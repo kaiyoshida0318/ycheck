@@ -119,57 +119,6 @@ tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.ok { border-color: rgba(74,222,128,0.3); color: var(--green); }
 .toast.err { border-color: rgba(248,113,113,0.3); color: var(--red); }
-</style>0px; }
-.metric-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.3px; }
-.metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--text); }
-.metric-card.accent { border-color: rgba(212,245,60,0.2); }
-.metric-card.accent .metric-value { color: var(--accent); }
-.chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
-.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.chart-title { font-size: 13px; font-weight: 500; color: var(--text2); }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
-.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
-.table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
-.table-toolbar { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.table-toolbar input[type=text] {
-  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  padding: 7px 12px; font-size: 12px; color: var(--text); outline: none; width: 200px; font-family: inherit;
-}
-.table-toolbar input[type=text]:focus { border-color: var(--accent); }
-.table-toolbar input[type=text]::placeholder { color: var(--text3); }
-.table-toolbar select {
-  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  padding: 7px 10px; font-size: 12px; color: var(--text2); outline: none; cursor: pointer; font-family: inherit;
-}
-.table-toolbar select:focus { border-color: var(--accent); }
-.table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-thead { position: sticky; top: 0; z-index: 2; }
-th { background: var(--bg3); padding: 10px 12px; color: var(--text3); font-weight: 500; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.3px; }
-th.group-header { text-align: center; background: var(--bg2); font-size: 10px; color: var(--text3); letter-spacing: 0.5px; }
-td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
-.code-cell { font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text); font-size: 11px; }
-.name-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; font-size: 11px; color: var(--text3); }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.roas-high { color: var(--green); font-weight: 500; }
-.roas-mid { color: var(--amber); font-weight: 500; }
-.roas-low { color: var(--red); font-weight: 500; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; }
-.badge-bid { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); }
-.badge-none { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-.empty-title { font-size: 15px; color: var(--text2); margin-bottom: 6px; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .sidebar { display: none; } .main { padding: 16px; } }
-.toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 12px; color: var(--text2); opacity: 0; transform: translateY(8px); transition: all 0.25s; max-width: 320px; }
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.ok { border-color: rgba(74,222,128,0.3); color: var(--green); }
-.toast.err { border-color: rgba(248,113,113,0.3); color: var(--red); }
 </style>
 </head>
 <body>
@@ -198,3 +147,452 @@ tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
       <div id="uploadCount" style="margin-top:8px;font-size:10px;color:var(--text3)">ファイル未読込</div>
     </div>
   </aside>
+
+  <main class="main">
+    <div id="sec-overview" class="section active">
+      <div class="page-header">
+        <div class="page-title">ショップ全体</div>
+        <div class="page-sub">月別売上・広告パフォーマンス推移</div>
+      </div>
+      <div id="overviewContent">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <div class="empty-title">CSVをアップロードしてください</div>
+          <div>yukaiya-store_overall と 広告詳細レポート を読み込むと表示されます</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-items" class="section">
+      <div class="page-header">
+        <div class="page-title">商品別詳細</div>
+        <div class="page-sub">商品コード別の売上・広告・ROAS推移</div>
+      </div>
+      <div id="itemsContent">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <div class="empty-title">CSVをアップロードしてください</div>
+          <div>yukaiya-item_report と 広告詳細レポート を読み込むと表示されます</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-bid" class="section">
+      <div class="page-header">
+        <div class="page-title">入札状況</div>
+        <div class="page-sub">現在の入札中商品と入札単価</div>
+      </div>
+      <div id="bidContent">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <div class="empty-title">CSVをアップロードしてください</div>
+          <div>BID_ITEM.csv を読み込むと表示されます</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// STATE
+// =====================
+const DB = { overall: {}, items: {}, bid: {} };
+let itemSortCol = 'total_sales';
+let itemCurrentMonth = 'all';
+let itemSearch = '';
+let overviewCharts = {};
+
+const MONTH_FMT = m => m.replace('-', '年') + '月';
+
+// =====================
+// NAV
+// =====================
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// =====================
+// TOAST
+// =====================
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || 'ok');
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+// =====================
+// FILE HANDLING
+// =====================
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.add('drag');
+}
+function handleDragLeave() {
+  document.getElementById('dropZone').classList.remove('drag');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  handleDragLeave();
+  processFiles([...e.dataTransfer.files]);
+}
+function handleFileInput(e) {
+  processFiles([...e.target.files]);
+  e.target.value = '';
+}
+
+async function processFiles(files) {
+  const csvFiles = files.filter(function(f) { return f.name.endsWith('.csv'); });
+  if (!csvFiles.length) { toast('CSVファイルを選択してください', 'err'); return; }
+  let loaded = 0;
+  for (let i = 0; i < csvFiles.length; i++) {
+    await parseCSV(csvFiles[i]);
+    loaded++;
+  }
+  // Deferred item_report processing
+  if (DB._pending) {
+    Object.entries(DB._pending).forEach(function(pair) {
+      const rows = pair[1];
+      const months = Object.keys(DB.items).sort();
+      let month = null;
+      for (let mi = 0; mi < months.length; mi++) {
+        const m = months[mi];
+        const adCodes = new Set(Object.keys(DB.items[m] || {}));
+        const cnt = rows.filter(function(r) { return adCodes.has((r['商品コード'] || '').toLowerCase()); }).length;
+        if (cnt > 3) { month = m; break; }
+      }
+      if (month) applyItemReport(rows, month);
+    });
+    DB._pending = {};
+  }
+  updateUploadCount();
+  renderAll();
+  toast(loaded + '件のファイルを読み込みました');
+}
+
+function safeNum(v) {
+  if (!v) return 0;
+  var s = String(v).replace(/,/g, '').trim();
+  if (['-', '集計対象外', '2未満', ''].indexOf(s) !== -1) return 0;
+  return parseFloat(s) || 0;
+}
+
+function parseCSV(file) {
+  return new Promise(function(resolve) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      encoding: 'Shift_JIS',
+      complete: function(result) {
+        var rows = result.data;
+        if (!rows.length) { resolve(); return; }
+        var cols = Object.keys(rows[0]);
+        if (cols.indexOf('ストアアカウント_商品コード') !== -1) {
+          parseBid(rows);
+        } else if (cols.indexOf('売上合計値') !== -1 && cols.indexOf('日付') !== -1) {
+          parseOverall(rows);
+        } else if (cols.indexOf('商品コード') !== -1 && cols.indexOf('利用金額') !== -1) {
+          parseAdReport(rows);
+        } else if (cols.indexOf('商品コード') !== -1 && cols.indexOf('サブコード') !== -1) {
+          parseItemReport(rows, file.name);
+        }
+        resolve();
+      },
+      error: function() { toast(file.name + ' の読み込みに失敗しました', 'err'); resolve(); }
+    });
+  });
+}
+
+function parseBid(rows) {
+  rows.forEach(function(r) {
+    var raw = r['ストアアカウント_商品コード'] || '';
+    var code = raw.replace('yukaiya_', '').toLowerCase();
+    DB.bid[code] = { bid_price: safeNum(r['入札価格']), item_name: r['商品名'] || '' };
+  });
+}
+
+function parseOverall(rows) {
+  rows.forEach(function(r) {
+    var month = (r['日付'] || '').replace('/', '-').slice(0, 7);
+    if (!month) return;
+    DB.overall[month] = { total_sales: safeNum(r['売上合計値']) };
+  });
+}
+
+function parseAdReport(rows) {
+  rows.forEach(function(r) {
+    var month = (r['日付'] || '').replace('/', '-').slice(0, 7);
+    var code = (r['商品コード'] || '').trim().toLowerCase();
+    if (!month || !code) return;
+    if (!DB.items[month]) DB.items[month] = {};
+    if (!DB.items[month][code]) DB.items[month][code] = { total_sales: 0, ad_sales: 0, ad_spend: 0, organic_sales: 0, item_name: '' };
+    DB.items[month][code].ad_sales += safeNum(r['売上金額']);
+    DB.items[month][code].ad_spend += safeNum(r['利用金額']);
+    if (!DB.items[month][code].item_name) DB.items[month][code].item_name = r['商品名'] || '';
+  });
+}
+
+function parseItemReport(rows, fname) {
+  // Try to match to a month already loaded via ad_report
+  var months = Object.keys(DB.items).sort();
+  var month = null;
+  for (var mi = 0; mi < months.length; mi++) {
+    var m = months[mi];
+    var adCodes = new Set(Object.keys(DB.items[m] || {}));
+    var cnt = rows.filter(function(r) { return adCodes.has((r['商品コード'] || '').toLowerCase()); }).length;
+    if (cnt > 3) { month = m; break; }
+  }
+  if (!month) {
+    // Defer
+    if (!DB._pending) DB._pending = {};
+    DB._pending[fname + '_' + Date.now()] = rows;
+    return;
+  }
+  applyItemReport(rows, month);
+}
+
+function applyItemReport(rows, month) {
+  if (!DB.items[month]) DB.items[month] = {};
+  rows.forEach(function(r) {
+    var code = (r['商品コード'] || '').trim().toLowerCase();
+    if (!code) return;
+    if (!DB.items[month][code]) DB.items[month][code] = { total_sales: 0, ad_sales: 0, ad_spend: 0, organic_sales: 0, item_name: '' };
+    DB.items[month][code].total_sales += safeNum(r['売上合計値（税込）']);
+    if (!DB.items[month][code].item_name) DB.items[month][code].item_name = r['商品名'] || '';
+  });
+  Object.values(DB.items[month]).forEach(function(d) {
+    d.organic_sales = d.total_sales - d.ad_sales;
+  });
+}
+
+function updateUploadCount() {
+  var months = Object.keys(DB.overall).sort();
+  var hasBid = Object.keys(DB.bid).length > 0;
+  var lines = [];
+  if (months.length) lines.push(months.map(MONTH_FMT).join(' / '));
+  if (hasBid) lines.push('入札データ読込済');
+  document.getElementById('uploadCount').textContent = lines.length ? lines.join('\n') : 'ファイル未読込';
+}
+
+// =====================
+// RENDER
+// =====================
+function renderAll() { renderOverview(); renderItems(); renderBid(); }
+
+function fmt(n) { return Math.round(n).toLocaleString('ja-JP'); }
+function fmtRoas(n) { return n > 0 ? Math.round(n) + '%' : '-'; }
+function roasClass(r) { return r >= 400 ? 'roas-high' : r >= 200 ? 'roas-mid' : r > 0 ? 'roas-low' : ''; }
+
+// --- OVERVIEW ---
+function renderOverview() {
+  var months = Object.keys(DB.overall).sort();
+  if (!months.length) return;
+  var latestM = months[months.length - 1];
+  var latest = DB.overall[latestM];
+  var latestItems = DB.items[latestM] || {};
+
+  var total_ad_sales = Object.values(latestItems).reduce(function(s, d) { return s + d.ad_sales; }, 0);
+  var total_ad_spend = Object.values(latestItems).reduce(function(s, d) { return s + d.ad_spend; }, 0);
+  var total_ad_roas = total_ad_spend > 0 ? Math.round(total_ad_sales / total_ad_spend * 100) : 0;
+
+  var sales = months.map(function(m) { return DB.overall[m] ? DB.overall[m].total_sales : 0; });
+  var adSales = months.map(function(m) { return Object.values(DB.items[m] || {}).reduce(function(s, d) { return s + d.ad_sales; }, 0); });
+  var adSpend = months.map(function(m) { return Object.values(DB.items[m] || {}).reduce(function(s, d) { return s + d.ad_spend; }, 0); });
+  var roas = months.map(function(m, i) { return adSpend[i] > 0 ? Math.round(adSales[i] / adSpend[i] * 100) : 0; });
+  var labels = months.map(MONTH_FMT);
+
+  var summaryRows = months.map(function(m, i) {
+    var org = sales[i] - adSales[i];
+    return '<tr><td>' + MONTH_FMT(m) + '</td><td class="num">\u00a5' + fmt(sales[i]) + '</td><td class="num">\u00a5' + fmt(adSales[i]) + '</td><td class="num">\u00a5' + fmt(adSpend[i]) + '</td><td class="num ' + roasClass(roas[i]) + '">' + fmtRoas(roas[i]) + '</td><td class="num">\u00a5' + fmt(org) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('overviewContent').innerHTML =
+    '<div class="metric-grid">' +
+    '<div class="metric-card accent"><div class="metric-label">売上合計（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">\u00a5' + fmt(latest.total_sales) + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">広告売上（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">\u00a5' + fmt(total_ad_sales) + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">広告費（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">\u00a5' + fmt(total_ad_spend) + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">広告ROAS（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">' + fmtRoas(total_ad_roas) + '</div></div>' +
+    '</div>' +
+    '<div class="grid-2">' +
+    '<div class="chart-card"><div class="chart-header"><div class="chart-title">月別売上推移</div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#d4f53c"></div>売上合計</div><div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>広告売上</div><div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>広告費</div></div></div><div style="position:relative;height:220px"><canvas id="salesChart" role="img" aria-label="月別売上推移">月別売上推移グラフ</canvas></div></div>' +
+    '<div class="chart-card"><div class="chart-header"><div class="chart-title">広告ROAS推移</div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>広告ROAS (%)</div></div></div><div style="position:relative;height:220px"><canvas id="roasChart" role="img" aria-label="広告ROAS推移">ROAS推移グラフ</canvas></div></div>' +
+    '</div>' +
+    '<div class="chart-card"><div class="chart-header"><div class="chart-title">月別サマリー</div></div><div class="table-scroll"><table><thead><tr><th>月</th><th class="num">売上合計</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">広告ROAS</th><th class="num">自然検索売上</th></tr></thead><tbody>' + summaryRows + '</tbody></table></div></div>';
+
+  if (overviewCharts.sales) overviewCharts.sales.destroy();
+  if (overviewCharts.roas) overviewCharts.roas.destroy();
+
+  var gc = 'rgba(255,255,255,0.05)';
+  var tc = '#5a5955';
+
+  overviewCharts.sales = new Chart(document.getElementById('salesChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: '売上合計', data: sales, backgroundColor: '#d4f53c', borderRadius: 4 },
+        { label: '広告売上', data: adSales, backgroundColor: '#4ade80', borderRadius: 4 },
+        { label: '広告費', data: adSpend, backgroundColor: '#f87171', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: function(v) { return '\u00a5' + (v/10000).toFixed(0) + '\u4e07'; }, color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } },
+        x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+
+  overviewCharts.roas = new Chart(document.getElementById('roasChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{ data: roas, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,0.1)', tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#60a5fa', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: function(v) { return v + '%'; }, color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } },
+        x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+      }
+    }
+  });
+}
+
+// --- ITEMS ---
+function renderItems() {
+  var months = Object.keys(DB.items).sort();
+  if (!months.length && !Object.keys(DB.bid).length) return;
+
+  var allCodes = new Set();
+  months.forEach(function(m) { Object.keys(DB.items[m] || {}).forEach(function(c) { allCodes.add(c); }); });
+
+  var rows = [...allCodes].map(function(code) {
+    var bidPrice = DB.bid[code] ? DB.bid[code].bid_price : 0;
+    var hasBid = !!DB.bid[code];
+    var itemName = months.reduce(function(n, m) { return n || (DB.items[m] && DB.items[m][code] ? DB.items[m][code].item_name : ''); }, '');
+    var monthData = {};
+    months.forEach(function(m) {
+      var d = (DB.items[m] && DB.items[m][code]) ? DB.items[m][code] : {};
+      monthData[m] = {
+        total_sales: d.total_sales || 0, ad_sales: d.ad_sales || 0,
+        ad_spend: d.ad_spend || 0, organic_sales: d.organic_sales || 0,
+        ad_roas: d.ad_spend > 0 ? Math.round(d.ad_sales / d.ad_spend * 100) : 0,
+        total_roas: d.ad_spend > 0 ? Math.round(d.total_sales / d.ad_spend * 100) : 0
+      };
+    });
+    return { code: code, itemName: itemName, hasBid: hasBid, bidPrice: bidPrice, monthData: monthData };
+  });
+
+  if (itemSearch) rows = rows.filter(function(r) { return r.code.toLowerCase().indexOf(itemSearch.toLowerCase()) !== -1; });
+  if (itemCurrentMonth !== 'all') rows = rows.filter(function(r) {
+    var d = r.monthData[itemCurrentMonth];
+    return d && (d.total_sales > 0 || d.ad_spend > 0);
+  });
+
+  var latestTarget = itemCurrentMonth !== 'all' ? itemCurrentMonth : (months[months.length - 1] || '');
+  rows.sort(function(a, b) {
+    function getVal(r) {
+      var d = r.monthData[latestTarget] || {};
+      if (itemSortCol === 'total_sales') return d.total_sales || 0;
+      if (itemSortCol === 'ad_spend') return d.ad_spend || 0;
+      if (itemSortCol === 'total_roas') return d.total_roas || 0;
+      if (itemSortCol === 'ad_roas') return d.ad_roas || 0;
+      if (itemSortCol === 'bid_price') return r.bidPrice;
+      return 0;
+    }
+    return getVal(b) - getVal(a);
+  });
+
+  var monthOpts = months.map(function(m) { return '<option value="' + m + '"' + (itemCurrentMonth === m ? ' selected' : '') + '>' + MONTH_FMT(m) + '</option>'; }).join('');
+
+  var thead = '<tr><th>商品コード</th><th>入札</th><th>入札単価</th>';
+  if (itemCurrentMonth === 'all') {
+    months.forEach(function(m) { thead += '<th colspan="5" class="group-header">' + MONTH_FMT(m) + '</th>'; });
+    thead += '</tr><tr><th></th><th></th><th></th>';
+    months.forEach(function() { thead += '<th class="num">売上</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">広告ROAS</th><th class="num">売上ROAS</th>'; });
+  } else {
+    thead += '<th class="num">売上合計</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">自然検索売上</th><th class="num">広告ROAS</th><th class="num">売上ROAS</th>';
+  }
+  thead += '</tr>';
+
+  var tbody = rows.slice(0, 150).map(function(r) {
+    var cells = '<td><div class="code-cell">' + r.code + '</div><div class="name-cell">' + r.itemName + '</div></td>';
+    cells += '<td>' + (r.hasBid ? '<span class="badge badge-bid">入札中</span>' : '<span class="badge badge-none">-</span>') + '</td>';
+    cells += '<td class="num">' + (r.bidPrice > 0 ? '\u00a5' + r.bidPrice : '-') + '</td>';
+    if (itemCurrentMonth === 'all') {
+      months.forEach(function(m) {
+        var d = r.monthData[m] || {};
+        cells += '<td class="num">' + (d.total_sales > 0 ? '\u00a5' + fmt(d.total_sales) : '-') + '</td>';
+        cells += '<td class="num">' + (d.ad_sales > 0 ? '\u00a5' + fmt(d.ad_sales) : '-') + '</td>';
+        cells += '<td class="num">' + (d.ad_spend > 0 ? '\u00a5' + fmt(d.ad_spend) : '-') + '</td>';
+        cells += '<td class="num ' + roasClass(d.ad_roas) + '">' + fmtRoas(d.ad_roas) + '</td>';
+        cells += '<td class="num ' + roasClass(d.total_roas) + '">' + fmtRoas(d.total_roas) + '</td>';
+      });
+    } else {
+      var d = r.monthData[itemCurrentMonth] || {};
+      cells += '<td class="num">' + (d.total_sales > 0 ? '\u00a5' + fmt(d.total_sales) : '-') + '</td>';
+      cells += '<td class="num">' + (d.ad_sales > 0 ? '\u00a5' + fmt(d.ad_sales) : '-') + '</td>';
+      cells += '<td class="num">' + (d.ad_spend > 0 ? '\u00a5' + fmt(d.ad_spend) : '-') + '</td>';
+      cells += '<td class="num">' + (d.organic_sales > 0 ? '\u00a5' + fmt(d.organic_sales) : '-') + '</td>';
+      cells += '<td class="num ' + roasClass(d.ad_roas) + '">' + fmtRoas(d.ad_roas) + '</td>';
+      cells += '<td class="num ' + roasClass(d.total_roas) + '">' + fmtRoas(d.total_roas) + '</td>';
+    }
+    return '<tr>' + cells + '</tr>';
+  }).join('');
+
+  document.getElementById('itemsContent').innerHTML =
+    '<div class="table-card"><div class="table-toolbar">' +
+    '<input type="text" placeholder="商品コードで検索..." id="itemSearch" value="' + itemSearch + '" oninput="itemSearch=this.value;renderItems()">' +
+    '<select onchange="itemCurrentMonth=this.value;renderItems()"><option value="all"' + (itemCurrentMonth === 'all' ? ' selected' : '') + '>全月表示</option>' + monthOpts + '</select>' +
+    '<select onchange="itemSortCol=this.value;renderItems()"><option value="total_sales"' + (itemSortCol==='total_sales'?' selected':'') + '>売上順</option><option value="ad_spend"' + (itemSortCol==='ad_spend'?' selected':'') + '>広告費順</option><option value="total_roas"' + (itemSortCol==='total_roas'?' selected':'') + '>売上ROAS順</option><option value="ad_roas"' + (itemSortCol==='ad_roas'?' selected':'') + '>広告ROAS順</option><option value="bid_price"' + (itemSortCol==='bid_price'?' selected':'') + '>入札単価順</option></select>' +
+    '<span style="font-size:11px;color:var(--text3)">' + rows.length + '件</span>' +
+    '</div><div class="table-scroll"><table><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div></div>';
+}
+
+// --- BID ---
+function renderBid() {
+  var codes = Object.keys(DB.bid);
+  if (!codes.length) return;
+  var months = Object.keys(DB.items).sort();
+  var latestM = months[months.length - 1];
+
+  var rows = codes.map(function(code) {
+    var b = DB.bid[code];
+    var d = (DB.items[latestM] && DB.items[latestM][code]) ? DB.items[latestM][code] : {};
+    return {
+      code: code, bid_price: b.bid_price, item_name: b.item_name, d: d,
+      ad_roas: d.ad_spend > 0 ? Math.round(d.ad_sales / d.ad_spend * 100) : 0,
+      total_roas: d.ad_spend > 0 ? Math.round(d.total_sales / d.ad_spend * 100) : 0
+    };
+  }).sort(function(a, b) { return (b.d.total_sales || 0) - (a.d.total_sales || 0); });
+
+  var tbody = rows.map(function(r) {
+    return '<tr>' +
+      '<td class="code-cell">' + r.code + '</td>' +
+      '<td class="num" style="font-weight:600;color:var(--accent)">\u00a5' + r.bid_price + '</td>' +
+      '<td class="num">' + (r.d.total_sales > 0 ? '\u00a5' + fmt(r.d.total_sales) : '-') + '</td>' +
+      '<td class="num">' + (r.d.ad_sales > 0 ? '\u00a5' + fmt(r.d.ad_sales) : '-') + '</td>' +
+      '<td class="num">' + (r.d.ad_spend > 0 ? '\u00a5' + fmt(r.d.ad_spend) : '-') + '</td>' +
+      '<td class="num ' + roasClass(r.ad_roas) + '">' + fmtRoas(r.ad_roas) + '</td>' +
+      '<td class="num ' + roasClass(r.total_roas) + '">' + fmtRoas(r.total_roas) + '</td>' +
+      '<td style="font-size:11px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.item_name + '</td>' +
+      '</tr>';
+  }).join('');
+
+  document.getElementById('bidContent').innerHTML =
+    '<div class="table-card"><div class="table-toolbar"><span style="font-size:11px;color:var(--text3)">入札中商品 ' + codes.length + '件</span>' + (latestM ? '<span style="font-size:11px;color:var(--text3)">※ 売上は' + MONTH_FMT(latestM) + 'のデータ</span>' : '') + '</div>' +
+    '<div class="table-scroll"><table><thead><tr><th>商品コード</th><th class="num">入札単価</th><th class="num">売上合計</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">広告ROAS</th><th class="num">売上ROAS</th><th>商品名</th></tr></thead><tbody>' + tbody + '</tbody></table></div></div>';
+}
+</script>
+</body>
+</html>
