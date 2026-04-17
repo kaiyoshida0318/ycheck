@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v12 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v13 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 :root {
   --bg: #f0f2f5;
@@ -472,7 +473,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v12 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v13 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -651,10 +652,10 @@ tbody tr:hover { background: var(--bg3); }
       <p class="upload-desc"><b>ショップ売上・商品別売上・広告詳細レポート</b>の3つをセットでアップロードしてください。月が一致していることを確認してから「アップロード実行」ボタンが押せるようになります。</p>
       <div class="dropzone" id="dropzone">
         <div class="dropzone-icon">📥</div>
-        <div class="dropzone-text">ここに <b>CSV</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
-        <div class="dropzone-hint">ショップ売上 / 商品別売上 / 広告詳細レポート / 入札価格（Shift_JIS・UTF-8対応）</div>
+        <div class="dropzone-text">ここに <b>CSV</b> または <b>ZIP</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
+        <div class="dropzone-hint">ショップ売上 / 商品別売上 / 広告詳細レポート / 入札価格（Shift_JIS・UTF-8 / ZIP内の複数CSVを自動展開）</div>
       </div>
-      <input type="file" id="fileInput" multiple accept=".csv" style="display:none;">
+      <input type="file" id="fileInput" multiple accept=".csv,.zip" style="display:none;">
 
       <div class="file-slots">
         <div class="file-slot" id="slot-overall">
@@ -1349,11 +1350,66 @@ function validateBuffer() {
   return true;
 }
 
+// ==================== ZIP extraction ====================
+// ZIPファイルからCSV相当のFileオブジェクトを配列で返す
+async function extractCsvFromZip(zipFile) {
+  const arrayBuffer = await zipFile.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const csvFiles = [];
+  const entries = Object.keys(zip.files);
+  for (const name of entries) {
+    const entry = zip.files[name];
+    if (entry.dir) continue;
+    // __MACOSX やドットファイル系はスキップ
+    if (name.startsWith('__MACOSX/') || name.split('/').pop().startsWith('.')) continue;
+    if (!name.toLowerCase().endsWith('.csv')) continue;
+    const blob = await entry.async('blob');
+    // FileオブジェクトとしてラップしてreadCsvFileで読めるように
+    const file = new File([blob], name.split('/').pop(), { type: 'text/csv' });
+    csvFiles.push(file);
+  }
+  return csvFiles;
+}
+
+// ドロップ/選択されたファイル群を展開してCSVだけの配列を返す
+async function expandFiles(files) {
+  const result = [];
+  for (const file of files) {
+    const nameLower = file.name.toLowerCase();
+    if (nameLower.endsWith('.zip')) {
+      log(`📦 ZIP展開中: ${file.name}`);
+      try {
+        const csvs = await extractCsvFromZip(file);
+        if (csvs.length === 0) {
+          log(`⚠ ZIP内にCSVが見つかりません: ${file.name}`, 'err');
+        } else {
+          log(`📦 ${file.name} から ${csvs.length}件のCSVを取り出しました: ${csvs.map(f => f.name).join(', ')}`, 'ok');
+          result.push(...csvs);
+        }
+      } catch (err) {
+        log(`✗ ZIP展開失敗: ${file.name} — ${err.message}`, 'err');
+      }
+    } else if (nameLower.endsWith('.csv')) {
+      result.push(file);
+    } else {
+      log(`⚠ 対応していない形式: ${file.name}（csv/zipのみ）`, 'err');
+    }
+  }
+  return result;
+}
+
 // ==================== File Processing (into buffer) ====================
 async function processFiles(files) {
   $('#logArea').classList.add('show');
   log(`${files.length}件のファイルを処理開始`);
-  for (const file of files) {
+  // ZIPを展開してCSVだけにする
+  const csvFiles = await expandFiles(files);
+  if (csvFiles.length === 0) {
+    log('処理するCSVがありません', 'err');
+    validateBuffer();
+    return;
+  }
+  for (const file of csvFiles) {
     try {
       log(`読み込み中: ${file.name}`);
       const rows = await readCsvFile(file);
@@ -1479,7 +1535,10 @@ dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.clas
 dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
 dropzone.addEventListener('drop', (e) => {
   e.preventDefault(); dropzone.classList.remove('dragover');
-  const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.csv'));
+  const files = Array.from(e.dataTransfer.files).filter(f => {
+    const n = f.name.toLowerCase();
+    return n.endsWith('.csv') || n.endsWith('.zip');
+  });
   if (files.length > 0) processFiles(files);
 });
 fileInput.addEventListener('change', (e) => {
