@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ycheck — Yahoo!ショッピング 売上管理</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0e0e10;
+  --bg2: #18181c;
+  --bg3: #222228;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0efe8;
+  --text2: #9b9a94;
+  --text3: #5a5955;
+  --accent: #d4f53c;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', system-ui, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  padding: 24px 0; position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; display: flex; flex-direction: column;
+}
+.main { flex: 1; min-width: 0; padding: 32px; }
+.logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--accent); }
+.logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.nav-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 20px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px; font-size: 13px; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: var(--bg3); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(212,245,60,0.06); }
+.nav-icon { font-size: 15px; width: 18px; text-align: center; }
+.upload-zone {
+  margin: auto 12px 0;
+  border: 1px dashed var(--border2); border-radius: var(--radius-sm);
+  padding: 14px; text-align: center; cursor: pointer;
+  transition: all 0.2s; font-size: 11px; color: var(--text3);
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); color: var(--accent); background: rgba(212,245,60,0.04); }
+.upload-zone input { display: none; }
+.upload-icon { font-size: 20px; margin-bottom: 6px; }
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.page-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+.section { display: none; }
+.section.active { display: block; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+.metric-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.3px; }
+.metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--text); }
+.metric-card.accent { border-color: rgba(212,245,60,0.2); }
+.metric-card.accent .metric-value { color: var(--accent); }
+.chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.chart-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.table-toolbar { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.table-toolbar input[type=text] {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 7px 12px; font-size: 12px; color: var(--text); outline: none; width: 200px; font-family: inherit;
+}
+.table-toolbar input[type=text]:focus { border-color: var(--accent); }
+.table-toolbar input[type=text]::placeholder { color: var(--text3); }
+.table-toolbar select {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 7px 10px; font-size: 12px; color: var(--text2); outline: none; cursor: pointer; font-family: inherit;
+}
+.table-toolbar select:focus { border-color: var(--accent); }
+.table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead { position: sticky; top: 0; z-index: 2; }
+th { background: var(--bg3); padding: 10px 12px; color: var(--text3); font-weight: 500; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.3px; }
+th.group-header { text-align: center; background: var(--bg2); font-size: 10px; color: var(--text3); letter-spacing: 0.5px; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
+.code-cell { font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text); font-size: 11px; }
+.name-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; font-size: 11px; color: var(--text3); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.roas-high { color: var(--green); font-weight: 500; }
+.roas-mid { color: var(--amber); font-weight: 500; }
+.roas-low { color: var(--red); font-weight: 500; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; }
+.badge-bid { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); }
+.badge-none { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; color: var(--text2); margin-bottom: 6px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .sidebar { display: none; } .main { padding: 16px; } }
+.toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 12px; color: var(--text2); opacity: 0; transform: translateY(8px); transition: all 0.25s; max-width: 320px; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok { border-color: rgba(74,222,128,0.3); color: var(--green); }
+.toast.err { border-color: rgba(248,113,113,0.3); color: var(--red); }
+</style>0px; }
+.metric-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.3px; }
+.metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--text); }
+.metric-card.accent { border-color: rgba(212,245,60,0.2); }
+.metric-card.accent .metric-value { color: var(--accent); }
+.chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.chart-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.table-toolbar { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.table-toolbar input[type=text] {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 7px 12px; font-size: 12px; color: var(--text); outline: none; width: 200px; font-family: inherit;
+}
+.table-toolbar input[type=text]:focus { border-color: var(--accent); }
+.table-toolbar input[type=text]::placeholder { color: var(--text3); }
+.table-toolbar select {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 7px 10px; font-size: 12px; color: var(--text2); outline: none; cursor: pointer; font-family: inherit;
+}
+.table-toolbar select:focus { border-color: var(--accent); }
+.table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead { position: sticky; top: 0; z-index: 2; }
+th { background: var(--bg3); padding: 10px 12px; color: var(--text3); font-weight: 500; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.3px; }
+th.group-header { text-align: center; background: var(--bg2); font-size: 10px; color: var(--text3); letter-spacing: 0.5px; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
+.code-cell { font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text); font-size: 11px; }
+.name-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; font-size: 11px; color: var(--text3); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.roas-high { color: var(--green); font-weight: 500; }
+.roas-mid { color: var(--amber); font-weight: 500; }
+.roas-low { color: var(--red); font-weight: 500; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; }
+.badge-bid { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); }
+.badge-none { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; color: var(--text2); margin-bottom: 6px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .sidebar { display: none; } .main { padding: 16px; } }
+.toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 12px; color: var(--text2); opacity: 0; transform: translateY(8px); transition: all 0.25s; max-width: 320px; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok { border-color: rgba(74,222,128,0.3); color: var(--green); }
+.toast.err { border-color: rgba(248,113,113,0.3); color: var(--red); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">Ycheck</div>
+      <div class="logo-sub">Yahoo!ショッピング管理</div>
+    </div>
+    <div class="nav-label">メニュー</div>
+    <div class="nav-item active" onclick="showSection('overview',this)">
+      <span class="nav-icon">▦</span>ショップ全体
+    </div>
+    <div class="nav-item" onclick="showSection('items',this)">
+      <span class="nav-icon">≡</span>商品別詳細
+    </div>
+    <div class="nav-item" onclick="showSection('bid',this)">
+      <span class="nav-icon">◎</span>入札状況
+    </div>
+    <div class="upload-zone" id="dropZone"
+         onclick="document.getElementById('fileInput').click()"
+         ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" multiple accept=".csv" onchange="handleFileInput(event)">
+      <div class="upload-icon">↑</div>
+      <div>CSVをドロップ<br>またはクリック</div>
+      <div id="uploadCount" style="margin-top:8px;font-size:10px;color:var(--text3)">ファイル未読込</div>
+    </div>
+  </aside>
