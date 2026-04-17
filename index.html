@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v16 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Ycheck v17 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -81,6 +84,30 @@ body {
   min-width: 42px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+/* Data status badge */
+.data-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg3);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--text3);
+  border: 1px solid var(--border);
+  cursor: default;
+}
+.data-status.ok {
+  background: rgba(22,163,74,0.1);
+  color: var(--green);
+  border-color: rgba(22,163,74,0.25);
+}
+.data-status.empty {
+  background: rgba(217,119,6,0.08);
+  color: var(--amber);
+  border-color: rgba(217,119,6,0.25);
 }
 
 .header-status { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -504,7 +531,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v16 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v17 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -512,6 +539,7 @@ tbody tr:hover { background: var(--bg3); }
         <span class="font-size-label" id="fontLabel">100%</span>
         <button class="font-btn" id="fontUp">A+</button>
       </div>
+      <div class="data-status" id="dataStatus" title="ブラウザに保存されたデータの状況">📭 データなし</div>
       <button class="btn sm primary" id="btnJumpUpload" title="レポート追加">+ レポート追加</button>
     </div>
   </div>
@@ -1375,7 +1403,9 @@ function saveToStorage() {
       master: state.master,
       savedAt: new Date().toISOString()
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const json = JSON.stringify(data);
+    localStorage.setItem(STORAGE_KEY, json);
+    updateDataStatus();
     return true;
   } catch (err) {
     console.error('localStorage save error:', err);
@@ -1403,8 +1433,55 @@ function loadFromStorage() {
 function clearStorage() {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    updateDataStatus();
   } catch (err) {
     console.error('localStorage clear error:', err);
+  }
+}
+
+// ヘッダーのデータ状況バッジ更新
+function updateDataStatus() {
+  const el = $('#dataStatus');
+  if (!el) return;
+  const hasOverall = state.overall && state.overall.months && state.overall.months.length > 0;
+  const hasItem = state.item && state.item.length > 0;
+  const hasAd = state.ad && state.ad.length > 0;
+  const hasBid = state.bid && state.bid.length > 0;
+  const hasMaster = state.master && Object.keys(state.master).length > 0;
+  const parts = [];
+  if (hasOverall) parts.push('売上');
+  if (hasItem) parts.push('商品別');
+  if (hasAd) parts.push('広告');
+  if (hasBid) parts.push('入札');
+  if (hasMaster) parts.push(`マスタ(${Object.keys(state.master).length})`);
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data.savedAt) {
+        const saved = new Date(data.savedAt);
+        const timeStr = saved.toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        if (parts.length > 0) {
+          el.className = 'data-status ok';
+          el.textContent = `💾 ${parts.join('/')} (${timeStr})`;
+          el.title = `ブラウザに保存済み — 最終更新: ${saved.toLocaleString('ja-JP')}`;
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (parts.length > 0) {
+    el.className = 'data-status ok';
+    el.textContent = `✓ ${parts.join('/')}`;
+    el.title = 'データが読み込まれています（未保存）';
+  } else {
+    el.className = 'data-status empty';
+    el.textContent = '📭 データなし';
+    el.title = '「+ レポート追加」からCSVをアップロードしてください';
   }
 }
 
@@ -1857,6 +1934,7 @@ document.addEventListener('dblclick', (e) => {
 // 初期化：localStorageから復元＆描画
 const restored = loadFromStorage();
 renderAll();
+updateDataStatus();
 if (restored) {
   console.log('Ycheck: 保存済みデータを復元しました', restored);
 }
