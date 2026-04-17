@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v14 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v15 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -473,7 +473,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v14 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v15 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -1296,6 +1296,50 @@ function detectMonthFromRows(rows) {
   return null;
 }
 
+// ==================== Persistence (localStorage) ====================
+const STORAGE_KEY = 'ycheck_data_v1';
+
+function saveToStorage() {
+  try {
+    const data = {
+      overall: state.overall,
+      item: state.item,
+      ad: state.ad,
+      bid: state.bid,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch (err) {
+    console.error('localStorage save error:', err);
+    return false;
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.overall) state.overall = data.overall;
+    if (data.item) state.item = data.item;
+    if (data.ad) state.ad = data.ad;
+    if (data.bid) state.bid = data.bid;
+    return data.savedAt || true;
+  } catch (err) {
+    console.error('localStorage load error:', err);
+    return false;
+  }
+}
+
+function clearStorage() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    console.error('localStorage clear error:', err);
+  }
+}
+
 // ==================== Validation ====================
 function validateBuffer() {
   const buf = state.uploadBuffer;
@@ -1506,6 +1550,11 @@ function commitUpload() {
   // 描画
   renderAll();
 
+  // localStorageに保存
+  if (saveToStorage()) {
+    log(`💾 ブラウザに保存しました（バージョン更新後も残ります）`, 'ok');
+  }
+
   // モーダルを閉じる
   closeUploadModal();
 }
@@ -1582,8 +1631,9 @@ $('#btnClear').addEventListener('click', () => {
   ['sumRevenue','sumAdCost','sumAdRev','sumRoas'].forEach(id => $('#' + id).textContent = '—');
   ['tableOverall','tableItem','tableBidAdjust','tableBid'].forEach(id => $('#' + id + ' tbody').innerHTML = '');
   $('#logArea').innerHTML = '';
+  clearStorage();
   validateBuffer();
-  log('全データをクリアしました', 'ok');
+  log('全データをクリアしました（ブラウザ保存分も削除）', 'ok');
 });
 
 $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggle('show'));
@@ -1632,7 +1682,12 @@ document.querySelectorAll('#tableBidAdjust th[data-sort]').forEach(th => {
   });
 });
 
+// 初期化：localStorageから復元＆描画
+const restored = loadFromStorage();
 renderAll();
+if (restored) {
+  console.log('Ycheck: 保存済みデータを復元しました', restored);
+}
 </script>
 </body>
 </html>
