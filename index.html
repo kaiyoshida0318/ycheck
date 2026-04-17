@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v7 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v8 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -372,7 +372,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v7 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v8 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -382,8 +382,7 @@ tbody tr:hover { background: var(--bg3); }
       </div>
       <button class="btn sm" id="btnJumpUpload" title="CSVアップロードへ">📁 CSVアップロード</button>
       <div class="header-status">
-        <span class="status-chip" id="chipMaster">商品マスタ: 未</span>
-        <span class="status-chip" id="chipOverall">ショップ全体: 未</span>
+        <span class="status-chip" id="chipOverall">ショップ売上: 未</span>
         <span class="status-chip" id="chipItem">商品別: 未</span>
         <span class="status-chip" id="chipAd">広告: 未</span>
         <span class="status-chip" id="chipBid">入札: 未</span>
@@ -551,17 +550,17 @@ tbody tr:hover { background: var(--bg3); }
   <!-- Upload Section -->
   <div class="upload-section" id="uploadSection">
     <h3 class="upload-title">📁 CSVファイルをまとめてアップロード</h3>
-    <p class="upload-desc">複数種類のCSVを同時にドラッグ＆ドロップできます。ファイル名・カラム内容から自動判別します。月別実績CSV（商品マスタ）は複数月分を重ねてアップロード可能。</p>
+    <p class="upload-desc">4種類のCSVを同時にドラッグ＆ドロップできます。ファイル名・カラム内容から自動判別します。</p>
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📥</div>
       <div class="dropzone-text">ここに <b>CSV</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
-      <div class="dropzone-hint">ショップ全体 / 商品別売上 / 広告詳細レポート / 入札価格 / 商品マスタ（Shift_JIS・UTF-8対応）</div>
+      <div class="dropzone-hint">ショップ売上 / 商品別売上 / 広告詳細レポート / 入札価格（Shift_JIS・UTF-8対応）</div>
     </div>
     <input type="file" id="fileInput" multiple accept=".csv" style="display:none;">
 
     <div class="file-slots">
       <div class="file-slot" id="slot-overall">
-        <div class="file-slot-label"><span class="slot-badge"></span>ショップ全体（月次）</div>
+        <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
       </div>
@@ -580,12 +579,6 @@ tbody tr:hover { background: var(--bg3); }
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
       </div>
-    </div>
-
-    <div class="file-slot" id="slot-master" style="margin-top:10px;">
-      <div class="file-slot-label"><span class="slot-badge"></span>商品マスタ＆月次実績（データ分析_Yahoo-対応全般）</div>
-      <div class="file-slot-status">未アップロード</div>
-      <div class="file-slot-filename">_データ分析_Yahoo-対応全般*.csv （複数月分をまとめて可）</div>
     </div>
 
     <div class="upload-actions">
@@ -688,13 +681,6 @@ function classifyFile(filename, rows) {
   const keys = rows.length > 0 ? Object.keys(rows[0]) : [];
   const keySet = new Set(keys);
 
-  // 商品マスタ＆月次実績: 「MM-XXX」のヘッダーがあれば優先
-  const hasMonthPrefix = keys.some(k => /^\d{1,2}-/.test(k));
-  if (keySet.has('商品コード') && keySet.has('商品名') && (keySet.has('主要KW') || keySet.has('検索画面URL') || hasMonthPrefix)) {
-    return 'master';
-  }
-  if (filename.includes('データ分析') || filename.toLowerCase().includes('yahoo-対応')) return 'master';
-
   if (name.includes('store_overall') || name.includes('store-overall')) return 'overall';
   if (name.includes('item_report') || name.includes('item-report')) return 'item';
   if (name.includes('bid_item') || name.includes('bid-item') || name.startsWith('bid')) return 'bid';
@@ -767,63 +753,12 @@ function parseBid(rows) {
   return [...new Set(codes)];
 }
 
-// データ分析_Yahoo-対応全般CSV パース
-function parseMaster(rows, filename) {
-  const keys = rows.length > 0 ? Object.keys(rows[0]) : [];
-  const currentYear = new Date().getFullYear();
-  const monthPrefixes = [...new Set(
-    keys.map(k => { const m = k.match(/^(\d{1,2})-/); return m ? m[1].padStart(2, '0') : null; }).filter(Boolean)
-  )];
-  log(`商品マスタCSV検出: 月プレフィックス ${monthPrefixes.join(', ') || 'なし'}`);
-
-  rows.forEach(r => {
-    const code = (r['商品コード'] || '').trim();
-    if (!code) return;
-    if (!state.master[code]) {
-      state.master[code] = {
-        code,
-        name: (r['商品名'] || '').trim(),
-        kw: (r['主要KW'] || '').trim(),
-        searchUrl: (r['検索画面URL'] || '').trim(),
-        months: {}
-      };
-    } else {
-      const m = state.master[code];
-      if (!m.name) m.name = (r['商品名'] || '').trim();
-      if (!m.kw) m.kw = (r['主要KW'] || '').trim();
-      if (!m.searchUrl) m.searchUrl = (r['検索画面URL'] || '').trim();
-    }
-    const rec = state.master[code];
-    monthPrefixes.forEach(mp => {
-      const monthKey = `${currentYear}-${mp}`;
-      const pick = (suffix) => {
-        const k1 = `${parseInt(mp, 10).toString().padStart(2, '0')}-${suffix}`;
-        const k2 = `${parseInt(mp, 10)}-${suffix}`;
-        return r[k1] !== undefined ? r[k1] : r[k2];
-      };
-      const rev = toNum(pick('Yahoo売上'));
-      const seoRev = toNum(pick('SEO売上'));
-      const adRev = toNum(pick('広告売上'));
-      const bid = toNum(pick('入札価格'));
-      const spent = toNum(pick('実績額'));
-      const ctr = toNum(pick('CTR'));
-      const cvr = toNum(pick('CVR'));
-      const roas = toNum(pick('広告ROAS'));
-      if (rev === 0 && adRev === 0 && bid === 0 && spent === 0) return;
-      rec.months[monthKey] = {
-        revenue: rev, seoRev, adRev, bid, adCost: spent, ctr, cvr, roas
-      };
-    });
-  });
-}
-
 // ==================== Status ====================
 const slotMap = {
-  overall: { slotId: 'slot-overall', chipId: 'chipOverall', label: 'ショップ全体', pattern: 'yukaiya-store_overall*.csv' },
+  overall: { slotId: 'slot-overall', chipId: 'chipOverall', label: 'ショップ売上', pattern: 'yukaiya-store_overall*.csv' },
   item: { slotId: 'slot-item', chipId: 'chipItem', label: '商品別', pattern: 'yukaiya-item_report*.csv' },
   ad: { slotId: 'slot-ad', chipId: 'chipAd', label: '広告', pattern: '広告詳細レポート商品別*.csv' },
-  bid: { slotId: 'slot-bid', chipId: 'chipBid', label: '入札', pattern: 'BID_ITEM*.csv' },
-  master: { slotId: 'slot-master', chipId: 'chipMaster', label: '商品マスタ', pattern: '_データ分析_Yahoo-対応全般*.csv' }
+  bid: { slotId: 'slot-bid', chipId: 'chipBid', label: '入札', pattern: 'BID_ITEM*.csv' }
 };
 
 function updateSlot(kind, filename) {
@@ -1248,7 +1183,6 @@ async function processFiles(files) {
       else if (kind === 'item') state.item = parseItem(rows);
       else if (kind === 'ad') state.ad = parseAd(rows);
       else if (kind === 'bid') state.bid = parseBid(rows);
-      else if (kind === 'master') parseMaster(rows, file.name);
       updateSlot(kind, file.name);
       log(`✓ ${kind} として登録 (${rows.length}行): ${file.name}`, 'ok');
     } catch (err) {
@@ -1294,7 +1228,7 @@ fileInput.addEventListener('change', (e) => {
 $('#btnClear').addEventListener('click', () => {
   state.overall = null; state.item = null; state.ad = null; state.bid = null;
   state.master = {};
-  ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
+  ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
   state.charts = {};
   ['sumRevenue','sumAdCost','sumAdRev','sumRoas'].forEach(id => $('#' + id).textContent = '—');
