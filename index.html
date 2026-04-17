@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v3 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v6 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -95,15 +95,16 @@ body {
 .dropzone-text b { color: var(--accent); }
 .dropzone-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
 
-/* File slots */
+/* File slots - 2x2 grid */
 .file-slots {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
   gap: 10px;
   margin-top: 14px;
 }
-@media (max-width: 900px) {
-  .file-slots { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 640px) {
+  .file-slots { grid-template-columns: 1fr; }
 }
 .file-slot {
   border: 1px solid var(--border);
@@ -327,7 +328,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v3 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v6 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-status" id="headerStatus">
       <span class="status-chip" id="chipOverall">ショップ全体: 未</span>
@@ -343,29 +344,33 @@ tbody tr:hover { background: var(--bg3); }
     <p class="upload-desc">4種類のCSVを同時にドラッグ＆ドロップできます。ファイル名の内容から自動で種類を判別します。</p>
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📥</div>
-      <div class="dropzone-text">ここに <b>4つのCSV</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
-      <div class="dropzone-hint">yukaiya-store_overall / yukaiya-item_report / 広告詳細レポート / BID_ITEM（Shift_JIS対応）</div>
+      <div class="dropzone-text">ここに <b>CSV</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
+      <div class="dropzone-hint">ショップ全体 / 商品別売上 / 広告詳細レポート / 入札価格（Shift_JIS対応）</div>
     </div>
     <input type="file" id="fileInput" multiple accept=".csv" style="display:none;">
 
     <div class="file-slots">
+      <!-- 左上 -->
       <div class="file-slot" id="slot-overall">
-        <div class="file-slot-label"><span class="slot-badge"></span>ショップ全体</div>
+        <div class="file-slot-label"><span class="slot-badge"></span>ショップ全体（月次）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
       </div>
+      <!-- 右上 -->
       <div class="file-slot" id="slot-item">
-        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上</div>
+        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上（月次）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
       </div>
+      <!-- 左下 -->
       <div class="file-slot" id="slot-ad">
-        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート</div>
+        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート（月次）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
       </div>
+      <!-- 右下 -->
       <div class="file-slot" id="slot-bid">
-        <div class="file-slot-label"><span class="slot-badge"></span>入札商品</div>
+        <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
       </div>
