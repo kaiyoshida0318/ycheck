@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v13 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v14 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -473,7 +473,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v13 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v14 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -1306,20 +1306,37 @@ function validateBuffer() {
   const hasOverall = buf.overall != null;
   const hasItem = buf.item != null;
   const hasAd = buf.ad != null;
+  const hasBid = buf.bid != null;
 
-  // 必須3ファイルチェック
+  // 何もない状態
+  if (!hasOverall && !hasItem && !hasAd && !hasBid) {
+    box.className = 'validation-box info';
+    msg.textContent = `📋 必須3ファイル（ショップ売上・商品別売上・広告詳細レポート）、または入札価格を単独でアップロードできます`;
+    btn.disabled = true;
+    return false;
+  }
+
+  // 入札価格のみの場合：月次データが一切バッファになければOK
+  if (hasBid && !hasOverall && !hasItem && !hasAd) {
+    box.className = 'validation-box ok';
+    msg.textContent = `✓ 入札価格を単独でアップロード実行できます`;
+    btn.disabled = false;
+    return true;
+  }
+
+  // 月次ファイルが揃っていない（部分的にある状態）
   if (!hasOverall || !hasItem || !hasAd) {
     const missing = [];
     if (!hasOverall) missing.push('ショップ売上');
     if (!hasItem) missing.push('商品別売上');
     if (!hasAd) missing.push('広告詳細レポート');
     box.className = 'validation-box info';
-    msg.textContent = `📋 あと${missing.length}ファイル必要です: ${missing.join(' / ')}`;
+    msg.textContent = `📋 あと${missing.length}ファイル必要です: ${missing.join(' / ')}（入札価格のみのアップも可能）`;
     btn.disabled = true;
     return false;
   }
 
-  // 月一致チェック
+  // 月一致チェック（3ファイル揃っている場合）
   const overallMonth = buf.overall.month;
   const adMonth = buf.ad.month;
 
@@ -1344,7 +1361,7 @@ function validateBuffer() {
 
   // すべてOK
   box.className = 'validation-box ok';
-  const bidInfo = buf.bid ? ' + 入札価格' : '';
+  const bidInfo = hasBid ? ' + 入札価格' : '';
   msg.textContent = `✓ ${overallMonth}月分として3ファイル確認OK${bidInfo} — アップロード実行できます`;
   btn.disabled = false;
   return true;
@@ -1450,38 +1467,44 @@ function commitUpload() {
   // もう一度バリデーション
   if (!validateBuffer()) return;
 
-  const targetMonth = buf.overall.month;  // store_overallの月を正とする
+  const hasMonthly = buf.overall && buf.item && buf.ad;
+  const hasBid = buf.bid != null;
 
-  // overall: 既存データとマージ（月をキーに置換/追加）
-  const overallMonths = parseOverall(buf.overall.rows).months;
-  if (!state.overall) state.overall = { months: [] };
-  // 同じ月は置換
-  overallMonths.forEach(newM => {
-    const idx = state.overall.months.findIndex(m => m.month === newM.month);
-    if (idx >= 0) state.overall.months[idx] = newM;
-    else state.overall.months.push(newM);
-  });
-  state.overall.months.sort((a, b) => a.month.localeCompare(b.month));
+  // 月次データの反映
+  if (hasMonthly) {
+    const targetMonth = buf.overall.month;
 
-  // item: 月情報を targetMonth で強制付与
-  const itemParsed = parseItem(buf.item.rows).map(r => ({ ...r, month: targetMonth }));
-  if (!state.item) state.item = [];
-  // 同じ月のitemレコードは置換
-  state.item = state.item.filter(r => r.month !== targetMonth).concat(itemParsed);
+    // overall: 既存データとマージ（月をキーに置換/追加）
+    const overallMonths = parseOverall(buf.overall.rows).months;
+    if (!state.overall) state.overall = { months: [] };
+    overallMonths.forEach(newM => {
+      const idx = state.overall.months.findIndex(m => m.month === newM.month);
+      if (idx >= 0) state.overall.months[idx] = newM;
+      else state.overall.months.push(newM);
+    });
+    state.overall.months.sort((a, b) => a.month.localeCompare(b.month));
 
-  // ad: そのままパース＆マージ
-  const adParsed = parseAd(buf.ad.rows);
-  if (!state.ad) state.ad = [];
-  state.ad = state.ad.filter(r => r.month !== targetMonth).concat(adParsed);
+    // item: 月情報を targetMonth で強制付与
+    const itemParsed = parseItem(buf.item.rows).map(r => ({ ...r, month: targetMonth }));
+    if (!state.item) state.item = [];
+    state.item = state.item.filter(r => r.month !== targetMonth).concat(itemParsed);
 
-  // bid: アップされていれば上書き
-  if (buf.bid) {
+    // ad: そのままパース＆マージ
+    const adParsed = parseAd(buf.ad.rows);
+    if (!state.ad) state.ad = [];
+    state.ad = state.ad.filter(r => r.month !== targetMonth).concat(adParsed);
+
+    log(`✅ ${targetMonth}月分の月次データを反映しました`, 'ok');
+  }
+
+  // 入札価格の反映（アップされていれば上書き）
+  if (hasBid) {
     state.bid = parseBid(buf.bid.rows);
+    log(`✅ 入札価格を反映しました（${state.bid.length}件）`, 'ok');
   }
 
   // 描画
   renderAll();
-  log(`✅ ${targetMonth}月分のデータをダッシュボードに反映しました`, 'ok');
 
   // モーダルを閉じる
   closeUploadModal();
