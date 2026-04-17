@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v2 — Yahoo!ショッピング 売上管理</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<title>Ycheck v3 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --bg: #f0f2f5;
@@ -21,578 +21,976 @@
   --amber: #d97706;
   --red: #dc2626;
   --blue: #2563eb;
-  --radius: 10px;
-  --radius-sm: 6px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; }
+* { box-sizing: border-box; }
 body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', system-ui, sans-serif;
-  min-height: 100vh;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
 }
-.shell { display: flex; min-height: 100vh; }
-.sidebar {
-  width: 220px; flex-shrink: 0;
-  background: var(--bg2); border-right: 1px solid var(--border);
-  padding: 24px 0; position: sticky; top: 0; height: 100vh;
-  overflow-y: auto; display: flex; flex-direction: column;
+.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
-.main { flex: 1; min-width: 0; padding: 32px; }
-.logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-.logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--accent); }
-.logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.nav-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 20px; margin-bottom: 6px; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 20px; font-size: 13px; color: var(--text2);
-  cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent;
+.logo { display: flex; align-items: baseline; gap: 12px; }
+.logo-main { font-size: 24px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
+.logo-sub { font-size: 12px; color: var(--text3); font-weight: 500; }
+.header-status { display: flex; gap: 8px; flex-wrap: wrap; }
+.status-chip {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg3);
+  color: var(--text3);
+  border: 1px solid var(--border);
 }
-.nav-item:hover { color: var(--text); background: var(--bg3); }
-.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(37,99,235,0.07); }
-.nav-icon { font-size: 15px; width: 18px; text-align: center; }
-.upload-zone {
-  margin: auto 12px 0;
-  border: 1px dashed var(--border2); border-radius: var(--radius-sm);
-  padding: 14px; text-align: center; cursor: pointer;
-  transition: all 0.2s; font-size: 11px; color: var(--text3);
+.status-chip.ok { background: rgba(22, 163, 74, 0.1); color: var(--green); border-color: rgba(22,163,74,0.25); }
+
+/* Upload Area */
+.upload-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
 }
-.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); color: var(--accent); background: rgba(37,99,235,0.04); }
-.upload-zone input { display: none; }
-.upload-icon { font-size: 20px; margin-bottom: 6px; }
-.page-header { margin-bottom: 28px; }
-.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-.page-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
-.section { display: none; }
-.section.active { display: block; }
-.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
-.metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
-.metric-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.3px; }
-.metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--text); }
-.metric-card.accent { border-color: rgba(37,99,235,0.25); }
-.metric-card.accent .metric-value { color: var(--accent); }
-.chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
-.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.chart-title { font-size: 13px; font-weight: 500; color: var(--text2); }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
-.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
-.table-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
-.table-toolbar { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.table-toolbar input[type=text] {
-  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  padding: 7px 12px; font-size: 12px; color: var(--text); outline: none; width: 200px; font-family: inherit;
+.upload-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--text);
 }
-.table-toolbar input[type=text]:focus { border-color: var(--accent); }
-.table-toolbar input[type=text]::placeholder { color: var(--text3); }
-.table-toolbar select {
-  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  padding: 7px 10px; font-size: 12px; color: var(--text2); outline: none; cursor: pointer; font-family: inherit;
+.upload-desc {
+  font-size: 12px;
+  color: var(--text3);
+  margin: 0 0 14px 0;
 }
-.table-toolbar select:focus { border-color: var(--accent); }
-.table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-thead { position: sticky; top: 0; z-index: 2; }
-th { background: var(--bg3); padding: 10px 12px; color: var(--text3); font-weight: 500; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.3px; }
-th.group-header { text-align: center; background: var(--bg2); font-size: 10px; color: var(--text3); letter-spacing: 0.5px; }
-td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,0.025); color: var(--text); }
-.code-cell { font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text); font-size: 11px; }
-.name-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; font-size: 11px; color: var(--text3); }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.roas-high { color: var(--green); font-weight: 500; }
-.roas-mid { color: var(--amber); font-weight: 500; }
-.roas-low { color: var(--red); font-weight: 500; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; }
-.badge-bid { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); }
-.badge-none { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-.empty-title { font-size: 15px; color: var(--text2); margin-bottom: 6px; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .sidebar { display: none; } .main { padding: 16px; } }
-.toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 12px; color: var(--text2); opacity: 0; transform: translateY(8px); transition: all 0.25s; max-width: 320px; }
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.ok { border-color: rgba(74,222,128,0.3); color: var(--green); }
-.toast.err { border-color: rgba(248,113,113,0.3); color: var(--red); }
+.dropzone {
+  border: 2px dashed var(--border2);
+  border-radius: 10px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafbfc;
+}
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.04);
+}
+.dropzone-icon { font-size: 32px; margin-bottom: 6px; }
+.dropzone-text { font-size: 13px; color: var(--text2); }
+.dropzone-text b { color: var(--accent); }
+.dropzone-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* File slots */
+.file-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+@media (max-width: 900px) {
+  .file-slots { grid-template-columns: repeat(2, 1fr); }
+}
+.file-slot {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 68px;
+}
+.file-slot.loaded {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.3);
+}
+.file-slot-label {
+  font-weight: 600;
+  color: var(--text2);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.file-slot-status { font-size: 11px; color: var(--text3); }
+.file-slot.loaded .file-slot-status { color: var(--green); font-weight: 500; }
+.file-slot-filename {
+  font-size: 11px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slot-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+.file-slot.loaded .slot-badge { background: var(--green); }
+
+.upload-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--bg3); }
+.btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.btn.primary:hover { background: #1d4ed8; }
+.btn.ghost { background: transparent; border-color: var(--border); color: var(--text2); }
+.btn.ghost:hover { background: var(--bg3); }
+
+/* Log area */
+.log-area {
+  margin-top: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text2);
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  display: none;
+}
+.log-area.show { display: block; }
+.log-line { padding: 2px 0; }
+.log-line.err { color: var(--red); }
+.log-line.ok { color: var(--green); }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--bg2);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+.tab {
+  padding: 8px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+}
+.tab:hover { color: var(--text); background: var(--bg3); }
+.tab.active {
+  background: var(--accent);
+  color: white;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 14px 0;
+  color: var(--text);
+}
+.chart-box { position: relative; height: 320px; }
+
+/* Summary grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.summary-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.summary-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.summary-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 4px;
+}
+.summary-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* Table */
+.table-wrap { overflow-x: auto; border-radius: 8px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th, td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--bg3);
+  font-weight: 600;
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 0;
+}
+th:hover { background: var(--border); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: var(--bg3); }
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filters input, .filters select {
+  padding: 7px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  font-size: 13px;
+  background: var(--bg2);
+  color: var(--text);
+}
+.filters input:focus, .filters select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.filter-label { font-size: 12px; color: var(--text3); font-weight: 500; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-size: 14px;
+}
 </style>
 </head>
 <body>
-<div class="shell">
-  <aside class="sidebar">
+<div class="container">
+
+  <div class="header">
     <div class="logo">
-      <div class="logo-text">Ycheck</div>
-      <div class="logo-sub">Yahoo!ショッピング管理 v2</div>
+      <div class="logo-main">Ycheck</div>
+      <div class="logo-sub">v3 — Yahoo!ショッピング売上管理</div>
     </div>
-    <div class="nav-label">メニュー</div>
-    <div class="nav-item active" onclick="showSection('overview',this)">
-      <span class="nav-icon">▦</span>ショップ全体
+    <div class="header-status" id="headerStatus">
+      <span class="status-chip" id="chipOverall">ショップ全体: 未</span>
+      <span class="status-chip" id="chipItem">商品別: 未</span>
+      <span class="status-chip" id="chipAd">広告: 未</span>
+      <span class="status-chip" id="chipBid">入札: 未</span>
     </div>
-    <div class="nav-item" onclick="showSection('items',this)">
-      <span class="nav-icon">≡</span>商品別詳細
-    </div>
-    <div class="nav-item" onclick="showSection('bid',this)">
-      <span class="nav-icon">◎</span>入札状況
-    </div>
-    <div class="upload-zone" id="dropZone"
-         onclick="document.getElementById('fileInput').click()"
-         ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
-      <input type="file" id="fileInput" multiple accept=".csv" onchange="handleFileInput(event)">
-      <div class="upload-icon">↑</div>
-      <div>CSVをドロップ<br>またはクリック</div>
-      <div id="uploadCount" style="margin-top:8px;font-size:10px;color:var(--text3)">ファイル未読込</div>
-    </div>
-  </aside>
+  </div>
 
-  <main class="main">
-    <div id="sec-overview" class="section active">
-      <div class="page-header">
-        <div class="page-title">ショップ全体</div>
-        <div class="page-sub">月別売上・広告パフォーマンス推移</div>
-      </div>
-      <div id="overviewContent">
-        <div class="empty-state">
-          <div class="empty-icon">📂</div>
-          <div class="empty-title">CSVをアップロードしてください</div>
-          <div>yukaiya-store_overall と 広告詳細レポート を読み込むと表示されます</div>
-        </div>
-      </div>
+  <!-- アップロード領域 -->
+  <div class="upload-section">
+    <h3 class="upload-title">📁 CSVファイルをまとめてアップロード</h3>
+    <p class="upload-desc">4種類のCSVを同時にドラッグ＆ドロップできます。ファイル名の内容から自動で種類を判別します。</p>
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">📥</div>
+      <div class="dropzone-text">ここに <b>4つのCSV</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
+      <div class="dropzone-hint">yukaiya-store_overall / yukaiya-item_report / 広告詳細レポート / BID_ITEM（Shift_JIS対応）</div>
     </div>
+    <input type="file" id="fileInput" multiple accept=".csv" style="display:none;">
 
-    <div id="sec-items" class="section">
-      <div class="page-header">
-        <div class="page-title">商品別詳細</div>
-        <div class="page-sub">商品コード別の売上・広告・ROAS推移</div>
+    <div class="file-slots">
+      <div class="file-slot" id="slot-overall">
+        <div class="file-slot-label"><span class="slot-badge"></span>ショップ全体</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
       </div>
-      <div id="itemsContent">
-        <div class="empty-state">
-          <div class="empty-icon">📂</div>
-          <div class="empty-title">CSVをアップロードしてください</div>
-          <div>yukaiya-item_report と 広告詳細レポート を読み込むと表示されます</div>
-        </div>
+      <div class="file-slot" id="slot-item">
+        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">yukaiya-item_report*.csv</div>
+      </div>
+      <div class="file-slot" id="slot-ad">
+        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
+      </div>
+      <div class="file-slot" id="slot-bid">
+        <div class="file-slot-label"><span class="slot-badge"></span>入札商品</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">BID_ITEM*.csv</div>
       </div>
     </div>
 
-    <div id="sec-bid" class="section">
-      <div class="page-header">
-        <div class="page-title">入札状況</div>
-        <div class="page-sub">現在の入札中商品と入札単価</div>
-      </div>
-      <div id="bidContent">
-        <div class="empty-state">
-          <div class="empty-icon">📂</div>
-          <div class="empty-title">CSVをアップロードしてください</div>
-          <div>BID_ITEM.csv を読み込むと表示されます</div>
-        </div>
+    <div class="upload-actions">
+      <button class="btn ghost" id="btnClear">すべてクリア</button>
+      <button class="btn ghost" id="btnToggleLog">ログ表示</button>
+    </div>
+    <div class="log-area" id="logArea"></div>
+  </div>
+
+  <!-- タブ -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overall">ショップ全体</button>
+    <button class="tab" data-tab="item">商品別詳細</button>
+    <button class="tab" data-tab="bid">入札状況</button>
+  </div>
+
+  <!-- タブ1: ショップ全体 -->
+  <div class="tab-content active" id="tab-overall">
+    <div class="summary-grid" id="summaryGrid">
+      <div class="summary-item"><div class="summary-label">総売上</div><div class="summary-value" id="sumRevenue">—</div><div class="summary-sub">期間合計</div></div>
+      <div class="summary-item"><div class="summary-label">広告費</div><div class="summary-value" id="sumAdCost">—</div><div class="summary-sub">期間合計</div></div>
+      <div class="summary-item"><div class="summary-label">広告売上</div><div class="summary-value" id="sumAdRev">—</div><div class="summary-sub">期間合計</div></div>
+      <div class="summary-item"><div class="summary-label">総合ROAS</div><div class="summary-value" id="sumRoas">—</div><div class="summary-sub">広告売上 / 広告費</div></div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">月別売上（棒グラフ）</h3>
+      <div class="chart-box"><canvas id="chartSales"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">広告ROAS推移（折れ線）</h3>
+      <div class="chart-box"><canvas id="chartRoas"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">月別サマリー</h3>
+      <div class="table-wrap">
+        <table id="tableOverall">
+          <thead><tr>
+            <th>月</th>
+            <th class="num">売上</th>
+            <th class="num">広告費</th>
+            <th class="num">広告売上</th>
+            <th class="num">ROAS</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
-  </main>
+  </div>
+
+  <!-- タブ2: 商品別詳細 -->
+  <div class="tab-content" id="tab-item">
+    <div class="card">
+      <div class="filters">
+        <span class="filter-label">商品コード</span>
+        <input type="search" id="itemSearch" placeholder="商品コードで検索...">
+        <span class="filter-label">月</span>
+        <select id="itemMonth"><option value="">すべて</option></select>
+      </div>
+      <div class="table-wrap">
+        <table id="tableItem">
+          <thead><tr>
+            <th data-sort="code">商品コード</th>
+            <th data-sort="month">月</th>
+            <th class="num" data-sort="qty">販売数</th>
+            <th class="num" data-sort="rev">売上</th>
+            <th class="num" data-sort="adCost">広告費</th>
+            <th class="num" data-sort="adRev">広告売上</th>
+            <th class="num" data-sort="roas">ROAS</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- タブ3: 入札状況 -->
+  <div class="tab-content" id="tab-bid">
+    <div class="card">
+      <h3 class="card-title">入札中商品（直近月の実績）</h3>
+      <div class="table-wrap">
+        <table id="tableBid">
+          <thead><tr>
+            <th>商品コード</th>
+            <th class="num">売上</th>
+            <th class="num">販売数</th>
+            <th class="num">広告費</th>
+            <th class="num">広告売上</th>
+            <th class="num">ROAS</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script>
-// =====================
-// STATE
-// =====================
-const DB = { overall: {}, items: {}, bid: {} };
-let itemSortCol = 'total_sales';
-let itemCurrentMonth = 'all';
-let itemSearch = '';
-let overviewCharts = {};
+// ==================== State ====================
+const state = {
+  overall: null,  // {months:[{month, revenue}]}
+  item: null,     // [{code, month, qty, revenue}]
+  ad: null,       // [{code, month, adCost, adRevenue}]
+  bid: null,      // [code, code, ...]
+  charts: {}
+};
 
-const MONTH_FMT = m => m.replace('-', '年') + '月';
+// ==================== Utility ====================
+const $ = (s) => document.querySelector(s);
+const fmt = (n) => {
+  if (n == null || isNaN(n)) return '—';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+};
+const fmtNum = (n) => {
+  if (n == null || isNaN(n)) return '—';
+  return Math.round(n).toLocaleString('ja-JP');
+};
+const fmtRoas = (n) => {
+  if (n == null || isNaN(n) || !isFinite(n)) return '—';
+  return (n * 100).toFixed(1) + '%';
+};
+const toNum = (v) => {
+  if (v == null) return 0;
+  const s = String(v).replace(/[,¥\s]/g, '');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+};
 
-// =====================
-// NAV
-// =====================
-function showSection(id, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('sec-' + id).classList.add('active');
-  if (el) el.classList.add('active');
-}
+// ==================== Logging ====================
+const log = (msg, type = '') => {
+  const area = $('#logArea');
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  const time = new Date().toLocaleTimeString('ja-JP');
+  line.textContent = `[${time}] ${msg}`;
+  area.appendChild(line);
+  area.scrollTop = area.scrollHeight;
+};
 
-// =====================
-// TOAST
-// =====================
-function toast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + (type || 'ok');
-  setTimeout(() => { t.className = 'toast'; }, 3000);
-}
-
-// =====================
-// FILE HANDLING
-// =====================
-function handleDragOver(e) {
-  e.preventDefault();
-  document.getElementById('dropZone').classList.add('drag');
-}
-function handleDragLeave() {
-  document.getElementById('dropZone').classList.remove('drag');
-}
-function handleDrop(e) {
-  e.preventDefault();
-  handleDragLeave();
-  processFiles([...e.dataTransfer.files]);
-}
-function handleFileInput(e) {
-  processFiles([...e.target.files]);
-  e.target.value = '';
-}
-
-async function processFiles(files) {
-  const csvFiles = files.filter(function(f) { return f.name.endsWith('.csv'); });
-  if (!csvFiles.length) { toast('CSVファイルを選択してください', 'err'); return; }
-  let loaded = 0;
-  for (let i = 0; i < csvFiles.length; i++) {
-    await parseCSV(csvFiles[i]);
-    loaded++;
-  }
-  // Deferred item_report processing
-  if (DB._pending) {
-    Object.entries(DB._pending).forEach(function(pair) {
-      const rows = pair[1];
-      const months = Object.keys(DB.items).sort();
-      let month = null;
-      for (let mi = 0; mi < months.length; mi++) {
-        const m = months[mi];
-        const adCodes = new Set(Object.keys(DB.items[m] || {}));
-        const cnt = rows.filter(function(r) { return adCodes.has((r['商品コード'] || '').toLowerCase()); }).length;
-        if (cnt > 3) { month = m; break; }
-      }
-      if (month) applyItemReport(rows, month);
-    });
-    DB._pending = {};
-  }
-  updateUploadCount();
-  renderAll();
-  toast(loaded + '件のファイルを読み込みました');
-}
-
-function safeNum(v) {
-  if (!v) return 0;
-  var s = String(v).replace(/,/g, '').trim();
-  if (['-', '集計対象外', '2未満', ''].indexOf(s) !== -1) return 0;
-  return parseFloat(s) || 0;
-}
-
-function parseCSV(file) {
-  return new Promise(function(resolve) {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      encoding: 'Shift_JIS',
-      complete: function(result) {
-        var rows = result.data;
-        if (!rows.length) { resolve(); return; }
-        var cols = Object.keys(rows[0]);
-        if (cols.indexOf('ストアアカウント_商品コード') !== -1) {
-          parseBid(rows);
-        } else if (cols.indexOf('売上合計値') !== -1 && cols.indexOf('日付') !== -1) {
-          parseOverall(rows);
-        } else if (cols.indexOf('商品コード') !== -1 && cols.indexOf('利用金額') !== -1) {
-          parseAdReport(rows);
-        } else if (cols.indexOf('商品コード') !== -1 && cols.indexOf('サブコード') !== -1) {
-          parseItemReport(rows, file.name);
+// ==================== CSV reader (Shift_JIS) ====================
+function readCsvFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const buffer = e.target.result;
+        // まず Shift_JIS で試みる
+        let text;
+        try {
+          const decoder = new TextDecoder('shift_jis', { fatal: false });
+          text = decoder.decode(buffer);
+        } catch (err) {
+          const decoder = new TextDecoder('utf-8');
+          text = decoder.decode(buffer);
         }
-        resolve();
-      },
-      error: function() { toast(file.name + ' の読み込みに失敗しました', 'err'); resolve(); }
-    });
+        // BOM除去
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        // UTF-8っぽい場合は再デコード
+        // 文字化けチェック：置換文字(U+FFFD)が多すぎたらUTF-8でリトライ
+        const replaceCount = (text.match(/\uFFFD/g) || []).length;
+        if (replaceCount > 5) {
+          text = new TextDecoder('utf-8').decode(buffer);
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        }
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (result) => resolve(result.data),
+          error: (err) => reject(err)
+        });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('ファイル読み込みエラー'));
+    reader.readAsArrayBuffer(file);
   });
+}
+
+// ==================== File Classification ====================
+function classifyFile(filename, rows) {
+  const name = filename.toLowerCase();
+  const keys = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const keySet = new Set(keys);
+
+  // ファイル名優先
+  if (name.includes('store_overall') || name.includes('store-overall')) return 'overall';
+  if (name.includes('item_report') || name.includes('item-report')) return 'item';
+  if (name.includes('bid_item') || name.includes('bid-item') || name.startsWith('bid')) return 'bid';
+  if (name.includes('広告') || name.includes('ad_') || name.includes('advertis')) return 'ad';
+
+  // カラムで判定（フォールバック）
+  if (keySet.has('売上合計値') && keySet.has('日付')) return 'overall';
+  if (keySet.has('商品コード') && keySet.has('サブコード')) return 'item';
+  if (keySet.has('ストアアカウント_商品コード')) return 'bid';
+  if (keySet.has('商品コード') && keySet.has('利用金額')) return 'ad';
+
+  return 'unknown';
+}
+
+// ==================== Parsers ====================
+function parseOverall(rows) {
+  // 日付 + 売上合計値 を月別に集計
+  const monthMap = {};
+  rows.forEach(r => {
+    const dateStr = r['日付'] || r['date'] || '';
+    const revenue = toNum(r['売上合計値'] || r['売上']);
+    if (!dateStr) return;
+    // YYYY-MM-DD / YYYY/MM/DD に対応
+    const m = dateStr.match(/(\d{4})[-\/年]?(\d{1,2})/);
+    if (!m) return;
+    const month = `${m[1]}-${m[2].padStart(2, '0')}`;
+    if (!monthMap[month]) monthMap[month] = 0;
+    monthMap[month] += revenue;
+  });
+  const months = Object.keys(monthMap).sort().map(k => ({ month: k, revenue: monthMap[k] }));
+  return { months };
+}
+
+function parseItem(rows) {
+  // 商品コード別 × 月 で集計
+  const result = [];
+  rows.forEach(r => {
+    const code = (r['商品コード'] || '').trim();
+    if (!code) return;
+    const dateStr = r['日付'] || r['年月'] || r['月'] || '';
+    let month = '';
+    const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
+    if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
+    const qty = toNum(r['販売数'] || r['数量'] || r['個数']);
+    const revenue = toNum(r['売上'] || r['売上合計'] || r['売上金額']);
+    result.push({ code, month, qty, revenue });
+  });
+  return result;
+}
+
+function parseAd(rows) {
+  const result = [];
+  rows.forEach(r => {
+    const code = (r['商品コード'] || '').trim();
+    if (!code) return;
+    const dateStr = r['日付'] || r['年月'] || r['月'] || '';
+    let month = '';
+    const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
+    if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
+    const adCost = toNum(r['利用金額'] || r['広告費']);
+    const adRevenue = toNum(r['売上金額'] || r['広告経由売上'] || r['売上']);
+    result.push({ code, month, adCost, adRevenue });
+  });
+  return result;
 }
 
 function parseBid(rows) {
-  rows.forEach(function(r) {
-    var raw = r['ストアアカウント_商品コード'] || '';
-    var code = raw.replace('yukaiya_', '').toLowerCase();
-    DB.bid[code] = { bid_price: safeNum(r['入札価格']), item_name: r['商品名'] || '' };
+  const codes = [];
+  rows.forEach(r => {
+    const raw = r['ストアアカウント_商品コード'] || r['商品コード'] || '';
+    if (!raw) return;
+    // yukaiya_ プレフィックス除去
+    const code = String(raw).replace(/^yukaiya_/, '').trim();
+    if (code) codes.push(code);
   });
+  return [...new Set(codes)];
 }
 
-function parseOverall(rows) {
-  rows.forEach(function(r) {
-    var month = (r['日付'] || '').replace('/', '-').slice(0, 7);
-    if (!month) return;
-    DB.overall[month] = { total_sales: safeNum(r['売上合計値']) };
-  });
+// ==================== Status Update ====================
+function updateSlot(kind, filename) {
+  const map = {
+    overall: { slotId: 'slot-overall', chipId: 'chipOverall', label: 'ショップ全体' },
+    item: { slotId: 'slot-item', chipId: 'chipItem', label: '商品別' },
+    ad: { slotId: 'slot-ad', chipId: 'chipAd', label: '広告' },
+    bid: { slotId: 'slot-bid', chipId: 'chipBid', label: '入札' }
+  };
+  const info = map[kind];
+  if (!info) return;
+  const slot = $('#' + info.slotId);
+  slot.classList.add('loaded');
+  slot.querySelector('.file-slot-status').textContent = '✓ 読み込み済み';
+  slot.querySelector('.file-slot-filename').textContent = filename;
+  const chip = $('#' + info.chipId);
+  chip.classList.add('ok');
+  chip.textContent = `${info.label}: ✓`;
 }
 
-function parseAdReport(rows) {
-  rows.forEach(function(r) {
-    var month = (r['日付'] || '').replace('/', '-').slice(0, 7);
-    var code = (r['商品コード'] || '').trim().toLowerCase();
-    if (!month || !code) return;
-    if (!DB.items[month]) DB.items[month] = {};
-    if (!DB.items[month][code]) DB.items[month][code] = { total_sales: 0, ad_sales: 0, ad_spend: 0, organic_sales: 0, item_name: '' };
-    DB.items[month][code].ad_sales += safeNum(r['売上金額']);
-    DB.items[month][code].ad_spend += safeNum(r['利用金額']);
-    if (!DB.items[month][code].item_name) DB.items[month][code].item_name = r['商品名'] || '';
-  });
+function clearSlot(kind) {
+  const map = {
+    overall: { slotId: 'slot-overall', chipId: 'chipOverall', label: 'ショップ全体', pattern: 'yukaiya-store_overall*.csv' },
+    item: { slotId: 'slot-item', chipId: 'chipItem', label: '商品別', pattern: 'yukaiya-item_report*.csv' },
+    ad: { slotId: 'slot-ad', chipId: 'chipAd', label: '広告', pattern: '広告詳細レポート商品別*.csv' },
+    bid: { slotId: 'slot-bid', chipId: 'chipBid', label: '入札', pattern: 'BID_ITEM*.csv' }
+  };
+  const info = map[kind];
+  const slot = $('#' + info.slotId);
+  slot.classList.remove('loaded');
+  slot.querySelector('.file-slot-status').textContent = '未アップロード';
+  slot.querySelector('.file-slot-filename').textContent = info.pattern;
+  const chip = $('#' + info.chipId);
+  chip.classList.remove('ok');
+  chip.textContent = `${info.label}: 未`;
 }
 
-function parseItemReport(rows, fname) {
-  // Try to match to a month already loaded via ad_report
-  var months = Object.keys(DB.items).sort();
-  var month = null;
-  for (var mi = 0; mi < months.length; mi++) {
-    var m = months[mi];
-    var adCodes = new Set(Object.keys(DB.items[m] || {}));
-    var cnt = rows.filter(function(r) { return adCodes.has((r['商品コード'] || '').toLowerCase()); }).length;
-    if (cnt > 3) { month = m; break; }
+// ==================== Rendering ====================
+function renderOverall() {
+  if (!state.overall) return;
+  const months = state.overall.months;
+
+  // 月別 ad 集計
+  const adByMonth = {};
+  if (state.ad) {
+    state.ad.forEach(a => {
+      if (!a.month) return;
+      if (!adByMonth[a.month]) adByMonth[a.month] = { cost: 0, rev: 0 };
+      adByMonth[a.month].cost += a.adCost;
+      adByMonth[a.month].rev += a.adRevenue;
+    });
   }
-  if (!month) {
-    // Defer
-    if (!DB._pending) DB._pending = {};
-    DB._pending[fname + '_' + Date.now()] = rows;
+
+  // サマリー
+  const totalRev = months.reduce((s, m) => s + m.revenue, 0);
+  let totalAdCost = 0, totalAdRev = 0;
+  Object.values(adByMonth).forEach(a => { totalAdCost += a.cost; totalAdRev += a.rev; });
+  $('#sumRevenue').textContent = fmt(totalRev);
+  $('#sumAdCost').textContent = fmt(totalAdCost);
+  $('#sumAdRev').textContent = fmt(totalAdRev);
+  $('#sumRoas').textContent = totalAdCost > 0 ? fmtRoas(totalAdRev / totalAdCost) : '—';
+
+  // 棒グラフ
+  const labels = months.map(m => m.month);
+  const salesData = months.map(m => m.revenue);
+  drawBar('chartSales', labels, [{ label: '売上', data: salesData, color: '#2563eb' }]);
+
+  // ROAS折れ線
+  const roasData = labels.map(l => {
+    const a = adByMonth[l];
+    return a && a.cost > 0 ? (a.rev / a.cost) * 100 : null;
+  });
+  drawLine('chartRoas', labels, [{ label: 'ROAS(%)', data: roasData, color: '#16a34a' }]);
+
+  // テーブル
+  const tbody = $('#tableOverall tbody');
+  tbody.innerHTML = '';
+  months.forEach(m => {
+    const a = adByMonth[m.month] || { cost: 0, rev: 0 };
+    const roas = a.cost > 0 ? a.rev / a.cost : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.month}</td>
+      <td class="num">${fmt(m.revenue)}</td>
+      <td class="num">${a.cost > 0 ? fmt(a.cost) : '—'}</td>
+      <td class="num">${a.rev > 0 ? fmt(a.rev) : '—'}</td>
+      <td class="num">${roas != null ? fmtRoas(roas) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+let itemSortKey = 'rev', itemSortDir = -1;
+function renderItem() {
+  if (!state.item) {
+    $('#tableItem tbody').innerHTML = '<tr><td colspan="7" class="empty-state">商品別データを読み込んでください</td></tr>';
     return;
   }
-  applyItemReport(rows, month);
-}
+  // 月セレクタ
+  const months = [...new Set(state.item.map(i => i.month).filter(Boolean))].sort();
+  const sel = $('#itemMonth');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">すべて</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  sel.value = cur;
 
-function applyItemReport(rows, month) {
-  if (!DB.items[month]) DB.items[month] = {};
-  rows.forEach(function(r) {
-    var code = (r['商品コード'] || '').trim().toLowerCase();
-    if (!code) return;
-    if (!DB.items[month][code]) DB.items[month][code] = { total_sales: 0, ad_sales: 0, ad_spend: 0, organic_sales: 0, item_name: '' };
-    DB.items[month][code].total_sales += safeNum(r['売上合計値（税込）']);
-    if (!DB.items[month][code].item_name) DB.items[month][code].item_name = r['商品名'] || '';
+  // 商品コード x 月 で集計
+  const agg = {};
+  state.item.forEach(i => {
+    const key = i.code + '|' + i.month;
+    if (!agg[key]) agg[key] = { code: i.code, month: i.month, qty: 0, rev: 0, adCost: 0, adRev: 0 };
+    agg[key].qty += i.qty;
+    agg[key].rev += i.revenue;
   });
-  Object.values(DB.items[month]).forEach(function(d) {
-    d.organic_sales = d.total_sales - d.ad_sales;
+  // 広告マージ
+  if (state.ad) {
+    state.ad.forEach(a => {
+      const key = a.code + '|' + a.month;
+      if (!agg[key]) agg[key] = { code: a.code, month: a.month, qty: 0, rev: 0, adCost: 0, adRev: 0 };
+      agg[key].adCost += a.adCost;
+      agg[key].adRev += a.adRevenue;
+    });
+  }
+  let list = Object.values(agg).map(r => ({
+    ...r,
+    roas: r.adCost > 0 ? r.adRev / r.adCost : null
+  }));
+
+  // フィルター
+  const q = $('#itemSearch').value.trim().toLowerCase();
+  const mf = $('#itemMonth').value;
+  if (q) list = list.filter(r => r.code.toLowerCase().includes(q));
+  if (mf) list = list.filter(r => r.month === mf);
+
+  // ソート
+  list.sort((a, b) => {
+    const va = a[itemSortKey], vb = b[itemSortKey];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === 'string') return itemSortDir * va.localeCompare(vb);
+    return itemSortDir * (va - vb);
+  });
+
+  const tbody = $('#tableItem tbody');
+  tbody.innerHTML = '';
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">該当データなし</td></tr>';
+    return;
+  }
+  list.slice(0, 500).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.code}</td>
+      <td>${r.month || '—'}</td>
+      <td class="num">${fmtNum(r.qty)}</td>
+      <td class="num">${fmt(r.rev)}</td>
+      <td class="num">${r.adCost > 0 ? fmt(r.adCost) : '—'}</td>
+      <td class="num">${r.adRev > 0 ? fmt(r.adRev) : '—'}</td>
+      <td class="num">${r.roas != null ? fmtRoas(r.roas) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
-function updateUploadCount() {
-  var months = Object.keys(DB.overall).sort();
-  var hasBid = Object.keys(DB.bid).length > 0;
-  var lines = [];
-  if (months.length) lines.push(months.map(MONTH_FMT).join(' / '));
-  if (hasBid) lines.push('入札データ読込済');
-  document.getElementById('uploadCount').textContent = lines.length ? lines.join('\n') : 'ファイル未読込';
+function renderBid() {
+  const tbody = $('#tableBid tbody');
+  if (!state.bid || state.bid.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">入札データを読み込んでください</td></tr>';
+    return;
+  }
+
+  // 直近月
+  let latestMonth = '';
+  if (state.item) {
+    const ms = [...new Set(state.item.map(i => i.month).filter(Boolean))].sort();
+    latestMonth = ms[ms.length - 1] || '';
+  }
+
+  tbody.innerHTML = '';
+  state.bid.forEach(code => {
+    let rev = 0, qty = 0, adCost = 0, adRev = 0;
+    if (state.item && latestMonth) {
+      state.item.filter(i => i.code === code && i.month === latestMonth).forEach(i => {
+        rev += i.revenue; qty += i.qty;
+      });
+    }
+    if (state.ad && latestMonth) {
+      state.ad.filter(a => a.code === code && a.month === latestMonth).forEach(a => {
+        adCost += a.adCost; adRev += a.adRevenue;
+      });
+    }
+    const roas = adCost > 0 ? adRev / adCost : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${code}</td>
+      <td class="num">${rev > 0 ? fmt(rev) : '—'}</td>
+      <td class="num">${qty > 0 ? fmtNum(qty) : '—'}</td>
+      <td class="num">${adCost > 0 ? fmt(adCost) : '—'}</td>
+      <td class="num">${adRev > 0 ? fmt(adRev) : '—'}</td>
+      <td class="num">${roas != null ? fmtRoas(roas) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (latestMonth) {
+    const card = $('#tab-bid .card-title');
+    card.textContent = `入札中商品（${latestMonth}）`;
+  }
 }
 
-// =====================
-// RENDER
-// =====================
-function renderAll() { renderOverview(); renderItems(); renderBid(); }
-
-function fmt(n) { return Math.round(n).toLocaleString('ja-JP'); }
-function fmtRoas(n) { return n > 0 ? Math.round(n) + '%' : '-'; }
-function roasClass(r) { return r >= 400 ? 'roas-high' : r >= 200 ? 'roas-mid' : r > 0 ? 'roas-low' : ''; }
-
-// --- OVERVIEW ---
-function renderOverview() {
-  var months = Object.keys(DB.overall).sort();
-  if (!months.length) return;
-  var latestM = months[months.length - 1];
-  var latest = DB.overall[latestM];
-  var latestItems = DB.items[latestM] || {};
-
-  var total_ad_sales = Object.values(latestItems).reduce(function(s, d) { return s + d.ad_sales; }, 0);
-  var total_ad_spend = Object.values(latestItems).reduce(function(s, d) { return s + d.ad_spend; }, 0);
-  var total_ad_roas = total_ad_spend > 0 ? Math.round(total_ad_sales / total_ad_spend * 100) : 0;
-
-  var sales = months.map(function(m) { return DB.overall[m] ? DB.overall[m].total_sales : 0; });
-  var adSales = months.map(function(m) { return Object.values(DB.items[m] || {}).reduce(function(s, d) { return s + d.ad_sales; }, 0); });
-  var adSpend = months.map(function(m) { return Object.values(DB.items[m] || {}).reduce(function(s, d) { return s + d.ad_spend; }, 0); });
-  var roas = months.map(function(m, i) { return adSpend[i] > 0 ? Math.round(adSales[i] / adSpend[i] * 100) : 0; });
-  var labels = months.map(MONTH_FMT);
-
-  var summaryRows = months.map(function(m, i) {
-    var org = sales[i] - adSales[i];
-    return '<tr><td>' + MONTH_FMT(m) + '</td><td class="num">\u00a5' + fmt(sales[i]) + '</td><td class="num">\u00a5' + fmt(adSales[i]) + '</td><td class="num">\u00a5' + fmt(adSpend[i]) + '</td><td class="num ' + roasClass(roas[i]) + '">' + fmtRoas(roas[i]) + '</td><td class="num">\u00a5' + fmt(org) + '</td></tr>';
-  }).join('');
-
-  document.getElementById('overviewContent').innerHTML =
-    '<div class="metric-grid">' +
-    '<div class="metric-card accent"><div class="metric-label">売上合計（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">\u00a5' + fmt(latest.total_sales) + '</div></div>' +
-    '<div class="metric-card"><div class="metric-label">広告売上（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">\u00a5' + fmt(total_ad_sales) + '</div></div>' +
-    '<div class="metric-card"><div class="metric-label">広告費（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">\u00a5' + fmt(total_ad_spend) + '</div></div>' +
-    '<div class="metric-card"><div class="metric-label">広告ROAS（' + MONTH_FMT(latestM) + '）</div><div class="metric-value">' + fmtRoas(total_ad_roas) + '</div></div>' +
-    '</div>' +
-    '<div class="grid-2">' +
-    '<div class="chart-card"><div class="chart-header"><div class="chart-title">月別売上推移</div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>売上合計</div><div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>広告売上</div><div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>広告費</div></div></div><div style="position:relative;height:220px"><canvas id="salesChart" role="img" aria-label="月別売上推移">月別売上推移グラフ</canvas></div></div>' +
-    '<div class="chart-card"><div class="chart-header"><div class="chart-title">広告ROAS推移</div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>広告ROAS (%)</div></div></div><div style="position:relative;height:220px"><canvas id="roasChart" role="img" aria-label="広告ROAS推移">ROAS推移グラフ</canvas></div></div>' +
-    '</div>' +
-    '<div class="chart-card"><div class="chart-header"><div class="chart-title">月別サマリー</div></div><div class="table-scroll"><table><thead><tr><th>月</th><th class="num">売上合計</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">広告ROAS</th><th class="num">自然検索売上</th></tr></thead><tbody>' + summaryRows + '</tbody></table></div></div>';
-
-  if (overviewCharts.sales) overviewCharts.sales.destroy();
-  if (overviewCharts.roas) overviewCharts.roas.destroy();
-
-  var gc = 'rgba(0,0,0,0.06)';
-  var tc = '#8a8d94';
-
-  overviewCharts.sales = new Chart(document.getElementById('salesChart'), {
+// ==================== Charts ====================
+function drawBar(canvasId, labels, datasets) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if (state.charts[canvasId]) state.charts[canvasId].destroy();
+  state.charts[canvasId] = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: labels,
-      datasets: [
-        { label: '売上合計', data: sales, backgroundColor: '#3b82f6', borderRadius: 4 },
-        { label: '広告売上', data: adSales, backgroundColor: '#10b981', borderRadius: 4 },
-        { label: '広告費', data: adSpend, backgroundColor: '#f87171', borderRadius: 4 }
-      ]
+      labels,
+      datasets: datasets.map(d => ({
+        label: d.label,
+        data: d.data,
+        backgroundColor: d.color,
+        borderRadius: 4
+      }))
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { labels: { color: '#4a4d52' } } },
       scales: {
-        y: { ticks: { callback: function(v) { return '\u00a5' + (v/10000).toFixed(0) + '\u4e07'; }, color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } },
-        x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+        x: { ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#8a8d94', callback: (v) => '¥' + (v/1000).toFixed(0) + 'k' }, grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
+}
 
-  overviewCharts.roas = new Chart(document.getElementById('roasChart'), {
+function drawLine(canvasId, labels, datasets) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if (state.charts[canvasId]) state.charts[canvasId].destroy();
+  state.charts[canvasId] = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
-      datasets: [{ data: roas, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#2563eb', borderWidth: 2 }]
+      labels,
+      datasets: datasets.map(d => ({
+        label: d.label,
+        data: d.data,
+        borderColor: d.color,
+        backgroundColor: d.color + '20',
+        tension: 0.3,
+        fill: true,
+        spanGaps: true
+      }))
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { labels: { color: '#4a4d52' } } },
       scales: {
-        y: { ticks: { callback: function(v) { return v + '%'; }, color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } },
-        x: { ticks: { color: tc, font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+        x: { ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#8a8d94', callback: (v) => v + '%' }, grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
 }
 
-// --- ITEMS ---
-function renderItems() {
-  var months = Object.keys(DB.items).sort();
-  if (!months.length && !Object.keys(DB.bid).length) return;
-
-  var allCodes = new Set();
-  months.forEach(function(m) { Object.keys(DB.items[m] || {}).forEach(function(c) { allCodes.add(c); }); });
-
-  var rows = [...allCodes].map(function(code) {
-    var bidPrice = DB.bid[code] ? DB.bid[code].bid_price : 0;
-    var hasBid = !!DB.bid[code];
-    var itemName = months.reduce(function(n, m) { return n || (DB.items[m] && DB.items[m][code] ? DB.items[m][code].item_name : ''); }, '');
-    var monthData = {};
-    months.forEach(function(m) {
-      var d = (DB.items[m] && DB.items[m][code]) ? DB.items[m][code] : {};
-      monthData[m] = {
-        total_sales: d.total_sales || 0, ad_sales: d.ad_sales || 0,
-        ad_spend: d.ad_spend || 0, organic_sales: d.organic_sales || 0,
-        ad_roas: d.ad_spend > 0 ? Math.round(d.ad_sales / d.ad_spend * 100) : 0,
-        total_roas: d.ad_spend > 0 ? Math.round(d.total_sales / d.ad_spend * 100) : 0
-      };
-    });
-    return { code: code, itemName: itemName, hasBid: hasBid, bidPrice: bidPrice, monthData: monthData };
-  });
-
-  if (itemSearch) rows = rows.filter(function(r) { return r.code.toLowerCase().indexOf(itemSearch.toLowerCase()) !== -1; });
-  if (itemCurrentMonth !== 'all') rows = rows.filter(function(r) {
-    var d = r.monthData[itemCurrentMonth];
-    return d && (d.total_sales > 0 || d.ad_spend > 0);
-  });
-
-  var latestTarget = itemCurrentMonth !== 'all' ? itemCurrentMonth : (months[months.length - 1] || '');
-  rows.sort(function(a, b) {
-    function getVal(r) {
-      var d = r.monthData[latestTarget] || {};
-      if (itemSortCol === 'total_sales') return d.total_sales || 0;
-      if (itemSortCol === 'ad_spend') return d.ad_spend || 0;
-      if (itemSortCol === 'total_roas') return d.total_roas || 0;
-      if (itemSortCol === 'ad_roas') return d.ad_roas || 0;
-      if (itemSortCol === 'bid_price') return r.bidPrice;
-      return 0;
+// ==================== File Processing ====================
+async function processFiles(files) {
+  $('#logArea').classList.add('show');
+  log(`${files.length}件のファイルを処理開始`);
+  for (const file of files) {
+    try {
+      log(`読み込み中: ${file.name}`);
+      const rows = await readCsvFile(file);
+      const kind = classifyFile(file.name, rows);
+      if (kind === 'unknown') {
+        log(`⚠ 種別判定できず: ${file.name}`, 'err');
+        continue;
+      }
+      if (kind === 'overall') state.overall = parseOverall(rows);
+      else if (kind === 'item') state.item = parseItem(rows);
+      else if (kind === 'ad') state.ad = parseAd(rows);
+      else if (kind === 'bid') state.bid = parseBid(rows);
+      updateSlot(kind, file.name);
+      log(`✓ ${kind} として登録 (${rows.length}行): ${file.name}`, 'ok');
+    } catch (err) {
+      log(`✗ エラー: ${file.name} — ${err.message}`, 'err');
     }
-    return getVal(b) - getVal(a);
-  });
-
-  var monthOpts = months.map(function(m) { return '<option value="' + m + '"' + (itemCurrentMonth === m ? ' selected' : '') + '>' + MONTH_FMT(m) + '</option>'; }).join('');
-
-  var thead = '<tr><th>商品コード</th><th>入札</th><th>入札単価</th>';
-  if (itemCurrentMonth === 'all') {
-    months.forEach(function(m) { thead += '<th colspan="5" class="group-header">' + MONTH_FMT(m) + '</th>'; });
-    thead += '</tr><tr><th></th><th></th><th></th>';
-    months.forEach(function() { thead += '<th class="num">売上</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">広告ROAS</th><th class="num">売上ROAS</th>'; });
-  } else {
-    thead += '<th class="num">売上合計</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">自然検索売上</th><th class="num">広告ROAS</th><th class="num">売上ROAS</th>';
   }
-  thead += '</tr>';
-
-  var tbody = rows.slice(0, 150).map(function(r) {
-    var cells = '<td><div class="code-cell">' + r.code + '</div><div class="name-cell">' + r.itemName + '</div></td>';
-    cells += '<td>' + (r.hasBid ? '<span class="badge badge-bid">入札中</span>' : '<span class="badge badge-none">-</span>') + '</td>';
-    cells += '<td class="num">' + (r.bidPrice > 0 ? '\u00a5' + r.bidPrice : '-') + '</td>';
-    if (itemCurrentMonth === 'all') {
-      months.forEach(function(m) {
-        var d = r.monthData[m] || {};
-        cells += '<td class="num">' + (d.total_sales > 0 ? '\u00a5' + fmt(d.total_sales) : '-') + '</td>';
-        cells += '<td class="num">' + (d.ad_sales > 0 ? '\u00a5' + fmt(d.ad_sales) : '-') + '</td>';
-        cells += '<td class="num">' + (d.ad_spend > 0 ? '\u00a5' + fmt(d.ad_spend) : '-') + '</td>';
-        cells += '<td class="num ' + roasClass(d.ad_roas) + '">' + fmtRoas(d.ad_roas) + '</td>';
-        cells += '<td class="num ' + roasClass(d.total_roas) + '">' + fmtRoas(d.total_roas) + '</td>';
-      });
-    } else {
-      var d = r.monthData[itemCurrentMonth] || {};
-      cells += '<td class="num">' + (d.total_sales > 0 ? '\u00a5' + fmt(d.total_sales) : '-') + '</td>';
-      cells += '<td class="num">' + (d.ad_sales > 0 ? '\u00a5' + fmt(d.ad_sales) : '-') + '</td>';
-      cells += '<td class="num">' + (d.ad_spend > 0 ? '\u00a5' + fmt(d.ad_spend) : '-') + '</td>';
-      cells += '<td class="num">' + (d.organic_sales > 0 ? '\u00a5' + fmt(d.organic_sales) : '-') + '</td>';
-      cells += '<td class="num ' + roasClass(d.ad_roas) + '">' + fmtRoas(d.ad_roas) + '</td>';
-      cells += '<td class="num ' + roasClass(d.total_roas) + '">' + fmtRoas(d.total_roas) + '</td>';
-    }
-    return '<tr>' + cells + '</tr>';
-  }).join('');
-
-  document.getElementById('itemsContent').innerHTML =
-    '<div class="table-card"><div class="table-toolbar">' +
-    '<input type="text" placeholder="商品コードで検索..." id="itemSearch" value="' + itemSearch + '" oninput="itemSearch=this.value;renderItems()">' +
-    '<select onchange="itemCurrentMonth=this.value;renderItems()"><option value="all"' + (itemCurrentMonth === 'all' ? ' selected' : '') + '>全月表示</option>' + monthOpts + '</select>' +
-    '<select onchange="itemSortCol=this.value;renderItems()"><option value="total_sales"' + (itemSortCol==='total_sales'?' selected':'') + '>売上順</option><option value="ad_spend"' + (itemSortCol==='ad_spend'?' selected':'') + '>広告費順</option><option value="total_roas"' + (itemSortCol==='total_roas'?' selected':'') + '>売上ROAS順</option><option value="ad_roas"' + (itemSortCol==='ad_roas'?' selected':'') + '>広告ROAS順</option><option value="bid_price"' + (itemSortCol==='bid_price'?' selected':'') + '>入札単価順</option></select>' +
-    '<span style="font-size:11px;color:var(--text3)">' + rows.length + '件</span>' +
-    '</div><div class="table-scroll"><table><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div></div>';
+  // 再描画
+  renderOverall();
+  renderItem();
+  renderBid();
+  log('処理完了', 'ok');
 }
 
-// --- BID ---
-function renderBid() {
-  var codes = Object.keys(DB.bid);
-  if (!codes.length) return;
-  var months = Object.keys(DB.items).sort();
-  var latestM = months[months.length - 1];
+// ==================== Events ====================
+const dropzone = $('#dropzone');
+const fileInput = $('#fileInput');
 
-  var rows = codes.map(function(code) {
-    var b = DB.bid[code];
-    var d = (DB.items[latestM] && DB.items[latestM][code]) ? DB.items[latestM][code] : {};
-    return {
-      code: code, bid_price: b.bid_price, item_name: b.item_name, d: d,
-      ad_roas: d.ad_spend > 0 ? Math.round(d.ad_sales / d.ad_spend * 100) : 0,
-      total_roas: d.ad_spend > 0 ? Math.round(d.total_sales / d.ad_spend * 100) : 0
-    };
-  }).sort(function(a, b) { return (b.d.total_sales || 0) - (a.d.total_sales || 0); });
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropzone.classList.add('dragover');
+});
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.csv'));
+  if (files.length > 0) processFiles(files);
+});
+fileInput.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files);
+  if (files.length > 0) processFiles(files);
+  fileInput.value = '';
+});
 
-  var tbody = rows.map(function(r) {
-    return '<tr>' +
-      '<td class="code-cell">' + r.code + '</td>' +
-      '<td class="num" style="font-weight:600;color:var(--accent)">\u00a5' + r.bid_price + '</td>' +
-      '<td class="num">' + (r.d.total_sales > 0 ? '\u00a5' + fmt(r.d.total_sales) : '-') + '</td>' +
-      '<td class="num">' + (r.d.ad_sales > 0 ? '\u00a5' + fmt(r.d.ad_sales) : '-') + '</td>' +
-      '<td class="num">' + (r.d.ad_spend > 0 ? '\u00a5' + fmt(r.d.ad_spend) : '-') + '</td>' +
-      '<td class="num ' + roasClass(r.ad_roas) + '">' + fmtRoas(r.ad_roas) + '</td>' +
-      '<td class="num ' + roasClass(r.total_roas) + '">' + fmtRoas(r.total_roas) + '</td>' +
-      '<td style="font-size:11px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + r.item_name + '</td>' +
-      '</tr>';
-  }).join('');
+$('#btnClear').addEventListener('click', () => {
+  state.overall = null; state.item = null; state.ad = null; state.bid = null;
+  ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
+  Object.values(state.charts).forEach(c => c.destroy());
+  state.charts = {};
+  ['sumRevenue','sumAdCost','sumAdRev','sumRoas'].forEach(id => $('#' + id).textContent = '—');
+  $('#tableOverall tbody').innerHTML = '';
+  $('#tableItem tbody').innerHTML = '';
+  $('#tableBid tbody').innerHTML = '';
+  $('#logArea').innerHTML = '';
+  log('全データをクリアしました', 'ok');
+});
 
-  document.getElementById('bidContent').innerHTML =
-    '<div class="table-card"><div class="table-toolbar"><span style="font-size:11px;color:var(--text3)">入札中商品 ' + codes.length + '件</span>' + (latestM ? '<span style="font-size:11px;color:var(--text3)">※ 売上は' + MONTH_FMT(latestM) + 'のデータ</span>' : '') + '</div>' +
-    '<div class="table-scroll"><table><thead><tr><th>商品コード</th><th class="num">入札単価</th><th class="num">売上合計</th><th class="num">広告売上</th><th class="num">広告費</th><th class="num">広告ROAS</th><th class="num">売上ROAS</th><th>商品名</th></tr></thead><tbody>' + tbody + '</tbody></table></div></div>';
-}
+$('#btnToggleLog').addEventListener('click', () => {
+  $('#logArea').classList.toggle('show');
+});
+
+// タブ切替
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    $('#tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// 商品別フィルター
+$('#itemSearch').addEventListener('input', renderItem);
+$('#itemMonth').addEventListener('change', renderItem);
+document.querySelectorAll('#tableItem th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (itemSortKey === k) itemSortDir *= -1;
+    else { itemSortKey = k; itemSortDir = -1; }
+    renderItem();
+  });
+});
+
+// 初期表示
+renderItem();
+renderBid();
 </script>
 </body>
 </html>
