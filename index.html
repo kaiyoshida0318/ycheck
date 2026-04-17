@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v18 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v19 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -531,7 +531,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v18 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v19 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -897,7 +897,8 @@ function parseOverall(rows) {
 }
 
 function parseItem(rows) {
-  const result = [];
+  // 同じ商品コードの複数行（サブコード違い）を合算する
+  const agg = {};
   rows.forEach(r => {
     const code = (r['商品コード'] || '').trim();
     if (!code) return;
@@ -905,15 +906,28 @@ function parseItem(rows) {
     let month = '';
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
     if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
-    const qty = toNum(r['販売数'] || r['数量'] || r['個数']);
-    const revenue = toNum(r['売上'] || r['売上合計'] || r['売上金額']);
-    result.push({ code, month, qty, revenue });
+    // 販売数カラム候補
+    const qty = toNum(
+      r['注文点数合計'] || r['注文点数'] || r['注文数合計'] || r['販売数'] || r['数量'] || r['個数'] || 0
+    );
+    // 売上カラム候補
+    const revenue = toNum(
+      r['売上合計値（税込）'] || r['売上合計値(税込)'] || r['売上合計値'] ||
+      r['売上金額'] || r['売上合計'] || r['売上'] || 0
+    );
+    const key = code + '|' + month;
+    if (!agg[key]) {
+      agg[key] = { code, month, qty: 0, revenue: 0 };
+    }
+    agg[key].qty += qty;
+    agg[key].revenue += revenue;
   });
-  return result;
+  return Object.values(agg);
 }
 
 function parseAd(rows) {
-  const result = [];
+  // 同じ商品コードの複数行を合算（Yahoo!広告レポートは日別のことが多い）
+  const agg = {};
   rows.forEach(r => {
     const code = (r['商品コード'] || '').trim();
     if (!code) return;
@@ -921,11 +935,20 @@ function parseAd(rows) {
     let month = '';
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
     if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
-    const adCost = toNum(r['利用金額'] || r['広告費']);
-    const adRevenue = toNum(r['売上金額'] || r['広告経由売上'] || r['売上']);
-    result.push({ code, month, adCost, adRevenue });
+    const adCost = toNum(
+      r['利用金額'] || r['広告費'] || r['実績額'] || r['消化金額'] || 0
+    );
+    const adRevenue = toNum(
+      r['売上金額'] || r['売上金額（税込）'] || r['売上金額(税込)'] || r['広告経由売上'] || r['売上'] || 0
+    );
+    const key = code + '|' + month;
+    if (!agg[key]) {
+      agg[key] = { code, month, adCost: 0, adRevenue: 0 };
+    }
+    agg[key].adCost += adCost;
+    agg[key].adRevenue += adRevenue;
   });
-  return result;
+  return Object.values(agg);
 }
 
 function parseBid(rows) {
