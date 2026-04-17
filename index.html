@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ycheck v9 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v12 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -252,6 +252,57 @@ body {
 }
 .modal-close:hover { background: var(--bg3); color: var(--text); }
 
+/* Required mark */
+.required-mark {
+  font-size: 0.65rem;
+  background: var(--red);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* Validation box */
+.validation-box {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.validation-box.ok {
+  background: rgba(22,163,74,0.08);
+  border-color: rgba(22,163,74,0.3);
+  color: var(--green);
+}
+.validation-box.err {
+  background: rgba(220,38,38,0.08);
+  border-color: rgba(220,38,38,0.3);
+  color: var(--red);
+}
+.validation-box.info {
+  background: rgba(37,99,235,0.06);
+  border-color: rgba(37,99,235,0.25);
+  color: var(--accent);
+}
+.validation-msg { margin: 0; font-weight: 500; }
+
+/* Disabled button */
+.btn:disabled {
+  background: var(--bg3);
+  color: var(--text3);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.btn.primary:disabled {
+  background: var(--bg3);
+  color: var(--text3);
+  border-color: var(--border);
+}
+
 /* Tabs */
 .tabs {
   display: flex;
@@ -421,7 +472,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="header">
     <div class="logo">
       <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v9 — Yahoo!ショッピング売上管理</div>
+      <div class="logo-sub">v12 — Yahoo!ショッピング売上管理</div>
     </div>
     <div class="header-tools">
       <div class="font-controls" title="文字サイズ">
@@ -430,12 +481,6 @@ tbody tr:hover { background: var(--bg3); }
         <button class="font-btn" id="fontUp">A+</button>
       </div>
       <button class="btn sm primary" id="btnJumpUpload" title="レポート追加">+ レポート追加</button>
-      <div class="header-status">
-        <span class="status-chip" id="chipOverall">ショップ売上: 未</span>
-        <span class="status-chip" id="chipItem">商品別: 未</span>
-        <span class="status-chip" id="chipAd">広告: 未</span>
-        <span class="status-chip" id="chipBid">入札: 未</span>
-      </div>
     </div>
   </div>
 
@@ -603,7 +648,7 @@ tbody tr:hover { background: var(--bg3); }
         <h2 class="modal-title">📂 レポートを追加</h2>
         <button class="modal-close" id="modalClose" title="閉じる">×</button>
       </div>
-      <p class="upload-desc">4種類のCSVを同時にドラッグ＆ドロップできます。ファイル名・カラム内容から自動判別します。</p>
+      <p class="upload-desc"><b>ショップ売上・商品別売上・広告詳細レポート</b>の3つをセットでアップロードしてください。月が一致していることを確認してから「アップロード実行」ボタンが押せるようになります。</p>
       <div class="dropzone" id="dropzone">
         <div class="dropzone-icon">📥</div>
         <div class="dropzone-text">ここに <b>CSV</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
@@ -613,17 +658,17 @@ tbody tr:hover { background: var(--bg3); }
 
       <div class="file-slots">
         <div class="file-slot" id="slot-overall">
-          <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）</div>
+          <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）<span class="required-mark">必須</span></div>
           <div class="file-slot-status">未アップロード</div>
           <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
         </div>
         <div class="file-slot" id="slot-item">
-          <div class="file-slot-label"><span class="slot-badge"></span>商品別売上（月次）</div>
+          <div class="file-slot-label"><span class="slot-badge"></span>商品別売上（月次）<span class="required-mark">必須</span></div>
           <div class="file-slot-status">未アップロード</div>
           <div class="file-slot-filename">yukaiya-item_report*.csv</div>
         </div>
         <div class="file-slot" id="slot-ad">
-          <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート（月次）</div>
+          <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート（月次）<span class="required-mark">必須</span></div>
           <div class="file-slot-status">未アップロード</div>
           <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
         </div>
@@ -634,7 +679,13 @@ tbody tr:hover { background: var(--bg3); }
         </div>
       </div>
 
+      <!-- バリデーション結果表示 -->
+      <div class="validation-box" id="validationBox">
+        <div class="validation-msg" id="validationMsg">📋 必須の3ファイル（ショップ売上・商品別売上・広告詳細レポート）をドロップしてください</div>
+      </div>
+
       <div class="upload-actions">
+        <button class="btn primary" id="btnConfirmUpload" disabled>⬆ アップロード実行</button>
         <button class="btn ghost" id="btnClear">すべてクリア</button>
         <button class="btn ghost" id="btnToggleLog">ログ表示</button>
         <button class="btn" id="btnCloseBottom" style="margin-left:auto;">閉じる</button>
@@ -658,7 +709,14 @@ const state = {
   bid: null,
   master: {},
   charts: {},
-  fontScale: 1
+  fontScale: 1,
+  // モーダル内の一時バッファ（アップロード実行ボタンで確定）
+  uploadBuffer: {
+    overall: null,  // {rows, filename, month}
+    item: null,     // {rows, filename}
+    ad: null,       // {rows, filename, month}
+    bid: null       // {rows, filename}
+  }
 };
 
 // ==================== Utility ====================
@@ -823,8 +881,10 @@ function updateSlot(kind, filename) {
   slot.querySelector('.file-slot-status').textContent = '✓ 読み込み済み';
   slot.querySelector('.file-slot-filename').textContent = filename;
   const chip = $('#' + info.chipId);
-  chip.classList.add('ok');
-  chip.textContent = `${info.label}: ✓`;
+  if (chip) {
+    chip.classList.add('ok');
+    chip.textContent = `${info.label}: ✓`;
+  }
 }
 
 function clearSlot(kind) {
@@ -834,8 +894,10 @@ function clearSlot(kind) {
   slot.querySelector('.file-slot-status').textContent = '未アップロード';
   slot.querySelector('.file-slot-filename').textContent = info.pattern;
   const chip = $('#' + info.chipId);
-  chip.classList.remove('ok');
-  chip.textContent = `${info.label}: 未`;
+  if (chip) {
+    chip.classList.remove('ok');
+    chip.textContent = `${info.label}: 未`;
+  }
 }
 
 // ==================== Helpers ====================
@@ -1221,7 +1283,73 @@ function drawLine(canvasId, labels, datasets) {
   });
 }
 
-// ==================== Processing ====================
+// ==================== Month detection ====================
+function detectMonthFromRows(rows) {
+  // 日付カラムから月（YYYY-MM）を検出
+  for (const r of rows) {
+    const dateStr = r['日付'] || r['date'] || r['年月'] || r['月'] || '';
+    if (!dateStr) continue;
+    const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2, '0')}`;
+  }
+  return null;
+}
+
+// ==================== Validation ====================
+function validateBuffer() {
+  const buf = state.uploadBuffer;
+  const box = $('#validationBox');
+  const msg = $('#validationMsg');
+  const btn = $('#btnConfirmUpload');
+
+  const hasOverall = buf.overall != null;
+  const hasItem = buf.item != null;
+  const hasAd = buf.ad != null;
+
+  // 必須3ファイルチェック
+  if (!hasOverall || !hasItem || !hasAd) {
+    const missing = [];
+    if (!hasOverall) missing.push('ショップ売上');
+    if (!hasItem) missing.push('商品別売上');
+    if (!hasAd) missing.push('広告詳細レポート');
+    box.className = 'validation-box info';
+    msg.textContent = `📋 あと${missing.length}ファイル必要です: ${missing.join(' / ')}`;
+    btn.disabled = true;
+    return false;
+  }
+
+  // 月一致チェック
+  const overallMonth = buf.overall.month;
+  const adMonth = buf.ad.month;
+
+  if (!overallMonth) {
+    box.className = 'validation-box err';
+    msg.textContent = `❌ ショップ売上CSVから月を検出できませんでした（日付カラム確認）`;
+    btn.disabled = true;
+    return false;
+  }
+  if (!adMonth) {
+    box.className = 'validation-box err';
+    msg.textContent = `❌ 広告詳細レポートから月を検出できませんでした（日付カラム確認）`;
+    btn.disabled = true;
+    return false;
+  }
+  if (overallMonth !== adMonth) {
+    box.className = 'validation-box err';
+    msg.textContent = `❌ 月が一致しません：ショップ売上=${overallMonth} / 広告=${adMonth}。同じ月のCSVを揃えてください`;
+    btn.disabled = true;
+    return false;
+  }
+
+  // すべてOK
+  box.className = 'validation-box ok';
+  const bidInfo = buf.bid ? ' + 入札価格' : '';
+  msg.textContent = `✓ ${overallMonth}月分として3ファイル確認OK${bidInfo} — アップロード実行できます`;
+  btn.disabled = false;
+  return true;
+}
+
+// ==================== File Processing (into buffer) ====================
 async function processFiles(files) {
   $('#logArea').classList.add('show');
   log(`${files.length}件のファイルを処理開始`);
@@ -1234,18 +1362,73 @@ async function processFiles(files) {
         log(`⚠ 種別判定できず: ${file.name}`, 'err');
         continue;
       }
-      if (kind === 'overall') state.overall = parseOverall(rows);
-      else if (kind === 'item') state.item = parseItem(rows);
-      else if (kind === 'ad') state.ad = parseAd(rows);
-      else if (kind === 'bid') state.bid = parseBid(rows);
+      // バッファに格納（state本体にはまだ入れない）
+      if (kind === 'overall') {
+        const month = detectMonthFromRows(rows);
+        state.uploadBuffer.overall = { rows, filename: file.name, month };
+        log(`✓ ショップ売上をバッファへ (${rows.length}行, 月=${month || '検出不可'}): ${file.name}`, 'ok');
+      } else if (kind === 'item') {
+        state.uploadBuffer.item = { rows, filename: file.name };
+        log(`✓ 商品別売上をバッファへ (${rows.length}行): ${file.name}`, 'ok');
+      } else if (kind === 'ad') {
+        const month = detectMonthFromRows(rows);
+        state.uploadBuffer.ad = { rows, filename: file.name, month };
+        log(`✓ 広告詳細レポートをバッファへ (${rows.length}行, 月=${month || '検出不可'}): ${file.name}`, 'ok');
+      } else if (kind === 'bid') {
+        state.uploadBuffer.bid = { rows, filename: file.name };
+        log(`✓ 入札価格をバッファへ (${rows.length}行): ${file.name}`, 'ok');
+      }
       updateSlot(kind, file.name);
-      log(`✓ ${kind} として登録 (${rows.length}行): ${file.name}`, 'ok');
     } catch (err) {
       log(`✗ エラー: ${file.name} — ${err.message}`, 'err');
     }
   }
+  // バリデーション
+  validateBuffer();
+  log('読み込み完了（アップロード実行ボタンで反映）', 'ok');
+}
+
+// バッファを state に反映（確定処理）
+function commitUpload() {
+  const buf = state.uploadBuffer;
+  // もう一度バリデーション
+  if (!validateBuffer()) return;
+
+  const targetMonth = buf.overall.month;  // store_overallの月を正とする
+
+  // overall: 既存データとマージ（月をキーに置換/追加）
+  const overallMonths = parseOverall(buf.overall.rows).months;
+  if (!state.overall) state.overall = { months: [] };
+  // 同じ月は置換
+  overallMonths.forEach(newM => {
+    const idx = state.overall.months.findIndex(m => m.month === newM.month);
+    if (idx >= 0) state.overall.months[idx] = newM;
+    else state.overall.months.push(newM);
+  });
+  state.overall.months.sort((a, b) => a.month.localeCompare(b.month));
+
+  // item: 月情報を targetMonth で強制付与
+  const itemParsed = parseItem(buf.item.rows).map(r => ({ ...r, month: targetMonth }));
+  if (!state.item) state.item = [];
+  // 同じ月のitemレコードは置換
+  state.item = state.item.filter(r => r.month !== targetMonth).concat(itemParsed);
+
+  // ad: そのままパース＆マージ
+  const adParsed = parseAd(buf.ad.rows);
+  if (!state.ad) state.ad = [];
+  state.ad = state.ad.filter(r => r.month !== targetMonth).concat(adParsed);
+
+  // bid: アップされていれば上書き
+  if (buf.bid) {
+    state.bid = parseBid(buf.bid.rows);
+  }
+
+  // 描画
   renderAll();
-  log('処理完了', 'ok');
+  log(`✅ ${targetMonth}月分のデータをダッシュボードに反映しました`, 'ok');
+
+  // モーダルを閉じる
+  closeUploadModal();
 }
 
 function renderAll() {
@@ -1263,6 +1446,13 @@ $('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.1)
 // Modal open/close
 const uploadModal = $('#uploadModal');
 function openUploadModal() {
+  // バッファ・スロット表示・ログを毎回リセット（state内の確定済みデータは保持）
+  state.uploadBuffer = { overall: null, item: null, ad: null, bid: null };
+  ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
+  $('#logArea').innerHTML = '';
+  $('#logArea').classList.remove('show');
+  // バリデーション表示初期化
+  validateBuffer();
   uploadModal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -1298,15 +1488,19 @@ fileInput.addEventListener('change', (e) => {
   fileInput.value = '';
 });
 
+$('#btnConfirmUpload').addEventListener('click', commitUpload);
+
 $('#btnClear').addEventListener('click', () => {
   state.overall = null; state.item = null; state.ad = null; state.bid = null;
   state.master = {};
+  state.uploadBuffer = { overall: null, item: null, ad: null, bid: null };
   ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
   state.charts = {};
   ['sumRevenue','sumAdCost','sumAdRev','sumRoas'].forEach(id => $('#' + id).textContent = '—');
   ['tableOverall','tableItem','tableBidAdjust','tableBid'].forEach(id => $('#' + id + ' tbody').innerHTML = '');
   $('#logArea').innerHTML = '';
+  validateBuffer();
   log('全データをクリアしました', 'ok');
 });
 
