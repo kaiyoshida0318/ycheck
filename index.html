@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v25 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v26 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -167,8 +167,85 @@ body {
   top: 64px;
   z-index: 99;
 }
-/* 1段目（border-bottomなし、2段目と連続） */
-.top-nav:not(.top-nav-2) { border-bottom: none; }
+/* 2段目（border-bottomなし、3段目と連続するまではつける） */
+.top-nav:not(.top-nav-2):not(.top-nav-3) { border-bottom: none; }
+.top-nav-2 { border-bottom: 1px solid var(--border); }
+
+/* 3段目（状態バッジ） */
+.top-nav-3 {
+  top: calc(64px + 40px + 40px);
+  padding: 4px 20px;
+  border-top: none;
+  background: var(--bg);
+}
+
+/* クリック可能な状態バッジ */
+.state-chip {
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.state-chip:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.state-chip:hover .chip-label,
+.state-chip:hover .chip-num { color: white; }
+.state-chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.state-chip.active .chip-label,
+.state-chip.active .chip-num { color: white; }
+.state-chip .chip-label {
+  font-weight: 700;
+  color: var(--text);
+}
+.state-chip .chip-num {
+  font-size: 70%;
+  font-weight: 400;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* アクティブフィルターのバナー表示 */
+.filter-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: rgba(37,99,235,0.08);
+  border: 1px solid rgba(37,99,235,0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+.filter-banner.show { display: flex; }
+.filter-banner b { font-weight: 700; }
+.filter-banner .clear-btn {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 0.8rem;
+}
+.filter-banner .clear-btn:hover { background: var(--bg3); }
 .nav-group {
   display: flex;
   align-items: flex-end;
@@ -504,7 +581,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v25</div>
+    <div class="logo-sub">v26</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -529,24 +606,28 @@ tbody tr:hover { background: var(--bg3); }
   </div>
 </nav>
 
-<!-- Second row: 定期チェック + 状態 -->
+<!-- Second row: 定期チェック -->
 <nav class="top-nav top-nav-2">
   <div class="nav-group">
     <span class="nav-group-label">【定期チェック】</span>
     <button class="nav-tab" data-view="ad-adjust"><span class="ico">🎯</span>広告調整</button>
     <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRオプ調整</button>
   </div>
+</nav>
+
+<!-- Third row: 状態 -->
+<nav class="top-nav top-nav-3">
   <div class="nav-group">
     <span class="nav-group-label">【状態】</span>
-    <span class="status-chip"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">広告○</span><span class="chip-num" id="cntAdOk">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">広告×</span><span class="chip-num" id="cntAdNg">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">広告無</span><span class="chip-num" id="cntAdNone">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">PRオプ○</span><span class="chip-num" id="cntProOk">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">PRオプ×</span><span class="chip-num" id="cntProNg">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">撤退■</span><span class="chip-num" id="cntProWithdraw">(0)</span></span>
-    <span class="status-chip"><span class="chip-label">選択前□</span><span class="chip-num" id="cntUnselected">(0)</span></span>
+    <button class="state-chip" data-state="ad-ok"><span class="chip-label">広告○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+    <button class="state-chip" data-state="ad-ng"><span class="chip-label">広告×</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <button class="state-chip" data-state="ad-none"><span class="chip-label">広告無</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+    <button class="state-chip" data-state="pro-ok"><span class="chip-label">PRオプ○</span><span class="chip-num" id="cntProOk">(0)</span></button>
+    <button class="state-chip" data-state="pro-ng"><span class="chip-label">PRオプ×</span><span class="chip-num" id="cntProNg">(0)</span></button>
+    <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
+    <button class="state-chip" data-state="pro-w"><span class="chip-label">撤退■</span><span class="chip-num" id="cntProWithdraw">(0)</span></button>
+    <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-広告□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+    <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
   </div>
 </nav>
 
@@ -625,6 +706,10 @@ tbody tr:hover { background: var(--bg3); }
     <div class="view" id="view-ad-adjust">
       <div class="card">
         <h3 class="card-title">広告調整</h3>
+        <div class="filter-banner" id="adAdjustBanner">
+          <span>📌 <b id="adAdjustBannerLabel">—</b> で絞り込み中</span>
+          <button class="clear-btn" id="adAdjustBannerClear">解除</button>
+        </div>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
@@ -654,10 +739,14 @@ tbody tr:hover { background: var(--bg3); }
       </div>
     </div>
 
-    <!-- View: PRO調整 -->
+    <!-- View: PRオプ調整 -->
     <div class="view" id="view-pro-adjust">
       <div class="card">
         <h3 class="card-title">PRオプ調整</h3>
+        <div class="filter-banner" id="proAdjustBanner">
+          <span>📌 <b id="proAdjustBannerLabel">—</b> で絞り込み中</span>
+          <button class="clear-btn" id="proAdjustBannerClear">解除</button>
+        </div>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
@@ -762,6 +851,7 @@ const state = {
   charts: {},
   fontScale: 1,
   currentView: 'basic',
+  activeStateFilter: null,  // {type: 'ad-ok'|'ad-ng'|..., targetView: 'ad-adjust'|'pro-adjust', label: '...'}
   uploadBuffer: { overall: null, item: null, ad: null, bid: null, master: null }
 };
 
@@ -1263,7 +1353,7 @@ function updateStateCounts() {
   Object.keys(state.master).forEach(c => allCodes.add(c));
   let adOk = 0, adNg = 0, adNone = 0;
   let proOk = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
-  let unselected = 0;
+  let unselectedAd = 0, unselectedPro = 0;
   allCodes.forEach(code => {
     const meta = state.productMeta[code] || {};
     const adS = meta.adStatus || '';
@@ -1275,10 +1365,9 @@ function updateStateCounts() {
     else if (proS === 'PRオプ×' || proS === 'PRO×') proNg++;
     else if (proS === '撤退検討▲') proWithdrawConsider++;
     else if (proS === '撤退■') proWithdraw++;
-    // 選択前□：広告状態・PRオプ状態どちらも未選択
-    if (!adS && !proS) unselected++;
+    if (!adS) unselectedAd++;
+    if (!proS) unselectedPro++;
   });
-  $('#cntAll').textContent = `(${allCodes.size})`;
   $('#cntAdOk').textContent = `(${adOk})`;
   $('#cntAdNg').textContent = `(${adNg})`;
   $('#cntAdNone').textContent = `(${adNone})`;
@@ -1286,7 +1375,8 @@ function updateStateCounts() {
   $('#cntProNg').textContent = `(${proNg})`;
   $('#cntProWithdrawConsider').textContent = `(${proWithdrawConsider})`;
   $('#cntProWithdraw').textContent = `(${proWithdraw})`;
-  $('#cntUnselected').textContent = `(${unselected})`;
+  $('#cntUnselectedAd').textContent = `(${unselectedAd})`;
+  $('#cntUnselectedPro').textContent = `(${unselectedPro})`;
 }
 
 // ==================== Status select helpers ====================
@@ -1530,6 +1620,14 @@ function renderAdAdjust() {
     return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
   });
 
+  // 【状態】バッジによるフィルタ適用
+  if (state.activeStateFilter && state.activeStateFilter.targetView === 'ad-adjust') {
+    const f = STATE_FILTERS[state.activeStateFilter.type];
+    if (f) {
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}));
+    }
+  }
+
   const tbody = $('#tableAdAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
@@ -1585,6 +1683,14 @@ function renderProAdjust() {
     return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
   });
 
+  // 【状態】バッジによるフィルタ適用
+  if (state.activeStateFilter && state.activeStateFilter.targetView === 'pro-adjust') {
+    const f = STATE_FILTERS[state.activeStateFilter.type];
+    if (f) {
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}));
+    }
+  }
+
   const tbody = $('#tableProAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
@@ -1629,9 +1735,98 @@ $$('.nav-tab').forEach(item => {
     state.currentView = view;
     $$('.view').forEach(v => v.classList.remove('active'));
     $('#view-' + view).classList.add('active');
+    // 【状態】フィルタも解除
+    state.activeStateFilter = null;
+    updateActiveStateChip();
+    updateFilterBanners();
     renderAll();
   });
 });
+
+// ==================== 状態バッジフィルタ ====================
+// フィルタ条件の定義
+const STATE_FILTERS = {
+  'ad-ok':         { label: '広告○',       targetView: 'ad-adjust',  match: (meta) => (meta.adStatus || '') === '広告○' },
+  'ad-ng':         { label: '広告×',       targetView: 'ad-adjust',  match: (meta) => (meta.adStatus || '') === '広告×' },
+  'ad-none':       { label: '広告無',       targetView: 'pro-adjust', match: (meta) => (meta.adStatus || '') === '広告無' },
+  'pro-ok':        { label: 'PRオプ○',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ○' || p === 'PRO○'; } },
+  'pro-ng':        { label: 'PRオプ×',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ×' || p === 'PRO×'; } },
+  'pro-wc':        { label: '撤退検討▲',   targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === '撤退検討▲' },
+  'pro-w':         { label: '撤退■',       targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === '撤退■' },
+  'unselected-ad': { label: '選択前-広告□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
+  'unselected-pro':{ label: '選択前-PRオプ□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
+};
+
+function switchToView(viewName) {
+  $$('.nav-tab').forEach(i => i.classList.remove('active'));
+  const tab = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
+  if (tab) tab.classList.add('active');
+  state.currentView = viewName;
+  $$('.view').forEach(v => v.classList.remove('active'));
+  $('#view-' + viewName).classList.add('active');
+}
+
+function applyStateFilter(filterKey) {
+  const def = STATE_FILTERS[filterKey];
+  if (!def) return;
+  state.activeStateFilter = { type: filterKey, targetView: def.targetView, label: def.label };
+  switchToView(def.targetView);
+  updateActiveStateChip();
+  updateFilterBanners();
+  renderAll();
+}
+
+function clearStateFilter() {
+  state.activeStateFilter = null;
+  updateActiveStateChip();
+  updateFilterBanners();
+  renderAll();
+}
+
+function updateActiveStateChip() {
+  $$('.state-chip').forEach(c => c.classList.remove('active'));
+  if (state.activeStateFilter) {
+    const chip = document.querySelector(`.state-chip[data-state="${state.activeStateFilter.type}"]`);
+    if (chip) chip.classList.add('active');
+  }
+}
+
+function updateFilterBanners() {
+  const adBanner = $('#adAdjustBanner');
+  const proBanner = $('#proAdjustBanner');
+  if (!state.activeStateFilter) {
+    if (adBanner) adBanner.classList.remove('show');
+    if (proBanner) proBanner.classList.remove('show');
+    return;
+  }
+  const f = state.activeStateFilter;
+  if (f.targetView === 'ad-adjust' && adBanner) {
+    adBanner.classList.add('show');
+    $('#adAdjustBannerLabel').textContent = f.label;
+    if (proBanner) proBanner.classList.remove('show');
+  } else if (f.targetView === 'pro-adjust' && proBanner) {
+    proBanner.classList.add('show');
+    $('#proAdjustBannerLabel').textContent = f.label;
+    if (adBanner) adBanner.classList.remove('show');
+  }
+}
+
+// 【状態】バッジクリック
+$$('.state-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const key = chip.dataset.state;
+    // 同じバッジを再クリックしたら解除
+    if (state.activeStateFilter && state.activeStateFilter.type === key) {
+      clearStateFilter();
+    } else {
+      applyStateFilter(key);
+    }
+  });
+});
+
+// 解除ボタン
+if ($('#adAdjustBannerClear')) $('#adAdjustBannerClear').addEventListener('click', clearStateFilter);
+if ($('#proAdjustBannerClear')) $('#proAdjustBannerClear').addEventListener('click', clearStateFilter);
 
 // ==================== Modal ====================
 const uploadModal = $('#uploadModal');
@@ -1773,6 +1968,10 @@ document.addEventListener('change', (e) => {
   e.target.className = 'status-select ' + cls;
   // 件数バッジ更新
   updateStateCounts();
+  // フィルタ中なら該当テーブルを再描画（条件外れた行を消す/入れる）
+  if (state.activeStateFilter) {
+    renderAll();
+  }
 });
 
 // ==================== 対応内容（note）編集 ====================
@@ -1859,6 +2058,8 @@ document.addEventListener('dblclick', (e) => {
 
 // ==================== 初期化 ====================
 const restored = loadFromStorage();
+updateActiveStateChip();
+updateFilterBanners();
 renderAll();
 if (restored) console.log('Ycheck: 保存済みデータを復元');
 </script>
