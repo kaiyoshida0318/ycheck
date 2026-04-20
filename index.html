@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v21 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v22 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -155,6 +155,8 @@ body {
   top: 64px;
   z-index: 99;
 }
+/* 1段目（border-bottomなし、2段目と連続） */
+.top-nav:not(.top-nav-2) { border-bottom: none; }
 .nav-group {
   display: flex;
   align-items: flex-end;
@@ -191,6 +193,17 @@ body {
   font-weight: 600;
 }
 .nav-tab .ico { font-size: 0.9rem; }
+
+/* 2段目のタブバー：【定期チェック】【状態】用 */
+.top-nav-2 {
+  top: calc(64px + 40px);  /* header + 1段目タブ分 */
+  padding-bottom: 6px;
+  border-top: none;
+}
+.top-nav-2 .status-chip {
+  align-self: center;
+  margin-bottom: 6px;
+}
 
 .main {
   padding: 18px 20px;
@@ -263,7 +276,7 @@ tbody tr:hover { background: var(--bg3); }
   font-size: 0.78rem;
   color: var(--text2);
 }
-.name-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.name-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text); }
 .link-btn {
   color: var(--accent); text-decoration: none;
   font-size: 0.8rem; white-space: nowrap;
@@ -478,16 +491,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v21</div>
-  </div>
-  <!-- 【状態】件数バッジ群 -->
-  <div class="header-status-row" id="stateChips">
-    <span class="status-chip">全体 <span class="num" id="cntAll">0</span></span>
-    <span class="status-chip">広告○ <span class="num" id="cntAdOk">0</span></span>
-    <span class="status-chip">広告× <span class="num" id="cntAdNg">0</span></span>
-    <span class="status-chip">広告無 <span class="num" id="cntAdNone">0</span></span>
-    <span class="status-chip">PRO○ <span class="num" id="cntProOk">0</span></span>
-    <span class="status-chip">PRO× <span class="num" id="cntProNg">0</span></span>
+    <div class="logo-sub">v22</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -510,10 +514,23 @@ tbody tr:hover { background: var(--bg3); }
     <span class="nav-group-label">【グラフ】</span>
     <button class="nav-tab" data-view="graph"><span class="ico">📈</span>全-月別データ</button>
   </div>
+</nav>
+
+<!-- Second row: 定期チェック + 状態 -->
+<nav class="top-nav top-nav-2">
   <div class="nav-group">
     <span class="nav-group-label">【定期チェック】</span>
     <button class="nav-tab" data-view="ad-adjust"><span class="ico">🎯</span>広告調整</button>
     <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRO調整</button>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label">【状態】</span>
+    <span class="status-chip">全体 <span class="num" id="cntAll">0</span></span>
+    <span class="status-chip">広告○ <span class="num" id="cntAdOk">0</span></span>
+    <span class="status-chip">広告× <span class="num" id="cntAdNg">0</span></span>
+    <span class="status-chip">広告無 <span class="num" id="cntAdNone">0</span></span>
+    <span class="status-chip">PRO○ <span class="num" id="cntProOk">0</span></span>
+    <span class="status-chip">PRO× <span class="num" id="cntProNg">0</span></span>
   </div>
 </nav>
 
