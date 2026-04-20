@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v23 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v24 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -66,15 +66,27 @@ body {
   flex-wrap: wrap;
 }
 .status-chip {
-  font-size: 0.72rem;
-  padding: 3px 10px;
+  font-size: 0.78rem;
+  padding: 4px 10px;
   border-radius: 999px;
   background: var(--bg3);
   color: var(--text2);
   border: 1px solid var(--border);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
 }
-.status-chip .num { font-weight: 700; color: var(--text); }
+.status-chip .chip-label {
+  font-weight: 700;
+  color: var(--text);
+}
+.status-chip .chip-num {
+  font-size: 70%;
+  font-weight: 400;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
 
 .header-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
@@ -305,6 +317,7 @@ tbody tr:hover { background: var(--bg3); }
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
 .status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
+.status-select.warn { background: rgba(217,119,6,0.08); color: var(--amber); border-color: rgba(217,119,6,0.3); }
 .status-select.none { background: var(--bg3); color: var(--text3); }
 
 /* Note cell (対応内容) */
@@ -491,7 +504,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v23</div>
+    <div class="logo-sub">v24</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -525,12 +538,15 @@ tbody tr:hover { background: var(--bg3); }
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【状態】</span>
-    <span class="status-chip">全体 <span class="num" id="cntAll">0</span></span>
-    <span class="status-chip">広告○ <span class="num" id="cntAdOk">0</span></span>
-    <span class="status-chip">広告× <span class="num" id="cntAdNg">0</span></span>
-    <span class="status-chip">広告無 <span class="num" id="cntAdNone">0</span></span>
-    <span class="status-chip">PRオプ○ <span class="num" id="cntProOk">0</span></span>
-    <span class="status-chip">PRオプ× <span class="num" id="cntProNg">0</span></span>
+    <span class="status-chip"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">広告○</span><span class="chip-num" id="cntAdOk">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">広告×</span><span class="chip-num" id="cntAdNg">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">広告無</span><span class="chip-num" id="cntAdNone">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">PRオプ○</span><span class="chip-num" id="cntProOk">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">PRオプ×</span><span class="chip-num" id="cntProNg">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">撤退■</span><span class="chip-num" id="cntProWithdraw">(0)</span></span>
+    <span class="status-chip"><span class="chip-label">選択前□</span><span class="chip-num" id="cntUnselected">(0)</span></span>
   </div>
 </nav>
 
@@ -1245,21 +1261,32 @@ function updateStateCounts() {
   const allCodes = new Set();
   (state.item || []).forEach(i => allCodes.add(i.code));
   Object.keys(state.master).forEach(c => allCodes.add(c));
-  let adOk = 0, adNg = 0, adNone = 0, proOk = 0, proNg = 0;
+  let adOk = 0, adNg = 0, adNone = 0;
+  let proOk = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
+  let unselected = 0;
   allCodes.forEach(code => {
     const meta = state.productMeta[code] || {};
-    if (meta.adStatus === '広告○') adOk++;
-    else if (meta.adStatus === '広告×') adNg++;
-    else if (meta.adStatus === '広告無') adNone++;
-    if (meta.proStatus === 'PRオプ○' || meta.proStatus === 'PRO○') proOk++;
-    else if (meta.proStatus === 'PRオプ×' || meta.proStatus === 'PRO×') proNg++;
+    const adS = meta.adStatus || '';
+    const proS = meta.proStatus || '';
+    if (adS === '広告○') adOk++;
+    else if (adS === '広告×') adNg++;
+    else if (adS === '広告無') adNone++;
+    if (proS === 'PRオプ○' || proS === 'PRO○') proOk++;
+    else if (proS === 'PRオプ×' || proS === 'PRO×') proNg++;
+    else if (proS === '撤退検討▲') proWithdrawConsider++;
+    else if (proS === '撤退■') proWithdraw++;
+    // 選択前□：広告状態・PRオプ状態どちらも未選択
+    if (!adS && !proS) unselected++;
   });
-  $('#cntAll').textContent = allCodes.size;
-  $('#cntAdOk').textContent = adOk;
-  $('#cntAdNg').textContent = adNg;
-  $('#cntAdNone').textContent = adNone;
-  $('#cntProOk').textContent = proOk;
-  $('#cntProNg').textContent = proNg;
+  $('#cntAll').textContent = `(${allCodes.size})`;
+  $('#cntAdOk').textContent = `(${adOk})`;
+  $('#cntAdNg').textContent = `(${adNg})`;
+  $('#cntAdNone').textContent = `(${adNone})`;
+  $('#cntProOk').textContent = `(${proOk})`;
+  $('#cntProNg').textContent = `(${proNg})`;
+  $('#cntProWithdrawConsider').textContent = `(${proWithdrawConsider})`;
+  $('#cntProWithdraw').textContent = `(${proWithdraw})`;
+  $('#cntUnselected').textContent = `(${unselected})`;
 }
 
 // ==================== Status select helpers ====================
@@ -1268,8 +1295,13 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' */) {
   const value = kind === 'ad' ? meta.adStatus : meta.proStatus;
   const options = kind === 'ad'
     ? ['', '広告○', '広告×', '広告無']
-    : ['', 'PRオプ○', 'PRオプ×'];
-  const cls = !value ? 'none' : (value.includes('○') ? 'ok' : (value.includes('×') ? 'ng' : 'none'));
+    : ['', 'PRオプ○', 'PRオプ×', '撤退検討▲', '撤退■'];
+  let cls = 'none';
+  if (value) {
+    if (value.includes('○')) cls = 'ok';
+    else if (value.includes('×') || value === '撤退■') cls = 'ng';
+    else if (value === '撤退検討▲') cls = 'warn';
+  }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   return `<select class="status-select ${cls}" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
 }
@@ -1732,7 +1764,12 @@ document.addEventListener('change', (e) => {
   else meta.proStatus = value;
   saveToStorage();
   // 見た目更新
-  const cls = !value ? 'none' : (value.includes('○') ? 'ok' : 'ng');
+  let cls = 'none';
+  if (value) {
+    if (value.includes('○')) cls = 'ok';
+    else if (value.includes('×') || value === '撤退■') cls = 'ng';
+    else if (value === '撤退検討▲') cls = 'warn';
+  }
   e.target.className = 'status-select ' + cls;
   // 件数バッジ更新
   updateStateCounts();
