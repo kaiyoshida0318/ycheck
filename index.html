@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v28 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v29 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -423,6 +423,29 @@ tbody tr:hover { background: var(--bg3); }
 }
 .kw-cell:hover { background: rgba(37,99,235,0.06); color: var(--accent); }
 .kw-cell.edited { color: var(--accent); font-weight: 500; }
+
+/* 引退済み商品の商品名登録用セル */
+.name-edit-cell {
+  color: var(--text3);
+  font-style: italic;
+  cursor: pointer;
+  border-bottom: 1px dotted var(--border2);
+  padding: 4px 6px;
+  display: inline-block;
+}
+.name-edit-cell:hover { background: rgba(37,99,235,0.06); color: var(--accent); }
+.name-edit-input {
+  width: 100%;
+  padding: 3px 6px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--bg2);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+}
 .kw-edit-input {
   width: 100%;
   padding: 3px 6px;
@@ -582,7 +605,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v28</div>
+    <div class="logo-sub">v29</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -704,7 +727,7 @@ tbody tr:hover { background: var(--bg3); }
           <span class="filter-label">検索</span>
           <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索...">
         </div>
-        <p class="dropzone-hint" style="margin:0 0 10px 0;">商品マスタに商品名が登録されていない商品を表示します（他の画面には表示されません）</p>
+        <p style="margin:0 0 12px 0; font-size:0.95rem; font-weight:700; color:var(--text);">■■商品名未登録のものが表示される。有効に戻したい場合は商品名を登録する■■</p>
         <div class="table-wrap">
           <table id="tableRetired">
             <thead><tr>
@@ -1623,7 +1646,7 @@ function renderRetired() {
     tr.innerHTML = `
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
-      <td><span style="color:var(--text3);font-style:italic">（商品名未登録）</span></td>
+      <td><span class="name-edit-cell" data-code="${escapeHtml(r.code)}" title="クリックして商品名を登録">（クリックして商品名を登録）</span></td>
       <td class="num">${fmt(r.rev)}</td>
       <td class="num bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
     `;
@@ -2171,6 +2194,71 @@ document.addEventListener('dblclick', (e) => {
   if (cell.querySelector('input')) return;
   e.preventDefault();
   startKwEdit(cell);
+});
+
+// ==================== 引退済み商品 商品名編集 ====================
+function startNameEdit(cell) {
+  if (cell.querySelector('input')) return;
+  const code = cell.dataset.code;
+  if (!code) return;
+  const m = getMaster(code);
+  const currentName = m ? m.name : '';
+  const originalHtml = cell.outerHTML;
+  // セルを入力欄に置換
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'name-edit-input';
+  input.value = currentName;
+  input.setAttribute('data-code', code);
+  input.placeholder = '商品名を入力...';
+  cell.replaceWith(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    const newName = input.value.trim();
+    if (newName) {
+      // マスタに登録（なければ作る）
+      if (!state.master[code]) {
+        state.master[code] = { code, name: '', kw: '', searchUrl: '', editedKw: false };
+      }
+      state.master[code].name = newName;
+      // 広告状態・PRオプ状態を空白にリセット
+      if (!state.productMeta[code]) {
+        state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
+      } else {
+        state.productMeta[code].adStatus = '';
+        state.productMeta[code].proStatus = '';
+      }
+      saveToStorage();
+      log(`✓ 商品名を登録しました: ${code} → 「${newName}」`, 'ok');
+      renderAll();
+    } else {
+      // 空文字で確定したらキャンセル扱い（元に戻す）
+      cancel();
+    }
+  };
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    // 入力欄を元のセルに戻す
+    const tmp = document.createElement('div');
+    tmp.innerHTML = originalHtml;
+    input.replaceWith(tmp.firstElementChild);
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+document.addEventListener('click', (e) => {
+  const cell = e.target.closest('.name-edit-cell');
+  if (!cell) return;
+  e.preventDefault();
+  startNameEdit(cell);
 });
 
 // ==================== 初期化 ====================
