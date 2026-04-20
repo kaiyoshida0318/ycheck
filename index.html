@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v26 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v27 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -579,9 +579,9 @@ tbody tr:hover { background: var(--bg3); }
 
 <!-- Header -->
 <div class="header">
-  <div class="logo">
+  <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v26</div>
+    <div class="logo-sub">v27</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -599,6 +599,7 @@ tbody tr:hover { background: var(--bg3); }
     <span class="nav-group-label">【基本】</span>
     <button class="nav-tab active" data-view="basic"><span class="ico">📊</span>商品-基本データ</button>
     <button class="nav-tab" data-view="monthly"><span class="ico">📅</span>商品-月別データ</button>
+    <button class="nav-tab" data-view="retired"><span class="ico">🗂</span>引退済み商品</button>
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【グラフ】</span>
@@ -687,6 +688,30 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num" data-sort="adRev">広告売上</th>
               <th class="num" data-sort="adCost">実績額</th>
               <th class="num" data-sort="roas">広告ROAS</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: 引退済み商品 -->
+    <div class="view" id="view-retired">
+      <div class="card">
+        <h3 class="card-title">引退済み商品</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索...">
+        </div>
+        <p class="dropzone-hint" style="margin:0 0 10px 0;">商品マスタに商品名が登録されていない商品を表示します（他の画面には表示されません）</p>
+        <div class="table-wrap">
+          <table id="tableRetired">
+            <thead><tr>
+              <th data-sort="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name">商品名</th>
+              <th class="num" data-sort="rev">総売上（直近月）</th>
+              <th class="num" data-sort="bid">入札価格</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1290,6 +1315,11 @@ function clearSlot(kind) {
 
 // ==================== Helpers ====================
 function getMaster(code) { return state.master[code]; }
+// 「引退済み」= 商品マスタに商品名が登録されていない商品
+function isRetired(code) {
+  const m = state.master[code];
+  return !m || !m.name || !m.name.trim();
+}
 function getMeta(code) {
   if (!state.productMeta[code]) {
     state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
@@ -1355,6 +1385,8 @@ function updateStateCounts() {
   let proOk = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
   allCodes.forEach(code => {
+    // 引退済み商品はカウント対象外
+    if (isRetired(code)) return;
     const meta = state.productMeta[code] || {};
     const adS = meta.adStatus || '';
     const proS = meta.proStatus || '';
@@ -1444,6 +1476,9 @@ function renderBasic() {
     });
   }
 
+  // 引退済み商品（商品名なし）を除外
+  list = list.filter(r => !isRetired(r.code));
+
   // 検索
   const q = $('#basicSearch').value.trim().toLowerCase();
   if (q) {
@@ -1498,6 +1533,9 @@ function renderMonthly() {
   const agg = buildFullAggregate();
   let list = agg.filter(r => r.month);  // 月あるもの
 
+  // 引退済み商品（商品名なし）を除外
+  list = list.filter(r => !isRetired(r.code));
+
   const q = $('#monthlySearch').value.trim().toLowerCase();
   if (q) {
     list = list.filter(r => {
@@ -1535,6 +1573,66 @@ function renderMonthly() {
       <td class="num">${fmt(r.adRev)}</td>
       <td class="num">${fmt(r.adCost)}</td>
       <td class="num ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==================== Rendering: 引退済み商品 ====================
+let retiredSortKey = 'code', retiredSortDir = 1;
+function renderRetired() {
+  const tbody = $('#tableRetired tbody');
+  // 商品マスタ＋各データソースから全コードを集める
+  const allCodes = new Set();
+  Object.keys(state.master).forEach(c => allCodes.add(c));
+  (state.item || []).forEach(i => allCodes.add(i.code));
+  (state.ad || []).forEach(a => allCodes.add(a.code));
+  if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
+
+  // 引退済みだけ抽出
+  let list = [...allCodes].filter(code => isRetired(code));
+
+  // 直近月の総売上（あれば）を付ける
+  const agg = buildFullAggregate();
+  const months = getAvailableMonths();
+  const latestMonth = months.length > 0 ? months[months.length - 1] : '';
+  const revMap = {};
+  agg.forEach(r => {
+    if (r.month === latestMonth) revMap[r.code] = r.rev || 0;
+  });
+
+  list = list.map(code => ({
+    code,
+    rev: revMap[code] || 0,
+    bid: state.bid ? (state.bid[code] || null) : null
+  }));
+
+  // 検索フィルタ
+  const q = $('#retiredSearch').value.trim().toLowerCase();
+  if (q) list = list.filter(r => r.code.toLowerCase().includes(q));
+
+  // ソート
+  list.sort((a, b) => {
+    const va = a[retiredSortKey] || (retiredSortKey === 'name' ? '' : 0);
+    const vb = b[retiredSortKey] || (retiredSortKey === 'name' ? '' : 0);
+    if (typeof va === 'string') return retiredSortDir * va.localeCompare(vb);
+    return retiredSortDir * (va - vb);
+  });
+
+  tbody.innerHTML = '';
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">引退済み商品はありません（商品マスタに商品名がある商品のみが各タブに表示されます）</td></tr>';
+    return;
+  }
+
+  list.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td><span style="color:var(--text3);font-style:italic">（商品名未登録）</span></td>
+      <td class="num">${fmt(r.rev)}</td>
+      <td class="num bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1614,6 +1712,9 @@ function renderAdAdjust() {
     return { code, adRevs, roass };
   });
 
+  // 引退済み商品（商品名なし）を除外
+  list = list.filter(r => !isRetired(r.code));
+
   const q = $('#adAdjustSearch').value.trim().toLowerCase();
   if (q) list = list.filter(r => {
     const m = getMaster(r.code);
@@ -1677,6 +1778,9 @@ function renderProAdjust() {
     return { code, seoRevs };
   });
 
+  // 引退済み商品（商品名なし）を除外
+  list = list.filter(r => !isRetired(r.code));
+
   const q = $('#proAdjustSearch').value.trim().toLowerCase();
   if (q) list = list.filter(r => {
     const m = getMaster(r.code);
@@ -1721,12 +1825,21 @@ function renderAll() {
   updateStateCounts();
   if (state.currentView === 'basic') renderBasic();
   else if (state.currentView === 'monthly') renderMonthly();
+  else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraph();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
 }
 
 // ==================== Top Tab Navigation ====================
+// ロゴクリックでホーム（商品-基本データ）に戻る
+$('#logoHome').addEventListener('click', () => {
+  switchToView('basic');
+  state.activeStateFilter = null;
+  updateActiveStateChip();
+  updateFilterBanners();
+  renderAll();
+});
 $$('.nav-tab').forEach(item => {
   item.addEventListener('click', () => {
     $$('.nav-tab').forEach(i => i.classList.remove('active'));
@@ -1941,6 +2054,17 @@ $$('#tableMonthly th[data-sort]').forEach(th => {
     if (monthlySortKey === k) monthlySortDir *= -1;
     else { monthlySortKey = k; monthlySortDir = -1; }
     renderMonthly();
+  });
+});
+
+// Retiredビューの操作
+$('#retiredSearch').addEventListener('input', renderRetired);
+$$('#tableRetired th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (retiredSortKey === k) retiredSortDir *= -1;
+    else { retiredSortKey = k; retiredSortDir = 1; }
+    renderRetired();
   });
 });
 
