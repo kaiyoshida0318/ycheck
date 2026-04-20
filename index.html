@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v19 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v20 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -36,24 +36,42 @@ body {
   color: var(--text);
   line-height: 1.5;
 }
-.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
 /* Header */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 14px 20px;
+  padding: 12px 20px;
   background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-.logo { display: flex; align-items: baseline; gap: 12px; }
-.logo-main { font-size: 1.7rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
-.logo-sub { font-size: 0.85rem; color: var(--text3); font-weight: 500; }
+.logo { display: flex; align-items: baseline; gap: 10px; }
+.logo-main { font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
+.logo-sub { font-size: 0.75rem; color: var(--text3); font-weight: 500; }
+
+.header-status-row {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.status-chip {
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg3);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.status-chip .num { font-weight: 700; color: var(--text); }
 
 .header-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
@@ -86,41 +104,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Data status badge */
-.data-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: var(--bg3);
-  border-radius: 999px;
-  font-size: 0.75rem;
-  color: var(--text3);
-  border: 1px solid var(--border);
-  cursor: default;
-}
-.data-status.ok {
-  background: rgba(22,163,74,0.1);
-  color: var(--green);
-  border-color: rgba(22,163,74,0.25);
-}
-.data-status.empty {
-  background: rgba(217,119,6,0.08);
-  color: var(--amber);
-  border-color: rgba(217,119,6,0.25);
-}
-
-.header-status { display: flex; gap: 6px; flex-wrap: wrap; }
-.status-chip {
-  font-size: 0.75rem;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--bg3);
-  color: var(--text3);
-  border: 1px solid var(--border);
-}
-.status-chip.ok { background: rgba(22,163,74,0.1); color: var(--green); border-color: rgba(22,163,74,0.25); }
-
 /* Generic button */
 .btn {
   padding: 7px 14px;
@@ -142,94 +125,205 @@ body {
 .btn.ghost { background: transparent; border-color: var(--border); color: var(--text2); }
 .btn.ghost:hover { background: var(--bg3); }
 .btn.sm { padding: 4px 10px; font-size: 0.8rem; }
+.btn:disabled {
+  background: var(--bg3);
+  color: var(--text3);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.btn.primary:disabled { background: var(--bg3); color: var(--text3); border-color: var(--border); }
 
-/* Upload Area */
-.upload-section {
+/* Layout: Sidebar + Main */
+.app {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+.sidebar {
+  width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+.sidebar-section { margin-bottom: 18px; }
+.sidebar-title {
+  padding: 6px 18px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  color: var(--text2);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.12s;
+  gap: 8px;
+}
+.sidebar-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-item.active {
+  background: rgba(37,99,235,0.08);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.sidebar-item .ico { font-size: 0.9rem; }
+
+.main {
+  flex: 1;
+  padding: 20px;
+  overflow: hidden;
+}
+.view { display: none; }
+.view.active { display: block; }
+
+/* Cards */
+.card {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 18px;
+  margin-bottom: 16px;
 }
-.upload-title { font-size: 1.05rem; font-weight: 600; margin: 0 0 4px 0; }
-.upload-desc { font-size: 0.85rem; color: var(--text3); margin: 0 0 14px 0; }
-.dropzone {
-  border: 2px dashed var(--border2);
-  border-radius: 10px;
-  padding: 28px 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: #fafbfc;
-}
-.dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: rgba(37,99,235,0.04); }
-.dropzone-icon { font-size: 2rem; margin-bottom: 6px; }
-.dropzone-text { font-size: 0.95rem; color: var(--text2); }
-.dropzone-text b { color: var(--accent); }
-.dropzone-hint { font-size: 0.75rem; color: var(--text3); margin-top: 4px; }
+.card-title { font-size: 1rem; font-weight: 600; margin: 0 0 12px 0; }
 
-/* File slots 2x2 */
-.file-slots {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 10px;
-  margin-top: 14px;
-}
-@media (max-width: 640px) { .file-slots { grid-template-columns: 1fr; } }
-.file-slot {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: var(--bg3);
-  font-size: 0.85rem;
+/* Filters */
+.filters {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-height: 68px;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
 }
-.file-slot.loaded {
-  background: rgba(22,163,74,0.08);
-  border-color: rgba(22,163,74,0.3);
+.filters input, .filters select {
+  padding: 6px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  font-size: 0.85rem;
+  background: var(--bg2);
+  color: var(--text);
 }
-.file-slot-label {
-  font-weight: 600;
-  color: var(--text2);
-  font-size: 0.8rem;
-  display: flex; align-items: center; gap: 6px;
-}
-.file-slot-status { font-size: 0.8rem; color: var(--text3); }
-.file-slot.loaded .file-slot-status { color: var(--green); font-weight: 500; }
-.file-slot-filename {
-  font-size: 0.75rem;
-  color: var(--text2);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.slot-badge {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--text3);
-}
-.file-slot.loaded .slot-badge { background: var(--green); }
+.filters input:focus, .filters select:focus { outline: none; border-color: var(--accent); }
+.filter-label { font-size: 0.8rem; color: var(--text3); font-weight: 500; }
 
-.upload-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.log-area {
-  margin-top: 12px;
-  max-height: 140px;
-  overflow-y: auto;
-  background: var(--bg3);
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 0.75rem;
-  color: var(--text2);
-  font-family: ui-monospace, "SF Mono", Consolas, monospace;
-  display: none;
+/* Table */
+.table-wrap { overflow-x: auto; border-radius: 8px; max-height: 72vh; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+th {
+  background: var(--bg3); font-weight: 600; color: var(--text2);
+  font-size: 0.78rem; cursor: pointer; user-select: none;
+  position: sticky; top: 0; z-index: 1;
 }
-.log-area.show { display: block; }
-.log-line { padding: 2px 0; }
-.log-line.err { color: var(--red); }
-.log-line.ok { color: var(--green); }
+th:hover { background: var(--border); }
+th.nosort { cursor: default; }
+th.nosort:hover { background: var(--bg3); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: var(--bg3); }
+
+.product-img {
+  width: 40px; height: 40px;
+  object-fit: cover;
+  border-radius: 5px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: block;
+}
+.product-img-placeholder {
+  width: 40px; height: 40px;
+  border-radius: 5px;
+  background: var(--bg3);
+  border: 1px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; color: var(--text3);
+}
+.code-cell {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--text2);
+}
+.name-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.link-btn {
+  color: var(--accent); text-decoration: none;
+  font-size: 0.8rem; white-space: nowrap;
+}
+.link-btn:hover { text-decoration: underline; }
+.bid-price {
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.roas-good { color: var(--green); font-weight: 600; }
+.roas-bad { color: var(--red); font-weight: 600; }
+.roas-mid { color: var(--amber); font-weight: 600; }
+
+/* Status select (広告状態/PRO状態) */
+.status-select {
+  padding: 4px 6px;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  font-size: 0.8rem;
+  background: var(--bg2);
+  color: var(--text);
+  min-width: 80px;
+  cursor: pointer;
+}
+.status-select:focus { outline: none; border-color: var(--accent); }
+.status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
+.status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
+.status-select.none { background: var(--bg3); color: var(--text3); }
+
+/* Note cell (対応内容) */
+.note-cell {
+  min-width: 180px;
+  max-width: 280px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 0.8rem;
+  background: var(--bg2);
+  cursor: text;
+  min-height: 28px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.note-cell:focus { outline: none; border-color: var(--accent); background: var(--bg2); }
+.note-cell:empty::before { content: 'クリックして入力'; color: var(--text3); font-style: italic; }
+
+/* Editable KW */
+.kw-cell {
+  color: var(--text2);
+  cursor: pointer;
+  border-bottom: 1px dotted var(--border2);
+}
+.kw-cell:hover { background: rgba(37,99,235,0.06); color: var(--accent); }
+.kw-cell.edited { color: var(--accent); font-weight: 500; }
+.kw-edit-input {
+  width: 100%;
+  padding: 3px 6px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: var(--bg2);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-size: 0.9rem;
+}
+.chart-box { position: relative; height: 420px; }
 
 /* Modal */
 .modal-overlay {
@@ -251,7 +345,6 @@ body {
   max-width: 900px;
   width: 100%;
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-  position: relative;
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -263,359 +356,191 @@ body {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
-.modal-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin: 0;
-}
+.modal-title { font-size: 1.15rem; font-weight: 700; margin: 0; }
 .modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.6rem;
-  color: var(--text3);
-  cursor: pointer;
-  padding: 0 8px;
-  line-height: 1;
+  background: transparent; border: none;
+  font-size: 1.6rem; color: var(--text3);
+  cursor: pointer; padding: 0 8px; line-height: 1;
   border-radius: 6px;
 }
 .modal-close:hover { background: var(--bg3); color: var(--text); }
 
-/* Required mark */
 .required-mark {
   font-size: 0.65rem;
-  background: var(--red);
-  color: white;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 600;
-  margin-left: 4px;
+  background: var(--red); color: white;
+  padding: 1px 6px; border-radius: 4px;
+  font-weight: 600; margin-left: 4px;
 }
 
-/* Validation box */
+.dropzone {
+  border: 2px dashed var(--border2);
+  border-radius: 10px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafbfc;
+}
+.dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: rgba(37,99,235,0.04); }
+.dropzone-icon { font-size: 1.8rem; margin-bottom: 4px; }
+.dropzone-text { font-size: 0.9rem; color: var(--text2); }
+.dropzone-text b { color: var(--accent); }
+.dropzone-hint { font-size: 0.72rem; color: var(--text3); margin-top: 4px; }
+
+.file-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+@media (max-width: 640px) { .file-slots { grid-template-columns: 1fr; } }
+.file-slot {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  font-size: 0.82rem;
+  display: flex; flex-direction: column; gap: 4px;
+  min-height: 64px;
+}
+.file-slot.loaded {
+  background: rgba(22,163,74,0.08);
+  border-color: rgba(22,163,74,0.3);
+}
+.file-slot-label {
+  font-weight: 600; color: var(--text2);
+  font-size: 0.78rem; display: flex; align-items: center; gap: 6px;
+}
+.file-slot-status { font-size: 0.78rem; color: var(--text3); }
+.file-slot.loaded .file-slot-status { color: var(--green); font-weight: 500; }
+.file-slot-filename {
+  font-size: 0.72rem; color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.slot-badge {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+.file-slot.loaded .slot-badge { background: var(--green); }
+
+.upload-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
 .validation-box {
-  margin-top: 14px;
+  margin-top: 12px;
   padding: 10px 14px;
   border-radius: 8px;
   background: var(--bg3);
   border: 1px solid var(--border);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
-.validation-box.ok {
-  background: rgba(22,163,74,0.08);
-  border-color: rgba(22,163,74,0.3);
-  color: var(--green);
-}
-.validation-box.err {
-  background: rgba(220,38,38,0.08);
-  border-color: rgba(220,38,38,0.3);
-  color: var(--red);
-}
-.validation-box.info {
-  background: rgba(37,99,235,0.06);
-  border-color: rgba(37,99,235,0.25);
-  color: var(--accent);
-}
-.validation-msg { margin: 0; font-weight: 500; }
+.validation-box.ok { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.3); color: var(--green); }
+.validation-box.err { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.3); color: var(--red); }
+.validation-box.info { background: rgba(37,99,235,0.06); border-color: rgba(37,99,235,0.25); color: var(--accent); }
 
-/* Disabled button */
-.btn:disabled {
+.log-area {
+  margin-top: 10px;
+  max-height: 140px;
+  overflow-y: auto;
   background: var(--bg3);
-  color: var(--text3);
-  border-color: var(--border);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-.btn.primary:disabled {
-  background: var(--bg3);
-  color: var(--text3);
-  border-color: var(--border);
-}
-
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  background: var(--bg2);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  width: fit-content;
-  flex-wrap: wrap;
-}
-.tab {
-  padding: 8px 18px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
   color: var(--text2);
-  transition: all 0.15s;
-  border: none;
-  background: transparent;
-}
-.tab:hover { color: var(--text); background: var(--bg3); }
-.tab.active { background: var(--accent); color: white; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-/* Sub tabs */
-.sub-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 14px;
-  background: var(--bg3);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  width: fit-content;
-}
-.sub-tab {
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text2);
-  border: none;
-  background: transparent;
-}
-.sub-tab.active { background: var(--bg2); color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.sub-content { display: none; }
-.sub-content.active { display: block; }
-
-/* Cards */
-.card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-}
-.card-title { font-size: 1.05rem; font-weight: 600; margin: 0 0 14px 0; }
-.chart-box { position: relative; height: 320px; }
-
-/* Summary grid */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.summary-item {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-.summary-label {
-  font-size: 0.7rem; color: var(--text3);
-  font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
-}
-.summary-value { font-size: 1.55rem; font-weight: 700; color: var(--text); margin-top: 4px; }
-.summary-sub { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
-
-/* Table */
-.table-wrap { overflow-x: auto; border-radius: 8px; }
-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
-th {
-  background: var(--bg3); font-weight: 600; color: var(--text2);
-  font-size: 0.8rem; cursor: pointer; user-select: none;
-  position: sticky; top: 0; z-index: 1;
-}
-th:hover { background: var(--border); }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-tbody tr:hover { background: var(--bg3); }
-
-/* Product image */
-.product-img {
-  width: 48px; height: 48px;
-  object-fit: cover;
-  border-radius: 6px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  display: block;
-}
-.product-img-placeholder {
-  width: 48px; height: 48px;
-  border-radius: 6px;
-  background: var(--bg3);
-  border: 1px dashed var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: var(--text3);
-}
-.code-cell {
   font-family: ui-monospace, "SF Mono", Consolas, monospace;
-  font-size: 0.8rem;
-  color: var(--text2);
-  white-space: nowrap;
+  display: none;
 }
-.kw-cell { color: var(--text2); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kw-cell.editable {
-  cursor: pointer;
-  border-bottom: 1px dotted var(--border2);
-  position: relative;
-}
-.kw-cell.editable:hover {
-  background: rgba(37,99,235,0.06);
-  color: var(--accent);
-}
-.kw-cell.editable:hover::after {
-  content: '✏️';
-  font-size: 0.7rem;
-  margin-left: 4px;
-  opacity: 0.6;
-}
-.kw-cell.edited {
-  color: var(--accent);
-  font-weight: 500;
-}
-.kw-edit-input {
-  width: 100%;
-  padding: 4px 8px;
-  border: 2px solid var(--accent);
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  background: var(--bg2);
-  color: var(--text);
-  outline: none;
-  box-sizing: border-box;
-}
-.name-cell { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-btn {
-  color: var(--accent); text-decoration: none;
-  font-size: 0.8rem; white-space: nowrap;
-}
-.link-btn:hover { text-decoration: underline; }
-
-/* Filters */
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.filters input, .filters select {
-  padding: 7px 10px;
-  border: 1px solid var(--border2);
-  border-radius: 7px;
-  font-size: 0.85rem;
-  background: var(--bg2);
-  color: var(--text);
-}
-.filters input:focus, .filters select:focus { outline: none; border-color: var(--accent); }
-.filter-label { font-size: 0.8rem; color: var(--text3); font-weight: 500; }
-
-.empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 0.9rem; }
-
-.bid-price {
-  font-weight: 600;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-.roas-good { color: var(--green); font-weight: 600; }
-.roas-bad { color: var(--red); font-weight: 600; }
-.roas-mid { color: var(--amber); font-weight: 600; }
+.log-area.show { display: block; }
+.log-line { padding: 2px 0; }
+.log-line.err { color: var(--red); }
+.log-line.ok { color: var(--green); }
 </style>
 </head>
 <body>
-<div class="container">
 
-  <!-- Header -->
-  <div class="header">
-    <div class="logo">
-      <div class="logo-main">Ycheck</div>
-      <div class="logo-sub">v19 — Yahoo!ショッピング売上管理</div>
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-main">Ycheck</div>
+    <div class="logo-sub">v20</div>
+  </div>
+  <!-- 【状態】件数バッジ群 -->
+  <div class="header-status-row" id="stateChips">
+    <span class="status-chip">全体 <span class="num" id="cntAll">0</span></span>
+    <span class="status-chip">広告○ <span class="num" id="cntAdOk">0</span></span>
+    <span class="status-chip">広告× <span class="num" id="cntAdNg">0</span></span>
+    <span class="status-chip">広告無 <span class="num" id="cntAdNone">0</span></span>
+    <span class="status-chip">PRO○ <span class="num" id="cntProOk">0</span></span>
+    <span class="status-chip">PRO× <span class="num" id="cntProNg">0</span></span>
+  </div>
+  <div class="header-tools">
+    <div class="font-controls" title="文字サイズ">
+      <button class="font-btn" id="fontDown">A−</button>
+      <span class="font-size-label" id="fontLabel">100%</span>
+      <button class="font-btn" id="fontUp">A+</button>
     </div>
-    <div class="header-tools">
-      <div class="font-controls" title="文字サイズ">
-        <button class="font-btn" id="fontDown">A−</button>
-        <span class="font-size-label" id="fontLabel">100%</span>
-        <button class="font-btn" id="fontUp">A+</button>
+    <button class="btn sm primary" id="btnJumpUpload">+ レポート追加</button>
+  </div>
+</div>
+
+<!-- App Layout -->
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">【基本】</div>
+      <div class="sidebar-item active" data-view="basic">
+        <span class="ico">📊</span>商品-基本データ
       </div>
-      <button class="btn sm primary" id="btnJumpUpload" title="レポート追加">+ レポート追加</button>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" data-tab="overall">ショップ全体</button>
-    <button class="tab" data-tab="item">商品別詳細</button>
-    <button class="tab" data-tab="bid-adjust">入札価格調整</button>
-    <button class="tab" data-tab="bid">入札状況</button>
-  </div>
-
-  <!-- Tab 1: ショップ全体 -->
-  <div class="tab-content active" id="tab-overall">
-    <div class="summary-grid">
-      <div class="summary-item"><div class="summary-label">総売上</div><div class="summary-value" id="sumRevenue">—</div><div class="summary-sub">期間合計</div></div>
-      <div class="summary-item"><div class="summary-label">広告費</div><div class="summary-value" id="sumAdCost">—</div><div class="summary-sub">期間合計</div></div>
-      <div class="summary-item"><div class="summary-label">広告売上</div><div class="summary-value" id="sumAdRev">—</div><div class="summary-sub">期間合計</div></div>
-      <div class="summary-item"><div class="summary-label">総合ROAS</div><div class="summary-value" id="sumRoas">—</div><div class="summary-sub">広告売上 / 広告費</div></div>
-    </div>
-
-    <div class="card">
-      <h3 class="card-title">月別売上（棒グラフ）</h3>
-      <div class="chart-box"><canvas id="chartSales"></canvas></div>
-    </div>
-    <div class="card">
-      <h3 class="card-title">広告ROAS推移（折れ線）</h3>
-      <div class="chart-box"><canvas id="chartRoas"></canvas></div>
-    </div>
-    <div class="card">
-      <h3 class="card-title">月別サマリー</h3>
-      <div class="table-wrap">
-        <table id="tableOverall">
-          <thead><tr>
-            <th>月</th>
-            <th class="num">売上</th>
-            <th class="num">広告費</th>
-            <th class="num">広告売上</th>
-            <th class="num">ROAS</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+      <div class="sidebar-item" data-view="monthly">
+        <span class="ico">📅</span>商品-月別データ
       </div>
     </div>
-  </div>
-
-  <!-- Tab 2: 商品別詳細 -->
-  <div class="tab-content" id="tab-item">
-    <div class="sub-tabs">
-      <button class="sub-tab active" data-sub="item-basic">商品-基本データ</button>
-      <button class="sub-tab" data-sub="item-chart">商品-グラフ</button>
+    <div class="sidebar-section">
+      <div class="sidebar-title">【グラフ】</div>
+      <div class="sidebar-item" data-view="graph">
+        <span class="ico">📈</span>全-月別データ
+      </div>
     </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">【定期チェック】</div>
+      <div class="sidebar-item" data-view="ad-adjust">
+        <span class="ico">🎯</span>広告調整
+      </div>
+      <div class="sidebar-item" data-view="pro-adjust">
+        <span class="ico">⭐</span>PRO調整
+      </div>
+    </div>
+  </aside>
 
-    <div class="sub-content active" id="sub-item-basic">
+  <!-- Main -->
+  <main class="main">
+
+    <!-- View: 商品-基本データ -->
+    <div class="view active" id="view-basic">
       <div class="card">
+        <h3 class="card-title">商品-基本データ</h3>
         <div class="filters">
-          <span class="filter-label">検索</span>
-          <input type="search" id="itemSearch" placeholder="商品コード・商品名・KWで検索...">
           <span class="filter-label">月</span>
-          <select id="itemMonth"><option value="">すべて</option></select>
+          <select id="basicMonth"></select>
+          <span class="filter-label">検索</span>
+          <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索...">
         </div>
-        <p class="dropzone-hint" style="margin:0 0 10px 0;">下が古い月 / 上が新しい月 の順で表示</p>
         <div class="table-wrap">
-          <table id="tableItem">
+          <table id="tableBasic">
             <thead><tr>
-              <th data-sort="month">月</th>
               <th data-sort="code">商品コード</th>
-              <th>画像</th>
+              <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
-              <th>主要KW</th>
-              <th>検索URL</th>
-              <th class="num" data-sort="qty">販売数</th>
-              <th class="num" data-sort="rev">売上</th>
-              <th class="num" data-sort="adCost">広告費</th>
+              <th class="num" data-sort="rev">総売上</th>
+              <th class="num" data-sort="seoRev">SEO売上</th>
               <th class="num" data-sort="adRev">広告売上</th>
+              <th class="num" data-sort="adCost">実績額</th>
               <th class="num" data-sort="roas">広告ROAS</th>
               <th class="num" data-sort="bid">入札価格</th>
+              <th class="nosort">広告状態</th>
+              <th class="nosort">PRO状態</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -623,149 +548,167 @@ tbody tr:hover { background: var(--bg3); }
       </div>
     </div>
 
-    <div class="sub-content" id="sub-item-chart">
+    <!-- View: 商品-月別データ -->
+    <div class="view" id="view-monthly">
       <div class="card">
+        <h3 class="card-title">商品-月別データ</h3>
         <div class="filters">
-          <span class="filter-label">商品コード</span>
-          <select id="chartItemSelect"><option value="">商品を選択...</option></select>
-          <span class="filter-label">指標</span>
-          <select id="chartMetricSelect">
-            <option value="rev">売上</option>
-            <option value="adCost">広告費</option>
-            <option value="adRev">広告売上</option>
-            <option value="roas">広告ROAS</option>
-            <option value="qty">販売数</option>
-          </select>
+          <span class="filter-label">検索</span>
+          <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索...">
         </div>
-        <div class="chart-box" style="height:360px;"><canvas id="chartItemTrend"></canvas></div>
+        <p class="dropzone-hint" style="margin:0 0 10px 0;">下が古い月 / 上が新しい月</p>
+        <div class="table-wrap">
+          <table id="tableMonthly">
+            <thead><tr>
+              <th class="nosort">画像</th>
+              <th data-sort="name">商品名</th>
+              <th data-sort="month">月</th>
+              <th class="num" data-sort="rev">総売上</th>
+              <th class="num" data-sort="seoRev">SEO売上</th>
+              <th class="num" data-sort="adRev">広告売上</th>
+              <th class="num" data-sort="adCost">実績額</th>
+              <th class="num" data-sort="roas">広告ROAS</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
+    </div>
+
+    <!-- View: 全-月別データ（グラフ） -->
+    <div class="view" id="view-graph">
       <div class="card">
-        <h3 class="card-title">月別ランキング（売上TOP10）</h3>
-        <div class="chart-box" style="height:360px;"><canvas id="chartItemTop"></canvas></div>
+        <h3 class="card-title">全-月別データ（折れ線グラフ）</h3>
+        <div class="chart-box"><canvas id="chartAll"></canvas></div>
       </div>
     </div>
-  </div>
 
-  <!-- Tab 3: 入札価格調整 -->
-  <div class="tab-content" id="tab-bid-adjust">
-    <div class="card">
-      <h3 class="card-title">入札価格調整</h3>
-      <div class="filters">
-        <span class="filter-label">検索</span>
-        <input type="search" id="bidAdjustSearch" placeholder="商品コード・商品名・KWで検索...">
-        <span class="filter-label">表示</span>
-        <select id="bidAdjustFilter">
-          <option value="all">すべて</option>
-          <option value="bidded">入札中のみ</option>
-          <option value="nonbidded">未入札のみ</option>
-        </select>
-      </div>
-      <p class="dropzone-hint" style="margin:0 0 10px 0;">直近3ヶ月の広告売上・ROASを参考に入札価格を調整</p>
-      <div class="table-wrap">
-        <table id="tableBidAdjust">
-          <thead><tr>
-            <th data-sort="code">商品コード</th>
-            <th>画像</th>
-            <th data-sort="name">商品名</th>
-            <th>主要KW</th>
-            <th class="num" data-sort="adRev3m">直近3ヶ月<br>広告売上</th>
-            <th class="num" data-sort="roas3m">広告ROAS<br>(3ヶ月平均)</th>
-            <th class="num" data-sort="bid">入札価格</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+    <!-- View: 広告調整 -->
+    <div class="view" id="view-ad-adjust">
+      <div class="card">
+        <h3 class="card-title">広告調整</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
+        </div>
+        <div class="table-wrap">
+          <table id="tableAdAdjust">
+            <thead><tr>
+              <th data-sort="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name">商品名</th>
+              <th class="nosort">検索URL</th>
+              <th class="num nosort" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
+              <th class="num nosort" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
+              <th class="num nosort" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
+              <th class="num nosort" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
+              <th class="num nosort" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
+              <th class="num nosort" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
+              <th class="num" data-sort="bid">入札価格</th>
+              <th class="nosort">広告状態</th>
+              <th class="nosort">PRO状態</th>
+              <th class="nosort">対応内容</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Tab 4: 入札状況 -->
-  <div class="tab-content" id="tab-bid">
-    <div class="card">
-      <h3 class="card-title" id="bidCardTitle">入札中商品（直近月の実績）</h3>
-      <div class="table-wrap">
-        <table id="tableBid">
-          <thead><tr>
-            <th>商品コード</th>
-            <th>画像</th>
-            <th>商品名</th>
-            <th class="num">売上</th>
-            <th class="num">販売数</th>
-            <th class="num">広告費</th>
-            <th class="num">広告売上</th>
-            <th class="num">ROAS</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+    <!-- View: PRO調整 -->
+    <div class="view" id="view-pro-adjust">
+      <div class="card">
+        <h3 class="card-title">PRO調整</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
+        </div>
+        <div class="table-wrap">
+          <table id="tableProAdjust">
+            <thead><tr>
+              <th data-sort="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name">商品名</th>
+              <th class="nosort">検索URL</th>
+              <th class="num nosort" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
+              <th class="num nosort" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
+              <th class="num nosort" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
+              <th class="nosort">広告状態</th>
+              <th class="nosort">PRO状態</th>
+              <th class="nosort">対応内容</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Upload Modal -->
-  <div class="modal-overlay" id="uploadModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title">📂 レポートを追加</h2>
-        <button class="modal-close" id="modalClose" title="閉じる">×</button>
-      </div>
-      <p class="upload-desc"><b>ショップ売上・商品別売上・広告詳細レポート</b>の3つをセットでアップロードしてください。月が一致していることを確認してから「アップロード実行」ボタンが押せるようになります。</p>
-      <div class="dropzone" id="dropzone">
-        <div class="dropzone-icon">📥</div>
-        <div class="dropzone-text">ここに <b>CSV</b> または <b>ZIP</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
-        <div class="dropzone-hint">ショップ売上 / 商品別売上 / 広告詳細レポート / 入札価格 / 商品マスタ（Shift_JIS・UTF-8 / ZIP内の複数CSVを自動展開）</div>
-      </div>
-      <input type="file" id="fileInput" multiple accept=".csv,.zip" style="display:none;">
+  </main>
+</div>
 
-      <div class="file-slots">
-        <div class="file-slot" id="slot-overall">
-          <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）<span class="required-mark">必須</span></div>
-          <div class="file-slot-status">未アップロード</div>
-          <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
-        </div>
-        <div class="file-slot" id="slot-item">
-          <div class="file-slot-label"><span class="slot-badge"></span>商品別売上（月次）<span class="required-mark">必須</span></div>
-          <div class="file-slot-status">未アップロード</div>
-          <div class="file-slot-filename">yukaiya-item_report*.csv</div>
-        </div>
-        <div class="file-slot" id="slot-ad">
-          <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート（月次）<span class="required-mark">必須</span></div>
-          <div class="file-slot-status">未アップロード</div>
-          <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
-        </div>
-        <div class="file-slot" id="slot-bid">
-          <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
-          <div class="file-slot-status">未アップロード</div>
-          <div class="file-slot-filename">BID_ITEM*.csv</div>
-        </div>
-      </div>
+<!-- Upload Modal -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">📂 レポートを追加</h2>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <p class="dropzone-hint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートの3つをセットで、または入札価格・商品マスタを単独でアップロードできます（CSVまたはZIP）</p>
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">📥</div>
+      <div class="dropzone-text">ここに <b>CSV</b> または <b>ZIP</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
+      <div class="dropzone-hint">Shift_JIS・UTF-8対応</div>
+    </div>
+    <input type="file" id="fileInput" multiple accept=".csv,.zip" style="display:none;">
 
-      <!-- 商品マスタ用スロット -->
-      <div class="file-slot" id="slot-master" style="margin-top:10px;">
-        <div class="file-slot-label"><span class="slot-badge"></span>商品マスタ（商品名・主要KW・検索URL）</div>
+    <div class="file-slots">
+      <div class="file-slot" id="slot-overall">
+        <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
-        <div class="file-slot-filename">商品コード / 商品名 / 主要KW / 検索URL の4列CSV（単独でアップ可能）</div>
+        <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
       </div>
-
-      <!-- バリデーション結果表示 -->
-      <div class="validation-box" id="validationBox">
-        <div class="validation-msg" id="validationMsg">📋 必須の3ファイル（ショップ売上・商品別売上・広告詳細レポート）をドロップしてください</div>
+      <div class="file-slot" id="slot-item">
+        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上（月次）<span class="required-mark">必須</span></div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">yukaiya-item_report*.csv</div>
       </div>
-
-      <div class="upload-actions">
-        <button class="btn primary" id="btnConfirmUpload" disabled>⬆ アップロード実行</button>
-        <button class="btn ghost" id="btnClear">すべてクリア</button>
-        <button class="btn ghost" id="btnToggleLog">ログ表示</button>
-        <button class="btn" id="btnCloseBottom" style="margin-left:auto;">閉じる</button>
+      <div class="file-slot" id="slot-ad">
+        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート（月次）<span class="required-mark">必須</span></div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
       </div>
-      <div class="log-area" id="logArea"></div>
+      <div class="file-slot" id="slot-bid">
+        <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">BID_ITEM*.csv</div>
+      </div>
     </div>
-  </div>
 
+    <div class="file-slot" id="slot-master" style="margin-top:10px;">
+      <div class="file-slot-label"><span class="slot-badge"></span>商品マスタ（商品名・主要KW・検索URL）</div>
+      <div class="file-slot-status">未アップロード</div>
+      <div class="file-slot-filename">商品コード / 商品名 / 主要KW / 検索URL の4列CSV（単独でアップ可能）</div>
+    </div>
+
+    <div class="validation-box" id="validationBox">
+      <div class="validation-msg" id="validationMsg">📋 必須3ファイル（月次データ）、入札価格、商品マスタを単独でアップロードできます</div>
+    </div>
+
+    <div class="upload-actions">
+      <button class="btn primary" id="btnConfirmUpload" disabled>⬆ アップロード実行</button>
+      <button class="btn ghost" id="btnClear">すべてクリア</button>
+      <button class="btn ghost" id="btnToggleLog">ログ表示</button>
+      <button class="btn" id="btnCloseBottom" style="margin-left:auto;">閉じる</button>
+    </div>
+    <div class="log-area" id="logArea"></div>
+  </div>
 </div>
 
 <script>
 // ==================== Constants ====================
 const STORE_ACCOUNT = 'yukaiya';
 const YAHOO_IMG_URL = (code) => `https://item-shopping.c.yimg.jp/i/l/${STORE_ACCOUNT}_${code}`;
+const STORAGE_KEY = 'ycheck_data_v1';
 
 // ==================== State ====================
 const state = {
@@ -774,24 +717,21 @@ const state = {
   ad: null,
   bid: null,
   master: {},
+  // 商品ごとの手動入力情報（広告状態/PRO状態/対応内容）
+  productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
   charts: {},
   fontScale: 1,
-  // モーダル内の一時バッファ（アップロード実行ボタンで確定）
-  uploadBuffer: {
-    overall: null,
-    item: null,
-    ad: null,
-    bid: null,
-    master: null   // 商品マスタ（{rows, filename}）
-  }
+  currentView: 'basic',
+  uploadBuffer: { overall: null, item: null, ad: null, bid: null, master: null }
 };
 
 // ==================== Utility ====================
 const $ = (s) => document.querySelector(s);
-const fmt = (n) => (n == null || isNaN(n)) ? '—' : '¥' + Math.round(n).toLocaleString('ja-JP');
-const fmtNum = (n) => (n == null || isNaN(n)) ? '—' : Math.round(n).toLocaleString('ja-JP');
+const $$ = (s) => document.querySelectorAll(s);
+const fmt = (n) => (n == null || isNaN(n) || n === 0) ? '—' : '¥' + Math.round(n).toLocaleString('ja-JP');
+const fmtNum = (n) => (n == null || isNaN(n) || n === 0) ? '—' : Math.round(n).toLocaleString('ja-JP');
 const fmtRoas = (n) => {
-  if (n == null || isNaN(n) || !isFinite(n)) return '—';
+  if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
   return (n).toFixed(0) + '%';
 };
 const toNum = (v) => {
@@ -821,7 +761,37 @@ const log = (msg, type = '') => {
   area.scrollTop = area.scrollHeight;
 };
 
-// ==================== CSV Reader ====================
+// ==================== Persistence ====================
+function saveToStorage() {
+  try {
+    const data = {
+      overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
+      master: state.master, productMeta: state.productMeta,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch (err) { console.error(err); return false; }
+}
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.overall) state.overall = data.overall;
+    if (data.item) state.item = data.item;
+    if (data.ad) state.ad = data.ad;
+    if (data.bid) state.bid = data.bid;
+    if (data.master) state.master = data.master;
+    if (data.productMeta) state.productMeta = data.productMeta;
+    return data.savedAt || true;
+  } catch (err) { console.error(err); return false; }
+}
+function clearStorage() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (err) { console.error(err); }
+}
+
+// ==================== CSV reader ====================
 function readCsvFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -829,11 +799,8 @@ function readCsvFile(file) {
       try {
         const buffer = e.target.result;
         let text;
-        try {
-          text = new TextDecoder('shift_jis', { fatal: false }).decode(buffer);
-        } catch {
-          text = new TextDecoder('utf-8').decode(buffer);
-        }
+        try { text = new TextDecoder('shift_jis', { fatal: false }).decode(buffer); }
+        catch { text = new TextDecoder('utf-8').decode(buffer); }
         if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
         const replaceCount = (text.match(/\uFFFD/g) || []).length;
         if (replaceCount > 5) {
@@ -841,27 +808,59 @@ function readCsvFile(file) {
           if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
         }
         Papa.parse(text, {
-          header: true,
-          skipEmptyLines: true,
+          header: true, skipEmptyLines: true,
           complete: (result) => resolve(result.data),
           error: (err) => reject(err)
         });
-      } catch (err) {
-        reject(err);
-      }
+      } catch (err) { reject(err); }
     };
     reader.onerror = () => reject(new Error('ファイル読み込みエラー'));
     reader.readAsArrayBuffer(file);
   });
 }
 
-// ==================== File Classification ====================
+// ==================== ZIP extraction ====================
+async function extractCsvFromZip(zipFile) {
+  const arrayBuffer = await zipFile.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const csvFiles = [];
+  for (const name of Object.keys(zip.files)) {
+    const entry = zip.files[name];
+    if (entry.dir) continue;
+    if (name.startsWith('__MACOSX/') || name.split('/').pop().startsWith('.')) continue;
+    if (!name.toLowerCase().endsWith('.csv')) continue;
+    const blob = await entry.async('blob');
+    csvFiles.push(new File([blob], name.split('/').pop(), { type: 'text/csv' }));
+  }
+  return csvFiles;
+}
+async function expandFiles(files) {
+  const result = [];
+  for (const file of files) {
+    const n = file.name.toLowerCase();
+    if (n.endsWith('.zip')) {
+      log(`📦 ZIP展開中: ${file.name}`);
+      try {
+        const csvs = await extractCsvFromZip(file);
+        if (csvs.length === 0) log(`⚠ ZIP内にCSVが見つかりません: ${file.name}`, 'err');
+        else { log(`📦 ${file.name} から ${csvs.length}件のCSV`, 'ok'); result.push(...csvs); }
+      } catch (err) { log(`✗ ZIP展開失敗: ${file.name} — ${err.message}`, 'err'); }
+    } else if (n.endsWith('.csv')) {
+      result.push(file);
+    } else {
+      log(`⚠ 対応していない形式: ${file.name}`, 'err');
+    }
+  }
+  return result;
+}
+
+// ==================== File classification ====================
 function classifyFile(filename, rows) {
   const name = filename.toLowerCase();
   const keys = rows.length > 0 ? Object.keys(rows[0]) : [];
   const keySet = new Set(keys);
 
-  // 商品マスタ（商品コード + 商品名 + 主要KW + 検索URL系）- 4列CSV
+  // 商品マスタ
   if (keySet.has('商品コード') && keySet.has('商品名') && keySet.has('主要KW') &&
       (keySet.has('検索URL') || keySet.has('検索画面URL'))) {
     return 'master';
@@ -884,7 +883,7 @@ function classifyFile(filename, rows) {
 function parseOverall(rows) {
   const monthMap = {};
   rows.forEach(r => {
-    const dateStr = r['日付'] || r['date'] || '';
+    const dateStr = r['日付'] || '';
     const revenue = toNum(r['売上合計値'] || r['売上']);
     if (!dateStr) return;
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
@@ -897,7 +896,6 @@ function parseOverall(rows) {
 }
 
 function parseItem(rows) {
-  // 同じ商品コードの複数行（サブコード違い）を合算する
   const agg = {};
   rows.forEach(r => {
     const code = (r['商品コード'] || '').trim();
@@ -906,19 +904,10 @@ function parseItem(rows) {
     let month = '';
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
     if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
-    // 販売数カラム候補
-    const qty = toNum(
-      r['注文点数合計'] || r['注文点数'] || r['注文数合計'] || r['販売数'] || r['数量'] || r['個数'] || 0
-    );
-    // 売上カラム候補
-    const revenue = toNum(
-      r['売上合計値（税込）'] || r['売上合計値(税込)'] || r['売上合計値'] ||
-      r['売上金額'] || r['売上合計'] || r['売上'] || 0
-    );
+    const qty = toNum(r['注文点数合計'] || r['注文点数'] || r['注文数合計'] || r['販売数'] || r['数量'] || r['個数'] || 0);
+    const revenue = toNum(r['売上合計値（税込）'] || r['売上合計値(税込)'] || r['売上合計値'] || r['売上金額'] || r['売上合計'] || r['売上'] || 0);
     const key = code + '|' + month;
-    if (!agg[key]) {
-      agg[key] = { code, month, qty: 0, revenue: 0 };
-    }
+    if (!agg[key]) agg[key] = { code, month, qty: 0, revenue: 0 };
     agg[key].qty += qty;
     agg[key].revenue += revenue;
   });
@@ -926,7 +915,6 @@ function parseItem(rows) {
 }
 
 function parseAd(rows) {
-  // 同じ商品コードの複数行を合算（Yahoo!広告レポートは日別のことが多い）
   const agg = {};
   rows.forEach(r => {
     const code = (r['商品コード'] || '').trim();
@@ -935,16 +923,10 @@ function parseAd(rows) {
     let month = '';
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
     if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
-    const adCost = toNum(
-      r['利用金額'] || r['広告費'] || r['実績額'] || r['消化金額'] || 0
-    );
-    const adRevenue = toNum(
-      r['売上金額'] || r['売上金額（税込）'] || r['売上金額(税込)'] || r['広告経由売上'] || r['売上'] || 0
-    );
+    const adCost = toNum(r['利用金額'] || r['広告費'] || r['実績額'] || r['消化金額'] || 0);
+    const adRevenue = toNum(r['売上金額'] || r['売上金額（税込）'] || r['売上金額(税込)'] || r['広告経由売上'] || r['売上'] || 0);
     const key = code + '|' + month;
-    if (!agg[key]) {
-      agg[key] = { code, month, adCost: 0, adRevenue: 0 };
-    }
+    if (!agg[key]) agg[key] = { code, month, adCost: 0, adRevenue: 0 };
     agg[key].adCost += adCost;
     agg[key].adRevenue += adRevenue;
   });
@@ -952,17 +934,20 @@ function parseAd(rows) {
 }
 
 function parseBid(rows) {
-  const codes = [];
+  // 商品コード → 入札価格 のマップを返す
+  const bidMap = {};
   rows.forEach(r => {
     const raw = r['ストアアカウント_商品コード'] || r['商品コード'] || '';
     if (!raw) return;
     const code = String(raw).replace(/^yukaiya_/, '').trim();
-    if (code) codes.push(code);
+    if (!code) return;
+    // 入札価格カラム候補
+    const price = toNum(r['入札価格'] || r['価格'] || r['bid'] || r['Price'] || 0);
+    bidMap[code] = price > 0 ? price : (bidMap[code] || null);
   });
-  return [...new Set(codes)];
+  return bidMap;
 }
 
-// 商品マスタ: 商品コード / 商品名 / 主要KW / 検索URL
 function parseMasterSimple(rows) {
   const result = {};
   rows.forEach(r => {
@@ -978,431 +963,8 @@ function parseMasterSimple(rows) {
   return result;
 }
 
-// ==================== Status ====================
-const slotMap = {
-  overall: { slotId: 'slot-overall', chipId: 'chipOverall', label: 'ショップ売上', pattern: 'yukaiya-store_overall*.csv' },
-  item: { slotId: 'slot-item', chipId: 'chipItem', label: '商品別', pattern: 'yukaiya-item_report*.csv' },
-  ad: { slotId: 'slot-ad', chipId: 'chipAd', label: '広告', pattern: '広告詳細レポート商品別*.csv' },
-  bid: { slotId: 'slot-bid', chipId: 'chipBid', label: '入札', pattern: 'BID_ITEM*.csv' },
-  master: { slotId: 'slot-master', chipId: null, label: '商品マスタ', pattern: '商品コード / 商品名 / 主要KW / 検索URL の4列CSV（単独でアップ可能）' }
-};
-
-function updateSlot(kind, filename) {
-  const info = slotMap[kind]; if (!info) return;
-  const slot = $('#' + info.slotId);
-  slot.classList.add('loaded');
-  slot.querySelector('.file-slot-status').textContent = '✓ 読み込み済み';
-  slot.querySelector('.file-slot-filename').textContent = filename;
-  const chip = $('#' + info.chipId);
-  if (chip) {
-    chip.classList.add('ok');
-    chip.textContent = `${info.label}: ✓`;
-  }
-}
-
-function clearSlot(kind) {
-  const info = slotMap[kind]; if (!info) return;
-  const slot = $('#' + info.slotId);
-  slot.classList.remove('loaded');
-  slot.querySelector('.file-slot-status').textContent = '未アップロード';
-  slot.querySelector('.file-slot-filename').textContent = info.pattern;
-  const chip = $('#' + info.chipId);
-  if (chip) {
-    chip.classList.remove('ok');
-    chip.textContent = `${info.label}: 未`;
-  }
-}
-
-// ==================== Helpers ====================
-function getMaster(code) { return state.master[code]; }
-
-function imageCellHtml(code) {
-  const url = YAHOO_IMG_URL(code);
-  return `<img class="product-img" src="${url}" alt="${escapeHtml(code)}"
-    onerror="this.outerHTML='<div class=&quot;product-img-placeholder&quot;>📦</div>'">`;
-}
-
-function nameCellHtml(code) {
-  const m = getMaster(code);
-  const name = m ? m.name : '';
-  return `<div class="name-cell" title="${escapeHtml(name)}">${escapeHtml(name) || '<span style="color:var(--text3)">—</span>'}</div>`;
-}
-
-function kwCellHtml(code) {
-  const m = getMaster(code);
-  const kw = m ? m.kw : '';
-  const edited = m && m.editedKw;
-  const cls = 'kw-cell editable' + (edited ? ' edited' : '');
-  const title = kw ? escapeHtml(kw) + (edited ? ' (編集済み)' : '') + ' — ダブルクリックで編集' : 'ダブルクリックで編集';
-  return `<div class="${cls}" data-code="${escapeHtml(code)}" title="${title}">${escapeHtml(kw) || '<span style="color:var(--text3)">— 編集</span>'}</div>`;
-}
-
-function searchUrlCellHtml(code) {
-  const m = getMaster(code);
-  if (!m || !m.searchUrl) return '<span style="color:var(--text3)">—</span>';
-  return `<a class="link-btn" href="${escapeHtml(m.searchUrl)}" target="_blank" rel="noopener">検索結果 ↗</a>`;
-}
-
-function roasClass(roas) {
-  if (roas == null || !isFinite(roas)) return '';
-  if (roas >= 300) return 'roas-good';
-  if (roas >= 100) return 'roas-mid';
-  return 'roas-bad';
-}
-
-function buildItemAggregate() {
-  const agg = {};
-  if (state.item) state.item.forEach(i => {
-    const key = i.code + '|' + i.month;
-    if (!agg[key]) agg[key] = { code: i.code, month: i.month, qty: 0, rev: 0, adCost: 0, adRev: 0, bid: null, roas: null };
-    agg[key].qty += i.qty;
-    agg[key].rev += i.revenue;
-  });
-  if (state.ad) state.ad.forEach(a => {
-    const key = a.code + '|' + a.month;
-    if (!agg[key]) agg[key] = { code: a.code, month: a.month, qty: 0, rev: 0, adCost: 0, adRev: 0, bid: null, roas: null };
-    agg[key].adCost += a.adCost;
-    agg[key].adRev += a.adRevenue;
-  });
-  Object.values(state.master).forEach(m => {
-    if (!m.months) return;
-    Object.entries(m.months).forEach(([month, d]) => {
-      const key = m.code + '|' + month;
-      if (!agg[key]) agg[key] = { code: m.code, month, qty: 0, rev: 0, adCost: 0, adRev: 0, bid: null, roas: null };
-      if (d.revenue > 0 && agg[key].rev === 0) agg[key].rev = d.revenue;
-      if (d.adRev > 0 && agg[key].adRev === 0) agg[key].adRev = d.adRev;
-      if (d.adCost > 0 && agg[key].adCost === 0) agg[key].adCost = d.adCost;
-      if (d.bid != null && d.bid > 0) agg[key].bid = d.bid;
-      if (d.roas != null && d.roas > 0) agg[key].roas = d.roas;
-    });
-  });
-  Object.values(agg).forEach(r => {
-    if (r.roas == null && r.adCost > 0) r.roas = (r.adRev / r.adCost) * 100;
-  });
-  return Object.values(agg);
-}
-
-// ==================== Rendering: Overall ====================
-function renderOverall() {
-  const monthSet = new Set();
-  if (state.overall) state.overall.months.forEach(m => monthSet.add(m.month));
-  Object.values(state.master).forEach(m => { if (m.months) Object.keys(m.months).forEach(k => monthSet.add(k)); });
-  if (state.ad) state.ad.forEach(a => a.month && monthSet.add(a.month));
-  if (state.item) state.item.forEach(i => i.month && monthSet.add(i.month));
-  const months = [...monthSet].sort();
-
-  const monthlyData = {};
-  months.forEach(m => monthlyData[m] = { revenue: 0, adCost: 0, adRev: 0 });
-
-  if (state.overall) state.overall.months.forEach(m => { monthlyData[m.month].revenue += m.revenue; });
-  if (state.ad) state.ad.forEach(a => { if (monthlyData[a.month]) { monthlyData[a.month].adCost += a.adCost; monthlyData[a.month].adRev += a.adRevenue; } });
-  Object.values(state.master).forEach(m => {
-    if (!m.months) return;
-    Object.entries(m.months).forEach(([month, d]) => {
-      if (!monthlyData[month]) return;
-      monthlyData[month].revenue += d.revenue || 0;
-      monthlyData[month].adRev += d.adRev || 0;
-      monthlyData[month].adCost += d.adCost || 0;
-    });
-  });
-
-  let totalRev = 0, totalAdCost = 0, totalAdRev = 0;
-  months.forEach(m => { totalRev += monthlyData[m].revenue; totalAdCost += monthlyData[m].adCost; totalAdRev += monthlyData[m].adRev; });
-  $('#sumRevenue').textContent = totalRev > 0 ? fmt(totalRev) : '—';
-  $('#sumAdCost').textContent = totalAdCost > 0 ? fmt(totalAdCost) : '—';
-  $('#sumAdRev').textContent = totalAdRev > 0 ? fmt(totalAdRev) : '—';
-  $('#sumRoas').textContent = totalAdCost > 0 ? fmtRoas((totalAdRev / totalAdCost) * 100) : '—';
-
-  if (months.length > 0) {
-    drawBar('chartSales', months, [{ label: '売上', data: months.map(m => monthlyData[m].revenue), color: '#2563eb' }]);
-    drawLine('chartRoas', months, [{
-      label: 'ROAS(%)',
-      data: months.map(m => monthlyData[m].adCost > 0 ? (monthlyData[m].adRev / monthlyData[m].adCost) * 100 : null),
-      color: '#16a34a'
-    }]);
-  }
-
-  const tbody = $('#tableOverall tbody');
-  tbody.innerHTML = '';
-  if (months.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">データを読み込んでください</td></tr>';
-    return;
-  }
-  months.forEach(m => {
-    const d = monthlyData[m];
-    const roas = d.adCost > 0 ? (d.adRev / d.adCost) * 100 : null;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${m}</td>
-      <td class="num">${d.revenue > 0 ? fmt(d.revenue) : '—'}</td>
-      <td class="num">${d.adCost > 0 ? fmt(d.adCost) : '—'}</td>
-      <td class="num">${d.adRev > 0 ? fmt(d.adRev) : '—'}</td>
-      <td class="num">${roas != null ? fmtRoas(roas) : '—'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ==================== Rendering: Item Basic ====================
-let itemSortKey = 'month', itemSortDir = -1;
-function renderItemBasic() {
-  const tbody = $('#tableItem tbody');
-  let list = buildItemAggregate();
-
-  if (list.length === 0) {
-    // データが無くても、商品マスタがあれば商品一覧を表示
-    list = Object.values(state.master).map(m => ({
-      code: m.code,
-      month: '',
-      qty: 0, rev: 0, adCost: 0, adRev: 0,
-      bid: null, roas: null
-    }));
-  }
-
-  const months = [...new Set(list.map(r => r.month).filter(Boolean))].sort();
-  const sel = $('#itemMonth');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">すべて</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
-  sel.value = cur;
-
-  const q = $('#itemSearch').value.trim().toLowerCase();
-  const mf = $('#itemMonth').value;
-  if (q) {
-    list = list.filter(r => {
-      const m = getMaster(r.code);
-      const hay = [r.code, m && m.name, m && m.kw].filter(Boolean).join(' ').toLowerCase();
-      return hay.includes(q);
-    });
-  }
-  if (mf) list = list.filter(r => r.month === mf);
-
-  const sortGet = (r, k) => {
-    if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
-    return r[k];
-  };
-  list.sort((a, b) => {
-    const va = sortGet(a, itemSortKey), vb = sortGet(b, itemSortKey);
-    if (va == null && vb == null) return 0;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    if (typeof va === 'string') return itemSortDir * va.localeCompare(vb);
-    return itemSortDir * (va - vb);
-  });
-
-  tbody.innerHTML = '';
-  if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">該当データなし</td></tr>';
-    return;
-  }
-  list.slice(0, 1000).forEach(r => {
-    const tr = document.createElement('tr');
-    const roasCls = roasClass(r.roas);
-    tr.innerHTML = `
-      <td>${r.month || '—'}</td>
-      <td class="code-cell">${escapeHtml(r.code)}</td>
-      <td>${imageCellHtml(r.code)}</td>
-      <td>${nameCellHtml(r.code)}</td>
-      <td>${kwCellHtml(r.code)}</td>
-      <td>${searchUrlCellHtml(r.code)}</td>
-      <td class="num">${r.qty > 0 ? fmtNum(r.qty) : '—'}</td>
-      <td class="num">${r.rev > 0 ? fmt(r.rev) : '—'}</td>
-      <td class="num">${r.adCost > 0 ? fmt(r.adCost) : '—'}</td>
-      <td class="num">${r.adRev > 0 ? fmt(r.adRev) : '—'}</td>
-      <td class="num ${roasCls}">${r.roas != null ? fmtRoas(r.roas) : '—'}</td>
-      <td class="num">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ==================== Rendering: Item Chart ====================
-function renderItemChart() {
-  const list = buildItemAggregate();
-  const codeSet = new Set(list.map(r => r.code));
-  Object.keys(state.master).forEach(c => codeSet.add(c));
-  const codes = [...codeSet].sort();
-
-  const sel = $('#chartItemSelect');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">商品を選択...</option>' + codes.map(c => {
-    const m = getMaster(c);
-    const label = m && m.name ? `${c} — ${m.name.slice(0, 30)}` : c;
-    return `<option value="${escapeHtml(c)}">${escapeHtml(label)}</option>`;
-  }).join('');
-  sel.value = cur;
-
-  const selectedCode = sel.value;
-  const metric = $('#chartMetricSelect').value;
-  const metricLabel = { rev: '売上', adCost: '広告費', adRev: '広告売上', roas: '広告ROAS(%)', qty: '販売数' }[metric];
-
-  if (selectedCode) {
-    const data = list.filter(r => r.code === selectedCode).sort((a, b) => a.month.localeCompare(b.month));
-    const labels = data.map(r => r.month);
-    const values = data.map(r => r[metric] != null ? r[metric] : null);
-    drawLine('chartItemTrend', labels, [{ label: `${selectedCode} — ${metricLabel}`, data: values, color: '#2563eb' }]);
-  } else {
-    drawLine('chartItemTrend', [], [{ label: '—', data: [], color: '#2563eb' }]);
-  }
-
-  const months = [...new Set(list.map(r => r.month).filter(Boolean))].sort();
-  const latestMonth = months[months.length - 1] || '';
-  if (latestMonth) {
-    const topList = list.filter(r => r.month === latestMonth).sort((a, b) => b.rev - a.rev).slice(0, 10);
-    drawBar('chartItemTop',
-      topList.map(r => r.code),
-      [{ label: `${latestMonth} 売上TOP10`, data: topList.map(r => r.rev), color: '#2563eb' }]
-    );
-  } else {
-    drawBar('chartItemTop', [], [{ label: '—', data: [], color: '#2563eb' }]);
-  }
-}
-
-// ==================== Rendering: 入札価格調整 ====================
-let bidAdjustSortKey = 'adRev3m', bidAdjustSortDir = -1;
-function renderBidAdjust() {
-  const tbody = $('#tableBidAdjust tbody');
-  const list = buildItemAggregate();
-  const allMonths = [...new Set(list.map(r => r.month).filter(Boolean))].sort();
-  const last3 = allMonths.slice(-3);
-
-  const productMap = {};
-  const codes = new Set([...Object.keys(state.master), ...list.map(r => r.code)]);
-  codes.forEach(code => {
-    productMap[code] = { code, adRev3m: 0, adCost3m: 0, bid: null };
-  });
-  list.forEach(r => {
-    if (!last3.includes(r.month)) return;
-    if (!productMap[r.code]) productMap[r.code] = { code: r.code, adRev3m: 0, adCost3m: 0, bid: null };
-    productMap[r.code].adRev3m += r.adRev || 0;
-    productMap[r.code].adCost3m += r.adCost || 0;
-    if (r.bid != null && r.bid > 0) productMap[r.code].bid = r.bid;
-  });
-
-  if (last3.length > 0) {
-    const latest = last3[last3.length - 1];
-    list.filter(r => r.month === latest).forEach(r => {
-      if (r.bid != null && r.bid > 0 && productMap[r.code]) productMap[r.code].bid = r.bid;
-    });
-  }
-
-  let items = Object.values(productMap).map(p => ({
-    code: p.code,
-    name: (getMaster(p.code) && getMaster(p.code).name) || '',
-    kw: (getMaster(p.code) && getMaster(p.code).kw) || '',
-    adRev3m: p.adRev3m,
-    adCost3m: p.adCost3m,
-    bid: p.bid,
-    roas3m: p.adCost3m > 0 ? (p.adRev3m / p.adCost3m) * 100 : null
-  }));
-
-  const q = $('#bidAdjustSearch').value.trim().toLowerCase();
-  const filter = $('#bidAdjustFilter').value;
-  if (q) items = items.filter(r => [r.code, r.name, r.kw].join(' ').toLowerCase().includes(q));
-  if (filter === 'bidded') items = items.filter(r => r.bid != null && r.bid > 0);
-  if (filter === 'nonbidded') items = items.filter(r => !(r.bid != null && r.bid > 0));
-
-  items.sort((a, b) => {
-    const va = a[bidAdjustSortKey], vb = b[bidAdjustSortKey];
-    if (va == null && vb == null) return 0;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    if (typeof va === 'string') return bidAdjustSortDir * va.localeCompare(vb);
-    return bidAdjustSortDir * (va - vb);
-  });
-
-  tbody.innerHTML = '';
-  if (items.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">データを読み込んでください</td></tr>';
-    return;
-  }
-  items.slice(0, 1000).forEach(r => {
-    const roasCls = roasClass(r.roas3m);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(r.code)}</td>
-      <td>${imageCellHtml(r.code)}</td>
-      <td>${nameCellHtml(r.code)}</td>
-      <td>${kwCellHtml(r.code)}</td>
-      <td class="num">${r.adRev3m > 0 ? fmt(r.adRev3m) : '—'}</td>
-      <td class="num ${roasCls}">${r.roas3m != null ? fmtRoas(r.roas3m) : '—'}</td>
-      <td class="num bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ==================== Rendering: 入札状況 ====================
-function renderBid() {
-  const tbody = $('#tableBid tbody');
-  if (!state.bid || state.bid.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">入札データを読み込んでください</td></tr>';
-    return;
-  }
-  const list = buildItemAggregate();
-  const allMonths = [...new Set(list.map(r => r.month).filter(Boolean))].sort();
-  const latestMonth = allMonths[allMonths.length - 1] || '';
-
-  tbody.innerHTML = '';
-  state.bid.forEach(code => {
-    const rec = list.find(r => r.code === code && r.month === latestMonth) || { rev: 0, qty: 0, adCost: 0, adRev: 0, roas: null };
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(code)}</td>
-      <td>${imageCellHtml(code)}</td>
-      <td>${nameCellHtml(code)}</td>
-      <td class="num">${rec.rev > 0 ? fmt(rec.rev) : '—'}</td>
-      <td class="num">${rec.qty > 0 ? fmtNum(rec.qty) : '—'}</td>
-      <td class="num">${rec.adCost > 0 ? fmt(rec.adCost) : '—'}</td>
-      <td class="num">${rec.adRev > 0 ? fmt(rec.adRev) : '—'}</td>
-      <td class="num ${roasClass(rec.roas)}">${rec.roas != null ? fmtRoas(rec.roas) : '—'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  if (latestMonth) $('#bidCardTitle').textContent = `入札中商品（${latestMonth}）`;
-}
-
-// ==================== Charts ====================
-function drawBar(canvasId, labels, datasets) {
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  if (state.charts[canvasId]) state.charts[canvasId].destroy();
-  state.charts[canvasId] = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: datasets.map(d => ({ label: d.label, data: d.data, backgroundColor: d.color, borderRadius: 4 })) },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#4a4d52' } } },
-      scales: {
-        x: { ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y: { ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } }
-      }
-    }
-  });
-}
-
-function drawLine(canvasId, labels, datasets) {
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  if (state.charts[canvasId]) state.charts[canvasId].destroy();
-  state.charts[canvasId] = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets: datasets.map(d => ({
-      label: d.label, data: d.data, borderColor: d.color, backgroundColor: d.color + '20',
-      tension: 0.3, fill: true, spanGaps: true
-    })) },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#4a4d52' } } },
-      scales: {
-        x: { ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y: { ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } }
-      }
-    }
-  });
-}
-
-// ==================== Month detection ====================
+// ==================== Validation ====================
 function detectMonthFromRows(rows) {
-  // 日付カラムから月（YYYY-MM）を検出
   for (const r of rows) {
     const dateStr = r['日付'] || r['date'] || r['年月'] || r['月'] || '';
     if (!dateStr) continue;
@@ -1412,102 +974,6 @@ function detectMonthFromRows(rows) {
   return null;
 }
 
-// ==================== Persistence (localStorage) ====================
-const STORAGE_KEY = 'ycheck_data_v1';
-
-function saveToStorage() {
-  try {
-    const data = {
-      overall: state.overall,
-      item: state.item,
-      ad: state.ad,
-      bid: state.bid,
-      master: state.master,
-      savedAt: new Date().toISOString()
-    };
-    const json = JSON.stringify(data);
-    localStorage.setItem(STORAGE_KEY, json);
-    updateDataStatus();
-    return true;
-  } catch (err) {
-    console.error('localStorage save error:', err);
-    return false;
-  }
-}
-
-function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-    if (data.overall) state.overall = data.overall;
-    if (data.item) state.item = data.item;
-    if (data.ad) state.ad = data.ad;
-    if (data.bid) state.bid = data.bid;
-    if (data.master) state.master = data.master;
-    return data.savedAt || true;
-  } catch (err) {
-    console.error('localStorage load error:', err);
-    return false;
-  }
-}
-
-function clearStorage() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    updateDataStatus();
-  } catch (err) {
-    console.error('localStorage clear error:', err);
-  }
-}
-
-// ヘッダーのデータ状況バッジ更新
-function updateDataStatus() {
-  const el = $('#dataStatus');
-  if (!el) return;
-  const hasOverall = state.overall && state.overall.months && state.overall.months.length > 0;
-  const hasItem = state.item && state.item.length > 0;
-  const hasAd = state.ad && state.ad.length > 0;
-  const hasBid = state.bid && state.bid.length > 0;
-  const hasMaster = state.master && Object.keys(state.master).length > 0;
-  const parts = [];
-  if (hasOverall) parts.push('売上');
-  if (hasItem) parts.push('商品別');
-  if (hasAd) parts.push('広告');
-  if (hasBid) parts.push('入札');
-  if (hasMaster) parts.push(`マスタ(${Object.keys(state.master).length})`);
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (data.savedAt) {
-        const saved = new Date(data.savedAt);
-        const timeStr = saved.toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        if (parts.length > 0) {
-          el.className = 'data-status ok';
-          el.textContent = `💾 ${parts.join('/')} (${timeStr})`;
-          el.title = `ブラウザに保存済み — 最終更新: ${saved.toLocaleString('ja-JP')}`;
-          return;
-        }
-      }
-    }
-  } catch (err) {
-    console.error(err);
-  }
-
-  if (parts.length > 0) {
-    el.className = 'data-status ok';
-    el.textContent = `✓ ${parts.join('/')}`;
-    el.title = 'データが読み込まれています（未保存）';
-  } else {
-    el.className = 'data-status empty';
-    el.textContent = '📭 データなし';
-    el.title = '「+ レポート追加」からCSVをアップロードしてください';
-  }
-}
-
-// ==================== Validation ====================
 function validateBuffer() {
   const buf = state.uploadBuffer;
   const box = $('#validationBox');
@@ -1522,15 +988,12 @@ function validateBuffer() {
   const hasAnyMonthly = hasOverall || hasItem || hasAd;
   const hasFullMonthly = hasOverall && hasItem && hasAd;
 
-  // 何もない状態
   if (!hasAnyMonthly && !hasBid && !hasMaster) {
     box.className = 'validation-box info';
     msg.textContent = `📋 必須3ファイル（月次データ）、入札価格、商品マスタを単独でアップロードできます`;
     btn.disabled = true;
     return false;
   }
-
-  // 月次データなしで bid/master のみ → 単独OK
   if (!hasAnyMonthly && (hasBid || hasMaster)) {
     const parts = [];
     if (hasMaster) parts.push('商品マスタ');
@@ -1540,43 +1003,33 @@ function validateBuffer() {
     btn.disabled = false;
     return true;
   }
-
-  // 月次ファイルが揃っていない（部分的にある状態）
   if (!hasFullMonthly) {
     const missing = [];
     if (!hasOverall) missing.push('ショップ売上');
     if (!hasItem) missing.push('商品別売上');
     if (!hasAd) missing.push('広告詳細レポート');
     box.className = 'validation-box info';
-    msg.textContent = `📋 あと${missing.length}ファイル必要です: ${missing.join(' / ')}（入札価格・商品マスタのみのアップも可能）`;
+    msg.textContent = `📋 あと${missing.length}ファイル必要です: ${missing.join(' / ')}`;
     btn.disabled = true;
     return false;
   }
-
-  // 月一致チェック（3ファイル揃っている場合）
   const overallMonth = buf.overall.month;
   const adMonth = buf.ad.month;
-
   if (!overallMonth) {
     box.className = 'validation-box err';
-    msg.textContent = `❌ ショップ売上CSVから月を検出できませんでした（日付カラム確認）`;
-    btn.disabled = true;
-    return false;
+    msg.textContent = `❌ ショップ売上CSVから月を検出できませんでした`;
+    btn.disabled = true; return false;
   }
   if (!adMonth) {
     box.className = 'validation-box err';
-    msg.textContent = `❌ 広告詳細レポートから月を検出できませんでした（日付カラム確認）`;
-    btn.disabled = true;
-    return false;
+    msg.textContent = `❌ 広告詳細レポートから月を検出できませんでした`;
+    btn.disabled = true; return false;
   }
   if (overallMonth !== adMonth) {
     box.className = 'validation-box err';
-    msg.textContent = `❌ 月が一致しません：ショップ売上=${overallMonth} / 広告=${adMonth}。同じ月のCSVを揃えてください`;
-    btn.disabled = true;
-    return false;
+    msg.textContent = `❌ 月が一致しません：ショップ売上=${overallMonth} / 広告=${adMonth}`;
+    btn.disabled = true; return false;
   }
-
-  // すべてOK
   box.className = 'validation-box ok';
   const extras = [];
   if (hasBid) extras.push('入札価格');
@@ -1587,117 +1040,52 @@ function validateBuffer() {
   return true;
 }
 
-// ==================== ZIP extraction ====================
-// ZIPファイルからCSV相当のFileオブジェクトを配列で返す
-async function extractCsvFromZip(zipFile) {
-  const arrayBuffer = await zipFile.arrayBuffer();
-  const zip = await JSZip.loadAsync(arrayBuffer);
-  const csvFiles = [];
-  const entries = Object.keys(zip.files);
-  for (const name of entries) {
-    const entry = zip.files[name];
-    if (entry.dir) continue;
-    // __MACOSX やドットファイル系はスキップ
-    if (name.startsWith('__MACOSX/') || name.split('/').pop().startsWith('.')) continue;
-    if (!name.toLowerCase().endsWith('.csv')) continue;
-    const blob = await entry.async('blob');
-    // FileオブジェクトとしてラップしてreadCsvFileで読めるように
-    const file = new File([blob], name.split('/').pop(), { type: 'text/csv' });
-    csvFiles.push(file);
-  }
-  return csvFiles;
-}
-
-// ドロップ/選択されたファイル群を展開してCSVだけの配列を返す
-async function expandFiles(files) {
-  const result = [];
-  for (const file of files) {
-    const nameLower = file.name.toLowerCase();
-    if (nameLower.endsWith('.zip')) {
-      log(`📦 ZIP展開中: ${file.name}`);
-      try {
-        const csvs = await extractCsvFromZip(file);
-        if (csvs.length === 0) {
-          log(`⚠ ZIP内にCSVが見つかりません: ${file.name}`, 'err');
-        } else {
-          log(`📦 ${file.name} から ${csvs.length}件のCSVを取り出しました: ${csvs.map(f => f.name).join(', ')}`, 'ok');
-          result.push(...csvs);
-        }
-      } catch (err) {
-        log(`✗ ZIP展開失敗: ${file.name} — ${err.message}`, 'err');
-      }
-    } else if (nameLower.endsWith('.csv')) {
-      result.push(file);
-    } else {
-      log(`⚠ 対応していない形式: ${file.name}（csv/zipのみ）`, 'err');
-    }
-  }
-  return result;
-}
-
-// ==================== File Processing (into buffer) ====================
+// ==================== File Processing ====================
 async function processFiles(files) {
   $('#logArea').classList.add('show');
   log(`${files.length}件のファイルを処理開始`);
-  // ZIPを展開してCSVだけにする
   const csvFiles = await expandFiles(files);
-  if (csvFiles.length === 0) {
-    log('処理するCSVがありません', 'err');
-    validateBuffer();
-    return;
-  }
+  if (csvFiles.length === 0) { log('処理するCSVがありません', 'err'); validateBuffer(); return; }
   for (const file of csvFiles) {
     try {
       log(`読み込み中: ${file.name}`);
       const rows = await readCsvFile(file);
       const kind = classifyFile(file.name, rows);
-      if (kind === 'unknown') {
-        log(`⚠ 種別判定できず: ${file.name}`, 'err');
-        continue;
-      }
-      // バッファに格納（state本体にはまだ入れない）
+      if (kind === 'unknown') { log(`⚠ 種別判定できず: ${file.name}`, 'err'); continue; }
       if (kind === 'overall') {
         const month = detectMonthFromRows(rows);
         state.uploadBuffer.overall = { rows, filename: file.name, month };
-        log(`✓ ショップ売上をバッファへ (${rows.length}行, 月=${month || '検出不可'}): ${file.name}`, 'ok');
+        log(`✓ ショップ売上をバッファへ (${rows.length}行, 月=${month || '?'})`, 'ok');
       } else if (kind === 'item') {
         state.uploadBuffer.item = { rows, filename: file.name };
-        log(`✓ 商品別売上をバッファへ (${rows.length}行): ${file.name}`, 'ok');
+        log(`✓ 商品別売上をバッファへ (${rows.length}行)`, 'ok');
       } else if (kind === 'ad') {
         const month = detectMonthFromRows(rows);
         state.uploadBuffer.ad = { rows, filename: file.name, month };
-        log(`✓ 広告詳細レポートをバッファへ (${rows.length}行, 月=${month || '検出不可'}): ${file.name}`, 'ok');
+        log(`✓ 広告詳細レポートをバッファへ (${rows.length}行, 月=${month || '?'})`, 'ok');
       } else if (kind === 'bid') {
         state.uploadBuffer.bid = { rows, filename: file.name };
-        log(`✓ 入札価格をバッファへ (${rows.length}行): ${file.name}`, 'ok');
+        log(`✓ 入札価格をバッファへ (${rows.length}行)`, 'ok');
       } else if (kind === 'master') {
         state.uploadBuffer.master = { rows, filename: file.name };
-        log(`✓ 商品マスタをバッファへ (${rows.length}行): ${file.name}`, 'ok');
+        log(`✓ 商品マスタをバッファへ (${rows.length}行)`, 'ok');
       }
       updateSlot(kind, file.name);
     } catch (err) {
       log(`✗ エラー: ${file.name} — ${err.message}`, 'err');
     }
   }
-  // バリデーション
   validateBuffer();
-  log('読み込み完了（アップロード実行ボタンで反映）', 'ok');
 }
 
-// バッファを state に反映（確定処理）
 function commitUpload() {
   const buf = state.uploadBuffer;
-  // もう一度バリデーション
   if (!validateBuffer()) return;
-
   const hasMonthly = buf.overall && buf.item && buf.ad;
-  const hasBid = buf.bid != null;
 
-  // 月次データの反映
   if (hasMonthly) {
     const targetMonth = buf.overall.month;
-
-    // overall: 既存データとマージ（月をキーに置換/追加）
+    // overall
     const overallMonths = parseOverall(buf.overall.rows).months;
     if (!state.overall) state.overall = { months: [] };
     overallMonths.forEach(newM => {
@@ -1706,77 +1094,489 @@ function commitUpload() {
       else state.overall.months.push(newM);
     });
     state.overall.months.sort((a, b) => a.month.localeCompare(b.month));
-
-    // item: 月情報を targetMonth で強制付与
+    // item（monthは店舗overallの月で強制）
     const itemParsed = parseItem(buf.item.rows).map(r => ({ ...r, month: targetMonth }));
     if (!state.item) state.item = [];
     state.item = state.item.filter(r => r.month !== targetMonth).concat(itemParsed);
-
-    // ad: そのままパース＆マージ
+    // ad
     const adParsed = parseAd(buf.ad.rows);
     if (!state.ad) state.ad = [];
     state.ad = state.ad.filter(r => r.month !== targetMonth).concat(adParsed);
-
-    log(`✅ ${targetMonth}月分の月次データを反映しました`, 'ok');
+    log(`✅ ${targetMonth}月分の月次データを反映`, 'ok');
   }
-
-  // 入札価格の反映（アップされていれば上書き）
-  if (hasBid) {
+  if (buf.bid) {
     state.bid = parseBid(buf.bid.rows);
-    log(`✅ 入札価格を反映しました（${state.bid.length}件）`, 'ok');
+    log(`✅ 入札価格を反映（${Object.keys(state.bid).length}件）`, 'ok');
   }
-
-  // 商品マスタの反映（アップされていればマージ）
   if (buf.master) {
     const newMaster = parseMasterSimple(buf.master.rows);
-    // 既存のmasterとマージ。同じcodeは新しいもので上書き、ただしユーザー編集（editedKw）は保持
     Object.keys(newMaster).forEach(code => {
       const existing = state.master[code] || {};
       const incoming = newMaster[code];
-      // ユーザーが手動編集したKWは保持（editedKwフラグ）
       state.master[code] = {
         ...incoming,
-        // 既存のユーザー編集KWがあれば優先
         kw: existing.editedKw ? existing.kw : incoming.kw,
         editedKw: existing.editedKw || false
       };
     });
-    log(`✅ 商品マスタを反映しました（${Object.keys(newMaster).length}件）`, 'ok');
+    log(`✅ 商品マスタを反映（${Object.keys(newMaster).length}件）`, 'ok');
   }
 
-  // 描画
+  saveToStorage();
+  log(`💾 ブラウザに保存しました`, 'ok');
   renderAll();
-
-  // localStorageに保存
-  if (saveToStorage()) {
-    log(`💾 ブラウザに保存しました（バージョン更新後も残ります）`, 'ok');
-  }
-
-  // モーダルを閉じる
   closeUploadModal();
 }
 
-function renderAll() {
-  renderOverall();
-  renderItemBasic();
-  renderItemChart();
-  renderBidAdjust();
-  renderBid();
+// ==================== Slot management ====================
+const slotMap = {
+  overall: { slotId: 'slot-overall', pattern: 'yukaiya-store_overall*.csv' },
+  item: { slotId: 'slot-item', pattern: 'yukaiya-item_report*.csv' },
+  ad: { slotId: 'slot-ad', pattern: '広告詳細レポート商品別*.csv' },
+  bid: { slotId: 'slot-bid', pattern: 'BID_ITEM*.csv' },
+  master: { slotId: 'slot-master', pattern: '商品コード / 商品名 / 主要KW / 検索URL の4列CSV' }
+};
+function updateSlot(kind, filename) {
+  const info = slotMap[kind]; if (!info) return;
+  const slot = $('#' + info.slotId);
+  slot.classList.add('loaded');
+  slot.querySelector('.file-slot-status').textContent = '✓ 読み込み済み';
+  slot.querySelector('.file-slot-filename').textContent = filename;
+}
+function clearSlot(kind) {
+  const info = slotMap[kind]; if (!info) return;
+  const slot = $('#' + info.slotId);
+  slot.classList.remove('loaded');
+  slot.querySelector('.file-slot-status').textContent = '未アップロード';
+  slot.querySelector('.file-slot-filename').textContent = info.pattern;
 }
 
-// ==================== Events ====================
-$('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.1));
-$('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.1));
+// ==================== Helpers ====================
+function getMaster(code) { return state.master[code]; }
+function getMeta(code) {
+  if (!state.productMeta[code]) {
+    state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
+  }
+  return state.productMeta[code];
+}
+function imageCellHtml(code) {
+  const url = YAHOO_IMG_URL(code);
+  return `<img class="product-img" src="${url}" alt="${escapeHtml(code)}"
+    onerror="this.outerHTML='<div class=&quot;product-img-placeholder&quot;>📦</div>'">`;
+}
+function nameCellHtml(code) {
+  const m = getMaster(code);
+  const name = m ? m.name : '';
+  return `<div class="name-cell" title="${escapeHtml(name)}">${escapeHtml(name) || '<span style="color:var(--text3)">—</span>'}</div>`;
+}
+function searchUrlCellHtml(code) {
+  const m = getMaster(code);
+  if (!m || !m.searchUrl) return '<span style="color:var(--text3)">—</span>';
+  return `<a class="link-btn" href="${escapeHtml(m.searchUrl)}" target="_blank" rel="noopener">検索 ↗</a>`;
+}
+function roasClass(roas) {
+  if (roas == null || !isFinite(roas)) return '';
+  if (roas >= 300) return 'roas-good';
+  if (roas >= 100) return 'roas-mid';
+  return 'roas-bad';
+}
+function getAvailableMonths() {
+  const set = new Set();
+  if (state.item) state.item.forEach(i => i.month && set.add(i.month));
+  if (state.ad) state.ad.forEach(a => a.month && set.add(a.month));
+  if (state.overall) state.overall.months.forEach(m => set.add(m.month));
+  return [...set].sort();
+}
 
-// Modal open/close
+// 商品コード x 月 で集計された完全形を返す
+function buildFullAggregate() {
+  const agg = {};
+  (state.item || []).forEach(i => {
+    const key = i.code + '|' + i.month;
+    if (!agg[key]) agg[key] = { code: i.code, month: i.month, rev: 0, adCost: 0, adRev: 0 };
+    agg[key].rev += i.revenue;
+  });
+  (state.ad || []).forEach(a => {
+    const key = a.code + '|' + a.month;
+    if (!agg[key]) agg[key] = { code: a.code, month: a.month, rev: 0, adCost: 0, adRev: 0 };
+    agg[key].adCost += a.adCost;
+    agg[key].adRev += a.adRevenue;
+  });
+  Object.values(agg).forEach(r => {
+    r.seoRev = Math.max(0, r.rev - r.adRev);
+    r.roas = r.adCost > 0 ? (r.adRev / r.adCost) * 100 : null;
+  });
+  return Object.values(agg);
+}
+
+// ==================== Status counts ====================
+function updateStateCounts() {
+  const allCodes = new Set();
+  (state.item || []).forEach(i => allCodes.add(i.code));
+  Object.keys(state.master).forEach(c => allCodes.add(c));
+  let adOk = 0, adNg = 0, adNone = 0, proOk = 0, proNg = 0;
+  allCodes.forEach(code => {
+    const meta = state.productMeta[code] || {};
+    if (meta.adStatus === '広告○') adOk++;
+    else if (meta.adStatus === '広告×') adNg++;
+    else if (meta.adStatus === '広告無') adNone++;
+    if (meta.proStatus === 'PRO○') proOk++;
+    else if (meta.proStatus === 'PRO×') proNg++;
+  });
+  $('#cntAll').textContent = allCodes.size;
+  $('#cntAdOk').textContent = adOk;
+  $('#cntAdNg').textContent = adNg;
+  $('#cntAdNone').textContent = adNone;
+  $('#cntProOk').textContent = proOk;
+  $('#cntProNg').textContent = proNg;
+}
+
+// ==================== Status select helpers ====================
+function statusSelectHtml(code, kind /* 'ad' | 'pro' */) {
+  const meta = getMeta(code);
+  const value = kind === 'ad' ? meta.adStatus : meta.proStatus;
+  const options = kind === 'ad'
+    ? ['', '広告○', '広告×', '広告無']
+    : ['', 'PRO○', 'PRO×'];
+  const cls = !value ? 'none' : (value.includes('○') ? 'ok' : (value.includes('×') ? 'ng' : 'none'));
+  const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
+  return `<select class="status-select ${cls}" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
+}
+
+function noteCellHtml(code, kind /* 'ad' | 'pro' */) {
+  const meta = getMeta(code);
+  const value = kind === 'ad' ? meta.adNote : meta.proNote;
+  return `<div class="note-cell" contenteditable="true" data-code="${escapeHtml(code)}" data-kind="${kind}">${escapeHtml(value || '')}</div>`;
+}
+
+// ==================== KW Cell editable ====================
+function kwCellHtml(code) {
+  const m = getMaster(code);
+  const kw = m ? m.kw : '';
+  const edited = m && m.editedKw;
+  const cls = 'kw-cell' + (edited ? ' edited' : '');
+  return `<div class="${cls}" data-code="${escapeHtml(code)}" title="ダブルクリックで編集">${escapeHtml(kw) || '<span style="color:var(--text3)">—</span>'}</div>`;
+}
+
+// ==================== Rendering: 商品-基本データ ====================
+let basicSortKey = 'rev', basicSortDir = -1;
+function renderBasic() {
+  const months = getAvailableMonths();
+  const sel = $('#basicMonth');
+  const cur = sel.value;
+  if (months.length === 0) {
+    sel.innerHTML = '<option value="">データなし</option>';
+  } else {
+    sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    // デフォルトは最新月
+    if (!cur || !months.includes(cur)) {
+      sel.value = months[months.length - 1];
+    } else {
+      sel.value = cur;
+    }
+  }
+  const targetMonth = sel.value;
+
+  const agg = buildFullAggregate();
+  // 選択月のみ
+  let list = agg.filter(r => r.month === targetMonth);
+
+  // master のみの商品（データがなくても全商品表示のため）
+  if (targetMonth) {
+    const knownCodes = new Set(list.map(r => r.code));
+    Object.keys(state.master).forEach(code => {
+      if (!knownCodes.has(code)) {
+        list.push({ code, month: targetMonth, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null });
+      }
+    });
+  }
+
+  // 検索
+  const q = $('#basicSearch').value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(r => {
+      const m = getMaster(r.code);
+      const hay = [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  // ソート
+  const sortGet = (r, k) => {
+    if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
+    return r[k] || 0;
+  };
+  list.sort((a, b) => {
+    const va = sortGet(a, basicSortKey), vb = sortGet(b, basicSortKey);
+    if (typeof va === 'string') return basicSortDir * va.localeCompare(vb);
+    return basicSortDir * (va - vb);
+  });
+
+  const tbody = $('#tableBasic tbody');
+  tbody.innerHTML = '';
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" class="empty-state">データを読み込んでください</td></tr>';
+    return;
+  }
+  list.slice(0, 2000).forEach(r => {
+    const bid = state.bid ? state.bid[r.code] : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td class="num">${fmt(r.rev)}</td>
+      <td class="num">${fmt(r.seoRev)}</td>
+      <td class="num">${fmt(r.adRev)}</td>
+      <td class="num">${fmt(r.adCost)}</td>
+      <td class="num ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      <td class="num bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
+      <td>${statusSelectHtml(r.code, 'ad')}</td>
+      <td>${statusSelectHtml(r.code, 'pro')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==================== Rendering: 商品-月別データ ====================
+let monthlySortKey = 'month', monthlySortDir = -1;
+function renderMonthly() {
+  const agg = buildFullAggregate();
+  let list = agg.filter(r => r.month);  // 月あるもの
+
+  const q = $('#monthlySearch').value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(r => {
+      const m = getMaster(r.code);
+      const hay = [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  const sortGet = (r, k) => {
+    if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    return r[k] || 0;
+  };
+  list.sort((a, b) => {
+    const va = sortGet(a, monthlySortKey), vb = sortGet(b, monthlySortKey);
+    if (typeof va === 'string') return monthlySortDir * va.localeCompare(vb);
+    return monthlySortDir * (va - vb);
+  });
+
+  const tbody = $('#tableMonthly tbody');
+  tbody.innerHTML = '';
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">データを読み込んでください</td></tr>';
+    return;
+  }
+  list.slice(0, 3000).forEach(r => {
+    const monthDisplay = r.month ? r.month.replace('-', '/') : '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td>${monthDisplay}</td>
+      <td class="num">${fmt(r.rev)}</td>
+      <td class="num">${fmt(r.seoRev)}</td>
+      <td class="num">${fmt(r.adRev)}</td>
+      <td class="num">${fmt(r.adCost)}</td>
+      <td class="num ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==================== Rendering: 全-月別データ（グラフ）====================
+function renderGraph() {
+  const months = getAvailableMonths();
+  const data = months.map(m => {
+    let rev = 0, adRev = 0, adCost = 0;
+    (state.item || []).filter(i => i.month === m).forEach(i => { rev += i.revenue; });
+    (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue; adCost += a.adCost; });
+    // overallの売上を優先（より正確な総売上）
+    if (state.overall) {
+      const o = state.overall.months.find(x => x.month === m);
+      if (o && o.revenue > 0) rev = o.revenue;
+    }
+    return { month: m, rev, adRev, adCost, seoRev: Math.max(0, rev - adRev) };
+  });
+
+  const labels = data.map(d => d.month);
+  const ctx = document.getElementById('chartAll').getContext('2d');
+  if (state.charts.chartAll) state.charts.chartAll.destroy();
+  state.charts.chartAll = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: '総売上', data: data.map(d => d.rev), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
+        { label: 'SEO売上', data: data.map(d => d.seoRev), borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
+        { label: '広告売上', data: data.map(d => d.adRev), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
+        { label: '実績額', data: data.map(d => d.adCost), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#4a4d52' }, position: 'top' },
+        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ¥${Math.round(c.parsed.y).toLocaleString()}` } }
+      },
+      scales: {
+        x: { title: { display: true, text: '月', color: '#8a8d94' }, ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { title: { display: true, text: '金額（円）', color: '#8a8d94' }, ticks: { color: '#8a8d94', callback: v => '¥' + v.toLocaleString() }, grid: { color: 'rgba(0,0,0,0.06)' } }
+      }
+    }
+  });
+}
+
+// ==================== Rendering: 広告調整 ====================
+function last3Months() {
+  const months = getAvailableMonths();
+  return months.slice(-3);
+}
+
+function renderAdAdjust() {
+  const months = last3Months();
+  // 動的に見出しを更新（月が分かる場合）
+  if (months.length >= 1) $('#hAdAdjustAdRev0').innerHTML = `広告売上<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#hAdAdjustAdRev1').innerHTML = `広告売上<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#hAdAdjustAdRev2').innerHTML = `広告売上<br>${months[2] || '(前月)'}`;
+  if (months.length >= 1) $('#hAdAdjustRoas0').innerHTML = `広告ROAS<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#hAdAdjustRoas1').innerHTML = `広告ROAS<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#hAdAdjustRoas2').innerHTML = `広告ROAS<br>${months[2] || '(前月)'}`;
+
+  // 商品コード一覧
+  const codes = new Set(Object.keys(state.master));
+  (state.item || []).forEach(i => codes.add(i.code));
+  (state.ad || []).forEach(a => codes.add(a.code));
+
+  const agg = buildFullAggregate();
+  const byKey = {};
+  agg.forEach(r => { byKey[r.code + '|' + r.month] = r; });
+
+  let list = [...codes].map(code => {
+    const adRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adRev : 0);
+    const roass = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].roas : null);
+    return { code, adRevs, roass };
+  });
+
+  const q = $('#adAdjustSearch').value.trim().toLowerCase();
+  if (q) list = list.filter(r => {
+    const m = getMaster(r.code);
+    return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
+  });
+
+  const tbody = $('#tableAdAdjust tbody');
+  tbody.innerHTML = '';
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">データを読み込んでください</td></tr>';
+    return;
+  }
+  list.sort((a, b) => (b.adRevs[2] || 0) - (a.adRevs[2] || 0));
+  list.slice(0, 2000).forEach(r => {
+    const bid = state.bid ? state.bid[r.code] : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td>${searchUrlCellHtml(r.code)}</td>
+      <td class="num">${fmt(r.adRevs[0])}</td>
+      <td class="num">${fmt(r.adRevs[1])}</td>
+      <td class="num">${fmt(r.adRevs[2])}</td>
+      <td class="num ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
+      <td class="num ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
+      <td class="num ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
+      <td class="num bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
+      <td>${statusSelectHtml(r.code, 'ad')}</td>
+      <td>${statusSelectHtml(r.code, 'pro')}</td>
+      <td>${noteCellHtml(r.code, 'ad')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==================== Rendering: PRO調整 ====================
+function renderProAdjust() {
+  const months = last3Months();
+  if (months.length >= 1) $('#hProAdjustSeo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#hProAdjustSeo1').innerHTML = `SEO売上<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#hProAdjustSeo2').innerHTML = `SEO売上<br>${months[2] || '(前月)'}`;
+
+  const codes = new Set(Object.keys(state.master));
+  (state.item || []).forEach(i => codes.add(i.code));
+
+  const agg = buildFullAggregate();
+  const byKey = {};
+  agg.forEach(r => { byKey[r.code + '|' + r.month] = r; });
+
+  let list = [...codes].map(code => {
+    const seoRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].seoRev : 0);
+    return { code, seoRevs };
+  });
+
+  const q = $('#proAdjustSearch').value.trim().toLowerCase();
+  if (q) list = list.filter(r => {
+    const m = getMaster(r.code);
+    return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
+  });
+
+  const tbody = $('#tableProAdjust tbody');
+  tbody.innerHTML = '';
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">データを読み込んでください</td></tr>';
+    return;
+  }
+  list.sort((a, b) => (b.seoRevs[2] || 0) - (a.seoRevs[2] || 0));
+  list.slice(0, 2000).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td>${searchUrlCellHtml(r.code)}</td>
+      <td class="num">${fmt(r.seoRevs[0])}</td>
+      <td class="num">${fmt(r.seoRevs[1])}</td>
+      <td class="num">${fmt(r.seoRevs[2])}</td>
+      <td>${statusSelectHtml(r.code, 'ad')}</td>
+      <td>${statusSelectHtml(r.code, 'pro')}</td>
+      <td>${noteCellHtml(r.code, 'pro')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==================== Render All ====================
+function renderAll() {
+  updateStateCounts();
+  if (state.currentView === 'basic') renderBasic();
+  else if (state.currentView === 'monthly') renderMonthly();
+  else if (state.currentView === 'graph') renderGraph();
+  else if (state.currentView === 'ad-adjust') renderAdAdjust();
+  else if (state.currentView === 'pro-adjust') renderProAdjust();
+}
+
+// ==================== Sidebar Navigation ====================
+$$('.sidebar-item').forEach(item => {
+  item.addEventListener('click', () => {
+    $$('.sidebar-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    const view = item.dataset.view;
+    state.currentView = view;
+    $$('.view').forEach(v => v.classList.remove('active'));
+    $('#view-' + view).classList.add('active');
+    renderAll();
+  });
+});
+
+// ==================== Modal ====================
 const uploadModal = $('#uploadModal');
 function openUploadModal() {
-  // バッファ・スロット表示・ログを毎回リセット（state内の確定済みデータは保持）
   state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
   ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
   $('#logArea').innerHTML = '';
   $('#logArea').classList.remove('show');
-  // バリデーション表示初期化
   validateBuffer();
   uploadModal.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1788,14 +1588,14 @@ function closeUploadModal() {
 $('#btnJumpUpload').addEventListener('click', openUploadModal);
 $('#modalClose').addEventListener('click', closeUploadModal);
 $('#btnCloseBottom').addEventListener('click', closeUploadModal);
-// オーバーレイクリックで閉じる（モーダル本体のクリックは無視）
-uploadModal.addEventListener('click', (e) => {
-  if (e.target === uploadModal) closeUploadModal();
-});
-// Escキーで閉じる
+uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) closeUploadModal(); });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && uploadModal.classList.contains('open')) closeUploadModal();
 });
+
+// ==================== Events ====================
+$('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.1));
+$('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.1));
 
 const dropzone = $('#dropzone');
 const fileInput = $('#fileInput');
@@ -1820,146 +1620,149 @@ $('#btnConfirmUpload').addEventListener('click', commitUpload);
 
 $('#btnClear').addEventListener('click', () => {
   state.overall = null; state.item = null; state.ad = null; state.bid = null;
-  state.master = {};
+  state.master = {}; state.productMeta = {};
   state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
   ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
   state.charts = {};
-  ['sumRevenue','sumAdCost','sumAdRev','sumRoas'].forEach(id => $('#' + id).textContent = '—');
-  ['tableOverall','tableItem','tableBidAdjust','tableBid'].forEach(id => $('#' + id + ' tbody').innerHTML = '');
-  $('#logArea').innerHTML = '';
   clearStorage();
   validateBuffer();
   log('全データをクリアしました（ブラウザ保存分も削除）', 'ok');
+  renderAll();
 });
 
 $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggle('show'));
 
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    $('#tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-document.querySelectorAll('.sub-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.sub-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    $('#sub-' + btn.dataset.sub).classList.add('active');
-    if (btn.dataset.sub === 'item-chart') renderItemChart();
-  });
-});
-
-$('#itemSearch').addEventListener('input', renderItemBasic);
-$('#itemMonth').addEventListener('change', renderItemBasic);
-document.querySelectorAll('#tableItem th[data-sort]').forEach(th => {
+// Basicビューの操作
+$('#basicMonth').addEventListener('change', renderBasic);
+$('#basicSearch').addEventListener('input', renderBasic);
+$$('#tableBasic th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
     const k = th.dataset.sort;
-    if (itemSortKey === k) itemSortDir *= -1;
-    else { itemSortKey = k; itemSortDir = -1; }
-    renderItemBasic();
+    if (basicSortKey === k) basicSortDir *= -1;
+    else { basicSortKey = k; basicSortDir = -1; }
+    renderBasic();
   });
 });
 
-$('#chartItemSelect').addEventListener('change', renderItemChart);
-$('#chartMetricSelect').addEventListener('change', renderItemChart);
-
-$('#bidAdjustSearch').addEventListener('input', renderBidAdjust);
-$('#bidAdjustFilter').addEventListener('change', renderBidAdjust);
-document.querySelectorAll('#tableBidAdjust th[data-sort]').forEach(th => {
+// Monthlyビューの操作
+$('#monthlySearch').addEventListener('input', renderMonthly);
+$$('#tableMonthly th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
     const k = th.dataset.sort;
-    if (bidAdjustSortKey === k) bidAdjustSortDir *= -1;
-    else { bidAdjustSortKey = k; bidAdjustSortDir = -1; }
-    renderBidAdjust();
+    if (monthlySortKey === k) monthlySortDir *= -1;
+    else { monthlySortKey = k; monthlySortDir = -1; }
+    renderMonthly();
   });
 });
 
-// ==================== KW Inline Edit ====================
+// 調整ビューの操作
+$('#adAdjustSearch').addEventListener('input', renderAdAdjust);
+$('#proAdjustSearch').addEventListener('input', renderProAdjust);
+
+// ==================== 広告/PRO状態プルダウン ====================
+document.addEventListener('change', (e) => {
+  if (!e.target.classList.contains('status-select')) return;
+  const code = e.target.dataset.code;
+  const kind = e.target.dataset.kind;
+  const value = e.target.value;
+  const meta = getMeta(code);
+  if (kind === 'ad') meta.adStatus = value;
+  else meta.proStatus = value;
+  saveToStorage();
+  // 見た目更新
+  const cls = !value ? 'none' : (value.includes('○') ? 'ok' : 'ng');
+  e.target.className = 'status-select ' + cls;
+  // 件数バッジ更新
+  updateStateCounts();
+});
+
+// ==================== 対応内容（note）編集 ====================
+document.addEventListener('focus', (e) => {
+  if (!e.target.classList || !e.target.classList.contains('note-cell')) return;
+  // フォーカス時の初期値を保持（後でempty判定に使用）
+  e.target.dataset.originalValue = e.target.textContent.trim();
+}, true);
+
+document.addEventListener('blur', (e) => {
+  if (!e.target.classList || !e.target.classList.contains('note-cell')) return;
+  const code = e.target.dataset.code;
+  const kind = e.target.dataset.kind;
+  const meta = getMeta(code);
+  const value = e.target.textContent.trim();
+  const originalValue = e.target.dataset.originalValue || '';
+
+  // 空のまま離れた && もとから空 → 更新日時を自動挿入
+  if (!value && !originalValue) {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const stamp = `更新日時-${yy}/${mm}${dd}`;
+    e.target.textContent = stamp;
+    if (kind === 'ad') meta.adNote = stamp;
+    else meta.proNote = stamp;
+  } else {
+    if (kind === 'ad') meta.adNote = value;
+    else meta.proNote = value;
+  }
+  saveToStorage();
+}, true);
+
+// ==================== KW ダブルクリック編集 ====================
 function startKwEdit(cell) {
-  // 既に編集中なら何もしない
   if (cell.querySelector('input')) return;
   const code = cell.dataset.code;
   if (!code) return;
   const m = getMaster(code);
   const currentKw = m ? m.kw : '';
-
-  // 元のHTMLを退避
   const originalHtml = cell.innerHTML;
   cell.innerHTML = '';
-
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'kw-edit-input';
   input.value = currentKw;
-  input.setAttribute('data-code', code);
   cell.appendChild(input);
   input.focus();
   input.select();
-
   let committed = false;
-
   const commit = () => {
     if (committed) return;
     committed = true;
     const newKw = input.value.trim();
-    // state.masterにエントリがなければ作る
     if (!state.master[code]) {
       state.master[code] = { code, name: '', kw: '', searchUrl: '', editedKw: false };
     }
-    const existingKw = state.master[code].kw || '';
-    if (newKw !== existingKw) {
+    if (newKw !== (state.master[code].kw || '')) {
       state.master[code].kw = newKw;
       state.master[code].editedKw = true;
       saveToStorage();
-      log(`✏️ 主要KWを更新: ${code} → 「${newKw}」`, 'ok');
     }
-    // 全テーブルを再描画（同じ商品が他のタブにも出ている可能性）
-    renderItemBasic();
-    renderBidAdjust();
-    renderBid();
+    renderAll();
   };
-
   const cancel = () => {
     if (committed) return;
     committed = true;
     cell.innerHTML = originalHtml;
   };
-
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      commit();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      cancel();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
   });
-  input.addEventListener('blur', () => {
-    commit();
-  });
+  input.addEventListener('blur', commit);
 }
-
-// 全体でKWセルのダブルクリック検知（イベント委譲）
 document.addEventListener('dblclick', (e) => {
-  const cell = e.target.closest('.kw-cell.editable');
+  const cell = e.target.closest('.kw-cell');
   if (!cell) return;
   if (cell.querySelector('input')) return;
   e.preventDefault();
   startKwEdit(cell);
 });
 
-// 初期化：localStorageから復元＆描画
+// ==================== 初期化 ====================
 const restored = loadFromStorage();
 renderAll();
-updateDataStatus();
-if (restored) {
-  console.log('Ycheck: 保存済みデータを復元しました', restored);
-}
+if (restored) console.log('Ycheck: 保存済みデータを復元');
 </script>
 </body>
 </html>
