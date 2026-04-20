@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v20 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v21 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -28,13 +28,15 @@
   --font-scale: 1;
 }
 * { box-sizing: border-box; }
-html { font-size: calc(14px * var(--font-scale)); }
+html { font-size: calc(13px * var(--font-scale)); }
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Header */
@@ -42,7 +44,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
@@ -50,10 +52,11 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 64px;
 }
-.logo { display: flex; align-items: baseline; gap: 10px; }
-.logo-main { font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
-.logo-sub { font-size: 0.75rem; color: var(--text3); font-weight: 500; }
+.logo { display: flex; align-items: baseline; gap: 8px; }
+.logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
+.logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
 
 .header-status-row {
   display: flex;
@@ -134,51 +137,63 @@ body {
 }
 .btn.primary:disabled { background: var(--bg3); color: var(--text3); border-color: var(--border); }
 
-/* Layout: Sidebar + Main */
+/* Layout: no sidebar, top tabs */
 .app {
-  display: flex;
   min-height: calc(100vh - 64px);
 }
-.sidebar {
-  width: 220px;
+
+/* Top tab navigation bar (ADcheck style) */
+.top-nav {
   background: var(--bg2);
-  border-right: 1px solid var(--border);
-  padding: 16px 0;
-  flex-shrink: 0;
-}
-.sidebar-section { margin-bottom: 18px; }
-.sidebar-title {
-  padding: 6px 18px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text3);
-  text-transform: none;
-  letter-spacing: 0.5px;
-}
-.sidebar-item {
+  border-bottom: 1px solid var(--border);
+  padding: 6px 20px 0 20px;
   display: flex;
-  align-items: center;
-  padding: 8px 18px;
-  font-size: 0.88rem;
+  gap: 18px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 64px;
+  z-index: 99;
+}
+.nav-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.nav-group-label {
+  font-size: 0.7rem;
+  color: var(--text3);
+  font-weight: 600;
+  padding: 0 4px 6px 0;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+.nav-tab {
+  padding: 8px 14px;
+  font-size: 0.85rem;
   color: var(--text2);
   cursor: pointer;
-  border-left: 3px solid transparent;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
   transition: all 0.12s;
-  gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-weight: 500;
 }
-.sidebar-item:hover { background: var(--bg3); color: var(--text); }
-.sidebar-item.active {
-  background: rgba(37,99,235,0.08);
+.nav-tab:hover { color: var(--text); background: var(--bg3); }
+.nav-tab.active {
   color: var(--accent);
-  border-left-color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(37,99,235,0.04);
   font-weight: 600;
 }
-.sidebar-item .ico { font-size: 0.9rem; }
+.nav-tab .ico { font-size: 0.9rem; }
 
 .main {
-  flex: 1;
-  padding: 20px;
-  overflow: hidden;
+  padding: 18px 20px;
 }
 .view { display: none; }
 .view.active { display: block; }
@@ -463,7 +478,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v20</div>
+    <div class="logo-sub">v21</div>
   </div>
   <!-- 【状態】件数バッジ群 -->
   <div class="header-status-row" id="stateChips">
@@ -484,36 +499,26 @@ tbody tr:hover { background: var(--bg3); }
   </div>
 </div>
 
+<!-- Top Tab Navigation -->
+<nav class="top-nav">
+  <div class="nav-group">
+    <span class="nav-group-label">【基本】</span>
+    <button class="nav-tab active" data-view="basic"><span class="ico">📊</span>商品-基本データ</button>
+    <button class="nav-tab" data-view="monthly"><span class="ico">📅</span>商品-月別データ</button>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label">【グラフ】</span>
+    <button class="nav-tab" data-view="graph"><span class="ico">📈</span>全-月別データ</button>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label">【定期チェック】</span>
+    <button class="nav-tab" data-view="ad-adjust"><span class="ico">🎯</span>広告調整</button>
+    <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRO調整</button>
+  </div>
+</nav>
+
 <!-- App Layout -->
 <div class="app">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-title">【基本】</div>
-      <div class="sidebar-item active" data-view="basic">
-        <span class="ico">📊</span>商品-基本データ
-      </div>
-      <div class="sidebar-item" data-view="monthly">
-        <span class="ico">📅</span>商品-月別データ
-      </div>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-title">【グラフ】</div>
-      <div class="sidebar-item" data-view="graph">
-        <span class="ico">📈</span>全-月別データ
-      </div>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-title">【定期チェック】</div>
-      <div class="sidebar-item" data-view="ad-adjust">
-        <span class="ico">🎯</span>広告調整
-      </div>
-      <div class="sidebar-item" data-view="pro-adjust">
-        <span class="ico">⭐</span>PRO調整
-      </div>
-    </div>
-  </aside>
-
   <!-- Main -->
   <main class="main">
 
@@ -1557,10 +1562,10 @@ function renderAll() {
   else if (state.currentView === 'pro-adjust') renderProAdjust();
 }
 
-// ==================== Sidebar Navigation ====================
-$$('.sidebar-item').forEach(item => {
+// ==================== Top Tab Navigation ====================
+$$('.nav-tab').forEach(item => {
   item.addEventListener('click', () => {
-    $$('.sidebar-item').forEach(i => i.classList.remove('active'));
+    $$('.nav-tab').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     const view = item.dataset.view;
     state.currentView = view;
