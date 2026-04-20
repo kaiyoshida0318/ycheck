@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v22 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v23 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -291,7 +291,7 @@ tbody tr:hover { background: var(--bg3); }
 .roas-bad { color: var(--red); font-weight: 600; }
 .roas-mid { color: var(--amber); font-weight: 600; }
 
-/* Status select (広告状態/PRO状態) */
+/* Status select (広告状態/PRオプ状態) */
 .status-select {
   padding: 4px 6px;
   border: 1px solid var(--border2);
@@ -491,7 +491,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v22</div>
+    <div class="logo-sub">v23</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -521,7 +521,7 @@ tbody tr:hover { background: var(--bg3); }
   <div class="nav-group">
     <span class="nav-group-label">【定期チェック】</span>
     <button class="nav-tab" data-view="ad-adjust"><span class="ico">🎯</span>広告調整</button>
-    <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRO調整</button>
+    <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRオプ調整</button>
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【状態】</span>
@@ -529,8 +529,8 @@ tbody tr:hover { background: var(--bg3); }
     <span class="status-chip">広告○ <span class="num" id="cntAdOk">0</span></span>
     <span class="status-chip">広告× <span class="num" id="cntAdNg">0</span></span>
     <span class="status-chip">広告無 <span class="num" id="cntAdNone">0</span></span>
-    <span class="status-chip">PRO○ <span class="num" id="cntProOk">0</span></span>
-    <span class="status-chip">PRO× <span class="num" id="cntProNg">0</span></span>
+    <span class="status-chip">PRオプ○ <span class="num" id="cntProOk">0</span></span>
+    <span class="status-chip">PRオプ× <span class="num" id="cntProNg">0</span></span>
   </div>
 </nav>
 
@@ -562,7 +562,7 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num" data-sort="roas">広告ROAS</th>
               <th class="num" data-sort="bid">入札価格</th>
               <th class="nosort">広告状態</th>
-              <th class="nosort">PRO状態</th>
+              <th class="nosort">PRオプ状態</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -612,6 +612,7 @@ tbody tr:hover { background: var(--bg3); }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
+          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust">
@@ -628,7 +629,7 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num nosort" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
               <th class="num" data-sort="bid">入札価格</th>
               <th class="nosort">広告状態</th>
-              <th class="nosort">PRO状態</th>
+              <th class="nosort">PRオプ状態</th>
               <th class="nosort">対応内容</th>
             </tr></thead>
             <tbody></tbody>
@@ -640,10 +641,11 @@ tbody tr:hover { background: var(--bg3); }
     <!-- View: PRO調整 -->
     <div class="view" id="view-pro-adjust">
       <div class="card">
-        <h3 class="card-title">PRO調整</h3>
+        <h3 class="card-title">PRオプ調整</h3>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
+          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -656,7 +658,7 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num nosort" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num nosort" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
               <th class="nosort">広告状態</th>
-              <th class="nosort">PRO状態</th>
+              <th class="nosort">PRオプ状態</th>
               <th class="nosort">対応内容</th>
             </tr></thead>
             <tbody></tbody>
@@ -805,7 +807,14 @@ function loadFromStorage() {
     if (data.ad) state.ad = data.ad;
     if (data.bid) state.bid = data.bid;
     if (data.master) state.master = data.master;
-    if (data.productMeta) state.productMeta = data.productMeta;
+    if (data.productMeta) {
+      state.productMeta = data.productMeta;
+      // 旧「PRO○/×」→「PRオプ○/×」にマイグレーション
+      Object.values(state.productMeta).forEach(m => {
+        if (m && m.proStatus === 'PRO○') m.proStatus = 'PRオプ○';
+        else if (m && m.proStatus === 'PRO×') m.proStatus = 'PRオプ×';
+      });
+    }
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
 }
@@ -1242,8 +1251,8 @@ function updateStateCounts() {
     if (meta.adStatus === '広告○') adOk++;
     else if (meta.adStatus === '広告×') adNg++;
     else if (meta.adStatus === '広告無') adNone++;
-    if (meta.proStatus === 'PRO○') proOk++;
-    else if (meta.proStatus === 'PRO×') proNg++;
+    if (meta.proStatus === 'PRオプ○' || meta.proStatus === 'PRO○') proOk++;
+    else if (meta.proStatus === 'PRオプ×' || meta.proStatus === 'PRO×') proNg++;
   });
   $('#cntAll').textContent = allCodes.size;
   $('#cntAdOk').textContent = adOk;
@@ -1259,7 +1268,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' */) {
   const value = kind === 'ad' ? meta.adStatus : meta.proStatus;
   const options = kind === 'ad'
     ? ['', '広告○', '広告×', '広告無']
-    : ['', 'PRO○', 'PRO×'];
+    : ['', 'PRオプ○', 'PRオプ×'];
   const cls = !value ? 'none' : (value.includes('○') ? 'ok' : (value.includes('×') ? 'ng' : 'none'));
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   return `<select class="status-select ${cls}" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
@@ -1654,6 +1663,36 @@ $('#btnClear').addEventListener('click', () => {
 });
 
 $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggle('show'));
+
+// 更新日時のみを削除するヘルパー
+// 「更新日時-」で始まる単独文言の場合のみ空白に、それ以外のメモはそのまま残す
+function isAutoTimestamp(text) {
+  if (!text) return false;
+  const trimmed = text.trim();
+  // 「更新日時-YY/MMDD」形式（前後空白は許容）のみマッチ、他の文字が含まれていれば false
+  return /^更新日時-\d{2}\/\d{4}$/.test(trimmed);
+}
+
+function deleteNoteStamps(kind /* 'ad' | 'pro' */) {
+  let count = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const meta = state.productMeta[code];
+    if (!meta) return;
+    const field = kind === 'ad' ? 'adNote' : 'proNote';
+    if (isAutoTimestamp(meta[field])) {
+      meta[field] = '';
+      count++;
+    }
+  });
+  if (count > 0) {
+    saveToStorage();
+    renderAll();
+  }
+  alert(`${count}件の「更新日時-」を削除しました（メモ書きのセルはそのまま残しています）`);
+}
+
+$('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad'));
+$('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
