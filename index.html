@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v47 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v48 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -238,7 +238,10 @@ body {
 }
 .state-chip[data-state="ad-ok"]:hover,
 .state-chip[data-state="ad-ng"]:hover,
-.state-chip[data-state="ad-none"]:hover {
+.state-chip[data-state="ad-none"]:hover,
+.state-chip[data-state="ad-ok"].active,
+.state-chip[data-state="ad-ng"].active,
+.state-chip[data-state="ad-none"].active {
   background: #f4b860;
   border-color: #e09824;
 }
@@ -250,7 +253,9 @@ body {
   border-color: #d4c4ed;
 }
 .state-chip[data-state="pro-ok"]:hover,
-.state-chip[data-state="pro-ng"]:hover {
+.state-chip[data-state="pro-ng"]:hover,
+.state-chip[data-state="pro-ok"].active,
+.state-chip[data-state="pro-ng"].active {
   background: #a880d8;
   border-color: #8b5cf6;
 }
@@ -262,7 +267,9 @@ body {
   border-color: #f5b8b5;
 }
 .state-chip[data-state="pro-wc"]:hover,
-.state-chip[data-state="pro-w"]:hover {
+.state-chip[data-state="pro-w"]:hover,
+.state-chip[data-state="pro-wc"].active,
+.state-chip[data-state="pro-w"].active {
   background: #ef6f6c;
   border-color: #dc2626;
 }
@@ -274,7 +281,9 @@ body {
   border-color: #c8cdd5;
 }
 .state-chip[data-state="unselected-ad"]:hover,
-.state-chip[data-state="unselected-pro"]:hover {
+.state-chip[data-state="unselected-pro"]:hover,
+.state-chip[data-state="unselected-ad"].active,
+.state-chip[data-state="unselected-pro"].active {
   background: #94a3b8;
   border-color: #64748b;
 }
@@ -980,7 +989,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v47</div>
+    <div class="logo-sub">v48</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
