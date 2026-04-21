@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v36 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v37 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -547,20 +547,22 @@ tbody tr:hover { background: var(--bg3); }
   font-size: 0.8rem;
   background: var(--bg2);
   color: var(--text);
-  min-width: 72px;
+  min-width: 68px;
   cursor: pointer;
 }
 
 /* status-selectを含むセル（td/th）の左右paddingを詰めて列間を狭く */
 th.status-col,
 td.status-col {
-  padding-left: 5px;
-  padding-right: 5px;
+  padding-left: 4px;
+  padding-right: 4px;
+  width: 1%;           /* テーブルが余幅を回さないよう最小幅に */
+  white-space: nowrap;
 }
 /* 連続する status-col 同士は特に詰める（例：広告状態→PRオプ状態） */
 th.status-col + th.status-col,
 td.status-col + td.status-col {
-  padding-left: 2px;
+  padding-left: 0;
 }
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
@@ -775,7 +777,7 @@ td.status-col + td.status-col {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v36</div>
+    <div class="logo-sub">v37</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
