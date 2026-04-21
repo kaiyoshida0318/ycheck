@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v33 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v34 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -28,7 +28,7 @@
   --font-scale: 1;
 }
 * { box-sizing: border-box; }
-html { font-size: calc(13px * var(--font-scale)); }
+html { font-size: calc(13px * var(--font-scale)); height: 100%; }
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
@@ -37,6 +37,10 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
@@ -151,7 +155,11 @@ body {
 
 /* Layout: no sidebar, top tabs */
 .app {
-  min-height: calc(100vh - 64px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Top tab navigation bar (ADcheck style) */
@@ -425,9 +433,21 @@ body {
 
 .main {
   padding: 18px 20px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-.view { display: none; }
-.view.active { display: block; }
+.view {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+.view.active {
+  display: flex;
+  flex-direction: column;
+}
 
 /* Cards */
 .card {
@@ -436,8 +456,12 @@ body {
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
-.card-title { font-size: 1rem; font-weight: 600; margin: 0 0 12px 0; }
+.card-title { font-size: 1rem; font-weight: 600; margin: 0 0 12px 0; flex-shrink: 0; }
 
 /* Filters */
 .filters {
@@ -446,6 +470,7 @@ body {
   margin-bottom: 14px;
   flex-wrap: wrap;
   align-items: center;
+  flex-shrink: 0;
 }
 .filters input, .filters select {
   padding: 6px 10px;
@@ -459,7 +484,12 @@ body {
 .filter-label { font-size: 0.8rem; color: var(--text3); font-weight: 500; }
 
 /* Table */
-.table-wrap { overflow-x: auto; border-radius: 8px; max-height: 72vh; }
+.table-wrap {
+  overflow: auto;
+  border-radius: 8px;
+  flex: 1;
+  min-height: 0;
+}
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
 th {
@@ -593,7 +623,7 @@ tbody tr:hover { background: var(--bg3); }
   color: var(--text3);
   font-size: 0.9rem;
 }
-.chart-box { position: relative; height: 420px; }
+.chart-box { position: relative; height: 420px; flex: 1; min-height: 300px; }
 
 /* Modal */
 .modal-overlay {
@@ -733,7 +763,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v33</div>
+    <div class="logo-sub">v34</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
