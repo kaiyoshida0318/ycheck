@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v39 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v40 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -495,7 +495,7 @@ th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--bor
 th {
   background: var(--bg3); font-weight: 600; color: var(--text2);
   font-size: 0.78rem; cursor: pointer; user-select: none;
-  position: sticky; top: 0; z-index: 1;
+  position: sticky; top: 0; z-index: 5;
 }
 th:hover { background: var(--border); }
 th.nosort { cursor: default; }
@@ -574,7 +574,7 @@ tbody tr:hover td.col-sales {
   background: rgba(22,163,74,0.12);
 }
 th.col-sales {
-  background: rgba(22,163,74,0.15);
+  background: #dff0e3;  /* 不透明：sticky時に下の行が透けないように */
 }
 
 /* グループ2: 広告売上・実績額・広告ROAS（広告系 / アンバー） */
@@ -585,7 +585,7 @@ tbody tr:hover td.col-ad {
   background: rgba(217,119,6,0.12);
 }
 th.col-ad {
-  background: rgba(217,119,6,0.15);
+  background: #fae6ce;  /* 不透明 */
 }
 
 /* グループ3: 入札価格（入札系 / ブルー） */
@@ -596,7 +596,7 @@ tbody tr:hover td.col-bid {
   background: rgba(37,99,235,0.14);
 }
 th.col-bid {
-  background: rgba(37,99,235,0.15);
+  background: #d6e1fa;  /* 不透明 */
 }
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
@@ -907,7 +907,7 @@ tbody tr:hover .name-edit-btn {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v39</div>
+    <div class="logo-sub">v40</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
