@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v55 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v56 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1009,7 +1009,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v55</div>
+    <div class="logo-sub">v56</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1091,6 +1091,7 @@ td:has(> .name-cell-wrap) {
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
+              <th class="nosort status-col">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1119,6 +1120,7 @@ td:has(> .name-cell-wrap) {
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
+              <th class="nosort status-col">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1142,7 +1144,7 @@ td:has(> .name-cell-wrap) {
               <th data-sort="name">商品名</th>
               <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th class="nosort status-col">PRオプ状態</th>
+              <th class="nosort status-col">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1186,6 +1188,7 @@ td:has(> .name-cell-wrap) {
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort">対応内容</th>
+              <th class="nosort status-col">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1217,6 +1220,7 @@ td:has(> .name-cell-wrap) {
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort">対応内容</th>
+              <th class="nosort status-col">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1483,8 +1487,44 @@ function loadFromStorage() {
     migrateRetiredByMissingName();
     // 【マイグレーション v55】state.bid のキーを小文字統一
     migrateBidKeysLowercase();
+    // 【マイグレーション v56】proStatus の撤退系を status フィールドへ移行
+    migrateProStatusToStatus();
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
+}
+
+// 【v56】proStatusの「撤退検討▲/撤退■/撤退済み」を status に移し、proStatus側はクリア
+// また、全商品のmetaに status（デフォルト「新商品」）を付与
+function migrateProStatusToStatus() {
+  if (!state.productMeta) state.productMeta = {};
+  // 既知コードに status のデフォルト値を補う
+  const allCodes = new Set();
+  Object.keys(state.master || {}).forEach(c => allCodes.add(c));
+  Object.keys(state.productMeta).forEach(c => allCodes.add(c));
+  (state.item || []).forEach(i => allCodes.add(i.code));
+  (state.ad || []).forEach(a => allCodes.add(a.code));
+  if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
+
+  let migrated = 0;
+  allCodes.forEach(code => {
+    if (!state.productMeta[code]) {
+      state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '新商品' };
+      return;
+    }
+    const meta = state.productMeta[code];
+    // proStatus が撤退系なら status に移して proStatus をクリア
+    if (meta.proStatus === '撤退検討▲' || meta.proStatus === '撤退■' || meta.proStatus === '撤退済み') {
+      meta.status = meta.proStatus;
+      meta.proStatus = '';
+      migrated++;
+    }
+    // statusフィールドが未設定の場合は「新商品」で補完
+    if (!meta.status) meta.status = '新商品';
+  });
+  if (migrated > 0) {
+    console.log(`Ycheck: ${migrated}件のPRオプ状態（撤退系）を「ステータス」へ移行しました`);
+    saveToStorage();
+  }
 }
 
 // 既存の state.bid に大文字混じりキーがある場合、小文字統一に変換
@@ -1903,14 +1943,18 @@ function clearSlot(kind) {
 
 // ==================== Helpers ====================
 function getMaster(code) { return state.master[code]; }
-// 「撤退済み」= PRオプ状態が「撤退済み」の商品
+// 「撤退済み」= ステータスが「撤退済み」の商品
 function isRetired(code) {
   const meta = state.productMeta[code];
-  return meta && meta.proStatus === '撤退済み';
+  return meta && meta.status === '撤退済み';
 }
 function getMeta(code) {
   if (!state.productMeta[code]) {
-    state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
+    state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '新商品' };
+  }
+  // statusが未定義の既存データは「新商品」で補完
+  if (!state.productMeta[code].status) {
+    state.productMeta[code].status = '新商品';
   }
   return state.productMeta[code];
 }
@@ -1998,8 +2042,10 @@ function updateStateCounts() {
     else if (adS === '広告無') adNone++;
     if (proS === 'PRオプ○' || proS === 'PRO○') proOk++;
     else if (proS === 'PRオプ×' || proS === 'PRO×') proNg++;
-    else if (proS === '撤退検討▲') proWithdrawConsider++;
-    else if (proS === '撤退■') proWithdraw++;
+    // 撤退検討▲・撤退■ は status フィールドから判定（v56〜）
+    const st = meta.status || '';
+    if (st === '撤退検討▲') proWithdrawConsider++;
+    else if (st === '撤退■') proWithdraw++;
     if (!adS) unselectedAd++;
     if (!proS) unselectedPro++;
   });
@@ -2015,17 +2061,27 @@ function updateStateCounts() {
 }
 
 // ==================== Status select helpers ====================
-function statusSelectHtml(code, kind /* 'ad' | 'pro' */) {
+function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
-  const value = kind === 'ad' ? meta.adStatus : meta.proStatus;
-  const options = kind === 'ad'
-    ? ['', '広告○', '広告×', '広告無']
-    : ['', 'PRオプ○', 'PRオプ×', '撤退検討▲', '撤退■', '撤退済み'];
+  let value, options;
+  if (kind === 'ad') {
+    value = meta.adStatus;
+    options = ['', '広告○', '広告×', '広告無'];
+  } else if (kind === 'pro') {
+    value = meta.proStatus;
+    options = ['', 'PRオプ○', 'PRオプ×'];
+  } else if (kind === 'status') {
+    value = meta.status || '新商品';
+    options = ['新商品', '現役商品', '撤退検討▲', '撤退■', '撤退済み'];
+  }
   let cls = 'none';
   if (value) {
     if (value.includes('○')) cls = 'ok';
     else if (value.includes('×') || value === '撤退■') cls = 'ng';
     else if (value === '撤退検討▲') cls = 'warn';
+    else if (value === '撤退済み') cls = 'ng';
+    else if (value === '現役商品') cls = 'ok';
+    else if (value === '新商品') cls = 'none';
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   return `<select class="status-select ${cls}" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
@@ -2107,7 +2163,7 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.slice(0, 2000).forEach(r => {
@@ -2125,6 +2181,7 @@ function renderBasic() {
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2162,7 +2219,7 @@ function renderMonthly() {
   const tbody = $('#tableMonthly tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.slice(0, 3000).forEach(r => {
@@ -2178,6 +2235,7 @@ function renderMonthly() {
       <td class="num col-ad">${fmt(r.adRev)}</td>
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2247,7 +2305,7 @@ function renderRetired() {
       <td>${nameCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${r.bid != null && r.bid > 0 ? "¥" + r.bid : "—"}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2347,7 +2405,7 @@ function renderAdAdjust() {
   const tbody = $('#tableAdAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.sort((a, b) => (b.adRevs[2] || 0) - (a.adRevs[2] || 0));
@@ -2370,6 +2428,7 @@ function renderAdAdjust() {
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2414,7 +2473,7 @@ function renderProAdjust() {
   const tbody = $('#tableProAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.sort((a, b) => (b.seoRevs[2] || 0) - (a.seoRevs[2] || 0));
@@ -2432,6 +2491,7 @@ function renderProAdjust() {
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2481,8 +2541,8 @@ const STATE_FILTERS = {
   'ad-none':       { label: '広告無',       targetView: 'pro-adjust', match: (meta) => (meta.adStatus || '') === '広告無' },
   'pro-ok':        { label: 'PRオプ○',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ○' || p === 'PRO○'; } },
   'pro-ng':        { label: 'PRオプ×',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ×' || p === 'PRO×'; } },
-  'pro-wc':        { label: '撤退検討▲',   targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === '撤退検討▲' },
-  'pro-w':         { label: '撤退■',       targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === '撤退■' },
+  'pro-wc':        { label: '撤退検討▲',   targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退検討▲' },
+  'pro-w':         { label: '撤退■',       targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退■' },
   'unselected-ad': { label: '選択前-広告□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
   'unselected-pro':{ label: '選択前-PRオプ□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
 };
@@ -2762,10 +2822,13 @@ document.addEventListener('change', (e) => {
   const value = e.target.value;
   const meta = getMeta(code);
   if (kind === 'ad') meta.adStatus = value;
-  else meta.proStatus = value;
-  // 広告状態・PRオプ状態のどちらを変更しても、両方の対応内容に更新日時を入れる
-  meta.adNote = applyUpdateStampToNote(meta.adNote);
-  meta.proNote = applyUpdateStampToNote(meta.proNote);
+  else if (kind === 'pro') meta.proStatus = value;
+  else if (kind === 'status') meta.status = value || '新商品';
+  // ad/pro変更時は両方の対応内容に更新日時を入れる（status変更時はnoteに触らない）
+  if (kind === 'ad' || kind === 'pro') {
+    meta.adNote = applyUpdateStampToNote(meta.adNote);
+    meta.proNote = applyUpdateStampToNote(meta.proNote);
+  }
   saveToStorage();
   // 見た目更新
   let cls = 'none';
@@ -2773,6 +2836,8 @@ document.addEventListener('change', (e) => {
     if (value.includes('○')) cls = 'ok';
     else if (value.includes('×') || value === '撤退■') cls = 'ng';
     else if (value === '撤退検討▲') cls = 'warn';
+    else if (value === '撤退済み') cls = 'ng';
+    else if (value === '現役商品') cls = 'ok';
   }
   e.target.className = 'status-select ' + cls;
   // 件数バッジ更新
