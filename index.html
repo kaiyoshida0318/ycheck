@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v37 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v38 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -564,6 +564,40 @@ th.status-col + th.status-col,
 td.status-col + td.status-col {
   padding-left: 0;
 }
+
+/* ==================== 列の色分けグループ ==================== */
+/* グループ1: 総売上・SEO売上（売上系 / グリーン） */
+th.col-sales, td.col-sales {
+  background: rgba(22,163,74,0.06);
+}
+tbody tr:hover td.col-sales {
+  background: rgba(22,163,74,0.12);
+}
+th.col-sales {
+  background: rgba(22,163,74,0.15);
+}
+
+/* グループ2: 広告売上・実績額・広告ROAS（広告系 / アンバー） */
+th.col-ad, td.col-ad {
+  background: rgba(217,119,6,0.06);
+}
+tbody tr:hover td.col-ad {
+  background: rgba(217,119,6,0.12);
+}
+th.col-ad {
+  background: rgba(217,119,6,0.15);
+}
+
+/* グループ3: 入札価格（入札系 / ブルー） */
+th.col-bid, td.col-bid {
+  background: rgba(37,99,235,0.06);
+}
+tbody tr:hover td.col-bid {
+  background: rgba(37,99,235,0.14);
+}
+th.col-bid {
+  background: rgba(37,99,235,0.15);
+}
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
 .status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
@@ -777,7 +811,7 @@ td.status-col + td.status-col {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v37</div>
+    <div class="logo-sub">v38</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -850,12 +884,12 @@ td.status-col + td.status-col {
               <th data-sort="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
-              <th class="num" data-sort="rev">総売上</th>
-              <th class="num" data-sort="seoRev">SEO売上</th>
-              <th class="num" data-sort="adRev">広告売上</th>
-              <th class="num" data-sort="adCost">実績額</th>
-              <th class="num" data-sort="roas">広告ROAS</th>
-              <th class="num" data-sort="bid">入札価格</th>
+              <th class="num col-sales" data-sort="rev">総売上</th>
+              <th class="num col-sales" data-sort="seoRev">SEO売上</th>
+              <th class="num col-ad" data-sort="adRev">広告売上</th>
+              <th class="num col-ad" data-sort="adCost">実績額</th>
+              <th class="num col-ad" data-sort="roas">広告ROAS</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
             </tr></thead>
@@ -880,11 +914,11 @@ td.status-col + td.status-col {
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
               <th data-sort="month">月</th>
-              <th class="num" data-sort="rev">総売上</th>
-              <th class="num" data-sort="seoRev">SEO売上</th>
-              <th class="num" data-sort="adRev">広告売上</th>
-              <th class="num" data-sort="adCost">実績額</th>
-              <th class="num" data-sort="roas">広告ROAS</th>
+              <th class="num col-sales" data-sort="rev">総売上</th>
+              <th class="num col-sales" data-sort="seoRev">SEO売上</th>
+              <th class="num col-ad" data-sort="adRev">広告売上</th>
+              <th class="num col-ad" data-sort="adCost">実績額</th>
+              <th class="num col-ad" data-sort="roas">広告ROAS</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -906,8 +940,8 @@ td.status-col + td.status-col {
               <th data-sort="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
-              <th class="num" data-sort="rev">総売上（直近月）</th>
-              <th class="num" data-sort="bid">入札価格</th>
+              <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="nosort status-col">PRオプ状態</th>
             </tr></thead>
             <tbody></tbody>
@@ -940,13 +974,13 @@ td.status-col + td.status-col {
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
               <th class="nosort">検索URL</th>
-              <th class="num nosort" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
-              <th class="num nosort" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
-              <th class="num nosort" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
-              <th class="num nosort" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
-              <th class="num nosort" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
-              <th class="num nosort" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
-              <th class="num" data-sort="bid">入札価格</th>
+              <th class="num nosort col-ad" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
+              <th class="num nosort col-ad" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
+              <th class="num nosort col-ad" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
+              <th class="num nosort col-ad" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
+              <th class="num nosort col-ad" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
+              <th class="num nosort col-ad" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort">対応内容</th>
@@ -973,9 +1007,9 @@ td.status-col + td.status-col {
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
               <th class="nosort">検索URL</th>
-              <th class="num nosort" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
-              <th class="num nosort" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
-              <th class="num nosort" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
+              <th class="num nosort col-sales" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
+              <th class="num nosort col-sales" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
+              <th class="num nosort col-sales" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort">対応内容</th>
@@ -1756,12 +1790,12 @@ function renderBasic() {
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      <td class="num">${fmt(r.rev)}</td>
-      <td class="num">${fmt(r.seoRev)}</td>
-      <td class="num">${fmt(r.adRev)}</td>
-      <td class="num">${fmt(r.adCost)}</td>
-      <td class="num ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
-      <td class="num bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
+      <td class="num col-sales">${fmt(r.rev)}</td>
+      <td class="num col-sales">${fmt(r.seoRev)}</td>
+      <td class="num col-ad">${fmt(r.adRev)}</td>
+      <td class="num col-ad">${fmt(r.adCost)}</td>
+      <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      <td class="num col-bid bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
@@ -1810,11 +1844,11 @@ function renderMonthly() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${monthDisplay}</td>
-      <td class="num">${fmt(r.rev)}</td>
-      <td class="num">${fmt(r.seoRev)}</td>
-      <td class="num">${fmt(r.adRev)}</td>
-      <td class="num">${fmt(r.adCost)}</td>
-      <td class="num ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      <td class="num col-sales">${fmt(r.rev)}</td>
+      <td class="num col-sales">${fmt(r.seoRev)}</td>
+      <td class="num col-ad">${fmt(r.adRev)}</td>
+      <td class="num col-ad">${fmt(r.adCost)}</td>
+      <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1886,8 +1920,8 @@ function renderRetired() {
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCell}</td>
-      <td class="num">${fmt(r.rev)}</td>
-      <td class="num bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
+      <td class="num col-sales">${fmt(r.rev)}</td>
+      <td class="num col-bid bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
@@ -2000,13 +2034,13 @@ function renderAdAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${searchUrlCellHtml(r.code)}</td>
-      <td class="num">${fmt(r.adRevs[0])}</td>
-      <td class="num">${fmt(r.adRevs[1])}</td>
-      <td class="num">${fmt(r.adRevs[2])}</td>
-      <td class="num ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
-      <td class="num ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
-      <td class="num ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
-      <td class="num bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
+      <td class="num col-ad">${fmt(r.adRevs[0])}</td>
+      <td class="num col-ad">${fmt(r.adRevs[1])}</td>
+      <td class="num col-ad">${fmt(r.adRevs[2])}</td>
+      <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
+      <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
+      <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
+      <td class="num col-bid bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
@@ -2065,9 +2099,9 @@ function renderProAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${searchUrlCellHtml(r.code)}</td>
-      <td class="num">${fmt(r.seoRevs[0])}</td>
-      <td class="num">${fmt(r.seoRevs[1])}</td>
-      <td class="num">${fmt(r.seoRevs[2])}</td>
+      <td class="num col-sales">${fmt(r.seoRevs[0])}</td>
+      <td class="num col-sales">${fmt(r.seoRevs[1])}</td>
+      <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
