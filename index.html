@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v34 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v35 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -541,14 +541,26 @@ tbody tr:hover { background: var(--bg3); }
 
 /* Status select (広告状態/PRオプ状態) */
 .status-select {
-  padding: 4px 6px;
+  padding: 4px 4px 4px 6px;
   border: 1px solid var(--border2);
   border-radius: 5px;
   font-size: 0.8rem;
   background: var(--bg2);
   color: var(--text);
-  min-width: 80px;
+  min-width: 72px;
   cursor: pointer;
+}
+
+/* status-selectを含むセル（td/th）の左右paddingを詰めて列間を狭く */
+th.status-col,
+td.status-col {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+/* 連続する status-col 同士は特に詰める（例：広告状態→PRオプ状態） */
+th.status-col + th.status-col,
+td.status-col + td.status-col {
+  padding-left: 2px;
 }
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
@@ -763,7 +775,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v34</div>
+    <div class="logo-sub">v35</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -842,8 +854,8 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num" data-sort="adCost">実績額</th>
               <th class="num" data-sort="roas">広告ROAS</th>
               <th class="num" data-sort="bid">入札価格</th>
-              <th class="nosort">広告状態</th>
-              <th class="nosort">PRオプ状態</th>
+              <th class="nosort status-col">広告状態</th>
+              <th class="nosort status-col">PRオプ状態</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -894,7 +906,7 @@ tbody tr:hover { background: var(--bg3); }
               <th data-sort="name">商品名</th>
               <th class="num" data-sort="rev">総売上（直近月）</th>
               <th class="num" data-sort="bid">入札価格</th>
-              <th class="nosort">PRオプ状態</th>
+              <th class="nosort status-col">PRオプ状態</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -933,8 +945,8 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num nosort" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num nosort" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
               <th class="num" data-sort="bid">入札価格</th>
-              <th class="nosort">広告状態</th>
-              <th class="nosort">PRオプ状態</th>
+              <th class="nosort status-col">広告状態</th>
+              <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort">対応内容</th>
             </tr></thead>
             <tbody></tbody>
@@ -962,8 +974,8 @@ tbody tr:hover { background: var(--bg3); }
               <th class="num nosort" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num nosort" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num nosort" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
-              <th class="nosort">広告状態</th>
-              <th class="nosort">PRオプ状態</th>
+              <th class="nosort status-col">広告状態</th>
+              <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort">対応内容</th>
             </tr></thead>
             <tbody></tbody>
@@ -1748,8 +1760,8 @@ function renderBasic() {
       <td class="num">${fmt(r.adCost)}</td>
       <td class="num ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       <td class="num bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
-      <td>${statusSelectHtml(r.code, 'ad')}</td>
-      <td>${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1874,7 +1886,7 @@ function renderRetired() {
       <td>${nameCell}</td>
       <td class="num">${fmt(r.rev)}</td>
       <td class="num bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
-      <td>${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1993,8 +2005,8 @@ function renderAdAdjust() {
       <td class="num ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
       <td class="num ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
       <td class="num bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
-      <td>${statusSelectHtml(r.code, 'ad')}</td>
-      <td>${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
     `;
     tbody.appendChild(tr);
@@ -2054,8 +2066,8 @@ function renderProAdjust() {
       <td class="num">${fmt(r.seoRevs[0])}</td>
       <td class="num">${fmt(r.seoRevs[1])}</td>
       <td class="num">${fmt(r.seoRevs[2])}</td>
-      <td>${statusSelectHtml(r.code, 'ad')}</td>
-      <td>${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
