@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v48 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v49 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -989,7 +989,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v48</div>
+    <div class="logo-sub">v49</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2653,6 +2653,30 @@ $('#adAdjustSearch').addEventListener('input', renderAdAdjust);
 $('#proAdjustSearch').addEventListener('input', renderProAdjust);
 
 // ==================== 広告/PRO状態プルダウン ====================
+// 「更新日時-YY/MMDD」スタンプを生成
+function makeUpdateStamp() {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `更新日時-${yy}/${mm}${dd}`;
+}
+
+// 既存のnoteに更新日時を反映（メモ書きがある場合は維持して日時だけ差し替え）
+function applyUpdateStampToNote(currentNote) {
+  const stamp = makeUpdateStamp();
+  const trimmed = (currentNote || '').trim();
+  if (!trimmed) return stamp;
+  // 既存のスタンプ「更新日時-YY/MMDD」のみのケース → 新しい日時に置換
+  if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return stamp;
+  // 既存に「更新日時-YY/MMDD」が含まれている場合 → その部分だけ最新化
+  if (/更新日時-\d{2}\/\d{4}/.test(trimmed)) {
+    return trimmed.replace(/更新日時-\d{2}\/\d{4}/, stamp);
+  }
+  // メモ書きがある場合 → 末尾に改行＋スタンプ追加
+  return trimmed + '\n' + stamp;
+}
+
 document.addEventListener('change', (e) => {
   if (!e.target.classList.contains('status-select')) return;
   const code = e.target.dataset.code;
@@ -2661,6 +2685,9 @@ document.addEventListener('change', (e) => {
   const meta = getMeta(code);
   if (kind === 'ad') meta.adStatus = value;
   else meta.proStatus = value;
+  // 広告状態・PRオプ状態のどちらを変更しても、両方の対応内容に更新日時を入れる
+  meta.adNote = applyUpdateStampToNote(meta.adNote);
+  meta.proNote = applyUpdateStampToNote(meta.proNote);
   saveToStorage();
   // 見た目更新
   let cls = 'none';
@@ -2672,7 +2699,7 @@ document.addEventListener('change', (e) => {
   e.target.className = 'status-select ' + cls;
   // 件数バッジ更新
   updateStateCounts();
-  // 状態変更時は常に全画面を再描画（撤退済みへの移動／復帰などに対応）
+  // 状態変更時は常に全画面を再描画（撤退済みへの移動／復帰や対応内容の更新表示）
   renderAll();
 });
 
