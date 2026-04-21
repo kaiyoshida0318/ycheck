@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v49 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v50 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -989,7 +989,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v49</div>
+    <div class="logo-sub">v50</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1146,6 +1146,7 @@ td:has(> .name-cell-wrap) {
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告調整の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust">
@@ -1180,6 +1181,7 @@ td:has(> .name-cell-wrap) {
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ調整の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -2611,8 +2613,38 @@ function deleteNoteStamps(kind /* 'ad' | 'pro' */) {
   alert(`${count}件の「更新日時-」を削除しました（メモ書きのセルはそのまま残しています）`);
 }
 
+// 対応内容を全削除（メモ書き含めて完全クリア）
+function deleteAllNotes(kind /* 'ad' | 'pro' */) {
+  const label = kind === 'ad' ? '広告調整' : 'PRオプ調整';
+  // 削除対象件数を事前カウント
+  const field = kind === 'ad' ? 'adNote' : 'proNote';
+  let target = 0;
+  Object.values(state.productMeta).forEach(meta => {
+    if (meta && (meta[field] || '').trim()) target++;
+  });
+  if (target === 0) {
+    alert(`${label}：削除対象の対応内容はありません。`);
+    return;
+  }
+  if (!confirm(`${label}の対応内容を【全${target}件】まとめて削除します。\nメモ書きも含めて全て空白になります。\n（この操作は元に戻せません）\n\n本当に削除しますか？`)) return;
+  let count = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const meta = state.productMeta[code];
+    if (!meta) return;
+    if ((meta[field] || '').trim()) {
+      meta[field] = '';
+      count++;
+    }
+  });
+  saveToStorage();
+  renderAll();
+  alert(`${label}の対応内容を ${count}件 削除しました。`);
+}
+
 $('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad'));
 $('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
+$('#btnDeleteAdNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
+$('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
