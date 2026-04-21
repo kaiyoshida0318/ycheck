@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v56 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v57 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1009,7 +1009,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v56</div>
+    <div class="logo-sub">v57</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1040,8 +1040,8 @@ td:has(> .name-cell-wrap) {
 <nav class="top-nav top-nav-2">
   <div class="nav-group">
     <span class="nav-group-label">【定期チェック】</span>
-    <button class="nav-tab" data-view="ad-adjust"><span class="ico">🎯</span>広告調整</button>
-    <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRオプ調整</button>
+    <button class="nav-tab" data-view="ad-adjust"><span class="ico">🎯</span>広告全体</button>
+    <button class="nav-tab" data-view="pro-adjust"><span class="ico">⭐</span>PRオプ全体</button>
   </div>
 </nav>
 
@@ -1160,15 +1160,15 @@ td:has(> .name-cell-wrap) {
       </div>
     </div>
 
-    <!-- View: 広告調整 -->
+    <!-- View: 広告全体 -->
     <div class="view" id="view-ad-adjust">
       <div class="card">
-        <h3 class="card-title">広告調整</h3>
+        <h3 class="card-title">広告全体</h3>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
-          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告調整の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust">
@@ -1196,15 +1196,15 @@ td:has(> .name-cell-wrap) {
       </div>
     </div>
 
-    <!-- View: PRオプ調整 -->
+    <!-- View: PRオプ全体 -->
     <div class="view" id="view-pro-adjust">
       <div class="card">
-        <h3 class="card-title">PRオプ調整</h3>
+        <h3 class="card-title">PRオプ全体</h3>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
-          <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ調整の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
+          <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -2354,7 +2354,7 @@ function renderGraph() {
   });
 }
 
-// ==================== Rendering: 広告調整 ====================
+// ==================== Rendering: 広告全体 ====================
 function last3Months() {
   const months = getAvailableMonths();
   return months.slice(-3);
@@ -2721,7 +2721,7 @@ function deleteNoteStamps(kind /* 'ad' | 'pro' */) {
 
 // 対応内容を全削除（メモ書き含めて完全クリア）
 function deleteAllNotes(kind /* 'ad' | 'pro' */) {
-  const label = kind === 'ad' ? '広告調整' : 'PRオプ調整';
+  const label = kind === 'ad' ? '広告全体' : 'PRオプ全体';
   // 削除対象件数を事前カウント
   const field = kind === 'ad' ? 'adNote' : 'proNote';
   let target = 0;
