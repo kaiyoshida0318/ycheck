@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v43 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v44 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -929,7 +929,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v43</div>
+    <div class="logo-sub">v44</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -938,6 +938,7 @@ td:has(> .name-cell-wrap) {
       <button class="font-btn" id="fontUp">A+</button>
     </div>
     <button class="btn sm primary" id="btnJumpUpload">+ レポート追加</button>
+    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 新商品追加</button>
   </div>
 </div>
 
@@ -1207,6 +1208,48 @@ td:has(> .name-cell-wrap) {
   </div>
 </div>
 
+<!-- 新商品追加モーダル -->
+<div class="modal-overlay" id="newProductModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">+ 新商品追加</h2>
+      <button class="modal-close" id="npClose" type="button">×</button>
+    </div>
+    <p class="dropzone-hint" style="margin:0 0 12px 0;">
+      新商品の登録情報をCSVでまとめてアップロードできます。
+      商品画像はYahoo!ショッピングから自動取得されます。
+    </p>
+
+    <div style="margin-bottom: 14px; padding: 10px 14px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border);">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap: 10px; flex-wrap: wrap;">
+        <div>
+          <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;">📥 CSVテンプレート</div>
+          <div style="font-size: 0.78rem; color: var(--text3);">列：商品コード / 商品名 / 検索URL / 主要KW</div>
+        </div>
+        <button class="btn sm" id="npDownloadTemplate" type="button">⬇ テンプレートをダウンロード</button>
+      </div>
+    </div>
+
+    <div class="file-slot" id="slot-newproduct">
+      <div class="file-slot-label"><span class="slot-badge"></span>● 新商品登録情報</div>
+      <div class="file-slot-status">未アップロード</div>
+      <div class="file-slot-filename">CSVファイルをここにドロップ、またはクリックして選択</div>
+    </div>
+
+    <div class="validation-box">
+      <div class="validation-msg" id="npValidationMsg">📋 CSVファイルをアップロードしてください</div>
+    </div>
+
+    <div class="upload-actions">
+      <button class="btn primary" id="npConfirmUpload" disabled>⬆ アップロード実行</button>
+      <button class="btn ghost" id="npClearAll">すべてクリア</button>
+      <button class="btn ghost" id="npToggleLog">ログ表示</button>
+      <button class="btn" id="npCloseBottom" style="margin-left:auto;" type="button">閉じる</button>
+    </div>
+    <div class="log-area" id="npLogArea"></div>
+  </div>
+</div>
+
 <!-- Upload Modal -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
@@ -1214,7 +1257,7 @@ td:has(> .name-cell-wrap) {
       <h2 class="modal-title">📂 レポートを追加</h2>
       <button class="modal-close" id="modalClose">×</button>
     </div>
-    <p class="dropzone-hint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートの3つをセットで、または入札価格・商品マスタを単独でアップロードできます（CSVまたはZIP）</p>
+    <p class="dropzone-hint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートの3つをセットで、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📥</div>
       <div class="dropzone-text">ここに <b>CSV</b> または <b>ZIP</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
@@ -1245,14 +1288,8 @@ td:has(> .name-cell-wrap) {
       </div>
     </div>
 
-    <div class="file-slot" id="slot-master" style="margin-top:10px;">
-      <div class="file-slot-label"><span class="slot-badge"></span>商品マスタ（商品名・主要KW・検索URL）</div>
-      <div class="file-slot-status">未アップロード</div>
-      <div class="file-slot-filename">商品コード / 商品名 / 主要KW / 検索URL の4列CSV（単独でアップ可能）</div>
-    </div>
-
     <div class="validation-box" id="validationBox">
-      <div class="validation-msg" id="validationMsg">📋 必須3ファイル（月次データ）、入札価格、商品マスタを単独でアップロードできます</div>
+      <div class="validation-msg" id="validationMsg">📋 必須3ファイル（月次データ）、または入札価格を単独でアップロードできます</div>
     </div>
 
     <div class="upload-actions">
@@ -1588,7 +1625,7 @@ function validateBuffer() {
 
   if (!hasAnyMonthly && !hasBid && !hasMaster) {
     box.className = 'validation-box info';
-    msg.textContent = `📋 必須3ファイル（月次データ）、入札価格、商品マスタを単独でアップロードできます`;
+    msg.textContent = `📋 必須3ファイル（月次データ）、または入札価格を単独でアップロードできます`;
     btn.disabled = true;
     return false;
   }
@@ -2802,6 +2839,188 @@ document.addEventListener('click', (e) => {
   e.stopPropagation();
   const code = btn.dataset.code;
   openProductEditModal(code);
+});
+
+// ==================== 新商品追加モーダル ====================
+const newProductModal = $('#newProductModal');
+const npLogArea = $('#npLogArea');
+let npBuffer = null;  // { rows: [...], filename: '...', count: N }
+
+function npLog(msg, type = '') {
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  const time = new Date().toLocaleTimeString('ja-JP');
+  line.textContent = `[${time}] ${msg}`;
+  npLogArea.appendChild(line);
+  npLogArea.scrollTop = npLogArea.scrollHeight;
+}
+
+function openNewProductModal() {
+  newProductModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  npBuffer = null;
+  npRefreshSlot();
+}
+
+function closeNewProductModal() {
+  newProductModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// CSVテンプレートをダウンロード
+function downloadNewProductTemplate() {
+  const header = '商品コード,商品名,検索URL,主要KW';
+  const example = 'sample-001,サンプル商品名,https://shopping.yahoo.co.jp/search?p=...,メインキーワード';
+  const csv = '\uFEFF' + header + '\n' + example + '\n';  // UTF-8 BOM付き（Excel対応）
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '新商品登録テンプレート.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  npLog('📥 テンプレートをダウンロードしました', 'ok');
+}
+
+// スロット表示更新
+function npRefreshSlot() {
+  const slot = $('#slot-newproduct');
+  const status = slot.querySelector('.file-slot-status');
+  const filename = slot.querySelector('.file-slot-filename');
+  const confirmBtn = $('#npConfirmUpload');
+  const msg = $('#npValidationMsg');
+  if (npBuffer) {
+    slot.classList.add('filled');
+    status.textContent = `✓ ${npBuffer.count}件 読込済`;
+    filename.textContent = npBuffer.filename;
+    confirmBtn.disabled = false;
+    msg.textContent = `✅ ${npBuffer.count}件の新商品データを読み込みました。「アップロード実行」を押してください。`;
+    msg.style.color = 'var(--green)';
+  } else {
+    slot.classList.remove('filled');
+    status.textContent = '未アップロード';
+    filename.textContent = 'CSVファイルをここにドロップ、またはクリックして選択';
+    confirmBtn.disabled = true;
+    msg.textContent = '📋 CSVファイルをアップロードしてください';
+    msg.style.color = '';
+  }
+}
+
+// CSVファイル受け取り
+async function npHandleFile(file) {
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.csv')) {
+    npLog(`❌ CSVファイルのみ対応：${file.name}`, 'err');
+    return;
+  }
+  try {
+    npLog(`📂 読込中：${file.name}`);
+    const rows = await readCsvFile(file);
+    // 商品コードを持つ行のみ抽出
+    const valid = rows.filter(r => (r['商品コード'] || '').trim());
+    if (valid.length === 0) {
+      npLog(`❌ 「商品コード」列に有効なデータが見つかりません`, 'err');
+      return;
+    }
+    npBuffer = {
+      rows: valid,
+      filename: file.name,
+      count: valid.length
+    };
+    npLog(`✓ ${valid.length}件 読込成功`, 'ok');
+    npRefreshSlot();
+  } catch (err) {
+    npLog(`❌ 読込エラー：${err.message || err}`, 'err');
+  }
+}
+
+// アップロード実行：state.master に新商品を追加
+function npConfirmUpload() {
+  if (!npBuffer) return;
+  let added = 0, updated = 0;
+  npBuffer.rows.forEach(r => {
+    const code = (r['商品コード'] || '').trim();
+    if (!code) return;
+    const existing = state.master[code];
+    const data = {
+      code,
+      name: (r['商品名'] || '').trim(),
+      searchUrl: (r['検索URL'] || r['検索画面URL'] || '').trim(),
+      kw: (r['主要KW'] || '').trim()
+    };
+    if (existing) {
+      // 既存商品は editedKw フラグを尊重
+      state.master[code] = {
+        ...existing,
+        name: data.name || existing.name,
+        searchUrl: data.searchUrl || existing.searchUrl,
+        kw: existing.editedKw ? existing.kw : (data.kw || existing.kw),
+      };
+      updated++;
+    } else {
+      state.master[code] = { ...data, editedKw: false };
+      added++;
+    }
+  });
+  const ok = saveToStorage();
+  if (!ok) {
+    alert('保存に失敗しました（localStorage容量超過の可能性）');
+    return;
+  }
+  npLog(`✅ 反映完了：新規追加 ${added}件 / 既存更新 ${updated}件`, 'ok');
+  npLog(`💾 ブラウザに保存しました`, 'ok');
+  npBuffer = null;
+  npRefreshSlot();
+  renderAll();
+  // モーダルは開いたまま、ユーザーが閉じる
+}
+
+// すべてクリア
+function npClearAll() {
+  npBuffer = null;
+  npRefreshSlot();
+  npLog('🗑 入力をクリアしました');
+}
+
+// イベントバインド
+$('#btnJumpNewProduct').addEventListener('click', openNewProductModal);
+$('#npClose').addEventListener('click', closeNewProductModal);
+$('#npCloseBottom').addEventListener('click', closeNewProductModal);
+newProductModal.addEventListener('click', (e) => {
+  if (e.target === newProductModal) closeNewProductModal();
+});
+$('#npDownloadTemplate').addEventListener('click', downloadNewProductTemplate);
+$('#npConfirmUpload').addEventListener('click', npConfirmUpload);
+$('#npClearAll').addEventListener('click', npClearAll);
+$('#npToggleLog').addEventListener('click', () => {
+  const isShown = npLogArea.style.display !== 'none' && npLogArea.style.display !== '';
+  npLogArea.style.display = isShown ? 'none' : 'block';
+});
+
+// スロットへのドロップ・クリック
+const npSlot = $('#slot-newproduct');
+npSlot.addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv';
+  input.onchange = (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) npHandleFile(f);
+  };
+  input.click();
+});
+npSlot.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  npSlot.classList.add('dragover');
+});
+npSlot.addEventListener('dragleave', () => npSlot.classList.remove('dragover'));
+npSlot.addEventListener('drop', (e) => {
+  e.preventDefault();
+  npSlot.classList.remove('dragover');
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) npHandleFile(f);
 });
 
 // ==================== 初期化 ====================
