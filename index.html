@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v30 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v31 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -605,7 +605,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v30</div>
+    <div class="logo-sub">v31</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -623,7 +623,7 @@ tbody tr:hover { background: var(--bg3); }
     <span class="nav-group-label">【基本】</span>
     <button class="nav-tab active" data-view="basic"><span class="ico">📊</span>商品-基本データ</button>
     <button class="nav-tab" data-view="monthly"><span class="ico">📅</span>商品-月別データ</button>
-    <button class="nav-tab" data-view="retired"><span class="ico">🗂</span>引退済み商品</button>
+    <button class="nav-tab" data-view="retired"><span class="ico">🗂</span>撤退済み商品</button>
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【グラフ】</span>
@@ -719,15 +719,14 @@ tbody tr:hover { background: var(--bg3); }
       </div>
     </div>
 
-    <!-- View: 引退済み商品 -->
+    <!-- View: 撤退済み商品 -->
     <div class="view" id="view-retired">
       <div class="card">
-        <h3 class="card-title">引退済み商品</h3>
+        <h3 class="card-title">撤退済み商品</h3>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索...">
         </div>
-        <p style="margin:0 0 12px 0; font-size:0.95rem; font-weight:700; color:var(--text);">■■商品名未登録のものが表示される。有効に戻したい場合は商品名を登録する■■</p>
         <div class="table-wrap">
           <table id="tableRetired">
             <thead><tr>
@@ -736,6 +735,7 @@ tbody tr:hover { background: var(--bg3); }
               <th data-sort="name">商品名</th>
               <th class="num" data-sort="rev">総売上（直近月）</th>
               <th class="num" data-sort="bid">入札価格</th>
+              <th class="nosort">PRオプ状態</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -962,8 +962,37 @@ function loadFromStorage() {
         else if (m && m.proStatus === 'PRO×') m.proStatus = 'PRオプ×';
       });
     }
+    // 【マイグレーション v31】旧「商品名なし=引退済み」→ proStatus='撤退済み' に変換
+    migrateRetiredByMissingName();
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
+}
+
+// 旧仕様（商品名なし=引退済み）の商品を、新仕様（proStatus=撤退済み）に自動変換
+function migrateRetiredByMissingName() {
+  const allCodes = new Set();
+  Object.keys(state.master || {}).forEach(c => allCodes.add(c));
+  (state.item || []).forEach(i => allCodes.add(i.code));
+  (state.ad || []).forEach(a => allCodes.add(a.code));
+  if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
+  let migrated = 0;
+  allCodes.forEach(code => {
+    const m = state.master[code];
+    const hasName = m && m.name && m.name.trim();
+    if (!hasName) {
+      if (!state.productMeta[code]) {
+        state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
+      }
+      if (state.productMeta[code].proStatus !== '撤退済み') {
+        state.productMeta[code].proStatus = '撤退済み';
+        migrated++;
+      }
+    }
+  });
+  if (migrated > 0) {
+    console.log(`Ycheck: 商品名なし商品 ${migrated}件を「撤退済み」に移行しました`);
+    saveToStorage();
+  }
 }
 function clearStorage() {
   try { localStorage.removeItem(STORAGE_KEY); } catch (err) { console.error(err); }
@@ -1331,10 +1360,10 @@ function clearSlot(kind) {
 
 // ==================== Helpers ====================
 function getMaster(code) { return state.master[code]; }
-// 「引退済み」= 商品マスタに商品名が登録されていない商品
+// 「撤退済み」= PRオプ状態が「撤退済み」の商品
 function isRetired(code) {
-  const m = state.master[code];
-  return !m || !m.name || !m.name.trim();
+  const meta = state.productMeta[code];
+  return meta && meta.proStatus === '撤退済み';
 }
 function getMeta(code) {
   if (!state.productMeta[code]) {
@@ -1433,7 +1462,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' */) {
   const value = kind === 'ad' ? meta.adStatus : meta.proStatus;
   const options = kind === 'ad'
     ? ['', '広告○', '広告×', '広告無']
-    : ['', 'PRオプ○', 'PRオプ×', '撤退検討▲', '撤退■'];
+    : ['', 'PRオプ○', 'PRオプ×', '撤退検討▲', '撤退■', '撤退済み'];
   let cls = 'none';
   if (value) {
     if (value.includes('○')) cls = 'ok';
@@ -1594,18 +1623,18 @@ function renderMonthly() {
   });
 }
 
-// ==================== Rendering: 引退済み商品 ====================
+// ==================== Rendering: 撤退済み商品 ====================
 let retiredSortKey = 'code', retiredSortDir = 1;
 function renderRetired() {
   const tbody = $('#tableRetired tbody');
-  // 商品マスタ＋各データソースから全コードを集める
+  // 全コード集めて「PRオプ状態＝撤退済み」のもののみ抽出
   const allCodes = new Set();
   Object.keys(state.master).forEach(c => allCodes.add(c));
+  Object.keys(state.productMeta).forEach(c => allCodes.add(c));
   (state.item || []).forEach(i => allCodes.add(i.code));
   (state.ad || []).forEach(a => allCodes.add(a.code));
   if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
 
-  // 引退済みだけ抽出
   let list = [...allCodes].filter(code => isRetired(code));
 
   // 直近月の総売上（あれば）を付ける
@@ -1623,32 +1652,46 @@ function renderRetired() {
     bid: state.bid ? (state.bid[code] || null) : null
   }));
 
-  // 検索フィルタ
+  // 検索フィルタ（商品コード + 商品名）
   const q = $('#retiredSearch').value.trim().toLowerCase();
-  if (q) list = list.filter(r => r.code.toLowerCase().includes(q));
+  if (q) {
+    list = list.filter(r => {
+      const m = getMaster(r.code);
+      const hay = [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
 
   // ソート
+  const sortGet = (r, k) => {
+    if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    return r[k] || 0;
+  };
   list.sort((a, b) => {
-    const va = a[retiredSortKey] || (retiredSortKey === 'name' ? '' : 0);
-    const vb = b[retiredSortKey] || (retiredSortKey === 'name' ? '' : 0);
+    const va = sortGet(a, retiredSortKey), vb = sortGet(b, retiredSortKey);
     if (typeof va === 'string') return retiredSortDir * va.localeCompare(vb);
     return retiredSortDir * (va - vb);
   });
 
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">引退済み商品はありません（商品マスタに商品名がある商品のみが各タブに表示されます）</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">撤退済み商品はありません</td></tr>';
     return;
   }
 
   list.forEach(r => {
+    const m = getMaster(r.code);
+    const nameCell = (m && m.name && m.name.trim())
+      ? nameCellHtml(r.code)
+      : `<span class="name-edit-cell" data-code="${escapeHtml(r.code)}" title="クリックして商品名を登録">（クリックして商品名を登録）</span>`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
-      <td><span class="name-edit-cell" data-code="${escapeHtml(r.code)}" title="クリックして商品名を登録">（クリックして商品名を登録）</span></td>
+      <td>${nameCell}</td>
       <td class="num">${fmt(r.rev)}</td>
       <td class="num bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
+      <td>${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2108,10 +2151,8 @@ document.addEventListener('change', (e) => {
   e.target.className = 'status-select ' + cls;
   // 件数バッジ更新
   updateStateCounts();
-  // フィルタ中なら該当テーブルを再描画（条件外れた行を消す/入れる）
-  if (state.activeStateFilter) {
-    renderAll();
-  }
+  // 状態変更時は常に全画面を再描画（撤退済みへの移動／復帰などに対応）
+  renderAll();
 });
 
 // ==================== 対応内容（note）編集 ====================
@@ -2225,12 +2266,9 @@ function startNameEdit(cell) {
         state.master[code] = { code, name: '', kw: '', searchUrl: '', editedKw: false };
       }
       state.master[code].name = newName;
-      // 広告状態・PRオプ状態を空白にリセット
+      // productMetaのエントリは無ければ初期化のみ（状態はそのまま）
       if (!state.productMeta[code]) {
         state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
-      } else {
-        state.productMeta[code].adStatus = '';
-        state.productMeta[code].proStatus = '';
       }
       saveToStorage();
       log(`✓ 商品名を登録しました: ${code} → 「${newName}」`, 'ok');
