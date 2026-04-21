@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v44 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v45 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -929,7 +929,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v44</div>
+    <div class="logo-sub">v45</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -938,7 +938,7 @@ td:has(> .name-cell-wrap) {
       <button class="font-btn" id="fontUp">A+</button>
     </div>
     <button class="btn sm primary" id="btnJumpUpload">+ レポート追加</button>
-    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 新商品追加</button>
+    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
   </div>
 </div>
 
@@ -1092,6 +1092,7 @@ td:has(> .name-cell-wrap) {
               <th data-sort="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
+              <th class="nosort">メインKW</th>
               <th class="nosort">検索URL</th>
               <th class="num nosort col-ad" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
               <th class="num nosort col-ad" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
@@ -1125,6 +1126,7 @@ td:has(> .name-cell-wrap) {
               <th data-sort="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
+              <th class="nosort">メインKW</th>
               <th class="nosort">検索URL</th>
               <th class="num nosort col-sales" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num nosort col-sales" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
@@ -1183,6 +1185,10 @@ td:has(> .name-cell-wrap) {
         <input type="text" id="peName" class="pe-input" placeholder="商品名を入力...">
       </div>
       <div class="pe-row">
+        <label class="pe-label" for="peKw">メインKW</label>
+        <input type="text" id="peKw" class="pe-input" placeholder="メインキーワードを入力...">
+      </div>
+      <div class="pe-row">
         <label class="pe-label" for="peSearchUrl">検索URL</label>
         <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
       </div>
@@ -1212,7 +1218,7 @@ td:has(> .name-cell-wrap) {
 <div class="modal-overlay" id="newProductModal">
   <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title">+ 新商品追加</h2>
+      <h2 class="modal-title">+ 商品追加・更新</h2>
       <button class="modal-close" id="npClose" type="button">×</button>
     </div>
     <p class="dropzone-hint" style="margin:0 0 12px 0;">
@@ -1224,14 +1230,14 @@ td:has(> .name-cell-wrap) {
       <div style="display:flex; align-items:center; justify-content:space-between; gap: 10px; flex-wrap: wrap;">
         <div>
           <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;">📥 CSVテンプレート</div>
-          <div style="font-size: 0.78rem; color: var(--text3);">列：商品コード / 商品名 / 検索URL / 主要KW</div>
+          <div style="font-size: 0.78rem; color: var(--text3);">列：商品コード / 商品名 / メインKW / 検索URL</div>
         </div>
         <button class="btn sm" id="npDownloadTemplate" type="button">⬇ テンプレートをダウンロード</button>
       </div>
     </div>
 
     <div class="file-slot" id="slot-newproduct">
-      <div class="file-slot-label"><span class="slot-badge"></span>● 新商品登録情報</div>
+      <div class="file-slot-label"><span class="slot-badge"></span>登録情報</div>
       <div class="file-slot-status">未アップロード</div>
       <div class="file-slot-filename">CSVファイルをここにドロップ、またはクリックして選択</div>
     </div>
@@ -1591,7 +1597,7 @@ function parseMasterSimple(rows) {
     result[code] = {
       code,
       name: (r['商品名'] || '').trim(),
-      kw: (r['主要KW'] || '').trim(),
+      kw: (r['メインKW'] || r['主要KW'] || '').trim(),
       searchUrl: (r['検索URL'] || r['検索画面URL'] || '').trim()
     };
   });
@@ -1769,7 +1775,7 @@ const slotMap = {
   item: { slotId: 'slot-item', pattern: 'yukaiya-item_report*.csv' },
   ad: { slotId: 'slot-ad', pattern: '広告詳細レポート商品別*.csv' },
   bid: { slotId: 'slot-bid', pattern: 'BID_ITEM*.csv' },
-  master: { slotId: 'slot-master', pattern: '商品コード / 商品名 / 主要KW / 検索URL の4列CSV' }
+  master: { slotId: 'slot-master', pattern: '商品コード / 商品名 / メインKW / 検索URL の4列CSV' }
 };
 function updateSlot(kind, filename) {
   const info = slotMap[kind]; if (!info) return;
@@ -2241,6 +2247,7 @@ function renderAdAdjust() {
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
+      <td>${kwCellHtml(r.code)}</td>
       <td>${searchUrlCellHtml(r.code)}</td>
       <td class="num col-ad">${fmt(r.adRevs[0])}</td>
       <td class="num col-ad">${fmt(r.adRevs[1])}</td>
@@ -2306,6 +2313,7 @@ function renderProAdjust() {
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
+      <td>${kwCellHtml(r.code)}</td>
       <td>${searchUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.seoRevs[0])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[1])}</td>
@@ -2730,6 +2738,7 @@ function openProductEditModal(code) {
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
   $('#peCode').textContent = code;
   $('#peName').value = m.name || '';
+  $('#peKw').value = m.kw || '';
   $('#peSearchUrl').value = m.searchUrl || '';
   // 画像編集の一時状態を現在のmaster値で初期化
   peImageState = {
@@ -2757,11 +2766,17 @@ function saveProductEdit() {
   if (!code) return;
   const newName = $('#peName').value.trim();
   const newUrl = $('#peSearchUrl').value.trim();
+  const newKw = $('#peKw').value.trim();
   if (!state.master[code]) {
     state.master[code] = { code, name: '', kw: '', searchUrl: '', editedKw: false };
   }
   state.master[code].name = newName;
   state.master[code].searchUrl = newUrl;
+  // メインKWが変わった場合は editedKw フラグも立てる（CSV更新時に保護されるように）
+  if (newKw !== (state.master[code].kw || '')) {
+    state.master[code].kw = newKw;
+    state.master[code].editedKw = true;
+  }
   // 画像情報を保存
   state.master[code].customImage = peImageState.customImage || null;
   state.master[code].imageDeleted = !!peImageState.imageDeleted;
@@ -2869,14 +2884,14 @@ function closeNewProductModal() {
 
 // CSVテンプレートをダウンロード
 function downloadNewProductTemplate() {
-  const header = '商品コード,商品名,検索URL,主要KW';
-  const example = 'sample-001,サンプル商品名,https://shopping.yahoo.co.jp/search?p=...,メインキーワード';
+  const header = '商品コード,商品名,メインKW,検索URL';
+  const example = 'sample-001,サンプル商品名,メインキーワード,https://shopping.yahoo.co.jp/search?p=...';
   const csv = '\uFEFF' + header + '\n' + example + '\n';  // UTF-8 BOM付き（Excel対応）
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = '新商品登録テンプレート.csv';
+  a.download = '商品追加・更新テンプレート.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -2944,23 +2959,29 @@ function npConfirmUpload() {
     const code = (r['商品コード'] || '').trim();
     if (!code) return;
     const existing = state.master[code];
-    const data = {
-      code,
-      name: (r['商品名'] || '').trim(),
-      searchUrl: (r['検索URL'] || r['検索画面URL'] || '').trim(),
-      kw: (r['主要KW'] || '').trim()
-    };
+    // 各フィールドは「CSVに値があれば上書き、空欄ならスキップ（既存値保持）」
+    const nameVal = (r['商品名'] || '').trim();
+    const urlVal = (r['検索URL'] || r['検索画面URL'] || '').trim();
+    const kwVal = (r['メインKW'] || r['主要KW'] || '').trim();
+
     if (existing) {
-      // 既存商品は editedKw フラグを尊重
-      state.master[code] = {
-        ...existing,
-        name: data.name || existing.name,
-        searchUrl: data.searchUrl || existing.searchUrl,
-        kw: existing.editedKw ? existing.kw : (data.kw || existing.kw),
-      };
+      const next = { ...existing };
+      if (nameVal !== '') next.name = nameVal;
+      if (urlVal !== '') next.searchUrl = urlVal;
+      if (kwVal !== '') {
+        next.kw = kwVal;
+        next.editedKw = true;  // CSVで明示的に上書きされた → 手動編集相当として記録
+      }
+      state.master[code] = next;
       updated++;
     } else {
-      state.master[code] = { ...data, editedKw: false };
+      state.master[code] = {
+        code,
+        name: nameVal,
+        searchUrl: urlVal,
+        kw: kwVal,
+        editedKw: !!kwVal
+      };
       added++;
     }
   });
@@ -2974,7 +2995,6 @@ function npConfirmUpload() {
   npBuffer = null;
   npRefreshSlot();
   renderAll();
-  // モーダルは開いたまま、ユーザーが閉じる
 }
 
 // すべてクリア
