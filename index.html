@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v53 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v55 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -593,6 +593,26 @@ tbody tr:hover { background: var(--bg3); }
   font-weight: 600;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  border-bottom: 1px dotted transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+.bid-price:hover {
+  background: rgba(37,99,235,0.08);
+  border-bottom-color: var(--accent);
+}
+.bid-price-input {
+  width: 80px;
+  padding: 3px 6px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--bg2);
+  color: var(--text);
+  outline: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .roas-good { color: var(--green); font-weight: 600; }
 .roas-bad { color: var(--red); font-weight: 600; }
@@ -989,7 +1009,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v53</div>
+    <div class="logo-sub">v55</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1461,8 +1481,32 @@ function loadFromStorage() {
     }
     // 【マイグレーション v31】旧「商品名なし=引退済み」→ proStatus='撤退済み' に変換
     migrateRetiredByMissingName();
+    // 【マイグレーション v55】state.bid のキーを小文字統一
+    migrateBidKeysLowercase();
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
+}
+
+// 既存の state.bid に大文字混じりキーがある場合、小文字統一に変換
+function migrateBidKeysLowercase() {
+  if (!state.bid) return;
+  let migrated = 0;
+  const newBid = {};
+  Object.keys(state.bid).forEach(key => {
+    const lower = key.toLowerCase();
+    if (lower !== key) migrated++;
+    // 同一商品（大文字版/小文字版両方ある場合）は値が大きい方を優先
+    if (newBid[lower] != null && state.bid[key] != null) {
+      newBid[lower] = Math.max(newBid[lower], state.bid[key]);
+    } else {
+      newBid[lower] = state.bid[key];
+    }
+  });
+  if (migrated > 0) {
+    state.bid = newBid;
+    console.log(`Ycheck: 入札価格キー ${migrated}件を小文字統一しました`);
+    saveToStorage();
+  }
 }
 
 // 旧仕様（商品名なし=引退済み）の商品を、新仕様（proStatus=撤退済み）に自動変換
@@ -1639,11 +1683,13 @@ function parseAd(rows) {
 
 function parseBid(rows) {
   // 商品コード → 入札価格 のマップを返す
+  // BID_ITEMファイルには大文字混じりのコード（IH-21-01等）があるが、
+  // Ycheck内では小文字統一で扱う（同一商品として）
   const bidMap = {};
   rows.forEach(r => {
     const raw = r['ストアアカウント_商品コード'] || r['商品コード'] || '';
     if (!raw) return;
-    const code = String(raw).replace(/^yukaiya_/, '').trim();
+    const code = String(raw).replace(/^yukaiya_/i, '').trim().toLowerCase();
     if (!code) return;
     // 入札価格カラム候補
     const price = toNum(r['入札価格'] || r['価格'] || r['bid'] || r['Price'] || 0);
@@ -2076,7 +2122,7 @@ function renderBasic() {
       <td class="num col-ad">${fmt(r.adRev)}</td>
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
-      <td class="num col-bid bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
+      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
@@ -2200,7 +2246,7 @@ function renderRetired() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
-      <td class="num col-bid bid-price">${r.bid != null && r.bid > 0 ? '¥' + r.bid : '—'}</td>
+      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${r.bid != null && r.bid > 0 ? "¥" + r.bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
@@ -2320,7 +2366,7 @@ function renderAdAdjust() {
       <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
       <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
       <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
-      <td class="num col-bid bid-price">${bid != null && bid > 0 ? '¥' + bid : '—'}</td>
+      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
@@ -2815,6 +2861,66 @@ document.addEventListener('dblclick', (e) => {
   if (cell.querySelector('input')) return;
   e.preventDefault();
   startKwEdit(cell);
+});
+
+// ==================== 入札価格 クリック編集 ====================
+function startBidEdit(cell) {
+  if (cell.querySelector('input')) return;
+  const code = cell.dataset.code;
+  if (!code) return;
+  const currentBid = (state.bid && state.bid[code]) || '';
+  const originalHtml = cell.innerHTML;
+  cell.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.min = '0';
+  input.step = '1';
+  input.className = 'bid-price-input';
+  input.value = currentBid || '';
+  input.placeholder = '円';
+  cell.appendChild(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    const raw = input.value.trim();
+    if (!state.bid) state.bid = {};
+    if (raw === '' || raw === '0') {
+      // 空・0で確定 → 入札価格を削除
+      delete state.bid[code];
+    } else {
+      const num = parseInt(raw, 10);
+      if (isNaN(num) || num < 0) {
+        cancel();
+        return;
+      }
+      state.bid[code] = num;
+    }
+    saveToStorage();
+    log(`✓ 入札価格を更新: ${code} → ${state.bid[code] != null ? '¥' + state.bid[code] : '削除'}`, 'ok');
+    renderAll();
+  };
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    cell.innerHTML = originalHtml;
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+document.addEventListener('click', (e) => {
+  const cell = e.target.closest('.bid-price');
+  if (!cell) return;
+  if (cell.querySelector('input')) return;
+  // num/code/etcを共有しないよう、bid-priceクラスのtdだけが対象
+  e.preventDefault();
+  startBidEdit(cell);
 });
 
 // ==================== 商品情報編集モーダル ====================
