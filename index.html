@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v35 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v36 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -166,7 +166,7 @@ body {
 .top-nav {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 6px 20px 18px 20px;
+  padding: 6px 20px 15px 20px;
   display: flex;
   gap: 18px;
   align-items: flex-end;
@@ -181,7 +181,7 @@ body {
 
 /* 3段目（状態バッジ） */
 .top-nav-3 {
-  top: calc(64px + 58px + 70px);
+  top: calc(64px + 55px + 70px);
   padding: 18px 20px 4px 20px;
   border-top: none;
   background: var(--bg);
@@ -421,8 +421,8 @@ body {
 
 /* 2段目のタブバー：【定期チェック】用 */
 .top-nav-2 {
-  top: calc(64px + 58px);  /* header + 1段目(paddingなどで約58px)分 */
-  padding-top: 18px;
+  top: calc(64px + 55px);  /* header + 1段目(padding含む)分 */
+  padding-top: 15px;
   padding-bottom: 18px;
   border-top: none;
 }
@@ -454,14 +454,14 @@ body {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 18px;
+  padding: 12px 18px 18px 18px;
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
 }
-.card-title { font-size: 1rem; font-weight: 600; margin: 0 0 12px 0; flex-shrink: 0; }
+.card-title { display: none; }
 
 /* Filters */
 .filters {
@@ -775,7 +775,7 @@ td.status-col + td.status-col {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v35</div>
+    <div class="logo-sub">v36</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
