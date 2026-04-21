@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v31 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v32 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -218,6 +218,134 @@ body {
   font-weight: 400;
   color: var(--text3);
   font-variant-numeric: tabular-nums;
+}
+
+/* 全体の説明ボタン（クリック不可のアイコン風） */
+.state-chip.info-chip {
+  background: rgba(37,99,235,0.08);
+  border-color: rgba(37,99,235,0.3);
+  cursor: help;
+}
+.state-chip.info-chip:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.state-chip.info-chip .chip-label { color: var(--accent); }
+.state-chip.info-chip:hover .chip-label { color: white; }
+
+/* 全体の説明オーバーレイ */
+.info-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  pointer-events: none;  /* マウス操作を透過 */
+}
+.info-overlay.show { display: flex; }
+.info-panel {
+  background: var(--bg2);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  padding: 24px 28px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+}
+.info-section { margin-bottom: 20px; }
+.info-section:last-child { margin-bottom: 0; }
+.info-heading {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+}
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.info-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.info-list li:last-child { border-bottom: none; }
+.info-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.info-tag.ok { background: rgba(22,163,74,0.1); color: var(--green); border: 1px solid rgba(22,163,74,0.3); }
+.info-tag.ng { background: rgba(220,38,38,0.08); color: var(--red); border: 1px solid rgba(220,38,38,0.3); }
+.info-tag.none { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+.info-note {
+  display: block;
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--text3);
+  margin-top: 4px;
+  padding-left: 0;
+}
+.info-flow {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: flow;
+}
+.info-flow li {
+  position: relative;
+  padding: 10px 0 10px 44px;
+  counter-increment: flow;
+  font-size: 0.9rem;
+}
+.info-flow li::before {
+  content: counter(flow);
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 30px;
+  height: 30px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.info-flow li:not(:last-child)::after {
+  content: '↓';
+  position: absolute;
+  left: 11px;
+  bottom: -12px;
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.flow-step {
+  display: block;
+  padding: 4px 0;
+  color: var(--text);
+  font-weight: 500;
 }
 
 /* アクティブフィルターのバナー表示 */
@@ -605,7 +733,7 @@ tbody tr:hover { background: var(--bg3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v31</div>
+    <div class="logo-sub">v32</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -644,6 +772,7 @@ tbody tr:hover { background: var(--bg3); }
 <nav class="top-nav top-nav-3">
   <div class="nav-group">
     <span class="nav-group-label">【状態】</span>
+    <button class="state-chip info-chip" id="stateInfoBtn" type="button"><span class="chip-label">💡 全体の説明</span></button>
     <button class="state-chip" data-state="ad-ok"><span class="chip-label">広告○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <button class="state-chip" data-state="ad-ng"><span class="chip-label">広告×</span><span class="chip-num" id="cntAdNg">(0)</span></button>
     <button class="state-chip" data-state="ad-none"><span class="chip-label">広告無</span><span class="chip-num" id="cntAdNone">(0)</span></button>
@@ -814,6 +943,30 @@ tbody tr:hover { background: var(--bg3); }
     </div>
 
   </main>
+</div>
+
+<!-- 全体の説明ポップアップ -->
+<div class="info-overlay" id="stateInfoOverlay">
+  <div class="info-panel">
+    <section class="info-section">
+      <h3 class="info-heading">■ 状態の説明</h3>
+      <ul class="info-list">
+        <li><b class="info-tag ok">広告○</b>広告の入札価格が <b>25円</b> の状態。</li>
+        <li><b class="info-tag ng">広告×</b>広告の入札価格が <b>26円以上</b> の状態。</li>
+        <li><b class="info-tag none">広告無</b>広告を打っていない状態。</li>
+        <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> の状態。<br><span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
+        <li><b class="info-tag ng">PRオプ×</b>PRオプションが最安値の <b>8%以上</b> の状態。</li>
+      </ul>
+    </section>
+    <section class="info-section">
+      <h3 class="info-heading">■ 撤退までの流れ</h3>
+      <ol class="info-flow">
+        <li><span class="flow-step">まずは広告を出して売っていく</span></li>
+        <li><span class="flow-step">採算が合わなくなったら広告を削除して、PRオプションだけで運用</span></li>
+        <li><span class="flow-step">それでも利益が出ない場合は撤退認定する</span></li>
+      </ol>
+    </section>
+  </div>
 </div>
 
 <!-- Upload Modal -->
@@ -1983,8 +2136,9 @@ function updateFilterBanners() {
   }
 }
 
-// 【状態】バッジクリック
+// 【状態】バッジクリック（info-chipはフィルタ対象外）
 $$('.state-chip').forEach(chip => {
+  if (chip.classList.contains('info-chip')) return;
   chip.addEventListener('click', () => {
     const key = chip.dataset.state;
     // 同じバッジを再クリックしたら解除
@@ -1995,6 +2149,16 @@ $$('.state-chip').forEach(chip => {
     }
   });
 });
+
+// 全体の説明ポップアップ（ホバー表示・外れたら消す）
+const infoBtn = $('#stateInfoBtn');
+const infoOverlay = $('#stateInfoOverlay');
+if (infoBtn && infoOverlay) {
+  infoBtn.addEventListener('mouseenter', () => infoOverlay.classList.add('show'));
+  infoBtn.addEventListener('mouseleave', () => infoOverlay.classList.remove('show'));
+  infoBtn.addEventListener('focus', () => infoOverlay.classList.add('show'));
+  infoBtn.addEventListener('blur', () => infoOverlay.classList.remove('show'));
+}
 
 // 解除ボタン
 if ($('#adAdjustBannerClear')) $('#adAdjustBannerClear').addEventListener('click', clearStateFilter);
