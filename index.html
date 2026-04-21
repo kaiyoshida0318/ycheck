@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v40 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v41 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -632,10 +632,11 @@ th.col-bid {
 
 /* 商品名セル（ホバーで編集アイコン表示） */
 .name-cell-wrap {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   max-width: 260px;
+  width: 100%;
 }
 .name-cell-wrap .name-cell {
   overflow: hidden;
@@ -643,7 +644,8 @@ th.col-bid {
   white-space: nowrap;
   font-weight: 700;
   color: var(--text);
-  max-width: 220px;
+  flex: 1;
+  min-width: 0;
 }
 .name-cell-wrap .name-empty {
   color: var(--text3);
@@ -666,7 +668,8 @@ th.col-bid {
   justify-content: center;
   line-height: 1;
   flex-shrink: 0;
-  transition: all 0.12s;
+  margin-left: auto;
+  transition: opacity 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
 }
 .name-cell-wrap:hover .name-edit-btn,
 tbody tr:hover .name-edit-btn {
@@ -907,7 +910,7 @@ tbody tr:hover .name-edit-btn {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v40</div>
+    <div class="logo-sub">v41</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
