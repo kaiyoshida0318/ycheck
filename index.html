@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v41 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v42 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -524,7 +524,6 @@ tbody tr:hover { background: var(--bg3); }
   font-size: 0.78rem;
   color: var(--text2);
 }
-.name-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text); }
 .link-btn {
   color: var(--accent); text-decoration: none;
   font-size: 0.8rem; white-space: nowrap;
@@ -630,22 +629,24 @@ th.col-bid {
 .kw-cell:hover { background: rgba(37,99,235,0.06); color: var(--accent); }
 .kw-cell.edited { color: var(--accent); font-weight: 500; }
 
-/* 商品名セル（ホバーで編集アイコン表示） */
+/* 商品名セル（全表示＋右端に編集アイコン） */
 .name-cell-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
-  max-width: 260px;
+  gap: 8px;
   width: 100%;
+  min-width: 240px;
 }
 .name-cell-wrap .name-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-weight: 700;
   color: var(--text);
   flex: 1;
   min-width: 0;
+  white-space: normal;      /* 改行OKに */
+  word-break: break-word;
+  line-height: 1.4;
+  max-width: none;
+  overflow: visible;
 }
 .name-cell-wrap .name-empty {
   color: var(--text3);
@@ -679,6 +680,10 @@ tbody tr:hover .name-edit-btn {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+}
+/* name-cell-wrap を内包する td の右padding を詰めて、アイコンをセル右端ぴったりに寄せる */
+td:has(> .name-cell-wrap) {
+  padding-right: 6px;
 }
 
 /* 商品情報編集モーダル */
@@ -743,6 +748,20 @@ tbody tr:hover .name-edit-btn {
   justify-content: center;
   height: 120px;
 }
+.pe-image-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.pe-image-note {
+  font-size: 0.75rem;
+  color: var(--text3);
+  margin-top: 4px;
+  min-height: 1em;
+}
+.pe-image-note.info { color: var(--accent); }
+.pe-image-note.warn { color: var(--amber); }
 .pe-actions {
   display: flex;
   gap: 10px;
@@ -910,7 +929,7 @@ tbody tr:hover .name-edit-btn {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v41</div>
+    <div class="logo-sub">v42</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1172,6 +1191,13 @@ tbody tr:hover .name-edit-btn {
           <img id="peImage" class="pe-image" alt="商品画像">
           <div id="peImagePh" class="pe-image-placeholder" style="display:none">📦 画像なし</div>
         </div>
+        <div class="pe-image-actions">
+          <button class="btn sm" id="peImageUpload" type="button">📤 新しい画像を選択</button>
+          <button class="btn sm ghost" id="peImageDelete" type="button">🗑 画像を削除</button>
+          <button class="btn sm ghost" id="peImageReset" type="button" title="Yahoo!の標準画像に戻す">↻ デフォルトに戻す</button>
+          <input type="file" id="peImageFile" accept="image/*" style="display:none">
+        </div>
+        <div class="pe-image-note" id="peImageNote"></div>
       </div>
     </div>
     <div class="pe-actions">
@@ -1736,9 +1762,20 @@ function getMeta(code) {
   }
   return state.productMeta[code];
 }
+// 商品画像URLを取得（優先：ユーザーアップロード > 削除フラグならなし > Yahoo!デフォルト）
+function getProductImageSrc(code) {
+  const m = state.master[code];
+  if (m && m.customImage) return m.customImage;
+  if (m && m.imageDeleted) return null;   // 明示的に削除された
+  return YAHOO_IMG_URL(code);
+}
+
 function imageCellHtml(code) {
-  const url = YAHOO_IMG_URL(code);
-  return `<img class="product-img" src="${url}" alt="${escapeHtml(code)}"
+  const src = getProductImageSrc(code);
+  if (!src) {
+    return `<div class="product-img-placeholder">📦</div>`;
+  }
+  return `<img class="product-img" src="${src}" alt="${escapeHtml(code)}"
     onerror="this.outerHTML='<div class=&quot;product-img-placeholder&quot;>📦</div>'">`;
 }
 function nameCellHtml(code) {
@@ -2615,6 +2652,41 @@ document.addEventListener('dblclick', (e) => {
 
 // ==================== 商品情報編集モーダル ====================
 const productEditModal = $('#productEditModal');
+// モーダル編集中の一時的な画像状態（保存時に state.master に反映）
+let peImageState = { customImage: null, imageDeleted: false };
+
+function peRefreshImagePreview() {
+  const img = $('#peImage');
+  const ph = $('#peImagePh');
+  const note = $('#peImageNote');
+  const code = productEditModal.dataset.code;
+  let src = null;
+  let noteText = '';
+  let noteCls = '';
+  if (peImageState.customImage) {
+    src = peImageState.customImage;
+    noteText = 'アップロードした画像が設定されています（保存で確定）';
+    noteCls = 'info';
+  } else if (peImageState.imageDeleted) {
+    src = null;
+    noteText = '画像は削除されます（保存で確定）';
+    noteCls = 'warn';
+  } else if (code) {
+    src = YAHOO_IMG_URL(code);
+  }
+  if (src) {
+    img.onerror = () => { img.style.display = 'none'; ph.style.display = 'flex'; ph.textContent = '📦 画像が見つかりません'; };
+    img.onload = () => { img.style.display = 'block'; ph.style.display = 'none'; };
+    img.src = src;
+  } else {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    ph.style.display = 'flex';
+    ph.textContent = '📦 画像なし';
+  }
+  note.className = 'pe-image-note ' + noteCls;
+  note.textContent = noteText;
+}
 
 function openProductEditModal(code) {
   if (!code) return;
@@ -2622,16 +2694,15 @@ function openProductEditModal(code) {
   $('#peCode').textContent = code;
   $('#peName').value = m.name || '';
   $('#peSearchUrl').value = m.searchUrl || '';
-  // 画像プレビュー
-  const img = $('#peImage');
-  img.src = YAHOO_IMG_URL(code);
-  img.onerror = () => { img.style.display = 'none'; $('#peImagePh').style.display = 'flex'; };
-  img.onload = () => { img.style.display = 'block'; $('#peImagePh').style.display = 'none'; };
-  // 一時stateに現在の商品コードを保持
+  // 画像編集の一時状態を現在のmaster値で初期化
+  peImageState = {
+    customImage: m.customImage || null,
+    imageDeleted: !!m.imageDeleted
+  };
   productEditModal.dataset.code = code;
+  peRefreshImagePreview();
   productEditModal.classList.add('open');
   document.body.style.overflow = 'hidden';
-  // 次のtickでフォーカス
   setTimeout(() => $('#peName').focus(), 50);
 }
 
@@ -2639,6 +2710,9 @@ function closeProductEditModal() {
   productEditModal.classList.remove('open');
   document.body.style.overflow = '';
   delete productEditModal.dataset.code;
+  // ファイル入力をクリア（次回開いた時に同じファイルを再選択できるように）
+  $('#peImageFile').value = '';
+  peImageState = { customImage: null, imageDeleted: false };
 }
 
 function saveProductEdit() {
@@ -2651,14 +2725,43 @@ function saveProductEdit() {
   }
   state.master[code].name = newName;
   state.master[code].searchUrl = newUrl;
+  // 画像情報を保存
+  state.master[code].customImage = peImageState.customImage || null;
+  state.master[code].imageDeleted = !!peImageState.imageDeleted;
   // productMetaがなければ初期化（状態はそのまま）
   if (!state.productMeta[code]) {
     state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
   }
-  saveToStorage();
+  const ok = saveToStorage();
+  if (!ok) {
+    alert('保存に失敗しました。画像が大きすぎる可能性があります（localStorageの容量超過）。画像を削除するかサイズの小さい画像に差し替えてください。');
+    return;
+  }
   log(`✓ 商品情報を更新: ${code}`, 'ok');
   closeProductEditModal();
   renderAll();
+}
+
+// 画像ファイル選択→Base64変換→プレビュー
+function handlePeImageFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('画像ファイルを選択してください');
+    return;
+  }
+  // サイズ制限の目安（1MB以上は圧縮推奨の警告）
+  const sizeKB = Math.round(file.size / 1024);
+  if (sizeKB > 2048) {
+    if (!confirm(`ファイルサイズが ${sizeKB}KB と大きいです。ブラウザの保存容量を圧迫する可能性があります。続行しますか？`)) return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    peImageState.customImage = e.target.result;
+    peImageState.imageDeleted = false;
+    peRefreshImagePreview();
+  };
+  reader.onerror = () => alert('画像の読み込みに失敗しました');
+  reader.readAsDataURL(file);
 }
 
 // モーダル外側クリックで閉じる
@@ -2672,6 +2775,24 @@ document.addEventListener('keydown', (e) => {
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
 $('#peSave').addEventListener('click', saveProductEdit);
+
+// 画像操作ボタン
+$('#peImageUpload').addEventListener('click', () => $('#peImageFile').click());
+$('#peImageFile').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (f) handlePeImageFile(f);
+  e.target.value = '';
+});
+$('#peImageDelete').addEventListener('click', () => {
+  peImageState.customImage = null;
+  peImageState.imageDeleted = true;
+  peRefreshImagePreview();
+});
+$('#peImageReset').addEventListener('click', () => {
+  peImageState.customImage = null;
+  peImageState.imageDeleted = false;
+  peRefreshImagePreview();
+});
 
 // 編集ペンアイコンクリックでモーダルを開く
 document.addEventListener('click', (e) => {
