@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v65 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v66 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1021,7 +1021,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v65</div>
+    <div class="logo-sub">v66</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2823,29 +2823,49 @@ if ($('#adAdjustBannerClear')) $('#adAdjustBannerClear').addEventListener('click
 if ($('#proAdjustBannerClear')) $('#proAdjustBannerClear').addEventListener('click', clearStateFilter);
 
 // ==================== Modal ====================
-const uploadModal = $('#uploadModal');
+let uploadModal = $('#uploadModal');
 function openUploadModal() {
-  state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
-  ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
-  $('#logArea').innerHTML = '';
-  $('#logArea').classList.remove('show');
-  validateBuffer();
-  uploadModal.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  try {
+    // 要素を毎回取り直し（初回取得時にnullでも復旧できるように）
+    if (!uploadModal) uploadModal = document.getElementById('uploadModal');
+    if (!uploadModal) {
+      alert('エラー: uploadModal要素が見つかりません。ページをリロードしてください。');
+      return;
+    }
+    state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
+    ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
+    const logArea = $('#logArea');
+    if (logArea) {
+      logArea.innerHTML = '';
+      logArea.classList.remove('show');
+    }
+    if (typeof validateBuffer === 'function') validateBuffer();
+    uploadModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    console.log('✅ openUploadModal: モーダルを開きました');
+  } catch (err) {
+    console.error('openUploadModal エラー:', err);
+    alert('レポート追加ボタンでエラーが発生しました:\n' + (err && err.message ? err.message : err) + '\n\nブラウザのコンソール(F12)に詳細があります。');
+  }
 }
 function closeUploadModal() {
-  uploadModal.classList.remove('open');
-  document.body.style.overflow = '';
+  try {
+    if (!uploadModal) uploadModal = document.getElementById('uploadModal');
+    if (uploadModal) uploadModal.classList.remove('open');
+    document.body.style.overflow = '';
+  } catch (err) {
+    console.error('closeUploadModal エラー:', err);
+  }
 }
 // グローバル公開（HTMLのonclickフォールバック用）
 window.openUploadModal = openUploadModal;
 window.closeUploadModal = closeUploadModal;
-$('#btnJumpUpload').addEventListener('click', openUploadModal);
-$('#modalClose').addEventListener('click', closeUploadModal);
-$('#btnCloseBottom').addEventListener('click', closeUploadModal);
-uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) closeUploadModal(); });
+if ($('#btnJumpUpload')) $('#btnJumpUpload').addEventListener('click', openUploadModal);
+if ($('#modalClose')) $('#modalClose').addEventListener('click', closeUploadModal);
+if ($('#btnCloseBottom')) $('#btnCloseBottom').addEventListener('click', closeUploadModal);
+if (uploadModal) uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) closeUploadModal(); });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && uploadModal.classList.contains('open')) closeUploadModal();
+  if (e.key === 'Escape' && uploadModal && uploadModal.classList.contains('open')) closeUploadModal();
 });
 
 // ==================== Events ====================
