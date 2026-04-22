@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v78 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v79 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1038,7 +1038,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v78</div>
+    <div class="logo-sub">v79</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1128,9 +1128,9 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
-              <th class="nosort status-col">広告状態</th>
-              <th class="nosort status-col">PRオプ状態</th>
-              <th class="nosort status-col">ステータス</th>
+              <th class="status-col" data-sort="adStatus">広告状態</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1159,7 +1159,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
-              <th class="nosort status-col">ステータス</th>
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1183,7 +1183,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th data-sort="name">商品名</th>
               <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th class="nosort status-col">ステータス</th>
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1235,11 +1235,11 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num col-ad" data-sort="roas0" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="roas1" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="roas2" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
-              <th class="nosort status-col">広告状態</th>
-              <th class="nosort status-col">PRオプ状態</th>
+              <th class="status-col" data-sort="adStatus">広告状態</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="nosort">対応内容</th>
-              <th class="nosort status-col">ステータス</th>
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1268,11 +1268,11 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
-              <th class="nosort status-col">広告状態</th>
-              <th class="nosort status-col">PRオプ状態</th>
+              <th class="status-col" data-sort="adStatus">広告状態</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
               <th class="nosort">対応内容</th>
-              <th class="nosort status-col">ステータス</th>
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -2248,6 +2248,14 @@ function updateStateCounts() {
 }
 
 // ==================== Status select helpers ====================
+// 状態値をソート用の順序インデックスに変換（小さいほど先頭）
+const AD_STATUS_ORDER = { '': 0, '広告○': 1, '広告×': 2, '広告無': 3 };
+const PRO_STATUS_ORDER = { '': 0, 'PRオプ○': 1, 'PRオプ×': 2, 'PRO○': 1, 'PRO×': 2 };
+const STATUS_ORDER = { '新商品': 0, '現役商品': 1, '撤退検討▲': 2, '撤退■': 3, '撤退済み': 4, '': 0 };
+function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
+function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
+function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
+
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
   let value, options;
@@ -2340,6 +2348,9 @@ function renderBasic() {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
+    if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
+    if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
+    if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     return r[k] || 0;
   };
   list.sort((a, b) => {
@@ -2407,6 +2418,7 @@ function renderMonthly() {
   const sortGet = (r, k) => {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'code') return r.code || '';
+    if (k === 'status') { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     return r[k] || 0;
   };
   list.sort((a, b) => {
@@ -2484,6 +2496,7 @@ function renderRetired() {
   // ソート
   const sortGet = (r, k) => {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    if (k === 'status') { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     return r[k] || 0;
   };
   list.sort((a, b) => {
@@ -2639,6 +2652,9 @@ function renderAdAdjust() {
     if (k === 'roas0') { const v = r.roass[0]; return (v == null || !isFinite(v)) ? -1 : v; }
     if (k === 'roas1') { const v = r.roass[1]; return (v == null || !isFinite(v)) ? -1 : v; }
     if (k === 'roas2') { const v = r.roass[2]; return (v == null || !isFinite(v)) ? -1 : v; }
+    if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
+    if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
+    if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     return 0;
   };
   list.sort((a, b) => {
@@ -2724,6 +2740,9 @@ function renderProAdjust() {
     if (k === 'seoRev1') return r.seoRevs[1] || 0;
     if (k === 'seoRev2') return r.seoRevs[2] || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
+    if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
+    if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
+    if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     return 0;
   };
   list.sort((a, b) => {
