@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v62 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v63 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -873,6 +873,16 @@ td:has(> .name-cell-wrap) {
 .chart-box { position: relative; height: 420px; flex: 1; min-height: 300px; }
 .chart-box-fixed { flex: 0 0 auto; height: 360px; margin-bottom: 12px; }
 
+/* 順位テーブル用：日付列を狭く・中央寄せ */
+table.rank-table th.rank-day, table.rank-table td.rank-day {
+  min-width: 42px;
+  text-align: center;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-variant-numeric: tabular-nums;
+}
+table.rank-table td.rank-day.empty { color: var(--text3); }
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -1011,7 +1021,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v62</div>
+    <div class="logo-sub">v63</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1247,22 +1257,40 @@ td:has(> .name-cell-wrap) {
       </div>
     </div>
 
-    <!-- View: 広告順位（準備中） -->
+    <!-- View: 広告順位 -->
     <div class="view" id="view-ad-rank">
       <div class="card">
         <h3 class="card-title">広告順位</h3>
-        <div style="padding: 24px; color: var(--text2);">
-          🥇 広告順位データは準備中です。
+        <div class="filters">
+          <span class="filter-label">月</span>
+          <select id="adRankMonth"></select>
+          <span class="filter-label">検索</span>
+          <input type="search" id="adRankSearch" placeholder="商品コード・商品名で検索...">
+        </div>
+        <div class="table-wrap">
+          <table id="tableAdRank" class="rank-table">
+            <thead><tr id="adRankHeadRow"></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <!-- View: SEO順位（準備中） -->
+    <!-- View: SEO順位 -->
     <div class="view" id="view-seo-rank">
       <div class="card">
         <h3 class="card-title">SEO順位</h3>
-        <div style="padding: 24px; color: var(--text2);">
-          🔎 SEO順位データは準備中です。
+        <div class="filters">
+          <span class="filter-label">月</span>
+          <select id="seoRankMonth"></select>
+          <span class="filter-label">検索</span>
+          <input type="search" id="seoRankSearch" placeholder="商品コード・商品名で検索...">
+        </div>
+        <div class="table-wrap">
+          <table id="tableSeoRank" class="rank-table">
+            <thead><tr id="seoRankHeadRow"></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1451,6 +1479,8 @@ const state = {
   master: {},
   // 商品ごとの手動入力情報（広告状態/PRO状態/対応内容）
   productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
+  // 順位データ（将来Yahoo API自動取得予定）: { 'YYYY/MM': { code: { adRank:[31個], seoRank:[31個] } } }
+  rank: {},
   charts: {},
   fontScale: 1,
   currentView: 'basic',
@@ -1500,6 +1530,7 @@ function saveToStorage() {
     const data = {
       overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
       master: state.master, productMeta: state.productMeta,
+      rank: state.rank,
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1516,6 +1547,7 @@ function loadFromStorage() {
     if (data.ad) state.ad = data.ad;
     if (data.bid) state.bid = data.bid;
     if (data.master) state.master = data.master;
+    if (data.rank) state.rank = data.rank;
     if (data.productMeta) {
       state.productMeta = data.productMeta;
       // 旧「PRO○/×」→「PRオプ○/×」にマイグレーション
@@ -2553,6 +2585,109 @@ function renderProAdjust() {
   });
 }
 
+// ==================== Rendering: 広告順位 / SEO順位 ====================
+// 指定月(YYYY/MM)の日数を返す
+function daysInMonth(ym) {
+  if (!ym) return 31;
+  const [y, m] = ym.split('/').map(n => parseInt(n, 10));
+  if (!y || !m) return 31;
+  return new Date(y, m, 0).getDate();
+}
+
+// 順位データ取得: state.rank[ym][code][field][dayIndex]（field: 'adRank' | 'seoRank'）
+function getRankValue(ym, code, field, dayIndex) {
+  const byMonth = state.rank && state.rank[ym];
+  if (!byMonth) return null;
+  const byCode = byMonth[code];
+  if (!byCode) return null;
+  const arr = byCode[field];
+  if (!Array.isArray(arr)) return null;
+  const v = arr[dayIndex];
+  return (v == null || v === '' || isNaN(v)) ? null : v;
+}
+
+// 選択月の順位表を描画（kind: 'ad' | 'seo'）
+function renderRankTable(kind) {
+  const isAd = kind === 'ad';
+  const field = isAd ? 'adRank' : 'seoRank';
+  const monthSelId = isAd ? '#adRankMonth' : '#seoRankMonth';
+  const searchId   = isAd ? '#adRankSearch' : '#seoRankSearch';
+  const headRowId  = isAd ? '#adRankHeadRow' : '#seoRankHeadRow';
+  const tableId    = isAd ? '#tableAdRank' : '#tableSeoRank';
+
+  // 月プルダウン生成
+  const months = getAvailableMonths();
+  const sel = $(monthSelId);
+  const cur = sel.value;
+  if (months.length === 0) {
+    // データがまだ無くても、現在月を1件入れておく（順位は手動/API投入を想定）
+    const d = new Date();
+    const fallback = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    sel.innerHTML = `<option value="${fallback}">${fallback}</option>`;
+  } else {
+    sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    if (!cur || !months.includes(cur)) {
+      sel.value = months[months.length - 1];
+    } else {
+      sel.value = cur;
+    }
+  }
+  const ym = sel.value;
+  const nDays = daysInMonth(ym);
+
+  // 見出し行を動的生成：商品コード / 画像 / 商品名 / 1日 / 2日 / ...
+  const head = $(headRowId);
+  const dayTh = [];
+  for (let i = 1; i <= nDays; i++) dayTh.push(`<th class="rank-day nosort">${i}日</th>`);
+  head.innerHTML = `
+    <th>商品コード</th>
+    <th class="nosort">画像</th>
+    <th>商品名</th>
+    ${dayTh.join('')}
+  `;
+
+  // 対象商品リスト（現役商品のみ）
+  let codes = Object.keys(state.master).filter(c => !isRetired(c));
+
+  // 検索
+  const q = ($(searchId).value || '').trim().toLowerCase();
+  if (q) {
+    codes = codes.filter(code => {
+      const m = getMaster(code);
+      const hay = [code, m && m.name].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  codes.sort();
+
+  // 行描画
+  const tbody = document.querySelector(tableId + ' tbody');
+  const colspan = 3 + nDays;
+  if (codes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">商品データを読み込んでください</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = codes.slice(0, 2000).map(code => {
+    const cells = [];
+    for (let i = 0; i < nDays; i++) {
+      const v = getRankValue(ym, code, field, i);
+      cells.push(v == null
+        ? `<td class="rank-day empty">—</td>`
+        : `<td class="rank-day">${v}</td>`);
+    }
+    return `
+      <tr>
+        <td class="code-cell">${escapeHtml(code)}</td>
+        <td>${imageCellHtml(code)}</td>
+        <td>${nameCellHtml(code)}</td>
+        ${cells.join('')}
+      </tr>`;
+  }).join('');
+}
+
+function renderAdRank()  { renderRankTable('ad'); }
+function renderSeoRank() { renderRankTable('seo'); }
+
 // ==================== Render All ====================
 function renderAll() {
   updateStateCounts();
@@ -2562,6 +2697,8 @@ function renderAll() {
   else if (state.currentView === 'graph') renderGraph();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
+  else if (state.currentView === 'ad-rank') renderAdRank();
+  else if (state.currentView === 'seo-rank') renderSeoRank();
 }
 
 // ==================== Top Tab Navigation ====================
@@ -2735,7 +2872,7 @@ $('#btnConfirmUpload').addEventListener('click', commitUpload);
 
 $('#btnClear').addEventListener('click', () => {
   state.overall = null; state.item = null; state.ad = null; state.bid = null;
-  state.master = {}; state.productMeta = {};
+  state.master = {}; state.productMeta = {}; state.rank = {};
   state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
   ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
@@ -2811,6 +2948,12 @@ $('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'))
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
 $('#basicSearch').addEventListener('input', renderBasic);
+
+// 広告順位 / SEO順位 ビューの操作
+$('#adRankMonth').addEventListener('change', renderAdRank);
+$('#adRankSearch').addEventListener('input', renderAdRank);
+$('#seoRankMonth').addEventListener('change', renderSeoRank);
+$('#seoRankSearch').addEventListener('input', renderSeoRank);
 $$('#tableBasic th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
     const k = th.dataset.sort;
