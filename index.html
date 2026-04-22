@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v72 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v73 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1025,7 +1025,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v72</div>
+    <div class="logo-sub">v73</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1105,6 +1105,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th data-sort="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name">商品名</th>
+              <th class="nosort">メインKW</th>
+              <th class="nosort">検索URL</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
@@ -2324,7 +2326,7 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="13" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.slice(0, 2000).forEach(r => {
@@ -2335,6 +2337,8 @@ function renderBasic() {
       <td class="code-cell">${escapeHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
+      <td>${kwCellHtml(r.code)}</td>
+      <td>${searchUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
       <td class="num col-ad">${fmt(r.adRev)}</td>
