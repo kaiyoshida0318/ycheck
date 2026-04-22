@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v66 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v67 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1021,7 +1021,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v66</div>
+    <div class="logo-sub">v67</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2002,16 +2002,22 @@ const slotMap = {
 function updateSlot(kind, filename) {
   const info = slotMap[kind]; if (!info) return;
   const slot = $('#' + info.slotId);
+  if (!slot) return;   // スロット要素が存在しない（例: master）場合はスキップ
   slot.classList.add('loaded');
-  slot.querySelector('.file-slot-status').textContent = '✓ 読み込み済み';
-  slot.querySelector('.file-slot-filename').textContent = filename;
+  const statusEl = slot.querySelector('.file-slot-status');
+  const nameEl = slot.querySelector('.file-slot-filename');
+  if (statusEl) statusEl.textContent = '✓ 読み込み済み';
+  if (nameEl) nameEl.textContent = filename;
 }
 function clearSlot(kind) {
   const info = slotMap[kind]; if (!info) return;
   const slot = $('#' + info.slotId);
+  if (!slot) return;   // スロット要素が存在しない（例: master）場合はスキップ
   slot.classList.remove('loaded');
-  slot.querySelector('.file-slot-status').textContent = '未アップロード';
-  slot.querySelector('.file-slot-filename').textContent = info.pattern;
+  const statusEl = slot.querySelector('.file-slot-status');
+  const nameEl = slot.querySelector('.file-slot-filename');
+  if (statusEl) statusEl.textContent = '未アップロード';
+  if (nameEl) nameEl.textContent = info.pattern;
 }
 
 // ==================== Helpers ====================
@@ -2833,7 +2839,7 @@ function openUploadModal() {
       return;
     }
     state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
-    ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
+    ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
     const logArea = $('#logArea');
     if (logArea) {
       logArea.innerHTML = '';
@@ -2897,7 +2903,7 @@ $('#btnClear').addEventListener('click', () => {
   state.overall = null; state.item = null; state.ad = null; state.bid = null;
   state.master = {}; state.productMeta = {}; state.rank = {};
   state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
-  ['overall', 'item', 'ad', 'bid', 'master'].forEach(clearSlot);
+  ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
   state.charts = {};
   clearStorage();
