@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v75 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v76 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -561,6 +561,16 @@ th {
 th:hover { background: var(--border); }
 th.nosort { cursor: default; }
 th.nosort:hover { background: var(--bg3); }
+/* ソートアイコン: 既定は薄い↕、アクティブ時は向き付き濃色 */
+th[data-sort]::after {
+  content: ' \2195';          /* ↕ */
+  opacity: 0.35;
+  font-size: 0.85em;
+  margin-left: 3px;
+}
+th[data-sort].sort-active::after { opacity: 1; color: var(--blue); }
+th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blue); }  /* ▲ */
+th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:hover { background: var(--bg3); }
 
@@ -1025,7 +1035,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v75</div>
+    <div class="logo-sub">v76</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1114,7 +1124,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th class="num col-bid nosort">PRオプ</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort status-col">ステータス</th>
@@ -1216,12 +1226,12 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th data-sort="name">商品名</th>
               <th class="nosort">メインKW</th>
               <th class="nosort">検索URL</th>
-              <th class="num nosort col-ad" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
-              <th class="num nosort col-ad" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
-              <th class="num nosort col-ad" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
-              <th class="num nosort col-ad" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
-              <th class="num nosort col-ad" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
-              <th class="num nosort col-ad" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
+              <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="adRev1" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="adRev2" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
+              <th class="num col-ad" data-sort="roas0" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="roas1" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="roas2" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
@@ -1252,12 +1262,12 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th data-sort="name">商品名</th>
               <th class="nosort">メインKW</th>
               <th class="nosort">検索URL</th>
-              <th class="num nosort col-sales" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
-              <th class="num nosort col-sales" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
-              <th class="num nosort col-sales" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
+              <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev2" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
-              <th class="num col-bid nosort">PRオプ</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ</th>
               <th class="nosort">対応内容</th>
               <th class="nosort status-col">ステータス</th>
             </tr></thead>
@@ -1524,6 +1534,17 @@ function getProRate(code) {
   if (!state.proRate) return null;
   const v = state.proRate[String(code).toLowerCase()];
   return (v == null || isNaN(v)) ? null : v;
+}
+
+// テーブルヘッダのソートインジケータを更新（.sort-asc / .sort-desc クラス）
+function updateSortIndicator(tableSelector, key, dir) {
+  const ths = document.querySelectorAll(tableSelector + ' th[data-sort]');
+  ths.forEach(th => {
+    th.classList.remove('sort-active', 'sort-asc', 'sort-desc');
+    if (th.dataset.sort === key) {
+      th.classList.add('sort-active', dir < 0 ? 'sort-desc' : 'sort-asc');
+    }
+  });
 }
 const toNum = (v) => {
   if (v == null) return 0;
@@ -2315,6 +2336,7 @@ function renderBasic() {
   const sortGet = (r, k) => {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
+    if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     return r[k] || 0;
   };
   list.sort((a, b) => {
@@ -2329,6 +2351,7 @@ function renderBasic() {
     tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
+    updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
     return;
   }
   // CSVダウンロード用に現在の絞り込み・並び順を保持
@@ -2357,6 +2380,7 @@ function renderBasic() {
     `;
     tbody.appendChild(tr);
   });
+  updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
 }
 
 // ==================== Rendering: 商品-月別データ ====================
@@ -2392,6 +2416,7 @@ function renderMonthly() {
   tbody.innerHTML = '';
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="empty-state">データを読み込んでください</td></tr>';
+    updateSortIndicator('#tableMonthly', monthlySortKey, monthlySortDir);
     return;
   }
   list.slice(0, 3000).forEach(r => {
@@ -2411,6 +2436,7 @@ function renderMonthly() {
     `;
     tbody.appendChild(tr);
   });
+  updateSortIndicator('#tableMonthly', monthlySortKey, monthlySortDir);
 }
 
 // ==================== Rendering: 撤退済み商品 ====================
@@ -2466,6 +2492,7 @@ function renderRetired() {
   tbody.innerHTML = '';
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">撤退済み商品はありません</td></tr>';
+    updateSortIndicator('#tableRetired', retiredSortKey, retiredSortDir);
     return;
   }
 
@@ -2481,6 +2508,7 @@ function renderRetired() {
     `;
     tbody.appendChild(tr);
   });
+  updateSortIndicator('#tableRetired', retiredSortKey, retiredSortDir);
 }
 
 // ==================== Rendering: 全-月別データ（グラフ）====================
@@ -2547,6 +2575,7 @@ function last3Months() {
   return months.slice(-3);
 }
 
+let adAdjustSortKey = 'adRev2', adAdjustSortDir = -1;  // デフォルト: 前月の広告売上降順
 function renderAdAdjust() {
   const months = last3Months();
   // 動的に見出しを更新（月が分かる場合）
@@ -2593,9 +2622,27 @@ function renderAdAdjust() {
   tbody.innerHTML = '';
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="16" class="empty-state">データを読み込んでください</td></tr>';
+    updateSortIndicator('#tableAdAdjust', adAdjustSortKey, adAdjustSortDir);
     return;
   }
-  list.sort((a, b) => (b.adRevs[2] || 0) - (a.adRevs[2] || 0));
+  // ソート
+  const adSortGet = (r, k) => {
+    if (k === 'code') return r.code || '';
+    if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
+    if (k === 'adRev0') return r.adRevs[0] || 0;
+    if (k === 'adRev1') return r.adRevs[1] || 0;
+    if (k === 'adRev2') return r.adRevs[2] || 0;
+    if (k === 'roas0') { const v = r.roass[0]; return (v == null || !isFinite(v)) ? -1 : v; }
+    if (k === 'roas1') { const v = r.roass[1]; return (v == null || !isFinite(v)) ? -1 : v; }
+    if (k === 'roas2') { const v = r.roass[2]; return (v == null || !isFinite(v)) ? -1 : v; }
+    return 0;
+  };
+  list.sort((a, b) => {
+    const va = adSortGet(a, adAdjustSortKey), vb = adSortGet(b, adAdjustSortKey);
+    if (typeof va === 'string') return adAdjustSortDir * va.localeCompare(vb);
+    return adAdjustSortDir * (va - vb);
+  });
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
     const tr = document.createElement('tr');
@@ -2619,9 +2666,11 @@ function renderAdAdjust() {
     `;
     tbody.appendChild(tr);
   });
+  updateSortIndicator('#tableAdAdjust', adAdjustSortKey, adAdjustSortDir);
 }
 
 // ==================== Rendering: PRO調整 ====================
+let proAdjustSortKey = 'seoRev2', proAdjustSortDir = -1;  // デフォルト: 前月のSEO売上降順
 function renderProAdjust() {
   const months = last3Months();
   if (months.length >= 1) $('#hProAdjustSeo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
@@ -2661,9 +2710,24 @@ function renderProAdjust() {
   tbody.innerHTML = '';
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="13" class="empty-state">データを読み込んでください</td></tr>';
+    updateSortIndicator('#tableProAdjust', proAdjustSortKey, proAdjustSortDir);
     return;
   }
-  list.sort((a, b) => (b.seoRevs[2] || 0) - (a.seoRevs[2] || 0));
+  // ソート
+  const proSortGet = (r, k) => {
+    if (k === 'code') return r.code || '';
+    if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    if (k === 'seoRev0') return r.seoRevs[0] || 0;
+    if (k === 'seoRev1') return r.seoRevs[1] || 0;
+    if (k === 'seoRev2') return r.seoRevs[2] || 0;
+    if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
+    return 0;
+  };
+  list.sort((a, b) => {
+    const va = proSortGet(a, proAdjustSortKey), vb = proSortGet(b, proAdjustSortKey);
+    if (typeof va === 'string') return proAdjustSortDir * va.localeCompare(vb);
+    return proAdjustSortDir * (va - vb);
+  });
   list.slice(0, 2000).forEach(r => {
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
@@ -2684,6 +2748,7 @@ function renderProAdjust() {
     `;
     tbody.appendChild(tr);
   });
+  updateSortIndicator('#tableProAdjust', proAdjustSortKey, proAdjustSortDir);
 }
 
 // ==================== Rendering: 広告順位 / SEO順位 ====================
@@ -3128,6 +3193,22 @@ $$('#tableRetired th[data-sort]').forEach(th => {
 // 調整ビューの操作
 $('#adAdjustSearch').addEventListener('input', renderAdAdjust);
 $('#proAdjustSearch').addEventListener('input', renderProAdjust);
+$$('#tableAdAdjust th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (adAdjustSortKey === k) adAdjustSortDir *= -1;
+    else { adAdjustSortKey = k; adAdjustSortDir = -1; }
+    renderAdAdjust();
+  });
+});
+$$('#tableProAdjust th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (proAdjustSortKey === k) proAdjustSortDir *= -1;
+    else { proAdjustSortKey = k; proAdjustSortDir = -1; }
+    renderProAdjust();
+  });
+});
 
 // ==================== 広告/PRO状態プルダウン ====================
 // 「更新日時-YY/MMDD」スタンプを生成
