@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v64 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v65 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1021,7 +1021,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v64</div>
+    <div class="logo-sub">v65</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1029,7 +1029,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
       <span class="font-size-label" id="fontLabel">100%</span>
       <button class="font-btn" id="fontUp">A+</button>
     </div>
-    <button class="btn sm primary" id="btnJumpUpload">+ レポート追加</button>
+    <button class="btn sm primary" id="btnJumpUpload" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
   </div>
 </div>
@@ -2837,6 +2837,9 @@ function closeUploadModal() {
   uploadModal.classList.remove('open');
   document.body.style.overflow = '';
 }
+// グローバル公開（HTMLのonclickフォールバック用）
+window.openUploadModal = openUploadModal;
+window.closeUploadModal = closeUploadModal;
 $('#btnJumpUpload').addEventListener('click', openUploadModal);
 $('#modalClose').addEventListener('click', closeUploadModal);
 $('#btnCloseBottom').addEventListener('click', closeUploadModal);
@@ -3536,11 +3539,15 @@ npSlot.addEventListener('drop', (e) => {
 });
 
 // ==================== 初期化 ====================
-const restored = loadFromStorage();
-updateActiveStateChip();
-updateFilterBanners();
-renderAll();
-if (restored) console.log('Ycheck: 保存済みデータを復元');
+try {
+  const restored = loadFromStorage();
+  updateActiveStateChip();
+  updateFilterBanners();
+  renderAll();
+  if (restored) console.log('Ycheck: 保存済みデータを復元');
+} catch (err) {
+  console.error('Ycheck 初期化エラー:', err);
+}
 </script>
 </body>
 </html>
