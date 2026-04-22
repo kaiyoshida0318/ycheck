@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v74 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v75 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1025,7 +1025,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v74</div>
+    <div class="logo-sub">v75</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1257,7 +1257,6 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num nosort col-sales" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
-              <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="num col-bid nosort">PRオプ</th>
               <th class="nosort">対応内容</th>
               <th class="nosort status-col">ステータス</th>
@@ -2661,12 +2660,11 @@ function renderProAdjust() {
   const tbody = $('#tableProAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.sort((a, b) => (b.seoRevs[2] || 0) - (a.seoRevs[2] || 0));
   list.slice(0, 2000).forEach(r => {
-    const bid = state.bid ? state.bid[r.code] : null;
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -2680,7 +2678,6 @@ function renderProAdjust() {
       <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
-      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td class="num col-bid">${fmtProRate(pr)}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
