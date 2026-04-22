@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v63 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v64 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1021,7 +1021,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v63</div>
+    <div class="logo-sub">v64</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2638,7 +2638,7 @@ function renderRankTable(kind) {
   // 見出し行を動的生成：商品コード / 画像 / 商品名 / 1日 / 2日 / ...
   const head = $(headRowId);
   const dayTh = [];
-  for (let i = 1; i <= nDays; i++) dayTh.push(`<th class="rank-day nosort">${i}日</th>`);
+  for (let i = 1; i <= nDays; i++) dayTh.push(`<th class="rank-day nosort">${i}</th>`);
   head.innerHTML = `
     <th>商品コード</th>
     <th class="nosort">画像</th>
