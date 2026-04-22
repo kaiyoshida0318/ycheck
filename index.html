@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v80 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v81 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -890,6 +890,19 @@ td:has(> .name-cell-wrap) {
 #uploadModal[data-mode="monthly"] .file-slot[data-upload-group="spot"] { display: none; }
 #uploadModal[data-mode="spot"] .file-slot[data-upload-group="monthly"] { display: none; }
 
+/* API用CSVダウンロードボタン: 未反映の変動がある場合のアラート表示 */
+#btnDownloadBasicCsv.drift-alert {
+  background: rgba(217,119,6,0.12);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+  animation: drift-pulse 1.6s ease-in-out infinite;
+}
+@keyframes drift-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217,119,6,0.35); }
+  50%      { box-shadow: 0 0 0 4px rgba(217,119,6,0.18); }
+}
+
 /* 順位テーブル用：日付列を狭く・中央寄せ */
 table.rank-table th.rank-day, table.rank-table td.rank-day {
   min-width: 42px;
@@ -1038,7 +1051,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v80</div>
+    <div class="logo-sub">v81</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1510,6 +1523,8 @@ const state = {
   productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
   // 順位データ（将来Yahoo API自動取得予定）: { 'YYYY/MM': { code: { adRank:[31個], seoRank:[31個] } } }
   rank: {},
+  // API用CSVを最後にダウンロードした時点のスナップショット（{code: keyword, ...} と savedAt を保持）
+  productsCsvSnapshot: null,
   charts: {},
   fontScale: 1,
   currentView: 'basic',
@@ -1584,6 +1599,7 @@ function saveToStorage() {
       proRate: state.proRate,
       master: state.master, productMeta: state.productMeta,
       rank: state.rank,
+      productsCsvSnapshot: state.productsCsvSnapshot,
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1602,6 +1618,7 @@ function loadFromStorage() {
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
     if (data.rank) state.rank = data.rank;
+    if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     if (data.productMeta) {
       state.productMeta = data.productMeta;
       // 旧「PRO○/×」→「PRオプ○/×」にマイグレーション
@@ -2887,6 +2904,7 @@ function renderAll() {
   else if (state.currentView === 'pro-adjust') renderProAdjust();
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
+  updateCsvDownloadButtonState();
 }
 
 // ==================== Sort Reset ====================
@@ -3112,6 +3130,7 @@ $('#btnConfirmUpload').addEventListener('click', commitUpload);
 $('#btnClear').addEventListener('click', () => {
   state.overall = null; state.item = null; state.ad = null; state.bid = null; state.proRate = null;
   state.master = {}; state.productMeta = {}; state.rank = {};
+  state.productsCsvSnapshot = null;
   state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
   ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
@@ -3702,6 +3721,66 @@ function closeNewProductModal() {
 }
 
 // 【基本】商品-基本データの表示中リストをCSVでダウンロード（画像列は除外）
+// API用CSVの「現在のマップ」= 現役商品のうち、メインKW登録あり → {code: keyword, ...}
+function buildCurrentProductsMap() {
+  const m = {};
+  Object.keys(state.master || {}).forEach(code => {
+    if (isRetired(code)) return;
+    const master = state.master[code] || {};
+    const kw = String(master.kw || '').trim();
+    if (!kw) return;
+    m[String(code).toLowerCase().trim()] = kw;
+  });
+  return m;
+}
+
+// スナップショットと現在マップを比較。差分を {added, removed, changed, total} で返す。
+// スナップショット未設定の場合は total=0 を返し警告対象外とする（初回無警告仕様）
+function computeProductsCsvDiff() {
+  const snap = state.productsCsvSnapshot && state.productsCsvSnapshot.items;
+  if (!snap) return { hasSnapshot: false, added: [], removed: [], changed: [], total: 0 };
+  const current = buildCurrentProductsMap();
+  const added = [], removed = [], changed = [];
+  Object.keys(current).forEach(code => {
+    if (!(code in snap)) added.push(code);
+    else if (snap[code] !== current[code]) changed.push(code);
+  });
+  Object.keys(snap).forEach(code => {
+    if (!(code in current)) removed.push(code);
+  });
+  return {
+    hasSnapshot: true,
+    added, removed, changed,
+    total: added.length + removed.length + changed.length
+  };
+}
+
+// 「CSVダウンロード-API用」ボタンの視覚表示を差分に応じて更新
+function updateCsvDownloadButtonState() {
+  const btn = $('#btnDownloadBasicCsv');
+  if (!btn) return;
+  const diff = computeProductsCsvDiff();
+  if (!diff.hasSnapshot || diff.total === 0) {
+    btn.classList.remove('drift-alert');
+    const savedAt = state.productsCsvSnapshot && state.productsCsvSnapshot.savedAt;
+    if (savedAt) {
+      const d = new Date(savedAt);
+      const pad = (n) => String(n).padStart(2, '0');
+      btn.title = `順位取得API用の商品マスタCSV（code, keyword）をダウンロード\n前回DL: ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}（変動なし）`;
+    } else {
+      btn.title = '順位取得API用の商品マスタCSV（code, keyword）をダウンロード';
+    }
+    return;
+  }
+  btn.classList.add('drift-alert');
+  const preview = (arr) => arr.slice(0, 5).join(', ') + (arr.length > 5 ? ` …他${arr.length - 5}件` : '');
+  const lines = ['🔔 商品マスタに変動あり - 再ダウンロード＆GitHub反映を推奨'];
+  if (diff.added.length)   lines.push(`・新規追加 ${diff.added.length}件: ${preview(diff.added)}`);
+  if (diff.removed.length) lines.push(`・削除/撤退 ${diff.removed.length}件: ${preview(diff.removed)}`);
+  if (diff.changed.length) lines.push(`・メインKW変更 ${diff.changed.length}件: ${preview(diff.changed)}`);
+  btn.title = lines.join('\n');
+}
+
 function downloadBasicCsv() {
   const list = Array.isArray(state.basicListCache) ? state.basicListCache : [];
   if (list.length === 0) {
@@ -3741,6 +3820,13 @@ function downloadBasicCsv() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  // ダウンロード成功時点のスナップショットを保存（GitHub反映のタイミングとみなす）
+  state.productsCsvSnapshot = {
+    savedAt: new Date().toISOString(),
+    items: buildCurrentProductsMap()
+  };
+  saveToStorage();
+  updateCsvDownloadButtonState();
   if (skipped > 0) {
     console.log(`CSVダウンロード: メインKW未登録の${skipped}件をスキップしました`);
   }
