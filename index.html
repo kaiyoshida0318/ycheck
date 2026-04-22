@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v79 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v80 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1038,7 +1038,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v79</div>
+    <div class="logo-sub">v80</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1111,7 +1111,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
           <select id="basicMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索...">
-          <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" title="現在表示中の内容をCSVでダウンロード">🡇 CSVダウンロード</button>
+          <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" title="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 CSVダウンロード-API用</button>
         </div>
         <div class="table-wrap">
           <table id="tableBasic">
@@ -3713,36 +3713,21 @@ function downloadBasicCsv() {
     if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
     return s;
   };
-  const headers = [
-    '商品コード', '商品名', 'メインKW', '検索URL',
-    '総売上', 'SEO売上', '広告売上', '実績額', '広告ROAS',
-    '入札価格', 'PRオプ',
-    '広告状態', 'PRオプ状態', 'ステータス'
-  ];
+  // 順位取得API(rank_check.py)用フォーマット: 1列目 code, 2列目 keyword
+  const headers = ['code', 'keyword'];
   const lines = [headers.join(',')];
+  let skipped = 0;
   list.forEach(r => {
     const m = getMaster(r.code) || {};
-    const meta = state.productMeta && state.productMeta[r.code] || {};
-    const bid = state.bid ? state.bid[r.code] : null;
-    const pr = getProRate(r.code);
-    const row = [
-      r.code,
-      m.name || '',
-      m.kw || '',
-      m.searchUrl || '',
-      (r.rev || 0),
-      (r.seoRev || 0),
-      (r.adRev || 0),
-      (r.adCost || 0),
-      (r.roas == null || !isFinite(r.roas)) ? '' : Math.round(r.roas),
-      (bid != null && bid > 0) ? bid : '',
-      (pr == null || isNaN(pr)) ? '' : Math.floor(Number(pr)),
-      meta.adStatus || '',
-      meta.proStatus || '',
-      meta.status || ''
-    ];
-    lines.push(row.map(csvEscape).join(','));
+    const code = String(r.code || '').toLowerCase().trim();
+    const keyword = String(m.kw || '').trim();
+    if (!code || !keyword) { skipped++; return; }  // どちらか空はAPI側でスキップされるのでここで除外
+    lines.push([code, keyword].map(csvEscape).join(','));
   });
+  if (lines.length <= 1) {
+    alert('出力対象がありません。メインKWが未登録の商品だけだった可能性があります。');
+    return;
+  }
   const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -3751,12 +3736,14 @@ function downloadBasicCsv() {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
-  const monthLabel = (state.basicListMonth || '').replace(/\//g, '-');
-  a.download = `商品-基本データ_${monthLabel}_${ts}.csv`;
+  a.download = `products_${ts}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  if (skipped > 0) {
+    console.log(`CSVダウンロード: メインKW未登録の${skipped}件をスキップしました`);
+  }
 }
 
 // CSVテンプレートをダウンロード
