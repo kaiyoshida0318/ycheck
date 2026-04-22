@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v61 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v62 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -871,6 +871,7 @@ td:has(> .name-cell-wrap) {
   font-size: 0.9rem;
 }
 .chart-box { position: relative; height: 420px; flex: 1; min-height: 300px; }
+.chart-box-fixed { flex: 0 0 auto; height: 360px; margin-bottom: 12px; }
 
 /* Modal */
 .modal-overlay {
@@ -1010,7 +1011,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v61</div>
+    <div class="logo-sub">v62</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1158,11 +1159,23 @@ td:has(> .name-cell-wrap) {
       </div>
     </div>
 
-    <!-- View: 全-月別データ（グラフ） -->
+    <!-- View: 全-月別データ（グラフ + 月別表） -->
     <div class="view" id="view-graph">
       <div class="card">
         <h3 class="card-title">全-月別データ（折れ線グラフ）</h3>
-        <div class="chart-box"><canvas id="chartAll"></canvas></div>
+        <div class="chart-box chart-box-fixed"><canvas id="chartAll"></canvas></div>
+        <div class="table-wrap">
+          <table id="tableGraphMonthly">
+            <thead><tr>
+              <th>月</th>
+              <th class="num col-sales">総売上</th>
+              <th class="num col-sales">SEO売上</th>
+              <th class="num col-ad">広告売上</th>
+              <th class="num col-ad">実績額</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -2351,7 +2364,7 @@ function renderGraph() {
       const o = state.overall.months.find(x => x.month === m);
       if (o && o.revenue > 0) rev = o.revenue;
     }
-    return { month: m, rev, adRev, adCost, seoRev: Math.max(0, rev - adRev), roas: adCost > 0 ? (adRev / adCost) * 100 : null };
+    return { month: m, rev, adRev, adCost, seoRev: Math.max(0, rev - adRev) };
   });
 
   const labels = data.map(d => d.month);
@@ -2362,31 +2375,39 @@ function renderGraph() {
     data: {
       labels,
       datasets: [
-        { label: '総売上', data: data.map(d => d.rev), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2, yAxisID: 'y' },
-        { label: 'SEO売上', data: data.map(d => d.seoRev), borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2, yAxisID: 'y' },
-        { label: '広告売上', data: data.map(d => d.adRev), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2, yAxisID: 'y' },
-        { label: '実績額', data: data.map(d => d.adCost), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2, yAxisID: 'y' },
-        { label: '広告ROAS', data: data.map(d => d.roas), borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2, borderDash: [6, 4], yAxisID: 'y1' }
+        { label: '総売上', data: data.map(d => d.rev), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
+        { label: 'SEO売上', data: data.map(d => d.seoRev), borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
+        { label: '広告売上', data: data.map(d => d.adRev), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
+        { label: '実績額', data: data.map(d => d.adCost), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { labels: { color: '#4a4d52' }, position: 'top' },
-        tooltip: { callbacks: { label: (c) => {
-          if (c.dataset.label === '広告ROAS') {
-            return c.parsed.y == null ? `${c.dataset.label}: —` : `${c.dataset.label}: ${Math.round(c.parsed.y)}%`;
-          }
-          return `${c.dataset.label}: ¥${Math.round(c.parsed.y).toLocaleString()}`;
-        } } }
+        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ¥${Math.round(c.parsed.y).toLocaleString()}` } }
       },
       scales: {
         x: { title: { display: true, text: '月', color: '#8a8d94' }, ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y: { position: 'left', title: { display: true, text: '金額（円）', color: '#8a8d94' }, ticks: { color: '#8a8d94', callback: v => '¥' + v.toLocaleString() }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y1: { position: 'right', title: { display: true, text: '広告ROAS（%）', color: '#7c3aed' }, ticks: { color: '#7c3aed', callback: v => v + '%' }, grid: { drawOnChartArea: false } }
+        y: { title: { display: true, text: '金額（円）', color: '#8a8d94' }, ticks: { color: '#8a8d94', callback: v => '¥' + v.toLocaleString() }, grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
+
+  // 月別表（新しい順）
+  const tbody = document.querySelector('#tableGraphMonthly tbody');
+  if (tbody) {
+    const rows = [...data].reverse();
+    tbody.innerHTML = rows.map(d => `
+      <tr>
+        <td>${d.month}</td>
+        <td class="num col-sales">${fmt(d.rev)}</td>
+        <td class="num col-sales">${fmt(d.seoRev)}</td>
+        <td class="num col-ad">${fmt(d.adRev)}</td>
+        <td class="num col-ad">${fmt(d.adCost)}</td>
+      </tr>
+    `).join('');
+  }
 }
 
 // ==================== Rendering: 広告全体 ====================
