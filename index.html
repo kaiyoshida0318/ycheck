@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v76 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v77 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -600,7 +600,8 @@ tbody tr:hover { background: var(--bg3); }
   font-size: 0.8rem; white-space: nowrap;
 }
 .link-btn:hover { text-decoration: underline; }
-.bid-price {
+.bid-price,
+.pro-rate-cell {
   font-weight: 600;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -608,11 +609,13 @@ tbody tr:hover { background: var(--bg3); }
   border-bottom: 1px dotted transparent;
   transition: background 0.12s, border-color 0.12s;
 }
-.bid-price:hover {
+.bid-price:hover,
+.pro-rate-cell:hover {
   background: rgba(37,99,235,0.08);
   border-bottom-color: var(--accent);
 }
-.bid-price-input {
+.bid-price-input,
+.pro-rate-input {
   width: 80px;
   padding: 3px 6px;
   border: 2px solid var(--accent);
@@ -1035,7 +1038,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v76</div>
+    <div class="logo-sub">v77</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2373,7 +2376,7 @@ function renderBasic() {
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
-      <td class="num col-bid">${fmtProRate(pr)}</td>
+      <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
@@ -2742,7 +2745,7 @@ function renderProAdjust() {
       <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
-      <td class="num col-bid">${fmtProRate(pr)}</td>
+      <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
@@ -3248,6 +3251,13 @@ document.addEventListener('change', (e) => {
   if (kind === 'ad' || kind === 'pro') {
     meta.adNote = applyUpdateStampToNote(meta.adNote);
     meta.proNote = applyUpdateStampToNote(meta.proNote);
+    // 【v77】表中の note-cell を直接更新（再描画しないので手動で反映）
+    document.querySelectorAll(`.note-cell[data-code="${code}"][data-kind="ad"]`).forEach(el => {
+      el.textContent = meta.adNote || '';
+    });
+    document.querySelectorAll(`.note-cell[data-code="${code}"][data-kind="pro"]`).forEach(el => {
+      el.textContent = meta.proNote || '';
+    });
   }
   saveToStorage();
   // 見た目更新
@@ -3260,10 +3270,9 @@ document.addEventListener('change', (e) => {
     else if (value === '現役商品') cls = 'ok';
   }
   e.target.className = 'status-select ' + cls;
-  // 件数バッジ更新
-  updateStateCounts();
-  // 状態変更時は常に全画面を再描画（撤退済みへの移動／復帰や対応内容の更新表示）
-  renderAll();
+  // 【v77】件数バッジ・他ビューへの移動は即時反映せず、次のビュー切り替え時に更新
+  // 以前: updateStateCounts() と renderAll() を即時実行していたが、
+  // 編集中のスクロール位置や操作感を保つため、遅延反映に変更。
 });
 
 // ==================== 対応内容（note）編集 ====================
@@ -3406,6 +3415,71 @@ document.addEventListener('click', (e) => {
   // num/code/etcを共有しないよう、bid-priceクラスのtdだけが対象
   e.preventDefault();
   startBidEdit(cell);
+});
+
+// ==================== PRオプ料率クリック編集（入札価格と同仕様） ====================
+function startProRateEdit(cell) {
+  if (cell.querySelector('input')) return;
+  const code = cell.dataset.code;
+  if (!code) return;
+  const currentRaw = getProRate(code);
+  const currentDisp = (currentRaw == null || isNaN(currentRaw)) ? '' : String(currentRaw);
+  const originalHtml = cell.innerHTML;
+  cell.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.min = '0';
+  input.max = '100';
+  input.step = '0.1';
+  input.className = 'pro-rate-input';
+  input.value = currentDisp;
+  input.placeholder = '%';
+  cell.appendChild(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    const raw = input.value.trim();
+    if (!state.proRate) state.proRate = {};
+    const codeLower = String(code).toLowerCase();
+    if (raw === '' || raw === '0') {
+      // 空・0で確定 → PRオプ料率を削除
+      delete state.proRate[codeLower];
+    } else {
+      const num = parseFloat(raw);
+      if (isNaN(num) || num < 0 || num > 100) {
+        cancel();
+        return;
+      }
+      state.proRate[codeLower] = num;
+    }
+    saveToStorage();
+    const current = state.proRate[codeLower];
+    log(`✓ PRオプ料率を更新: ${code} → ${current != null ? Math.floor(current) + '%' : '削除'}`, 'ok');
+    // セルだけ更新（全体再描画は行わない）
+    const v = current;
+    cell.textContent = (v == null || isNaN(v)) ? '—' : Math.floor(Number(v)) + '%';
+  };
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    cell.innerHTML = originalHtml;
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+document.addEventListener('click', (e) => {
+  const cell = e.target.closest('.pro-rate-cell');
+  if (!cell) return;
+  if (cell.querySelector('input')) return;
+  e.preventDefault();
+  startProRateEdit(cell);
 });
 
 // ==================== 商品情報編集モーダル ====================
