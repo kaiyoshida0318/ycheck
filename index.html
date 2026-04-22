@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v70 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v72 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1025,7 +1025,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v70</div>
+    <div class="logo-sub">v72</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1034,7 +1034,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
       <button class="font-btn" id="fontUp">A+</button>
     </div>
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
-    <button class="btn sm primary" id="btnJumpUploadSpot" type="button" onclick="window.openUploadModal && window.openUploadModal('spot')">+ レポート追加(都度)</button>
+    <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
   </div>
 </div>
@@ -1925,7 +1925,7 @@ function validateBuffer() {
   // spot系が紛れ込んだ場合はエラー扱い
   if (hasBid || hasProRate) {
     box.className = 'validation-box err';
-    msg.textContent = '❌ 入札価格／PRオプ料率は「+ レポート追加(都度)」側でアップロードしてください';
+    msg.textContent = '❌ 入札価格／PRオプ料率は「+ 最新値を更新」側でアップロードしてください';
     btn.disabled = true; return false;
   }
   const hasAnyMonthly = hasOverall || hasItem || hasAd;
@@ -2934,7 +2934,7 @@ function openUploadModal(mode) {
     const titleEl = uploadModal.querySelector('.modal-title');
     const hintEl = $('#uploadModeHint');
     if (m === 'spot') {
-      if (titleEl) titleEl.textContent = '📂 レポートを追加（都度）';
+      if (titleEl) titleEl.textContent = '📂 最新値を更新';
       if (hintEl) hintEl.textContent = '入札価格（BID_ITEM*.csv）・PRオプ料率（data*.csv）をアップロードできます（CSVまたはZIP）';
     } else {
       if (titleEl) titleEl.textContent = '📂 レポートを追加（月次）';
