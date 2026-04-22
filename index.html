@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v67 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v69 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -873,6 +873,10 @@ td:has(> .name-cell-wrap) {
 .chart-box { position: relative; height: 420px; flex: 1; min-height: 300px; }
 .chart-box-fixed { flex: 0 0 auto; height: 360px; margin-bottom: 12px; }
 
+/* レポート追加モーダル: モードに応じてスロットを表示/非表示 */
+#uploadModal[data-mode="monthly"] .file-slot[data-upload-group="spot"] { display: none; }
+#uploadModal[data-mode="spot"] .file-slot[data-upload-group="monthly"] { display: none; }
+
 /* 順位テーブル用：日付列を狭く・中央寄せ */
 table.rank-table th.rank-day, table.rank-table td.rank-day {
   min-width: 42px;
@@ -1021,7 +1025,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v67</div>
+    <div class="logo-sub">v69</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1029,7 +1033,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
       <span class="font-size-label" id="fontLabel">100%</span>
       <button class="font-btn" id="fontUp">A+</button>
     </div>
-    <button class="btn sm primary" id="btnJumpUpload" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
+    <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
+    <button class="btn sm primary" id="btnJumpUploadSpot" type="button" onclick="window.openUploadModal && window.openUploadModal('spot')">+ レポート追加(都度)</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
   </div>
 </div>
@@ -1106,6 +1111,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
+              <th class="num col-bid nosort">PRオプ</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
               <th class="nosort status-col">ステータス</th>
@@ -1213,9 +1219,10 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num nosort col-ad" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num nosort col-ad" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num nosort col-ad" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
-              <th class="num col-bid" data-sort="bid">入札価格</th>
+              <th class="num col-bid nosort">PRオプ</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="nosort">対応内容</th>
               <th class="nosort status-col">ステータス</th>
             </tr></thead>
@@ -1248,6 +1255,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
               <th class="num nosort col-sales" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
               <th class="nosort status-col">広告状態</th>
               <th class="nosort status-col">PRオプ状態</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
+              <th class="num col-bid nosort">PRオプ</th>
               <th class="nosort">対応内容</th>
               <th class="nosort status-col">ステータス</th>
             </tr></thead>
@@ -1419,7 +1428,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
       <h2 class="modal-title">📂 レポートを追加</h2>
       <button class="modal-close" id="modalClose">×</button>
     </div>
-    <p class="dropzone-hint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートの3つをセットで、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
+    <p class="dropzone-hint" id="uploadModeHint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートの3つをセットで、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📥</div>
       <div class="dropzone-text">ここに <b>CSV</b> または <b>ZIP</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
@@ -1428,25 +1437,30 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
     <input type="file" id="fileInput" multiple accept=".csv,.zip" style="display:none;">
 
     <div class="file-slots">
-      <div class="file-slot" id="slot-overall">
+      <div class="file-slot" id="slot-overall" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
       </div>
-      <div class="file-slot" id="slot-item">
-        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上（月次）<span class="required-mark">必須</span></div>
+      <div class="file-slot" id="slot-item" data-upload-group="monthly">
+        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上(月次)<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
       </div>
-      <div class="file-slot" id="slot-ad">
-        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート（月次）<span class="required-mark">必須</span></div>
+      <div class="file-slot" id="slot-ad" data-upload-group="monthly">
+        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート(月次)<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
       </div>
-      <div class="file-slot" id="slot-bid">
+      <div class="file-slot" id="slot-bid" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
+      </div>
+      <div class="file-slot" id="slot-prorate" data-upload-group="spot">
+        <div class="file-slot-label"><span class="slot-badge"></span>PRオプ（最新）</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-filename">data*.csv</div>
       </div>
     </div>
 
@@ -1476,6 +1490,7 @@ const state = {
   item: null,
   ad: null,
   bid: null,
+  proRate: null,   // { code: 料率数値, ... } 小文字統一キー
   master: {},
   // 商品ごとの手動入力情報（広告状態/PRO状態/対応内容）
   productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
@@ -1485,7 +1500,8 @@ const state = {
   fontScale: 1,
   currentView: 'basic',
   activeStateFilter: null,  // {type: 'ad-ok'|'ad-ng'|..., targetView: 'ad-adjust'|'pro-adjust', label: '...'}
-  uploadBuffer: { overall: null, item: null, ad: null, bid: null, master: null }
+  uploadBuffer: { overall: null, item: null, ad: null, bid: null, proRate: null, master: null },
+  uploadMode: 'monthly'  // 現在のアップロードモーダルのモード: 'monthly' | 'spot'
 };
 
 // ==================== Utility ====================
@@ -1497,6 +1513,17 @@ const fmtRoas = (n) => {
   if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
   return (n).toFixed(0) + '%';
 };
+// PRオプ料率フォーマット: 小数点以下切り捨て + 末尾%
+const fmtProRate = (n) => {
+  if (n == null || isNaN(n) || !isFinite(n)) return '—';
+  return Math.floor(Number(n)) + '%';
+};
+// 商品コードからPRオプ料率を取得（小文字統一キー）
+function getProRate(code) {
+  if (!state.proRate) return null;
+  const v = state.proRate[String(code).toLowerCase()];
+  return (v == null || isNaN(v)) ? null : v;
+}
 const toNum = (v) => {
   if (v == null) return 0;
   const s = String(v).replace(/[,¥\s円％%]/g, '');
@@ -1529,6 +1556,7 @@ function saveToStorage() {
   try {
     const data = {
       overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
+      proRate: state.proRate,
       master: state.master, productMeta: state.productMeta,
       rank: state.rank,
       savedAt: new Date().toISOString()
@@ -1546,6 +1574,7 @@ function loadFromStorage() {
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
     if (data.bid) state.bid = data.bid;
+    if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
     if (data.rank) state.rank = data.rank;
     if (data.productMeta) {
@@ -1730,6 +1759,7 @@ function classifyFile(filename, rows) {
   if (name.includes('store_overall') || name.includes('store-overall')) return 'overall';
   if (name.includes('item_report') || name.includes('item-report')) return 'item';
   if (name.includes('bid_item') || name.includes('bid-item') || name.startsWith('bid')) return 'bid';
+  if (/^data\d/i.test(name) || keySet.has('pr-rate')) return 'proRate';
   if (name.includes('広告') || name.includes('ad_') || name.includes('advertis')) return 'ad';
 
   if (keySet.has('売上合計値') && keySet.has('日付')) return 'overall';
@@ -1811,6 +1841,23 @@ function parseBid(rows) {
   return bidMap;
 }
 
+// PRオプ料率（data*.csv）: code列 と pr-rate列 から {code: 料率数値} マップを返す
+function parseProRate(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const raw = r['code'] || r['商品コード'] || '';
+    if (!raw) return;
+    const code = String(raw).trim().toLowerCase();
+    if (!code) return;
+    const rateRaw = r['pr-rate'];
+    if (rateRaw == null || String(rateRaw).trim() === '') return;
+    const n = parseFloat(String(rateRaw).replace(/[％%,\s]/g, ''));
+    if (isNaN(n)) return;
+    map[code] = n;
+  });
+  return map;
+}
+
 function parseMasterSimple(rows) {
   const result = {};
   rows.forEach(r => {
@@ -1847,22 +1894,51 @@ function validateBuffer() {
   const hasItem = buf.item != null;
   const hasAd = buf.ad != null;
   const hasBid = buf.bid != null;
+  const hasProRate = buf.proRate != null;
   const hasMaster = buf.master != null;
-  const hasAnyMonthly = hasOverall || hasItem || hasAd;
   const hasFullMonthly = hasOverall && hasItem && hasAd;
+  const mode = state.uploadMode || 'monthly';
 
-  if (!hasAnyMonthly && !hasBid && !hasMaster) {
+  // ── 都度モード：入札価格 or PRオプ料率のどちらかがあればOK ──
+  if (mode === 'spot') {
+    // monthly系が紛れ込んだ場合はエラー扱い
+    if (hasOverall || hasItem || hasAd) {
+      box.className = 'validation-box err';
+      msg.textContent = '❌ 月次データは「+ レポート追加(月次)」側でアップロードしてください';
+      btn.disabled = true; return false;
+    }
+    if (!hasBid && !hasProRate && !hasMaster) {
+      box.className = 'validation-box info';
+      msg.textContent = '📋 入札価格（BID_ITEM*.csv）またはPRオプ料率（data*.csv）をドロップしてください';
+      btn.disabled = true; return false;
+    }
+    const parts = [];
+    if (hasBid) parts.push('入札価格');
+    if (hasProRate) parts.push('PRオプ料率');
+    if (hasMaster) parts.push('商品マスタ');
+    box.className = 'validation-box ok';
+    msg.textContent = `✓ ${parts.join(' + ')} をアップロード実行できます`;
+    btn.disabled = false;
+    return true;
+  }
+
+  // ── 月次モード（従来挙動） ──
+  // spot系が紛れ込んだ場合はエラー扱い
+  if (hasBid || hasProRate) {
+    box.className = 'validation-box err';
+    msg.textContent = '❌ 入札価格／PRオプ料率は「+ レポート追加(都度)」側でアップロードしてください';
+    btn.disabled = true; return false;
+  }
+  const hasAnyMonthly = hasOverall || hasItem || hasAd;
+  if (!hasAnyMonthly && !hasMaster) {
     box.className = 'validation-box info';
-    msg.textContent = `📋 必須3ファイル（月次データ）、または入札価格を単独でアップロードできます`;
+    msg.textContent = '📋 ショップ売上・商品別売上・広告詳細レポートの3つをセットでアップロードしてください';
     btn.disabled = true;
     return false;
   }
-  if (!hasAnyMonthly && (hasBid || hasMaster)) {
-    const parts = [];
-    if (hasMaster) parts.push('商品マスタ');
-    if (hasBid) parts.push('入札価格');
+  if (!hasAnyMonthly && hasMaster) {
     box.className = 'validation-box ok';
-    msg.textContent = `✓ ${parts.join(' + ')} をアップロード実行できます`;
+    msg.textContent = '✓ 商品マスタ をアップロード実行できます';
     btn.disabled = false;
     return true;
   }
@@ -1895,7 +1971,6 @@ function validateBuffer() {
   }
   box.className = 'validation-box ok';
   const extras = [];
-  if (hasBid) extras.push('入札価格');
   if (hasMaster) extras.push('商品マスタ');
   const extraTxt = extras.length > 0 ? ' + ' + extras.join(' + ') : '';
   msg.textContent = `✓ ${overallMonth}月分として3ファイル確認OK${extraTxt} — アップロード実行できます`;
@@ -1929,6 +2004,9 @@ async function processFiles(files) {
       } else if (kind === 'bid') {
         state.uploadBuffer.bid = { rows, filename: file.name };
         log(`✓ 入札価格をバッファへ (${rows.length}行)`, 'ok');
+      } else if (kind === 'proRate') {
+        state.uploadBuffer.proRate = { rows, filename: file.name };
+        log(`✓ PRオプ料率をバッファへ (${rows.length}行)`, 'ok');
       } else if (kind === 'master') {
         state.uploadBuffer.master = { rows, filename: file.name };
         log(`✓ 商品マスタをバッファへ (${rows.length}行)`, 'ok');
@@ -1971,6 +2049,10 @@ function commitUpload() {
     state.bid = parseBid(buf.bid.rows);
     log(`✅ 入札価格を反映（${Object.keys(state.bid).length}件）`, 'ok');
   }
+  if (buf.proRate) {
+    state.proRate = parseProRate(buf.proRate.rows);
+    log(`✅ PRオプ料率を反映（${Object.keys(state.proRate).length}件）`, 'ok');
+  }
   if (buf.master) {
     const newMaster = parseMasterSimple(buf.master.rows);
     Object.keys(newMaster).forEach(code => {
@@ -1997,6 +2079,7 @@ const slotMap = {
   item: { slotId: 'slot-item', pattern: 'yukaiya-item_report*.csv' },
   ad: { slotId: 'slot-ad', pattern: '広告詳細レポート商品別*.csv' },
   bid: { slotId: 'slot-bid', pattern: 'BID_ITEM*.csv' },
+  proRate: { slotId: 'slot-prorate', pattern: 'data*.csv' },
   master: { slotId: 'slot-master', pattern: '商品コード / 商品名 / メインKW / 検索URL の4列CSV' }
 };
 function updateSlot(kind, filename) {
@@ -2242,11 +2325,12 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
+    const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="code-cell">${escapeHtml(r.code)}</td>
@@ -2258,6 +2342,7 @@ function renderBasic() {
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      <td class="num col-bid">${fmtProRate(pr)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
@@ -2499,12 +2584,13 @@ function renderAdAdjust() {
   const tbody = $('#tableAdAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="17" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.sort((a, b) => (b.adRevs[2] || 0) - (a.adRevs[2] || 0));
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
+    const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="code-cell">${escapeHtml(r.code)}</td>
@@ -2518,9 +2604,10 @@ function renderAdAdjust() {
       <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
       <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
       <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
-      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      <td class="num col-bid">${fmtProRate(pr)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
@@ -2567,11 +2654,13 @@ function renderProAdjust() {
   const tbody = $('#tableProAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">データを読み込んでください</td></tr>';
     return;
   }
   list.sort((a, b) => (b.seoRevs[2] || 0) - (a.seoRevs[2] || 0));
   list.slice(0, 2000).forEach(r => {
+    const bid = state.bid ? state.bid[r.code] : null;
+    const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="code-cell">${escapeHtml(r.code)}</td>
@@ -2584,6 +2673,8 @@ function renderProAdjust() {
       <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      <td class="num col-bid">${fmtProRate(pr)}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
@@ -2830,7 +2921,7 @@ if ($('#proAdjustBannerClear')) $('#proAdjustBannerClear').addEventListener('cli
 
 // ==================== Modal ====================
 let uploadModal = $('#uploadModal');
-function openUploadModal() {
+function openUploadModal(mode) {
   try {
     // 要素を毎回取り直し（初回取得時にnullでも復旧できるように）
     if (!uploadModal) uploadModal = document.getElementById('uploadModal');
@@ -2838,8 +2929,22 @@ function openUploadModal() {
       alert('エラー: uploadModal要素が見つかりません。ページをリロードしてください。');
       return;
     }
-    state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
-    ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
+    // モード設定（デフォルトは monthly）
+    const m = (mode === 'spot') ? 'spot' : 'monthly';
+    state.uploadMode = m;
+    uploadModal.dataset.mode = m;
+    // タイトル・ヒント文言をモードに合わせて切り替え
+    const titleEl = uploadModal.querySelector('.modal-title');
+    const hintEl = $('#uploadModeHint');
+    if (m === 'spot') {
+      if (titleEl) titleEl.textContent = '📂 レポートを追加（都度）';
+      if (hintEl) hintEl.textContent = '入札価格（BID_ITEM*.csv）・PRオプ料率（data*.csv）をアップロードできます（CSVまたはZIP）';
+    } else {
+      if (titleEl) titleEl.textContent = '📂 レポートを追加（月次）';
+      if (hintEl) hintEl.textContent = 'ショップ売上・商品別売上・広告詳細レポートの3つをセットでアップロードします（CSVまたはZIP）';
+    }
+    state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
+    ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
     const logArea = $('#logArea');
     if (logArea) {
       logArea.innerHTML = '';
@@ -2848,7 +2953,7 @@ function openUploadModal() {
     if (typeof validateBuffer === 'function') validateBuffer();
     uploadModal.classList.add('open');
     document.body.style.overflow = 'hidden';
-    console.log('✅ openUploadModal: モーダルを開きました');
+    console.log('✅ openUploadModal: モーダルを開きました (mode=' + m + ')');
   } catch (err) {
     console.error('openUploadModal エラー:', err);
     alert('レポート追加ボタンでエラーが発生しました:\n' + (err && err.message ? err.message : err) + '\n\nブラウザのコンソール(F12)に詳細があります。');
@@ -2866,7 +2971,8 @@ function closeUploadModal() {
 // グローバル公開（HTMLのonclickフォールバック用）
 window.openUploadModal = openUploadModal;
 window.closeUploadModal = closeUploadModal;
-if ($('#btnJumpUpload')) $('#btnJumpUpload').addEventListener('click', openUploadModal);
+if ($('#btnJumpUploadMonthly')) $('#btnJumpUploadMonthly').addEventListener('click', () => openUploadModal('monthly'));
+if ($('#btnJumpUploadSpot')) $('#btnJumpUploadSpot').addEventListener('click', () => openUploadModal('spot'));
 if ($('#modalClose')) $('#modalClose').addEventListener('click', closeUploadModal);
 if ($('#btnCloseBottom')) $('#btnCloseBottom').addEventListener('click', closeUploadModal);
 if (uploadModal) uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) closeUploadModal(); });
@@ -2900,10 +3006,10 @@ fileInput.addEventListener('change', (e) => {
 $('#btnConfirmUpload').addEventListener('click', commitUpload);
 
 $('#btnClear').addEventListener('click', () => {
-  state.overall = null; state.item = null; state.ad = null; state.bid = null;
+  state.overall = null; state.item = null; state.ad = null; state.bid = null; state.proRate = null;
   state.master = {}; state.productMeta = {}; state.rank = {};
-  state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, master: null };
-  ['overall', 'item', 'ad', 'bid'].forEach(clearSlot);
+  state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
+  ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
   Object.values(state.charts).forEach(c => c && c.destroy());
   state.charts = {};
   clearStorage();
