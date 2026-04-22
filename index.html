@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v59 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v60 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1010,7 +1010,7 @@ td:has(> .name-cell-wrap) {
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v59</div>
+    <div class="logo-sub">v60</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1034,6 +1034,11 @@ td:has(> .name-cell-wrap) {
   <div class="nav-group">
     <span class="nav-group-label">【グラフ】</span>
     <button class="nav-tab" data-view="graph"><span class="ico">📈</span>全-月別データ</button>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label">【取得データ】</span>
+    <button class="nav-tab" data-view="ad-rank"><span class="ico">🥇</span>広告順位</button>
+    <button class="nav-tab" data-view="seo-rank"><span class="ico">🔎</span>SEO順位</button>
   </div>
 </nav>
 
@@ -1225,6 +1230,26 @@ td:has(> .name-cell-wrap) {
             </tr></thead>
             <tbody></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: 広告順位（準備中） -->
+    <div class="view" id="view-ad-rank">
+      <div class="card">
+        <h3 class="card-title">広告順位</h3>
+        <div style="padding: 24px; color: var(--text2);">
+          🥇 広告順位データは準備中です。
+        </div>
+      </div>
+    </div>
+
+    <!-- View: SEO順位（準備中） -->
+    <div class="view" id="view-seo-rank">
+      <div class="card">
+        <h3 class="card-title">SEO順位</h3>
+        <div style="padding: 24px; color: var(--text2);">
+          🔎 SEO順位データは準備中です。
         </div>
       </div>
     </div>
