@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v77 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v78 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1038,7 +1038,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v77</div>
+    <div class="logo-sub">v78</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2870,9 +2870,20 @@ function renderAll() {
   else if (state.currentView === 'seo-rank') renderSeoRank();
 }
 
+// ==================== Sort Reset ====================
+// ビュー遷移時にすべてのソート状態を各ビューのデフォルトに戻す
+function resetAllSorts() {
+  basicSortKey = 'rev';        basicSortDir = -1;
+  monthlySortKey = 'month';    monthlySortDir = -1;
+  retiredSortKey = 'code';     retiredSortDir = 1;
+  adAdjustSortKey = 'adRev2';  adAdjustSortDir = -1;
+  proAdjustSortKey = 'seoRev2'; proAdjustSortDir = -1;
+}
+
 // ==================== Top Tab Navigation ====================
 // ロゴクリックでホーム（商品-基本データ）に戻る
 $('#logoHome').addEventListener('click', () => {
+  resetAllSorts();
   switchToView('basic');
   state.activeStateFilter = null;
   updateActiveStateChip();
@@ -2881,6 +2892,7 @@ $('#logoHome').addEventListener('click', () => {
 });
 $$('.nav-tab').forEach(item => {
   item.addEventListener('click', () => {
+    resetAllSorts();
     $$('.nav-tab').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     const view = item.dataset.view;
@@ -2921,6 +2933,7 @@ function switchToView(viewName) {
 function applyStateFilter(filterKey) {
   const def = STATE_FILTERS[filterKey];
   if (!def) return;
+  resetAllSorts();
   state.activeStateFilter = { type: filterKey, targetView: def.targetView, label: def.label };
   switchToView(def.targetView);
   updateActiveStateChip();
