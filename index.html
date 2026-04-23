@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v90 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v91 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1122,7 +1122,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v90</div>
+    <div class="logo-sub">v91</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1195,6 +1195,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
           <select id="basicMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索...">
+          <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
         </div>
         <div class="table-wrap">
           <table id="tableBasic">
@@ -1395,7 +1396,6 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
           <input type="search" id="seoRankSearch" placeholder="商品コード・商品名で検索...">
           <button class="btn sm ghost" id="btnRefreshSeoRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="seoRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
-          <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
         </div>
         <div class="table-wrap">
           <table id="tableSeoRank" class="rank-table">
