@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v106 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v107 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1121,7 +1121,7 @@ table.rank-table td.rank-day:nth-child(7n+4) {
 table.rank-table td.rank-day.empty { color: var(--text3); }
 /* 順位セルの状態別背景色（薄い色で状態を直感的に） */
 table.rank-table td.rank-day.rank-best  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }  /* 上段◎: 最良 */
-table.rank-table td.rank-day.rank-good  { background: rgba(37,99,235,0.12);  color: var(--blue);   font-weight: 600; }  /* 上段PR○: 良 */
+table.rank-table td.rank-day.rank-good  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }  /* 【v107】上段PR○: 上段◎と同じ緑に統一 */
 table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  color: var(--red); }                       /* 下段×/下段PR×: 不良 */
 
 /* 【v106】2段セル: 上段=順位、下段=入札価格/PRオプ料率 */
@@ -1149,7 +1149,9 @@ table.rank-table td.rank-cell-2line {
 }
 .rank-row-bottom:hover { background: rgba(37,99,235,0.12); outline: 1px solid var(--accent); }
 .rank-edit-value { font-variant-numeric: tabular-nums; }
-.rank-edit-bold { font-weight: 700; color: var(--text); }
+/* 【v107】25/7 は紫系で「良い状態」、他は濃いグレーで中立 */
+.rank-edit-good { color: #7c3aed; font-weight: 600; }
+.rank-edit-off  { color: #6b7280; }
 .rank-row-bottom input.rank-edit-input {
   width: 100%;
   max-width: 56px;
@@ -1159,6 +1161,39 @@ table.rank-table td.rank-cell-2line {
   font-size: 0.78rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+/* 【v107】商品行の境目を強化して見やすく */
+table.rank-table tbody tr {
+  border-bottom: 2px solid #94a3b8;  /* 濃いめのグレー */
+}
+table.rank-table tbody tr:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+/* 【v107】凡例列「順位/入札価格(PRオプ)」：商品名の右に表示 */
+table.rank-table th.rank-legend-col,
+table.rank-table td.rank-legend-col-empty {
+  min-width: 72px;
+  max-width: 84px;
+  text-align: center;
+  background: var(--bg3);
+  border-right: 2px solid #94a3b8;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text2);
+  padding: 2px 4px;
+}
+table.rank-table th.rank-legend-col .rank-row-top {
+  border-bottom: 1px dashed rgba(0,0,0,0.25);
+  padding: 2px 0;
+}
+.rank-row-bottom-legend {
+  padding: 3px 2px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--text2);
+  font-weight: 600;
 }
 
 /* Modal */
@@ -1307,7 +1342,7 @@ table.rank-table td.rank-cell-2line {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v106</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v107</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3831,20 +3866,28 @@ function getRankEditArray(ym, code, field /* 'bid' | 'proRate' */) {
   if (!byCode) return null;
   return Array.isArray(byCode[field]) ? byCode[field] : null;
 }
-// 指定月の指定日の値を取得。そこが空なら直前日→前月末…と遡って直近値を返す。
+// 指定月の指定日の値を取得（継承なし：そこに値がなければ null）
 function getRankEditValue(ym, code, field, dayIndex) {
   const codeKey = String(code || '').toLowerCase();
-  // (1) まず同月内の直前継承を確認
+  const arr = getRankEditArray(ym, codeKey, field);
+  if (!arr) return null;
+  const v = arr[dayIndex];
+  return (v == null || v === '') ? null : v;
+}
+// 直前の非空日の値を返す（自動補完用）。同月内を遡り、見つからなければ前月以前も探す。
+function findPreviousRankEditValue(ym, code, field, beforeDayIndex) {
+  const codeKey = String(code || '').toLowerCase();
+  // (1) 同月内の直前日を遡る
   const arr = getRankEditArray(ym, codeKey, field);
   if (arr) {
-    for (let i = Math.min(dayIndex, arr.length - 1); i >= 0; i--) {
+    for (let i = Math.min(beforeDayIndex - 1, arr.length - 1); i >= 0; i--) {
       if (arr[i] != null && arr[i] !== '') return arr[i];
     }
   }
   // (2) 前月以前を新しい順に遡る
   const months = Object.keys(state.rankEdits || {}).sort().reverse();
   for (const pastYm of months) {
-    if (pastYm >= ym) continue;  // 未来や同月はスキップ
+    if (pastYm >= ym) continue;
     const pastArr = getRankEditArray(pastYm, codeKey, field);
     if (!pastArr) continue;
     for (let i = pastArr.length - 1; i >= 0; i--) {
@@ -3852,6 +3895,49 @@ function getRankEditValue(ym, code, field, dayIndex) {
     }
   }
   return null;
+}
+
+// 【v107】起動時自動補完: 各商品の「今日」のセルが空なら、直前の非空日の値をコピーして埋める
+// これにより、ページを開いた瞬間に「前日値 → 今日」への継承が実データとして反映される。
+// 手動入力済みの日付は上書きしない（arr[today] が null/空の時だけ動作）。
+function autoFillTodayRankEdits() {
+  if (!state.master) return;
+  const { ym, dayIndex } = getTodayYmAndIndex();
+  const codes = Object.keys(state.master);
+  let filledCount = 0;
+  for (const code of codes) {
+    // 引退商品はスキップ
+    if (isRetired(code)) continue;
+    const meta = state.productMeta[code] || {};
+    // 広告順位: 入札価格（bid）— 広告無商品はスキップ
+    if ((meta.adStatus || '') !== '広告無') {
+      const todayBid = getRankEditValue(ym, code, 'bid', dayIndex);
+      if (todayBid == null) {
+        const prev = findPreviousRankEditValue(ym, code, 'bid', dayIndex);
+        if (prev != null) {
+          setRankEditValue(ym, code, 'bid', dayIndex, prev);
+          if (!state.bid) state.bid = {};
+          state.bid[String(code).toLowerCase()] = prev;
+          filledCount++;
+        }
+      }
+    }
+    // SEO順位: PRオプ料率（proRate）— 全商品対象
+    const todayProRate = getRankEditValue(ym, code, 'proRate', dayIndex);
+    if (todayProRate == null) {
+      const prev = findPreviousRankEditValue(ym, code, 'proRate', dayIndex);
+      if (prev != null) {
+        setRankEditValue(ym, code, 'proRate', dayIndex, prev);
+        if (!state.proRate) state.proRate = {};
+        state.proRate[String(code).toLowerCase()] = prev;
+        filledCount++;
+      }
+    }
+  }
+  if (filledCount > 0) {
+    console.log(`[autoFill] ${ym} ${dayIndex + 1}日 に ${filledCount} 件の値を前日継承で自動補完`);
+    saveToStorage();
+  }
 }
 // 指定月の指定日に値をセット（その日以降は継承で自動反映される）
 function setRankEditValue(ym, code, field, dayIndex, value) {
@@ -3891,17 +3977,18 @@ function syncProRateToRankEdits(code, value) {
   setRankEditValue(ym, code, 'proRate', dayIndex, value);
 }
 // 入札価格/PRオプ料率の表示整形
+// 【v107】25/7は紫(良)、他は濃いグレー(中立)。太字は廃止。
 function formatBidCell(v) {
   if (v == null || v === '' || isNaN(Number(v))) return '—';
   const n = Number(v);
-  const bold = (n === 25);
-  return `<span class="rank-edit-value${bold ? ' rank-edit-bold' : ''}">¥${n}</span>`;
+  const cls = (n === 25) ? 'rank-edit-good' : 'rank-edit-off';
+  return `<span class="rank-edit-value ${cls}">¥${n}</span>`;
 }
 function formatProRateCell(v) {
   if (v == null || v === '' || isNaN(Number(v))) return '—';
-  const n = Number(v);
-  const bold = (n === 7);
-  return `<span class="rank-edit-value${bold ? ' rank-edit-bold' : ''}">${n}%</span>`;
+  const n = Math.floor(Number(v));  // 【v107】整数表示
+  const cls = (n === 7) ? 'rank-edit-good' : 'rank-edit-off';
+  return `<span class="rank-edit-value ${cls}">${n}%</span>`;
 }
 // ===========================================================================
 
@@ -3942,6 +4029,7 @@ function renderRankTable(kind) {
     <th>商品コード</th>
     <th class="nosort">画像</th>
     <th>商品名</th>
+    <th class="nosort rank-legend-col"><div class="rank-row-top">順位</div><div class="rank-row-bottom-legend">${isAd ? '入札価格' : 'PRオプ'}</div></th>
     ${dayTh.join('')}
   `;
 
@@ -3969,7 +4057,7 @@ function renderRankTable(kind) {
 
   // 行描画
   const tbody = document.querySelector(tableId + ' tbody');
-  const colspan = 3 + nDays;
+  const colspan = 4 + nDays;  /* 商品コード/画像/商品名/凡例 + 日付 */
   if (codes.length === 0) {
     tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">商品データを読み込んでください</td></tr>`;
     return;
@@ -3994,6 +4082,7 @@ function renderRankTable(kind) {
         <td class="code-cell">${escapeHtml(code)}</td>
         <td>${imageCellHtml(code)}</td>
         <td>${nameCellHtml(code)}</td>
+        <td class="rank-legend-col-empty"></td>
         ${cells.join('')}
       </tr>`;
   }).join('');
@@ -4726,9 +4815,9 @@ function startRankEditCell(cell) {
   input.type = 'number';
   input.className = 'rank-edit-input';
   input.min = '0';
-  input.step = isBid ? '1' : '0.1';
+  input.step = '1';  // 【v107】PRオプも整数のみに統一
   if (!isBid) input.max = '100';
-  input.value = (currentVal == null || isNaN(Number(currentVal))) ? '' : String(currentVal);
+  input.value = (currentVal == null || isNaN(Number(currentVal))) ? '' : String(Math.floor(Number(currentVal)));
   input.placeholder = isBid ? '¥' : '%';
   cell.appendChild(input);
   input.focus();
@@ -4740,7 +4829,7 @@ function startRankEditCell(cell) {
     const raw = input.value.trim();
     let newVal = null;
     if (raw !== '' && raw !== '0') {
-      const num = isBid ? parseInt(raw, 10) : parseFloat(raw);
+      const num = parseInt(raw, 10);  // 【v107】bid/proRate共に整数
       if (isNaN(num) || num < 0 || (!isBid && num > 100)) {
         cancel();
         return;
@@ -5295,6 +5384,8 @@ try {
   const restored = loadFromStorage();
   // 【v86】順位表記の旧→新 一括移行（1度だけ実行）
   const migrated = migrateRankNotationOnce();
+  // 【v107】起動時の自動補完：各商品の「今日」が空なら、直前の非空日の値をコピー
+  autoFillTodayRankEdits();
   refreshSlotPatterns();  // 現在ショップに合わせてスロットのファイル名を表示
   updateActiveStateChip();
   updateFilterBanners();
