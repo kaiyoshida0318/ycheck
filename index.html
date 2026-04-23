@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v88 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v89 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -979,6 +979,10 @@ table.rank-table td.rank-day:nth-child(7n+4) {
   border-left: 2px solid var(--border2);
 }
 table.rank-table td.rank-day.empty { color: var(--text3); }
+/* 順位セルの状態別背景色（薄い色で状態を直感的に） */
+table.rank-table td.rank-day.rank-best  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }  /* 上段◎: 最良 */
+table.rank-table td.rank-day.rank-good  { background: rgba(37,99,235,0.12);  color: var(--blue);   font-weight: 600; }  /* 上段PR○: 良 */
+table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  color: var(--red); }                       /* 下段×/下段PR×: 不良 */
 
 /* Modal */
 .modal-overlay {
@@ -1118,7 +1122,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v88</div>
+    <div class="logo-sub">v89</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -3140,9 +3144,12 @@ function renderRankTable(kind) {
     const cells = [];
     for (let i = 0; i < nDays; i++) {
       const v = getRankValue(ym, code, field, i);
-      cells.push(v == null
-        ? `<td class="rank-day empty">—</td>`
-        : `<td class="rank-day">${v}</td>`);
+      if (v == null) {
+        cells.push(`<td class="rank-day empty">—</td>`);
+      } else {
+        const statusCls = rankStatusClass(v);
+        cells.push(`<td class="rank-day${statusCls ? ' ' + statusCls : ''}">${escapeHtml(v)}</td>`);
+      }
     }
     return `
       <tr>
@@ -3152,6 +3159,17 @@ function renderRankTable(kind) {
         ${cells.join('')}
       </tr>`;
   }).join('');
+}
+
+// 順位セルの値から状態別クラス名を返す（改行\n込みの新表記 / 旧表記の両対応）
+function rankStatusClass(v) {
+  if (v == null || typeof v !== 'string') return '';
+  // 改行を除いた形で比較（"上段\n◎" → "上段◎"）
+  const compact = v.replace(/\s+/g, '');
+  if (compact === '上段◎' || compact === '最上段◎') return 'rank-best';
+  if (compact === '上段PR○' || compact === '上段-PRオプ○') return 'rank-good';
+  if (compact === '下段×' || compact === '下段PR×' || compact === '下段-PRオプ×') return 'rank-bad';
+  return '';
 }
 
 function renderAdRank()  { renderRankTable('ad'); }
