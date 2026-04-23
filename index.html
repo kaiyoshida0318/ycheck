@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v84 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v85 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1094,7 +1094,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v84</div>
+    <div class="logo-sub">v85</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2254,6 +2254,8 @@ function getAvailableMonths() {
   if (state.item) state.item.forEach(i => i.month && set.add(i.month));
   if (state.ad) state.ad.forEach(a => a.month && set.add(a.month));
   if (state.overall) state.overall.months.forEach(m => set.add(m.month));
+  // rank.json由来の月も含める（売上CSVをまだアップロードしていない月でも順位データだけは表示可能に）
+  if (state.rank) Object.keys(state.rank).forEach(ym => set.add(ym));
   return [...set].sort();
 }
 
@@ -2954,7 +2956,8 @@ function updateRankLastUpdatedDisplay() {
 function getRankValue(ym, code, field, dayIndex) {
   const byMonth = state.rank && state.rank[ym];
   if (!byMonth) return null;
-  const byCode = byMonth[code];
+  const codeKey = String(code || '').toLowerCase();
+  const byCode = byMonth[codeKey];
   if (!byCode) return null;
   const arr = byCode[field];
   if (!Array.isArray(arr)) return null;
