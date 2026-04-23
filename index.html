@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v107 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v108 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1171,9 +1171,14 @@ table.rank-table tbody tr:last-child {
   border-bottom: 1px solid var(--border);
 }
 
-/* 【v107】凡例列「順位/入札価格(PRオプ)」：商品名の右に表示 */
-table.rank-table th.rank-legend-col,
-table.rank-table td.rank-legend-col-empty {
+/* 【v107/v108】凡例列「順位/入札価格(PRオプ)」：各商品行ごとに表示（ヘッダは空欄） */
+table.rank-table th.rank-legend-col {
+  min-width: 72px;
+  max-width: 84px;
+  background: var(--bg3);
+  border-right: 2px solid #94a3b8;
+}
+table.rank-table td.rank-legend-col-row {
   min-width: 72px;
   max-width: 84px;
   text-align: center;
@@ -1183,10 +1188,12 @@ table.rank-table td.rank-legend-col-empty {
   font-size: 0.8rem;
   color: var(--text2);
   padding: 2px 4px;
+  vertical-align: middle;
 }
-table.rank-table th.rank-legend-col .rank-row-top {
+.rank-legend-label {
   border-bottom: 1px dashed rgba(0,0,0,0.25);
   padding: 2px 0;
+  font-weight: 600;
 }
 .rank-row-bottom-legend {
   padding: 3px 2px;
@@ -1342,7 +1349,7 @@ table.rank-table th.rank-legend-col .rank-row-top {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v107</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v108</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4029,7 +4036,7 @@ function renderRankTable(kind) {
     <th>商品コード</th>
     <th class="nosort">画像</th>
     <th>商品名</th>
-    <th class="nosort rank-legend-col"><div class="rank-row-top">順位</div><div class="rank-row-bottom-legend">${isAd ? '入札価格' : 'PRオプ'}</div></th>
+    <th class="nosort rank-legend-col"></th>
     ${dayTh.join('')}
   `;
 
@@ -4082,7 +4089,10 @@ function renderRankTable(kind) {
         <td class="code-cell">${escapeHtml(code)}</td>
         <td>${imageCellHtml(code)}</td>
         <td>${nameCellHtml(code)}</td>
-        <td class="rank-legend-col-empty"></td>
+        <td class="rank-legend-col-row">
+          <div class="rank-row-top rank-legend-label">順位</div>
+          <div class="rank-row-bottom-legend">${isAd ? '入札価格' : 'PRオプ'}</div>
+        </td>
         ${cells.join('')}
       </tr>`;
   }).join('');
