@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v81 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v82 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1051,7 +1051,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v81</div>
+    <div class="logo-sub">v82</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1302,6 +1302,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
           <select id="adRankMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="adRankSearch" placeholder="商品コード・商品名で検索...">
+          <button class="btn sm ghost" id="btnRefreshAdRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
+          <span class="filter-label" id="adRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
         <div class="table-wrap">
           <table id="tableAdRank" class="rank-table">
@@ -1321,6 +1323,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
           <select id="seoRankMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="seoRankSearch" placeholder="商品コード・商品名で検索...">
+          <button class="btn sm ghost" id="btnRefreshSeoRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
+          <span class="filter-label" id="seoRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
         <div class="table-wrap">
           <table id="tableSeoRank" class="rank-table">
@@ -1523,6 +1527,8 @@ const state = {
   productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
   // 順位データ（将来Yahoo API自動取得予定）: { 'YYYY/MM': { code: { adRank:[31個], seoRank:[31個] } } }
   rank: {},
+  // rank.json の meta情報（最終更新時刻など）
+  rankMeta: null,
   // API用CSVを最後にダウンロードした時点のスナップショット（{code: keyword, ...} と savedAt を保持）
   productsCsvSnapshot: null,
   charts: {},
@@ -1599,6 +1605,7 @@ function saveToStorage() {
       proRate: state.proRate,
       master: state.master, productMeta: state.productMeta,
       rank: state.rank,
+      rankMeta: state.rankMeta,
       productsCsvSnapshot: state.productsCsvSnapshot,
       savedAt: new Date().toISOString()
     };
@@ -1618,6 +1625,7 @@ function loadFromStorage() {
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
     if (data.rank) state.rank = data.rank;
+    if (data.rankMeta) state.rankMeta = data.rankMeta;
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     if (data.productMeta) {
       state.productMeta = data.productMeta;
@@ -2799,7 +2807,102 @@ function daysInMonth(ym) {
   return new Date(y, m, 0).getDate();
 }
 
+// ==================== rank.json 自動取得 ====================
+// 外部CI（GitHub Actions + rank_check.py）が生成する rank.json を取得して state.rank にマージ
+// JSON構造: { "2026-04": { "cab-25-01": { "ad": [...], "seo": [...] } }, "meta": {...} }
+// Ycheck内部構造: state.rank["2026/04"]["cab-25-01"].adRank[dayIndex] / .seoRank[dayIndex]
+function mergeRankJson(json) {
+  if (!json || typeof json !== 'object') return { months: [], total: 0 };
+  if (!state.rank) state.rank = {};
+  const mergedMonths = new Set();
+  let total = 0;
+  for (const ymRaw of Object.keys(json)) {
+    if (ymRaw === 'meta') continue;
+    const byCode = json[ymRaw];
+    if (!byCode || typeof byCode !== 'object') continue;
+    // "2026-04" -> "2026/04"（Ycheck内部形式）
+    const ym = ymRaw.replace(/-/g, '/');
+    if (!state.rank[ym]) state.rank[ym] = {};
+    mergedMonths.add(ym);
+    for (const rawCode of Object.keys(byCode)) {
+      const fields = byCode[rawCode] || {};
+      const code = String(rawCode).toLowerCase().trim();
+      if (!state.rank[ym][code]) state.rank[ym][code] = {};
+      // "ad" -> "adRank", "seo" -> "seoRank"（既存の手動データは上書きしない方針ではなく、
+      // APIが全31日分を nullパディング込みで返すので常に上書きで問題なし）
+      if (Array.isArray(fields.ad)) {
+        state.rank[ym][code].adRank = fields.ad.slice();
+      }
+      if (Array.isArray(fields.seo)) {
+        state.rank[ym][code].seoRank = fields.seo.slice();
+      }
+      total++;
+    }
+  }
+  // meta を別途保管
+  if (json.meta) state.rankMeta = json.meta;
+  return { months: Array.from(mergedMonths).sort(), total };
+}
+
+// rank.json を fetch して state に取り込む。成功時は対応月の表が自動更新される。
+async function fetchRankJson(options) {
+  const silent = options && options.silent;
+  const url = 'rank.json?t=' + Date.now();  // キャッシュバスター
+  try {
+    const res = await fetch(url, { cache: 'no-cache' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const result = mergeRankJson(json);
+    saveToStorage();
+    // 対応月の表が自動生成されるよう、広告順位/SEO順位の月プルダウンを最新月にセット
+    applyLatestRankMonth(result.months);
+    renderAll();
+    updateRankLastUpdatedDisplay();
+    if (!silent) {
+      log(`✓ rank.json 取得: ${result.total}件の商品データを ${result.months.length}ヶ月分 更新`, 'ok');
+    } else {
+      console.log(`rank.json fetched: ${result.total} products across ${result.months.length} month(s)`);
+    }
+    return true;
+  } catch (e) {
+    // 失敗してもlocalStorageに残っている前回データで表示継続
+    console.warn('rank.json 読み込み失敗（初回または通信エラーの可能性）:', e);
+    if (!silent) log(`⚠ rank.json 取得失敗: ${e.message}`, 'ng');
+    return false;
+  }
+}
+
+// rank.json 取得後、広告順位/SEO順位タブの月プルダウンを最新月に自動セット
+function applyLatestRankMonth(monthsFromJson) {
+  if (!monthsFromJson || monthsFromJson.length === 0) return;
+  const latest = monthsFromJson[monthsFromJson.length - 1];  // 昇順ソート済み
+  // 月プルダウンは renderRankTable 内で再生成される。先に value を書いておけば拾ってくれる
+  const adSel = $('#adRankMonth');
+  const seoSel = $('#seoRankMonth');
+  if (adSel)  adSel.value = latest;
+  if (seoSel) seoSel.value = latest;
+}
+
+// 最終更新表示（広告順位タブ/SEO順位タブの filters 内に挿入）
+function updateRankLastUpdatedDisplay() {
+  const iso = state.rankMeta && state.rankMeta.last_updated;
+  if (!iso) return;
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  const label = `📅 最終更新: ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const meta = state.rankMeta;
+  const detail = meta ? `（対象:${meta.total_products||0} / 成功:${meta.success_count||0} / 圏外:${meta.not_found_count||0} / エラー:${meta.error_count||0}）` : '';
+  ['#adRankLastUpdated', '#seoRankLastUpdated'].forEach(sel => {
+    const el = $(sel);
+    if (el) {
+      el.textContent = label;
+      el.title = label + '\n' + detail;
+    }
+  });
+}
+
 // 順位データ取得: state.rank[ym][code][field][dayIndex]（field: 'adRank' | 'seoRank'）
+// 値は数値でも文字列（"最上段◎" "下段×" "上段-PRオプ○" "下段-PRオプ×" "-" 等）でもそのまま返す
 function getRankValue(ym, code, field, dayIndex) {
   const byMonth = state.rank && state.rank[ym];
   if (!byMonth) return null;
@@ -2808,7 +2911,7 @@ function getRankValue(ym, code, field, dayIndex) {
   const arr = byCode[field];
   if (!Array.isArray(arr)) return null;
   const v = arr[dayIndex];
-  return (v == null || v === '' || isNaN(v)) ? null : v;
+  return (v == null || v === '') ? null : v;
 }
 
 // 選択月の順位表を描画（kind: 'ad' | 'seo'）
@@ -3213,6 +3316,8 @@ $('#adRankMonth').addEventListener('change', renderAdRank);
 $('#adRankSearch').addEventListener('input', renderAdRank);
 $('#seoRankMonth').addEventListener('change', renderSeoRank);
 $('#seoRankSearch').addEventListener('input', renderSeoRank);
+if ($('#btnRefreshAdRank')) $('#btnRefreshAdRank').addEventListener('click', () => fetchRankJson());
+if ($('#btnRefreshSeoRank')) $('#btnRefreshSeoRank').addEventListener('click', () => fetchRankJson());
 $$('#tableBasic th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
     const k = th.dataset.sort;
@@ -3999,7 +4104,10 @@ try {
   updateActiveStateChip();
   updateFilterBanners();
   renderAll();
+  updateRankLastUpdatedDisplay();  // 復元データの最終更新を表示
   if (restored) console.log('Ycheck: 保存済みデータを復元');
+  // rank.json を起動時に自動取得（失敗してもlocalStorageのデータで動作継続）
+  fetchRankJson({ silent: true });
 } catch (err) {
   console.error('Ycheck 初期化エラー:', err);
 }
