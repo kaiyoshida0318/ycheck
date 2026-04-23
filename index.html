@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v96 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v97 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -58,10 +58,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 64px;
+  height: 72px;  /* v97: ロゴサイズ拡大に合わせてヘッダーも少し高く */
 }
-.logo { display: flex; align-items: center; gap: 10px; }
-.logo-img { height: 40px; width: auto; display: block; }
+.logo { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+.logo-img { height: 56px; width: auto; display: block; }  /* v97: 40px→56px (約1.4倍) */
 .logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
 .logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
 
@@ -1197,7 +1197,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
-    <div class="logo-sub">v96</div>
+    <div class="logo-sub">v97</div>
   </div>
   <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
     <span class="shop-selector-label">🏪 ショップ</span>
