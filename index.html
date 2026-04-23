@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v104 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v105 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -552,7 +552,10 @@ body {
   gap: 5px;
   white-space: nowrap;
   font-weight: 500;
+  text-decoration: none;   /* 【v105】<a>タグ化された順位タブ用 */
 }
+a.nav-tab { color: var(--text2); }
+a.nav-tab:hover { color: var(--text); text-decoration: none; }
 .nav-tab:hover { color: var(--text); background: var(--bg3); }
 .nav-tab.active {
   color: var(--accent);
@@ -1267,7 +1270,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v104</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v105</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1296,8 +1299,8 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【取得データ】</span>
-    <button class="nav-tab" data-view="ad-rank"><span class="ico">🥇</span>広告順位</button>
-    <button class="nav-tab" data-view="seo-rank"><span class="ico">🔎</span>SEO順位</button>
+    <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank"><span class="ico">🥇</span>広告順位</a>
+    <a class="nav-tab nav-tab-link" data-view="seo-rank" href="?view=seo-rank"><span class="ico">🔎</span>SEO順位</a>
   </div>
 </nav>
 
@@ -3901,7 +3904,11 @@ $('#logoHome').addEventListener('click', () => {
   renderAll();
 });
 $$('.nav-tab').forEach(item => {
-  item.addEventListener('click', () => {
+  item.addEventListener('click', (e) => {
+    // 【v105】Ctrl/Cmd+クリック または 中クリックの場合は、ブラウザ既定（新しいタブで開く）に任せる
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+    // それ以外は通常のページ内切替（アンカーのデフォルト遷移は抑止）
+    if (item.tagName === 'A') e.preventDefault();
     resetAllSorts();
     $$('.nav-tab').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
@@ -5055,6 +5062,23 @@ try {
   updateFilterBanners();
   renderAll();
   updateRankLastUpdatedDisplay();  // 復元データの最終更新を表示
+  // 【v105】URLパラメータ ?view=ad-rank or ?view=seo-rank 等があれば、そのビューに直接移動
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialView = urlParams.get('view');
+    if (initialView) {
+      const target = document.querySelector(`.nav-tab[data-view="${initialView}"]`);
+      if (target) {
+        $$('.nav-tab').forEach(i => i.classList.remove('active'));
+        target.classList.add('active');
+        state.currentView = initialView;
+        $$('.view').forEach(v => v.classList.remove('active'));
+        const viewEl = document.getElementById('view-' + initialView);
+        if (viewEl) viewEl.classList.add('active');
+        renderAll();
+      }
+    }
+  } catch (e) { console.warn('URL viewパラメータの反映に失敗:', e); }
   const curShop = getCurrentShop();
   console.log(`[${curShop.id}] Ycheck 起動 (shopCode=${curShop.shopCode})`);
   if (restored) console.log(`[${curShop.id}] 保存済みデータを復元`);
