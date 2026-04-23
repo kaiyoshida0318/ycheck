@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v86 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v87 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -953,6 +953,22 @@ table.rank-table th.rank-day, table.rank-table td.rank-day {
   padding-left: 4px;
   padding-right: 4px;
   font-variant-numeric: tabular-nums;
+  border-left: 1px solid var(--border);   /* 日付列の縦罫線 */
+}
+/* 最初の日付列（"1"）の左罫線は強調（固定列との境界） */
+table.rank-table th.rank-day:first-of-type,
+table.rank-table td.rank-day:first-of-type {
+  border-left: 2px solid var(--border2);
+}
+/* 最終日以降の右端にも罫線（視認性） */
+table.rank-table th.rank-day:last-child,
+table.rank-table td.rank-day:last-child {
+  border-right: 1px solid var(--border);
+}
+/* 7日ごとに区切り線を強調（1週目/2週目/3週目/4週目の境界） */
+table.rank-table th.rank-day:nth-child(7n+4),
+table.rank-table td.rank-day:nth-child(7n+4) {
+  border-left: 2px solid var(--border2);
 }
 table.rank-table td.rank-day.empty { color: var(--text3); }
 
@@ -1094,7 +1110,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v86</div>
+    <div class="logo-sub">v87</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -3075,6 +3091,14 @@ function renderRankTable(kind) {
 
   // 対象商品リスト（現役商品のみ）
   let codes = Object.keys(state.master).filter(c => !isRetired(c));
+
+  // 【v87】広告順位タブでは「広告無」の商品を除外（広告出稿していないためデータ不要）
+  if (isAd) {
+    codes = codes.filter(code => {
+      const meta = state.productMeta[code] || {};
+      return (meta.adStatus || '') !== '広告無';
+    });
+  }
 
   // 検索
   const q = ($(searchId).value || '').trim().toLowerCase();
