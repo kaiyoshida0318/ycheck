@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v83 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v84 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -479,6 +479,14 @@ body {
   font-weight: 600;
 }
 .nav-tab .ico { font-size: 0.9rem; }
+.nav-tab .chip-num {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 4px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.nav-tab.active .chip-num { opacity: 0.9; }
 
 /* 2段目のタブバー：【定期チェック】用 */
 .top-nav-2 {
@@ -1086,7 +1094,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v83</div>
+    <div class="logo-sub">v84</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1104,7 +1112,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <nav class="top-nav">
   <div class="nav-group">
     <span class="nav-group-label">【基本】</span>
-    <button class="nav-tab active" data-view="basic"><span class="ico">📊</span>商品-基本データ</button>
+    <button class="nav-tab active" data-view="basic"><span class="ico">📊</span>商品-基本データ<span class="chip-num" id="cntBasicActive"></span></button>
     <button class="nav-tab" data-view="monthly"><span class="ico">📅</span>商品-月別データ</button>
     <button class="nav-tab" data-view="retired"><span class="ico">🗂</span>撤退済み商品</button>
   </div>
@@ -1266,8 +1274,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
-          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
-          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust">
@@ -1302,8 +1310,8 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
-          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 更新日時削除</button>
-          <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容を全削除</button>
+          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -2278,9 +2286,11 @@ function updateStateCounts() {
   let adOk = 0, adNg = 0, adNone = 0;
   let proOk = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
+  let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   allCodes.forEach(code => {
     // 引退済み商品はカウント対象外
     if (isRetired(code)) return;
+    activeCount++;
     const meta = state.productMeta[code] || {};
     const adS = meta.adStatus || '';
     const proS = meta.proStatus || '';
@@ -2305,6 +2315,9 @@ function updateStateCounts() {
   $('#cntProWithdraw').textContent = `(${proWithdraw})`;
   $('#cntUnselectedAd').textContent = `(${unselectedAd})`;
   $('#cntUnselectedPro').textContent = `(${unselectedPro})`;
+  // Basic(商品-基本データ)タブの現役商品合計数を表示
+  const cntBasic = $('#cntBasicActive');
+  if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
 }
 
 // ==================== Status select helpers ====================
