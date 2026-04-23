@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v92 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v93 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -61,6 +61,44 @@ body {
 .logo { display: flex; align-items: baseline; gap: 8px; }
 .logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
 .logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
+
+/* ショップ選択（マルチショップ対応 v93〜） */
+.shop-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+  padding: 6px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+}
+.shop-selector-label {
+  font-size: 0.78rem;
+  color: var(--text2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.shop-selector select {
+  padding: 4px 8px;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--bg2);
+  color: var(--text);
+  cursor: pointer;
+  min-width: 110px;
+}
+.shop-selector select:focus { outline: none; border-color: var(--accent); }
+.shop-selector-code {
+  font-size: 0.72rem;
+  color: var(--text3);
+  font-family: monospace;
+  padding: 2px 6px;
+  background: var(--bg2);
+  border-radius: 4px;
+}
 
 .header-status-row {
   display: flex;
@@ -1122,7 +1160,12 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v92</div>
+    <div class="logo-sub">v93</div>
+  </div>
+  <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
+    <span class="shop-selector-label">🏪 ショップ</span>
+    <select id="shopSelect"></select>
+    <span class="shop-selector-code" id="shopCodeLabel"></span>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -1581,10 +1624,65 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 </div>
 
 <script>
-// ==================== Constants ====================
-const STORE_ACCOUNT = 'yukaiya';
-const YAHOO_IMG_URL = (code) => `https://item-shopping.c.yimg.jp/i/l/${STORE_ACCOUNT}_${code}`;
-const STORAGE_KEY = 'ycheck_data_v1';
+// ==================== Shops (マルチショップ対応 v93〜) ====================
+// 初期ショップ定義。ユーザーが編集する想定は無いため const で固定。
+// 将来ショップを追加する場合はこの SHOPS_INITIAL に追記 + 既存ユーザーの localStorage を意識すること。
+const SHOPS_INITIAL = {
+  yukaiya: { id: 'yukaiya', name: 'ゆかい屋', shopCode: 'yukaiya' },
+  kairy:   { id: 'kairy',   name: 'KAIRY',   shopCode: 'burariya' }
+};
+const DEFAULT_SHOP_ID = 'yukaiya';
+const CURRENT_SHOP_STORAGE_KEY = 'ycheck_current_shop';  // 選択中のショップID（shopまたぎで共通）
+
+// 現在選択中のショップIDを取得（未設定ならデフォルト）
+function getCurrentShopId() {
+  try {
+    const v = localStorage.getItem(CURRENT_SHOP_STORAGE_KEY);
+    if (v && SHOPS_INITIAL[v]) return v;
+  } catch (e) {}
+  return DEFAULT_SHOP_ID;
+}
+function getCurrentShop() {
+  return SHOPS_INITIAL[getCurrentShopId()] || SHOPS_INITIAL[DEFAULT_SHOP_ID];
+}
+
+// localStorageキーは必ずショップ依存にする（ドキュメント指示「2. localStorage キーをショップ非依存にしない」）
+const STORAGE_KEY_BASE = 'ycheck_data_v1';
+function getStorageKey() { return STORAGE_KEY_BASE + '_' + getCurrentShopId(); }
+// 互換: 既存コード内で STORAGE_KEY を参照している箇所を壊さないための動的プロパティ
+Object.defineProperty(window, 'STORAGE_KEY', { get: getStorageKey });
+
+// 画像URLも現在ショップの shopCode に従う
+function yahooImgUrl(code) {
+  return `https://item-shopping.c.yimg.jp/i/l/${getCurrentShop().shopCode}_${code}`;
+}
+// 互換: 既存コードの YAHOO_IMG_URL() 呼び出しを壊さない（関数参照として維持）
+const YAHOO_IMG_URL = (code) => yahooImgUrl(code);
+// 互換: 既存コードの STORE_ACCOUNT 参照を現在ショップの shopCode で解決
+Object.defineProperty(window, 'STORE_ACCOUNT', { get: () => getCurrentShop().shopCode });
+
+// ==================== 旧データの自動マイグレーション（1度だけ） ====================
+// 旧キー「ycheck_data_v1」は yukaiya 固定運用だったので、「ycheck_data_v1_yukaiya」に移す。
+// ドキュメント指示「旧データの自動移行」のYcheck版。
+const MIGRATION_FLAG_MULTISHOP_V1 = 'ycheck_migrated_to_multishop_v1';
+(function migrateLegacyStorageKey() {
+  try {
+    if (localStorage.getItem(MIGRATION_FLAG_MULTISHOP_V1) === 'true') return;
+    const legacy = localStorage.getItem('ycheck_data_v1');
+    if (legacy) {
+      const newKey = STORAGE_KEY_BASE + '_yukaiya';
+      // 新キーに既存データが無い時だけコピー（二重移行を避ける）
+      if (!localStorage.getItem(newKey)) {
+        localStorage.setItem(newKey, legacy);
+        console.log('[マルチショップ移行] ycheck_data_v1 → ycheck_data_v1_yukaiya に自動移行しました');
+      }
+      // 旧キーは安全のためバックアップとして残す（即削除はしない）
+    }
+    localStorage.setItem(MIGRATION_FLAG_MULTISHOP_V1, 'true');
+  } catch (e) {
+    console.warn('[マルチショップ移行] スキップ:', e);
+  }
+})();
 
 // ==================== State ====================
 const state = {
@@ -1949,11 +2047,14 @@ function parseBid(rows) {
   // 商品コード → 入札価格 のマップを返す
   // BID_ITEMファイルには大文字混じりのコード（IH-21-01等）があるが、
   // Ycheck内では小文字統一で扱う（同一商品として）
+  // プレフィックスは現在選択中ショップのshopCode（例: yukaiya_ / burariya_）
+  const shopPrefix = getCurrentShop().shopCode + '_';
+  const prefixRegex = new RegExp('^' + shopPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
   const bidMap = {};
   rows.forEach(r => {
     const raw = r['ストアアカウント_商品コード'] || r['商品コード'] || '';
     if (!raw) return;
-    const code = String(raw).replace(/^yukaiya_/i, '').trim().toLowerCase();
+    const code = String(raw).replace(prefixRegex, '').trim().toLowerCase();
     if (!code) return;
     // 入札価格カラム候補
     const price = toNum(r['入札価格'] || r['価格'] || r['bid'] || r['Price'] || 0);
@@ -2195,14 +2296,37 @@ function commitUpload() {
 }
 
 // ==================== Slot management ====================
-const slotMap = {
-  overall: { slotId: 'slot-overall', pattern: 'yukaiya-store_overall*.csv' },
-  item: { slotId: 'slot-item', pattern: 'yukaiya-item_report*.csv' },
-  ad: { slotId: 'slot-ad', pattern: '広告詳細レポート商品別*.csv' },
-  bid: { slotId: 'slot-bid', pattern: 'BID_ITEM*.csv' },
-  proRate: { slotId: 'slot-prorate', pattern: 'data*.csv' },
-  master: { slotId: 'slot-master', pattern: '商品コード / 商品名 / メインKW / 検索URL の4列CSV' }
-};
+// パターン文字列はshopCode依存なので関数でその都度生成
+function buildSlotMap() {
+  const sc = getCurrentShop().shopCode;
+  return {
+    overall: { slotId: 'slot-overall', pattern: `${sc}-store_overall*.csv` },
+    item:    { slotId: 'slot-item',    pattern: `${sc}-item_report*.csv` },
+    ad:      { slotId: 'slot-ad',      pattern: '広告詳細レポート商品別*.csv' },
+    bid:     { slotId: 'slot-bid',     pattern: 'BID_ITEM*.csv' },
+    proRate: { slotId: 'slot-prorate', pattern: 'data*.csv' },
+    master:  { slotId: 'slot-master',  pattern: '商品コード / 商品名 / メインKW / 検索URL の4列CSV' }
+  };
+}
+const slotMap = buildSlotMap();
+
+// 現在ショップに合わせて未ロード状態のファイル名ラベルを更新
+function refreshSlotPatterns() {
+  const map = buildSlotMap();
+  Object.keys(slotMap).forEach(k => { slotMap[k].pattern = map[k].pattern; });
+  Object.keys(map).forEach(k => {
+    const slot = document.getElementById(map[k].slotId);
+    if (!slot) return;
+    // loaded 状態のスロットには触らない（ユーザーがアップロードしたファイル名が入っているため）
+    if (slot.classList.contains('loaded')) return;
+    const nameEl = slot.querySelector('.file-slot-filename');
+    if (!nameEl) return;
+    // クリックして選択の案内は残す（"CSVファイルをここにドロップ..."形式はそのまま）
+    if (nameEl.textContent && nameEl.textContent.includes('CSVファイル')) return;
+    nameEl.textContent = map[k].pattern;
+  });
+}
+
 function updateSlot(kind, filename) {
   const info = slotMap[kind]; if (!info) return;
   const slot = $('#' + info.slotId);
@@ -4320,17 +4444,56 @@ npSlot.addEventListener('drop', (e) => {
   if (f) npHandleFile(f);
 });
 
+// ==================== ショップ選択UI（マルチショップ v93〜） ====================
+function initShopSelector() {
+  const sel = $('#shopSelect');
+  const codeLabel = $('#shopCodeLabel');
+  if (!sel) return;
+  // 選択肢を生成
+  sel.innerHTML = Object.values(SHOPS_INITIAL).map(s =>
+    `<option value="${s.id}">${escapeHtml(s.name)}</option>`
+  ).join('');
+  const cur = getCurrentShopId();
+  sel.value = cur;
+  const curShop = SHOPS_INITIAL[cur];
+  if (codeLabel) codeLabel.textContent = curShop ? curShop.shopCode : '';
+  // 切替時: location.reload() で完全リセット（ドキュメント指示）
+  sel.addEventListener('change', (e) => {
+    const newShopId = e.target.value;
+    if (newShopId === getCurrentShopId()) return;
+    const newName = (SHOPS_INITIAL[newShopId] && SHOPS_INITIAL[newShopId].name) || newShopId;
+    if (!confirm(`ショップを「${newName}」に切り替えます。\n現在の画面データはリロードされて切り替わります。\n\n切り替えますか？`)) {
+      // キャンセル時は元に戻す
+      e.target.value = getCurrentShopId();
+      return;
+    }
+    try {
+      localStorage.setItem(CURRENT_SHOP_STORAGE_KEY, newShopId);
+    } catch (err) {
+      console.error('ショップ切替エラー:', err);
+      alert('ショップの切替に失敗しました: ' + err.message);
+      return;
+    }
+    // 完全リロードで前ショップのメモリ上データを完全に捨てる
+    location.reload();
+  });
+}
+
 // ==================== 初期化 ====================
 try {
+  initShopSelector();  // ショップセレクタの構築は loadFromStorage より先
   const restored = loadFromStorage();
   // 【v86】順位表記の旧→新 一括移行（1度だけ実行）
   const migrated = migrateRankNotationOnce();
+  refreshSlotPatterns();  // 現在ショップに合わせてスロットのファイル名を表示
   updateActiveStateChip();
   updateFilterBanners();
   renderAll();
   updateRankLastUpdatedDisplay();  // 復元データの最終更新を表示
-  if (restored) console.log('Ycheck: 保存済みデータを復元');
-  if (migrated) console.log('Ycheck: 順位表記を新表記に移行しました');
+  const curShop = getCurrentShop();
+  console.log(`[${curShop.id}] Ycheck 起動 (shopCode=${curShop.shopCode})`);
+  if (restored) console.log(`[${curShop.id}] 保存済みデータを復元`);
+  if (migrated) console.log(`[${curShop.id}] 順位表記を新表記に移行しました`);
   // rank.json を起動時に自動取得（失敗してもlocalStorageのデータで動作継続）
   fetchRankJson({ silent: true });
 } catch (err) {
