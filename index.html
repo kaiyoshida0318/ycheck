@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v102 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v103 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -60,17 +60,23 @@ body {
   z-index: 100;
   height: 72px;  /* v97: ロゴサイズ拡大に合わせてヘッダーも少し高く */
 }
+/* 【v103】ロゴとショップセレクタを左端に固定するラッパー */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .logo { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
 .logo-img { height: 56px; width: auto; display: block; }  /* v97: 40px→56px (約1.4倍) */
 .logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
 .logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
 
-/* ショップ選択（ADcheck風 v101〜, v102でロゴ真横に密着） */
+/* ショップ選択（ADcheck風 v101〜, v103でheader-leftにまとめて左端固定） */
 .shop-selector {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: -4px;  /* .header の gap:12px を打ち消してロゴに密着 */
+  margin-left: 0;
   padding: 6px 14px;
   background: #ffffff;
   border: 1px solid #d0d7de;
@@ -1251,15 +1257,17 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 
 <!-- Header -->
 <div class="header">
-  <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
-    <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
-  </div>
-  <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
-    <span class="shop-selector-icon">🏪</span>
-    <select id="shopSelect"></select>
+  <div class="header-left">
+    <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
+      <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
+    </div>
+    <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
+      <span class="shop-selector-icon">🏪</span>
+      <select id="shopSelect"></select>
+    </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v102</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v103</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
