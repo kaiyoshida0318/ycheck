@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v105 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v106 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1124,6 +1124,43 @@ table.rank-table td.rank-day.rank-best  { background: rgba(22,163,74,0.13);  col
 table.rank-table td.rank-day.rank-good  { background: rgba(37,99,235,0.12);  color: var(--blue);   font-weight: 600; }  /* 上段PR○: 良 */
 table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  color: var(--red); }                       /* 下段×/下段PR×: 不良 */
 
+/* 【v106】2段セル: 上段=順位、下段=入札価格/PRオプ料率 */
+table.rank-table td.rank-cell-2line {
+  padding: 2px 3px;
+  white-space: normal;  /* 親の pre-line をキャンセル（改行は rank-row-top 側で制御） */
+  line-height: normal;
+  font-size: inherit;
+}
+.rank-row-top {
+  padding: 2px 0;
+  border-bottom: 1px dashed rgba(0,0,0,0.15);
+  white-space: pre-line;
+  line-height: 1.15;
+}
+.rank-row-top.empty { color: var(--text3); }
+.rank-row-bottom {
+  padding: 3px 2px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.rank-row-bottom:hover { background: rgba(37,99,235,0.12); outline: 1px solid var(--accent); }
+.rank-edit-value { font-variant-numeric: tabular-nums; }
+.rank-edit-bold { font-weight: 700; color: var(--text); }
+.rank-row-bottom input.rank-edit-input {
+  width: 100%;
+  max-width: 56px;
+  padding: 1px 3px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  font-size: 0.78rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -1270,7 +1307,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v105</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v106</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1861,6 +1898,9 @@ const state = {
   productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
   // 順位データ（将来Yahoo API自動取得予定）: { 'YYYY/MM': { code: { adRank:[31個], seoRank:[31個] } } }
   rank: {},
+  // 【v106】順位表の入札価格・PRオプ料率の日別履歴: { 'YYYY/MM': { code: { bid:[31個], proRate:[31個] } } }
+  // 広告順位タブの2段目セルと、SEO順位タブの2段目セルで使用
+  rankEdits: {},
   // rank.json の meta情報（最終更新時刻など）
   rankMeta: null,
   // API用CSVを最後にダウンロードした時点のスナップショット（{code: keyword, ...} と savedAt を保持）
@@ -1939,6 +1979,7 @@ function saveToStorage() {
       proRate: state.proRate,
       master: state.master, productMeta: state.productMeta,
       rank: state.rank,
+      rankEdits: state.rankEdits,
       rankMeta: state.rankMeta,
       productsCsvSnapshot: state.productsCsvSnapshot,
       savedAt: new Date().toISOString()
@@ -2091,6 +2132,7 @@ function ghBuildDataString() {
     proRate: state.proRate,
     master: state.master, productMeta: state.productMeta,
     rank: state.rank,
+    rankEdits: state.rankEdits,
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
     savedAt: new Date().toISOString(),
@@ -2162,6 +2204,7 @@ async function ghLoadFromGitHub() {
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
     if (data.rank) state.rank = data.rank;
+    if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) state.rankMeta = data.rankMeta;
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     if (data.productMeta) {
@@ -2364,6 +2407,7 @@ function loadFromStorage() {
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
     if (data.rank) state.rank = data.rank;
+    if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) state.rankMeta = data.rankMeta;
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     if (data.productMeta) {
@@ -3765,6 +3809,102 @@ function getRankValue(ym, code, field, dayIndex) {
   return (v == null || v === '') ? null : v;
 }
 
+// 【v106】入札価格・PRオプ料率の日別履歴ヘルパー ================================
+// 月のYYYY/MM文字列 ym、商品コード code、対象フィールド field ('bid'|'proRate')
+// ユーザーが明示的に入力した値が無い日は、直前（同月内）の値を継承する。
+// それでも見つからない場合は、前月以前の最新値を検索する（最小限の月遡り）。
+//
+// 「変動があるまでは同じ値が毎日入る」仕様を実現するため、
+// 表示時は直前継承、保存時は当日のみ上書きする。
+function getDaysInMonth(ym) {
+  // ym: 'YYYY/MM'
+  if (!ym || !ym.includes('/')) return 31;
+  const [y, m] = ym.split('/').map(Number);
+  if (!y || !m) return 31;
+  return new Date(y, m, 0).getDate();  // 月末日
+}
+function getRankEditArray(ym, code, field /* 'bid' | 'proRate' */) {
+  const codeKey = String(code || '').toLowerCase();
+  const byMonth = state.rankEdits && state.rankEdits[ym];
+  if (!byMonth) return null;
+  const byCode = byMonth[codeKey];
+  if (!byCode) return null;
+  return Array.isArray(byCode[field]) ? byCode[field] : null;
+}
+// 指定月の指定日の値を取得。そこが空なら直前日→前月末…と遡って直近値を返す。
+function getRankEditValue(ym, code, field, dayIndex) {
+  const codeKey = String(code || '').toLowerCase();
+  // (1) まず同月内の直前継承を確認
+  const arr = getRankEditArray(ym, codeKey, field);
+  if (arr) {
+    for (let i = Math.min(dayIndex, arr.length - 1); i >= 0; i--) {
+      if (arr[i] != null && arr[i] !== '') return arr[i];
+    }
+  }
+  // (2) 前月以前を新しい順に遡る
+  const months = Object.keys(state.rankEdits || {}).sort().reverse();
+  for (const pastYm of months) {
+    if (pastYm >= ym) continue;  // 未来や同月はスキップ
+    const pastArr = getRankEditArray(pastYm, codeKey, field);
+    if (!pastArr) continue;
+    for (let i = pastArr.length - 1; i >= 0; i--) {
+      if (pastArr[i] != null && pastArr[i] !== '') return pastArr[i];
+    }
+  }
+  return null;
+}
+// 指定月の指定日に値をセット（その日以降は継承で自動反映される）
+function setRankEditValue(ym, code, field, dayIndex, value) {
+  const codeKey = String(code || '').toLowerCase();
+  if (!state.rankEdits) state.rankEdits = {};
+  if (!state.rankEdits[ym]) state.rankEdits[ym] = {};
+  if (!state.rankEdits[ym][codeKey]) state.rankEdits[ym][codeKey] = {};
+  const days = getDaysInMonth(ym);
+  if (!Array.isArray(state.rankEdits[ym][codeKey][field])) {
+    state.rankEdits[ym][codeKey][field] = new Array(days).fill(null);
+  }
+  // 配列が短ければ拡張
+  const arr = state.rankEdits[ym][codeKey][field];
+  while (arr.length < days) arr.push(null);
+  arr[dayIndex] = (value === '' || value == null) ? null : value;
+}
+// 今日の年月・日 index を返す（ローカル時刻ベース）
+function getTodayYmAndIndex() {
+  const d = new Date();
+  const ym = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return { ym, dayIndex: d.getDate() - 1 };
+}
+// state.bid/proRate（最新値ストア）と rankEdits（日別履歴）を同期
+// from: 'rankEdits' = 履歴編集由来、'latest' = 基本データ編集由来
+function syncBidToRankEdits(code, value) {
+  // 最新値ストアへ
+  if (!state.bid) state.bid = {};
+  state.bid[String(code || '').toLowerCase()] = value;
+  // 今日の履歴へ
+  const { ym, dayIndex } = getTodayYmAndIndex();
+  setRankEditValue(ym, code, 'bid', dayIndex, value);
+}
+function syncProRateToRankEdits(code, value) {
+  if (!state.proRate) state.proRate = {};
+  state.proRate[String(code || '').toLowerCase()] = value;
+  const { ym, dayIndex } = getTodayYmAndIndex();
+  setRankEditValue(ym, code, 'proRate', dayIndex, value);
+}
+// 入札価格/PRオプ料率の表示整形
+function formatBidCell(v) {
+  if (v == null || v === '' || isNaN(Number(v))) return '—';
+  const n = Number(v);
+  const bold = (n === 25);
+  return `<span class="rank-edit-value${bold ? ' rank-edit-bold' : ''}">¥${n}</span>`;
+}
+function formatProRateCell(v) {
+  if (v == null || v === '' || isNaN(Number(v))) return '—';
+  const n = Number(v);
+  const bold = (n === 7);
+  return `<span class="rank-edit-value${bold ? ' rank-edit-bold' : ''}">${n}%</span>`;
+}
+// ===========================================================================
+
 // 選択月の順位表を描画（kind: 'ad' | 'seo'）
 function renderRankTable(kind) {
   const isAd = kind === 'ad';
@@ -3838,12 +3978,16 @@ function renderRankTable(kind) {
     const cells = [];
     for (let i = 0; i < nDays; i++) {
       const v = getRankValue(ym, code, field, i);
-      if (v == null) {
-        cells.push(`<td class="rank-day empty">—</td>`);
-      } else {
-        const statusCls = rankStatusClass(v);
-        cells.push(`<td class="rank-day${statusCls ? ' ' + statusCls : ''}">${escapeHtml(v)}</td>`);
-      }
+      const statusCls = v == null ? '' : rankStatusClass(v);
+      const rankHtml = v == null
+        ? `<div class="rank-row-top empty">—</div>`
+        : `<div class="rank-row-top">${escapeHtml(v)}</div>`;
+      // 【v106】2段目: 広告順位→入札価格、SEO順位→PRオプ料率
+      const editField = isAd ? 'bid' : 'proRate';
+      const editVal = getRankEditValue(ym, code, editField, i);
+      const editFormatted = isAd ? formatBidCell(editVal) : formatProRateCell(editVal);
+      const editCellHtml = `<div class="rank-row-bottom" data-edit-field="${editField}" data-code="${escapeHtml(code)}" data-ym="${ym}" data-dayindex="${i}" title="クリックして編集">${editFormatted}</div>`;
+      cells.push(`<td class="rank-day rank-cell-2line${statusCls ? ' ' + statusCls : ''}">${rankHtml}${editCellHtml}</td>`);
     }
     return `
       <tr>
@@ -4464,6 +4608,12 @@ function startBidEdit(cell) {
       }
       state.bid[code] = num;
     }
+    // 【v106】rankEdits の今日の履歴にも同期
+    const currentBidVal = state.bid[code];
+    if (currentBidVal != null) {
+      const { ym, dayIndex } = getTodayYmAndIndex();
+      setRankEditValue(ym, code, 'bid', dayIndex, currentBidVal);
+    }
     saveToStorage();
     log(`✓ 入札価格を更新: ${code} → ${state.bid[code] != null ? '¥' + state.bid[code] : '削除'}`, 'ok');
     renderAll();
@@ -4527,6 +4677,12 @@ function startProRateEdit(cell) {
       }
       state.proRate[codeLower] = num;
     }
+    // 【v106】rankEdits の今日の履歴にも同期
+    const currentVal = state.proRate[codeLower];
+    if (currentVal != null) {
+      const { ym, dayIndex } = getTodayYmAndIndex();
+      setRankEditValue(ym, codeLower, 'proRate', dayIndex, currentVal);
+    }
     saveToStorage();
     const current = state.proRate[codeLower];
     log(`✓ PRオプ料率を更新: ${code} → ${current != null ? Math.floor(current) + '%' : '削除'}`, 'ok');
@@ -4552,6 +4708,88 @@ document.addEventListener('click', (e) => {
   if (cell.querySelector('input')) return;
   e.preventDefault();
   startProRateEdit(cell);
+});
+
+// 【v106】順位表の2段目セル（入札価格 / PRオプ料率）のインライン編集
+function startRankEditCell(cell) {
+  if (cell.querySelector('input')) return;
+  const code = cell.dataset.code;
+  const ym = cell.dataset.ym;
+  const dayIndex = parseInt(cell.dataset.dayindex, 10);
+  const field = cell.dataset.editField;  // 'bid' or 'proRate'
+  if (!code || !ym || isNaN(dayIndex) || !field) return;
+  const isBid = field === 'bid';
+  const currentVal = getRankEditValue(ym, code, field, dayIndex);
+  const originalHtml = cell.innerHTML;
+  cell.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.className = 'rank-edit-input';
+  input.min = '0';
+  input.step = isBid ? '1' : '0.1';
+  if (!isBid) input.max = '100';
+  input.value = (currentVal == null || isNaN(Number(currentVal))) ? '' : String(currentVal);
+  input.placeholder = isBid ? '¥' : '%';
+  cell.appendChild(input);
+  input.focus();
+  input.select();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    const raw = input.value.trim();
+    let newVal = null;
+    if (raw !== '' && raw !== '0') {
+      const num = isBid ? parseInt(raw, 10) : parseFloat(raw);
+      if (isNaN(num) || num < 0 || (!isBid && num > 100)) {
+        cancel();
+        return;
+      }
+      newVal = num;
+    }
+    // 履歴に反映
+    setRankEditValue(ym, code, field, dayIndex, newVal);
+    // 最新値ストアへの反映ルール：
+    // 「今日の日付または未来日」の編集は最新値(state.bid/proRate)にも反映
+    // 過去の日付のみ編集した場合は履歴のみ更新し、最新値は触らない
+    const today = getTodayYmAndIndex();
+    const isTodayOrFuture = (ym > today.ym) || (ym === today.ym && dayIndex >= today.dayIndex);
+    if (isTodayOrFuture) {
+      const codeLower = String(code).toLowerCase();
+      if (isBid) {
+        if (!state.bid) state.bid = {};
+        if (newVal == null) delete state.bid[codeLower];
+        else state.bid[codeLower] = newVal;
+      } else {
+        if (!state.proRate) state.proRate = {};
+        if (newVal == null) delete state.proRate[codeLower];
+        else state.proRate[codeLower] = newVal;
+      }
+    }
+    saveToStorage();
+    log(`✓ ${isBid ? '入札価格' : 'PRオプ料率'}を更新: ${code} (${ym} ${dayIndex + 1}日) → ${newVal == null ? '削除' : (isBid ? '¥' + newVal : newVal + '%')}`, 'ok');
+    // 表全体を再描画（以降の日付にも継承されるため）
+    renderAll();
+  };
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    cell.innerHTML = originalHtml;
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+document.addEventListener('click', (e) => {
+  const cell = e.target.closest('.rank-row-bottom');
+  if (!cell) return;
+  if (cell.querySelector('input')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  startRankEditCell(cell);
 });
 
 // ==================== 商品情報編集モーダル ====================
