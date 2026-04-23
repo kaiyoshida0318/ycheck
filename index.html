@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v85 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v86 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1094,7 +1094,7 @@ table.rank-table td.rank-day.empty { color: var(--text3); }
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <div class="logo-main">Ycheck</div>
-    <div class="logo-sub">v85</div>
+    <div class="logo-sub">v86</div>
   </div>
   <div class="header-tools">
     <div class="font-controls" title="文字サイズ">
@@ -2858,6 +2858,75 @@ function daysInMonth(ym) {
 }
 
 // ==================== rank.json 自動取得 ====================
+// 順位表記の旧→新変換ルール（GitHub側の表記変更 v86〜）
+// 旧表記を新表記に置換: 「最上段◎→上段◎」「上段-PRオプ○→上段PR○」「下段-PRオプ×→下段PR×」
+// 「下段×」「-」「圏外」「null」などはそのまま
+const RANK_NOTATION_MAP = {
+  '最上段◎': '上段◎',
+  '上段-PRオプ○': '上段PR○',
+  '下段-PRオプ×': '下段PR×'
+};
+function convertRankValue(v) {
+  if (v == null) return v;
+  if (typeof v !== 'string') return v;
+  return (v in RANK_NOTATION_MAP) ? RANK_NOTATION_MAP[v] : v;
+}
+function convertRankArray(arr) {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map(convertRankValue);
+}
+
+// 【v86】順位表記の一括移行を1度だけ実行（既存データの旧表記を新表記に置換）
+// 実行前に localStorage に別キーでバックアップを保存（不可逆性を緩和）
+const RANK_NOTATION_MIGRATION_FLAG_KEY = 'ycheck_rank_notation_migrated_v1';
+const RANK_NOTATION_MIGRATION_BACKUP_KEY = 'ycheck_data_v1_backup_pre_notation_migration';
+function migrateRankNotationOnce() {
+  try {
+    if (localStorage.getItem(RANK_NOTATION_MIGRATION_FLAG_KEY) === 'true') return false;
+    if (!state.rank) { localStorage.setItem(RANK_NOTATION_MIGRATION_FLAG_KEY, 'true'); return false; }
+
+    // バックアップ（現時点の localStorage メインキーの内容を別キーに退避）
+    try {
+      const current = localStorage.getItem(STORAGE_KEY);
+      if (current) localStorage.setItem(RANK_NOTATION_MIGRATION_BACKUP_KEY, current);
+    } catch (e) {
+      console.warn('移行前バックアップの保存に失敗:', e);
+    }
+
+    // 全走査して置換
+    let changed = 0;
+    Object.keys(state.rank).forEach(ym => {
+      const byCode = state.rank[ym];
+      if (!byCode || typeof byCode !== 'object') return;
+      Object.keys(byCode).forEach(code => {
+        const fields = byCode[code] || {};
+        ['adRank', 'seoRank'].forEach(key => {
+          const arr = fields[key];
+          if (!Array.isArray(arr)) return;
+          for (let i = 0; i < arr.length; i++) {
+            const before = arr[i];
+            const after = convertRankValue(before);
+            if (before !== after) {
+              arr[i] = after;
+              changed++;
+            }
+          }
+        });
+      });
+    });
+
+    localStorage.setItem(RANK_NOTATION_MIGRATION_FLAG_KEY, 'true');
+    if (changed > 0) {
+      saveToStorage();
+      console.log(`✓ 順位表記を新表記に一括移行: ${changed}件のセルを置換 (バックアップ: ${RANK_NOTATION_MIGRATION_BACKUP_KEY})`);
+    }
+    return changed > 0;
+  } catch (e) {
+    console.error('順位表記移行でエラー:', e);
+    return false;
+  }
+}
+
 // 外部CI（GitHub Actions + rank_check.py）が生成する rank.json を取得して state.rank にマージ
 // JSON構造: { "2026-04": { "cab-25-01": { "ad": [...], "seo": [...] } }, "meta": {...} }
 // Ycheck内部構造: state.rank["2026/04"]["cab-25-01"].adRank[dayIndex] / .seoRank[dayIndex]
@@ -2878,13 +2947,12 @@ function mergeRankJson(json) {
       const fields = byCode[rawCode] || {};
       const code = String(rawCode).toLowerCase().trim();
       if (!state.rank[ym][code]) state.rank[ym][code] = {};
-      // "ad" -> "adRank", "seo" -> "seoRank"（既存の手動データは上書きしない方針ではなく、
-      // APIが全31日分を nullパディング込みで返すので常に上書きで問題なし）
+      // "ad" -> "adRank", "seo" -> "seoRank"。取り込み時に旧表記を新表記へ変換（保険）
       if (Array.isArray(fields.ad)) {
-        state.rank[ym][code].adRank = fields.ad.slice();
+        state.rank[ym][code].adRank = convertRankArray(fields.ad.slice());
       }
       if (Array.isArray(fields.seo)) {
-        state.rank[ym][code].seoRank = fields.seo.slice();
+        state.rank[ym][code].seoRank = convertRankArray(fields.seo.slice());
       }
       total++;
     }
@@ -4156,11 +4224,14 @@ npSlot.addEventListener('drop', (e) => {
 // ==================== 初期化 ====================
 try {
   const restored = loadFromStorage();
+  // 【v86】順位表記の旧→新 一括移行（1度だけ実行）
+  const migrated = migrateRankNotationOnce();
   updateActiveStateChip();
   updateFilterBanners();
   renderAll();
   updateRankLastUpdatedDisplay();  // 復元データの最終更新を表示
   if (restored) console.log('Ycheck: 保存済みデータを復元');
+  if (migrated) console.log('Ycheck: 順位表記を新表記に移行しました');
   // rank.json を起動時に自動取得（失敗してもlocalStorageのデータで動作継続）
   fetchRankJson({ silent: true });
 } catch (err) {
