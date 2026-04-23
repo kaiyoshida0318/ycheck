@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v95 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v96 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1197,7 +1197,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
-    <div class="logo-sub">v95</div>
+    <div class="logo-sub">v96</div>
   </div>
   <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
     <span class="shop-selector-label">🏪 ショップ</span>
@@ -2187,9 +2187,9 @@ function initGitHubSettings() {
   }
   function openModal() {
     refreshModal();
-    modal.classList.add('active');
+    modal.classList.add('open');
   }
-  function closeModal() { modal.classList.remove('active'); }
+  function closeModal() { modal.classList.remove('open'); }
 
   if (area) area.addEventListener('click', openModal);
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
