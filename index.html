@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v100 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v101 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -65,43 +65,44 @@ body {
 .logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
 .logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
 
-/* ショップ選択（マルチショップ対応 v93〜） */
+/* ショップ選択（ADcheck風 v101〜） */
 .shop-selector {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: 16px;
-  padding: 6px 12px;
-  background: var(--bg3);
-  border: 1px solid var(--border2);
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
   border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.shop-selector-label {
-  font-size: 0.78rem;
+.shop-selector:hover {
+  border-color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.shop-selector-icon {
+  font-size: 1rem;
+  line-height: 1;
   color: var(--text2);
-  font-weight: 600;
-  white-space: nowrap;
 }
 .shop-selector select {
-  padding: 4px 8px;
-  border: 1px solid var(--border2);
-  border-radius: 6px;
-  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
   font-weight: 600;
-  background: var(--bg2);
   color: var(--text);
   cursor: pointer;
-  min-width: 110px;
+  padding: 2px 20px 2px 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%23666'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
 }
-.shop-selector select:focus { outline: none; border-color: var(--accent); }
-.shop-selector-code {
-  font-size: 0.72rem;
-  color: var(--text3);
-  font-family: monospace;
-  padding: 2px 6px;
-  background: var(--bg2);
-  border-radius: 4px;
-}
+.shop-selector select:focus { outline: none; }
 
 /* 【v95】GitHub同期ステータス表示 */
 .gh-sync-area {
@@ -1199,12 +1200,11 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
     <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
   </div>
   <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
-    <span class="shop-selector-label">🏪 ショップ</span>
+    <span class="shop-selector-icon">🏪</span>
     <select id="shopSelect"></select>
-    <span class="shop-selector-code" id="shopCodeLabel"></span>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v100</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v101</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4992,7 +4992,6 @@ npSlot.addEventListener('drop', (e) => {
 // ==================== ショップ選択UI（マルチショップ v93〜） ====================
 function initShopSelector() {
   const sel = $('#shopSelect');
-  const codeLabel = $('#shopCodeLabel');
   if (!sel) return;
   // 選択肢を生成
   sel.innerHTML = Object.values(SHOPS_INITIAL).map(s =>
@@ -5000,8 +4999,6 @@ function initShopSelector() {
   ).join('');
   const cur = getCurrentShopId();
   sel.value = cur;
-  const curShop = SHOPS_INITIAL[cur];
-  if (codeLabel) codeLabel.textContent = curShop ? curShop.shopCode : '';
   // 切替時: location.reload() で完全リセット（ドキュメント指示）
   sel.addEventListener('change', (e) => {
     const newShopId = e.target.value;
