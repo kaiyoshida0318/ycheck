@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v94 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v95 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -102,6 +102,40 @@ body {
   background: var(--bg2);
   border-radius: 4px;
 }
+
+/* 【v95】GitHub同期ステータス表示 */
+.gh-sync-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--bg2);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+.gh-sync-area:hover { background: var(--bg3); }
+.gh-sync-area.gh-disabled { color: var(--text3); }
+.gh-sync-area.gh-saved    { color: var(--green); border-color: var(--green); background: rgba(22,163,74,0.06); }
+.gh-sync-area.gh-dirty    { color: #d97706; border-color: #d97706; background: rgba(217,119,6,0.08); }
+.gh-sync-area.gh-saving   { color: var(--blue);  border-color: var(--blue);  background: rgba(37,99,235,0.06); }
+.gh-sync-area.gh-error    { color: var(--red);   border-color: var(--red);   background: rgba(220,38,38,0.08); }
+.gh-sync-area.gh-saving .gh-sync-status::before {
+  content: '';
+  display: inline-block;
+  width: 10px; height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--blue);
+  border-top-color: transparent;
+  animation: gh-spin 0.8s linear infinite;
+  vertical-align: -2px;
+}
+@keyframes gh-spin { to { transform: rotate(360deg); } }
 
 .header-status-row {
   display: flex;
@@ -1163,7 +1197,7 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
 <div class="header">
   <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
     <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
-    <div class="logo-sub">v94</div>
+    <div class="logo-sub">v95</div>
   </div>
   <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
     <span class="shop-selector-label">🏪 ショップ</span>
@@ -1179,6 +1213,9 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
+    <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub設定">
+      <span class="gh-sync-status" id="ghSyncStatus">⚙️ GitHub</span>
+    </div>
   </div>
 </div>
 
@@ -1478,6 +1515,58 @@ table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  col
         <li><span class="flow-step">それでも利益が出ない場合は撤退認定する</span></li>
       </ol>
     </section>
+  </div>
+</div>
+
+<!-- 【v95】GitHub連携設定モーダル -->
+<div class="modal-overlay" id="ghSettingsModal">
+  <div class="modal" style="max-width: 620px;">
+    <div class="modal-header">
+      <h2 class="modal-title">⚙️ GitHub連携設定</h2>
+      <button class="modal-close" id="ghClose" type="button">×</button>
+    </div>
+    <div style="padding: 16px 0;">
+      <p style="margin: 0 0 10px; font-size: 0.88rem; color: var(--text2); line-height: 1.6;">
+        GitHub に Personal Access Token (PAT) を設定すると、<b>Ycheckのデータが複数のPC/ブラウザ間で共有</b>できるようになります。
+      </p>
+      <p style="margin: 0 0 16px; font-size: 0.82rem; color: var(--text3); line-height: 1.55;">
+        PATは <code style="background:var(--bg3);padding:2px 5px;border-radius:3px;">github_pat_...</code> 形式の長い文字列です。<br>
+        このPC（このブラウザ）のlocalStorageにのみ保存され、Claude・GitHub以外に送信されません。
+      </p>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;font-size:0.85rem;">Personal Access Token</label>
+        <input type="password" id="ghPatInput" placeholder="github_pat_11A..." 
+               style="width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:6px;font-family:monospace;font-size:0.85rem;">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <label style="font-size:0.8rem;color:var(--text3);">
+            <input type="checkbox" id="ghPatShowPlain" style="margin-right:4px;"> 表示
+          </label>
+          <span id="ghPatStatus" style="font-size:0.78rem;color:var(--text3);"></span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;padding:10px 12px;background:var(--bg3);border-radius:6px;font-size:0.8rem;">
+        <div style="margin-bottom:4px;"><b>保存先（現在のショップ）</b>:</div>
+        <code id="ghSavePath" style="font-size:0.78rem;color:var(--text2);">data/yukaiya/ycheck_data.json</code>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="btn sm primary" id="ghBtnSave" type="button">💾 PATを保存</button>
+        <button class="btn sm" id="ghBtnTest" type="button">🔌 接続テスト</button>
+        <button class="btn sm" id="ghBtnManualSave" type="button">⬆ 今すぐGitHub保存</button>
+        <button class="btn sm" id="ghBtnManualLoad" type="button">⬇ GitHubから再取得</button>
+        <button class="btn sm ghost" id="ghBtnClear" type="button" style="margin-left:auto;color:var(--red);">🗑 PATを削除</button>
+      </div>
+
+      <div id="ghSettingsLog" style="margin-top:10px;padding:10px;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:0.75rem;border-radius:6px;max-height:180px;overflow-y:auto;display:none;"></div>
+
+      <div style="margin-top:14px;padding:10px 12px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:0.78rem;color:#6a4e00;line-height:1.55;">
+        <b>⚠ 初回利用時の注意</b><br>
+        GitHub上にまだデータが無い状態で「今すぐGitHub保存」を実行すると、このPCのデータがGitHubの初期データとしてアップロードされます。<br>
+        他PCから先にアップロード済みの場合は、先に「GitHubから再取得」を実行してください。
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1782,9 +1871,414 @@ function saveToStorage() {
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // 【v95】GitHub連携: PATが設定されていれば、デバウンス保存をスケジュール
+    if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave();
     return true;
   } catch (err) { console.error(err); return false; }
 }
+
+// ==================== 【v95】GitHub連携（データのクラウド共有） ====================
+// 設計ガイド準拠: mutex / 409 Conflict 自動リトライ / beforeunload / allowEmpty
+const GH_OWNER = 'kaiyoshida0318';
+const GH_REPO = 'ycheck';
+const GH_BRANCH = 'main';
+const GH_PAT_KEY = 'ycheck_github_pat';   // ブラウザ毎・ショップ非依存
+const GH_SAVE_DEBOUNCE_MS = 3000;          // 編集後3秒で自動保存
+const GH_MAX_RETRY = 5;                    // 409 Conflict 時の最大リトライ回数
+
+let _ghSaveDebounceTimer = null;
+let _ghSaveInFlight = null;                // 並列保存防止 mutex
+let _ghLastKnownSha = null;                // 最新取得時のSHA
+let _ghDirty = false;                      // 未保存フラグ
+
+// ショップ別のGitHub保存パス（設計ガイド: data/{shopId}/...）
+function ghFilePath() {
+  return `data/${getCurrentShopId()}/ycheck_data.json`;
+}
+
+// PAT取得・設定
+function ghGetPat() {
+  try { return localStorage.getItem(GH_PAT_KEY) || ''; } catch (e) { return ''; }
+}
+function ghSetPat(pat) {
+  try {
+    if (pat) localStorage.setItem(GH_PAT_KEY, pat);
+    else localStorage.removeItem(GH_PAT_KEY);
+    return true;
+  } catch (e) { return false; }
+}
+function ghIsEnabled() {
+  const pat = ghGetPat();
+  return !!pat && pat.length > 20;
+}
+
+// ログ出力ヘルパー（設定モーダルのログエリアに追記）
+function ghLog(msg, level = 'info') {
+  const colors = { info: '#0f0', warn: '#fb0', error: '#f66' };
+  const shopId = getCurrentShopId();
+  console.log(`[${shopId}] [GH] ${msg}`);
+  const logEl = document.getElementById('ghSettingsLog');
+  if (logEl) {
+    logEl.style.display = 'block';
+    const ts = new Date().toTimeString().slice(0, 8);
+    const color = colors[level] || colors.info;
+    logEl.innerHTML += `<div style="color:${color};">[${ts}] ${escapeHtml(msg)}</div>`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+}
+
+// GitHub API: ファイルのSHAと内容を取得
+async function ghGetFile() {
+  const path = ghFilePath();
+  const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${ghGetPat()}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    },
+    cache: 'no-store'
+  });
+  if (res.status === 404) return { sha: null, content: null };
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GET ${path} failed: ${res.status} ${text.slice(0,200)}`);
+  }
+  const json = await res.json();
+  // content はbase64
+  let decoded = '';
+  if (json.content) {
+    try {
+      const raw = atob(json.content.replace(/\s/g, ''));
+      // UTF-8 バイト列として decode
+      const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+      decoded = new TextDecoder('utf-8').decode(bytes);
+    } catch (e) {
+      throw new Error('base64デコードに失敗: ' + e.message);
+    }
+  }
+  _ghLastKnownSha = json.sha;
+  return { sha: json.sha, content: decoded };
+}
+
+// GitHub API: ファイルPUT（409時は最新SHAを取り直してリトライ）
+async function ghPutFile(contentString, retryCount = 0) {
+  const path = ghFilePath();
+  const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+  // UTF-8対応のbase64エンコード
+  const utf8Bytes = new TextEncoder().encode(contentString);
+  let binary = '';
+  for (let i = 0; i < utf8Bytes.length; i++) binary += String.fromCharCode(utf8Bytes[i]);
+  const base64 = btoa(binary);
+
+  const body = {
+    message: `Ycheck data save (${getCurrentShopId()}) ${new Date().toISOString()}`,
+    content: base64,
+    branch: GH_BRANCH
+  };
+  if (_ghLastKnownSha) body.sha = _ghLastKnownSha;
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${ghGetPat()}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (res.status === 409 && retryCount < GH_MAX_RETRY) {
+    ghLog(`409 Conflict - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
+    // 最新のSHAを取り直してリトライ（指数バックオフ: 500ms, 800ms, 1100ms, ...）
+    await new Promise(r => setTimeout(r, 500 + retryCount * 300));
+    const latest = await ghGetFile();
+    _ghLastKnownSha = latest.sha;
+    return ghPutFile(contentString, retryCount + 1);
+  }
+  if (res.status === 429) {
+    ghLog('429 Too Many Requests - 少し待ってリトライ', 'warn');
+    await new Promise(r => setTimeout(r, 3000));
+    return ghPutFile(contentString, retryCount);
+  }
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`PUT ${path} failed: ${res.status} ${text.slice(0,200)}`);
+  }
+  const json = await res.json();
+  _ghLastKnownSha = json.content && json.content.sha;
+  return json;
+}
+
+// 現在のstateをシリアライズしてJSON文字列に
+function ghBuildDataString() {
+  const data = {
+    overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
+    proRate: state.proRate,
+    master: state.master, productMeta: state.productMeta,
+    rank: state.rank,
+    rankMeta: state.rankMeta,
+    productsCsvSnapshot: state.productsCsvSnapshot,
+    savedAt: new Date().toISOString(),
+    shopId: getCurrentShopId(),
+    schemaVersion: 1
+  };
+  return JSON.stringify(data, null, 2);
+}
+
+// GitHubへの保存（mutex + 空データ誤上書き防止）
+async function ghSaveToGitHub(options = {}) {
+  const allowEmpty = options.allowEmpty === true;
+  if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
+  // mutex: 既に実行中なら待つ
+  if (_ghSaveInFlight) {
+    ghLog('既存の保存処理を待機中...');
+    try { await _ghSaveInFlight; } catch (e) {}
+  }
+  _ghSaveInFlight = (async () => {
+    const jsonStr = ghBuildDataString();
+    // 空データ誤上書き防止
+    const dataObj = JSON.parse(jsonStr);
+    const dataTotal = (dataObj.overall ? 1 : 0)
+      + (dataObj.item ? (Array.isArray(dataObj.item) ? dataObj.item.length : 1) : 0)
+      + (dataObj.ad ? (Array.isArray(dataObj.ad) ? dataObj.ad.length : 1) : 0)
+      + Object.keys(dataObj.master || {}).length
+      + Object.keys(dataObj.productMeta || {}).length;
+    if (dataTotal === 0 && !allowEmpty) {
+      ghLog('全データが空のため保存スキップ（誤上書き防止）', 'warn');
+      return { skipped: true, reason: 'empty-guard' };
+    }
+    ghSetSyncStatus('saving');
+    try {
+      await ghPutFile(jsonStr);
+      _ghDirty = false;
+      ghSetSyncStatus('saved');
+      ghLog(`保存成功: ${ghFilePath()} (${(jsonStr.length / 1024).toFixed(1)} KB)`);
+      return { success: true };
+    } catch (err) {
+      ghSetSyncStatus('error', err.message);
+      ghLog('保存失敗: ' + err.message, 'error');
+      throw err;
+    }
+  })();
+  try {
+    return await _ghSaveInFlight;
+  } finally {
+    _ghSaveInFlight = null;
+  }
+}
+
+// GitHubから読み込んでstateに反映 + localStorage上書き
+async function ghLoadFromGitHub() {
+  if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
+  ghSetSyncStatus('saving');  // 読み込み中も「処理中」表示（色は同じ）
+  try {
+    const { content } = await ghGetFile();
+    if (!content) {
+      ghSetSyncStatus(_ghDirty ? 'dirty' : 'saved');
+      ghLog('GitHubにデータがまだありません');
+      return { notFound: true };
+    }
+    const data = JSON.parse(content);
+    // state に展開（loadFromStorage と同じロジック）
+    if (data.overall) state.overall = data.overall;
+    if (data.item) state.item = data.item;
+    if (data.ad) state.ad = data.ad;
+    if (data.bid) state.bid = data.bid;
+    if (data.proRate) state.proRate = data.proRate;
+    if (data.master) state.master = data.master;
+    if (data.rank) state.rank = data.rank;
+    if (data.rankMeta) state.rankMeta = data.rankMeta;
+    if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
+    if (data.productMeta) {
+      state.productMeta = data.productMeta;
+      Object.values(state.productMeta).forEach(m => {
+        if (m && m.proStatus === 'PRO○') m.proStatus = 'PRオプ○';
+        else if (m && m.proStatus === 'PRO×') m.proStatus = 'PRオプ×';
+      });
+    }
+    // マイグレーション
+    migrateRetiredByMissingName();
+    migrateBidKeysLowercase();
+    migrateProStatusToStatus();
+    // localStorage にも即書き
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: new Date().toISOString() }));
+    _ghDirty = false;
+    ghSetSyncStatus('saved');
+    ghLog(`取得成功: ${(content.length / 1024).toFixed(1)} KB`);
+    return { success: true, savedAt: data.savedAt };
+  } catch (err) {
+    ghSetSyncStatus('error', err.message);
+    ghLog('取得失敗: ' + err.message, 'error');
+    throw err;
+  }
+}
+
+// 編集後のデバウンス自動保存
+function scheduleGitHubSave() {
+  if (!ghIsEnabled()) return;
+  _ghDirty = true;
+  ghSetSyncStatus('dirty');
+  if (_ghSaveDebounceTimer) clearTimeout(_ghSaveDebounceTimer);
+  _ghSaveDebounceTimer = setTimeout(() => {
+    _ghSaveDebounceTimer = null;
+    ghSaveToGitHub().catch(() => {});
+  }, GH_SAVE_DEBOUNCE_MS);
+}
+
+// ヘッダーの同期ステータス表示を更新
+function ghSetSyncStatus(state, detail) {
+  const el = document.getElementById('ghSyncArea');
+  const txt = document.getElementById('ghSyncStatus');
+  if (!el || !txt) return;
+  el.classList.remove('gh-disabled', 'gh-saved', 'gh-dirty', 'gh-saving', 'gh-error');
+  switch (state) {
+    case 'disabled':
+      el.classList.add('gh-disabled');
+      txt.textContent = '⚙️ GitHub 未設定';
+      el.title = 'クリックしてPATを設定すると複数PCで共有できます';
+      break;
+    case 'saved':
+      el.classList.add('gh-saved');
+      txt.textContent = '✓ 保存済み';
+      el.title = `最終保存: ${new Date().toLocaleTimeString('ja-JP')}\nクリックで設定`;
+      break;
+    case 'dirty':
+      el.classList.add('gh-dirty');
+      txt.textContent = '● 未保存';
+      el.title = '編集内容を3秒後に自動保存します\nクリックで設定';
+      break;
+    case 'saving':
+      el.classList.add('gh-saving');
+      txt.textContent = 'GitHub保存中...';
+      el.title = '保存中です';
+      break;
+    case 'error':
+      el.classList.add('gh-error');
+      txt.textContent = '⚠ エラー';
+      el.title = detail || '保存エラー\nクリックで詳細';
+      break;
+  }
+}
+
+// 設定モーダル関連のイベント
+function initGitHubSettings() {
+  const area = document.getElementById('ghSyncArea');
+  const modal = document.getElementById('ghSettingsModal');
+  const closeBtn = document.getElementById('ghClose');
+  const patInput = document.getElementById('ghPatInput');
+  const showChk = document.getElementById('ghPatShowPlain');
+  const statusSpan = document.getElementById('ghPatStatus');
+  const btnSave = document.getElementById('ghBtnSave');
+  const btnTest = document.getElementById('ghBtnTest');
+  const btnManualSave = document.getElementById('ghBtnManualSave');
+  const btnManualLoad = document.getElementById('ghBtnManualLoad');
+  const btnClear = document.getElementById('ghBtnClear');
+  const pathEl = document.getElementById('ghSavePath');
+
+  function refreshModal() {
+    const pat = ghGetPat();
+    patInput.value = pat;
+    statusSpan.textContent = pat
+      ? `✓ 設定済み（${pat.length}文字, ${pat.slice(0, 14)}...）`
+      : '未設定';
+    if (pathEl) pathEl.textContent = ghFilePath();
+  }
+  function openModal() {
+    refreshModal();
+    modal.classList.add('active');
+  }
+  function closeModal() { modal.classList.remove('active'); }
+
+  if (area) area.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  if (showChk) showChk.addEventListener('change', e => {
+    patInput.type = e.target.checked ? 'text' : 'password';
+  });
+
+  if (btnSave) btnSave.addEventListener('click', () => {
+    const pat = patInput.value.trim();
+    if (pat && !pat.startsWith('github_pat_') && !pat.startsWith('ghp_')) {
+      if (!confirm('PATの形式が一般的でない（github_pat_ または ghp_ で始まらない）ようです。\nこのまま保存してもよろしいですか？')) return;
+    }
+    ghSetPat(pat);
+    refreshModal();
+    ghLog(pat ? 'PATを保存しました' : 'PATを削除しました');
+    ghSetSyncStatus(pat ? 'saved' : 'disabled');
+    if (pat) {
+      alert('PATを保存しました。\n「接続テスト」でGitHubへアクセス可能か確認してください。');
+    }
+  });
+
+  if (btnTest) btnTest.addEventListener('click', async () => {
+    if (!ghIsEnabled()) { alert('先にPATを保存してください'); return; }
+    ghLog('接続テスト開始...');
+    try {
+      const result = await ghGetFile();
+      if (result.sha) {
+        ghLog(`✓ 接続OK - 既存ファイルあり (sha=${result.sha.slice(0,7)}, size=${(result.content.length/1024).toFixed(1)}KB)`);
+        alert('接続OK: GitHub上に既存データが見つかりました。\n「GitHubから再取得」で読み込めます。');
+      } else {
+        ghLog('✓ 接続OK - まだファイルなし（初回保存時に作成されます）');
+        alert('接続OK: まだデータがありません。\n「今すぐGitHub保存」で初回アップロードができます。');
+      }
+    } catch (err) {
+      ghLog('接続失敗: ' + err.message, 'error');
+      alert('接続エラー: ' + err.message);
+    }
+  });
+
+  if (btnManualSave) btnManualSave.addEventListener('click', async () => {
+    if (!ghIsEnabled()) { alert('先にPATを保存してください'); return; }
+    try {
+      const result = await ghSaveToGitHub({ allowEmpty: false });
+      if (result.skipped) alert('保存スキップ: ' + result.reason);
+      else alert('GitHub保存が完了しました');
+    } catch (err) {
+      alert('保存エラー: ' + err.message);
+    }
+  });
+
+  if (btnManualLoad) btnManualLoad.addEventListener('click', async () => {
+    if (!ghIsEnabled()) { alert('先にPATを保存してください'); return; }
+    if (_ghDirty) {
+      if (!confirm('未保存の変更があります。先にGitHub保存をせずに再取得すると、その変更は失われます。\n\n再取得しますか？')) return;
+    }
+    try {
+      const result = await ghLoadFromGitHub();
+      if (result.notFound) alert('GitHubにデータがまだありません');
+      else if (result.success) {
+        alert('GitHubからデータを取得しました。ページをリロードして反映します。');
+        location.reload();
+      }
+    } catch (err) {
+      alert('取得エラー: ' + err.message);
+    }
+  });
+
+  if (btnClear) btnClear.addEventListener('click', () => {
+    if (!confirm('このブラウザに保存されたPATを削除しますか？\n\n削除するとGitHub連携が無効になり、localStorageのみで動作します。\n（GitHubやリポジトリ上のデータは削除されません）')) return;
+    ghSetPat('');
+    refreshModal();
+    ghSetSyncStatus('disabled');
+    ghLog('PATを削除しました');
+  });
+
+  // 初期ステータス
+  ghSetSyncStatus(ghIsEnabled() ? 'saved' : 'disabled');
+}
+
+// beforeunload: 保存中にページを閉じようとしたら警告
+window.addEventListener('beforeunload', (e) => {
+  if (_ghSaveInFlight || _ghDirty) {
+    e.preventDefault();
+    e.returnValue = '保存中の変更があります。このページを離れると保存されない可能性があります。';
+    return e.returnValue;
+  }
+});
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -4485,6 +4979,7 @@ function initShopSelector() {
 // ==================== 初期化 ====================
 try {
   initShopSelector();  // ショップセレクタの構築は loadFromStorage より先
+  initGitHubSettings();  // 【v95】GitHub連携設定UIの初期化
   const restored = loadFromStorage();
   // 【v86】順位表記の旧→新 一括移行（1度だけ実行）
   const migrated = migrateRankNotationOnce();
@@ -4499,6 +4994,21 @@ try {
   if (migrated) console.log(`[${curShop.id}] 順位表記を新表記に移行しました`);
   // rank.json を起動時に自動取得（失敗してもlocalStorageのデータで動作継続）
   fetchRankJson({ silent: true });
+  // 【v95】GitHub連携が有効なら、起動時にGitHubから最新データを取得して反映
+  if (ghIsEnabled()) {
+    console.log(`[${curShop.id}] GitHub連携が有効です - データを取得中...`);
+    ghLoadFromGitHub().then(result => {
+      if (result && result.success) {
+        renderAll();
+        updateRankLastUpdatedDisplay();
+        console.log(`[${curShop.id}] GitHub から最新データを取得・反映しました`);
+      } else if (result && result.notFound) {
+        console.log(`[${curShop.id}] GitHub にデータなし - localStorageを継続使用`);
+      }
+    }).catch(err => {
+      console.warn(`[${curShop.id}] GitHub取得失敗（localStorageで継続）:`, err.message);
+    });
+  }
 } catch (err) {
   console.error('Ycheck 初期化エラー:', err);
 }
