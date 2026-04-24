@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v129 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v130 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -544,12 +544,48 @@ body {
 .rep-filter-icon { font-size: 1.1rem; }
 .rep-filter-text { flex: 1; }
 
-/* 【v128】カスタムツールチップ：瞬時表示（ブラウザ標準titleのラグを排除） */
+/* 【v128/v130】カスタムツールチップ：瞬時表示（ブラウザ標準titleのラグを排除）
+   v130: 検索欄バッジは下ではなく「上」に表示して、下の表に隠れないようにする */
 .search-rep-badge,
 .rep-badge {
   position: relative;
 }
-.search-rep-badge[data-tooltip]::after,
+/* 検索欄バッジ: ツールチップを「上」に出す（表に隠れるのを防ぐ） */
+.search-rep-badge[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 10000;
+  transition: opacity 0.05s;
+}
+.search-rep-badge[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: #1f2937;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 10000;
+  transition: opacity 0.05s;
+}
+/* 商品コード横のバッジは従来通り下に出す（表内なので下向きで問題なし） */
 .rep-badge[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
@@ -566,10 +602,9 @@ body {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  z-index: 2000;
-  transition: opacity 0.05s;  /* 瞬時（50ms） */
+  z-index: 10000;
+  transition: opacity 0.05s;
 }
-.search-rep-badge[data-tooltip]::before,
 .rep-badge[data-tooltip]::before {
   content: '';
   position: absolute;
@@ -582,7 +617,7 @@ body {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  z-index: 2000;
+  z-index: 10000;
   transition: opacity 0.05s;
 }
 .search-rep-badge:hover[data-tooltip]::after,
@@ -816,6 +851,16 @@ tbody tr:hover { background: var(--bg3); }
   font-size: 0.78rem;
   color: var(--text2);
 }
+/* 【v130】商品コードとバッジを flex で配置：コード左、🔀バッジは常にセル右端 */
+.code-cell-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+.code-cell-inner .code-text { flex: 1; min-width: 0; }
+.code-cell-inner .rep-badge { flex: 0 0 auto; margin-left: 0; }
 .link-btn {
   color: var(--accent); text-decoration: none;
   font-size: 0.8rem; white-space: nowrap;
@@ -1671,7 +1716,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v129</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v130</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3499,13 +3544,13 @@ function updateStateCounts() {
   if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
 }
 
-// 【v125】商品コード表示（代表コード所属なら🔗バッジ付き）
-// クリックでそのグループに絞り込み、Ctrl+クリックで絞り込み解除
+// 【v125/v130】商品コード表示（代表コード所属なら🔀バッジ付き）
+// v130: バッジをセル右端に固定するため、コード部分とバッジを flex 構造でラップ
 function codeCellHtml(code) {
   const meta = state.productMeta[code] || {};
   const rep = (meta.repCode || '').trim();
-  if (!rep) return escapeHtml(code);
-  return `${escapeHtml(code)}<button class="rep-badge" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button">🔀</button>`;
+  if (!rep) return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span></span>`;
+  return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span><button class="rep-badge" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button">🔀</button></span>`;
 }
 
 // ==================== Status select helpers ====================
