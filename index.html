@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v131 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v132 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1363,10 +1363,10 @@ table.rank-table td.rank-cell-2line {
   outline-offset: -2px;
   background: rgba(37,99,235,0.08);
 }
-/* 手動編集された値は少しだけ斜体 + 点線下線で区別（API値と見分けるため） */
+/* 【v129/v132】手動編集値のスタイル
+   v132: API値と見た目を完全に同じにするため、斜体・下線を削除 */
 .rank-row-top.rank-top-manual {
-  font-style: italic;
-  text-decoration: underline dotted rgba(0,0,0,0.3);
+  /* 区別マークなし：API値と同じ見た目 */
 }
 
 /* 【v129】順位上段セル編集用プルダウン */
@@ -1716,7 +1716,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v131</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v132</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
