@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v125 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v126 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -544,7 +544,34 @@ body {
 .rep-filter-icon { font-size: 1.1rem; }
 .rep-filter-text { flex: 1; }
 
-/* 【v125】商品コード横の🔗バッジ（クリックでグループ絞り込み） */
+/* 【v126】検索欄右のバッジ（送り込みがある商品のみ表示するトグル） */
+.search-rep-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--bg2);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  vertical-align: middle;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+  margin-left: 6px;
+}
+.search-rep-badge:hover {
+  background: rgba(37,99,235,0.08);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+.search-rep-badge.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
 .rep-badge {
   display: inline-flex;
   align-items: center;
@@ -1550,7 +1577,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v125</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v126</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1558,7 +1585,6 @@ table.rank-table td.rank-legend-col-row {
     </div>
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
-    <button class="btn sm ghost" id="btnRepFilterToggle" type="button" title="代表コードが設定されている商品だけを表示（もう一度押して解除）">🔗 グループ所属のみ</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub設定">
       <span class="gh-sync-status" id="ghSyncStatus">⚙️ GitHub</span>
@@ -1632,6 +1658,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="basicMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="basicRepBadge" type="button" title="送り込みがある商品">🔗</button>
           <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <span class="gh-reflect-hover" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
@@ -1675,6 +1702,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="monthlyMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="monthlyRepBadge" type="button" title="送り込みがある商品">🔗</button>
         </div>
         <p class="dropzone-hint" style="margin:0 0 10px 0;">下が古い月 / 上が新しい月</p>
         <div class="table-wrap">
@@ -1704,6 +1732,7 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="retiredRepBadge" type="button" title="送り込みがある商品">🔗</button>
         </div>
         <div class="table-wrap">
           <table id="tableRetired">
@@ -1748,6 +1777,7 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="adAdjustRepBadge" type="button" title="送り込みがある商品">🔗</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
@@ -1784,6 +1814,7 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="proAdjustRepBadge" type="button" title="送り込みがある商品">🔗</button>
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
@@ -1819,6 +1850,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="adRankMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="adRankSearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="adRankRepBadge" type="button" title="送り込みがある商品">🔗</button>
           <button class="btn sm ghost" id="btnRefreshAdRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="adRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
@@ -1840,6 +1872,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="seoRankMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="seoRankSearch" placeholder="商品コード・商品名で検索...">
+          <button class="search-rep-badge" id="seoRankRepBadge" type="button" title="送り込みがある商品">🔗</button>
           <button class="btn sm ghost" id="btnRefreshSeoRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="seoRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
@@ -5882,17 +5915,16 @@ function npClearAll() {
 // イベントバインド
 $('#btnJumpNewProduct').addEventListener('click', openNewProductModal);
 
-// ==================== 【v125】代表コード絞り込み ====================
+// ==================== 【v125/v126】代表コード絞り込み ====================
 function updateRepFilterUI() {
   const banner = document.getElementById('repFilterBanner');
   const text = document.getElementById('repFilterText');
-  const toggleBtn = document.getElementById('btnRepFilterToggle');
   const f = state.repFilter;
-  // ヘッダートグルボタンの active 表示
-  if (toggleBtn) {
-    if (f === '*') toggleBtn.classList.add('rep-filter-active');
-    else toggleBtn.classList.remove('rep-filter-active');
-  }
+  // 【v126】すべての検索欄右バッジの active 表示
+  document.querySelectorAll('.search-rep-badge').forEach(btn => {
+    if (f === '*') btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
   // バナー表示
   if (!banner) return;
   if (!f) {
@@ -5901,11 +5933,11 @@ function updateRepFilterUI() {
   }
   banner.style.display = 'flex';
   if (f === '*') {
-    text.textContent = '🔗 代表コードを持つ商品のみ表示中';
+    text.textContent = '🔗 送り込みがある商品のみ表示中';
   } else {
     text.textContent = `🔗 グループ「${f}」のみ表示中`;
   }
-  // バッジの active 表示
+  // 商品コード横のバッジの active 表示
   document.querySelectorAll('.rep-badge').forEach(b => {
     if (b.dataset.rep === f) b.classList.add('active');
     else b.classList.remove('active');
@@ -5928,15 +5960,18 @@ function setRepFilter(val) {
   }
 }
 
-// ヘッダートグル: グループ所属のみ
-if ($('#btnRepFilterToggle')) {
-  $('#btnRepFilterToggle').addEventListener('click', () => setRepFilter('*'));
-}
+// 【v126】すべての検索欄右バッジ: クリックで「送り込みがある商品のみ」をトグル
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.search-rep-badge');
+  if (!btn) return;
+  e.preventDefault();
+  setRepFilter('*');
+});
 // バナーの解除ボタン
 if ($('#repFilterClear')) {
   $('#repFilterClear').addEventListener('click', clearRepFilter);
 }
-// 🔗バッジクリック → そのグループに絞り込み（クリック委譲）
+// 🔗バッジ(商品コード横)クリック → そのグループに絞り込み（クリック委譲）
 document.addEventListener('click', (e) => {
   const badge = e.target.closest('.rep-badge');
   if (!badge) return;
