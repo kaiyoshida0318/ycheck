@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v117 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v118 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1087,15 +1087,21 @@ td:has(> .name-cell-wrap) {
 }
 
 /* 順位テーブル用：日付列を狭く・中央寄せ */
+/* 【v118】table-layout: fixed で広告順位/SEO順位を完全に同じ列幅にする */
+table.rank-table {
+  table-layout: fixed;
+  width: 100%;
+}
 table.rank-table th.rank-day, table.rank-table td.rank-day {
-  min-width: 32px;            /* 【v116】31日分が収まるよう幅を圧縮 */
-  max-width: 36px;
   width: 32px;
+  min-width: 32px;
+  max-width: 32px;
   text-align: center;
   padding-left: 2px;
   padding-right: 2px;
   font-variant-numeric: tabular-nums;
   border-left: 1px solid var(--border);   /* 日付列の縦罫線 */
+  overflow: hidden;
 }
 /* 値セル内の改行(\n)を実際の改行として表示し、2段文字列をコンパクトに見せる */
 table.rank-table td.rank-day {
@@ -1242,14 +1248,18 @@ table.rank-table tbody tr:last-child {
 
 /* 【v116】順位表の固定列（商品コード・画像・商品名）をコンパクトに
    31日分の列が画面に収まるよう、左側の列幅を抑える */
-table.rank-table .code-cell {
-  min-width: 90px;
-  max-width: 110px;
+/* 【v118】table-layout: fixed と連携して各列の幅を厳密に固定 */
+table.rank-table .code-cell,
+table.rank-table th:first-child,
+table.rank-table td:first-child {
   width: 100px;
+  min-width: 100px;
+  max-width: 100px;
   font-size: 0.72rem;
   padding: 2px 4px;
   word-break: break-all;
   line-height: 1.2;
+  overflow: hidden;
 }
 table.rank-table th,
 table.rank-table td {
@@ -1264,20 +1274,23 @@ table.rank-table .product-image-wrap img {
   width: 40px !important;
   height: auto !important;
 }
-table.rank-table td:nth-child(2) {
+table.rank-table td:nth-child(2),
+table.rank-table th:nth-child(2) {
   width: 46px;
   min-width: 46px;
   max-width: 46px;
   padding: 2px;
+  overflow: hidden;
 }
 /* 商品名は2行まで、折り返し可 */
 table.rank-table td:nth-child(3),
 table.rank-table th:nth-child(3) {
-  min-width: 130px;
-  max-width: 170px;
   width: 150px;
+  min-width: 150px;
+  max-width: 150px;
   font-size: 0.74rem;
   padding: 2px 4px;
+  overflow: hidden;
 }
 table.rank-table td:nth-child(3) .name-cell-wrap {
   display: flex;
@@ -1302,18 +1315,19 @@ table.rank-table td:nth-child(3) .name-edit-btn {
   font-size: 0.7rem;
 }
 
-/* 【v107/v108/v115/v116】凡例列「広告順位/SEO順位 & 入札価格/PRオプ」：各商品行ごとに表示（ヘッダは空欄） */
+/* 【v107/v108/v115/v116/v118】凡例列「広告順位/SEO順位 & 入札価格/PRオプ」：各商品行ごとに表示（ヘッダは空欄） */
 table.rank-table th.rank-legend-col {
-  min-width: 60px;
-  max-width: 70px;
   width: 60px;
+  min-width: 60px;
+  max-width: 60px;
   background: var(--bg3);
   border-right: 2px solid #94a3b8;
+  overflow: hidden;
 }
 table.rank-table td.rank-legend-col-row {
-  min-width: 60px;
-  max-width: 70px;
   width: 60px;
+  min-width: 60px;
+  max-width: 60px;
   text-align: center;
   background: var(--bg3);
   border-right: 2px solid #94a3b8;
@@ -1323,6 +1337,7 @@ table.rank-table td.rank-legend-col-row {
   padding: 1px 2px;
   vertical-align: middle;
   line-height: 1.1;
+  overflow: hidden;
 }
 .rank-legend-label {
   border-bottom: 1px dashed rgba(0,0,0,0.25);
@@ -1483,7 +1498,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v117</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v118</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
