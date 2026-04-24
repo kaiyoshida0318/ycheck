@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v124 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v125 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -525,6 +525,58 @@ body {
   font-size: 0.8rem;
 }
 .filter-banner .clear-btn:hover { background: var(--bg3); }
+
+/* 【v125】代表コード絞り込みバナー */
+.rep-filter-banner {
+  align-items: center;
+  gap: 10px;
+  background: rgba(37,99,235,0.08);
+  border: 1px solid rgba(37,99,235,0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.rep-filter-banner[style*="display: flex"],
+.rep-filter-banner[style*="display:flex"] { display: flex !important; }
+.rep-filter-icon { font-size: 1.1rem; }
+.rep-filter-text { flex: 1; }
+
+/* 【v125】商品コード横の🔗バッジ（クリックでグループ絞り込み） */
+.rep-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  padding: 0;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: rgba(37,99,235,0.08);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  vertical-align: middle;
+  transition: background 0.1s, transform 0.1s;
+}
+.rep-badge:hover {
+  background: rgba(37,99,235,0.2);
+  transform: scale(1.08);
+}
+.rep-badge.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* ヘッダーの🔗 グループ所属のみ ボタンの active 状態 */
+.btn.rep-filter-active {
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+}
 .nav-group {
   display: flex;
   align-items: flex-end;
@@ -1498,7 +1550,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v124</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v125</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1506,6 +1558,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
+    <button class="btn sm ghost" id="btnRepFilterToggle" type="button" title="代表コードが設定されている商品だけを表示（もう一度押して解除）">🔗 グループ所属のみ</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub設定">
       <span class="gh-sync-status" id="ghSyncStatus">⚙️ GitHub</span>
@@ -1562,6 +1615,13 @@ table.rank-table td.rank-legend-col-row {
 <div class="app">
   <!-- Main -->
   <main class="main">
+
+    <!-- 【v125】代表コード絞り込みバナー（絞り込み中のみ表示） -->
+    <div id="repFilterBanner" class="rep-filter-banner" style="display:none;">
+      <span class="rep-filter-icon">🔗</span>
+      <span class="rep-filter-text" id="repFilterText">代表コード絞り込み中</span>
+      <button type="button" id="repFilterClear" class="btn sm" style="background: var(--amber); color:white; border-color:var(--amber);">✕ 絞り込み解除</button>
+    </div>
 
     <!-- View: 商品-基本データ -->
     <div class="view active" id="view-basic">
@@ -2106,6 +2166,8 @@ const state = {
   fontScale: 1,
   currentView: 'basic',
   activeStateFilter: null,  // {type: 'ad-ok'|'ad-ng'|..., targetView: 'ad-adjust'|'pro-adjust', label: '...'}
+  // 【v125】代表コード絞り込み: null=全件、'*'=代表コード持ち全商品のみ、'ih-family'=その代表コードのグループのみ
+  repFilter: null,
   uploadBuffer: { overall: null, item: null, ad: null, bid: null, proRate: null, master: null },
   uploadMode: 'monthly'  // 現在のアップロードモーダルのモード: 'monthly' | 'spot'
 };
@@ -3302,6 +3364,15 @@ function updateStateCounts() {
   if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
 }
 
+// 【v125】商品コード表示（代表コード所属なら🔗バッジ付き）
+// クリックでそのグループに絞り込み、Ctrl+クリックで絞り込み解除
+function codeCellHtml(code) {
+  const meta = state.productMeta[code] || {};
+  const rep = (meta.repCode || '').trim();
+  if (!rep) return escapeHtml(code);
+  return `${escapeHtml(code)}<button class="rep-badge" data-rep="${escapeHtml(rep)}" title="グループ &quot;${escapeHtml(rep)}&quot; で絞り込み（もう一度押すと解除）" type="button">🔗</button>`;
+}
+
 // ==================== Status select helpers ====================
 // 状態値をソート用の順序インデックスに変換（小さいほど先頭）
 const AD_STATUS_ORDER = { '': 0, '広告○': 1, '広告×': 2, '広告無': 3 };
@@ -3310,6 +3381,23 @@ const STATUS_ORDER = { '新商品': 0, '現役商品': 1, '撤退検討▲': 2, 
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
 function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
+
+// 【v125】代表コード絞り込み
+// repFilter = null     → 全件そのまま
+// repFilter = '*'      → 代表コードを持つ商品（グループに所属する商品）のみ
+// repFilter = 'xxx'    → 代表コード == 'xxx' のグループのみ
+function applyRepFilter(list) {
+  const f = state.repFilter;
+  if (!f) return list;
+  return list.filter(item => {
+    const code = item && item.code;
+    if (!code) return false;
+    const meta = state.productMeta[code] || {};
+    const rep = (meta.repCode || '').trim();
+    if (f === '*') return rep.length > 0;
+    return rep === f;
+  });
+}
 
 // 【v124】代表商品コードによるグループ表示
 // 引数: sortedList = すでにソート済みの配列（各要素に .code があること）
@@ -3465,6 +3553,8 @@ function renderBasic() {
     if (typeof va === 'string') return basicSortDir * va.localeCompare(vb);
     return basicSortDir * (va - vb);
   });
+  // 【v125】代表コード絞り込み
+  list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化（同じrepCodeの商品を塊で表示）
   list = applyRepGrouping(list);
 
@@ -3485,7 +3575,7 @@ function renderBasic() {
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
@@ -3566,6 +3656,8 @@ function renderMonthly() {
     if (typeof va === 'string') return monthlySortDir * va.localeCompare(vb);
     return monthlySortDir * (va - vb);
   });
+  // 【v125】代表コード絞り込み
+  list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化
   list = applyRepGrouping(list);
 
@@ -3580,7 +3672,7 @@ function renderMonthly() {
     const monthDisplay = r.month ? r.month.replace('-', '/') : '—';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${monthDisplay}</td>
@@ -3646,6 +3738,8 @@ function renderRetired() {
     if (typeof va === 'string') return retiredSortDir * va.localeCompare(vb);
     return retiredSortDir * (va - vb);
   });
+  // 【v125】代表コード絞り込み
+  list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化
   list = applyRepGrouping(list);
 
@@ -3659,7 +3753,7 @@ function renderRetired() {
   list.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
@@ -3814,13 +3908,15 @@ function renderAdAdjust() {
     }
     return adAdjustSortDir * (va - vb);
   });
+  // 【v125】代表コード絞り込み
+  list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化
   list = applyRepGrouping(list);
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
@@ -3912,13 +4008,15 @@ function renderProAdjust() {
     }
     return proAdjustSortDir * (va - vb);
   });
+  // 【v125】代表コード絞り込み
+  list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化
   list = applyRepGrouping(list);
   list.slice(0, 2000).forEach(r => {
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="code-cell">${escapeHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
@@ -4577,6 +4675,8 @@ function renderAll() {
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
   updateCsvDownloadButtonState();
+  // 【v125】代表コード絞り込みUI
+  if (typeof updateRepFilterUI === 'function') updateRepFilterUI();
 }
 
 // ==================== Sort Reset ====================
@@ -5781,6 +5881,70 @@ function npClearAll() {
 
 // イベントバインド
 $('#btnJumpNewProduct').addEventListener('click', openNewProductModal);
+
+// ==================== 【v125】代表コード絞り込み ====================
+function updateRepFilterUI() {
+  const banner = document.getElementById('repFilterBanner');
+  const text = document.getElementById('repFilterText');
+  const toggleBtn = document.getElementById('btnRepFilterToggle');
+  const f = state.repFilter;
+  // ヘッダートグルボタンの active 表示
+  if (toggleBtn) {
+    if (f === '*') toggleBtn.classList.add('rep-filter-active');
+    else toggleBtn.classList.remove('rep-filter-active');
+  }
+  // バナー表示
+  if (!banner) return;
+  if (!f) {
+    banner.style.display = 'none';
+    return;
+  }
+  banner.style.display = 'flex';
+  if (f === '*') {
+    text.textContent = '🔗 代表コードを持つ商品のみ表示中';
+  } else {
+    text.textContent = `🔗 グループ「${f}」のみ表示中`;
+  }
+  // バッジの active 表示
+  document.querySelectorAll('.rep-badge').forEach(b => {
+    if (b.dataset.rep === f) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+}
+// 絞り込み解除
+function clearRepFilter() {
+  state.repFilter = null;
+  updateRepFilterUI();
+  renderAll();
+}
+// 絞り込み適用（同じ値が来たら解除＝トグル）
+function setRepFilter(val) {
+  if (state.repFilter === val) {
+    clearRepFilter();
+  } else {
+    state.repFilter = val;
+    updateRepFilterUI();
+    renderAll();
+  }
+}
+
+// ヘッダートグル: グループ所属のみ
+if ($('#btnRepFilterToggle')) {
+  $('#btnRepFilterToggle').addEventListener('click', () => setRepFilter('*'));
+}
+// バナーの解除ボタン
+if ($('#repFilterClear')) {
+  $('#repFilterClear').addEventListener('click', clearRepFilter);
+}
+// 🔗バッジクリック → そのグループに絞り込み（クリック委譲）
+document.addEventListener('click', (e) => {
+  const badge = e.target.closest('.rep-badge');
+  if (!badge) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const rep = badge.dataset.rep;
+  if (rep) setRepFilter(rep);
+});
 $('#npClose').addEventListener('click', closeNewProductModal);
 $('#npCloseBottom').addEventListener('click', closeNewProductModal);
 newProductModal.addEventListener('click', (e) => {
