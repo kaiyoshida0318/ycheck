@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v118 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v119 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1498,7 +1498,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v118</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v119</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4241,6 +4241,37 @@ function overwriteTodayRankEditsFromLatest() {
   }
   return overwritten;
 }
+
+// 【v119】指定日（例: 4/23）のセルに、基本データの最新値を強制上書き
+// 引数: ym='2026/04', dayIndex=22（=4/23）
+function overwriteSpecificDayRankEdits(ym, dayIndex) {
+  if (!state.master) return 0;
+  if (!ym || dayIndex == null || isNaN(Number(dayIndex))) return 0;
+  const codes = Object.keys(state.master);
+  let overwritten = 0;
+  for (const code of codes) {
+    if (isRetired(code)) continue;
+    const codeLower = String(code).toLowerCase();
+    const meta = state.productMeta[code] || {};
+    if ((meta.adStatus || '') !== '広告無') {
+      const latestBid = state.bid && state.bid[codeLower];
+      if (latestBid != null && !isNaN(Number(latestBid))) {
+        setRankEditValue(ym, code, 'bid', dayIndex, Number(latestBid));
+        overwritten++;
+      }
+    }
+    const latestProRate = state.proRate && state.proRate[codeLower];
+    if (latestProRate != null && !isNaN(Number(latestProRate))) {
+      setRankEditValue(ym, code, 'proRate', dayIndex, Math.floor(Number(latestProRate)));
+      overwritten++;
+    }
+  }
+  if (overwritten > 0) {
+    console.log(`[overwrite-day] ${ym} ${dayIndex + 1}日 に ${overwritten} 件を強制上書き`);
+    saveToStorage();
+  }
+  return overwritten;
+}
 // 指定月の指定日に値をセット（その日以降は継承で自動反映される）
 function setRankEditValue(ym, code, field, dayIndex, value) {
   const codeKey = String(code || '').toLowerCase();
@@ -5754,6 +5785,19 @@ try {
   const restored = loadFromStorage();
   // 【v86】順位表記の旧→新 一括移行（1度だけ実行）
   const migrated = migrateRankNotationOnce();
+  // 【v119】4/23（2026/04 dayIndex=22）に基本データの入札価格/PRオプを強制上書き（1度のみ）
+  // autoFill より先に実行。autoFill が「今日(4/24)が空なら前日(4/23)を継承」するため、
+  // 結果として 4/23 と 4/24 が同じ値になる（案A＝変化なしの継続扱い）
+  try {
+    const seed0423Key = `ycheck_seed_0423_v1_${getCurrentShopId()}`;
+    if (!localStorage.getItem(seed0423Key)) {
+      const overwritten = overwriteSpecificDayRankEdits('2026/04', 22);
+      localStorage.setItem(seed0423Key, new Date().toISOString());
+      if (overwritten > 0) {
+        console.log(`[seed-0423-once] ${getCurrentShopId()}: 4/23 に ${overwritten} 件を基本データ値で注入`);
+      }
+    }
+  } catch (e) { console.warn('4/23 seed エラー:', e); }
   // 【v107】起動時の自動補完：各商品の「今日」が空なら、直前の非空日の値をコピー
   autoFillTodayRankEdits();
   // 【v113】基本データの入札価格/PRオプ料率を、順位表の「今日」に初期値として注入（1度のみ）
