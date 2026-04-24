@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v116 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v117 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1483,7 +1483,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v116</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v117</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4191,6 +4191,41 @@ function seedRankEditsFromLatest() {
   }
   return injected;
 }
+
+// 【v117】今日のセルに、基本データの最新値（state.bid/proRate）を強制上書き
+// seedRankEditsFromLatest との違い:
+//   - seed は「履歴が全空の商品だけ」 / overwrite は「今日の値があっても上書き」
+// 過去日（4/23以前）は一切触らない。今日（4/24）だけを上書きする。
+function overwriteTodayRankEditsFromLatest() {
+  if (!state.master) return 0;
+  const { ym, dayIndex } = getTodayYmAndIndex();
+  const codes = Object.keys(state.master);
+  let overwritten = 0;
+  for (const code of codes) {
+    if (isRetired(code)) continue;
+    const codeLower = String(code).toLowerCase();
+    const meta = state.productMeta[code] || {};
+    // --- bid（広告順位の下段）---
+    if ((meta.adStatus || '') !== '広告無') {
+      const latestBid = state.bid && state.bid[codeLower];
+      if (latestBid != null && !isNaN(Number(latestBid))) {
+        setRankEditValue(ym, code, 'bid', dayIndex, Number(latestBid));
+        overwritten++;
+      }
+    }
+    // --- proRate（SEO順位の下段）---
+    const latestProRate = state.proRate && state.proRate[codeLower];
+    if (latestProRate != null && !isNaN(Number(latestProRate))) {
+      setRankEditValue(ym, code, 'proRate', dayIndex, Math.floor(Number(latestProRate)));
+      overwritten++;
+    }
+  }
+  if (overwritten > 0) {
+    console.log(`[overwrite-today] ${ym} ${dayIndex + 1}日 に ${overwritten} 件を強制上書き`);
+    saveToStorage();
+  }
+  return overwritten;
+}
 // 指定月の指定日に値をセット（その日以降は継承で自動反映される）
 function setRankEditValue(ym, code, field, dayIndex, value) {
   const codeKey = String(code || '').toLowerCase();
@@ -5717,6 +5752,17 @@ try {
       }
     }
   } catch (e) { console.warn('seedRankEditsFromLatest エラー:', e); }
+  // 【v117】基本データの最新値で「今日」の値を強制上書き（1度のみ・過去日は触らない）
+  try {
+    const owFlagKey = `ycheck_overwrite_today_v1_${getCurrentShopId()}`;
+    if (!localStorage.getItem(owFlagKey)) {
+      const ow = overwriteTodayRankEditsFromLatest();
+      localStorage.setItem(owFlagKey, new Date().toISOString());
+      if (ow > 0) {
+        console.log(`[overwrite-once] ${getCurrentShopId()}: 今日の値を基本データの値で ${ow} 件、上書き`);
+      }
+    }
+  } catch (e) { console.warn('overwriteTodayRankEditsFromLatest エラー:', e); }
   refreshSlotPatterns();  // 現在ショップに合わせてスロットのファイル名を表示
   updateActiveStateChip();
   updateFilterBanners();
