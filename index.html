@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v123 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v124 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1498,7 +1498,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v123</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v124</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1896,6 +1896,10 @@ table.rank-table td.rank-legend-col-row {
       <div class="pe-row">
         <label class="pe-label" for="peSearchUrl">検索URL</label>
         <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
+      </div>
+      <div class="pe-row">
+        <label class="pe-label" for="peRepCode">代表商品コード</label>
+        <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
       </div>
       <div class="pe-row">
         <label class="pe-label">商品画像</label>
@@ -3307,6 +3311,57 @@ function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != nul
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
 function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
 
+// 【v124】代表商品コードによるグループ表示
+// 引数: sortedList = すでにソート済みの配列（各要素に .code があること）
+// 挙動:
+//   - productMeta[code].repCode が同じ商品は「グループ」として塊で表示
+//   - グループの位置は、そのグループ内で sortedList 最上位に来る商品の位置
+//   - グループ内は商品コード昇順（固定）
+//   - repCode が空の商品はグループ化せず、元のソート順のまま
+function applyRepGrouping(sortedList) {
+  if (!Array.isArray(sortedList) || sortedList.length === 0) return sortedList;
+  // 各商品の repCode を取得
+  const getRepCode = (item) => {
+    const code = item && item.code;
+    if (!code) return '';
+    const meta = state.productMeta[code] || {};
+    return (meta.repCode || '').trim();
+  };
+  // 同じrepCodeを持つグループを先に集める
+  const groups = new Map();  // repCode -> [items]
+  sortedList.forEach(item => {
+    const rep = getRepCode(item);
+    if (!rep) return;
+    if (!groups.has(rep)) groups.set(rep, []);
+    groups.get(rep).push(item);
+  });
+  // 1商品しかないrepCodeはグループ扱いしない
+  for (const [rep, items] of [...groups.entries()]) {
+    if (items.length < 2) groups.delete(rep);
+  }
+  if (groups.size === 0) return sortedList;
+  // グループ内メンバーを商品コード昇順で固定
+  for (const [rep, items] of groups.entries()) {
+    items.sort((a, b) => String(a.code || '').localeCompare(String(b.code || ''), 'ja'));
+  }
+  // 結果配列を構築：各itemについて「グループの先頭に来た時だけ、グループ全体を挿入」
+  const result = [];
+  const insertedReps = new Set();
+  for (const item of sortedList) {
+    const rep = getRepCode(item);
+    if (!rep || !groups.has(rep)) {
+      // 単独商品 or グループ未成立
+      result.push(item);
+      continue;
+    }
+    if (insertedReps.has(rep)) continue;  // 既にグループ挿入済み
+    // 未挿入グループ: いまの位置にグループ全体を挿入
+    result.push(...groups.get(rep));
+    insertedReps.add(rep);
+  }
+  return result;
+}
+
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
   let value, options;
@@ -3410,6 +3465,8 @@ function renderBasic() {
     if (typeof va === 'string') return basicSortDir * va.localeCompare(vb);
     return basicSortDir * (va - vb);
   });
+  // 【v124】代表商品コードでグループ化（同じrepCodeの商品を塊で表示）
+  list = applyRepGrouping(list);
 
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
@@ -3509,6 +3566,8 @@ function renderMonthly() {
     if (typeof va === 'string') return monthlySortDir * va.localeCompare(vb);
     return monthlySortDir * (va - vb);
   });
+  // 【v124】代表商品コードでグループ化
+  list = applyRepGrouping(list);
 
   const tbody = $('#tableMonthly tbody');
   tbody.innerHTML = '';
@@ -3587,6 +3646,8 @@ function renderRetired() {
     if (typeof va === 'string') return retiredSortDir * va.localeCompare(vb);
     return retiredSortDir * (va - vb);
   });
+  // 【v124】代表商品コードでグループ化
+  list = applyRepGrouping(list);
 
   tbody.innerHTML = '';
   if (list.length === 0) {
@@ -3753,6 +3814,8 @@ function renderAdAdjust() {
     }
     return adAdjustSortDir * (va - vb);
   });
+  // 【v124】代表商品コードでグループ化
+  list = applyRepGrouping(list);
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
     const tr = document.createElement('tr');
@@ -3849,6 +3912,8 @@ function renderProAdjust() {
     }
     return proAdjustSortDir * (va - vb);
   });
+  // 【v124】代表商品コードでグループ化
+  list = applyRepGrouping(list);
   list.slice(0, 2000).forEach(r => {
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
@@ -5323,10 +5388,13 @@ function peRefreshImagePreview() {
 function openProductEditModal(code) {
   if (!code) return;
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
+  const meta = state.productMeta[code] || {};
   $('#peCode').textContent = code;
   $('#peName').value = m.name || '';
   $('#peKw').value = m.kw || '';
   $('#peSearchUrl').value = m.searchUrl || '';
+  // 【v124】代表商品コード
+  $('#peRepCode').value = meta.repCode || '';
   // 画像編集の一時状態を現在のmaster値で初期化
   peImageState = {
     customImage: m.customImage || null,
@@ -5354,6 +5422,7 @@ function saveProductEdit() {
   const newName = $('#peName').value.trim();
   const newUrl = $('#peSearchUrl').value.trim();
   const newKw = $('#peKw').value.trim();
+  const newRepCode = $('#peRepCode').value.trim();  // 【v124】代表商品コード
   if (!state.master[code]) {
     state.master[code] = { code, name: '', kw: '', searchUrl: '', editedKw: false };
   }
@@ -5371,6 +5440,9 @@ function saveProductEdit() {
   if (!state.productMeta[code]) {
     state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
   }
+  // 【v124】代表商品コードを保存（空文字なら削除扱い）
+  if (newRepCode) state.productMeta[code].repCode = newRepCode;
+  else delete state.productMeta[code].repCode;
   const ok = saveToStorage();
   if (!ok) {
     alert('保存に失敗しました。画像が大きすぎる可能性があります（localStorageの容量超過）。画像を削除するかサイズの小さい画像に差し替えてください。');
