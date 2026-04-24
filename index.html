@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v126 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v127 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1031,10 +1031,25 @@ td:has(> .name-cell-wrap) {
 .pe-actions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
+  align-items: center;
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
+}
+/* 【v127】前後ボタンおよびインデックス表示 */
+.pe-nav-btn {
+  min-width: 92px;
+}
+.pe-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pe-pos-counter {
+  font-size: 0.82rem;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+  min-width: 56px;
+  text-align: center;
 }
 .kw-edit-input {
   width: 100%;
@@ -1577,7 +1592,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v126</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v127</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2010,6 +2025,11 @@ table.rank-table td.rank-legend-col-row {
       </div>
     </div>
     <div class="pe-actions">
+      <!-- 【v127】前後の商品への移動ボタン -->
+      <button class="btn sm ghost pe-nav-btn" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">← 前の商品</button>
+      <span class="pe-pos-counter" id="pePosCounter"></span>
+      <button class="btn sm ghost pe-nav-btn" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">次の商品 →</button>
+      <span class="pe-actions-spacer" style="flex:1;"></span>
       <button class="btn ghost" id="peCancel" type="button">キャンセル</button>
       <button class="btn primary" id="peSave" type="button">保存</button>
     </div>
@@ -5537,7 +5557,74 @@ function openProductEditModal(code) {
   peRefreshImagePreview();
   productEditModal.classList.add('open');
   document.body.style.overflow = 'hidden';
+  // 【v127】前後ボタンの有効/無効を更新
+  if (typeof updatePrevNextButtons === 'function') updatePrevNextButtons(code);
   setTimeout(() => $('#peName').focus(), 50);
+}
+
+// 【v127】現在のビューの表示順で商品コード配列を取得する
+// 各ビューのテーブルに表示されている <td class="code-cell"> の順で取得。
+// ソート・絞り込み・ビュー切替の結果をそのまま反映。
+function getCurrentViewCodesInOrder() {
+  const view = state.currentView;
+  // ビュー → テーブルID のマッピング
+  const tableMap = {
+    'basic':      '#tableBasic',
+    'monthly':    '#tableMonthly',
+    'retired':    '#tableRetired',
+    'ad-adjust':  '#tableAdAdjust',
+    'pro-adjust': '#tableProAdjust',
+    'ad-rank':    '#tableAdRank',
+    'seo-rank':   '#tableSeoRank'
+  };
+  const sel = tableMap[view];
+  if (!sel) return [];
+  const tbl = document.querySelector(sel);
+  if (!tbl) return [];
+  // tbody の各行、先頭 td(code-cell) から商品コードを抜き出す
+  // 【v125】code-cell は `${escapeHtml(code)}<button class="rep-badge">...</button>` なので、
+  // firstChild（テキストノード）を拾う
+  const codes = [];
+  tbl.querySelectorAll('tbody tr').forEach(tr => {
+    const cell = tr.querySelector('td.code-cell');
+    if (!cell) return;
+    // テキストノード先頭を商品コードとする
+    const first = cell.firstChild;
+    let code = '';
+    if (first && first.nodeType === Node.TEXT_NODE) code = first.textContent.trim();
+    else code = cell.textContent.trim().split(/\s/)[0];  // フォールバック
+    if (code) codes.push(code);
+  });
+  return codes;
+}
+
+// 【v127】前後ボタンのenabled/disabled を現在のコードに応じて更新
+function updatePrevNextButtons(currentCode) {
+  const prevBtn = document.getElementById('pePrevBtn');
+  const nextBtn = document.getElementById('peNextBtn');
+  if (!prevBtn || !nextBtn) return;
+  const codes = getCurrentViewCodesInOrder();
+  const idx = codes.indexOf(currentCode);
+  prevBtn.disabled = (idx <= 0);
+  nextBtn.disabled = (idx < 0 || idx >= codes.length - 1);
+  // インデックス表示（例: 3 / 251）
+  const counter = document.getElementById('pePosCounter');
+  if (counter) {
+    counter.textContent = (idx >= 0) ? `${idx + 1} / ${codes.length}` : '';
+  }
+}
+
+// 【v127】前後の商品を開く
+function navigateToAdjacentProduct(direction /* -1 or +1 */) {
+  const curCode = productEditModal && productEditModal.dataset.code;
+  if (!curCode) return;
+  const codes = getCurrentViewCodesInOrder();
+  const idx = codes.indexOf(curCode);
+  if (idx < 0) return;
+  const target = idx + direction;
+  if (target < 0 || target >= codes.length) return;
+  // 現在の内容を保存してから移動
+  saveProductEdit({ keepOpen: true, nextCode: codes[target] });
 }
 
 function closeProductEditModal() {
@@ -5549,7 +5636,8 @@ function closeProductEditModal() {
   peImageState = { customImage: null, imageDeleted: false };
 }
 
-function saveProductEdit() {
+function saveProductEdit(opts) {
+  opts = opts || {};
   const code = productEditModal.dataset.code;
   if (!code) return;
   const newName = $('#peName').value.trim();
@@ -5582,6 +5670,13 @@ function saveProductEdit() {
     return;
   }
   log(`✓ 商品情報を更新: ${code}`, 'ok');
+  // 【v127】前後移動: keepOpen 指定時はモーダルを閉じず、renderAll 後に次の商品を開く
+  if (opts.keepOpen && opts.nextCode) {
+    renderAll();
+    // ※ renderAll で DOM が再描画されるので、表示順も更新される
+    openProductEditModal(opts.nextCode);
+    return;
+  }
   closeProductEditModal();
   renderAll();
 }
@@ -5618,7 +5713,11 @@ document.addEventListener('keydown', (e) => {
 });
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
-$('#peSave').addEventListener('click', saveProductEdit);
+$('#peSave').addEventListener('click', () => saveProductEdit());
+
+// 【v127】前後の商品への移動ボタン
+if ($('#pePrevBtn')) $('#pePrevBtn').addEventListener('click', () => navigateToAdjacentProduct(-1));
+if ($('#peNextBtn')) $('#peNextBtn').addEventListener('click', () => navigateToAdjacentProduct(+1));
 
 // 画像操作ボタン
 $('#peImageUpload').addEventListener('click', () => $('#peImageFile').click());
