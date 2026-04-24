@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v120 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v121 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1498,7 +1498,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v120</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v121</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5785,17 +5785,22 @@ try {
   const restored = loadFromStorage();
   // 【v86】順位表記の旧→新 一括移行（1度だけ実行）
   const migrated = migrateRankNotationOnce();
-  // 【v119】4/23（2026/04 dayIndex=22）に基本データの入札価格/PRオプを強制上書き（1度のみ）
+  // 【v119/v121】4/23（2026/04 dayIndex=22）に基本データの入札価格/PRオプを強制上書き（1度のみ）
   // autoFill より先に実行。autoFill が「今日(4/24)が空なら前日(4/23)を継承」するため、
   // 結果として 4/23 と 4/24 が同じ値になる（案A＝変化なしの継続扱い）
+  // v121: フラグキーを _v2_ に変更し、v119 で実行済みのユーザーも再度強制実行されるようにした
   try {
-    const seed0423Key = `ycheck_seed_0423_v1_${getCurrentShopId()}`;
+    const seed0423Key = `ycheck_seed_0423_v2_${getCurrentShopId()}`;
     if (!localStorage.getItem(seed0423Key)) {
+      console.log(`[seed-0423] ${getCurrentShopId()}: 開始 - state.bid 件数=${Object.keys(state.bid || {}).length}, state.proRate 件数=${Object.keys(state.proRate || {}).length}, state.master 件数=${Object.keys(state.master || {}).length}`);
       const overwritten = overwriteSpecificDayRankEdits('2026/04', 22);
       localStorage.setItem(seed0423Key, new Date().toISOString());
-      if (overwritten > 0) {
-        console.log(`[seed-0423-once] ${getCurrentShopId()}: 4/23 に ${overwritten} 件を基本データ値で注入`);
+      console.log(`[seed-0423-once-v2] ${getCurrentShopId()}: 4/23 に ${overwritten} 件を基本データ値で注入`);
+      if (overwritten === 0) {
+        console.warn(`[seed-0423] 注入件数が0件です。state.bid/state.proRate が空か、全商品が引退/広告無の可能性があります。`);
       }
+    } else {
+      console.log(`[seed-0423-v2] ${getCurrentShopId()}: 既に実行済み（${localStorage.getItem(seed0423Key)}）`);
     }
   } catch (e) { console.warn('4/23 seed エラー:', e); }
   // 【v107】起動時の自動補完：各商品の「今日」が空なら、直前の非空日の値をコピー
