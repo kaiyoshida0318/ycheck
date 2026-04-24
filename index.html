@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v114 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v115 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1238,16 +1238,16 @@ table.rank-table tbody tr:last-child {
   border-bottom: 1px solid var(--border);
 }
 
-/* 【v107/v108】凡例列「順位/入札価格(PRオプ)」：各商品行ごとに表示（ヘッダは空欄） */
+/* 【v107/v108/v115】凡例列「広告順位/SEO順位 & 入札価格/PRオプ」：各商品行ごとに表示（ヘッダは空欄） */
 table.rank-table th.rank-legend-col {
-  min-width: 72px;
-  max-width: 84px;
+  min-width: 86px;
+  max-width: 100px;
   background: var(--bg3);
   border-right: 2px solid #94a3b8;
 }
 table.rank-table td.rank-legend-col-row {
-  min-width: 72px;
-  max-width: 84px;
+  min-width: 86px;
+  max-width: 100px;
   text-align: center;
   background: var(--bg3);
   border-right: 2px solid #94a3b8;
@@ -1416,7 +1416,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v114</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v115</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4330,7 +4330,7 @@ function renderRankTable(kind) {
         <td>${imageCellHtml(code)}</td>
         <td>${nameCellHtml(code)}</td>
         <td class="rank-legend-col-row">
-          <div class="rank-row-top rank-legend-label">順位</div>
+          <div class="rank-row-top rank-legend-label">${isAd ? '広告順位' : 'SEO順位'}</div>
           <div class="rank-row-bottom-legend">${isAd ? '入札価格' : 'PRオプ'}</div>
         </td>
         ${cells.join('')}
