@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v109 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v110 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1368,7 +1368,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v109</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v110</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1481,6 +1481,8 @@ table.rank-table td.rank-legend-col-row {
       <div class="card">
         <h3 class="card-title">商品-月別データ</h3>
         <div class="filters">
+          <span class="filter-label">月</span>
+          <select id="monthlyMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索...">
         </div>
@@ -3086,6 +3088,23 @@ function getAvailableMonths() {
   return [...set].sort();
 }
 
+// 【v110】「数値データ（売上/広告/全体）がインポートされた月」のみを返す
+// rank.json由来の月は含めない。デフォルト選択月の決定に使う。
+function getImportedDataMonths() {
+  const set = new Set();
+  if (state.item) state.item.forEach(i => i.month && set.add(i.month));
+  if (state.ad) state.ad.forEach(a => a.month && set.add(a.month));
+  if (state.overall && state.overall.months) state.overall.months.forEach(m => set.add(m.month));
+  return [...set].sort();
+}
+// インポート済みの最新月を返す（無ければ全月一覧の最新月、それも無ければ空）
+function getLatestImportedMonth() {
+  const imported = getImportedDataMonths();
+  if (imported.length > 0) return imported[imported.length - 1];
+  const all = getAvailableMonths();
+  return all.length > 0 ? all[all.length - 1] : '';
+}
+
 // 商品コード x 月 で集計された完全形を返す
 function buildFullAggregate() {
   const agg = {};
@@ -3209,9 +3228,10 @@ function renderBasic() {
     sel.innerHTML = '<option value="">データなし</option>';
   } else {
     sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-    // デフォルトは最新月
+    // 【v110】デフォルトは「数値データがインポートされた最新月」
     if (!cur || !months.includes(cur)) {
-      sel.value = months[months.length - 1];
+      const latest = getLatestImportedMonth();
+      sel.value = latest && months.includes(latest) ? latest : months[months.length - 1];
     } else {
       sel.value = cur;
     }
@@ -3300,12 +3320,43 @@ function renderBasic() {
 }
 
 // ==================== Rendering: 商品-月別データ ====================
-let monthlySortKey = 'month', monthlySortDir = -1;
+// 【v110】月プルダウンで1ヶ月に絞り込み（基本データと同じ方式）
+let monthlySortKey = 'rev', monthlySortDir = -1;
 function renderMonthly() {
-  const agg = buildFullAggregate();
-  let list = agg.filter(r => r.month);  // 月あるもの
+  const months = getAvailableMonths();
+  const sel = $('#monthlyMonth');
+  const cur = sel ? sel.value : '';
+  if (sel) {
+    if (months.length === 0) {
+      sel.innerHTML = '<option value="">データなし</option>';
+    } else {
+      sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+      // デフォルトは「数値データがインポートされた最新月」
+      if (!cur || !months.includes(cur)) {
+        const latest = getLatestImportedMonth();
+        sel.value = latest && months.includes(latest) ? latest : months[months.length - 1];
+      } else {
+        sel.value = cur;
+      }
+    }
+  }
+  const targetMonth = sel ? sel.value : '';
 
-  // 引退済み商品（商品名なし）を除外
+  const agg = buildFullAggregate();
+  // 選択月のみ
+  let list = agg.filter(r => r.month === targetMonth);
+
+  // master の商品も「選択月の行」として補完（データなくても行として出す）
+  if (targetMonth) {
+    const knownCodes = new Set(list.map(r => r.code));
+    Object.keys(state.master).forEach(code => {
+      if (!knownCodes.has(code)) {
+        list.push({ code, month: targetMonth, rev: 0, adRev: 0, adCost: 0, seoRev: 0, roas: null });
+      }
+    });
+  }
+
+  // 引退済み商品を除外
   list = list.filter(r => !isRetired(r.code));
 
   const q = $('#monthlySearch').value.trim().toLowerCase();
@@ -4475,6 +4526,7 @@ $$('#tableBasic th[data-sort]').forEach(th => {
 
 // Monthlyビューの操作
 $('#monthlySearch').addEventListener('input', renderMonthly);
+if ($('#monthlyMonth')) $('#monthlyMonth').addEventListener('change', renderMonthly);
 $$('#tableMonthly th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
     const k = th.dataset.sort;
@@ -5427,6 +5479,24 @@ try {
   refreshSlotPatterns();  // 現在ショップに合わせてスロットのファイル名を表示
   updateActiveStateChip();
   updateFilterBanners();
+  // 【v110】起動時は必ず「数値インポート済みの最新月」に合わせる（localStorage残しを上書き）
+  try {
+    const latest = getLatestImportedMonth();
+    if (latest) {
+      const basicSel = document.getElementById('basicMonth');
+      const monthlySel = document.getElementById('monthlyMonth');
+      // 先にoption生成（renderの前にvalue設定するため）
+      const months = getAvailableMonths();
+      if (basicSel && months.length > 0) {
+        basicSel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+        basicSel.value = latest;
+      }
+      if (monthlySel && months.length > 0) {
+        monthlySel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+        monthlySel.value = latest;
+      }
+    }
+  } catch (e) { console.warn('初期月選択エラー:', e); }
   renderAll();
   updateRankLastUpdatedDisplay();  // 復元データの最終更新を表示
   // 【v105】URLパラメータ ?view=ad-rank or ?view=seo-rank 等があれば、そのビューに直接移動
