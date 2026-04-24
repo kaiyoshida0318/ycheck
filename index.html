@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v110 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v111 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1132,36 +1132,85 @@ table.rank-table td.rank-cell-2line.rank-good .rank-row-top  { background: rgba(
 table.rank-table td.rank-cell-2line.rank-bad .rank-row-top   { background: rgba(220,38,38,0.10);  color: var(--red); }
 
 /* 【v106】2段セル: 上段=順位、下段=入札価格/PRオプ料率 */
+/* 【v111】2段セル: 上段がはみ出さないよう高さ制御、下段は全面クリック可能に */
 table.rank-table td.rank-cell-2line {
-  padding: 2px 3px;
-  white-space: normal;  /* 親の pre-line をキャンセル（改行は rank-row-top 側で制御） */
+  padding: 0;
+  white-space: normal;
   line-height: normal;
   font-size: inherit;
+  vertical-align: top;
 }
 .rank-row-top {
-  padding: 2px 0;
-  border-bottom: 1px dashed rgba(0,0,0,0.15);
+  padding: 1px 2px;
+  border-bottom: 1px solid rgba(0,0,0,0.12);
   white-space: pre-line;
-  line-height: 1.15;
+  line-height: 1.0;         /* 【v111】行間ぎちぎちで2行収める */
+  font-size: 0.7rem;        /* 【v111】小さめで確実に収める */
+  min-height: 28px;         /* 上段の高さを確保（空でも見える） */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;         /* はみ出し防止 */
 }
 .rank-row-top.empty { color: var(--text3); }
 .rank-edit-value { font-variant-numeric: tabular-nums; }
-/* 【v109】色変更：
-   25(入札価格)/7(PRオプ) = 濃い青セル + 太字 + 濃い黒文字
-   それ以外                = 薄い青セル + 濃い黒文字 */
-.rank-row-bottom { padding: 3px 2px; cursor: pointer; font-size: 0.78rem; line-height: 1.2; transition: background 0.1s; white-space: nowrap; text-align: center; }
+
+/* 下段: セル内全面クリック可能、変化色対応 */
+.rank-row-bottom {
+  padding: 4px 2px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  transition: background 0.1s;
+  white-space: nowrap;
+  text-align: center;
+  min-height: 22px;           /* 【v111】クリック領域を確保 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+/* 既存: 25/7 は濃い青・太字。他は薄い青 */
 .rank-row-bottom.rank-edit-cell-good {
   background: #60a5fa;    /* 濃いめの青 */
-  color: #111827;         /* 濃い黒 */
-  font-weight: 700;       /* 太字 */
+  color: #111827;
+  font-weight: 700;
 }
 .rank-row-bottom.rank-edit-cell-off {
   background: #dbeafe;    /* 薄めの青 */
-  color: #111827;         /* 濃い黒 */
+  color: #111827;
 }
 .rank-row-bottom.rank-edit-cell-empty { background: transparent; }
-.rank-row-bottom:hover { outline: 1px solid var(--accent); }
-.rank-edit-value { display: inline-block; }
+
+/* 【v111】値が前日と変わった日だけ「変化ライン」：青の濃淡を交互に */
+/* 基本: 変化なしの継続日は上記 good/off の色をそのまま使う。
+   変化があった日（または変化後の継続ライン）に応じて色相を変えるため、
+   変化ラインのインデックス（偶/奇）で色相を切替える 2 種類のクラスを用意。
+   加えて、変化があった「その日」だけ太字化して強調する。 */
+.rank-row-bottom.rank-edit-line-a.rank-edit-cell-off  { background: #bfdbfe; color: #111827; } /* 薄い青系A */
+.rank-row-bottom.rank-edit-line-a.rank-edit-cell-good { background: #60a5fa; color: #111827; font-weight: 700; }  /* 濃い青系A */
+.rank-row-bottom.rank-edit-line-b.rank-edit-cell-off  { background: #a7f3d0; color: #111827; } /* 薄い緑青系B */
+.rank-row-bottom.rank-edit-line-b.rank-edit-cell-good { background: #34d399; color: #111827; font-weight: 700; }  /* 濃い緑青系B */
+.rank-row-bottom.rank-edit-line-c.rank-edit-cell-off  { background: #fde68a; color: #111827; } /* 薄い金系C */
+.rank-row-bottom.rank-edit-line-c.rank-edit-cell-good { background: #fbbf24; color: #111827; font-weight: 700; }  /* 濃い金系C */
+.rank-row-bottom.rank-edit-line-d.rank-edit-cell-off  { background: #ddd6fe; color: #111827; } /* 薄い紫系D */
+.rank-row-bottom.rank-edit-line-d.rank-edit-cell-good { background: #a78bfa; color: #111827; font-weight: 700; }  /* 濃い紫系D */
+
+/* 変化した「その日」のみ: 左端に濃い青ライン＋太字で強調 */
+.rank-row-bottom.rank-edit-changed {
+  border-left: 3px solid #1d4ed8;
+  font-weight: 700;
+  box-shadow: inset 2px 0 0 rgba(29,78,216,0.15);
+}
+
+.rank-row-bottom:hover {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.rank-edit-value { display: inline-block; pointer-events: none; }
 .rank-edit-good, .rank-edit-off { color: inherit; font-weight: inherit; }
 .rank-row-bottom input.rank-edit-input {
   width: 100%;
@@ -1368,7 +1417,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v110</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v111</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4061,6 +4110,55 @@ function formatBidCell(v) {
   const cls = (n === 25) ? 'rank-edit-good' : 'rank-edit-off';
   return `<span class="rank-edit-value ${cls}">¥${n}</span>`;
 }
+
+// 【v111】その商品のその月の日別値を見て、各日に「変化ライン色クラス」と
+// 「変化した当日フラグ」を返す。
+//   戻り値: { lines:[null|'rank-edit-line-a'|'-b'|...], changed:[bool,...] }
+//   - 値がある日を時系列で見て、前回の値と違う値が出たら新しいライン（色）に切り替える
+//   - 同じ値の継続日は同じライン色
+//   - 最大4色を循環（line-a, -b, -c, -d）
+function computeChangeSegments(ym, code, field, nDays) {
+  const result = { lines: new Array(nDays).fill(null), changed: new Array(nDays).fill(false) };
+  const arr = getRankEditArray(ym, code, field);
+  if (!arr) return result;
+  // その月の最初の値に関しては、前月末日の値を「前回値」として扱う（前月から同じなら色は継続したい）
+  let prevVal = null;
+  const pastMonths = Object.keys(state.rankEdits || {}).filter(m => m < ym).sort();
+  if (pastMonths.length > 0) {
+    const lastYm = pastMonths[pastMonths.length - 1];
+    const pastArr = getRankEditArray(lastYm, code, field);
+    if (pastArr) {
+      for (let i = pastArr.length - 1; i >= 0; i--) {
+        if (pastArr[i] != null && pastArr[i] !== '') { prevVal = Number(pastArr[i]); break; }
+      }
+    }
+  }
+  // 色ラインは「最初に値が出た時点」をラインA として開始
+  const palette = ['rank-edit-line-a', 'rank-edit-line-b', 'rank-edit-line-c', 'rank-edit-line-d'];
+  let lineIdx = 0;
+  let started = false;
+  for (let i = 0; i < nDays; i++) {
+    const raw = arr[i];
+    if (raw == null || raw === '' || isNaN(Number(raw))) continue;
+    const v = Number(raw);
+    if (!started) {
+      // 今月の初めての値
+      // prevVal（前月末値）と等しければそのままライン継続、違えば「変化日」扱い
+      if (prevVal != null && v !== prevVal) {
+        result.changed[i] = true;
+        lineIdx = (lineIdx + 1) % palette.length;
+      }
+      started = true;
+    } else if (v !== prevVal) {
+      // 変化あり
+      result.changed[i] = true;
+      lineIdx = (lineIdx + 1) % palette.length;
+    }
+    result.lines[i] = palette[lineIdx];
+    prevVal = v;
+  }
+  return result;
+}
 function formatProRateCell(v) {
   if (v == null || v === '' || isNaN(Number(v))) return '';
   const n = Math.floor(Number(v));
@@ -4140,6 +4238,9 @@ function renderRankTable(kind) {
     return;
   }
   tbody.innerHTML = codes.slice(0, 2000).map(code => {
+    const editField = isAd ? 'bid' : 'proRate';
+    // 【v111】この商品のこの月の「変化ライン情報」を1度だけ計算
+    const segments = computeChangeSegments(ym, code, editField, nDays);
     const cells = [];
     for (let i = 0; i < nDays; i++) {
       const v = getRankValue(ym, code, field, i);
@@ -4148,7 +4249,6 @@ function renderRankTable(kind) {
         ? `<div class="rank-row-top empty"></div>`
         : `<div class="rank-row-top">${escapeHtml(v)}</div>`;
       // 【v106】2段目: 広告順位→入札価格、SEO順位→PRオプ料率
-      const editField = isAd ? 'bid' : 'proRate';
       const editVal = getRankEditValue(ym, code, editField, i);
       const editFormatted = isAd ? formatBidCell(editVal) : formatProRateCell(editVal);
       // 【v109】下段セル全体に色を付ける（good=25/7、off=他、empty=null）
@@ -4158,7 +4258,11 @@ function renderRankTable(kind) {
         const goodVal = isAd ? 25 : 7;
         editCellClass = (numVal === goodVal) ? 'rank-edit-cell-good' : 'rank-edit-cell-off';
       }
-      const editCellHtml = `<div class="rank-row-bottom ${editCellClass}" data-edit-field="${editField}" data-code="${escapeHtml(code)}" data-ym="${ym}" data-dayindex="${i}" title="クリックして編集">${editFormatted}</div>`;
+      // 【v111】変化ライン色を重ねがけ（line-a / line-b / line-c / line-d）
+      const lineCls = segments.lines[i] || '';
+      const changedCls = segments.changed[i] ? 'rank-edit-changed' : '';
+      const bottomClass = [editCellClass, lineCls, changedCls].filter(Boolean).join(' ');
+      const editCellHtml = `<div class="rank-row-bottom ${bottomClass}" data-edit-field="${editField}" data-code="${escapeHtml(code)}" data-ym="${ym}" data-dayindex="${i}" title="クリックして編集">${editFormatted}</div>`;
       cells.push(`<td class="rank-day rank-cell-2line${statusCls ? ' ' + statusCls : ''}">${rankHtml}${editCellHtml}</td>`);
     }
     return `
