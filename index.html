@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v112 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v113 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1416,7 +1416,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v112</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v113</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4064,6 +4064,50 @@ function autoFillTodayRankEdits() {
     saveToStorage();
   }
 }
+
+// 【v113】基本データの入札価格/PRオプ料率を、広告順位/SEO順位の「今日」セルに注入する。
+// - 履歴(rankEdits)に何も値が無い商品にだけ値を入れる（既に入力済みの日は壊さない）
+// - この関数は「最初に基本データの値を順位表に反映させたい」時に使う 1度きりの種まき
+// 戻り値: 注入件数
+function seedRankEditsFromLatest() {
+  if (!state.master) return 0;
+  const { ym, dayIndex } = getTodayYmAndIndex();
+  const codes = Object.keys(state.master);
+  let injected = 0;
+  for (const code of codes) {
+    if (isRetired(code)) continue;
+    const codeLower = String(code).toLowerCase();
+    const meta = state.productMeta[code] || {};
+    // --- bid（広告順位の下段）---
+    if ((meta.adStatus || '') !== '広告無') {
+      const latestBid = state.bid && state.bid[codeLower];
+      if (latestBid != null && !isNaN(Number(latestBid))) {
+        // 今月の bid 配列がまだ全空なら、今日の日付に入れる
+        const arr = getRankEditArray(ym, code, 'bid');
+        const isAllEmpty = !arr || arr.every(v => v == null || v === '');
+        if (isAllEmpty) {
+          setRankEditValue(ym, code, 'bid', dayIndex, Number(latestBid));
+          injected++;
+        }
+      }
+    }
+    // --- proRate（SEO順位の下段）---
+    const latestProRate = state.proRate && state.proRate[codeLower];
+    if (latestProRate != null && !isNaN(Number(latestProRate))) {
+      const arr = getRankEditArray(ym, code, 'proRate');
+      const isAllEmpty = !arr || arr.every(v => v == null || v === '');
+      if (isAllEmpty) {
+        setRankEditValue(ym, code, 'proRate', dayIndex, Math.floor(Number(latestProRate)));
+        injected++;
+      }
+    }
+  }
+  if (injected > 0) {
+    console.log(`[seed] ${ym} ${dayIndex + 1}日 に ${injected} 件の初期値を注入`);
+    saveToStorage();
+  }
+  return injected;
+}
 // 指定月の指定日に値をセット（その日以降は継承で自動反映される）
 function setRankEditValue(ym, code, field, dayIndex, value) {
   const codeKey = String(code || '').toLowerCase();
@@ -5579,6 +5623,17 @@ try {
   const migrated = migrateRankNotationOnce();
   // 【v107】起動時の自動補完：各商品の「今日」が空なら、直前の非空日の値をコピー
   autoFillTodayRankEdits();
+  // 【v113】基本データの入札価格/PRオプ料率を、順位表の「今日」に初期値として注入（1度のみ）
+  try {
+    const seedFlagKey = `ycheck_seeded_from_latest_v1_${getCurrentShopId()}`;
+    if (!localStorage.getItem(seedFlagKey)) {
+      const injected = seedRankEditsFromLatest();
+      localStorage.setItem(seedFlagKey, new Date().toISOString());
+      if (injected > 0) {
+        console.log(`[seed-once] ${getCurrentShopId()}: 基本データの入札価格/PRオプを ${injected} 件、順位表に初期注入`);
+      }
+    }
+  } catch (e) { console.warn('seedRankEditsFromLatest エラー:', e); }
   refreshSlotPatterns();  // 現在ショップに合わせてスロットのファイル名を表示
   updateActiveStateChip();
   updateFilterBanners();
