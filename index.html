@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v113 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v114 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1416,7 +1416,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v113</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v114</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1626,7 +1626,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="status-col" data-sort="adStatus">広告状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th class="nosort">対応内容</th>
+              <th data-sort="adNote">対応内容</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -1659,7 +1659,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="status-col" data-sort="adStatus">広告状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
-              <th class="nosort">対応内容</th>
+              <th data-sort="proNote">対応内容</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -3656,11 +3656,19 @@ function renderAdAdjust() {
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
     if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
+    if (k === 'adNote')    { const m = state.productMeta[r.code] || {}; return (m.adNote || '').trim(); }  // 【v114】対応内容のソート
     return 0;
   };
   list.sort((a, b) => {
     const va = adSortGet(a, adAdjustSortKey), vb = adSortGet(b, adAdjustSortKey);
-    if (typeof va === 'string') return adAdjustSortDir * va.localeCompare(vb);
+    // 【v114】文字列ソート時: 空欄は常に末尾扱い（昇順・降順関係なく下に）
+    if (typeof va === 'string' || typeof vb === 'string') {
+      const sa = String(va || ''), sb = String(vb || '');
+      if (sa === '' && sb === '') return 0;
+      if (sa === '') return 1;
+      if (sb === '') return -1;
+      return adAdjustSortDir * sa.localeCompare(sb, 'ja');
+    }
     return adAdjustSortDir * (va - vb);
   });
   list.slice(0, 2000).forEach(r => {
@@ -3744,11 +3752,19 @@ function renderProAdjust() {
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
     if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
+    if (k === 'proNote')   { const m = state.productMeta[r.code] || {}; return (m.proNote || '').trim(); }  // 【v114】対応内容のソート
     return 0;
   };
   list.sort((a, b) => {
     const va = proSortGet(a, proAdjustSortKey), vb = proSortGet(b, proAdjustSortKey);
-    if (typeof va === 'string') return proAdjustSortDir * va.localeCompare(vb);
+    // 【v114】文字列ソート時: 空欄は常に末尾扱い
+    if (typeof va === 'string' || typeof vb === 'string') {
+      const sa = String(va || ''), sb = String(vb || '');
+      if (sa === '' && sb === '') return 0;
+      if (sa === '') return 1;
+      if (sb === '') return -1;
+      return proAdjustSortDir * sa.localeCompare(sb, 'ja');
+    }
     return proAdjustSortDir * (va - vb);
   });
   list.slice(0, 2000).forEach(r => {
