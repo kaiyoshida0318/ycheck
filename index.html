@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v128 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v129 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1307,6 +1307,36 @@ table.rank-table td.rank-cell-2line {
   overflow: hidden;
 }
 .rank-row-top.empty { color: var(--text3); }
+
+/* 【v129】上段セル（順位）がクリックで編集可能（API値が無い時のみ） */
+.rank-row-top.rank-top-clickable {
+  cursor: pointer;
+  transition: background 0.1s, outline 0.1s;
+}
+.rank-row-top.rank-top-clickable:hover {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: rgba(37,99,235,0.08);
+}
+/* 手動編集された値は少しだけ斜体 + 点線下線で区別（API値と見分けるため） */
+.rank-row-top.rank-top-manual {
+  font-style: italic;
+  text-decoration: underline dotted rgba(0,0,0,0.3);
+}
+
+/* 【v129】順位上段セル編集用プルダウン */
+.rank-row-top select.rank-top-select {
+  width: 100%;
+  max-width: 100%;
+  font-size: 0.7rem;
+  padding: 0;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: white;
+  text-align: center;
+  font-family: inherit;
+  cursor: pointer;
+}
 .rank-edit-value { font-variant-numeric: tabular-nums; }
 
 /* 下段: セル内全面クリック可能、変化色対応 */
@@ -1641,7 +1671,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v128</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v129</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2257,8 +2287,11 @@ const state = {
   productMeta: {},  // { code: { adStatus, proStatus, adNote, proNote } }
   // 順位データ（将来Yahoo API自動取得予定）: { 'YYYY/MM': { code: { adRank:[31個], seoRank:[31個] } } }
   rank: {},
-  // 【v106】順位表の入札価格・PRオプ料率の日別履歴: { 'YYYY/MM': { code: { bid:[31個], proRate:[31個] } } }
-  // 広告順位タブの2段目セルと、SEO順位タブの2段目セルで使用
+  // 【v106/v129】順位表の2段セル編集値の日別履歴
+  //   { 'YYYY/MM': { code: { bid:[31], proRate:[31], rankAd:[31], rankSeo:[31] } } }
+  //   - bid/proRate: 下段セル（入札価格/PRオプ料率）
+  //   - rankAd/rankSeo: 上段セル（広告順位/SEO順位）の手動編集値
+  //     API取得値 (state.rank) が無い日だけ、この手動値を表示する
   rankEdits: {},
   // rank.json の meta情報（最終更新時刻など）
   rankMeta: null,
@@ -4332,6 +4365,24 @@ function getRankValue(ym, code, field, dayIndex) {
   return (v == null || v === '') ? null : v;
 }
 
+// 【v129】上段セルの「実際に表示する値」を決める
+// ルール:
+//   1. state.rank（API取得値）があれば、それを表示（手動値より優先）
+//   2. API値が無ければ、rankEdits の手動値（rankAd / rankSeo）を表示
+//   3. それも無ければ null（空欄）
+function getEffectiveRankValue(ym, code, field, dayIndex) {
+  const apiVal = getRankValue(ym, code, field, dayIndex);
+  if (apiVal != null) return { value: apiVal, source: 'api' };
+  // フォールバック: 手動編集値
+  const manualField = (field === 'adRank') ? 'rankAd' : (field === 'seoRank') ? 'rankSeo' : null;
+  if (!manualField) return { value: null, source: 'none' };
+  const manualArr = getRankEditArray(ym, code, manualField);
+  if (!manualArr) return { value: null, source: 'none' };
+  const v = manualArr[dayIndex];
+  if (v == null || v === '') return { value: null, source: 'none' };
+  return { value: v, source: 'manual' };
+}
+
 // 【v106】入札価格・PRオプ料率の日別履歴ヘルパー ================================
 // 月のYYYY/MM文字列 ym、商品コード code、対象フィールド field ('bid'|'proRate')
 // ユーザーが明示的に入力した値が無い日は、直前（同月内）の値を継承する。
@@ -4715,11 +4766,20 @@ function renderRankTable(kind) {
     const segments = computeChangeSegments(ym, code, editField, nDays);
     const cells = [];
     for (let i = 0; i < nDays; i++) {
-      const v = getRankValue(ym, code, field, i);
+      // 【v129】API値 or 手動編集値を優先順位に従って取得
+      const eff = getEffectiveRankValue(ym, code, field, i);
+      const v = eff.value;
       const statusCls = v == null ? '' : rankStatusClass(v);
+      const manualCls = eff.source === 'manual' ? ' rank-top-manual' : '';
+      // 【v129】上段セルをクリック可能に。API値が入っている日は編集不可（clickable のクラス非付与）
+      const topClickable = (eff.source !== 'api');  // APIでなければ（手動 or 空）クリックで編集可
+      const topClickCls = topClickable ? ' rank-top-clickable' : '';
+      const topDataAttrs = topClickable
+        ? ` data-ym="${ym}" data-code="${escapeHtml(code)}" data-dayindex="${i}" data-field="${isAd ? 'rankAd' : 'rankSeo'}" data-is-ad="${isAd ? '1' : '0'}"`
+        : '';
       const rankHtml = v == null
-        ? `<div class="rank-row-top empty"></div>`
-        : `<div class="rank-row-top">${escapeHtml(v)}</div>`;
+        ? `<div class="rank-row-top empty${topClickCls}"${topDataAttrs}></div>`
+        : `<div class="rank-row-top${manualCls}${topClickCls}"${topDataAttrs}>${escapeHtml(v)}</div>`;
       // 【v106】2段目: 広告順位→入札価格、SEO順位→PRオプ料率
       const editVal = getRankEditValue(ym, code, editField, i);
       const editFormatted = isAd ? formatBidCell(editVal) : formatProRateCell(editVal);
@@ -5547,6 +5607,75 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
   startRankEditCell(cell);
+});
+
+// 【v129】上段セル（順位）のクリック編集 - プルダウン方式
+// 広告順位: [空] / 上段◎ / 下段×
+// SEO順位: [空] / 上段 PR○ / 下段 PR×
+function startRankTopEditCell(cell) {
+  if (cell.querySelector('select')) return;
+  const code = cell.dataset.code;
+  const ym = cell.dataset.ym;
+  const dayIndex = parseInt(cell.dataset.dayindex, 10);
+  const field = cell.dataset.field;  // 'rankAd' or 'rankSeo'
+  const isAd = cell.dataset.isAd === '1';
+  if (!code || !ym || isNaN(dayIndex) || !field) return;
+  const currentVal = (getRankEditArray(ym, code, field) || [])[dayIndex] || '';
+  const originalHtml = cell.innerHTML;
+  const originalClass = cell.className;
+  // プルダウン作成
+  const select = document.createElement('select');
+  select.className = 'rank-top-select';
+  // 選択肢
+  const options = isAd
+    ? [{ v: '', label: '—' }, { v: '上段\n◎', label: '上段◎' }, { v: '下段\n×', label: '下段×' }]
+    : [{ v: '', label: '—' }, { v: '上段\nPR○', label: '上段 PR○' }, { v: '下段\nPR×', label: '下段 PR×' }];
+  options.forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt.v;
+    o.textContent = opt.label;
+    if (opt.v === currentVal) o.selected = true;
+    select.appendChild(o);
+  });
+  cell.innerHTML = '';
+  cell.appendChild(select);
+  select.focus();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    const newVal = select.value || null;
+    setRankEditValue(ym, code, field, dayIndex, newVal);
+    saveToStorage();
+    log(`✓ ${isAd ? '広告順位' : 'SEO順位'}を更新: ${code} (${ym} ${dayIndex + 1}日) → ${newVal ? newVal.replace('\n', '') : '削除'}`, 'ok');
+    // 全体を再描画（状態色などが変わるため）
+    renderAll();
+  };
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    cell.innerHTML = originalHtml;
+    cell.className = originalClass;
+  };
+  select.addEventListener('change', commit);
+  select.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  select.addEventListener('blur', () => {
+    // change が先に来ていれば committed 済み。未 commit なら cancel
+    setTimeout(() => { if (!committed) cancel(); }, 50);
+  });
+}
+
+document.addEventListener('click', (e) => {
+  const cell = e.target.closest('.rank-row-top.rank-top-clickable');
+  if (!cell) return;
+  // 凡例行（rank-legend-label）は除外
+  if (cell.classList.contains('rank-legend-label')) return;
+  if (cell.querySelector('select')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  startRankTopEditCell(cell);
 });
 
 // ==================== 商品情報編集モーダル ====================
