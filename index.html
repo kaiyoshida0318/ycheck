@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v108 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v109 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1120,9 +1120,16 @@ table.rank-table td.rank-day:nth-child(7n+4) {
 }
 table.rank-table td.rank-day.empty { color: var(--text3); }
 /* 順位セルの状態別背景色（薄い色で状態を直感的に） */
-table.rank-table td.rank-day.rank-best  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }  /* 上段◎: 最良 */
-table.rank-table td.rank-day.rank-good  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }  /* 【v107】上段PR○: 上段◎と同じ緑に統一 */
-table.rank-table td.rank-day.rank-bad   { background: rgba(220,38,38,0.10);  color: var(--red); }                       /* 下段×/下段PR×: 不良 */
+/* 順位セルの状態別背景色（薄い色で状態を直感的に） */
+/* 【v109】2段セルの場合は上段 div にのみ色を付け、下段（入札価格/PRオプ）には波及させない */
+table.rank-table td.rank-day:not(.rank-cell-2line).rank-best  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
+table.rank-table td.rank-day:not(.rank-cell-2line).rank-good  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
+table.rank-table td.rank-day:not(.rank-cell-2line).rank-bad   { background: rgba(220,38,38,0.10);  color: var(--red); }
+
+/* 2段セル用: 上段 div にだけ色を付ける */
+table.rank-table td.rank-cell-2line.rank-best .rank-row-top  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
+table.rank-table td.rank-cell-2line.rank-good .rank-row-top  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
+table.rank-table td.rank-cell-2line.rank-bad .rank-row-top   { background: rgba(220,38,38,0.10);  color: var(--red); }
 
 /* 【v106】2段セル: 上段=順位、下段=入札価格/PRオプ料率 */
 table.rank-table td.rank-cell-2line {
@@ -1138,20 +1145,24 @@ table.rank-table td.rank-cell-2line {
   line-height: 1.15;
 }
 .rank-row-top.empty { color: var(--text3); }
-.rank-row-bottom {
-  padding: 3px 2px;
-  cursor: pointer;
-  color: var(--text2);
-  font-size: 0.78rem;
-  line-height: 1.2;
-  transition: background 0.1s;
-  white-space: nowrap;
-}
-.rank-row-bottom:hover { background: rgba(37,99,235,0.12); outline: 1px solid var(--accent); }
 .rank-edit-value { font-variant-numeric: tabular-nums; }
-/* 【v107】25/7 は紫系で「良い状態」、他は濃いグレーで中立 */
-.rank-edit-good { color: #7c3aed; font-weight: 600; }
-.rank-edit-off  { color: #6b7280; }
+/* 【v109】色変更：
+   25(入札価格)/7(PRオプ) = 濃い青セル + 太字 + 濃い黒文字
+   それ以外                = 薄い青セル + 濃い黒文字 */
+.rank-row-bottom { padding: 3px 2px; cursor: pointer; font-size: 0.78rem; line-height: 1.2; transition: background 0.1s; white-space: nowrap; text-align: center; }
+.rank-row-bottom.rank-edit-cell-good {
+  background: #60a5fa;    /* 濃いめの青 */
+  color: #111827;         /* 濃い黒 */
+  font-weight: 700;       /* 太字 */
+}
+.rank-row-bottom.rank-edit-cell-off {
+  background: #dbeafe;    /* 薄めの青 */
+  color: #111827;         /* 濃い黒 */
+}
+.rank-row-bottom.rank-edit-cell-empty { background: transparent; }
+.rank-row-bottom:hover { outline: 1px solid var(--accent); }
+.rank-edit-value { display: inline-block; }
+.rank-edit-good, .rank-edit-off { color: inherit; font-weight: inherit; }
 .rank-row-bottom input.rank-edit-input {
   width: 100%;
   max-width: 56px;
@@ -1161,6 +1172,14 @@ table.rank-table td.rank-cell-2line {
   font-size: 0.78rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  /* 【v109】数値入力の上下矢印を非表示 */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.rank-row-bottom input.rank-edit-input::-webkit-outer-spin-button,
+.rank-row-bottom input.rank-edit-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* 【v107】商品行の境目を強化して見やすく */
@@ -1349,7 +1368,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v108</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v109</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3984,16 +4003,16 @@ function syncProRateToRankEdits(code, value) {
   setRankEditValue(ym, code, 'proRate', dayIndex, value);
 }
 // 入札価格/PRオプ料率の表示整形
-// 【v107】25/7は紫(良)、他は濃いグレー(中立)。太字は廃止。
+// 【v109】空は空白、25/7 は濃い青セル+太字、他は薄い青セル、文字は濃い黒
 function formatBidCell(v) {
-  if (v == null || v === '' || isNaN(Number(v))) return '—';
+  if (v == null || v === '' || isNaN(Number(v))) return '';
   const n = Number(v);
   const cls = (n === 25) ? 'rank-edit-good' : 'rank-edit-off';
   return `<span class="rank-edit-value ${cls}">¥${n}</span>`;
 }
 function formatProRateCell(v) {
-  if (v == null || v === '' || isNaN(Number(v))) return '—';
-  const n = Math.floor(Number(v));  // 【v107】整数表示
+  if (v == null || v === '' || isNaN(Number(v))) return '';
+  const n = Math.floor(Number(v));
   const cls = (n === 7) ? 'rank-edit-good' : 'rank-edit-off';
   return `<span class="rank-edit-value ${cls}">${n}%</span>`;
 }
@@ -4075,13 +4094,20 @@ function renderRankTable(kind) {
       const v = getRankValue(ym, code, field, i);
       const statusCls = v == null ? '' : rankStatusClass(v);
       const rankHtml = v == null
-        ? `<div class="rank-row-top empty">—</div>`
+        ? `<div class="rank-row-top empty"></div>`
         : `<div class="rank-row-top">${escapeHtml(v)}</div>`;
       // 【v106】2段目: 広告順位→入札価格、SEO順位→PRオプ料率
       const editField = isAd ? 'bid' : 'proRate';
       const editVal = getRankEditValue(ym, code, editField, i);
       const editFormatted = isAd ? formatBidCell(editVal) : formatProRateCell(editVal);
-      const editCellHtml = `<div class="rank-row-bottom" data-edit-field="${editField}" data-code="${escapeHtml(code)}" data-ym="${ym}" data-dayindex="${i}" title="クリックして編集">${editFormatted}</div>`;
+      // 【v109】下段セル全体に色を付ける（good=25/7、off=他、empty=null）
+      let editCellClass = 'rank-edit-cell-empty';
+      if (editVal != null && !isNaN(Number(editVal))) {
+        const numVal = (editField === 'proRate') ? Math.floor(Number(editVal)) : Number(editVal);
+        const goodVal = isAd ? 25 : 7;
+        editCellClass = (numVal === goodVal) ? 'rank-edit-cell-good' : 'rank-edit-cell-off';
+      }
+      const editCellHtml = `<div class="rank-row-bottom ${editCellClass}" data-edit-field="${editField}" data-code="${escapeHtml(code)}" data-ym="${ym}" data-dayindex="${i}" title="クリックして編集">${editFormatted}</div>`;
       cells.push(`<td class="rank-day rank-cell-2line${statusCls ? ' ' + statusCls : ''}">${rankHtml}${editCellHtml}</td>`);
     }
     return `
@@ -4827,8 +4853,10 @@ function startRankEditCell(cell) {
   input.min = '0';
   input.step = '1';  // 【v107】PRオプも整数のみに統一
   if (!isBid) input.max = '100';
-  input.value = (currentVal == null || isNaN(Number(currentVal))) ? '' : String(Math.floor(Number(currentVal)));
-  input.placeholder = isBid ? '¥' : '%';
+  // 【v109】currentVal が 0 または空なら input.value も空文字（placeholder表示）
+  const numericCurrent = Number(currentVal);
+  input.value = (currentVal == null || isNaN(numericCurrent) || numericCurrent === 0) ? '' : String(Math.floor(numericCurrent));
+  input.placeholder = '';  // 【v109】placeholder も不要
   cell.appendChild(input);
   input.focus();
   input.select();
