@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v132 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v133 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1126,13 +1126,49 @@ td:has(> .name-cell-wrap) {
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
 }
-/* 【v127】前後ボタンおよびインデックス表示 */
+/* 【v133】商品編集モーダル：本体と右脇ナビバーをflexで横並び */
+.pe-body-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+.pe-body-wrap .pe-grid {
+  flex: 1;
+  min-width: 0;
+}
+/* 【v133】右脇の縦ナビバー：↑前 / カウンタ / ↓次 を縦に配置 */
+.pe-nav-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-left: 1px solid var(--border);
+  min-width: 78px;
+}
+/* 【v133】前後ボタン：縦に伸びるボタン、矢印のみ大きく見せる */
 .pe-nav-btn {
-  min-width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 10px 6px;
+  line-height: 1.2;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.pe-nav-btn .pe-nav-arrow {
+  font-size: 1.4rem;
+  line-height: 1;
+  font-weight: 700;
 }
 .pe-nav-btn:disabled {
   opacity: 0.4;
@@ -1144,6 +1180,7 @@ td:has(> .name-cell-wrap) {
   font-variant-numeric: tabular-nums;
   min-width: 56px;
   text-align: center;
+  padding: 4px 0;
 }
 .kw-edit-input {
   width: 100%;
@@ -1716,7 +1753,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v132</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v133</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2112,48 +2149,56 @@ table.rank-table td.rank-legend-col-row {
       <h2 class="modal-title">✎ 商品情報を編集</h2>
       <button class="modal-close" id="peClose" type="button">×</button>
     </div>
-    <div class="pe-grid">
-      <div class="pe-row">
-        <label class="pe-label">商品コード</label>
-        <div class="pe-code-display" id="peCode">—</div>
-      </div>
-      <div class="pe-row">
-        <label class="pe-label" for="peName">商品名</label>
-        <input type="text" id="peName" class="pe-input" placeholder="商品名を入力...">
-      </div>
-      <div class="pe-row">
-        <label class="pe-label" for="peKw">メインKW</label>
-        <input type="text" id="peKw" class="pe-input" placeholder="メインキーワードを入力...">
-      </div>
-      <div class="pe-row">
-        <label class="pe-label" for="peSearchUrl">検索URL</label>
-        <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
-      </div>
-      <div class="pe-row">
-        <label class="pe-label" for="peRepCode">代表商品コード</label>
-        <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
-      </div>
-      <div class="pe-row">
-        <label class="pe-label">商品画像</label>
-        <div class="pe-image-wrap">
-          <img id="peImage" class="pe-image" alt="商品画像">
-          <div id="peImagePh" class="pe-image-placeholder" style="display:none">📦 画像なし</div>
+    <!-- 【v133】本体(左)と右脇の前後ナビバーを横並びに配置 -->
+    <div class="pe-body-wrap">
+      <div class="pe-grid">
+        <div class="pe-row">
+          <label class="pe-label">商品コード</label>
+          <div class="pe-code-display" id="peCode">—</div>
         </div>
-        <div class="pe-image-actions">
-          <button class="btn sm" id="peImageUpload" type="button">📤 新しい画像を選択</button>
-          <button class="btn sm ghost" id="peImageDelete" type="button">🗑 画像を削除</button>
-          <button class="btn sm ghost" id="peImageReset" type="button" title="Yahoo!の標準画像に戻す">↻ デフォルトに戻す</button>
-          <input type="file" id="peImageFile" accept="image/*" style="display:none">
+        <div class="pe-row">
+          <label class="pe-label" for="peName">商品名</label>
+          <input type="text" id="peName" class="pe-input" placeholder="商品名を入力...">
         </div>
-        <div class="pe-image-note" id="peImageNote"></div>
+        <div class="pe-row">
+          <label class="pe-label" for="peKw">メインKW</label>
+          <input type="text" id="peKw" class="pe-input" placeholder="メインキーワードを入力...">
+        </div>
+        <div class="pe-row">
+          <label class="pe-label" for="peSearchUrl">検索URL</label>
+          <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
+        </div>
+        <div class="pe-row">
+          <label class="pe-label" for="peRepCode">代表商品コード</label>
+          <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
+        </div>
+        <div class="pe-row">
+          <label class="pe-label">商品画像</label>
+          <div class="pe-image-wrap">
+            <img id="peImage" class="pe-image" alt="商品画像">
+            <div id="peImagePh" class="pe-image-placeholder" style="display:none">📦 画像なし</div>
+          </div>
+          <div class="pe-image-actions">
+            <button class="btn sm" id="peImageUpload" type="button">📤 新しい画像を選択</button>
+            <button class="btn sm ghost" id="peImageDelete" type="button">🗑 画像を削除</button>
+            <button class="btn sm ghost" id="peImageReset" type="button" title="Yahoo!の標準画像に戻す">↻ デフォルトに戻す</button>
+            <input type="file" id="peImageFile" accept="image/*" style="display:none">
+          </div>
+          <div class="pe-image-note" id="peImageNote"></div>
+        </div>
+      </div>
+      <!-- 【v133】右脇の縦ナビバー：表の上下と方向を一致させる -->
+      <div class="pe-nav-side">
+        <button class="btn sm ghost pe-nav-btn" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">
+          <span class="pe-nav-arrow">↑</span><span>前の商品</span>
+        </button>
+        <span class="pe-pos-counter" id="pePosCounter"></span>
+        <button class="btn sm ghost pe-nav-btn" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">
+          <span class="pe-nav-arrow">↓</span><span>次の商品</span>
+        </button>
       </div>
     </div>
     <div class="pe-actions">
-      <!-- 【v127】前後の商品への移動ボタン -->
-      <button class="btn sm ghost pe-nav-btn" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">← 前の商品</button>
-      <span class="pe-pos-counter" id="pePosCounter"></span>
-      <button class="btn sm ghost pe-nav-btn" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">次の商品 →</button>
-      <span class="pe-actions-spacer" style="flex:1;"></span>
       <button class="btn ghost" id="peCancel" type="button">キャンセル</button>
       <button class="btn primary" id="peSave" type="button">保存</button>
     </div>
