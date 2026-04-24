@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v121 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v122 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1498,7 +1498,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v121</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v122</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5878,6 +5878,18 @@ try {
     console.log(`[${curShop.id}] GitHub連携が有効です - データを取得中...`);
     ghLoadFromGitHub().then(result => {
       if (result && result.success) {
+        // 【v122】GitHub取得後に seed-0423 を再度実行（GitHubデータで上書きされても値を注入）
+        try {
+          const seed0423KeyV3 = `ycheck_seed_0423_v3_${getCurrentShopId()}`;
+          if (!localStorage.getItem(seed0423KeyV3)) {
+            console.log(`[seed-0423-after-gh] ${getCurrentShopId()}: GitHub取得後の注入 - state.bid 件数=${Object.keys(state.bid || {}).length}, state.proRate 件数=${Object.keys(state.proRate || {}).length}`);
+            const ow = overwriteSpecificDayRankEdits('2026/04', 22);
+            localStorage.setItem(seed0423KeyV3, new Date().toISOString());
+            console.log(`[seed-0423-after-gh] ${getCurrentShopId()}: 4/23 に ${ow} 件を注入（GitHub取得後）`);
+            // autoFillも再実行（今日が空なら前日を継承）
+            autoFillTodayRankEdits();
+          }
+        } catch (e) { console.warn('seed-0423-after-gh エラー:', e); }
         renderAll();
         updateRankLastUpdatedDisplay();
         console.log(`[${curShop.id}] GitHub から最新データを取得・反映しました`);
