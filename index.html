@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v130 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v131 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1716,7 +1716,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v130</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v131</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4410,22 +4410,26 @@ function getRankValue(ym, code, field, dayIndex) {
   return (v == null || v === '') ? null : v;
 }
 
-// 【v129】上段セルの「実際に表示する値」を決める
-// ルール:
-//   1. state.rank（API取得値）があれば、それを表示（手動値より優先）
-//   2. API値が無ければ、rankEdits の手動値（rankAd / rankSeo）を表示
+// 【v129/v131】上段セルの「実際に表示する値」を決める
+// ルール（v131で変更）:
+//   1. rankEdits の手動編集値があればそれを優先（手動>API、ユーザー編集を尊重）
+//   2. 手動値が無ければ、state.rank（API取得値）を表示
 //   3. それも無ければ null（空欄）
+//   ※ v129 では API優先だったが、v131 で「全セル編集可能＋手動優先」に変更
 function getEffectiveRankValue(ym, code, field, dayIndex) {
+  // 手動編集値を先に確認
+  const manualField = (field === 'adRank') ? 'rankAd' : (field === 'seoRank') ? 'rankSeo' : null;
+  if (manualField) {
+    const manualArr = getRankEditArray(ym, code, manualField);
+    if (manualArr) {
+      const mv = manualArr[dayIndex];
+      if (mv != null && mv !== '') return { value: mv, source: 'manual' };
+    }
+  }
+  // 手動値が無ければAPI値
   const apiVal = getRankValue(ym, code, field, dayIndex);
   if (apiVal != null) return { value: apiVal, source: 'api' };
-  // フォールバック: 手動編集値
-  const manualField = (field === 'adRank') ? 'rankAd' : (field === 'seoRank') ? 'rankSeo' : null;
-  if (!manualField) return { value: null, source: 'none' };
-  const manualArr = getRankEditArray(ym, code, manualField);
-  if (!manualArr) return { value: null, source: 'none' };
-  const v = manualArr[dayIndex];
-  if (v == null || v === '') return { value: null, source: 'none' };
-  return { value: v, source: 'manual' };
+  return { value: null, source: 'none' };
 }
 
 // 【v106】入札価格・PRオプ料率の日別履歴ヘルパー ================================
@@ -4816,12 +4820,10 @@ function renderRankTable(kind) {
       const v = eff.value;
       const statusCls = v == null ? '' : rankStatusClass(v);
       const manualCls = eff.source === 'manual' ? ' rank-top-manual' : '';
-      // 【v129】上段セルをクリック可能に。API値が入っている日は編集不可（clickable のクラス非付与）
-      const topClickable = (eff.source !== 'api');  // APIでなければ（手動 or 空）クリックで編集可
-      const topClickCls = topClickable ? ' rank-top-clickable' : '';
-      const topDataAttrs = topClickable
-        ? ` data-ym="${ym}" data-code="${escapeHtml(code)}" data-dayindex="${i}" data-field="${isAd ? 'rankAd' : 'rankSeo'}" data-is-ad="${isAd ? '1' : '0'}"`
-        : '';
+      // 【v131】全ての上段セルをクリック可能に（API値の有無は関係ない）
+      // 手動値を上書き保存できる。ただし API値がある場合は表示は API値優先のまま。
+      const topClickCls = ' rank-top-clickable';
+      const topDataAttrs = ` data-ym="${ym}" data-code="${escapeHtml(code)}" data-dayindex="${i}" data-field="${isAd ? 'rankAd' : 'rankSeo'}" data-is-ad="${isAd ? '1' : '0'}"`;
       const rankHtml = v == null
         ? `<div class="rank-row-top empty${topClickCls}"${topDataAttrs}></div>`
         : `<div class="rank-row-top${manualCls}${topClickCls}"${topDataAttrs}>${escapeHtml(v)}</div>`;
