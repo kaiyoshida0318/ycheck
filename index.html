@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v149 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v150 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -871,7 +871,8 @@ th[data-sort].sort-active::after { opacity: 1; color: var(--blue); }
 th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blue); }  /* ▲ */
 th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-tbody tr:hover { background: var(--bg3); }
+/* 【v150】行ホバー時の背景色変化を全廃止。青枠だけ残して、枠内の色は変えない方針。
+   元: tbody tr:hover { background: var(--bg3); } */
 
 /* 【v147】行ホバー時、行全体に細い青枠(1.5px)を出して「いまカーソルが当たっている行」を明確化。
    border-collapse: collapse の運用なので、tr に直接 border は効きにくい → 各td に inset box-shadow で
@@ -1044,9 +1045,10 @@ td.status-col + td.status-col {
 th.col-sales, td.col-sales {
   background: rgba(22,163,74,0.06);
 }
-tbody tr:hover td.col-sales {
+/* 【v150】ホバー時の濃色化を廃止（v150で行ホバーは青枠のみの方針） */
+/* tbody tr:hover td.col-sales {
   background: rgba(22,163,74,0.12);
-}
+} */
 th.col-sales {
   background: #dff0e3;  /* 不透明：sticky時に下の行が透けないように */
 }
@@ -1055,9 +1057,10 @@ th.col-sales {
 th.col-ad, td.col-ad {
   background: rgba(217,119,6,0.06);
 }
-tbody tr:hover td.col-ad {
+/* 【v150】ホバー時の濃色化を廃止 */
+/* tbody tr:hover td.col-ad {
   background: rgba(217,119,6,0.12);
-}
+} */
 th.col-ad {
   background: #fae6ce;  /* 不透明 */
 }
@@ -1066,9 +1069,10 @@ th.col-ad {
 th.col-bid, td.col-bid {
   background: rgba(37,99,235,0.06);
 }
-tbody tr:hover td.col-bid {
+/* 【v150】ホバー時の濃色化を廃止 */
+/* tbody tr:hover td.col-bid {
   background: rgba(37,99,235,0.14);
-}
+} */
 th.col-bid {
   background: #d6e1fa;  /* 不透明 */
 }
@@ -1649,15 +1653,12 @@ table.rank-table td.rank-cell-2line {
   margin: 0;
 }
 
-/* 【v135】順位表のホバー色: 表ヘッダのグレーと紛らわしいので薄い青系に変更
-   (tr:hoverの背景色は全テーブル共通でgrey系=var(--bg3)になっているため、順位表だけ上書き) */
-table.rank-table tbody tr:hover {
-  background: rgba(37, 99, 235, 0.08);  /* 薄い青系 */
-}
-/* 凡例列(rank-legend-col-row)はグレー固定背景なので、ホバー時もそれを優先 */
-table.rank-table tbody tr:hover td.rank-legend-col-row {
-  background: var(--bg3);
-}
+/* 【v150】行ホバー時の背景色変化を全廃止（青枠だけ残す方針）。
+   v135で順位表だけ薄い青系にしていたが、これも取りやめ。
+   元:
+   table.rank-table tbody tr:hover { background: rgba(37, 99, 235, 0.08); }
+   table.rank-table tbody tr:hover td.rank-legend-col-row { background: var(--bg3); }
+*/
 
 /* 【v107】商品行の境目を強化して見やすく */
 table.rank-table tbody tr {
@@ -1919,7 +1920,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v149</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v150</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
