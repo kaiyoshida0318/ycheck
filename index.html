@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v137 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v139 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -630,6 +630,7 @@ body {
 
 /* 【v126】検索欄右のバッジ（送り込みがある商品のみ表示するトグル） */
 /* 【v135】順位再取得ボタン(青)と紛らわしいため、グリーン系に変更 */
+/* 【v139】通常時から薄緑にして、商品コード横の.rep-badgeと見た目を統一 */
 .search-rep-badge {
   display: inline-flex;
   align-items: center;
@@ -637,9 +638,9 @@ body {
   width: 32px;
   height: 32px;
   padding: 0;
-  border: 1px solid var(--border2);
+  border: 1px solid var(--green);          /* 【v139】通常時から緑枠 */
   border-radius: 6px;
-  background: var(--bg2);
+  background: rgba(22,163,74,0.10);        /* 【v139】通常時から薄緑背景 */
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
@@ -648,7 +649,7 @@ body {
   margin-left: 6px;
 }
 .search-rep-badge:hover {
-  background: rgba(22,163,74,0.10);
+  background: rgba(22,163,74,0.22);        /* 【v139】hoverは少し濃い緑 */
   border-color: var(--green);
   transform: scale(1.05);
 }
@@ -671,9 +672,9 @@ body {
   height: 22px;
   margin-left: 4px;
   padding: 0;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--green);          /* 【v138】送り込み系で統一して緑系に */
   border-radius: 4px;
-  background: rgba(37,99,235,0.08);
+  background: rgba(22,163,74,0.10);        /* 【v138】薄い緑 */
   cursor: pointer;
   font-size: 0.85rem;
   line-height: 1;
@@ -681,12 +682,13 @@ body {
   transition: background 0.1s, transform 0.1s;
 }
 .rep-badge:hover {
-  background: rgba(37,99,235,0.2);
+  background: rgba(22,163,74,0.22);        /* 【v138】hoverは少し濃い緑 */
   transform: scale(1.08);
 }
 .rep-badge.active {
-  background: var(--accent);
+  background: var(--green);                /* 【v138】activeで緑塗り */
   color: white;
+  border-color: var(--green);
 }
 
 /* ヘッダーの🔗 グループ所属のみ ボタンの active 状態 */
@@ -1811,7 +1813,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v137</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v139</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
