@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v153 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v154 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1929,6 +1929,37 @@ table.rank-table td.rank-legend-col-row {
 .log-line { padding: 2px 0; }
 .log-line.err { color: var(--red); }
 .log-line.ok { color: var(--green); }
+
+/* 【v154】トースト通知（保存完了などのフィードバック用）。
+   右下に固定表示でスライドイン→2秒後にフェードアウト→DOMから除去。
+   z-index はモーダル(z-index: 100)より上で重なるよう 1000 に設定。 */
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  background: rgba(30, 41, 59, 0.94);
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast.success {
+  background: var(--green);
+}
+.toast.error {
+  background: var(--red);
+}
 </style>
 </head>
 <body>
@@ -1945,7 +1976,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v153</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v154</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6164,6 +6195,31 @@ function closeProductEditModal() {
   peImageState = { customImage: null, imageDeleted: false };
 }
 
+// 【v154】トースト通知。右下にスライドイン→2秒後フェードアウト→DOMから除去。
+// type: 'success'（緑）/ 'error'（赤）/ 省略時は黒系。
+let _toastTimer = null;
+function showToast(msg, type) {
+  // 既存トーストがあれば即座に除去（重複表示防止）
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  // 1フレーム後に show を付けてフェードイン
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => el.classList.add('show'));
+  });
+  // 2秒後にフェードアウト→0.25秒後にDOM除去
+  _toastTimer = setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 250);
+    _toastTimer = null;
+  }, 2000);
+}
+
 function saveProductEdit(opts) {
   opts = opts || {};
   const code = productEditModal.dataset.code;
@@ -6205,8 +6261,10 @@ function saveProductEdit(opts) {
     openProductEditModal(opts.nextCode);
     return;
   }
-  closeProductEditModal();
+  // 【v154】通常の保存ボタン押下時はモーダルを閉じない（×かキャンセルでだけ閉じる方針）。
+  // 代わりに「保存しました」トーストでフィードバック。renderAll は裏のテーブル更新のため必要。
   renderAll();
+  showToast('保存しました', 'success');
 }
 
 // 画像ファイル選択→Base64変換→プレビュー
