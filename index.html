@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v145 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v146 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -654,16 +654,23 @@ body {
   transform: scale(1.05);
 }
 .search-rep-badge.active {
-  background: #15803d;                     /* 【v141】activeはさらに濃い緑＋少し沈む見た目 */
+  background: #15803d;
   color: white;
   border-color: #15803d;
   transform: none;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35);  /* 内側に白枠を描いて押下感を演出 */
+  /* 【v146】外側に2層リングを描いて「選択中」が遠目でも分かるように
+     1層目: 白の細いギャップ / 2層目: 濃い緑の太いリング */
+  box-shadow:
+    0 0 0 2px var(--bg1),                  /* 内側ギャップ（背景色で抜けに見せる） */
+    0 0 0 4px #15803d;                     /* 外側の濃い緑リング */
 }
 .search-rep-badge.active:hover {
   background: #166534;
   border-color: #166534;
   transform: none;
+  box-shadow:
+    0 0 0 2px var(--bg1),
+    0 0 0 4px #166534;
 }
 .rep-badge {
   display: inline-flex;
@@ -692,7 +699,10 @@ body {
   background: #15803d;
   color: white;
   border-color: #15803d;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4);  /* 押下感を演出 */
+  /* 【v146】外側に2層リングで「選択中」を強調（小さいバッジなので 1.5px ＋ 3px） */
+  box-shadow:
+    0 0 0 1.5px var(--bg1),
+    0 0 0 3px #15803d;
 }
 
 /* 【v143】送り込み系ボタンの中の白シャッフルアイコン（SVG） */
@@ -1879,7 +1889,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v145</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v146</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
