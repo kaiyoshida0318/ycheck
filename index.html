@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v134 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v135 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -629,6 +629,7 @@ body {
 }
 
 /* 【v126】検索欄右のバッジ（送り込みがある商品のみ表示するトグル） */
+/* 【v135】順位再取得ボタン(青)と紛らわしいため、グリーン系に変更 */
 .search-rep-badge {
   display: inline-flex;
   align-items: center;
@@ -647,14 +648,14 @@ body {
   margin-left: 6px;
 }
 .search-rep-badge:hover {
-  background: rgba(37,99,235,0.08);
-  border-color: var(--accent);
+  background: rgba(22,163,74,0.10);
+  border-color: var(--green);
   transform: scale(1.05);
 }
 .search-rep-badge.active {
-  background: var(--accent);
+  background: var(--green);
   color: white;
-  border-color: var(--accent);
+  border-color: var(--green);
 }
 .rep-badge {
   display: inline-flex;
@@ -1543,6 +1544,16 @@ table.rank-table td.rank-cell-2line {
   margin: 0;
 }
 
+/* 【v135】順位表のホバー色: 表ヘッダのグレーと紛らわしいので薄い青系に変更
+   (tr:hoverの背景色は全テーブル共通でgrey系=var(--bg3)になっているため、順位表だけ上書き) */
+table.rank-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.08);  /* 薄い青系 */
+}
+/* 凡例列(rank-legend-col-row)はグレー固定背景なので、ホバー時もそれを優先 */
+table.rank-table tbody tr:hover td.rank-legend-col-row {
+  background: var(--bg3);
+}
+
 /* 【v107】商品行の境目を強化して見やすく */
 table.rank-table tbody tr {
   border-bottom: 2px solid #94a3b8;  /* 濃いめのグレー */
@@ -1803,7 +1814,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v134</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v135</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
