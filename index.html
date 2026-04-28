@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v147 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v149 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -634,8 +634,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;                              /* 【v149】32→30 (95%サイズ) */
+  height: 30px;                             /* 【v149】32→30 (95%サイズ) */
   padding: 0;
   border: 1px solid var(--green);
   border-radius: 6px;
@@ -661,7 +661,7 @@ body {
   /* 【v146】外側に2層リングを描いて「選択中」が遠目でも分かるように
      1層目: 白の細いギャップ / 2層目: 濃い緑の太いリング */
   box-shadow:
-    0 0 0 2px var(--bg1),                  /* 内側ギャップ（背景色で抜けに見せる） */
+    0 0 0 2px var(--bg2),                  /* 内側ギャップ（背景色で抜けに見せる） */
     0 0 0 4px #15803d;                     /* 外側の濃い緑リング */
 }
 .search-rep-badge.active:hover {
@@ -669,15 +669,15 @@ body {
   border-color: #166534;
   transform: none;
   box-shadow:
-    0 0 0 2px var(--bg1),
+    0 0 0 2px var(--bg2),
     0 0 0 4px #166534;
 }
 .rep-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 21px;                              /* 【v149】22→21 (95%サイズ) */
+  height: 21px;                             /* 【v149】22→21 (95%サイズ) */
   margin-left: 4px;
   padding: 0;
   border: 1px solid var(--green);
@@ -701,16 +701,17 @@ body {
   border-color: #15803d;
   /* 【v146】外側に2層リングで「選択中」を強調（小さいバッジなので 1.5px ＋ 3px） */
   box-shadow:
-    0 0 0 1.5px var(--bg1),
+    0 0 0 1.5px var(--bg2),
     0 0 0 3px #15803d;
 }
 
 /* 【v143】送り込み系ボタンの中の白シャッフルアイコン（SVG） */
+/* 【v149】ボタンのサイズ縮小に合わせて中身も比例縮小 */
 .search-rep-badge .rep-icon,
 .rep-badge .rep-icon {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 17px;                              /* 【v149】18→17 */
+  height: 17px;                             /* 【v149】18→17 */
   fill: none;
   stroke: white;
   stroke-width: 2;
@@ -719,8 +720,8 @@ body {
   pointer-events: none;
 }
 .rep-badge .rep-icon {
-  width: 13px;
-  height: 13px;
+  width: 12px;                              /* 【v149】13→12 */
+  height: 12px;                             /* 【v149】13→12 */
   stroke-width: 2.2;
 }
 
@@ -1918,7 +1919,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v147</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v149</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
