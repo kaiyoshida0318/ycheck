@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v142 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v145 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -693,6 +693,25 @@ body {
   color: white;
   border-color: #15803d;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4);  /* 押下感を演出 */
+}
+
+/* 【v143】送り込み系ボタンの中の白シャッフルアイコン（SVG） */
+.search-rep-badge .rep-icon,
+.rep-badge .rep-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: white;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.rep-badge .rep-icon {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.2;
 }
 
 /* ヘッダーの🔗 グループ所属のみ ボタンの active 状態 */
@@ -1860,7 +1879,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v142</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v145</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1941,7 +1960,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="basicMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="basicRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="basicRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <span class="gh-reflect-hover" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
@@ -1985,7 +2004,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="monthlyMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="monthlyRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="monthlyRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
         </div>
         <p class="dropzone-hint" style="margin:0 0 10px 0;">下が古い月 / 上が新しい月</p>
         <div class="table-wrap">
@@ -2015,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="retiredRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="retiredRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
         </div>
         <div class="table-wrap">
           <table id="tableRetired">
@@ -2060,7 +2079,7 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
@@ -2097,7 +2116,7 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
@@ -2133,7 +2152,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="adRankMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="adRankSearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="adRankRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="adRankRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnRefreshAdRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="adRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
@@ -2155,7 +2174,7 @@ table.rank-table td.rank-legend-col-row {
           <select id="seoRankMonth"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="seoRankSearch" placeholder="商品コード・商品名で検索...">
-          <button class="search-rep-badge" id="seoRankRepBadge" type="button" data-tooltip="送り込みがある商品">🔀</button>
+          <button class="search-rep-badge" id="seoRankRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnRefreshSeoRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="seoRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
@@ -3694,7 +3713,7 @@ function codeCellHtml(code) {
   const meta = state.productMeta[code] || {};
   const rep = (meta.repCode || '').trim();
   if (!rep) return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span></span>`;
-  return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span><button class="rep-badge" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button">🔀</button></span>`;
+  return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span><button class="rep-badge" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button></span>`;
 }
 
 // ==================== Status select helpers ====================
