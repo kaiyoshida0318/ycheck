@@ -1,0 +1,36 @@
+name: Yahoo API Inspection
+
+on:
+  workflow_dispatch:  # 手動実行のみ
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run API inspection
+        env:
+          YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+        run: python scripts/inspect_api_response.py
+
+      - name: Upload inspection results
+        uses: actions/upload-artifact@v4
+        with:
+          name: yahoo-api-inspection-results
+          path: /tmp/yahoo_api_inspection/
+          retention-days: 7
