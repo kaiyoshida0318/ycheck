@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v156 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v157 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -249,7 +249,7 @@ body {
 .top-nav {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 6px 20px 12px 20px;
+  padding: 2px 20px 4px 20px;          /* 【v157】上下のpaddingを大幅に詰めた（旧: 6px 12px → 2px 4px） */
   display: flex;
   gap: 18px;
   align-items: flex-end;
@@ -264,8 +264,8 @@ body {
 
 /* 3段目（状態バッジ） */
 .top-nav-3 {
-  top: calc(64px + 52px + 64px);
-  padding: 14px 20px 4px 20px;
+  top: calc(64px + 36px + 40px);       /* 【v157】各段のpadding縮小に合わせてtopを再計算（旧: 64+52+64） */
+  padding: 6px 20px 4px 20px;          /* 【v157】上のpadding 14→6 に詰めた */
   border-top: none;
   background: var(--bg);
 }
@@ -805,9 +805,9 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 
 /* 2段目のタブバー：【定期チェック】用 */
 .top-nav-2 {
-  top: calc(64px + 52px);  /* header + 1段目(padding含む)分 */
-  padding-top: 12px;
-  padding-bottom: 14px;
+  top: calc(64px + 36px);              /* 【v157】1段目高さの縮小に合わせて 52→36 へ */
+  padding-top: 4px;                    /* 【v157】上 12→4 に詰めた */
+  padding-bottom: 6px;                 /* 【v157】下 14→6 に詰めた */
   border-top: none;
 }
 .top-nav-2 .status-chip {
@@ -2004,7 +2004,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v156</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v157</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
