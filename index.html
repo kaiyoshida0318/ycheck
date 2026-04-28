@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v159 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v160 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -954,9 +954,15 @@ tbody tr:hover td:first-child:last-child {
 
 /* 【v140】列リサイズ機能：data-resize-key を持つthの右端にハンドル */
 /* 【v142】th だけでなく td(各行のセル)にもハンドルを設置できるよう拡張 */
-th[data-resize-key],
+/* 【v159 真の根本修正】 元の `th[data-resize-key], td[data-resize-key] { position: relative }` は
+   thのstickyを上書きしてしまい、stickyヘッダーが効かない致命的バグを引き起こしていた。
+   thはsticky維持、td側だけrelativeに設定（td側はリサイズハンドルの基準として relative が必要）。 */
+th[data-resize-key] {
+  position: sticky;     /* sticky維持（th { position: sticky } と同じ） */
+  top: 0;
+}
 td[data-resize-key] {
-  position: relative;  /* リサイズハンドルの基準 */
+  position: relative;   /* リサイズハンドルの絶対配置の基準 */
 }
 th[data-resize-key] .col-resize-handle,
 td[data-resize-key] .col-resize-handle {
@@ -2010,7 +2016,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v159</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v160</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
