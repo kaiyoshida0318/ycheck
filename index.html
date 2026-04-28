@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v160 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v161 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1578,15 +1578,15 @@ table.rank-table td.rank-day:nth-child(7n+4) {
 }
 table.rank-table td.rank-day.empty { color: var(--text3); }
 /* 順位セルの状態別背景色（薄い色で状態を直感的に） */
-/* 順位セルの状態別背景色（薄い色で状態を直感的に） */
+/* 【v161】新仕様：rank-best=青(4位以内/5-8位以内), rank-good=黄(5-12位/9-16位), rank-bad=赤(13位以下/17位以下) */
 /* 【v109】2段セルの場合は上段 div にのみ色を付け、下段（入札価格/PRオプ）には波及させない */
-table.rank-table td.rank-day:not(.rank-cell-2line).rank-best  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
-table.rank-table td.rank-day:not(.rank-cell-2line).rank-good  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
+table.rank-table td.rank-day:not(.rank-cell-2line).rank-best  { background: rgba(37,99,235,0.13);  color: var(--blue);   font-weight: 600; }
+table.rank-table td.rank-day:not(.rank-cell-2line).rank-good  { background: rgba(217,119,6,0.13);  color: var(--amber);  font-weight: 600; }
 table.rank-table td.rank-day:not(.rank-cell-2line).rank-bad   { background: rgba(220,38,38,0.10);  color: var(--red); }
 
 /* 2段セル用: 上段 div にだけ色を付ける */
-table.rank-table td.rank-cell-2line.rank-best .rank-row-top  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
-table.rank-table td.rank-cell-2line.rank-good .rank-row-top  { background: rgba(22,163,74,0.13);  color: var(--green);  font-weight: 600; }
+table.rank-table td.rank-cell-2line.rank-best .rank-row-top  { background: rgba(37,99,235,0.13);  color: var(--blue);   font-weight: 600; }
+table.rank-table td.rank-cell-2line.rank-good .rank-row-top  { background: rgba(217,119,6,0.13);  color: var(--amber);  font-weight: 600; }
 table.rank-table td.rank-cell-2line.rank-bad .rank-row-top   { background: rgba(220,38,38,0.10);  color: var(--red); }
 
 /* 【v106】2段セル: 上段=順位、下段=入札価格/PRオプ料率 */
@@ -2016,7 +2016,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v160</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v161</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4594,38 +4594,60 @@ function daysInMonth(ym) {
 }
 
 // ==================== rank.json 自動取得 ====================
-// 順位表記の旧→新変換ルール（GitHub側の表記変更 v86〜 / 2段表示 v88〜）
-// 新表記は改行 \n を含み、2段目に記号（◎/×/PR○/PR×）を配置して表示
-// 対象になる旧表記（いずれも新表記に集約）:
-//   「最上段◎」「上段◎」              → 「上段\n◎」
-//   「下段×」                           → 「下段\n×」
-//   「上段-PRオプ○」「上段PR○」        → 「上段\nPR○」
-//   「下段-PRオプ×」「下段PR×」        → 「下段\nPR×」
-// 「-」「圏外」「null」および既に \n を含む新表記はそのまま
-const RANK_NOTATION_MAP = {
-  '最上段◎':        '上段\n◎',
-  '上段◎':          '上段\n◎',
-  '下段×':          '下段\n×',
-  '上段-PRオプ○':   '上段\nPR○',
-  '上段PR○':        '上段\nPR○',
-  '下段-PRオプ×':   '下段\nPR×',
-  '下段PR×':        '下段\nPR×'
-};
-function convertRankValue(v) {
-  if (v == null) return v;
-  if (typeof v !== 'string') return v;
-  return (v in RANK_NOTATION_MAP) ? RANK_NOTATION_MAP[v] : v;
+// 【v161】順位値の正規化ルールを全面刷新。
+// API/JSONから入ってくる値は次のいずれか：
+//   - 数値（1, 5, 13, ...）= Yahoo APIから取得した実順位 → numericRankToCategoryでカテゴリ表記に変換
+//   - 既存の新表記（「4位以内\n◯」等）= そのまま
+//   - 旧表記（「最上段◎」「上段◎」「上段\n◎」「下段×」「下段\n×」「上段PR○」等）
+//     = 仕様変更で順位番号に推定不可。null にリセットし、新規取得を待つ。
+//   - 「-」「圏外」「null」「空文字」 = null として扱う（未取得の意味）
+// 旧表記検知用のセット（compactした形＝改行/空白を取り除いた形で判定）
+const _LEGACY_RANK_TOKENS = new Set([
+  '最上段◎', '上段◎', '下段×',
+  '上段-PRオプ○', '上段PR○', 'PR○',
+  '下段-PRオプ×', '下段PR×', 'PR×'
+]);
+// 新表記検知用：末尾が ◯/△/✕ なら新表記として通す
+function _isNewRankNotation(s) {
+  if (typeof s !== 'string') return false;
+  const c = s.replace(/\s+/g, '');
+  return c.endsWith('◯') || c.endsWith('△') || c.endsWith('✕');
 }
-function convertRankArray(arr) {
+// kind: 'ad' or 'seo'。convertRankArrayから渡される。
+function convertRankValue(v, kind) {
+  if (v == null) return null;
+  // 数値（または数値文字列）→ カテゴリ表記に変換
+  if (typeof v === 'number') {
+    return numericRankToCategory(v, kind);
+  }
+  if (typeof v === 'string') {
+    const trimmed = v.trim();
+    if (trimmed === '' || trimmed === '-' || trimmed === '圏外' || trimmed.toLowerCase() === 'null') {
+      return null;
+    }
+    // 数値文字列なら数値として変換
+    if (/^\d+$/.test(trimmed)) {
+      return numericRankToCategory(Number(trimmed), kind);
+    }
+    // 既に新表記ならそのまま
+    if (_isNewRankNotation(trimmed)) return trimmed;
+    // 旧表記ならリセット（null）
+    const compact = trimmed.replace(/\s+/g, '');
+    if (_LEGACY_RANK_TOKENS.has(compact)) return null;
+    return null;  // それ以外の不明な文字列もnull扱い（安全側）
+  }
+  return null;
+}
+function convertRankArray(arr, kind) {
   if (!Array.isArray(arr)) return arr;
-  return arr.map(convertRankValue);
+  return arr.map(v => convertRankValue(v, kind));
 }
 
 // 【v86→v88】順位表記の一括移行を1度だけ実行（既存データの旧表記を新表記に置換）
 // 実行前に localStorage に別キーでバックアップを保存（不可逆性を緩和）
-// フラグキーは移行ルールのバージョンごとに変更（v2: 2段表示対応）
-const RANK_NOTATION_MIGRATION_FLAG_KEY = 'ycheck_rank_notation_migrated_v2';
-const RANK_NOTATION_MIGRATION_BACKUP_KEY = 'ycheck_data_v1_backup_pre_notation_migration_v2';
+// フラグキーは移行ルールのバージョンごとに変更（v2: 2段表示対応 / 【v161】v3: 数値順位カテゴリ化対応）
+const RANK_NOTATION_MIGRATION_FLAG_KEY = 'ycheck_rank_notation_migrated_v3';
+const RANK_NOTATION_MIGRATION_BACKUP_KEY = 'ycheck_data_v1_backup_pre_notation_migration_v3';
 function migrateRankNotationOnce() {
   try {
     if (localStorage.getItem(RANK_NOTATION_MIGRATION_FLAG_KEY) === 'true') return false;
@@ -4649,9 +4671,11 @@ function migrateRankNotationOnce() {
         ['adRank', 'seoRank'].forEach(key => {
           const arr = fields[key];
           if (!Array.isArray(arr)) return;
+          // 【v161】adRank→'ad'、seoRank→'seo' を渡してカテゴリ判定の閾値を切り替え
+          const kind = (key === 'adRank') ? 'ad' : 'seo';
           for (let i = 0; i < arr.length; i++) {
             const before = arr[i];
-            const after = convertRankValue(before);
+            const after = convertRankValue(before, kind);
             if (before !== after) {
               arr[i] = after;
               changed++;
@@ -4693,12 +4717,12 @@ function mergeRankJson(json) {
       const fields = byCode[rawCode] || {};
       const code = String(rawCode).toLowerCase().trim();
       if (!state.rank[ym][code]) state.rank[ym][code] = {};
-      // "ad" -> "adRank", "seo" -> "seoRank"。取り込み時に旧表記を新表記へ変換（保険）
+      // "ad" -> "adRank", "seo" -> "seoRank"。【v161】数値順位もこの段階でカテゴリ表記に変換される。
       if (Array.isArray(fields.ad)) {
-        state.rank[ym][code].adRank = convertRankArray(fields.ad.slice());
+        state.rank[ym][code].adRank = convertRankArray(fields.ad.slice(), 'ad');
       }
       if (Array.isArray(fields.seo)) {
-        state.rank[ym][code].seoRank = convertRankArray(fields.seo.slice());
+        state.rank[ym][code].seoRank = convertRankArray(fields.seo.slice(), 'seo');
       }
       total++;
     }
@@ -5193,8 +5217,9 @@ function renderRankTable(kind) {
       // 手動値を上書き保存できる。ただし API値がある場合は表示は API値優先のまま。
       const topClickCls = ' rank-top-clickable';
       const topDataAttrs = ` data-ym="${ym}" data-code="${escapeHtml(code)}" data-dayindex="${i}" data-field="${isAd ? 'rankAd' : 'rankSeo'}" data-is-ad="${isAd ? '1' : '0'}"`;
+      // 【v161】未取得（null）の場合は「-」表示。セルの色は白のまま（rank-best/good/badクラス無し）
       const rankHtml = v == null
-        ? `<div class="rank-row-top empty${topClickCls}"${topDataAttrs}></div>`
+        ? `<div class="rank-row-top empty${topClickCls}"${topDataAttrs}>-</div>`
         : `<div class="rank-row-top${manualCls}${topClickCls}"${topDataAttrs}>${escapeHtml(v)}</div>`;
       // 【v106】2段目: 広告順位→入札価格、SEO順位→PRオプ料率
       const editVal = getRankEditValue(ym, code, editField, i);
@@ -5227,15 +5252,37 @@ function renderRankTable(kind) {
   }).join('');
 }
 
-// 順位セルの値から状態別クラス名を返す（改行\n込みの新表記 / 旧表記の両対応）
+// 順位セルの値から状態別クラス名を返す
+// 【v161】新仕様：「N位以内\n◯」「M-N位以内\n△」「N位以下\n✕」の3種に対応。旧表記（上段◎等）は廃止。
 function rankStatusClass(v) {
   if (v == null || typeof v !== 'string') return '';
-  // 改行を除いた形で比較（"上段\n◎" → "上段◎"）
+  // 改行を除いた形で比較
   const compact = v.replace(/\s+/g, '');
-  if (compact === '上段◎' || compact === '最上段◎') return 'rank-best';
-  if (compact === '上段PR○' || compact === '上段-PRオプ○') return 'rank-good';
-  if (compact === '下段×' || compact === '下段PR×' || compact === '下段-PRオプ×') return 'rank-bad';
+  // 末尾の記号で判定（◯=青/best、△=黄/good、✕=赤/bad）
+  if (compact.endsWith('◯')) return 'rank-best';
+  if (compact.endsWith('△')) return 'rank-good';
+  if (compact.endsWith('✕')) return 'rank-bad';
   return '';
+}
+
+// 【v161】数値順位 → 表示用カテゴリ文字列に変換
+// kind: 'ad' = 広告順位（1-4=◯, 5-12=△, 13+=✕）
+//       'seo' = SEO順位（1-8=◯, 9-16=△, 17+=✕）
+// 数値以外（null/'-'/空文字/NaN）は null を返す → 表示は空セル/「-」になる
+function numericRankToCategory(rank, kind) {
+  if (rank == null || rank === '' || rank === '-') return null;
+  const n = Number(rank);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  if (kind === 'ad') {
+    if (n <= 4)  return '4位以内\n◯';
+    if (n <= 12) return '5-12位以内\n△';
+    return '13位以下\n✕';
+  } else {
+    // seo
+    if (n <= 8)  return '5-8位以内\n◯';
+    if (n <= 16) return '9-16位以内\n△';
+    return '17位以下\n✕';
+  }
 }
 
 function renderAdRank()  { renderRankTable('ad'); }
@@ -6030,8 +6077,7 @@ document.addEventListener('click', (e) => {
 });
 
 // 【v129】上段セル（順位）のクリック編集 - プルダウン方式
-// 広告順位: [空] / 上段◎ / 下段×
-// SEO順位: [空] / 上段 PR○ / 下段 PR×
+// 【v161】新表記に対応：広告は[―/4位以内◯/5-12位以内△/13位以下✕]、SEOは[―/5-8位以内◯/9-16位以内△/17位以下✕]
 function startRankTopEditCell(cell) {
   if (cell.querySelector('select')) return;
   const code = cell.dataset.code;
@@ -6046,10 +6092,20 @@ function startRankTopEditCell(cell) {
   // プルダウン作成
   const select = document.createElement('select');
   select.className = 'rank-top-select';
-  // 選択肢
+  // 選択肢（新表記）
   const options = isAd
-    ? [{ v: '', label: '—' }, { v: '上段\n◎', label: '上段◎' }, { v: '下段\n×', label: '下段×' }]
-    : [{ v: '', label: '—' }, { v: '上段\nPR○', label: '上段 PR○' }, { v: '下段\nPR×', label: '下段 PR×' }];
+    ? [
+        { v: '', label: '—' },
+        { v: '4位以内\n◯',   label: '4位以内 ◯' },
+        { v: '5-12位以内\n△', label: '5-12位以内 △' },
+        { v: '13位以下\n✕',   label: '13位以下 ✕' }
+      ]
+    : [
+        { v: '', label: '—' },
+        { v: '5-8位以内\n◯',  label: '5-8位以内 ◯' },
+        { v: '9-16位以内\n△', label: '9-16位以内 △' },
+        { v: '17位以下\n✕',   label: '17位以下 ✕' }
+      ];
   options.forEach(opt => {
     const o = document.createElement('option');
     o.value = opt.v;
