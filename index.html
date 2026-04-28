@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v150 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v151 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -703,6 +703,29 @@ body {
   box-shadow:
     0 0 0 1.5px var(--bg2),
     0 0 0 3px #15803d;
+}
+
+/* 【v151】子商品（code≠rep）のバッジは黄色（パステル系A）。親はそのまま緑。
+   通常: bg=#fde68a / border=#f59e0b / icon stroke=#92400e
+   hover: 一段濃い黄色
+   active: 外側2層リング（橙系）で選択中を強調（緑バッジと同様の2層構造） */
+.rep-badge.child {
+  background: #fde68a;
+  border-color: #f59e0b;
+}
+.rep-badge.child:hover {
+  background: #fcd34d;
+  border-color: #d97706;
+}
+.rep-badge.child.active {
+  background: #fcd34d;
+  border-color: #d97706;
+  box-shadow:
+    0 0 0 1.5px var(--bg2),
+    0 0 0 3px #d97706;
+}
+.rep-badge.child .rep-icon {
+  stroke: #92400e;
 }
 
 /* 【v143】送り込み系ボタンの中の白シャッフルアイコン（SVG） */
@@ -1920,7 +1943,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v150</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v151</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3750,11 +3773,14 @@ function updateStateCounts() {
 
 // 【v125/v130】商品コード表示（代表コード所属なら🔀バッジ付き）
 // v130: バッジをセル右端に固定するため、コード部分とバッジを flex 構造でラップ
+// 【v151】code===rep（親）は緑、code!==rep（子・孤児含む）は黄色バッジ
 function codeCellHtml(code) {
   const meta = state.productMeta[code] || {};
   const rep = (meta.repCode || '').trim();
   if (!rep) return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span></span>`;
-  return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span><button class="rep-badge" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button></span>`;
+  const isChild = (rep !== code);
+  const cls = isChild ? 'rep-badge child' : 'rep-badge';
+  return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span><button class="${cls}" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button></span>`;
 }
 
 // ==================== Status select helpers ====================
