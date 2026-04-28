@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v146 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v147 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -871,6 +871,35 @@ th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blu
 th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:hover { background: var(--bg3); }
+
+/* 【v147】行ホバー時、行全体に細い青枠(1.5px)を出して「いまカーソルが当たっている行」を明確化。
+   border-collapse: collapse の運用なので、tr に直接 border は効きにくい → 各td に inset box-shadow で
+   上下のラインを引き、最左セルに左ライン、最右セルに右ラインを足して矩形に囲む。 */
+tbody tr:hover td {
+  box-shadow:
+    inset 0 1.5px 0 var(--accent),     /* 上ライン */
+    inset 0 -1.5px 0 var(--accent);    /* 下ライン */
+}
+tbody tr:hover td:first-child {
+  box-shadow:
+    inset 0 1.5px 0 var(--accent),
+    inset 0 -1.5px 0 var(--accent),
+    inset 1.5px 0 0 var(--accent);     /* 左ライン */
+}
+tbody tr:hover td:last-child {
+  box-shadow:
+    inset 0 1.5px 0 var(--accent),
+    inset 0 -1.5px 0 var(--accent),
+    inset -1.5px 0 0 var(--accent);    /* 右ライン */
+}
+/* 1セルしかないケース（empty-state など）にも対応 */
+tbody tr:hover td:first-child:last-child {
+  box-shadow:
+    inset 0 1.5px 0 var(--accent),
+    inset 0 -1.5px 0 var(--accent),
+    inset 1.5px 0 0 var(--accent),
+    inset -1.5px 0 0 var(--accent);
+}
 
 /* 【v140】列リサイズ機能：data-resize-key を持つthの右端にハンドル */
 /* 【v142】th だけでなく td(各行のセル)にもハンドルを設置できるよう拡張 */
@@ -1889,7 +1918,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v146</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v147</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
