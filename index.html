@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v133 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v134 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1131,56 +1131,106 @@ td:has(> .name-cell-wrap) {
   padding-top: 14px;
   border-top: 1px solid var(--border);
 }
-/* 【v133】商品編集モーダル：本体と右脇ナビバーをflexで横並び */
-.pe-body-wrap {
+/* 【v134】商品編集モーダル：縦バーを廃止し、ヘッダー右上に前後ボタン群を配置 */
+/* モーダルヘッダーを flex で「タイトル / ナビ / ×」の3列構成に */
+.pe-modal-header {
   display: flex;
-  gap: 14px;
-  align-items: stretch;
-}
-.pe-body-wrap .pe-grid {
-  flex: 1;
-  min-width: 0;
-}
-/* 【v133】右脇の縦ナビバー：↑前 / カウンタ / ↓次 を縦に配置 */
-.pe-nav-side {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  padding: 10px 8px;
-  border-left: 1px solid var(--border);
-  min-width: 78px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
-/* 【v133】前後ボタン：縦に伸びるボタン、矢印のみ大きく見せる */
-.pe-nav-btn {
+.pe-modal-header .modal-title { flex: 0 0 auto; }
+.pe-modal-header .modal-close { flex: 0 0 auto; }
+/* ヘッダー右上のミニ前後ナビ（∧/カウンタ/∨ を縦に並べる） */
+.pe-nav-mini {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-width: 64px;
-  padding: 10px 6px;
-  line-height: 1.2;
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-.pe-nav-btn .pe-nav-arrow {
-  font-size: 1.4rem;
+  gap: 1px;
+  margin-left: auto;        /* タイトルとの間に余白を取り、×の左に寄せる */
   line-height: 1;
+}
+.pe-nav-mini .pe-nav-btn-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  background: var(--bg2);
+  color: var(--text2);
+  font-size: 0.85rem;
   font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
-.pe-nav-btn:disabled {
-  opacity: 0.4;
+.pe-nav-mini .pe-nav-btn-mini:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.pe-nav-mini .pe-nav-btn-mini:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
+  background: var(--bg2);
+  color: var(--text3);
+  border-color: var(--border);
 }
-.pe-pos-counter {
-  font-size: 0.82rem;
+.pe-nav-mini .pe-pos-counter {
+  font-size: 0.68rem;
   color: var(--text3);
   font-variant-numeric: tabular-nums;
-  min-width: 56px;
   text-align: center;
-  padding: 4px 0;
+  padding: 1px 0;
+  white-space: nowrap;
+  min-width: 38px;
+}
+/* 【v134】代表コードによる親子表示
+   親 = 商品コード == 代表コード（自分自身が代表）
+   子 = 代表コードが指定されているが、自分自身は代表ではない（かつ親が同一覧内に存在）
+   親不在の子（孤児）= 代表コードが指定されているが親が一覧に居ない → 字下げせず通常表示 */
+tr.row-parent .code-cell .code-text {
+  font-weight: 700;
+}
+tr.row-parent .name-cell {
+  /* 親はやや強調 */
+}
+/* 子行の背景色 + 行頭インデント */
+tr.row-child {
+  background: rgba(37, 99, 235, 0.04);  /* 薄い青系 */
+}
+tr.row-child:hover {
+  background: rgba(37, 99, 235, 0.10);
+}
+tr.row-child td.col-sales,
+tr.row-child:hover td.col-sales,
+tr.row-child td.col-ad,
+tr.row-child:hover td.col-ad,
+tr.row-child td.col-bid,
+tr.row-child:hover td.col-bid {
+  /* 既存の列色分けを優先するため上書きしない（列色がそのまま見える） */
+}
+/* 子行の商品コードに └ ツリー記号 + 字下げ */
+tr.row-child .code-cell-inner {
+  position: relative;
+  padding-left: 16px;
+}
+tr.row-child .code-cell-inner::before {
+  content: '└';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  font-size: 0.95em;
+  font-weight: 600;
+  pointer-events: none;
 }
 .kw-edit-input {
   width: 100%;
@@ -1753,7 +1803,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v133</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v134</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2145,57 +2195,50 @@ table.rank-table td.rank-legend-col-row {
 <!-- 商品情報編集モーダル -->
 <div class="modal-overlay" id="productEditModal">
   <div class="modal" style="max-width: 540px;">
-    <div class="modal-header">
+    <!-- 【v134】ヘッダーにミニ前後ナビを追加（縦バー廃止で本体は横幅フル） -->
+    <div class="modal-header pe-modal-header">
       <h2 class="modal-title">✎ 商品情報を編集</h2>
+      <div class="pe-nav-mini">
+        <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
+        <span class="pe-pos-counter" id="pePosCounter"></span>
+        <button class="pe-nav-btn-mini" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">∨</button>
+      </div>
       <button class="modal-close" id="peClose" type="button">×</button>
     </div>
-    <!-- 【v133】本体(左)と右脇の前後ナビバーを横並びに配置 -->
-    <div class="pe-body-wrap">
-      <div class="pe-grid">
-        <div class="pe-row">
-          <label class="pe-label">商品コード</label>
-          <div class="pe-code-display" id="peCode">—</div>
-        </div>
-        <div class="pe-row">
-          <label class="pe-label" for="peName">商品名</label>
-          <input type="text" id="peName" class="pe-input" placeholder="商品名を入力...">
-        </div>
-        <div class="pe-row">
-          <label class="pe-label" for="peKw">メインKW</label>
-          <input type="text" id="peKw" class="pe-input" placeholder="メインキーワードを入力...">
-        </div>
-        <div class="pe-row">
-          <label class="pe-label" for="peSearchUrl">検索URL</label>
-          <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
-        </div>
-        <div class="pe-row">
-          <label class="pe-label" for="peRepCode">代表商品コード</label>
-          <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
-        </div>
-        <div class="pe-row">
-          <label class="pe-label">商品画像</label>
-          <div class="pe-image-wrap">
-            <img id="peImage" class="pe-image" alt="商品画像">
-            <div id="peImagePh" class="pe-image-placeholder" style="display:none">📦 画像なし</div>
-          </div>
-          <div class="pe-image-actions">
-            <button class="btn sm" id="peImageUpload" type="button">📤 新しい画像を選択</button>
-            <button class="btn sm ghost" id="peImageDelete" type="button">🗑 画像を削除</button>
-            <button class="btn sm ghost" id="peImageReset" type="button" title="Yahoo!の標準画像に戻す">↻ デフォルトに戻す</button>
-            <input type="file" id="peImageFile" accept="image/*" style="display:none">
-          </div>
-          <div class="pe-image-note" id="peImageNote"></div>
-        </div>
+    <div class="pe-grid">
+      <div class="pe-row">
+        <label class="pe-label">商品コード</label>
+        <div class="pe-code-display" id="peCode">—</div>
       </div>
-      <!-- 【v133】右脇の縦ナビバー：表の上下と方向を一致させる -->
-      <div class="pe-nav-side">
-        <button class="btn sm ghost pe-nav-btn" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">
-          <span class="pe-nav-arrow">↑</span><span>前の商品</span>
-        </button>
-        <span class="pe-pos-counter" id="pePosCounter"></span>
-        <button class="btn sm ghost pe-nav-btn" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">
-          <span class="pe-nav-arrow">↓</span><span>次の商品</span>
-        </button>
+      <div class="pe-row">
+        <label class="pe-label" for="peName">商品名</label>
+        <input type="text" id="peName" class="pe-input" placeholder="商品名を入力...">
+      </div>
+      <div class="pe-row">
+        <label class="pe-label" for="peKw">メインKW</label>
+        <input type="text" id="peKw" class="pe-input" placeholder="メインキーワードを入力...">
+      </div>
+      <div class="pe-row">
+        <label class="pe-label" for="peSearchUrl">検索URL</label>
+        <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
+      </div>
+      <div class="pe-row">
+        <label class="pe-label" for="peRepCode">代表商品コード</label>
+        <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
+      </div>
+      <div class="pe-row">
+        <label class="pe-label">商品画像</label>
+        <div class="pe-image-wrap">
+          <img id="peImage" class="pe-image" alt="商品画像">
+          <div id="peImagePh" class="pe-image-placeholder" style="display:none">📦 画像なし</div>
+        </div>
+        <div class="pe-image-actions">
+          <button class="btn sm" id="peImageUpload" type="button">📤 新しい画像を選択</button>
+          <button class="btn sm ghost" id="peImageDelete" type="button">🗑 画像を削除</button>
+          <button class="btn sm ghost" id="peImageReset" type="button" title="Yahoo!の標準画像に戻す">↻ デフォルトに戻す</button>
+          <input type="file" id="peImageFile" accept="image/*" style="display:none">
+        </div>
+        <div class="pe-image-note" id="peImageNote"></div>
       </div>
     </div>
     <div class="pe-actions">
@@ -3624,13 +3667,10 @@ function applyRepFilter(list) {
   });
 }
 
-// 【v124】代表商品コードによるグループ表示
+// 【v124/v134】代表商品コードによるグループ表示
+// v134: 親（code == repCode）を先頭固定、子（code != repCode）はその後に商品コード昇順
+//       親が一覧内に居ないグループは「孤児」とみなし、字下げせず通常表示する
 // 引数: sortedList = すでにソート済みの配列（各要素に .code があること）
-// 挙動:
-//   - productMeta[code].repCode が同じ商品は「グループ」として塊で表示
-//   - グループの位置は、そのグループ内で sortedList 最上位に来る商品の位置
-//   - グループ内は商品コード昇順（固定）
-//   - repCode が空の商品はグループ化せず、元のソート順のまま
 function applyRepGrouping(sortedList) {
   if (!Array.isArray(sortedList) || sortedList.length === 0) return sortedList;
   // 各商品の repCode を取得
@@ -3653,9 +3693,15 @@ function applyRepGrouping(sortedList) {
     if (items.length < 2) groups.delete(rep);
   }
   if (groups.size === 0) return sortedList;
-  // グループ内メンバーを商品コード昇順で固定
+  // 【v134】グループ内整列：親（code==rep）が居れば先頭、子はコード昇順
   for (const [rep, items] of groups.entries()) {
-    items.sort((a, b) => String(a.code || '').localeCompare(String(b.code || ''), 'ja'));
+    items.sort((a, b) => {
+      const aIsParent = String(a.code || '') === rep;
+      const bIsParent = String(b.code || '') === rep;
+      if (aIsParent && !bIsParent) return -1;
+      if (!aIsParent && bIsParent) return 1;
+      return String(a.code || '').localeCompare(String(b.code || ''), 'ja');
+    });
   }
   // 結果配列を構築：各itemについて「グループの先頭に来た時だけ、グループ全体を挿入」
   const result = [];
@@ -3673,6 +3719,49 @@ function applyRepGrouping(sortedList) {
     insertedReps.add(rep);
   }
   return result;
+}
+
+// 【v134】親子判定ヘルパー
+// 「現在のビューに表示される商品コード集合」内で、各行が親/子/孤児/単独 のどれかを判定する
+// 戻り値: { parentSet: Set<repCode>, childSet: Set<code> }
+//   - parentSet: 親が一覧内にいるグループの代表コード（つまり「ちゃんと親子関係が成立している」グループ）
+//   - childSet:  そのグループの子の商品コード（字下げ・背景色対象）
+//   - 孤児（親がリスト内に居ない子）はどちらにも入らない → 通常表示
+function buildParentChildSets(visibleList) {
+  const parentSet = new Set();   // repCode を保持
+  const childSet = new Set();    // 子の code を保持
+  if (!Array.isArray(visibleList) || visibleList.length === 0) return { parentSet, childSet };
+  // 1) リスト内に存在する商品コード集合
+  const codesInList = new Set(visibleList.map(it => String(it && it.code || '')).filter(Boolean));
+  // 2) repCode を持つ商品をグループ化
+  const groups = new Map();  // rep -> [code, ...]
+  visibleList.forEach(item => {
+    const code = item && item.code;
+    if (!code) return;
+    const meta = state.productMeta[code] || {};
+    const rep = (meta.repCode || '').trim();
+    if (!rep) return;
+    if (!groups.has(rep)) groups.set(rep, []);
+    groups.get(rep).push(code);
+  });
+  // 3) 各グループについて、親（code==rep）がリスト内に存在し、かつ2件以上のメンバーがある場合のみ親子成立
+  for (const [rep, members] of groups.entries()) {
+    if (members.length < 2) continue;
+    if (!codesInList.has(rep)) continue;  // 親がリスト内に居ない → 孤児扱い（このグループは親子表示しない）
+    parentSet.add(rep);
+    members.forEach(code => {
+      if (code !== rep) childSet.add(code);  // 親以外を子に
+    });
+  }
+  return { parentSet, childSet };
+}
+
+// 【v134】行の class 属性文字列を返すヘルパー（renderXxxの<tr>に注入用）
+function rowParentChildClass(code, sets) {
+  if (!sets) return '';
+  if (sets.parentSet.has(code)) return 'row-parent';
+  if (sets.childSet.has(code))  return 'row-child';
+  return '';
 }
 
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
@@ -3795,10 +3884,14 @@ function renderBasic() {
   // CSVダウンロード用に現在の絞り込み・並び順を保持
   state.basicListCache = list.slice();
   state.basicListMonth = targetMonth;
+  // 【v134】親子表示のための分類（リスト確定後に1度だけ計算）
+  const _pcSets = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
+    const _pcCls = rowParentChildClass(r.code, _pcSets);
+    if (_pcCls) tr.className = _pcCls;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -3893,9 +3986,13 @@ function renderMonthly() {
     updateSortIndicator('#tableMonthly', monthlySortKey, monthlySortDir);
     return;
   }
+  // 【v134】親子表示のための分類
+  const _pcSetsMonthly = buildParentChildSets(list);
   list.slice(0, 3000).forEach(r => {
     const monthDisplay = r.month ? r.month.replace('-', '/') : '—';
     const tr = document.createElement('tr');
+    const _pcCls = rowParentChildClass(r.code, _pcSetsMonthly);
+    if (_pcCls) tr.className = _pcCls;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -3975,8 +4072,12 @@ function renderRetired() {
     return;
   }
 
+  // 【v134】親子表示のための分類
+  const _pcSetsRetired = buildParentChildSets(list);
   list.forEach(r => {
     const tr = document.createElement('tr');
+    const _pcCls = rowParentChildClass(r.code, _pcSetsRetired);
+    if (_pcCls) tr.className = _pcCls;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -4137,9 +4238,13 @@ function renderAdAdjust() {
   list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化
   list = applyRepGrouping(list);
+  // 【v134】親子表示のための分類
+  const _pcSetsAdAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
     const bid = state.bid ? state.bid[r.code] : null;
     const tr = document.createElement('tr');
+    const _pcCls = rowParentChildClass(r.code, _pcSetsAdAdj);
+    if (_pcCls) tr.className = _pcCls;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -4237,9 +4342,13 @@ function renderProAdjust() {
   list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化
   list = applyRepGrouping(list);
+  // 【v134】親子表示のための分類
+  const _pcSetsProAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
+    const _pcCls = rowParentChildClass(r.code, _pcSetsProAdj);
+    if (_pcCls) tr.className = _pcCls;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
