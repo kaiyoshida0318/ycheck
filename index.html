@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v152 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v153 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1945,7 +1945,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v152</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v153</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6231,14 +6231,14 @@ function handlePeImageFile(file) {
   reader.readAsDataURL(file);
 }
 
-// モーダル外側クリックで閉じる
-productEditModal.addEventListener('click', (e) => {
-  if (e.target === productEditModal) closeProductEditModal();
-});
-// Escで閉じる
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && productEditModal.classList.contains('open')) closeProductEditModal();
-});
+// 【v153】商品編集モーダルは×ボタンとキャンセルボタンだけで閉じるように変更（誤操作防止）。
+// 元のオーバーレイ外側クリック・Escで閉じる挙動は廃止。
+// productEditModal.addEventListener('click', (e) => {
+//   if (e.target === productEditModal) closeProductEditModal();
+// });
+// document.addEventListener('keydown', (e) => {
+//   if (e.key === 'Escape' && productEditModal.classList.contains('open')) closeProductEditModal();
+// });
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
 $('#peSave').addEventListener('click', () => saveProductEdit());
