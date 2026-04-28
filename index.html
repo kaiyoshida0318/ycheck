@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v154 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v155 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -877,13 +877,16 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
 th {
-  background: var(--bg3); font-weight: 600; color: var(--text2);
+  background: #e8eaed;                /* 【v155】CSS変数(var(--bg3))ではなく実色で指定。一部ブラウザでstickyレンダリング時に変数経由のbgが透明扱いになる症状を回避 */
+  font-weight: 600; color: var(--text2);
   font-size: 0.78rem; cursor: pointer; user-select: none;
-  position: sticky; top: 0; z-index: 5;
+  position: sticky;
+  top: 0;
+  z-index: 10;                        /* 【v155】tbody内の要素より確実に上に。元は5だったが、画像セルやリサイザ要素と競合するケースに対応するため引き上げ */
 }
-th:hover { background: var(--border); }
+th:hover { background: #d8dadd; }      /* 【v155】hover時も実色で（var(--border)はrgbaで半透明 → スクロール時に透ける原因になっていた） */
 th.nosort { cursor: default; }
-th.nosort:hover { background: var(--bg3); }
+th.nosort:hover { background: #e8eaed; }
 /* ソートアイコン: 既定は薄い↕、アクティブ時は向き付き濃色 */
 th[data-sort]::after {
   content: ' \2195';          /* ↕ */
@@ -1976,7 +1979,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v154</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v155</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2077,11 +2080,11 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">検索URL</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ</th>
               <th class="status-col" data-sort="adStatus">広告状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="status-col" data-sort="status">ステータス</th>
@@ -4075,11 +4078,11 @@ function renderBasic() {
       <td>${searchUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
+      <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td class="num col-ad">${fmt(r.adRev)}</td>
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
-      <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
