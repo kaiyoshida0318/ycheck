@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v155 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v156 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -876,15 +876,38 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+/* 【v156】tbody内の全tdに不透明な白背景を明示。
+   stickyヘッダー(th)とスクロール時に重なる瞬間、tdが透明だと下の行と混ざって見える症状を防ぐ。
+   色付き列(col-sales/col-ad/col-bid)は後続のルールで個別に上書きされる。 */
+tbody td {
+  background: #ffffff;
+}
+
+/* 【v156】stickyヘッダーが下にスクロールした行と重なって透けるバグの完全修正。
+   原因: th単体でz-indexやbackgroundを設定しても、border-collapse:collapseのテーブルでは
+   ブラウザがthの背景を一部描画しない(特にtdがposition:relative/インラインスタイルを持つ場合)。
+   対策: thead → thead tr → th の3層に不透明背景をかけて、tbodyの内容が透ける経路を完全に塞ぐ。
+   note: thead自体には position は付けない（th側のstickyに干渉する可能性があるため）。
+         代わりに各thに isolation: isolate を付けて、tbody側のstacking contextの影響を遮断。 */
+thead {
+  background: #e8eaed;       /* 1層目: thead要素そのもの */
+}
+thead tr {
+  background: #e8eaed;       /* 2層目: tr */
+}
 th {
-  background: #e8eaed;                /* 【v155】CSS変数(var(--bg3))ではなく実色で指定。一部ブラウザでstickyレンダリング時に変数経由のbgが透明扱いになる症状を回避 */
-  font-weight: 600; color: var(--text2);
-  font-size: 0.78rem; cursor: pointer; user-select: none;
+  background: #e8eaed;       /* 3層目: 個別のth（色付き列で個別に上書きされる） */
+  font-weight: 600;
+  color: var(--text2);
+  font-size: 0.78rem;
+  cursor: pointer;
+  user-select: none;
   position: sticky;
   top: 0;
-  z-index: 10;                        /* 【v155】tbody内の要素より確実に上に。元は5だったが、画像セルやリサイザ要素と競合するケースに対応するため引き上げ */
+  z-index: 11;
+  isolation: isolate;        /* 独立スタッキングコンテキストでtbody側の影響を遮断 */
 }
-th:hover { background: #d8dadd; }      /* 【v155】hover時も実色で（var(--border)はrgbaで半透明 → スクロール時に透ける原因になっていた） */
+th:hover { background: #d8dadd; }
 th.nosort { cursor: default; }
 th.nosort:hover { background: #e8eaed; }
 /* ソートアイコン: 既定は薄い↕、アクティブ時は向き付き濃色 */
@@ -1069,38 +1092,32 @@ td.status-col + td.status-col {
 }
 
 /* ==================== 列の色分けグループ ==================== */
+/* 【v156】tdの背景を、元の半透明色を白と合成した不透明色に変更。
+   元: rgba(22,163,74,0.06) → #f1faf4
+       rgba(217,119,6,0.06) → #fcf6ec
+       rgba(37,99,235,0.06) → #f0f3fd
+   理由: 半透明だとstickyヘッダー(th)と重なる瞬間にレンダリングが透ける症状の遠因になる。
+        見た目はほぼ同じ（白背景の上に半透明色を乗せた時と同じ最終色）。 */
 /* グループ1: 総売上・SEO売上（売上系 / グリーン） */
 th.col-sales, td.col-sales {
-  background: rgba(22,163,74,0.06);
+  background: #f1faf4;
 }
-/* 【v150】ホバー時の濃色化を廃止（v150で行ホバーは青枠のみの方針） */
-/* tbody tr:hover td.col-sales {
-  background: rgba(22,163,74,0.12);
-} */
 th.col-sales {
   background: #dff0e3;  /* 不透明：sticky時に下の行が透けないように */
 }
 
 /* グループ2: 広告売上・実績額・広告ROAS（広告系 / アンバー） */
 th.col-ad, td.col-ad {
-  background: rgba(217,119,6,0.06);
+  background: #fcf6ec;
 }
-/* 【v150】ホバー時の濃色化を廃止 */
-/* tbody tr:hover td.col-ad {
-  background: rgba(217,119,6,0.12);
-} */
 th.col-ad {
   background: #fae6ce;  /* 不透明 */
 }
 
 /* グループ3: 入札価格（入札系 / ブルー） */
 th.col-bid, td.col-bid {
-  background: rgba(37,99,235,0.06);
+  background: #f0f3fd;
 }
-/* 【v150】ホバー時の濃色化を廃止 */
-/* tbody tr:hover td.col-bid {
-  background: rgba(37,99,235,0.14);
-} */
 th.col-bid {
   background: #d6e1fa;  /* 不透明 */
 }
@@ -1339,20 +1356,28 @@ tr.row-parent .code-cell .code-text {
 tr.row-parent .name-cell {
   /* 親はやや強調 */
 }
-/* 子行の背景色 + 行頭インデント */
-tr.row-child {
-  background: rgba(37, 99, 235, 0.04);  /* 薄い青系 */
+/* 子行の背景色 + 行頭インデント
+   【v156】tr→trの背景指定だと tbody td の白背景に上書きされるため、tr td に変更。
+   半透明 rgba(37,99,235,0.04/0.10) を白と合成した不透明色に置換し、stickyヘッダー透けバグを回避。 */
+tr.row-child td {
+  background: #f7f9fe;  /* 薄い青系（不透明） */
 }
-tr.row-child:hover {
-  background: rgba(37, 99, 235, 0.10);
+tr.row-child:hover td {
+  background: #e9eff9;
 }
+/* 子行であっても、色分け列(col-sales/col-ad/col-bid)は各列の色を維持する。
+   詳細度: tr.row-child td (12) > td.col-sales (11) のため、ここで明示的に再指定が必要。 */
 tr.row-child td.col-sales,
-tr.row-child:hover td.col-sales,
+tr.row-child:hover td.col-sales {
+  background: #f1faf4;
+}
 tr.row-child td.col-ad,
-tr.row-child:hover td.col-ad,
+tr.row-child:hover td.col-ad {
+  background: #fcf6ec;
+}
 tr.row-child td.col-bid,
 tr.row-child:hover td.col-bid {
-  /* 既存の列色分けを優先するため上書きしない（列色がそのまま見える） */
+  background: #f0f3fd;
 }
 /* 子行の商品コードに └ ツリー記号 + 字下げ */
 tr.row-child .code-cell-inner {
@@ -1979,7 +2004,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v155</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v156</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6833,8 +6858,9 @@ function installColResizeHandles() {
         if (td.querySelector('.col-resize-handle')) return;  // 既設置スキップ
         // td にも data-resize-key 属性を設定（CSSの th[data-resize-key], td[data-resize-key] が効く）
         td.dataset.resizeKey = col.key;
-        // tdのpositionをrelativeにして、ハンドルを内部に配置
-        td.style.position = 'relative';
+        // 【v156】td.style.position = 'relative' のインラインstyle設定を廃止。
+        // CSSの td[data-resize-key] { position: relative } が効くので冗長。
+        // インラインstyleは詳細度が最強で、stickyヘッダーのレンダリングに干渉する可能性があるため除去。
         makeHandle(td, col.ownerTh, col.key);
       });
     });
