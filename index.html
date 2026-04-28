@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v139 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v140 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -838,6 +838,40 @@ th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blu
 th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:hover { background: var(--bg3); }
+
+/* 【v140】列リサイズ機能：data-resize-key を持つthの右端にハンドル */
+th[data-resize-key] {
+  position: relative;  /* リサイズハンドルの基準 */
+}
+th[data-resize-key] .col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 6;            /* sticky thより前面に */
+  background: transparent;
+  transition: background 0.15s;
+}
+th[data-resize-key] .col-resize-handle:hover,
+th[data-resize-key] .col-resize-handle.is-resizing {
+  background: rgba(37,99,235,0.45);  /* hoverで青いライン */
+}
+/* リサイズ中はテキスト選択を全画面で無効化 */
+body.is-col-resizing,
+body.is-col-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+/* リサイズ対象列の幅をJSがインラインstyleで設定する。
+   折返しを許容しつつ、必要に応じて省略表示にする */
+th[data-resize-key],
+td[data-resize-key] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .product-img {
   width: 48px; height: 48px;
@@ -1813,7 +1847,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v139</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v140</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -1907,11 +1941,11 @@ table.rank-table td.rank-legend-col-row {
         <div class="table-wrap">
           <table id="tableBasic">
             <thead><tr>
-              <th data-sort="code">商品コード</th>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name">商品名</th>
-              <th class="nosort">メインKW</th>
-              <th class="nosort">検索URL</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="url">検索URL</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
@@ -1944,9 +1978,9 @@ table.rank-table td.rank-legend-col-row {
         <div class="table-wrap">
           <table id="tableMonthly">
             <thead><tr>
-              <th data-sort="code">商品コード</th>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name">商品名</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
               <th data-sort="month">月</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
@@ -1973,9 +2007,9 @@ table.rank-table td.rank-legend-col-row {
         <div class="table-wrap">
           <table id="tableRetired">
             <thead><tr>
-              <th data-sort="code">商品コード</th>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name">商品名</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="status-col" data-sort="status">ステータス</th>
@@ -2020,11 +2054,11 @@ table.rank-table td.rank-legend-col-row {
         <div class="table-wrap">
           <table id="tableAdAdjust">
             <thead><tr>
-              <th data-sort="code">商品コード</th>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name">商品名</th>
-              <th class="nosort">メインKW</th>
-              <th class="nosort">検索URL</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="url">検索URL</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
@@ -2057,11 +2091,11 @@ table.rank-table td.rank-legend-col-row {
         <div class="table-wrap">
           <table id="tableProAdjust">
             <thead><tr>
-              <th data-sort="code">商品コード</th>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name">商品名</th>
-              <th class="nosort">メインKW</th>
-              <th class="nosort">検索URL</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="url">検索URL</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
@@ -6505,6 +6539,113 @@ npSlot.addEventListener('drop', (e) => {
   if (f) npHandleFile(f);
 });
 
+// ==================== 【v140】列リサイズ機能 ====================
+// 主要4列（商品コード/商品名/メインKW/検索URL）の列幅をドラッグで変更可能に。
+// 設定は localStorage に保存され、リロードしても復元される。
+// テーブルをまたいで同じ data-resize-key を持つ列は同じ幅を共有（基本データで広げたら広告全体でも同じ幅）。
+const COL_WIDTHS_STORAGE_KEY = 'ycheck_col_widths_v1';
+const COL_RESIZE_MIN_PX = 60;     // 最小幅（潰しすぎ防止）
+const COL_RESIZE_MAX_PX = 800;    // 最大幅（広げすぎ防止）
+
+function loadColWidths() {
+  try {
+    const raw = localStorage.getItem(COL_WIDTHS_STORAGE_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return (obj && typeof obj === 'object') ? obj : {};
+  } catch (e) { return {}; }
+}
+function saveColWidth(key, px) {
+  try {
+    const all = loadColWidths();
+    if (px == null) delete all[key];
+    else all[key] = Math.round(px);
+    localStorage.setItem(COL_WIDTHS_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) { console.warn('列幅の保存に失敗:', e); }
+}
+
+// 保存済み列幅を全テーブルに適用（th と、対応する列番目の td にwidth/min-width/max-widthを設定）
+function applyColWidths() {
+  const widths = loadColWidths();
+  // data-resize-key を持つ全 th を走査
+  document.querySelectorAll('th[data-resize-key]').forEach(th => {
+    const key = th.dataset.resizeKey;
+    if (!key) return;
+    const px = widths[key];
+    if (px == null) {
+      // 保存値なし → インラインstyleを除去（CSSデフォルトに戻す）
+      th.style.width = '';
+      th.style.minWidth = '';
+      th.style.maxWidth = '';
+    } else {
+      const v = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, px));
+      th.style.width = v + 'px';
+      th.style.minWidth = v + 'px';
+      th.style.maxWidth = v + 'px';
+    }
+  });
+}
+
+// 各 th の右端にリサイズハンドル div を差し込む（1度だけ）
+function installColResizeHandles() {
+  document.querySelectorAll('th[data-resize-key]').forEach(th => {
+    if (th.querySelector('.col-resize-handle')) return;  // 既に挿入済みならスキップ
+    const handle = document.createElement('div');
+    handle.className = 'col-resize-handle';
+    handle.title = 'ドラッグで列幅を変更／ダブルクリックでリセット';
+    th.appendChild(handle);
+
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();  // th のクリック（ソート切替）に波及させない
+      const startX = e.clientX;
+      const startWidth = th.getBoundingClientRect().width;
+      const key = th.dataset.resizeKey;
+      handle.classList.add('is-resizing');
+      document.body.classList.add('is-col-resizing');
+
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX;
+        const newW = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, startWidth + dx));
+        // ドラッグ中はこの th だけ即時更新（軽いプレビュー）
+        th.style.width = newW + 'px';
+        th.style.minWidth = newW + 'px';
+        th.style.maxWidth = newW + 'px';
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        handle.classList.remove('is-resizing');
+        document.body.classList.remove('is-col-resizing');
+        // 確定値を保存し、全テーブルに反映
+        const finalW = parseFloat(th.style.width) || COL_RESIZE_MIN_PX;
+        saveColWidth(key, finalW);
+        applyColWidths();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    // ダブルクリックでデフォルト幅に戻す
+    handle.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const key = th.dataset.resizeKey;
+      saveColWidth(key, null);
+      applyColWidths();
+    });
+
+    // ハンドル単体のクリックで th のソート挙動が誤発火しないようにブロック
+    handle.addEventListener('click', (e) => { e.stopPropagation(); });
+  });
+}
+
+// 初期化: ハンドル設置 + 保存幅の復元。renderAll後に呼ぶ。
+function initColumnResize() {
+  installColResizeHandles();
+  applyColWidths();
+}
+
 // ==================== ショップ選択UI（マルチショップ v93〜） ====================
 function initShopSelector() {
   const sel = $('#shopSelect');
@@ -6609,6 +6750,8 @@ try {
   } catch (e) { console.warn('初期月選択エラー:', e); }
   renderAll();
   updateRankLastUpdatedDisplay();  // 復元データの最終更新を表示
+  // 【v140】列リサイズ機能の初期化（ハンドル設置 + 保存幅の復元）
+  try { initColumnResize(); } catch (e) { console.warn('列リサイズ初期化エラー:', e); }
   // 【v105】URLパラメータ ?view=ad-rank or ?view=seo-rank 等があれば、そのビューに直接移動
   try {
     const urlParams = new URLSearchParams(window.location.search);
