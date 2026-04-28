@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v157 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v158 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -876,36 +876,37 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
-/* 【v156】tbody内の全tdに不透明な白背景を明示。
-   stickyヘッダー(th)とスクロール時に重なる瞬間、tdが透明だと下の行と混ざって見える症状を防ぐ。
-   色付き列(col-sales/col-ad/col-bid)は後続のルールで個別に上書きされる。 */
+
+/* 【v158】stickyヘッダーが下にスクロールした行と重なって透けるバグの決定的修正。
+   v156までの「th単体stickyに3層背景」方式が不安定だったため、構造を変更：
+   - <thead> 自体に position: sticky を適用（最も実績のある構成）
+   - <tbody> に position: relative + z-index: 1 で明示的に下層を確保
+   - 個別のthからは position は取り除く（theadに任せる）
+   この組み合わせで、ブラウザ依存のレンダリング不具合を完全に避ける。 */
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #e8eaed;
+}
+thead tr {
+  background: #e8eaed;
+}
+tbody {
+  position: relative;
+  z-index: 1;
+}
+/* 【v156】tbody内の全tdに不透明な白背景を明示。半透明背景の合成色を絶つ。 */
 tbody td {
   background: #ffffff;
 }
-
-/* 【v156】stickyヘッダーが下にスクロールした行と重なって透けるバグの完全修正。
-   原因: th単体でz-indexやbackgroundを設定しても、border-collapse:collapseのテーブルでは
-   ブラウザがthの背景を一部描画しない(特にtdがposition:relative/インラインスタイルを持つ場合)。
-   対策: thead → thead tr → th の3層に不透明背景をかけて、tbodyの内容が透ける経路を完全に塞ぐ。
-   note: thead自体には position は付けない（th側のstickyに干渉する可能性があるため）。
-         代わりに各thに isolation: isolate を付けて、tbody側のstacking contextの影響を遮断。 */
-thead {
-  background: #e8eaed;       /* 1層目: thead要素そのもの */
-}
-thead tr {
-  background: #e8eaed;       /* 2層目: tr */
-}
 th {
-  background: #e8eaed;       /* 3層目: 個別のth（色付き列で個別に上書きされる） */
+  background: #e8eaed;
   font-weight: 600;
   color: var(--text2);
   font-size: 0.78rem;
   cursor: pointer;
   user-select: none;
-  position: sticky;
-  top: 0;
-  z-index: 11;
-  isolation: isolate;        /* 独立スタッキングコンテキストでtbody側の影響を遮断 */
 }
 th:hover { background: #d8dadd; }
 th.nosort { cursor: default; }
@@ -2004,7 +2005,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v157</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v158</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
