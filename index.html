@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v161 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v164 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2016,12 +2016,14 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v161</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v164</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
       <button class="font-btn" id="fontUp">A+</button>
     </div>
+    <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
+    <button class="state-chip info-chip" id="stateInfoBtn" type="button"><span class="chip-label">💡 全体の説明</span></button>
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
@@ -2063,7 +2065,7 @@ table.rank-table td.rank-legend-col-row {
 <nav class="top-nav top-nav-3">
   <div class="nav-group">
     <span class="nav-group-label">【状態】</span>
-    <button class="state-chip info-chip" id="stateInfoBtn" type="button"><span class="chip-label">💡 全体の説明</span></button>
+    <!-- 【v162】「💡 全体の説明」はヘッダーへ移動済み。ここからは削除。 -->
     <button class="state-chip" data-state="ad-ok"><span class="chip-label">広告○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <button class="state-chip" data-state="ad-ng"><span class="chip-label">広告×</span><span class="chip-num" id="cntAdNg">(0)</span></button>
     <button class="state-chip" data-state="ad-none"><span class="chip-label">広告無</span><span class="chip-num" id="cntAdNone">(0)</span></button>
@@ -2256,6 +2258,8 @@ table.rank-table td.rank-legend-col-row {
           <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
+          <!-- 【v164】一時ボタン: 表示中の商品の[商品コード/商品名/メインKW/PRオプ料率]をCSV出力。次回以降の指示で削除予定。 -->
+          <button class="btn sm ghost" id="btnExportProAdjustCsvTemp" title="表示中の商品の商品コード/商品名/メインKW/PRオプ料率をCSV出力（一時機能）">📥 CSV出力(一時)</button>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -4594,20 +4598,13 @@ function daysInMonth(ym) {
 }
 
 // ==================== rank.json 自動取得 ====================
-// 【v161】順位値の正規化ルールを全面刷新。
-// API/JSONから入ってくる値は次のいずれか：
-//   - 数値（1, 5, 13, ...）= Yahoo APIから取得した実順位 → numericRankToCategoryでカテゴリ表記に変換
-//   - 既存の新表記（「4位以内\n◯」等）= そのまま
-//   - 旧表記（「最上段◎」「上段◎」「上段\n◎」「下段×」「下段\n×」「上段PR○」等）
-//     = 仕様変更で順位番号に推定不可。null にリセットし、新規取得を待つ。
-//   - 「-」「圏外」「null」「空文字」 = null として扱う（未取得の意味）
-// 旧表記検知用のセット（compactした形＝改行/空白を取り除いた形で判定）
-const _LEGACY_RANK_TOKENS = new Set([
-  '最上段◎', '上段◎', '下段×',
-  '上段-PRオプ○', '上段PR○', 'PR○',
-  '下段-PRオプ×', '下段PR×', 'PR×'
-]);
-// 新表記検知用：末尾が ◯/△/✕ なら新表記として通す
+// 【v162】rank.json取り込み時の値正規化ルール（v161の旧表記null化は撤回）。
+// 入りうる値：
+//   - 数値（1, 5, 13...）= 新仕様の数値順位 → numericRankToCategoryでカテゴリ表記に変換
+//   - 数値文字列（"5"）= 同上
+//   - 新表記（"4位以内\n◯"等）= そのまま素通し
+//   - 旧表記（"上段\n◎"、"下段\n×"、"上段\nPR○" 等）= そのまま素通し（移行期間中の互換性のため）
+//   - null/空/'-'/'圏外'/'null' = null として扱う（未取得＝「-」表示）
 function _isNewRankNotation(s) {
   if (typeof s !== 'string') return false;
   const c = s.replace(/\s+/g, '');
@@ -4616,7 +4613,7 @@ function _isNewRankNotation(s) {
 // kind: 'ad' or 'seo'。convertRankArrayから渡される。
 function convertRankValue(v, kind) {
   if (v == null) return null;
-  // 数値（または数値文字列）→ カテゴリ表記に変換
+  // 数値 → カテゴリ表記
   if (typeof v === 'number') {
     return numericRankToCategory(v, kind);
   }
@@ -4629,12 +4626,18 @@ function convertRankValue(v, kind) {
     if (/^\d+$/.test(trimmed)) {
       return numericRankToCategory(Number(trimmed), kind);
     }
-    // 既に新表記ならそのまま
-    if (_isNewRankNotation(trimmed)) return trimmed;
-    // 旧表記ならリセット（null）
-    const compact = trimmed.replace(/\s+/g, '');
-    if (_LEGACY_RANK_TOKENS.has(compact)) return null;
-    return null;  // それ以外の不明な文字列もnull扱い（安全側）
+    // 【v163】SEO旧閾値表記の自動読み替え：
+    //   旧 9-16位以内 → 新 9-18位以内
+    //   旧 17位以下   → 新 19位以下
+    // (kindによらず、文字列マッチで安全に置換。改行/記号は保持)
+    if (v.indexOf('9-16位以内') !== -1) {
+      return v.replace('9-16位以内', '9-18位以内');
+    }
+    if (v.indexOf('17位以下') !== -1) {
+      return v.replace('17位以下', '19位以下');
+    }
+    // それ以外の文字列（新表記・旧表記とも）はそのまま素通し
+    return v;
   }
   return null;
 }
@@ -4645,9 +4648,10 @@ function convertRankArray(arr, kind) {
 
 // 【v86→v88】順位表記の一括移行を1度だけ実行（既存データの旧表記を新表記に置換）
 // 実行前に localStorage に別キーでバックアップを保存（不可逆性を緩和）
-// フラグキーは移行ルールのバージョンごとに変更（v2: 2段表示対応 / 【v161】v3: 数値順位カテゴリ化対応）
-const RANK_NOTATION_MIGRATION_FLAG_KEY = 'ycheck_rank_notation_migrated_v3';
-const RANK_NOTATION_MIGRATION_BACKUP_KEY = 'ycheck_data_v1_backup_pre_notation_migration_v3';
+// フラグキーは移行ルールのバージョンごとに変更
+//   v2: 2段表示対応 / v3: 数値順位カテゴリ化対応 / 【v163】v4: SEO閾値変更（9-16→9-18, 17位以下→19位以下）の自動読み替え
+const RANK_NOTATION_MIGRATION_FLAG_KEY = 'ycheck_rank_notation_migrated_v4';
+const RANK_NOTATION_MIGRATION_BACKUP_KEY = 'ycheck_data_v1_backup_pre_notation_migration_v4';
 function migrateRankNotationOnce() {
   try {
     if (localStorage.getItem(RANK_NOTATION_MIGRATION_FLAG_KEY) === 'true') return false;
@@ -4663,6 +4667,7 @@ function migrateRankNotationOnce() {
 
     // 全走査して置換
     let changed = 0;
+    // (1) state.rank（API値の正規化済みキャッシュ）
     Object.keys(state.rank).forEach(ym => {
       const byCode = state.rank[ym];
       if (!byCode || typeof byCode !== 'object') return;
@@ -4671,7 +4676,7 @@ function migrateRankNotationOnce() {
         ['adRank', 'seoRank'].forEach(key => {
           const arr = fields[key];
           if (!Array.isArray(arr)) return;
-          // 【v161】adRank→'ad'、seoRank→'seo' を渡してカテゴリ判定の閾値を切り替え
+          // adRank→'ad'、seoRank→'seo'
           const kind = (key === 'adRank') ? 'ad' : 'seo';
           for (let i = 0; i < arr.length; i++) {
             const before = arr[i];
@@ -4684,6 +4689,32 @@ function migrateRankNotationOnce() {
         });
       });
     });
+    // (2) 【v163】state.rankEdits（手動編集値）も対象に追加。
+    //   構造: state.rankEdits['YYYY/MM'][code].rankAd[31] / .rankSeo[31]
+    //   SEO閾値の旧→新 (9-16→9-18, 17位以下→19位以下) はSEO側にしか存在しないので rankSeo だけ走査でも十分だが、
+    //   念のため rankAd も同じconvertRankValueを通す（ad側は無関係なので変化なし）。
+    if (state.rankEdits && typeof state.rankEdits === 'object') {
+      Object.keys(state.rankEdits).forEach(ym => {
+        const byCode = state.rankEdits[ym];
+        if (!byCode || typeof byCode !== 'object') return;
+        Object.keys(byCode).forEach(code => {
+          const fields = byCode[code] || {};
+          ['rankAd', 'rankSeo'].forEach(key => {
+            const arr = fields[key];
+            if (!Array.isArray(arr)) return;
+            const kind = (key === 'rankAd') ? 'ad' : 'seo';
+            for (let i = 0; i < arr.length; i++) {
+              const before = arr[i];
+              const after = convertRankValue(before, kind);
+              if (before !== after) {
+                arr[i] = after;
+                changed++;
+              }
+            }
+          });
+        });
+      });
+    }
 
     localStorage.setItem(RANK_NOTATION_MIGRATION_FLAG_KEY, 'true');
     if (changed > 0) {
@@ -5267,7 +5298,7 @@ function rankStatusClass(v) {
 
 // 【v161】数値順位 → 表示用カテゴリ文字列に変換
 // kind: 'ad' = 広告順位（1-4=◯, 5-12=△, 13+=✕）
-//       'seo' = SEO順位（1-8=◯, 9-16=△, 17+=✕）
+//       'seo' = SEO順位（1-8=◯, 9-18=△, 19+=✕）  【v163】SEO閾値を9-16→9-18、17→19 に変更
 // 数値以外（null/'-'/空文字/NaN）は null を返す → 表示は空セル/「-」になる
 function numericRankToCategory(rank, kind) {
   if (rank == null || rank === '' || rank === '-') return null;
@@ -5280,8 +5311,8 @@ function numericRankToCategory(rank, kind) {
   } else {
     // seo
     if (n <= 8)  return '5-8位以内\n◯';
-    if (n <= 16) return '9-16位以内\n△';
-    return '17位以下\n✕';
+    if (n <= 18) return '9-18位以内\n△';
+    return '19位以下\n✕';
   }
 }
 
@@ -5607,6 +5638,63 @@ $('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad
 $('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 $('#btnDeleteAdNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
 $('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
+
+// 【v164】一時機能: PRオプ全体タブの表示中商品の[商品コード/商品名/メインKW/PRオプ料率]をCSV出力。
+// 次回以降の指示で削除予定。DOMから商品コードを順に拾うのでフィルタ・ソート・グループ化の結果がそのまま反映される。
+function exportProAdjustCsvTemp() {
+  const tbody = document.querySelector('#tableProAdjust tbody');
+  if (!tbody) { alert('PRオプ全体タブの表が見つかりませんでした。'); return; }
+  const rows = tbody.querySelectorAll('tr');
+  if (rows.length === 0) { alert('表示中の商品がありません。'); return; }
+  // 各行の最初のtd内の.code-textから商品コードを取得
+  const codes = [];
+  rows.forEach(tr => {
+    const codeEl = tr.querySelector('td:first-child .code-text');
+    if (codeEl) {
+      const c = (codeEl.textContent || '').trim();
+      if (c) codes.push(c);
+    }
+  });
+  if (codes.length === 0) { alert('商品コードが取得できませんでした。'); return; }
+  // CSVエスケープ
+  const csvEscape = (v) => {
+    const s = (v == null) ? '' : String(v);
+    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  // PRオプ料率の整形（state.proRateは既に%単位の整数。fmtProRateと同じMath.floor + '%'で整える）
+  const fmtRate = (pr) => {
+    if (pr == null || isNaN(pr) || !isFinite(pr)) return '';
+    return Math.floor(Number(pr)) + '%';
+  };
+  const headers = ['商品コード', '商品名', 'メインKW', 'PRオプ料率'];
+  const lines = [headers.join(',')];
+  codes.forEach(code => {
+    const m = (typeof getMaster === 'function') ? (getMaster(code) || {}) : (state.master[code] || {});
+    const pr = (typeof getProRate === 'function') ? getProRate(code) : null;
+    const row = [code, m.name || '', m.kw || '', fmtRate(pr)];
+    lines.push(row.map(csvEscape).join(','));
+  });
+  // BOM付きUTF-8でExcel対応
+  const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+  a.download = `proadjust_export_${ts}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  if (typeof showToast === 'function') {
+    showToast(`${codes.length}件をCSV出力しました`, 'success');
+  }
+}
+const _btnExportProAdjustCsvTemp = $('#btnExportProAdjustCsvTemp');
+if (_btnExportProAdjustCsvTemp) _btnExportProAdjustCsvTemp.addEventListener('click', exportProAdjustCsvTemp);
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
@@ -6103,8 +6191,8 @@ function startRankTopEditCell(cell) {
     : [
         { v: '', label: '—' },
         { v: '5-8位以内\n◯',  label: '5-8位以内 ◯' },
-        { v: '9-16位以内\n△', label: '9-16位以内 △' },
-        { v: '17位以下\n✕',   label: '17位以下 ✕' }
+        { v: '9-18位以内\n△', label: '9-18位以内 △' },
+        { v: '19位以下\n✕',   label: '19位以下 ✕' }
       ];
   options.forEach(opt => {
     const o = document.createElement('option');
