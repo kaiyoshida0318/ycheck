@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v164 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v167 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2016,7 +2016,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v164</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v167</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2056,8 +2056,8 @@ table.rank-table td.rank-legend-col-row {
 <nav class="top-nav top-nav-2">
   <div class="nav-group">
     <span class="nav-group-label">【定期チェック】</span>
-    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust"><span class="ico">🎯</span>広告全体</a>
-    <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust"><span class="ico">⭐</span>PRオプ全体</a>
+    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust"><span class="ico">🎯</span>広告全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust"><span class="ico">⭐</span>PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
   </div>
 </nav>
 
@@ -2258,8 +2258,6 @@ table.rank-table td.rank-legend-col-row {
           <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
-          <!-- 【v164】一時ボタン: 表示中の商品の[商品コード/商品名/メインKW/PRオプ料率]をCSV出力。次回以降の指示で削除予定。 -->
-          <button class="btn sm ghost" id="btnExportProAdjustCsvTemp" title="表示中の商品の商品コード/商品名/メインKW/PRオプ料率をCSV出力（一時機能）">📥 CSV出力(一時)</button>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -3758,6 +3756,19 @@ function roasClass(roas) {
   if (roas >= 100) return 'roas-mid';
   return 'roas-bad';
 }
+// 【v167】「YYYY/MM」形式で当月/前月を返すヘルパー。月セレクタの自動追加に使う。
+function getCurrentYm() {
+  const d = new Date();
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function getPrevYm() {
+  const d = new Date();
+  // 当月1日に揃えてから1ヶ月引く（月跨ぎ計算の安全側）
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function getAvailableMonths() {
   const set = new Set();
   if (state.item) state.item.forEach(i => i.month && set.add(i.month));
@@ -3765,6 +3776,9 @@ function getAvailableMonths() {
   if (state.overall) state.overall.months.forEach(m => set.add(m.month));
   // rank.json由来の月も含める（売上CSVをまだアップロードしていない月でも順位データだけは表示可能に）
   if (state.rank) Object.keys(state.rank).forEach(ym => set.add(ym));
+  // 【v167】当月と前月は常にセレクタに含める（データが無くても選べるように）
+  set.add(getCurrentYm());
+  set.add(getPrevYm());
   return [...set].sort();
 }
 
@@ -4034,10 +4048,10 @@ function renderBasic() {
     sel.innerHTML = '<option value="">データなし</option>';
   } else {
     sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-    // 【v110】デフォルトは「数値データがインポートされた最新月」
+    // 【v167】デフォルトは「前月」固定（getAvailableMonths内で当月/前月は必ず含めているので必ず候補にある）
     if (!cur || !months.includes(cur)) {
-      const latest = getLatestImportedMonth();
-      sel.value = latest && months.includes(latest) ? latest : months[months.length - 1];
+      const prev = getPrevYm();
+      sel.value = months.includes(prev) ? prev : months[months.length - 1];
     } else {
       sel.value = cur;
     }
@@ -4145,10 +4159,10 @@ function renderMonthly() {
       sel.innerHTML = '<option value="">データなし</option>';
     } else {
       sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-      // デフォルトは「数値データがインポートされた最新月」
+      // 【v167】デフォルトは「前月」固定
       if (!cur || !months.includes(cur)) {
-        const latest = getLatestImportedMonth();
-        sel.value = latest && months.includes(latest) ? latest : months[months.length - 1];
+        const prev = getPrevYm();
+        sel.value = months.includes(prev) ? prev : months[months.length - 1];
       } else {
         sel.value = cur;
       }
@@ -4485,6 +4499,12 @@ function renderAdAdjust() {
     tbody.appendChild(tr);
   });
   updateSortIndicator('#tableAdAdjust', adAdjustSortKey, adAdjustSortDir);
+  // 【v166】広告全体タブ見出しの件数 (N) を更新（フィルタ・絞り込み適用後の実際の表示行数）
+  const _cntAdAdj = $('#cntAdAdjustActive');
+  if (_cntAdAdj) {
+    const _n = tbody.children.length;
+    _cntAdAdj.textContent = _n > 0 ? `(${_n})` : '';
+  }
 }
 
 // ==================== Rendering: PRO調整 ====================
@@ -4586,6 +4606,12 @@ function renderProAdjust() {
     tbody.appendChild(tr);
   });
   updateSortIndicator('#tableProAdjust', proAdjustSortKey, proAdjustSortDir);
+  // 【v166】PRオプ全体タブ見出しの件数 (N) を更新（フィルタ・絞り込み適用後の実際の表示行数）
+  const _cntProAdj = $('#cntProAdjustActive');
+  if (_cntProAdj) {
+    const _n = tbody.children.length;
+    _cntProAdj.textContent = _n > 0 ? `(${_n})` : '';
+  }
 }
 
 // ==================== Rendering: 広告順位 / SEO順位 ====================
@@ -5183,8 +5209,10 @@ function renderRankTable(kind) {
     sel.innerHTML = `<option value="${fallback}">${fallback}</option>`;
   } else {
     sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    // 【v167】デフォルトは「前月」固定
     if (!cur || !months.includes(cur)) {
-      sel.value = months[months.length - 1];
+      const prev = getPrevYm();
+      sel.value = months.includes(prev) ? prev : months[months.length - 1];
     } else {
       sel.value = cur;
     }
@@ -5638,63 +5666,6 @@ $('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad
 $('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 $('#btnDeleteAdNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
 $('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
-
-// 【v164】一時機能: PRオプ全体タブの表示中商品の[商品コード/商品名/メインKW/PRオプ料率]をCSV出力。
-// 次回以降の指示で削除予定。DOMから商品コードを順に拾うのでフィルタ・ソート・グループ化の結果がそのまま反映される。
-function exportProAdjustCsvTemp() {
-  const tbody = document.querySelector('#tableProAdjust tbody');
-  if (!tbody) { alert('PRオプ全体タブの表が見つかりませんでした。'); return; }
-  const rows = tbody.querySelectorAll('tr');
-  if (rows.length === 0) { alert('表示中の商品がありません。'); return; }
-  // 各行の最初のtd内の.code-textから商品コードを取得
-  const codes = [];
-  rows.forEach(tr => {
-    const codeEl = tr.querySelector('td:first-child .code-text');
-    if (codeEl) {
-      const c = (codeEl.textContent || '').trim();
-      if (c) codes.push(c);
-    }
-  });
-  if (codes.length === 0) { alert('商品コードが取得できませんでした。'); return; }
-  // CSVエスケープ
-  const csvEscape = (v) => {
-    const s = (v == null) ? '' : String(v);
-    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-    return s;
-  };
-  // PRオプ料率の整形（state.proRateは既に%単位の整数。fmtProRateと同じMath.floor + '%'で整える）
-  const fmtRate = (pr) => {
-    if (pr == null || isNaN(pr) || !isFinite(pr)) return '';
-    return Math.floor(Number(pr)) + '%';
-  };
-  const headers = ['商品コード', '商品名', 'メインKW', 'PRオプ料率'];
-  const lines = [headers.join(',')];
-  codes.forEach(code => {
-    const m = (typeof getMaster === 'function') ? (getMaster(code) || {}) : (state.master[code] || {});
-    const pr = (typeof getProRate === 'function') ? getProRate(code) : null;
-    const row = [code, m.name || '', m.kw || '', fmtRate(pr)];
-    lines.push(row.map(csvEscape).join(','));
-  });
-  // BOM付きUTF-8でExcel対応
-  const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const now = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
-  a.download = `proadjust_export_${ts}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  if (typeof showToast === 'function') {
-    showToast(`${codes.length}件をCSV出力しました`, 'success');
-  }
-}
-const _btnExportProAdjustCsvTemp = $('#btnExportProAdjustCsvTemp');
-if (_btnExportProAdjustCsvTemp) _btnExportProAdjustCsvTemp.addEventListener('click', exportProAdjustCsvTemp);
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
