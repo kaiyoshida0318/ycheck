@@ -24,18 +24,18 @@ Yahoo!ショッピング 順位スクレイピングスクリプト(本番版)
 
 判定ルール:
 ■広告順位(広告枠の中での順位)
-  ・広告枠1〜4位 → "1～4位\n◯"
-  ・広告枠5〜6位 → "5～6位\n△"
-  ・広告枠7位以上 or 圏外 → "7位以下\n×"
+  ・広告枠1〜4位 → "1~4位\n◯"
+  ・広告枠5〜6位 → "5~6位\n△"
+  ・広告枠7位以上 or 圏外 → "7位\n以下✕"
 
 ■SEO順位(SEO枠の中での順位)
-  ・SEO枠1〜6位 → "1～6位\n◯"
-  ・SEO枠7〜14位 → "7～14位\n△"
-  ・SEO枠15位以上 or 圏外 → "15位以下\n×"
+  ・SEO枠1〜6位 → "1~6位\n◯"
+  ・SEO枠7〜14位 → "7~14位\n△"
+  ・SEO枠15位以上 or 圏外 → "15位\n以下✕"
 
 ■エラー時(取得失敗・タイムアウト等)
   ・rank.jsonには何も書き込まない(null=空白表示)
-  ・圏外(×)とエラー(空白)を視覚的に区別できる
+  ・圏外(✕)とエラー(空白)を視覚的に区別できる
 """
 
 import asyncio
@@ -44,6 +44,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -135,25 +136,35 @@ def set_today_value(
 # ==== 判定ロジック ====
 
 def judge_ad_rank(rank: int | None) -> str:
-    """広告枠順位の判定"""
+    """広告枠順位の判定
+
+    【v9.1】Ycheck側CSSの色付け判定が U+2715「✕」を期待しているため、× → ✕ に変更。
+           また圏外/7位以下は「7位\\n以下✕」の改行位置に変更。
+    【v9.2】全角チルダ「～」を半角「~」に変更(セル横幅を超えて3行になるのを防ぐため)。
+    """
     if rank is None:
-        return "7位以下\n×"  # 圏外
+        return "7位\n以下✕"  # 圏外
     if 1 <= rank <= 4:
-        return "1～4位\n◯"
+        return "1~4位\n◯"
     if 5 <= rank <= 6:
-        return "5～6位\n△"
-    return "7位以下\n×"
+        return "5~6位\n△"
+    return "7位\n以下✕"
 
 
 def judge_seo_rank(rank: int | None) -> str:
-    """SEO枠順位の判定"""
+    """SEO枠順位の判定
+
+    【v9.1】Ycheck側CSSの色付け判定が U+2715「✕」を期待しているため、× → ✕ に変更。
+           また圏外/15位以下は「15位\\n以下✕」の改行位置に変更。
+    【v9.2】全角チルダ「～」を半角「~」に変更(セル横幅を超えて3行になるのを防ぐため)。
+    """
     if rank is None:
-        return "15位以下\n×"  # 圏外
+        return "15位\n以下✕"  # 圏外
     if 1 <= rank <= 6:
-        return "1～6位\n◯"
+        return "1~6位\n◯"
     if 7 <= rank <= 14:
-        return "7～14位\n△"
-    return "15位以下\n×"
+        return "7~14位\n△"
+    return "15位\n以下✕"
 
 
 # ==== コード抽出 ====
@@ -293,48 +304,113 @@ def find_self_rank(items: list[dict], target_code: str) -> int | None:
 
 # ==== git push ====
 
+# pushが他者の更新と衝突した時の最大リトライ回数。
+# Ycheck側のGitHub連携(自動保存)が同時刻に走るケースに備える。
+GIT_PUSH_MAX_RETRY = 3
+# pull --rebase 後のpush再試行までの待機秒数(リトライごとにこれを倍にする)
+GIT_PUSH_RETRY_WAIT_SEC = 2
+
+
+def _git(args: list[str], cwd: Path, check: bool = True) -> subprocess.CompletedProcess:
+    """gitコマンド共通ラッパー"""
+    return subprocess.run(["git"] + args, cwd=cwd, check=check, capture_output=True)
+
+
+def _is_push_rejected(stderr_bytes: bytes) -> bool:
+    """git push の失敗ログから「remote先行による rejected」かを判定する。
+
+    典型的なメッセージ:
+      ! [rejected]        main -> main (fetch first)
+      error: failed to push some refs to 'https://...'
+    これらが含まれていれば「単純なrejected = pull-rebaseで解決可能」と判断する。
+    """
+    if not stderr_bytes:
+        return False
+    s = stderr_bytes.decode("utf-8", errors="replace")
+    if "[rejected]" in s and "fetch first" in s:
+        return True
+    if "non-fast-forward" in s:
+        return True
+    return False
+
+
 def git_commit_and_push(repo_root: Path) -> bool:
-    """rank.jsonをcommit&pushする。成功時 True
+    """rank.json を commit & push する。成功時 True
+
+    【v9.3】タスクスケジューラ運用に耐える恒久対策:
+      Ycheck画面のGitHub連携機能(自動保存)が同時刻にcommit & pushを行うため、
+      手元PCのpushが [rejected] になるケースが頻発する。
+      これを自動で解消するため、push失敗時は以下の手順で復旧を試みる:
+        1. push失敗(rejected)を検知
+        2. git pull --rebase で remote の最新コミットを取り込む
+        3. 再度 push を試みる
+        4. 1〜3を最大 GIT_PUSH_MAX_RETRY 回まで繰り返す
+      これにより、ユーザーが手動で stash → pull → push → pop する必要がなくなる。
 
     【v9で修正】
-    旧版は `git diff --quiet rank.json` で差分判定していたが、これは
-    新規ファイルや stage 済みの変更を検知できない問題があった。
-    新版は `git add` → `git diff --cached --quiet` で stage 後の差分を判定する。
+      旧版は `git diff --quiet rank.json` で差分判定していたが、これは
+      新規ファイルや stage 済みの変更を検知できない問題があった。
+      新版は `git add` → `git diff --cached --quiet` で stage 後の差分を判定する。
     """
     try:
-        # まず add(新規でも既存でも問題なし)
-        subprocess.run(
-            ["git", "add", "rank.json"],
-            cwd=repo_root,
-            check=True,
-            capture_output=True,
-        )
+        # ── ステップ1: add ──
+        _git(["add", "rank.json"], cwd=repo_root)
 
-        # stage 後の差分があるか確認
-        diff_result = subprocess.run(
-            ["git", "diff", "--cached", "--quiet"],
-            cwd=repo_root,
-            capture_output=True,
-        )
+        # ── ステップ2: stage 後の差分があるか確認 ──
+        diff_result = _git(["diff", "--cached", "--quiet"], cwd=repo_root, check=False)
         if diff_result.returncode == 0:
             # stageに差分なし=変更なし
             log("git: rank.jsonに変更なし、commit不要")
             return True
 
-        # commit
+        # ── ステップ3: commit ──
         timestamp = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
         commit_msg = f"chore: update rank.json ({timestamp})"
-        subprocess.run(
-            ["git", "commit", "-m", commit_msg],
-            cwd=repo_root,
-            check=True,
-            capture_output=True,
-        )
+        _git(["commit", "-m", commit_msg], cwd=repo_root)
 
-        # push
-        subprocess.run(["git", "push"], cwd=repo_root, check=True, capture_output=True)
-        log(f"git: push成功 ({commit_msg})")
-        return True
+        # ── ステップ4: push (失敗時は pull --rebase でリトライ) ──
+        wait_sec = GIT_PUSH_RETRY_WAIT_SEC
+        for attempt in range(1, GIT_PUSH_MAX_RETRY + 1):
+            push_result = _git(["push"], cwd=repo_root, check=False)
+            if push_result.returncode == 0:
+                log(f"git: push成功 ({commit_msg})")
+                return True
+
+            # 失敗:rejected かどうか判定
+            if not _is_push_rejected(push_result.stderr):
+                # rejected以外のエラー(認証失敗・ネットワーク不通など)は早期リターン
+                log(f"✖ git push 失敗(リトライ対象外): "
+                    f"{push_result.stderr.decode('utf-8', errors='replace').strip()}")
+                return False
+
+            # rejected 検知:remote先行 → pull --rebase で取り込んで再push
+            log(f"⚠ git push が rejected (試行 {attempt}/{GIT_PUSH_MAX_RETRY}): "
+                f"remote が先行しています。pull --rebase で取り込んで再試行します")
+
+            try:
+                pull_result = _git(["pull", "--rebase"], cwd=repo_root, check=False)
+                if pull_result.returncode != 0:
+                    # rebase で競合した場合 → abort して中断(rank.json は手元PCに残る)
+                    log(f"✖ git pull --rebase 失敗: "
+                        f"{pull_result.stderr.decode('utf-8', errors='replace').strip()}")
+                    log(f"  競合を解消するため git rebase --abort を実行します")
+                    _git(["rebase", "--abort"], cwd=repo_root, check=False)
+                    return False
+                log(f"  ✓ remoteの更新を取り込みました")
+            except Exception as e:
+                log(f"✖ git pull --rebase で例外: {e}")
+                return False
+
+            # 少し待ってから再push(連続push競合の緩和)
+            if attempt < GIT_PUSH_MAX_RETRY:
+                time.sleep(wait_sec)
+                wait_sec *= 2  # 指数バックオフ:2秒 → 4秒 → 8秒
+
+        # ループを抜けた=最大試行回数に達しても成功せず
+        log(f"✖ git push が {GIT_PUSH_MAX_RETRY} 回連続で rejected。"
+            f"後で手動で git push を実行してください")
+        return False
+
     except subprocess.CalledProcessError as e:
         log(f"✖ git操作エラー: {e}")
         if e.stderr:
@@ -414,7 +490,7 @@ async def main_async() -> int:
             except Exception as e:
                 log(f"[{i}/{len(products)}] {code} (KW='{keyword}'): ✖エラー {e}")
                 # エラー時はrank.jsonに値を書き込まない(nullのまま=空白表示)
-                # → 圏外(×)とエラー(空白)を区別できる
+                # → 圏外(✕)とエラー(空白)を区別できる
                 errors += 1
 
             # マナー上のキーワード間待機
