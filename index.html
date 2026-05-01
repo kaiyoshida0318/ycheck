@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v167 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v168 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2016,7 +2016,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v167</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v168</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2108,6 +2108,8 @@ table.rank-table td.rank-legend-col-row {
               <span class="gh-reflect-fallback" style="display:none;">reflect-guide.png が読み込めませんでした</span>
             </span>
           </span>
+          <!-- 【v168】商品コード+メインKWだけのCSV出力ボタン（1列目=code, 2列目=keyword） -->
+          <button class="btn sm ghost" id="btnDownloadCodeKwCsv" type="button" title="表示中の商品の商品コード(code)とメインKW(keyword)だけをCSV出力">📥 商品コード+KW CSV</button>
         </div>
         <div class="table-wrap">
           <table id="tableBasic">
@@ -5671,6 +5673,9 @@ $('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'))
 $('#basicMonth').addEventListener('change', renderBasic);
 $('#basicSearch').addEventListener('input', renderBasic);
 if ($('#btnDownloadBasicCsv')) $('#btnDownloadBasicCsv').addEventListener('click', downloadBasicCsv);
+// 【v168】「📥 商品コード+KW CSV」ボタン: 既存のdownloadBasicCsvと同じCSV(code,keyword)を出力。
+// 機能は完全に同じだが、ユーザーから見て「順位取得用」と「単純なKW一覧」を別UIとして提供したい意図のためボタンを分離。
+if ($('#btnDownloadCodeKwCsv')) $('#btnDownloadCodeKwCsv').addEventListener('click', downloadBasicCsv);
 
 // 広告順位 / SEO順位 ビューの操作
 $('#adRankMonth').addEventListener('change', renderAdRank);
