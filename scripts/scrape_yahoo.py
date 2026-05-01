@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Yahoo!ショッピング 順位スクレイピングスクリプト
+Yahoo!ショッピング 順位スクレイピングスクリプト(本番版)
+
+【v9で修正された重要点】
+1. セレクタ修正:商品コンテナ本体のみを正しく抽出
+   - 旧版:[class*="SearchResult_SearchResultItem_"] が部分一致のため
+     子要素(__price, __image, __imageIcon等)も「商品」とカウント。
+     最初の30要素のうち画像URLが取れるのは数件のみで、SEO検出が大幅に欠落していた。
+   - 新版:JS evaluateで __ がちょうど1回のクラス名(本体)のみフィルタ。
+     v9実機テストで3キーワード全て30/30件のコード取得成功。
+2. git push バグ修正:
+   - 旧版:git diff --quiet rank.json → 新規ファイルや stage 後の変更を検知できず
+   - 新版:git add → git diff --cached --quiet で stage 後の差分を判定
 
 機能:
 - 手元PCで Playwright を使用して Yahoo!ショッピング検索結果を取得
@@ -33,12 +44,11 @@ import json
 import re
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from urllib.parse import quote_plus
 
-from playwright.async_api import async_playwright, Page, ElementHandle
+from playwright.async_api import async_playwright, Page
 
 # ==== 設定 ====
 STORE_ID = "yukaiya"
@@ -46,13 +56,11 @@ SEARCH_URL = "https://shopping.yahoo.co.jp/search?p={keyword}"
 TARGET_RANK = 30  # 取得する全体順位の上限
 KEYWORD_INTERVAL_SEC = 8  # 各キーワード間の待機時間(マナー)
 PAGE_LOAD_TIMEOUT_MS = 30_000  # ページロードタイムアウト
-SCROLL_WAIT_MS = 1500  # スクロール後の待機
-MAX_SCROLL_ATTEMPTS = 10  # スクロールリトライ上限
+SCROLL_WAIT_MS = 400  # スクロール後の待機
+MAX_SCROLL_STEPS = 15  # スクロール回数(画像遅延ロード対策)
 
 # Playwrightセレクタ(部分一致でハッシュ変動に対応)
-ITEM_CONTAINER_SELECTOR = '[class*="SearchResult_SearchResultItem_"]'
-PR_BADGE_SELECTOR = '[class*="imageIcon--pr"]'
-ITEM_IMAGE_SELECTOR = 'img'
+ITEM_CONTAINER_PRESENCE_SELECTOR = '[class*="SearchResult_SearchResultItem_"]'
 
 # ==== パス設定 ====
 ROOT = Path(__file__).resolve().parent.parent
@@ -169,101 +177,107 @@ def extract_store_and_code(image_src: str) -> tuple[str, str] | None:
 
 # ==== スクレイピング ====
 
-async def ensure_items_loaded(page: Page, target_count: int) -> int:
-    """30件以上の商品が読み込まれるまでスクロール。実際の取得件数を返す。"""
-    last_count = 0
-    for attempt in range(MAX_SCROLL_ATTEMPTS):
-        items = await page.query_selector_all(ITEM_CONTAINER_SELECTOR)
-        count = len(items)
-        if count >= target_count:
-            return count
-        if count == last_count and attempt > 1:
-            # 2回連続で件数が変わらないなら諦める
-            return count
-        last_count = count
-        # ページ最下部までスクロール
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+# JS式:本体コンテナのみを抽出して必要情報を返す
+# 本体クラス名:SearchResult_SearchResultItem__<ハッシュ> ( __ が1回 )
+# 子要素クラス名:SearchResult_SearchResultItem__<名前>__<ハッシュ> ( __ が2回以上 )
+EXTRACT_ITEMS_JS = """
+() => {
+    const all = document.querySelectorAll('[class*="SearchResult_SearchResultItem"]');
+    const mainItems = [];
+    for (const el of all) {
+        const classes = (el.getAttribute('class') || '').split(/\\s+/);
+        let isMain = false;
+        for (const c of classes) {
+            if (c.startsWith('SearchResult_SearchResultItem__')) {
+                const underscoreCount = (c.match(/__/g) || []).length;
+                if (underscoreCount === 1) { isMain = true; break; }
+            }
+        }
+        if (isMain) mainItems.push(el);
+    }
+    return mainItems.slice(0, 30).map((item) => {
+        const pr = item.querySelector('[class*="imageIcon--pr"]');
+        const img = item.querySelector('img');
+        const src = img ? (img.getAttribute('src') || '') : '';
+        const dataSrc = img ? (img.getAttribute('data-src') || '') : '';
+        const srcset = img ? (img.getAttribute('srcset') || '') : '';
+        return { is_ad: !!pr, src, dataSrc, srcset };
+    });
+}
+"""
+
+
+async def scroll_to_load_all(page: Page) -> None:
+    """画像遅延ロード対策で段階的にスクロールしてから最上部に戻す"""
+    for _ in range(MAX_SCROLL_STEPS):
+        await page.evaluate("window.scrollBy(0, 500)")
         await page.wait_for_timeout(SCROLL_WAIT_MS)
-    items = await page.query_selector_all(ITEM_CONTAINER_SELECTOR)
-    return len(items)
-
-
-async def parse_item(item: ElementHandle) -> dict | None:
-    """
-    1商品の情報を抽出。
-    戻り値: {"is_ad": bool, "store_id": str, "item_code": str} または None
-    """
-    try:
-        # PRマークの有無
-        pr_element = await item.query_selector(PR_BADGE_SELECTOR)
-        is_ad = pr_element is not None
-
-        # 画像URLから商品コードを抽出
-        img = await item.query_selector(ITEM_IMAGE_SELECTOR)
-        if img is None:
-            return None
-        src = await img.get_attribute("src")
-        if not src:
-            # data-src など別属性も試す
-            src = await img.get_attribute("data-src") or ""
-        result = extract_store_and_code(src)
-        if result is None:
-            return None
-        store_id, item_code = result
-        return {"is_ad": is_ad, "store_id": store_id, "item_code": item_code}
-    except Exception:
-        return None
+    await page.evaluate("window.scrollTo(0, 0)")
+    await page.wait_for_timeout(1000)
 
 
 async def scrape_keyword(page: Page, keyword: str) -> tuple[list[dict], list[dict]]:
     """
     1キーワードで検索し、30位までを取得。
     戻り値: (ad_items, seo_items)
-      ad_items[i] = {"rank": 枠内順位, "store_id": ..., "item_code": ...}
+      ad_items[i] = {"rank": 枠内順位, "overall": 全体順位, "store_id": ..., "item_code": ...}
       seo_items[i] = 同上
     """
     encoded_keyword = quote_plus(keyword)
     url = SEARCH_URL.format(keyword=encoded_keyword)
 
     await page.goto(url, timeout=PAGE_LOAD_TIMEOUT_MS, wait_until="domcontentloaded")
+
     # 商品要素が出るまで待つ
     try:
-        await page.wait_for_selector(ITEM_CONTAINER_SELECTOR, timeout=15_000)
+        await page.wait_for_selector(ITEM_CONTAINER_PRESENCE_SELECTOR, timeout=15_000)
     except Exception:
         log(f"  ⚠ 商品要素が見つからない (keyword='{keyword}')")
         return [], []
 
-    # 30件揃うまでスクロール
-    loaded_count = await ensure_items_loaded(page, TARGET_RANK)
+    # 画像遅延ロード対策の段階的スクロール
+    await scroll_to_load_all(page)
 
-    # 全商品を取得して、上位30位までを処理
-    items = await page.query_selector_all(ITEM_CONTAINER_SELECTOR)
-    items = items[:TARGET_RANK]
+    # 本体コンテナだけをJS側で抽出
+    items_data = await page.evaluate(EXTRACT_ITEMS_JS)
 
-    ad_items = []
-    seo_items = []
+    ad_items: list[dict] = []
+    seo_items: list[dict] = []
     ad_rank_counter = 0
     seo_rank_counter = 0
 
-    for idx, item in enumerate(items, start=1):
-        info = await parse_item(item)
-        if info is None:
+    for idx, d in enumerate(items_data, start=1):
+        # 画像URLからコード抽出(src→data-src→srcsetの順)
+        result = None
+        for src_value in (d.get("src", ""), d.get("dataSrc", ""), d.get("srcset", "")):
+            if src_value:
+                result = extract_store_and_code(src_value)
+                if result:
+                    break
+        if result is None:
+            # コード取得失敗(アイテムリーチ広告など)→ 順位カウントは進めるがスキップ
+            if d.get("is_ad"):
+                ad_rank_counter += 1
+            else:
+                seo_rank_counter += 1
             continue
-        if info["is_ad"]:
+
+        store_id, item_code = result
+        if d.get("is_ad"):
             ad_rank_counter += 1
             ad_items.append({
                 "rank": ad_rank_counter,
                 "overall": idx,
-                "store_id": info["store_id"],
-                "item_code": info["item_code"],
+                "store_id": store_id,
+                "item_code": item_code,
             })
         else:
             seo_rank_counter += 1
             seo_items.append({
                 "rank": seo_rank_counter,
                 "overall": idx,
-                "store_id": info["store_id"],
-                "item_code": info["item_code"],
+                "store_id": store_id,
+                "item_code": item_code,
             })
 
     return ad_items, seo_items
@@ -280,20 +294,32 @@ def find_self_rank(items: list[dict], target_code: str) -> int | None:
 # ==== git push ====
 
 def git_commit_and_push(repo_root: Path) -> bool:
-    """rank.jsonをcommit&pushする。成功時 True"""
+    """rank.jsonをcommit&pushする。成功時 True
+
+    【v9で修正】
+    旧版は `git diff --quiet rank.json` で差分判定していたが、これは
+    新規ファイルや stage 済みの変更を検知できない問題があった。
+    新版は `git add` → `git diff --cached --quiet` で stage 後の差分を判定する。
+    """
     try:
-        # 変更があるか確認
-        result = subprocess.run(
-            ["git", "diff", "--quiet", "rank.json"],
+        # まず add(新規でも既存でも問題なし)
+        subprocess.run(
+            ["git", "add", "rank.json"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+        )
+
+        # stage 後の差分があるか確認
+        diff_result = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
             cwd=repo_root,
             capture_output=True,
         )
-        if result.returncode == 0:
+        if diff_result.returncode == 0:
+            # stageに差分なし=変更なし
             log("git: rank.jsonに変更なし、commit不要")
             return True
-
-        # add
-        subprocess.run(["git", "add", "rank.json"], cwd=repo_root, check=True)
 
         # commit
         timestamp = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
