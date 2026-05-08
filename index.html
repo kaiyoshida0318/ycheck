@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v180 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v181 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -542,14 +542,28 @@ body {
 }
 .rep-filter-banner[style*="display: flex"],
 .rep-filter-banner[style*="display:flex"] { display: flex !important; }
-.rep-filter-icon { font-size: 1.1rem; display: inline-flex; align-items: center; }
-/* 【v180】バナー左のSVGアイコンを送り込みバッジと同じ緑色（#15803d）で描画 */
+.rep-filter-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* 【v181】バナー左を「緑背景＋白SVG」の角丸バッジ風に（送り込みバッジ active と同じ見た目） */
+.rep-filter-icon .rep-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #15803d;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
 .rep-filter-icon .rep-icon {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   fill: none;
-  stroke: #15803d;
+  stroke: white;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -2063,7 +2077,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v180</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v181</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2132,14 +2146,16 @@ table.rank-table td.rank-legend-col-row {
 
     <!-- 【v125】代表コード絞り込みバナー（絞り込み中のみ表示） -->
     <div id="repFilterBanner" class="rep-filter-banner" style="display:none;">
-      <!-- 【v180】送り込みバッジと同じ形・同じ緑色のSVGアイコン -->
+      <!-- 【v181】送り込みバッジ active と同じ見た目（緑背景+白SVG）の角丸バッジ -->
       <span class="rep-filter-icon" aria-hidden="true">
-        <svg viewBox="0 0 20 20" class="rep-icon">
-          <path d="M3 5 L7 5 L13 15 L17 15"/>
-          <path d="M3 15 L7 15 L13 5 L17 5"/>
-          <polyline points="14.5,2.5 17,5 14.5,7.5"/>
-          <polyline points="14.5,12.5 17,15 14.5,17.5"/>
-        </svg>
+        <span class="rep-icon-box">
+          <svg viewBox="0 0 20 20" class="rep-icon">
+            <path d="M3 5 L7 5 L13 15 L17 15"/>
+            <path d="M3 15 L7 15 L13 5 L17 5"/>
+            <polyline points="14.5,2.5 17,5 14.5,7.5"/>
+            <polyline points="14.5,12.5 17,15 14.5,17.5"/>
+          </svg>
+        </span>
       </span>
       <span class="rep-filter-text" id="repFilterText">代表コード絞り込み中</span>
       <button type="button" id="repFilterClear" class="btn sm" style="background: var(--amber); color:white; border-color:var(--amber);">✕ 絞り込み解除</button>
