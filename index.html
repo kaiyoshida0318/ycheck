@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v169 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v170 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2034,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v169</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v170</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2562,11 +2562,13 @@ table.rank-table td.rank-legend-col-row {
         <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → アイテムリーチ → CSV入札・削除 → 商品データのダウンロード</div>
       </div>
       <div class="file-slot" id="slot-prorate" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge"></span>PRオプ（最新）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">data*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>商品登録 → 商品管理 → 商品データ → ダウンロード</div>
       </div>
     </div>
 
@@ -3442,6 +3444,8 @@ function parseBid(rows) {
 }
 
 // PRオプ料率（data*.csv）: code列 と pr-rate列 から {code: 料率数値} マップを返す
+// 【v170】pr-rate列が空欄の行は「未設定＝デフォルト7.0%」として扱う（Yahooストアクリエイターの仕様で、
+//   ストア全体一律料率の設定値が個別商品では空欄のままになるため。空欄=7.0で取り込む）
 function parseProRate(rows) {
   const map = {};
   rows.forEach(r => {
@@ -3450,9 +3454,17 @@ function parseProRate(rows) {
     const code = String(raw).trim().toLowerCase();
     if (!code) return;
     const rateRaw = r['pr-rate'];
-    if (rateRaw == null || String(rateRaw).trim() === '') return;
+    // 空欄判定: null/undefined/空文字 → デフォルト7.0として登録
+    if (rateRaw == null || String(rateRaw).trim() === '') {
+      map[code] = 7.0;
+      return;
+    }
     const n = parseFloat(String(rateRaw).replace(/[％%,\s]/g, ''));
-    if (isNaN(n)) return;
+    if (isNaN(n)) {
+      // 数値として解釈できない場合もデフォルト7.0
+      map[code] = 7.0;
+      return;
+    }
     map[code] = n;
   });
   return map;
