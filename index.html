@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v168 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v169 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1931,6 +1931,24 @@ table.rank-table td.rank-legend-col-row {
   font-size: 0.72rem; color: var(--text2);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* 【v169】各アップロード枠の取得手順表示。Yahooストアエディタのどこからダウンロードするかをユーザーに明示。 */
+.file-slot-source {
+  font-size: 0.68rem;
+  color: var(--text3);
+  background: rgba(37, 99, 235, 0.06);
+  border-left: 2px solid rgba(37, 99, 235, 0.3);
+  padding: 3px 6px;
+  border-radius: 3px;
+  margin-top: 2px;
+  line-height: 1.35;
+  white-space: normal;          /* 長い手順は折返し可 */
+  word-break: break-all;
+}
+.file-slot-source-label {
+  font-weight: 600;
+  color: var(--accent);
+  margin-right: 4px;
+}
 .slot-badge {
   display: inline-block;
   width: 8px; height: 8px;
@@ -2016,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v168</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v169</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2526,16 +2544,19 @@ table.rank-table td.rank-legend-col-row {
         <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge"></span>商品別売上(月次)<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 商品分析 → CSVファイルダウンロード</div>
       </div>
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート(月次)<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
       </div>
       <div class="file-slot" id="slot-bid" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
