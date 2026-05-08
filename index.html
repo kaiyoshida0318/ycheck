@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v178 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v179 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1188,6 +1188,17 @@ th.col-bid {
   font-weight: 400;
   font-style: italic;
 }
+/* 【v179】商品名リンク：既存の色・太字を維持し、ホバー時のみ下線で外部リンク示唆 */
+.name-cell-wrap .name-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.name-cell-wrap .name-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+}
 .name-edit-btn {
   opacity: 0;
   background: transparent;
@@ -2040,7 +2051,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v178</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v179</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2142,7 +2153,6 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="nosort">商品URL</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
@@ -2245,7 +2255,7 @@ table.rank-table td.rank-legend-col-row {
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
-          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「(YY-MMDD)」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
@@ -2255,7 +2265,6 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="nosort">商品URL</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
@@ -2282,7 +2291,7 @@ table.rank-table td.rank-legend-col-row {
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
-          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「(YY-MMDD)」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
@@ -2292,7 +2301,6 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="nosort">商品URL</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
@@ -3781,7 +3789,14 @@ function imageCellHtml(code) {
 function nameCellHtml(code) {
   const m = getMaster(code);
   const name = m ? m.name : '';
-  const displayName = escapeHtml(name) || '<span class="name-empty">— 未登録 —</span>';
+  // 【v179】商品名がある場合は商品ページ(Yahoo!)へのリンクで包む。未登録は従来表示のまま。
+  let displayName;
+  if (name) {
+    const url = yahooProductUrl(code);
+    displayName = `<a class="name-link" href="${url}" target="_blank" rel="noopener">${escapeHtml(name)}</a>`;
+  } else {
+    displayName = '<span class="name-empty">— 未登録 —</span>';
+  }
   return `<div class="name-cell-wrap" title="${escapeHtml(name) || '未登録'}">
     <span class="name-cell">${displayName}</span>
     <button class="name-edit-btn" data-code="${escapeHtml(code)}" title="商品情報を編集" type="button">✎</button>
@@ -4203,7 +4218,6 @@ function renderBasic() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td>${productUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
       <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
@@ -4561,7 +4575,6 @@ function renderAdAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td>${productUrlCellHtml(r.code)}</td>
       <td class="num col-ad">${fmt(r.adRevs[0])}</td>
       <td class="num col-ad">${fmt(r.adRevs[1])}</td>
       <td class="num col-ad">${fmt(r.adRevs[2])}</td>
@@ -4671,7 +4684,6 @@ function renderProAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td>${productUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.seoRevs[0])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[1])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
@@ -5727,12 +5739,14 @@ $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggl
 
 // 更新日時のみを削除するヘルパー
 // 「日付スタンプのみ」の場合に空白化対象とする：
-//   v177新形式: (YY-MMDD) 単独    （例: (26-0508)）
-//   旧形式:    更新日時-YY/MMDD 単独（例: 更新日時-26/0423）
-//   旧形式:    -YY/MMDD 単独       （例: -26/0423）
+//   v179新形式: （YY-MMDD） 単独全角  （例: （26-0508））
+//   v177形式:  (YY-MMDD) 単独半角     （例: (26-0508)）
+//   旧形式:    更新日時-YY/MMDD 単独   （例: 更新日時-26/0423）
+//   旧形式:    -YY/MMDD 単独           （例: -26/0423）
 function isAutoTimestamp(text) {
   if (!text) return false;
   const trimmed = text.trim();
+  if (/^（\d{2}-\d{2}\d{2}）$/.test(trimmed)) return true;
   if (/^\(\d{2}-\d{2}\d{2}\)$/.test(trimmed)) return true;
   if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return true;
   if (/^-\d{2}\/\d{2}\d{2}$/.test(trimmed)) return true;
@@ -5858,29 +5872,33 @@ $$('#tableProAdjust th[data-sort]').forEach(th => {
 });
 
 // ==================== 広告/PRO状態プルダウン ====================
-// 「更新日時-YY/MMDD」スタンプを生成
-// 【v177】「(YY-MMDD)」形式の日付スタンプを生成（例: (26-0508)）
+// 【v179】「（YY-MMDD）」形式の日付スタンプを生成（例: （26-0508））。全角かっこ
 function makeUpdateStamp() {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  return `(${yy}-${mm}${dd})`;
+  return `（${yy}-${mm}${dd}）`;
 }
 
 // 既存のnoteに更新日時を反映（プルダウン変更時用）
-// v177: 日付書式は末尾 (YY-MMDD) 方式。旧 -YY/MMDD / 旧「更新日時-YY/MMDD」も互換として処理。
+// v179: 日付書式は末尾 （YY-MMDD） 全角かっこ方式。
+//   互換: v177半角(YY-MMDD) / 旧 -YY/MMDD / 旧「更新日時-YY/MMDD」 も認識して新形式に変換。
 function applyUpdateStampToNote(currentNote) {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  const dateSuffix = `(${yy}-${mm}${dd})`;
+  const dateSuffix = `（${yy}-${mm}${dd}）`;
   const trimmed = (currentNote || '').trim();
   if (!trimmed) return dateSuffix;
   // 旧形式「更新日時-YY/MMDD」のみ → 新形式に置換
   if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return dateSuffix;
-  // 末尾が新形式 (YY-MMDD) → 日付だけ更新
+  // 末尾が新形式 （YY-MMDD） → 日付だけ更新
+  if (/（\d{2}-\d{2}\d{2}）$/.test(trimmed)) {
+    return trimmed.replace(/（\d{2}-\d{2}\d{2}）$/, dateSuffix);
+  }
+  // 末尾が v177 半角形式 (YY-MMDD) → 新形式（全角）に置換
   if (/\(\d{2}-\d{2}\d{2}\)$/.test(trimmed)) {
     return trimmed.replace(/\(\d{2}-\d{2}\d{2}\)$/, dateSuffix);
   }
@@ -5894,7 +5912,7 @@ function applyUpdateStampToNote(currentNote) {
     if (!withoutStamp) return dateSuffix;
     return withoutStamp + dateSuffix;
   }
-  // メモ書きがある場合 → 末尾に (YY-MMDD) 追加
+  // メモ書きがある場合 → 末尾に （YY-MMDD） 追加
   return trimmed + dateSuffix;
 }
 
@@ -5939,17 +5957,19 @@ document.addEventListener('blur', (e) => {
   const rawValue = e.target.textContent.trim();
   const originalValue = e.target.dataset.originalValue || '';
 
-  // 【v177】対応内容欄のblur時処理
-  // 日付書式: 末尾に (YY-MMDD)（例: (26-0508)）。旧形式 -YY/MMDD / 旧「更新日時-YY/MMDD」も互換認識して新形式に変換。
+  // 【v179】対応内容欄のblur時処理
+  // 日付書式: 末尾に （YY-MMDD） 全角かっこ（例: （26-0508））。
+  //   互換認識: v177半角(YY-MMDD) / 旧 -YY/MMDD / 旧「更新日時-YY/MMDD」 → すべて新形式に変換。
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  const dateSuffix = `(${yy}-${mm}${dd})`;
-  // 既存の日付サフィックスを除去するヘルパー（新形式・旧形式の両方を末尾から剥がす）
+  const dateSuffix = `（${yy}-${mm}${dd}）`;
+  // 既存の日付サフィックスを除去するヘルパー（新形式・旧形式の全パターンを末尾から剥がす）
   const stripDateSuffix = (s) => s
-    .replace(/\(\d{2}-\d{2}\d{2}\)$/, '')   // 新形式 (YY-MMDD)
-    .replace(/-\d{2}\/\d{2}\d{2}$/, '')     // 旧形式 -YY/MMDD
+    .replace(/（\d{2}-\d{2}\d{2}）$/, '')     // 新形式（v179）（YY-MMDD）全角
+    .replace(/\(\d{2}-\d{2}\d{2}\)$/, '')     // v177形式 (YY-MMDD) 半角
+    .replace(/-\d{2}\/\d{2}\d{2}$/, '')       // 旧形式 -YY/MMDD
     .replace(/\s+$/, '');
   // 「更新日時のみ」（旧スタンプ専用）の判定
   const isJustOldStamp = (s) => /^更新日時-\d{2}\/\d{4}$/.test(s);
