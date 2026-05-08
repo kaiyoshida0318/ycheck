@@ -73,10 +73,27 @@ JST = timezone(timedelta(hours=9))
 
 
 def log(msg: str) -> None:
-    """ログ出力(タイムスタンプ付き)"""
+    """ログ出力(タイムスタンプ付き)
+
+    【v9.4】Windowsの cp932 環境で「✕」「◯」「△」など Shift-JIS にない文字を
+    print すると UnicodeEncodeError で例外死してしまう問題への二重防御。
+    第一段:通常の print を試す。
+    第二段:UnicodeEncodeError が出たら、対象文字を ? に置換して再 print。
+    判定値の文字列(rank.json への書き込み)はこの関数を経由しないため影響なし。
+    """
     now = datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{now}] {msg}"
-    print(line, flush=True)
+    try:
+        print(line, flush=True)
+    except UnicodeEncodeError:
+        # 出力エンコーディングで表現できない文字があっても落とさない
+        encoding = getattr(sys.stdout, "encoding", "utf-8") or "utf-8"
+        safe_line = line.encode(encoding, errors="replace").decode(encoding, errors="replace")
+        try:
+            print(safe_line, flush=True)
+        except Exception:
+            # 最終フォールバック:ASCII以外を全て ? に
+            print(line.encode("ascii", errors="replace").decode("ascii"), flush=True)
 
 
 def load_products(csv_path: Path) -> list[dict]:
@@ -99,7 +116,7 @@ def load_existing_rank_json(path: Path) -> dict:
             with path.open("r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            log(f"⚠ rank.json読み込み失敗: {e} → 新規作成")
+            log(f"[WARN] rank.json読み込み失敗: {e} → 新規作成")
     return {}
 
 
@@ -243,7 +260,7 @@ async def scrape_keyword(page: Page, keyword: str) -> tuple[list[dict], list[dic
     try:
         await page.wait_for_selector(ITEM_CONTAINER_PRESENCE_SELECTOR, timeout=15_000)
     except Exception:
-        log(f"  ⚠ 商品要素が見つからない (keyword='{keyword}')")
+        log(f"  [WARN] 商品要素が見つからない (keyword='{keyword}')")
         return [], []
 
     # 画像遅延ロード対策の段階的スクロール
@@ -379,26 +396,26 @@ def git_commit_and_push(repo_root: Path) -> bool:
             # 失敗:rejected かどうか判定
             if not _is_push_rejected(push_result.stderr):
                 # rejected以外のエラー(認証失敗・ネットワーク不通など)は早期リターン
-                log(f"✖ git push 失敗(リトライ対象外): "
+                log(f"[ERROR] git push 失敗(リトライ対象外): "
                     f"{push_result.stderr.decode('utf-8', errors='replace').strip()}")
                 return False
 
             # rejected 検知:remote先行 → pull --rebase で取り込んで再push
-            log(f"⚠ git push が rejected (試行 {attempt}/{GIT_PUSH_MAX_RETRY}): "
+            log(f"[WARN] git push が rejected (試行 {attempt}/{GIT_PUSH_MAX_RETRY}): "
                 f"remote が先行しています。pull --rebase で取り込んで再試行します")
 
             try:
                 pull_result = _git(["pull", "--rebase"], cwd=repo_root, check=False)
                 if pull_result.returncode != 0:
                     # rebase で競合した場合 → abort して中断(rank.json は手元PCに残る)
-                    log(f"✖ git pull --rebase 失敗: "
+                    log(f"[ERROR] git pull --rebase 失敗: "
                         f"{pull_result.stderr.decode('utf-8', errors='replace').strip()}")
                     log(f"  競合を解消するため git rebase --abort を実行します")
                     _git(["rebase", "--abort"], cwd=repo_root, check=False)
                     return False
-                log(f"  ✓ remoteの更新を取り込みました")
+                log(f"  [OK] remoteの更新を取り込みました")
             except Exception as e:
-                log(f"✖ git pull --rebase で例外: {e}")
+                log(f"[ERROR] git pull --rebase で例外: {e}")
                 return False
 
             # 少し待ってから再push(連続push競合の緩和)
@@ -407,17 +424,17 @@ def git_commit_and_push(repo_root: Path) -> bool:
                 wait_sec *= 2  # 指数バックオフ:2秒 → 4秒 → 8秒
 
         # ループを抜けた=最大試行回数に達しても成功せず
-        log(f"✖ git push が {GIT_PUSH_MAX_RETRY} 回連続で rejected。"
+        log(f"[ERROR] git push が {GIT_PUSH_MAX_RETRY} 回連続で rejected。"
             f"後で手動で git push を実行してください")
         return False
 
     except subprocess.CalledProcessError as e:
-        log(f"✖ git操作エラー: {e}")
+        log(f"[ERROR] git操作エラー: {e}")
         if e.stderr:
             log(f"  stderr: {e.stderr.decode('utf-8', errors='replace')}")
         return False
     except Exception as e:
-        log(f"✖ git操作で予期せぬエラー: {e}")
+        log(f"[ERROR] git操作で予期せぬエラー: {e}")
         return False
 
 
@@ -425,13 +442,13 @@ def git_commit_and_push(repo_root: Path) -> bool:
 
 async def main_async() -> int:
     if not PRODUCTS_CSV.exists():
-        log(f"✖ 商品マスタが見つかりません: {PRODUCTS_CSV}")
+        log(f"[ERROR] 商品マスタが見つかりません: {PRODUCTS_CSV}")
         return 1
 
     products = load_products(PRODUCTS_CSV)
     log(f"対象商品数: {len(products)}件")
     if not products:
-        log("✖ 対象商品が0件です")
+        log("[ERROR] 対象商品が0件です")
         return 1
 
     now_jst = datetime.now(JST)
@@ -488,7 +505,7 @@ async def main_async() -> int:
                 if self_seo_rank:
                     seo_hit += 1
             except Exception as e:
-                log(f"[{i}/{len(products)}] {code} (KW='{keyword}'): ✖エラー {e}")
+                log(f"[{i}/{len(products)}] {code} (KW='{keyword}'): [ERROR] {e}")
                 # エラー時はrank.jsonに値を書き込まない(nullのまま=空白表示)
                 # → 圏外(✕)とエラー(空白)を区別できる
                 errors += 1
@@ -515,8 +532,8 @@ async def main_async() -> int:
 
     log(f"=== 完了 === 成功:{success} 広告ヒット:{ad_hit} SEOヒット:{seo_hit} エラー:{errors}")
     if errors > 0:
-        log(f"⚠️ {errors}件のエラーが発生しました。Ycheck上で空白セルが表示される商品があります。")
-        log(f"⚠️ 詳細は上記のログでエラー内容を確認してください。")
+        log(f"[WARN] {errors}件のエラーが発生しました。Ycheck上で空白セルが表示される商品があります。")
+        log(f"[WARN] 詳細は上記のログでエラー内容を確認してください。")
 
     # git push
     log("--- git push実行 ---")
@@ -532,7 +549,7 @@ def main() -> int:
         log("中断されました")
         return 130
     except Exception as e:
-        log(f"✖ 致命的エラー: {e}")
+        log(f"[FATAL] 致命的エラー: {e}")
         return 1
 
 
