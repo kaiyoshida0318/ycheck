@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v172 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v173 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1022,15 +1022,15 @@ td[data-resize-key] {
   font-size: 0.78rem;
   color: var(--text2);
 }
-/* 【v130】商品コードとバッジを flex で配置：コード左、🔀バッジは常にセル右端 */
+/* 【v130】商品コードとバッジを flex で配置：v173 でバッジ左→コード、左寄せ・間詰めに変更 */
 .code-cell-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  justify-content: flex-start;
+  gap: 4px;
   width: 100%;
 }
-.code-cell-inner .code-text { flex: 1; min-width: 0; }
+.code-cell-inner .code-text { flex: 0 1 auto; min-width: 0; }
 .code-cell-inner .rep-badge { flex: 0 0 auto; margin-left: 0; }
 .link-btn {
   color: var(--accent); text-decoration: none;
@@ -2034,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v172</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v173</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3835,6 +3835,21 @@ function getLatestImportedMonth() {
   const all = getAvailableMonths();
   return all.length > 0 ? all[all.length - 1] : '';
 }
+// 【v173】ショップ売上(月次)CSVで取り込まれた最新月を返す（YYYY-MM）。基本データ・月次タブのデフォルト用
+function getLatestOverallMonth() {
+  if (!state.overall || !Array.isArray(state.overall.months) || state.overall.months.length === 0) return '';
+  // months はソート済み（state更新時にlocaleCompareで昇順）が、念のため最大値を取る
+  let latest = '';
+  state.overall.months.forEach(m => {
+    if (m && m.month && m.month > latest) latest = m.month;
+  });
+  return latest;
+}
+// 【v173】rank.json も含めた全データソースで最新の月を返す（YYYY-MM）。広告順位・SEO順位タブのデフォルト用
+function getLatestAvailableMonth() {
+  const all = getAvailableMonths();
+  return all.length > 0 ? all[all.length - 1] : '';
+}
 
 // 商品コード x 月 で集計された完全形を返す
 function buildFullAggregate() {
@@ -3908,7 +3923,8 @@ function codeCellHtml(code) {
   if (!rep) return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span></span>`;
   const isChild = (rep !== code);
   const cls = isChild ? 'rep-badge child' : 'rep-badge';
-  return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span><button class="${cls}" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button></span>`;
+  // 【v173】バッジを商品コードの前（左端）に配置。間は詰める。
+  return `<span class="code-cell-inner"><button class="${cls}" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button><span class="code-text">${escapeHtml(code)}</span></span>`;
 }
 
 // ==================== Status select helpers ====================
@@ -4085,10 +4101,15 @@ function renderBasic() {
     sel.innerHTML = '<option value="">データなし</option>';
   } else {
     sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-    // 【v167】デフォルトは「前月」固定（getAvailableMonths内で当月/前月は必ず含めているので必ず候補にある）
+    // 【v173】デフォルトは「ショップ売上(月次)CSVで取り込まれた最新月」
     if (!cur || !months.includes(cur)) {
-      const prev = getPrevYm();
-      sel.value = months.includes(prev) ? prev : months[months.length - 1];
+      const latestOverall = getLatestOverallMonth();
+      if (latestOverall && months.includes(latestOverall)) {
+        sel.value = latestOverall;
+      } else {
+        const prev = getPrevYm();
+        sel.value = months.includes(prev) ? prev : months[months.length - 1];
+      }
     } else {
       sel.value = cur;
     }
@@ -4196,10 +4217,15 @@ function renderMonthly() {
       sel.innerHTML = '<option value="">データなし</option>';
     } else {
       sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-      // 【v167】デフォルトは「前月」固定
+      // 【v173】デフォルトは「ショップ売上(月次)CSVで取り込まれた最新月」
       if (!cur || !months.includes(cur)) {
-        const prev = getPrevYm();
-        sel.value = months.includes(prev) ? prev : months[months.length - 1];
+        const latestOverall = getLatestOverallMonth();
+        if (latestOverall && months.includes(latestOverall)) {
+          sel.value = latestOverall;
+        } else {
+          const prev = getPrevYm();
+          sel.value = months.includes(prev) ? prev : months[months.length - 1];
+        }
       } else {
         sel.value = cur;
       }
@@ -5281,10 +5307,9 @@ function renderRankTable(kind) {
     sel.innerHTML = `<option value="${fallback}">${fallback}</option>`;
   } else {
     sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-    // 【v167】デフォルトは「前月」固定
+    // 【v173】デフォルトは「最新月」（rank.jsonやCSVで取り込まれた中で最も新しい月）
     if (!cur || !months.includes(cur)) {
-      const prev = getPrevYm();
-      sel.value = months.includes(prev) ? prev : months[months.length - 1];
+      sel.value = months[months.length - 1];
     } else {
       sel.value = cur;
     }
