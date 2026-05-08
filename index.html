@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v173 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v174 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2034,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v173</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v174</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5352,6 +5352,8 @@ function renderRankTable(kind) {
       return hay.includes(q);
     });
   }
+  // 【v174】代表コード絞り込み（バッジクリックで設定された state.repFilter を適用）
+  codes = applyRepFilter(codes.map(c => ({ code: c }))).map(x => x.code);
   codes.sort();
 
   // 行描画
@@ -5400,7 +5402,7 @@ function renderRankTable(kind) {
     }
     return `
       <tr>
-        <td class="code-cell">${escapeHtml(code)}</td>
+        <td class="code-cell">${codeCellHtml(code)}</td>
         <td>${imageCellHtml(code)}</td>
         <td>${nameCellHtml(code)}</td>
         <td class="rank-legend-col-row">
