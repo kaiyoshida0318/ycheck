@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v176 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v177 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2040,7 +2040,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v176</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v177</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2245,7 +2245,7 @@ table.rank-table td.rank-legend-col-row {
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
-          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「(YY-MMDD)」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
@@ -2282,7 +2282,7 @@ table.rank-table td.rank-legend-col-row {
           <span class="filter-label">検索</span>
           <input type="search" id="proAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
-          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「更新日時-YY/MMDD」のみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「(YY-MMDD)」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
@@ -5717,12 +5717,17 @@ $('#btnClear').addEventListener('click', () => {
 $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggle('show'));
 
 // 更新日時のみを削除するヘルパー
-// 「更新日時-」で始まる単独文言の場合のみ空白に、それ以外のメモはそのまま残す
+// 「日付スタンプのみ」の場合に空白化対象とする：
+//   v177新形式: (YY-MMDD) 単独    （例: (26-0508)）
+//   旧形式:    更新日時-YY/MMDD 単独（例: 更新日時-26/0423）
+//   旧形式:    -YY/MMDD 単独       （例: -26/0423）
 function isAutoTimestamp(text) {
   if (!text) return false;
   const trimmed = text.trim();
-  // 「更新日時-YY/MMDD」形式（前後空白は許容）のみマッチ、他の文字が含まれていれば false
-  return /^更新日時-\d{2}\/\d{4}$/.test(trimmed);
+  if (/^\(\d{2}-\d{2}\d{2}\)$/.test(trimmed)) return true;
+  if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return true;
+  if (/^-\d{2}\/\d{2}\d{2}$/.test(trimmed)) return true;
+  return false;
 }
 
 function deleteNoteStamps(kind /* 'ad' | 'pro' */) {
@@ -5845,38 +5850,42 @@ $$('#tableProAdjust th[data-sort]').forEach(th => {
 
 // ==================== 広告/PRO状態プルダウン ====================
 // 「更新日時-YY/MMDD」スタンプを生成
+// 【v177】「(YY-MMDD)」形式の日付スタンプを生成（例: (26-0508)）
 function makeUpdateStamp() {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  return `更新日時-${yy}/${mm}${dd}`;
+  return `(${yy}-${mm}${dd})`;
 }
 
 // 既存のnoteに更新日時を反映（プルダウン変更時用）
-// v92: 日付書式は末尾 -YY/MMDD 方式
+// v177: 日付書式は末尾 (YY-MMDD) 方式。旧 -YY/MMDD / 旧「更新日時-YY/MMDD」も互換として処理。
 function applyUpdateStampToNote(currentNote) {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  const dateSuffix = `-${yy}/${mm}${dd}`;
-  const emptyStamp = `更新日時${dateSuffix}`;
+  const dateSuffix = `(${yy}-${mm}${dd})`;
   const trimmed = (currentNote || '').trim();
-  if (!trimmed) return emptyStamp;
-  // 既存のスタンプ「更新日時-YY/MMDD」のみ → 新しい日付に置換
-  if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return emptyStamp;
-  // 末尾に -YY/MMDD がある場合 → 末尾日付を置換
+  if (!trimmed) return dateSuffix;
+  // 旧形式「更新日時-YY/MMDD」のみ → 新形式に置換
+  if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return dateSuffix;
+  // 末尾が新形式 (YY-MMDD) → 日付だけ更新
+  if (/\(\d{2}-\d{2}\d{2}\)$/.test(trimmed)) {
+    return trimmed.replace(/\(\d{2}-\d{2}\d{2}\)$/, dateSuffix);
+  }
+  // 末尾が旧形式 -YY/MMDD → 新形式に置換
   if (/-\d{2}\/\d{2}\d{2}$/.test(trimmed)) {
     return trimmed.replace(/-\d{2}\/\d{2}\d{2}$/, dateSuffix);
   }
   // 既存に「更新日時-YY/MMDD」が含まれる旧形式 → そのブロックを削除して末尾に新スタンプ
   if (/更新日時-\d{2}\/\d{4}/.test(trimmed)) {
     const withoutStamp = trimmed.replace(/\s*\n?\s*更新日時-\d{2}\/\d{4}\s*/g, '').trim();
-    if (!withoutStamp) return emptyStamp;
+    if (!withoutStamp) return dateSuffix;
     return withoutStamp + dateSuffix;
   }
-  // メモ書きがある場合 → 末尾に -YY/MMDD 追加
+  // メモ書きがある場合 → 末尾に (YY-MMDD) 追加
   return trimmed + dateSuffix;
 }
 
@@ -5889,18 +5898,7 @@ document.addEventListener('change', (e) => {
   if (kind === 'ad') meta.adStatus = value;
   else if (kind === 'pro') meta.proStatus = value;
   else if (kind === 'status') meta.status = value || '新商品';
-  // ad/pro変更時は両方の対応内容に更新日時を入れる（status変更時はnoteに触らない）
-  if (kind === 'ad' || kind === 'pro') {
-    meta.adNote = applyUpdateStampToNote(meta.adNote);
-    meta.proNote = applyUpdateStampToNote(meta.proNote);
-    // 【v77】表中の note-cell を直接更新（再描画しないので手動で反映）
-    document.querySelectorAll(`.note-cell[data-code="${code}"][data-kind="ad"]`).forEach(el => {
-      el.textContent = meta.adNote || '';
-    });
-    document.querySelectorAll(`.note-cell[data-code="${code}"][data-kind="pro"]`).forEach(el => {
-      el.textContent = meta.proNote || '';
-    });
-  }
+  // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
   saveToStorage();
   // 見た目更新
   let cls = 'none';
@@ -5932,41 +5930,45 @@ document.addEventListener('blur', (e) => {
   const rawValue = e.target.textContent.trim();
   const originalValue = e.target.dataset.originalValue || '';
 
-  // 【v92】対応内容欄のblur時処理
-  // 日付書式: -YY/MMDD（例: -26/0423）
+  // 【v177】対応内容欄のblur時処理
+  // 日付書式: 末尾に (YY-MMDD)（例: (26-0508)）。旧形式 -YY/MMDD / 旧「更新日時-YY/MMDD」も互換認識して新形式に変換。
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  const dateSuffix = `-${yy}/${mm}${dd}`;
-  const emptyStamp = `更新日時${dateSuffix}`;
-  // 既存の日付サフィックスを除去するヘルパー
-  const stripDateSuffix = (s) => s.replace(/-\d{2}\/\d{2}\d{2}$/, '').replace(/\s+$/, '');
-  // 更新日時-YY/MMDD のみの値か判定（これは「実質空」扱い）
-  const isJustStamp = (s) => /^更新日時-\d{2}\/\d{4}$/.test(s);
+  const dateSuffix = `(${yy}-${mm}${dd})`;
+  // 既存の日付サフィックスを除去するヘルパー（新形式・旧形式の両方を末尾から剥がす）
+  const stripDateSuffix = (s) => s
+    .replace(/\(\d{2}-\d{2}\d{2}\)$/, '')   // 新形式 (YY-MMDD)
+    .replace(/-\d{2}\/\d{2}\d{2}$/, '')     // 旧形式 -YY/MMDD
+    .replace(/\s+$/, '');
+  // 「更新日時のみ」（旧スタンプ専用）の判定
+  const isJustOldStamp = (s) => /^更新日時-\d{2}\/\d{4}$/.test(s);
 
   let newValue;
-  if (!rawValue) {
-    // 空のまま離脱 → 更新日時-26/0423
-    newValue = emptyStamp;
-  } else {
-    const originalTrim = originalValue.trim();
-    const edited = (rawValue !== originalTrim);
-    if (!edited) {
-      // 未編集離脱 → 既存値は破棄して「更新日時-26/0423」にリセット
-      newValue = emptyStamp;
+  const rawTrimmed = rawValue;
+  const originalTrim = originalValue.trim();
+  const edited = (rawTrimmed !== originalTrim);
+
+  if (!edited) {
+    // 未編集離脱 → 既存値をそのまま維持（v177: 旧スタンプのみの場合は空にする）
+    if (isJustOldStamp(rawTrimmed)) {
+      newValue = '';
     } else {
-      // 編集あり → 入力値の末尾日付を一旦除去して、新しい日付を付け直す
-      let core = stripDateSuffix(rawValue);
-      if (!core) {
-        // 編集結果が実質空 → 更新日時-26/0423
-        newValue = emptyStamp;
-      } else if (isJustStamp(core + dateSuffix) || isJustStamp(core)) {
-        // 「更新日時」のみを書いた場合 → 更新日時-26/0423
-        newValue = emptyStamp;
-      } else {
-        newValue = core + dateSuffix;
-      }
+      newValue = rawTrimmed;
+    }
+  } else {
+    // 編集あり → 入力値の末尾日付を一旦除去
+    let core = stripDateSuffix(rawTrimmed);
+    if (!core) {
+      // 編集結果が実質空 → 空のまま
+      newValue = '';
+    } else if (isJustOldStamp(core) || core === '更新日時') {
+      // 旧スタンプ「更新日時-YY/MMDD」または「更新日時」のみ → 空に
+      newValue = '';
+    } else {
+      // 通常: 末尾に新形式日付を付与
+      newValue = core + dateSuffix;
     }
   }
 
