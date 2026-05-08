@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v177 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v178 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2040,7 +2040,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v177</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v178</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2142,7 +2142,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="nosort">検索URL</th>
+              <th class="nosort">商品URL</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
@@ -2255,7 +2255,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="nosort">検索URL</th>
+              <th class="nosort">商品URL</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
@@ -2292,7 +2292,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="nosort">検索URL</th>
+              <th class="nosort">商品URL</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
@@ -2458,7 +2458,8 @@ table.rank-table td.rank-legend-col-row {
         <label class="pe-label" for="peKw">メインKW</label>
         <input type="text" id="peKw" class="pe-input" placeholder="メインキーワードを入力...">
       </div>
-      <div class="pe-row">
+      <!-- 【v178】「検索URL」欄は表示のみ廃止。DOM要素は維持（保存・読込ロジックがこの#peSearchUrlを参照しているため、データ互換のため残す） -->
+      <div class="pe-row" style="display:none">
         <label class="pe-label" for="peSearchUrl">検索URL</label>
         <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
       </div>
@@ -3791,6 +3792,14 @@ function searchUrlCellHtml(code) {
   if (!m || !m.searchUrl) return '<span style="color:var(--text3)">—</span>';
   return `<a class="link-btn" href="${escapeHtml(m.searchUrl)}" target="_blank" rel="noopener">検索 ↗</a>`;
 }
+// 【v178】商品ページURL（store.shopping.yahoo.co.jp/{shopCode}/{code}.html）を生成
+function yahooProductUrl(code) {
+  return `https://store.shopping.yahoo.co.jp/${getCurrentShop().shopCode}/${encodeURIComponent(code)}.html`;
+}
+function productUrlCellHtml(code) {
+  const url = yahooProductUrl(code);
+  return `<a class="link-btn" href="${url}" target="_blank" rel="noopener">商品ページ ↗</a>`;
+}
 function roasClass(roas) {
   if (roas == null || !isFinite(roas)) return '';
   if (roas >= 300) return 'roas-good';
@@ -4194,7 +4203,7 @@ function renderBasic() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td>${searchUrlCellHtml(r.code)}</td>
+      <td>${productUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
       <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
@@ -4552,7 +4561,7 @@ function renderAdAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td>${searchUrlCellHtml(r.code)}</td>
+      <td>${productUrlCellHtml(r.code)}</td>
       <td class="num col-ad">${fmt(r.adRevs[0])}</td>
       <td class="num col-ad">${fmt(r.adRevs[1])}</td>
       <td class="num col-ad">${fmt(r.adRevs[2])}</td>
@@ -4662,7 +4671,7 @@ function renderProAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td>${searchUrlCellHtml(r.code)}</td>
+      <td>${productUrlCellHtml(r.code)}</td>
       <td class="num col-sales">${fmt(r.seoRevs[0])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[1])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
@@ -6972,7 +6981,7 @@ npSlot.addEventListener('drop', (e) => {
 });
 
 // ==================== 【v140】列リサイズ機能 ====================
-// 主要4列（商品コード/商品名/メインKW/検索URL）の列幅をドラッグで変更可能に。
+// 主要列（商品コード/商品名/メインKW など、data-resize-key を持つ列）の列幅をドラッグで変更可能に。
 // 設定は localStorage に保存され、リロードしても復元される。
 // テーブルをまたいで同じ data-resize-key を持つ列は同じ幅を共有（基本データで広げたら広告全体でも同じ幅）。
 const COL_WIDTHS_STORAGE_KEY = 'ycheck_col_widths_v1';
