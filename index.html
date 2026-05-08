@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v171 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v172 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2034,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v171</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v172</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4972,6 +4972,23 @@ function findPreviousRankEditValue(ym, code, field, beforeDayIndex) {
   return null;
 }
 
+// 【v172】表示用の値取得（前日継承で空欄を補完）。
+// 実データ(arr[dayIndex])があればそれを返す。空欄なら直前の非空日の値を遡って返す。
+// ただし「今日(実時間の本日)」より未来の日付については補完しない（null を返す → 空欄表示）。
+// 注意: 表示専用。state には書き込まない。データ自体は変動日のみ持つ A案 の方針。
+function getDisplayRankEditValue(ym, code, field, dayIndex) {
+  // まず実データ
+  const direct = getRankEditValue(ym, code, field, dayIndex);
+  if (direct != null) return direct;
+  // 未来日の判定: ym が今月で、dayIndex が今日のdayIndex を超えていたら補完しない
+  const today = getTodayYmAndIndex();  // { ym: 'YYYY/MM', dayIndex: 0始まり }
+  if (ym === today.ym && dayIndex > today.dayIndex) return null;
+  // ym が未来月（例: 表示中が来月）でも補完しない
+  if (ym > today.ym) return null;
+  // ここまで来たら「今日 or 過去日」 → 直前の非空日を遡って取得
+  return findPreviousRankEditValue(ym, code, field, dayIndex);
+}
+
 // 【v107】起動時自動補完: 各商品の「今日」のセルが空なら、直前の非空日の値をコピーして埋める
 // これにより、ページを開いた瞬間に「前日値 → 今日」への継承が実データとして反映される。
 // 手動入力済みの日付は上書きしない（arr[today] が null/空の時だけ動作）。
@@ -5196,9 +5213,27 @@ function computeChangeSegments(ym, code, field, nDays) {
   const palette = ['rank-edit-line-a', 'rank-edit-line-b', 'rank-edit-line-c', 'rank-edit-line-d'];
   let lineIdx = 0;
   let started = false;
+  // 【v172】今日(実時間)を取得。補完表示は今日まで → 未来日にはラインカラーを伸ばさない。
+  const today = (typeof getTodayYmAndIndex === 'function') ? getTodayYmAndIndex() : null;
+  const todayDayIndex = (today && today.ym === ym) ? today.dayIndex
+                       : (today && ym < today.ym) ? (nDays - 1)  // 過去月: 月末まで全部補完対象
+                       : -1;                                       // 未来月: 補完しない
   for (let i = 0; i < nDays; i++) {
     const raw = arr[i];
-    if (raw == null || raw === '' || isNaN(Number(raw))) continue;
+    const isEmpty = (raw == null || raw === '' || isNaN(Number(raw)));
+    if (isEmpty) {
+      // 【v172】実データ空欄の日も、今日以前なら直前のラインカラーを引き継ぐ
+      // (前月末値があるなら start 前でもラインA を引いておく)
+      if (i <= todayDayIndex) {
+        if (started) {
+          result.lines[i] = palette[lineIdx];
+        } else if (prevVal != null) {
+          // まだ started=false でも、前月末値があるならラインA を引く
+          result.lines[i] = palette[lineIdx];  // lineIdx=0 のまま
+        }
+      }
+      continue;
+    }
     const v = Number(raw);
     if (!started) {
       // 今月の初めての値
@@ -5321,7 +5356,8 @@ function renderRankTable(kind) {
         ? `<div class="rank-row-top empty${topClickCls}"${topDataAttrs}>-</div>`
         : `<div class="rank-row-top${manualCls}${topClickCls}"${topDataAttrs}>${escapeHtml(v)}</div>`;
       // 【v106】2段目: 広告順位→入札価格、SEO順位→PRオプ料率
-      const editVal = getRankEditValue(ym, code, editField, i);
+      // 【v172】表示時に前日継承で補完（実データが空欄なら直前の値で表示）。データ自体は変動日のみ保持(A案)。
+      const editVal = getDisplayRankEditValue(ym, code, editField, i);
       const editFormatted = isAd ? formatBidCell(editVal) : formatProRateCell(editVal);
       // 【v109】下段セル全体に色を付ける（good=25/7、off=他、empty=null）
       let editCellClass = 'rank-edit-cell-empty';
