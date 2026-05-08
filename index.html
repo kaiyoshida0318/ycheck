@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v170 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v171 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2034,7 +2034,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v170</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v171</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3791,27 +3791,29 @@ function roasClass(roas) {
   if (roas >= 100) return 'roas-mid';
   return 'roas-bad';
 }
-// 【v167】「YYYY/MM」形式で当月/前月を返すヘルパー。月セレクタの自動追加に使う。
+// 【v171】「YYYY-MM」形式で当月/前月を返すヘルパー。CSV由来の月キー(YYYY-MM)と統一。
+// (v167ではYYYY/MM形式で返していたが、同じ月が「2026-05」と「2026/05」で重複表示されるバグの原因になっていた)
 function getCurrentYm() {
   const d = new Date();
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 function getPrevYm() {
   const d = new Date();
-  // 当月1日に揃えてから1ヶ月引く（月跨ぎ計算の安全側）
   d.setDate(1);
   d.setMonth(d.getMonth() - 1);
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function getAvailableMonths() {
   const set = new Set();
-  if (state.item) state.item.forEach(i => i.month && set.add(i.month));
-  if (state.ad) state.ad.forEach(a => a.month && set.add(a.month));
-  if (state.overall) state.overall.months.forEach(m => set.add(m.month));
-  // rank.json由来の月も含める（売上CSVをまだアップロードしていない月でも順位データだけは表示可能に）
-  if (state.rank) Object.keys(state.rank).forEach(ym => set.add(ym));
-  // 【v167】当月と前月は常にセレクタに含める（データが無くても選べるように）
+  // 【v171】CSV由来の月(YYYY-MM)とrank由来の月(YYYY/MM)が混在するため、
+  // / を - に正規化してSetに入れる。これで「2026-05と2026/05が両方並ぶ」重複バグを防ぐ。
+  const norm = (ym) => String(ym || '').replace(/\//g, '-');
+  if (state.item) state.item.forEach(i => i.month && set.add(norm(i.month)));
+  if (state.ad) state.ad.forEach(a => a.month && set.add(norm(a.month)));
+  if (state.overall) state.overall.months.forEach(m => set.add(norm(m.month)));
+  if (state.rank) Object.keys(state.rank).forEach(ym => set.add(norm(ym)));
+  // 当月と前月は常にセレクタに含める（データが無くても選べるように）
   set.add(getCurrentYm());
   set.add(getPrevYm());
   return [...set].sort();
@@ -4801,7 +4803,7 @@ function mergeRankJson(json) {
     if (ymRaw === 'meta') continue;
     const byCode = json[ymRaw];
     if (!byCode || typeof byCode !== 'object') continue;
-    // "2026-04" -> "2026/04"（Ycheck内部形式）
+    // "2026-04" -> "2026/04"（Ycheck内部形式: state.rank/state.rankEditsは伝統的に YYYY/MM 形式で統一されている）
     const ym = ymRaw.replace(/-/g, '/');
     if (!state.rank[ym]) state.rank[ym] = {};
     mergedMonths.add(ym);
@@ -5252,7 +5254,10 @@ function renderRankTable(kind) {
       sel.value = cur;
     }
   }
-  const ym = sel.value;
+  const ymRaw = sel.value;
+  // 【v171】dropdownの値は YYYY-MM 形式（CSV由来と統一して重複防止）。
+  // 内部のstate.rank/state.rankEdits/getEffectiveRankValue/daysInMonth等は伝統的に YYYY/MM 形式で動作するため、ここで変換する。
+  const ym = ymRaw.replace(/-/g, '/');
   const nDays = daysInMonth(ym);
 
   // 見出し行を動的生成：商品コード / 画像 / 商品名 / 1日 / 2日 / ...
