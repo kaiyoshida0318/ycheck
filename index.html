@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v185 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v186 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2083,7 +2083,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v185</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v186</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4098,9 +4098,10 @@ function applyRepGrouping(sortedList) {
   if (groups.size === 0) return sortedList;
   // 【v134】グループ内整列：親（code==rep）が居れば先頭、子はコード昇順
   for (const [rep, items] of groups.entries()) {
+    const repStr = String(rep);
     items.sort((a, b) => {
-      const aIsParent = String(a.code || '') === rep;
-      const bIsParent = String(b.code || '') === rep;
+      const aIsParent = String(a.code || '') === repStr;
+      const bIsParent = String(b.code || '') === repStr;
       if (aIsParent && !bIsParent) return -1;
       if (!aIsParent && bIsParent) return 1;
       return String(a.code || '').localeCompare(String(b.code || ''), 'ja');
@@ -5833,6 +5834,7 @@ $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggl
 
 // 更新日時のみを削除するヘルパー
 // 「日付スタンプのみ」の場合に空白化対象とする：
+//   v186新形式: 更新日時-YY-MMDD 単独   （例: 更新日時-26-0512）← 未入力離脱時に付くスタンプ
 //   v179新形式: （YY-MMDD） 単独全角  （例: （26-0508））
 //   v177形式:  (YY-MMDD) 単独半角     （例: (26-0508)）
 //   旧形式:    更新日時-YY/MMDD 単独   （例: 更新日時-26/0423）
@@ -5840,6 +5842,7 @@ $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggl
 function isAutoTimestamp(text) {
   if (!text) return false;
   const trimmed = text.trim();
+  if (/^更新日時-\d{2}-\d{2}\d{2}$/.test(trimmed)) return true;
   if (/^（\d{2}-\d{2}\d{2}）$/.test(trimmed)) return true;
   if (/^\(\d{2}-\d{2}\d{2}\)$/.test(trimmed)) return true;
   if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return true;
@@ -6073,17 +6076,28 @@ document.addEventListener('blur', (e) => {
   const rawTrimmed = rawValue;
   const originalTrim = originalValue.trim();
   const edited = (rawTrimmed !== originalTrim);
+  // 【v186】未入力離脱専用のスタンプ「更新日時-YY-MMDD」（例: 更新日時-26-0512）
+  const blankLeaveStamp = `更新日時-${yy}-${mm}${dd}`;
+  // 「未入力離脱で付くスタンプ単独」かどうかの判定（v186新形式 / v179以前の旧形式の両方を許容）
+  const isJustBlankLeaveStamp = (s) => /^更新日時-\d{2}-\d{2}\d{2}$/.test(s) || /^更新日時-\d{2}\/\d{2}\d{2}$/.test(s) || /^更新日時-\d{2}\/\d{4}$/.test(s);
 
   if (!edited) {
-    // 未編集離脱 → 既存値をそのまま維持（v177: 旧スタンプのみの場合は空にする）
-    if (isJustOldStamp(rawTrimmed)) {
-      newValue = '';
+    // 未編集離脱
+    if (isJustOldStamp(rawTrimmed) || isJustBlankLeaveStamp(rawTrimmed)) {
+      // 既にスタンプのみの状態でフォーカスしただけで離脱 → 今日のスタンプに更新
+      newValue = blankLeaveStamp;
+    } else if (rawTrimmed === '') {
+      // 【v186】空セルにフォーカスして何も入力せず離脱 → 今日のスタンプを付与
+      newValue = blankLeaveStamp;
     } else {
+      // 既に内容がある状態でフォーカスしただけで離脱 → そのまま維持
       newValue = rawTrimmed;
     }
   } else {
     // 編集あり → 入力値の末尾日付を一旦除去
     let core = stripDateSuffix(rawTrimmed);
+    // 「更新日時-YY-MMDD」など未入力スタンプも剥がす
+    core = core.replace(/更新日時-\d{2}-\d{2}\d{2}$/, '').replace(/\s+$/, '');
     if (!core) {
       // 編集結果が実質空 → 空のまま
       newValue = '';
@@ -6171,6 +6185,8 @@ function startBidEdit(cell) {
   input.focus();
   input.select();
   let committed = false;
+  // 【v186】Tab確定時、再描画後に同じ行の対応内容セルへフォーカスする
+  let focusNoteAfterRender = false;
   const commit = () => {
     if (committed) return;
     committed = true;
@@ -6196,6 +6212,23 @@ function startBidEdit(cell) {
     saveToStorage();
     log(`✓ 入札価格を更新: ${code} → ${state.bid[code] != null ? '¥' + state.bid[code] : '削除'}`, 'ok');
     renderAll();
+    // 【v186】Tab確定だった場合、再描画後の対応内容セルにフォーカスを移す
+    if (focusNoteAfterRender) {
+      // renderAll後に新しいDOMが構築されるので、その後にフォーカスを当てる
+      requestAnimationFrame(() => {
+        const note = document.querySelector(`.note-cell[data-code="${CSS.escape(code)}"][data-kind="ad"]`);
+        if (note) {
+          note.focus();
+          // 末尾にキャレットを置く
+          const r = document.createRange();
+          r.selectNodeContents(note);
+          r.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+      });
+    }
   };
   const cancel = () => {
     if (committed) return;
@@ -6205,6 +6238,12 @@ function startBidEdit(cell) {
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); commit(); }
     else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    else if (e.key === 'Tab' && !e.shiftKey) {
+      // 【v186】Tab → 確定して同じ行の対応内容セルへ
+      e.preventDefault();
+      focusNoteAfterRender = true;
+      commit();
+    }
   });
   input.addEventListener('blur', commit);
 }
@@ -6239,6 +6278,8 @@ function startProRateEdit(cell) {
   input.focus();
   input.select();
   let committed = false;
+  // 【v186】Tab確定時、再描画後に同じ行の対応内容セルへフォーカスする
+  let focusNoteAfterRender = false;
   const commit = () => {
     if (committed) return;
     committed = true;
@@ -6268,6 +6309,27 @@ function startProRateEdit(cell) {
     // セルだけ更新（全体再描画は行わない）
     const v = current;
     cell.textContent = (v == null || isNaN(v)) ? '—' : Math.floor(Number(v)) + '%';
+    // 【v186】Tab確定だった場合、同じ行の対応内容セルにフォーカスを移す
+    // PRオプ料率セルがあるテーブルは「入札価格全体」「PRオプ全体」など。
+    // 対応内容セルは入札価格/PRオプ共通で kind="ad" のものを使用（仕様：対応内容欄は1つ）
+    if (focusNoteAfterRender) {
+      requestAnimationFrame(() => {
+        // 同じ行内の note-cell を取得
+        const row = cell.closest('tr');
+        let note = row ? row.querySelector('.note-cell[data-kind="ad"]') : null;
+        // 同じ行に kind=ad の note-cell が無い場合（PRオプ全体タブなどで kind=pro しかない場合）は kind=pro を採用
+        if (!note && row) note = row.querySelector('.note-cell');
+        if (note) {
+          note.focus();
+          const r = document.createRange();
+          r.selectNodeContents(note);
+          r.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+      });
+    }
   };
   const cancel = () => {
     if (committed) return;
@@ -6277,6 +6339,12 @@ function startProRateEdit(cell) {
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); commit(); }
     else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    else if (e.key === 'Tab' && !e.shiftKey) {
+      // 【v186】Tab → 確定して同じ行の対応内容セルへ
+      e.preventDefault();
+      focusNoteAfterRender = true;
+      commit();
+    }
   });
   input.addEventListener('blur', commit);
 }
