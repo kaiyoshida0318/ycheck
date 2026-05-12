@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v184 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v185 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -312,32 +312,38 @@ body {
 }
 
 /* ==================== 状態バッジのグループ色分け ==================== */
-/* グループ1: 広告系（薄いアンバー） */
+/* グループ1: 広告系（薄いアンバー）【v185】ad-warn を追加 */
 .state-chip[data-state="ad-ok"],
+.state-chip[data-state="ad-warn"],
 .state-chip[data-state="ad-ng"],
 .state-chip[data-state="ad-none"] {
   background: #fdf3e2;
   border-color: #f5d8a4;
 }
 .state-chip[data-state="ad-ok"]:hover,
+.state-chip[data-state="ad-warn"]:hover,
 .state-chip[data-state="ad-ng"]:hover,
 .state-chip[data-state="ad-none"]:hover,
 .state-chip[data-state="ad-ok"].active,
+.state-chip[data-state="ad-warn"].active,
 .state-chip[data-state="ad-ng"].active,
 .state-chip[data-state="ad-none"].active {
   background: #f4b860;
   border-color: #e09824;
 }
 
-/* グループ2: PRオプ系（薄いパープル） */
+/* グループ2: PRオプ系（薄いパープル）【v185】pro-warn を追加 */
 .state-chip[data-state="pro-ok"],
+.state-chip[data-state="pro-warn"],
 .state-chip[data-state="pro-ng"] {
   background: #f1ebfa;
   border-color: #d4c4ed;
 }
 .state-chip[data-state="pro-ok"]:hover,
+.state-chip[data-state="pro-warn"]:hover,
 .state-chip[data-state="pro-ng"]:hover,
 .state-chip[data-state="pro-ok"].active,
+.state-chip[data-state="pro-warn"].active,
 .state-chip[data-state="pro-ng"].active {
   background: #a880d8;
   border-color: #8b5cf6;
@@ -2077,7 +2083,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v184</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v185</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2117,7 +2123,7 @@ table.rank-table td.rank-legend-col-row {
 <nav class="top-nav top-nav-2">
   <div class="nav-group">
     <span class="nav-group-label">【定期チェック】</span>
-    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust"><span class="ico">🎯</span>広告全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust"><span class="ico">🎯</span>入札価格全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust"><span class="ico">⭐</span>PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
   </div>
 </nav>
@@ -2127,14 +2133,17 @@ table.rank-table td.rank-legend-col-row {
   <div class="nav-group">
     <span class="nav-group-label">【状態】</span>
     <!-- 【v162】「💡 全体の説明」はヘッダーへ移動済み。ここからは削除。 -->
-    <button class="state-chip" data-state="ad-ok"><span class="chip-label">広告○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-    <button class="state-chip" data-state="ad-ng"><span class="chip-label">広告×</span><span class="chip-num" id="cntAdNg">(0)</span></button>
-    <button class="state-chip" data-state="ad-none"><span class="chip-label">広告無</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+    <!-- 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称、入札価格△・PRオプ△を新設 -->
+    <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札価格○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+    <button class="state-chip" data-state="ad-warn"><span class="chip-label">入札価格△</span><span class="chip-num" id="cntAdWarn">(0)</span></button>
+    <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札価格✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <button class="state-chip" data-state="ad-none"><span class="chip-label">入札無し</span><span class="chip-num" id="cntAdNone">(0)</span></button>
     <button class="state-chip" data-state="pro-ok"><span class="chip-label">PRオプ○</span><span class="chip-num" id="cntProOk">(0)</span></button>
+    <button class="state-chip" data-state="pro-warn"><span class="chip-label">PRオプ△</span><span class="chip-num" id="cntProWarn">(0)</span></button>
     <button class="state-chip" data-state="pro-ng"><span class="chip-label">PRオプ×</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="pro-w"><span class="chip-label">撤退■</span><span class="chip-num" id="cntProWithdraw">(0)</span></button>
-    <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-広告□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+    <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
   </div>
 </nav>
@@ -2196,7 +2205,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th class="status-col" data-sort="adStatus">広告状態</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
@@ -2283,16 +2292,16 @@ table.rank-table td.rank-legend-col-row {
       </div>
     </div>
 
-    <!-- View: 広告全体 -->
+    <!-- View: 入札価格全体 -->
     <div class="view" id="view-ad-adjust">
       <div class="card">
-        <h3 class="card-title">広告全体</h3>
+        <h3 class="card-title">入札価格全体</h3>
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adAdjustSearch" placeholder="商品コード・商品名で検索...">
           <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
-          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="広告全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="入札価格全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust">
@@ -2307,7 +2316,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-ad" data-sort="roas0" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="roas1" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="roas2" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
-              <th class="status-col" data-sort="adStatus">広告状態</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th data-sort="adNote">対応内容</th>
@@ -2340,7 +2349,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProAdjustSeo2">SEO売上<br>(前月)</th>
-              <th class="status-col" data-sort="adStatus">広告状態</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
               <th data-sort="proNote">対応内容</th>
@@ -2405,10 +2414,12 @@ table.rank-table td.rank-legend-col-row {
     <section class="info-section">
       <h3 class="info-heading">■ 状態の説明</h3>
       <ul class="info-list">
-        <li><b class="info-tag ok">広告○</b>広告の入札価格が最安値の <b>25円</b> かつ、広告が <b>最上段に出ている</b> 状態。</li>
-        <li><b class="info-tag ng">広告×</b>広告が <b>下段に出ている</b> 状態。</li>
-        <li><b class="info-tag none">広告無</b>広告を打っていない状態。</li>
+        <li><b class="info-tag ok">入札価格○</b>広告の入札価格が最安値の <b>25円</b> かつ、広告が <b>最上段に出ている</b> 状態。</li>
+        <li><b class="info-tag warn">入札価格△</b>入札価格は調整中／途中状態のもの。</li>
+        <li><b class="info-tag ng">入札価格✕</b>広告が <b>下段に出ている</b> 状態。</li>
+        <li><b class="info-tag none">入札無し</b>広告を打っていない状態。</li>
         <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>2列目以上</b> の状態。<br><span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
+        <li><b class="info-tag warn">PRオプ△</b>PRオプションの料率は調整中／途中状態のもの。</li>
         <li><b class="info-tag ng">PRオプ×</b>SEO順位が <b>3列目以下</b> の状態。</li>
         <li><b class="info-tag warn">撤退検討▲</b>広告の採算が合わないため削除し、PRオプションのみで販売できるかを検証しているもの。</li>
         <li><b class="info-tag ng">撤退■</b>在庫が無くなり次第販売終了予定のもの。</li>
@@ -3035,6 +3046,7 @@ async function ghLoadFromGitHub() {
     migrateRetiredByMissingName();
     migrateBidKeysLowercase();
     migrateProStatusToStatus();
+    migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
     // localStorage にも即書き
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: new Date().toISOString() }));
     _ghDirty = false;
@@ -3241,12 +3253,13 @@ function loadFromStorage() {
     migrateBidKeysLowercase();
     // 【マイグレーション v56】proStatus の撤退系を status フィールドへ移行
     migrateProStatusToStatus();
+    // 【マイグレーション v185】広告○→入札価格○等、表示ラベルを新形式に移行
+    migrateAdStatusLabels();
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
 }
 
 // 【v56】proStatusの「撤退検討▲/撤退■/撤退済み」を status に移し、proStatus側はクリア
-// また、全商品のmetaに status（デフォルト「新商品」）を付与
 function migrateProStatusToStatus() {
   if (!state.productMeta) state.productMeta = {};
   // 既知コードに status のデフォルト値を補う
@@ -3275,6 +3288,28 @@ function migrateProStatusToStatus() {
   });
   if (migrated > 0) {
     console.log(`Ycheck: ${migrated}件のPRオプ状態（撤退系）を「ステータス」へ移行しました`);
+    saveToStorage();
+  }
+}
+
+// 【v185】広告状態の表示文字列を新ラベルに移行
+//   '広告○' → '入札価格○' / '広告×' → '入札価格✕' / '広告無' → '入札無し'
+//   PRオプ状態は変更なし（PRオプ○/PRオプ×/PRオプ△[新設]はそのまま）
+//   meta.adStatus は内部キー名のまま使い続ける（保存値の文字列だけ書き換える）
+function migrateAdStatusLabels() {
+  if (!state.productMeta) return;
+  const map = { '広告○': '入札価格○', '広告×': '入札価格✕', '広告無': '入札無し' };
+  let migrated = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const m = state.productMeta[code];
+    if (!m) return;
+    if (m.adStatus && map[m.adStatus]) {
+      m.adStatus = map[m.adStatus];
+      migrated++;
+    }
+  });
+  if (migrated > 0) {
+    console.log(`Ycheck: 入札状態（旧:広告状態）の表示ラベル ${migrated}件を新形式に移行しました`);
     saveToStorage();
   }
 }
@@ -3943,8 +3978,8 @@ function updateStateCounts() {
   const allCodes = new Set();
   (state.item || []).forEach(i => allCodes.add(i.code));
   Object.keys(state.master).forEach(c => allCodes.add(c));
-  let adOk = 0, adNg = 0, adNone = 0;
-  let proOk = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
+  let adOk = 0, adWarn = 0, adNg = 0, adNone = 0;
+  let proOk = 0, proWarn = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   allCodes.forEach(code => {
@@ -3954,10 +3989,13 @@ function updateStateCounts() {
     const meta = state.productMeta[code] || {};
     const adS = meta.adStatus || '';
     const proS = meta.proStatus || '';
-    if (adS === '広告○') adOk++;
-    else if (adS === '広告×') adNg++;
-    else if (adS === '広告無') adNone++;
+    // 【v185】新ラベル＋旧ラベル両方判定（マイグレーション前のデータ互換）
+    if (adS === '入札価格○' || adS === '広告○') adOk++;
+    else if (adS === '入札価格△') adWarn++;
+    else if (adS === '入札価格✕' || adS === '広告×') adNg++;
+    else if (adS === '入札無し' || adS === '広告無') adNone++;
     if (proS === 'PRオプ○' || proS === 'PRO○') proOk++;
+    else if (proS === 'PRオプ△') proWarn++;
     else if (proS === 'PRオプ×' || proS === 'PRO×') proNg++;
     // 撤退検討▲・撤退■ は status フィールドから判定（v56〜）
     const st = meta.status || '';
@@ -3967,9 +4005,11 @@ function updateStateCounts() {
     if (!proS) unselectedPro++;
   });
   $('#cntAdOk').textContent = `(${adOk})`;
+  const cntAdWarn = $('#cntAdWarn'); if (cntAdWarn) cntAdWarn.textContent = `(${adWarn})`;
   $('#cntAdNg').textContent = `(${adNg})`;
   $('#cntAdNone').textContent = `(${adNone})`;
   $('#cntProOk').textContent = `(${proOk})`;
+  const cntProWarn = $('#cntProWarn'); if (cntProWarn) cntProWarn.textContent = `(${proWarn})`;
   $('#cntProNg').textContent = `(${proNg})`;
   $('#cntProWithdrawConsider').textContent = `(${proWithdrawConsider})`;
   $('#cntProWithdraw').textContent = `(${proWithdraw})`;
@@ -3995,8 +4035,19 @@ function codeCellHtml(code) {
 
 // ==================== Status select helpers ====================
 // 状態値をソート用の順序インデックスに変換（小さいほど先頭）
-const AD_STATUS_ORDER = { '': 0, '広告○': 1, '広告×': 2, '広告無': 3 };
-const PRO_STATUS_ORDER = { '': 0, 'PRオプ○': 1, 'PRオプ×': 2, 'PRO○': 1, 'PRO×': 2 };
+// 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称、入札価格△を新設
+//   旧ラベルもキーとして残し、未マイグレーションデータでもソートが安定するようにする
+const AD_STATUS_ORDER = {
+  '': 0,
+  '入札価格○': 1, '入札価格△': 2, '入札価格✕': 3, '入札無し': 4,
+  '広告○': 1, '広告×': 3, '広告無': 4   // 互換用（マイグレーション前の値もソート可能に）
+};
+// 【v185】PRオプ△を新設
+const PRO_STATUS_ORDER = {
+  '': 0,
+  'PRオプ○': 1, 'PRオプ△': 2, 'PRオプ×': 3,
+  'PRO○': 1, 'PRO×': 3
+};
 const STATUS_ORDER = { '新商品': 0, '現役商品': 1, '撤退検討▲': 2, '撤退■': 3, '撤退済み': 4, '': 0 };
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
@@ -4121,10 +4172,12 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   let value, options;
   if (kind === 'ad') {
     value = meta.adStatus;
-    options = ['', '広告○', '広告×', '広告無'];
+    // 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称、入札価格△を新設
+    options = ['', '入札価格○', '入札価格△', '入札価格✕', '入札無し'];
   } else if (kind === 'pro') {
     value = meta.proStatus;
-    options = ['', 'PRオプ○', 'PRオプ×'];
+    // 【v185】PRオプ△を新設
+    options = ['', 'PRオプ○', 'PRオプ△', 'PRオプ×'];
   } else if (kind === 'status') {
     value = meta.status || '新商品';
     options = ['新商品', '現役商品', '撤退検討▲', '撤退■', '撤退済み'];
@@ -4132,11 +4185,12 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   let cls = 'none';
   if (value) {
     if (value.includes('○')) cls = 'ok';
-    else if (value.includes('×') || value === '撤退■') cls = 'ng';
-    else if (value === '撤退検討▲') cls = 'warn';
+    else if (value.includes('△') || value === '撤退検討▲') cls = 'warn';
+    else if (value.includes('×') || value.includes('✕') || value === '撤退■') cls = 'ng';
     else if (value === '撤退済み') cls = 'ng';
     else if (value === '現役商品') cls = 'ok';
     else if (value === '新商品') cls = 'none';
+    else if (value === '入札無し') cls = 'none';
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   return `<select class="status-select ${cls}" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
@@ -5091,7 +5145,7 @@ function autoFillTodayRankEdits() {
     if (isRetired(code)) continue;
     const meta = state.productMeta[code] || {};
     // 広告順位: 入札価格（bid）— 広告無商品はスキップ
-    if ((meta.adStatus || '') !== '広告無') {
+    if ((meta.adStatus || '') !== '広告無' && (meta.adStatus || '') !== '入札無し') {
       const todayBid = getRankEditValue(ym, code, 'bid', dayIndex);
       if (todayBid == null) {
         const prev = findPreviousRankEditValue(ym, code, 'bid', dayIndex);
@@ -5135,7 +5189,7 @@ function seedRankEditsFromLatest() {
     const codeLower = String(code).toLowerCase();
     const meta = state.productMeta[code] || {};
     // --- bid（広告順位の下段）---
-    if ((meta.adStatus || '') !== '広告無') {
+    if ((meta.adStatus || '') !== '広告無' && (meta.adStatus || '') !== '入札無し') {
       const latestBid = state.bid && state.bid[codeLower];
       if (latestBid != null && !isNaN(Number(latestBid))) {
         // 今月の bid 配列がまだ全空なら、今日の日付に入れる
@@ -5179,7 +5233,7 @@ function overwriteTodayRankEditsFromLatest() {
     const codeLower = String(code).toLowerCase();
     const meta = state.productMeta[code] || {};
     // --- bid（広告順位の下段）---
-    if ((meta.adStatus || '') !== '広告無') {
+    if ((meta.adStatus || '') !== '広告無' && (meta.adStatus || '') !== '入札無し') {
       const latestBid = state.bid && state.bid[codeLower];
       if (latestBid != null && !isNaN(Number(latestBid))) {
         setRankEditValue(ym, code, 'bid', dayIndex, Number(latestBid));
@@ -5211,7 +5265,7 @@ function overwriteSpecificDayRankEdits(ym, dayIndex) {
     if (isRetired(code)) continue;
     const codeLower = String(code).toLowerCase();
     const meta = state.productMeta[code] || {};
-    if ((meta.adStatus || '') !== '広告無') {
+    if ((meta.adStatus || '') !== '広告無' && (meta.adStatus || '') !== '入札無し') {
       const latestBid = state.bid && state.bid[codeLower];
       if (latestBid != null && !isNaN(Number(latestBid))) {
         setRankEditValue(ym, code, 'bid', dayIndex, Number(latestBid));
@@ -5402,7 +5456,7 @@ function renderRankTable(kind) {
   if (isAd) {
     codes = codes.filter(code => {
       const meta = state.productMeta[code] || {};
-      return (meta.adStatus || '') !== '広告無';
+      return (meta.adStatus || '') !== '広告無' && (meta.adStatus || '') !== '入札無し';
     });
   }
 
@@ -5576,15 +5630,19 @@ $$('.nav-tab').forEach(item => {
 
 // ==================== 状態バッジフィルタ ====================
 // フィルタ条件の定義
+// 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称、入札価格△・PRオプ△を新設
+//   match関数は新ラベルと旧ラベル両方を判定（マイグレーション前のデータ互換）
 const STATE_FILTERS = {
-  'ad-ok':         { label: '広告○',       targetView: 'ad-adjust',  match: (meta) => (meta.adStatus || '') === '広告○' },
-  'ad-ng':         { label: '広告×',       targetView: 'ad-adjust',  match: (meta) => (meta.adStatus || '') === '広告×' },
-  'ad-none':       { label: '広告無',       targetView: 'pro-adjust', match: (meta) => (meta.adStatus || '') === '広告無' },
+  'ad-ok':         { label: '入札価格○',   targetView: 'ad-adjust',  match: (meta) => { const a = meta.adStatus || ''; return a === '入札価格○' || a === '広告○'; } },
+  'ad-warn':       { label: '入札価格△',   targetView: 'ad-adjust',  match: (meta) => (meta.adStatus || '') === '入札価格△' },
+  'ad-ng':         { label: '入札価格✕',   targetView: 'ad-adjust',  match: (meta) => { const a = meta.adStatus || ''; return a === '入札価格✕' || a === '広告×'; } },
+  'ad-none':       { label: '入札無し',     targetView: 'pro-adjust', match: (meta) => { const a = meta.adStatus || ''; return a === '入札無し' || a === '広告無'; } },
   'pro-ok':        { label: 'PRオプ○',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ○' || p === 'PRO○'; } },
+  'pro-warn':      { label: 'PRオプ△',     targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PRオプ△' },
   'pro-ng':        { label: 'PRオプ×',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ×' || p === 'PRO×'; } },
   'pro-wc':        { label: '撤退検討▲',   targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退検討▲' },
   'pro-w':         { label: '撤退■',       targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退■' },
-  'unselected-ad': { label: '選択前-広告□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
+  'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
   'unselected-pro':{ label: '選択前-PRオプ□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
 };
 
@@ -5809,7 +5867,7 @@ function deleteNoteStamps(kind /* 'ad' | 'pro' */) {
 
 // 対応内容を全削除（メモ書き含めて完全クリア）
 function deleteAllNotes(kind /* 'ad' | 'pro' */) {
-  const label = kind === 'ad' ? '広告全体' : 'PRオプ全体';
+  const label = kind === 'ad' ? '入札価格全体' : 'PRオプ全体';
   // 削除対象件数を事前カウント
   const field = kind === 'ad' ? 'adNote' : 'proNote';
   let target = 0;
@@ -5967,10 +6025,11 @@ document.addEventListener('change', (e) => {
   let cls = 'none';
   if (value) {
     if (value.includes('○')) cls = 'ok';
-    else if (value.includes('×') || value === '撤退■') cls = 'ng';
-    else if (value === '撤退検討▲') cls = 'warn';
+    else if (value.includes('△') || value === '撤退検討▲') cls = 'warn';
+    else if (value.includes('×') || value.includes('✕') || value === '撤退■') cls = 'ng';
     else if (value === '撤退済み') cls = 'ng';
     else if (value === '現役商品') cls = 'ok';
+    else if (value === '入札無し') cls = 'none';
   }
   e.target.className = 'status-select ' + cls;
   // 【v77】件数バッジ・他ビューへの移動は即時反映せず、次のビュー切り替え時に更新
