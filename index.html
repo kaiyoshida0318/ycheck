@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v182 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v184 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2077,7 +2077,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v182</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v184</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6270,14 +6270,40 @@ function startRankEditCell(cell) {
       newVal = num;
     }
     // 履歴に反映
+    // 【v184】広告順位・SEO順位タブの編集挙動：
+    //   - 編集日に新しい値を書く（編集日以前の履歴は保持→推移履歴はそのまま）
+    //   - 「履歴上で最新の編集日」（または初書き込み）の場合のみ、編集日以降の同フィールド履歴をクリア
+    //     ＋ 最新値ストア(state.bid/proRate)も更新 → 他タブも自動同期
+    //   - 過去日のさらに過去を修正したケースは、編集日以降の履歴も維持＝推移表示もstate.bidも触らない
+    const codeLower = String(code).toLowerCase();
+    // 編集前の「履歴上の最新有効日インデックス」（rankEdits の同フィールドで非null最大のindex）
+    let latestExistingIdx = -1;
+    const existingArr = (state.rankEdits && state.rankEdits[ym] && state.rankEdits[ym][codeLower] && state.rankEdits[ym][codeLower][field]) || null;
+    if (Array.isArray(existingArr)) {
+      for (let i = existingArr.length - 1; i >= 0; i--) {
+        if (existingArr[i] != null && existingArr[i] !== '') { latestExistingIdx = i; break; }
+      }
+    }
+    // 「履歴上で最新の編集」かどうか判定
+    //   - 同月内の既存最新日 <= 編集日 なら最新
+    //   - 編集ymより新しい月に同フィールドの有効値があるなら最新ではない
+    let isMostRecent = (latestExistingIdx < 0) || (dayIndex >= latestExistingIdx);
+    if (isMostRecent && state.rankEdits) {
+      const newerMonths = Object.keys(state.rankEdits).filter(m => m > ym).sort();
+      for (const m of newerMonths) {
+        const a = state.rankEdits[m] && state.rankEdits[m][codeLower] && state.rankEdits[m][codeLower][field];
+        if (Array.isArray(a) && a.some(v => v != null && v !== '')) { isMostRecent = false; break; }
+      }
+    }
+    // 最新編集の場合のみ、編集日以降の履歴をクリア（v172前日継承で新値が継承表示される）
+    if (isMostRecent && state.rankEdits && state.rankEdits[ym] && state.rankEdits[ym][codeLower] && Array.isArray(state.rankEdits[ym][codeLower][field])) {
+      const arr = state.rankEdits[ym][codeLower][field];
+      for (let i = dayIndex + 1; i < arr.length; i++) arr[i] = null;
+    }
+    // 編集日に値をセット
     setRankEditValue(ym, code, field, dayIndex, newVal);
-    // 最新値ストアへの反映ルール：
-    // 「今日の日付または未来日」の編集は最新値(state.bid/proRate)にも反映
-    // 過去の日付のみ編集した場合は履歴のみ更新し、最新値は触らない
-    const today = getTodayYmAndIndex();
-    const isTodayOrFuture = (ym > today.ym) || (ym === today.ym && dayIndex >= today.dayIndex);
-    if (isTodayOrFuture) {
-      const codeLower = String(code).toLowerCase();
+    // 最新値ストア更新：最新編集のときのみ
+    if (isMostRecent) {
       if (isBid) {
         if (!state.bid) state.bid = {};
         if (newVal == null) delete state.bid[codeLower];
@@ -6289,8 +6315,8 @@ function startRankEditCell(cell) {
       }
     }
     saveToStorage();
-    log(`✓ ${isBid ? '入札価格' : 'PRオプ料率'}を更新: ${code} (${ym} ${dayIndex + 1}日) → ${newVal == null ? '削除' : (isBid ? '¥' + newVal : newVal + '%')}`, 'ok');
-    // 表全体を再描画（以降の日付にも継承されるため）
+    const reflectMsg = isMostRecent ? '他タブにも反映' : '過去日のみ更新（推移履歴維持）';
+    log(`✓ ${isBid ? '入札価格' : 'PRオプ料率'}を更新: ${code} (${ym} ${dayIndex + 1}日, ${reflectMsg}) → ${newVal == null ? '削除' : (isBid ? '¥' + newVal : newVal + '%')}`, 'ok');
     renderAll();
   };
   const cancel = () => {
