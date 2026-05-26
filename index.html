@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v193 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v194 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2109,7 +2109,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v193</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v194</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2340,9 +2340,9 @@ table.rank-table td.rank-legend-col-row {
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th data-sort="adNote">対応内容</th>
-              <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
-              <th class="num col-ad" data-sort="adRev1" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
-              <th class="num col-ad" data-sort="adRev2" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
+              <th class="num col-ad" data-sort="adCost0" id="hAdAdjustAdRev0">実績額<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="adCost1" id="hAdAdjustAdRev1">実績額<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="adCost2" id="hAdAdjustAdRev2">実績額<br>(前月)</th>
               <th class="num col-ad" data-sort="roas0" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="roas1" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="roas2" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
@@ -4653,18 +4653,20 @@ function renderGraph() {
 }
 
 // ==================== Rendering: 広告全体 ====================
+// 【v194】「データが実際に入っている」直近3ヶ月を返す。
+// getImportedDataMonths() は item/ad/overall 由来の月のみ（空の当月・前月を自動追加しない）。
 function last3Months() {
-  const months = getAvailableMonths();
+  const months = getImportedDataMonths();
   return months.slice(-3);
 }
 
-let adAdjustSortKey = 'adRev2', adAdjustSortDir = -1;  // デフォルト: 前月の広告売上降順
+let adAdjustSortKey = 'adCost2', adAdjustSortDir = -1;  // デフォルト: 前月の実績額降順
 function renderAdAdjust() {
   const months = last3Months();
   // 動的に見出しを更新（月が分かる場合）
-  if (months.length >= 1) $('#hAdAdjustAdRev0').innerHTML = `広告売上<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#hAdAdjustAdRev1').innerHTML = `広告売上<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#hAdAdjustAdRev2').innerHTML = `広告売上<br>${months[2] || '(前月)'}`;
+  if (months.length >= 1) $('#hAdAdjustAdRev0').innerHTML = `実績額<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#hAdAdjustAdRev1').innerHTML = `実績額<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#hAdAdjustAdRev2').innerHTML = `実績額<br>${months[2] || '(前月)'}`;
   if (months.length >= 1) $('#hAdAdjustRoas0').innerHTML = `広告ROAS<br>${months[0] || '(3ヶ月前)'}`;
   if (months.length >= 2) $('#hAdAdjustRoas1').innerHTML = `広告ROAS<br>${months[1] || '(2ヶ月前)'}`;
   if (months.length >= 3) $('#hAdAdjustRoas2').innerHTML = `広告ROAS<br>${months[2] || '(前月)'}`;
@@ -4680,8 +4682,9 @@ function renderAdAdjust() {
 
   let list = [...codes].map(code => {
     const adRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adRev : 0);
+    const adCosts = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adCost : 0);
     const roass = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].roas : null);
-    return { code, adRevs, roass };
+    return { code, adRevs, adCosts, roass };
   });
 
   // 引退済み商品（商品名なし）を除外
@@ -4713,9 +4716,9 @@ function renderAdAdjust() {
     if (k === 'code') return r.code || '';
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
-    if (k === 'adRev0') return r.adRevs[0] || 0;
-    if (k === 'adRev1') return r.adRevs[1] || 0;
-    if (k === 'adRev2') return r.adRevs[2] || 0;
+    if (k === 'adCost0') return r.adCosts[0] || 0;
+    if (k === 'adCost1') return r.adCosts[1] || 0;
+    if (k === 'adCost2') return r.adCosts[2] || 0;
     if (k === 'roas0') { const v = r.roass[0]; return (v == null || !isFinite(v)) ? -1 : v; }
     if (k === 'roas1') { const v = r.roass[1]; return (v == null || !isFinite(v)) ? -1 : v; }
     if (k === 'roas2') { const v = r.roass[2]; return (v == null || !isFinite(v)) ? -1 : v; }
@@ -4757,9 +4760,9 @@ function renderAdAdjust() {
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
-      <td class="num col-ad">${fmt(r.adRevs[0])}</td>
-      <td class="num col-ad">${fmt(r.adRevs[1])}</td>
-      <td class="num col-ad">${fmt(r.adRevs[2])}</td>
+      <td class="num col-ad">${fmt(r.adCosts[0])}</td>
+      <td class="num col-ad">${fmt(r.adCosts[1])}</td>
+      <td class="num col-ad">${fmt(r.adCosts[2])}</td>
       <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
       <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
       <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
