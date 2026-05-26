@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v197 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v199 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -129,7 +129,8 @@ body {
 .gh-sync-area:hover { background: var(--bg3); }
 .gh-sync-area.gh-disabled { color: var(--text3); }
 .gh-sync-area.gh-saved    { color: var(--green); border-color: var(--green); background: rgba(22,163,74,0.06); }
-.gh-sync-area.gh-dirty    { color: #d97706; border-color: #d97706; background: rgba(217,119,6,0.08); }
+.gh-sync-area.gh-dirty    { color: #d97706; border-color: #d97706; background: rgba(217,119,6,0.08); animation: ghDirtyPulse 1.2s ease-in-out infinite; }
+@keyframes ghDirtyPulse { 0%,100% { background: rgba(217,119,6,0.08); } 50% { background: rgba(217,119,6,0.22); } }
 .gh-sync-area.gh-saving   { color: var(--blue);  border-color: var(--blue);  background: rgba(37,99,235,0.06); }
 .gh-sync-area.gh-error    { color: var(--red);   border-color: var(--red);   background: rgba(220,38,38,0.08); }
 .gh-sync-area.gh-saving .gh-sync-status::before {
@@ -2109,7 +2110,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v197</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v199</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2837,6 +2838,10 @@ function saveToStorage() {
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // 【v199】未保存フラグをlocalStorageにも永続化。GitHub保存成功時にクリアする。
+    // 起動時、このフラグが残っていたら「GitHubに保存し切れていないローカル変更がある」と判断し、
+    // GitHubデータでの上書きをスキップして消失を防ぐ。
+    try { localStorage.setItem(ghPendingFlagKey(), '1'); } catch (e) {}
     // 【v95】GitHub連携: PATが設定されていれば、デバウンス保存をスケジュール
     if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave();
     return true;
@@ -2849,7 +2854,11 @@ const GH_OWNER = 'kaiyoshida0318';
 const GH_REPO = 'ycheck';
 const GH_BRANCH = 'main';
 const GH_PAT_KEY = 'ycheck_github_pat';   // ブラウザ毎・ショップ非依存
-const GH_SAVE_DEBOUNCE_MS = 3000;          // 編集後3秒で自動保存
+const GH_SAVE_DEBOUNCE_MS = 1000;          // 【v198】編集後1秒で自動保存（旧3秒。リロード消失リスク低減）
+// 【v199】GitHubに保存し切れていないローカル変更があることを示す永続フラグ（ショップ別）
+function ghPendingFlagKey() {
+  return 'ycheck_gh_pending_' + (typeof getCurrentShopId === 'function' ? getCurrentShopId() : 'default');
+}
 const GH_MAX_RETRY = 5;                    // 409 Conflict 時の最大リトライ回数
 
 let _ghSaveDebounceTimer = null;
@@ -3063,6 +3072,7 @@ async function ghSaveToGitHub(options = {}) {
     try {
       await ghPutFile(jsonStr);
       _ghDirty = false;
+      try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}  // 【v199】保存成功 → 未保存フラグ解除
       ghSetSyncStatus('saved');
       ghLog(`保存成功: ${ghFilePath()} (${(jsonStr.length / 1024).toFixed(1)} KB)`);
       return { success: true };
@@ -3158,8 +3168,8 @@ function ghSetSyncStatus(state, detail) {
       break;
     case 'dirty':
       el.classList.add('gh-dirty');
-      txt.textContent = '● 未保存';
-      el.title = '編集内容を3秒後に自動保存します\nクリックで設定';
+      txt.textContent = '● 未保存（自動保存中…）';
+      el.title = '編集内容を1秒後に自動保存します。\n保存完了（✓保存済み）まではページをリロードしないでください。\nクリックで設定';
       break;
     case 'saving':
       el.classList.add('gh-saving');
@@ -7630,8 +7640,20 @@ try {
   fetchRankJson({ silent: true });
   // 【v95】GitHub連携が有効なら、起動時にGitHubから最新データを取得して反映
   if (ghIsEnabled()) {
-    console.log(`[${curShop.id}] GitHub連携が有効です - データを取得中...`);
-    ghLoadFromGitHub().then(result => {
+    // 【v199】前回、GitHubに保存し切れていないローカル変更がある場合は、
+    // GitHubデータでの上書きをスキップ（消失防止）。ローカルを保持し、保存を促す。
+    let _hasPendingLocal = false;
+    try { _hasPendingLocal = localStorage.getItem(ghPendingFlagKey()) === '1'; } catch (e) {}
+    if (_hasPendingLocal) {
+      console.warn(`[${curShop.id}] ⚠ 未保存のローカル変更を検出。GitHubからの上書きをスキップしました。`);
+      _ghDirty = true;
+      ghSetSyncStatus('dirty');
+      // 念のため即時にGitHub保存を試みる（ローカルの変更をGitHubへ反映）
+      try { scheduleGitHubSave(); } catch (e) {}
+      alert('前回保存し切れていない変更がローカルに残っていたため、GitHubのデータでの上書きを中止しました。\n\n現在の内容を確認し、問題なければそのまま自動保存されます（右上が「✓保存済み」になればOK）。');
+    } else {
+      console.log(`[${curShop.id}] GitHub連携が有効です - データを取得中...`);
+      ghLoadFromGitHub().then(result => {
       if (result && result.success) {
         // 【v122】GitHub取得後に seed-0423 を再度実行（GitHubデータで上書きされても値を注入）
         try {
@@ -7654,6 +7676,7 @@ try {
     }).catch(err => {
       console.warn(`[${curShop.id}] GitHub取得失敗（localStorageで継続）:`, err.message);
     });
+    }
   }
 } catch (err) {
   console.error('Ycheck 初期化エラー:', err);
