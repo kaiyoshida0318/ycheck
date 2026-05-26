@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v189 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v191 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2083,7 +2083,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v189</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v191</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2310,16 +2310,16 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
+              <th data-sort="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdRev0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdAdjustAdRev1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdAdjustAdRev2">広告売上<br>(前月)</th>
               <th class="num col-ad" data-sort="roas0" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="roas1" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="roas2" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
-              <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="bid">入札価格</th>
-              <th data-sort="adNote">対応内容</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -3792,6 +3792,16 @@ function commitUpload() {
     state.proRate = parseProRate(buf.proRate.rows);
     log(`✅ PRオプ料率を反映（${Object.keys(state.proRate).length}件）`, 'ok');
   }
+  // 【v190】入札価格／PRオプ料率を取り込んだら、その最新値で順位表の「今日」のセルを強制上書き。
+  // （既に今日の値が入っていても上書きする。過去日は触らない）
+  if (buf.bid || buf.proRate) {
+    try {
+      const ow = overwriteTodayRankEditsFromLatest();
+      if (ow > 0) log(`✅ 最新値で今日のセルを上書き（${ow}件）`, 'ok');
+    } catch (e) {
+      console.warn('overwriteTodayRankEditsFromLatest(upload) エラー:', e);
+    }
+  }
   if (buf.master) {
     const newMaster = parseMasterSimple(buf.master.rows);
     Object.keys(newMaster).forEach(code => {
@@ -4658,7 +4668,7 @@ function renderAdAdjust() {
   const tbody = $('#tableAdAdjust tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="16" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
     updateSortIndicator('#tableAdAdjust', adAdjustSortKey, adAdjustSortDir);
     return;
   }
@@ -4707,16 +4717,16 @@ function renderAdAdjust() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      <td>${noteCellHtml(r.code, 'ad')}</td>
       <td class="num col-ad">${fmt(r.adRevs[0])}</td>
       <td class="num col-ad">${fmt(r.adRevs[1])}</td>
       <td class="num col-ad">${fmt(r.adRevs[2])}</td>
       <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
       <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
       <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
-      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
-      <td>${noteCellHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
