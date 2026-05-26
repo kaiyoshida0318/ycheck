@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v188 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v189 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2074,7 +2074,7 @@ table.rank-table td.rank-legend-col-row {
 <!-- Header -->
 <div class="header">
   <div class="header-left">
-    <a class="logo" id="logoHome" title="クリック: 商品-基本データに戻る / Ctrl(⌘)+クリック・中クリック: 新しいタブで開く" style="cursor:pointer; text-decoration:none;" href="#">
+    <a class="logo" id="logoHome" title="クリック: 商品-基本データに戻る / Ctrl(⌘)+クリック・中クリック: 新しいタブで開く" style="cursor:pointer; text-decoration:none;" href="https://kaiyoshida0318.github.io/ycheck/">
       <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
     </a>
     <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
@@ -2083,7 +2083,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v188</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v189</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2578,7 +2578,6 @@ table.rank-table td.rank-legend-col-row {
 
     <div class="upload-actions">
       <button class="btn primary" id="npConfirmUpload" disabled>⬆ アップロード実行</button>
-      <button class="btn ghost" id="npClearAll">すべてクリア</button>
       <button class="btn ghost" id="npToggleLog">ログ表示</button>
       <button class="btn" id="npCloseBottom" style="margin-left:auto;" type="button">閉じる</button>
     </div>
@@ -2640,7 +2639,6 @@ table.rank-table td.rank-legend-col-row {
 
     <div class="upload-actions">
       <button class="btn primary" id="btnConfirmUpload" disabled>⬆ アップロード実行</button>
-      <button class="btn ghost" id="btnClear">すべてクリア</button>
       <button class="btn ghost" id="btnToggleLog">ログ表示</button>
       <button class="btn" id="btnCloseBottom" style="margin-left:auto;">閉じる</button>
     </div>
@@ -5643,10 +5641,10 @@ function resetAllSorts() {
 
 // ==================== Top Tab Navigation ====================
 // ロゴクリックでホーム（商品-基本データ）に戻る
-// 【v188】ロゴの href を現在URLに設定（Ctrl/Cmd/中クリックで新しいタブに同じページを開けるように）
+// 【v188】ロゴの href をデプロイ先URLに設定（Ctrl/Cmd/中クリックで新しいタブにYcheckを開けるように）
 (function setLogoHref() {
   const logo = document.getElementById('logoHome');
-  if (logo) logo.setAttribute('href', location.href);
+  if (logo) logo.setAttribute('href', 'https://kaiyoshida0318.github.io/ycheck/');
 })();
 $('#logoHome').addEventListener('click', (e) => {
   // 【v188】Ctrl/Cmd/Shift+クリック または 中クリックはブラウザ既定（新しいタブで開く）に任せる
@@ -5867,20 +5865,6 @@ fileInput.addEventListener('change', (e) => {
 });
 
 $('#btnConfirmUpload').addEventListener('click', commitUpload);
-
-$('#btnClear').addEventListener('click', () => {
-  state.overall = null; state.item = null; state.ad = null; state.bid = null; state.proRate = null;
-  state.master = {}; state.productMeta = {}; state.rank = {};
-  state.productsCsvSnapshot = null;
-  state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
-  ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
-  Object.values(state.charts).forEach(c => c && c.destroy());
-  state.charts = {};
-  clearStorage();
-  validateBuffer();
-  log('全データをクリアしました（ブラウザ保存分も削除）', 'ok');
-  renderAll();
-});
 
 $('#btnToggleLog').addEventListener('click', () => $('#logArea').classList.toggle('show'));
 
@@ -7211,7 +7195,6 @@ newProductModal.addEventListener('click', (e) => {
 });
 $('#npDownloadTemplate').addEventListener('click', downloadNewProductTemplate);
 $('#npConfirmUpload').addEventListener('click', npConfirmUpload);
-$('#npClearAll').addEventListener('click', npClearAll);
 $('#npToggleLog').addEventListener('click', () => {
   const isShown = npLogArea.style.display !== 'none' && npLogArea.style.display !== '';
   npLogArea.style.display = isShown ? 'none' : 'block';
