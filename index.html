@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v199 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v200 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2110,7 +2110,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v199</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v200</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2983,6 +2983,17 @@ async function ghFetchLargeContent(json) {
 async function ghPutFile(contentString, retryCount = 0) {
   const path = ghFilePath();
   const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+  // 【v200】shaが未取得（起動時にghLoadFromGitHubをスキップした等）の場合、
+  // 既存ファイル更新には sha が必須なので、保存前に最新shaを取得しておく（422 "sha wasn't supplied" 防止）。
+  if (!_ghLastKnownSha) {
+    try {
+      const existing = await ghGetFile();
+      if (existing && existing.sha) _ghLastKnownSha = existing.sha;
+      // notFound（新規ファイル）の場合は sha 不要なので null のままでOK
+    } catch (e) {
+      ghLog('保存前のSHA取得に失敗（新規作成として続行）: ' + e.message, 'warn');
+    }
+  }
   // UTF-8対応のbase64エンコード
   const utf8Bytes = new TextEncoder().encode(contentString);
   let binary = '';
@@ -3007,12 +3018,14 @@ async function ghPutFile(contentString, retryCount = 0) {
     body: JSON.stringify(body)
   });
 
-  if (res.status === 409 && retryCount < GH_MAX_RETRY) {
-    ghLog(`409 Conflict - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
-    // 最新のSHAを取り直してリトライ（指数バックオフ: 500ms, 800ms, 1100ms, ...）
+  // 【v200】409（競合）に加えて422（sha不一致/未供給）でも、最新shaを取り直してリトライ
+  if ((res.status === 409 || res.status === 422) && retryCount < GH_MAX_RETRY) {
+    ghLog(`${res.status} - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
     await new Promise(r => setTimeout(r, 500 + retryCount * 300));
-    const latest = await ghGetFile();
-    _ghLastKnownSha = latest.sha;
+    try {
+      const latest = await ghGetFile();
+      _ghLastKnownSha = latest.sha;  // notFoundなら null（新規作成扱い）
+    } catch (e) { /* 取得失敗時はそのままリトライ */ }
     return ghPutFile(contentString, retryCount + 1);
   }
   if (res.status === 429) {
