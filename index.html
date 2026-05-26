@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v196 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v197 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2109,7 +2109,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v196</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v197</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5967,7 +5967,11 @@ function buildPriceChangeNote(existingNote, kind, oldVal, newVal) {
   const kept = [];
   const segs = String(existingNote || '').split('/').map(s => s.trim()).filter(s => s !== '');
   for (const seg of segs) {
-    if (isAutoTimestamp(seg)) continue;          // 更新日時のみ → 破棄
+    if (isAutoTimestamp(seg)) continue;          // 更新日時スタンプ（新形式など）→ 破棄
+    // 【v197】旧形式「更新日時-YY/MMDD」は / で割れて「更新日時-26」「0422」の2断片になる。
+    //   どちらも更新日時由来なので破棄する。
+    if (seg.indexOf('更新日時') !== -1) continue; // 「更新日時」を含む断片 → 破棄
+    if (/^\d{3,4}$/.test(seg)) continue;          // 日付断片（MMDD等の数字のみ）→ 破棄
     if (seg.startsWith(ownMark)) continue;       // 自分の記号 → 破棄（上書き）
     kept.push(seg);                              // 相手の記号 or 任意メモ → 残す
   }
