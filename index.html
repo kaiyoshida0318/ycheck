@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v187 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v188 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2074,16 +2074,16 @@ table.rank-table td.rank-legend-col-row {
 <!-- Header -->
 <div class="header">
   <div class="header-left">
-    <div class="logo" id="logoHome" title="商品-基本データに戻る" style="cursor:pointer;">
+    <a class="logo" id="logoHome" title="クリック: 商品-基本データに戻る / Ctrl(⌘)+クリック・中クリック: 新しいタブで開く" style="cursor:pointer; text-decoration:none;" href="#">
       <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
-    </div>
+    </a>
     <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
       <span class="shop-selector-icon">🏪</span>
       <select id="shopSelect"></select>
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v187</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v188</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5643,7 +5643,16 @@ function resetAllSorts() {
 
 // ==================== Top Tab Navigation ====================
 // ロゴクリックでホーム（商品-基本データ）に戻る
-$('#logoHome').addEventListener('click', () => {
+// 【v188】ロゴの href を現在URLに設定（Ctrl/Cmd/中クリックで新しいタブに同じページを開けるように）
+(function setLogoHref() {
+  const logo = document.getElementById('logoHome');
+  if (logo) logo.setAttribute('href', location.href);
+})();
+$('#logoHome').addEventListener('click', (e) => {
+  // 【v188】Ctrl/Cmd/Shift+クリック または 中クリックはブラウザ既定（新しいタブで開く）に任せる
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+  // 通常クリックはページ内でビュー切替（アンカーのデフォルト遷移は抑止）
+  e.preventDefault();
   resetAllSorts();
   switchToView('basic');
   state.activeStateFilter = null;
