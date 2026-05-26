@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v195 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v196 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2109,7 +2109,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v195</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v196</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5563,6 +5563,11 @@ function renderRankTable(kind) {
   // 【v174】代表コード絞り込み（バッジクリックで設定された state.repFilter を適用）
   codes = applyRepFilter(codes.map(c => ({ code: c }))).map(x => x.code);
   codes.sort();
+  // 【v196】親子表示（送り込み元/先）を他タブと同様に適用。
+  // {code}配列に変換 → applyRepGrouping で親子を隣接させ → buildParentChildSetsで親/子を判定。
+  let _rankList = applyRepGrouping(codes.map(c => ({ code: c })));
+  const _pcSetsRank = buildParentChildSets(_rankList);
+  codes = _rankList.map(x => x.code);
 
   // 行描画
   const tbody = document.querySelector(tableId + ' tbody');
@@ -5608,8 +5613,9 @@ function renderRankTable(kind) {
       const editCellHtml = `<div class="rank-row-bottom ${bottomClass}" data-edit-field="${editField}" data-code="${escapeHtml(code)}" data-ym="${ym}" data-dayindex="${i}" title="クリックして編集">${editFormatted}</div>`;
       cells.push(`<td class="rank-day rank-cell-2line${statusCls ? ' ' + statusCls : ''}">${rankHtml}${editCellHtml}</td>`);
     }
+    const _pcCls = rowParentChildClass(code, _pcSetsRank);
     return `
-      <tr>
+      <tr${_pcCls ? ` class="${_pcCls}"` : ''}>
         <td class="code-cell">${codeCellHtml(code)}</td>
         <td>${imageCellHtml(code)}</td>
         <td>${nameCellHtml(code)}</td>
