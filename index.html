@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v186 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v187 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2083,7 +2083,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v186</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v187</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2889,7 +2889,8 @@ async function ghGetFile() {
   const json = await res.json();
   // content はbase64
   let decoded = '';
-  if (json.content) {
+  if (json.content && json.content.replace(/\s/g, '').length > 0) {
+    // 1MB以下: Contents API が content(base64) を直接返す
     try {
       const raw = atob(json.content.replace(/\s/g, ''));
       // UTF-8 バイト列として decode
@@ -2898,9 +2899,51 @@ async function ghGetFile() {
     } catch (e) {
       throw new Error('base64デコードに失敗: ' + e.message);
     }
+  } else if (json.sha) {
+    // 【v187】1MB超のファイルは Contents API が content を省略する（GitHub仕様）。
+    // この場合 download_url から実データを取得し、空ファイルと誤認しないようにする。
+    decoded = await ghFetchLargeContent(json);
   }
   _ghLastKnownSha = json.sha;
   return { sha: json.sha, content: decoded };
+}
+
+// 【v187】1MB超ファイルの中身を取得するフォールバック。
+// まず download_url（一時署名付きraw URL）を試し、ダメなら Blob API（git/blobs/{sha}）で取得。
+async function ghFetchLargeContent(json) {
+  // 1) download_url: 署名付きの一時URL。認証ヘッダ不要で raw を返す
+  if (json.download_url) {
+    try {
+      const r = await fetch(json.download_url, { cache: 'no-store' });
+      if (r.ok) {
+        const txt = await r.text();
+        if (txt && txt.length > 0) return txt;
+      }
+    } catch (e) {
+      ghLog('download_url 取得失敗、Blob APIにフォールバック: ' + e.message, 'warn');
+    }
+  }
+  // 2) Blob API: base64で返る。サイズ上限100MBまで対応
+  const blobUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/git/blobs/${json.sha}`;
+  const res = await fetch(blobUrl, {
+    headers: {
+      'Authorization': `Bearer ${ghGetPat()}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    },
+    cache: 'no-store'
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Blob取得失敗: ${res.status} ${text.slice(0,200)}`);
+  }
+  const blob = await res.json();
+  if (blob.encoding === 'base64' && blob.content) {
+    const raw = atob(blob.content.replace(/\s/g, ''));
+    const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+  return blob.content || '';
 }
 
 // GitHub API: ファイルPUT（409時は最新SHAを取り直してリトライ）
