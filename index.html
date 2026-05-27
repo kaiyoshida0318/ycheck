@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v202 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v203 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2110,7 +2110,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v202</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v203</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2228,12 +2228,12 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-bid" data-sort="proRate">PRオプ</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
               <th class="num col-bid" data-sort="bid">入札価格</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -4483,12 +4483,12 @@ function renderBasic() {
       <td class="num col-sales">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
       <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-ad">${fmt(r.adRev)}</td>
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
