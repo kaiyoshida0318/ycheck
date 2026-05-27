@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v201 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v202 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2110,7 +2110,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v201</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v202</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3855,6 +3855,16 @@ function commitUpload() {
       console.warn('overwriteTodayRankEditsFromLatest(upload) エラー:', e);
     }
   }
+  // 【v202】PRオプCSV（=Yahoo公開中の全商品リスト）に載っていない既存商品を撤退済みに。
+  // 確認ダイアログでOKのときだけ適用。saveToStorageより前なので撤退結果も保存される。
+  if (buf.proRate) {
+    try {
+      const retired = applyRetireByProRate(state.proRate);
+      if (retired > 0) log(`🗂 Yahooで削除された商品 ${retired}件を「撤退済み」にしました`, 'ok');
+    } catch (e) {
+      console.warn('applyRetireByProRate エラー:', e);
+    }
+  }
   if (buf.master) {
     const newMaster = parseMasterSimple(buf.master.rows);
     Object.keys(newMaster).forEach(code => {
@@ -3934,6 +3944,53 @@ function getMaster(code) { return state.master[code]; }
 function isRetired(code) {
   const meta = state.productMeta[code];
   return meta && meta.status === '撤退済み';
+}
+
+// 【v202】PRオプCSV（data*.csv）を「Yahooで現在公開中の全商品リスト」とみなし、
+// Ycheckに登録済み（master）かつ撤退済み以外なのに、PRオプCSVに載っていない商品を
+// 「Yahooでページ削除された＝撤退」と判定する。
+// proRateMap: parseProRate の結果（キーは小文字統一）。
+// 返り値: 撤退候補の商品コード配列（master上の元のキー表記）。
+function detectRetiredByProRate(proRateMap) {
+  if (!proRateMap || typeof proRateMap !== 'object') return [];
+  const liveSet = new Set(Object.keys(proRateMap));  // proRateのキーは小文字
+  // PRオプCSVが空（取り込み失敗・誤ファイル）のときは判定しない（全件誤撤退の事故防止）
+  if (liveSet.size === 0) return [];
+  const candidates = [];
+  Object.keys(state.master).forEach(code => {
+    if (isRetired(code)) return;                       // 既に撤退済みは対象外
+    const lower = String(code).toLowerCase();
+    if (!liveSet.has(lower)) candidates.push(code);    // 公開リストにない＝ページ削除
+  });
+  return candidates;
+}
+
+// 【v202】撤退候補を確認ダイアログにかけ、OKなら status を「撤退済み」に一括セット。
+// 返り値: 実際に撤退済みにした件数。
+function applyRetireByProRate(proRateMap) {
+  const candidates = detectRetiredByProRate(proRateMap);
+  if (candidates.length === 0) return 0;
+  const preview = candidates.slice(0, 30).map(c => {
+    const m = state.master[c];
+    const nm = (m && m.name) ? `（${m.name}）` : '';
+    return `・${c}${nm}`;
+  }).join('\n');
+  const more = candidates.length > 30 ? `\n…他${candidates.length - 30}件` : '';
+  const ok = confirm(
+    `PRオプ料率CSV（Yahoo公開中の全商品リスト）に存在しない商品が ${candidates.length}件 見つかりました。\n` +
+    `これらはYahooで商品ページが削除された可能性が高いため、「撤退済み」にします。\n` +
+    `撤退済みにすると「撤退済み商品」ブロックにのみ表示され、他の表（過去分含む）からは外れます。\n\n` +
+    `${preview}${more}\n\n` +
+    `これらを撤退済みにしますか？`
+  );
+  if (!ok) return 0;
+  let n = 0;
+  candidates.forEach(code => {
+    const meta = getMeta(code);
+    meta.status = '撤退済み';
+    n++;
+  });
+  return n;
 }
 function getMeta(code) {
   if (!state.productMeta[code]) {
