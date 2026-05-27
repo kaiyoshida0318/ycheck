@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v203 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v204 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2110,7 +2110,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v203</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v204</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7734,9 +7734,22 @@ try {
       console.warn(`[${curShop.id}] ⚠ 未保存のローカル変更を検出。GitHubからの上書きをスキップしました。`);
       _ghDirty = true;
       ghSetSyncStatus('dirty');
-      // 念のため即時にGitHub保存を試みる（ローカルの変更をGitHubへ反映）
-      try { scheduleGitHubSave(); } catch (e) {}
-      alert('前回保存し切れていない変更がローカルに残っていたため、GitHubのデータでの上書きを中止しました。\n\n現在の内容を確認し、問題なければそのまま自動保存されます（右上が「✓保存済み」になればOK）。');
+      // 【v204】以前は無条件でalert警告を出していたが、正常に保存できていた場合でも
+      // 「保存完了前にリロード/タブを閉じた」だけでフラグが残り、毎回誤警告が出ていた。
+      // そこで、まず黙ってGitHub保存を試み、成功したら警告を出さない（フラグもクリアされる）。
+      // 本当に保存できなかったときだけ警告を出す。データ保護の仕組み自体は維持。
+      ghSaveToGitHub({ allowEmpty: false }).then(result => {
+        if (result && result.success) {
+          console.log(`[${curShop.id}] 未保存変更をGitHubへ反映しました（警告不要）`);
+        } else if (result && result.skipped) {
+          // 空ガード等でスキップ：ローカルは保持されているので静かに継続
+          console.warn(`[${curShop.id}] 起動時保存スキップ: ${result.reason || ''}`);
+        }
+      }).catch(err => {
+        // 本当に保存に失敗したときだけ警告（データはローカルに残っている）
+        console.error(`[${curShop.id}] 起動時の保存に失敗:`, err);
+        alert('前回保存し切れていない変更がローカルに残っており、GitHubへの保存も失敗しました。\n\nデータはこの端末に保持されています。右上が「✓保存済み」になるまで、設定から「今すぐGitHub保存」をお試しください。');
+      });
     } else {
       console.log(`[${curShop.id}] GitHub連携が有効です - データを取得中...`);
       ghLoadFromGitHub().then(result => {
