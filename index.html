@@ -2983,17 +2983,6 @@ async function ghFetchLargeContent(json) {
 async function ghPutFile(contentString, retryCount = 0) {
   const path = ghFilePath();
   const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
-  // 【v200】shaが未取得（起動時にghLoadFromGitHubをスキップした等）の場合、
-  // 既存ファイル更新には sha が必須なので、保存前に最新shaを取得しておく（422 "sha wasn't supplied" 防止）。
-  if (!_ghLastKnownSha) {
-    try {
-      const existing = await ghGetFile();
-      if (existing && existing.sha) _ghLastKnownSha = existing.sha;
-      // notFound（新規ファイル）の場合は sha 不要なので null のままでOK
-    } catch (e) {
-      ghLog('保存前のSHA取得に失敗（新規作成として続行）: ' + e.message, 'warn');
-    }
-  }
   // UTF-8対応のbase64エンコード
   const utf8Bytes = new TextEncoder().encode(contentString);
   let binary = '';
@@ -3018,14 +3007,12 @@ async function ghPutFile(contentString, retryCount = 0) {
     body: JSON.stringify(body)
   });
 
-  // 【v200】409（競合）に加えて422（sha不一致/未供給）でも、最新shaを取り直してリトライ
-  if ((res.status === 409 || res.status === 422) && retryCount < GH_MAX_RETRY) {
-    ghLog(`${res.status} - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
+  if (res.status === 409 && retryCount < GH_MAX_RETRY) {
+    ghLog(`409 Conflict - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
+    // 最新のSHAを取り直してリトライ（指数バックオフ: 500ms, 800ms, 1100ms, ...）
     await new Promise(r => setTimeout(r, 500 + retryCount * 300));
-    try {
-      const latest = await ghGetFile();
-      _ghLastKnownSha = latest.sha;  // notFoundなら null（新規作成扱い）
-    } catch (e) { /* 取得失敗時はそのままリトライ */ }
+    const latest = await ghGetFile();
+    _ghLastKnownSha = latest.sha;
     return ghPutFile(contentString, retryCount + 1);
   }
   if (res.status === 429) {
@@ -4315,7 +4302,7 @@ function kwCellHtml(code) {
   const cls = 'kw-cell' + (edited ? ' edited' : '');
   // KWテキスト: クリックでYahoo検索（別タブ）。KWが空ならリンクにしない
   const textHtml = kw
-    ? `<a class="kw-text" href="${escapeHtml(yahooSearchUrl(kw))}" target="_blank" rel="noopener" title="Yahoo!ショッピングで「${escapeHtml(kw)}」を検索">${escapeHtml(kw)}</a>`
+    ? `<a class="kw-text" data-kwsearch="1" href="${escapeHtml(yahooSearchUrl(kw))}" target="_blank" rel="noopener" title="クリック: 同じタブで検索を更新 / Ctrl(⌘)・中クリック: 新しいタブで開く">${escapeHtml(kw)}</a>`
     : `<span class="kw-text kw-empty">—</span>`;
   // 右端の編集ボタン
   const editBtn = `<button type="button" class="kw-edit-btn" data-code="${escapeHtml(code)}" title="メインKWを編集">✏</button>`;
@@ -5735,6 +5722,18 @@ $('#logoHome').addEventListener('click', (e) => {
   updateActiveStateChip();
   updateFilterBanners();
   renderAll();
+});
+// 【v200】メインKWリンク: 通常クリックは「KW検索専用の同じ1枚のタブ」で開く（中身を差し替え）。
+// Ctrl/Cmd/Shift+クリック・中クリックはブラウザ既定（毎回新しいタブ）に任せる。
+// renderAllで何度も再生成されるため、documentへのイベント委譲で1回だけ登録する。
+document.addEventListener('click', (e) => {
+  const link = e.target.closest && e.target.closest('a.kw-text[data-kwsearch]');
+  if (!link) return;
+  // 修飾キー付き・中クリックはブラウザ既定（新しいタブ）に任せる
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+  // 通常クリック: 固定ウィンドウ名で同じタブを使い回す（中身差し替え）
+  e.preventDefault();
+  window.open(link.href, 'ycheckKwSearch');
 });
 $$('.nav-tab').forEach(item => {
   item.addEventListener('click', (e) => {
