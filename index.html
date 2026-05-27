@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v200 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v201 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2110,7 +2110,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v200</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v201</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2979,7 +2979,7 @@ async function ghFetchLargeContent(json) {
   return blob.content || '';
 }
 
-// GitHub API: ファイルPUT（409時は最新SHAを取り直してリトライ）
+// GitHub API: ファイルPUT（409/422時は最新SHAを取り直してリトライ）
 async function ghPutFile(contentString, retryCount = 0) {
   const path = ghFilePath();
   const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
@@ -2988,6 +2988,18 @@ async function ghPutFile(contentString, retryCount = 0) {
   let binary = '';
   for (let i = 0; i < utf8Bytes.length; i++) binary += String.fromCharCode(utf8Bytes[i]);
   const base64 = btoa(binary);
+
+  // 【v201】SHA予防取得: 既存ファイルの更新にはSHAが必須。手元のSHAが空なら、
+  // PUT前に最新を取りに行く（404＝新規ならsha=nullが返るのでSHAなしでPUT＝新規作成）。
+  // これで「SHAなしで既存ファイルにPUT → 422 (sha wasn't supplied)」を未然に防ぐ。
+  if (!_ghLastKnownSha && retryCount === 0) {
+    try {
+      const pre = await ghGetFile();
+      if (pre && pre.sha) _ghLastKnownSha = pre.sha;
+    } catch (e) {
+      ghLog('PUT前SHA取得に失敗（新規作成として継続）: ' + e.message, 'warn');
+    }
+  }
 
   const body = {
     message: `Ycheck data save (${getCurrentShopId()}) ${new Date().toISOString()}`,
@@ -3007,8 +3019,10 @@ async function ghPutFile(contentString, retryCount = 0) {
     body: JSON.stringify(body)
   });
 
-  if (res.status === 409 && retryCount < GH_MAX_RETRY) {
-    ghLog(`409 Conflict - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
+  // 【v201】409(SHA競合) と 422(SHA未供給/不正) はどちらも「最新SHAを取り直して再送」で解決する。
+  // 422は従来リトライされず即エラー＝保存不能ループの原因だったため、ここに含める。
+  if ((res.status === 409 || res.status === 422) && retryCount < GH_MAX_RETRY) {
+    ghLog(`${res.status} - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
     // 最新のSHAを取り直してリトライ（指数バックオフ: 500ms, 800ms, 1100ms, ...）
     await new Promise(r => setTimeout(r, 500 + retryCount * 300));
     const latest = await ghGetFile();
@@ -3025,7 +3039,10 @@ async function ghPutFile(contentString, retryCount = 0) {
     throw new Error(`PUT ${path} failed: ${res.status} ${text.slice(0,200)}`);
   }
   const json = await res.json();
-  _ghLastKnownSha = json.content && json.content.sha;
+  // 【v201】成功時のSHA更新を堅牢化。content.sha が取れないレスポンス形でも commit.sha 等で拾い、
+  // 拾えなければ「次回PUT前に取り直す」ためnullにリセット（古いSHAを残して422を誘発しない）。
+  const newSha = (json.content && json.content.sha) || (json.commit && json.commit.sha) || null;
+  _ghLastKnownSha = newSha;
   return json;
 }
 
