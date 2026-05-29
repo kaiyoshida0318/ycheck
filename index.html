@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v205 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v206 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -383,6 +383,36 @@ body {
   background: rgba(37,99,235,0.08);
   border-color: rgba(37,99,235,0.3);
   cursor: pointer;  /* 【v205】クリックで開くのでhelpカーソルからpointerに変更 */
+  position: relative;  /* 【v206】data-tipツールチップの基準点 */
+}
+/* 【v206】即時表示の自作ツールチップ（title属性のラグ回避） */
+.state-chip.info-chip[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 1200;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+.state-chip.info-chip[data-tip]:hover::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: #1f2937;
+  z-index: 1200;
+  pointer-events: none;
 }
 .state-chip.info-chip:hover {
   background: var(--accent);
@@ -2133,7 +2163,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v205</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v206</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2141,7 +2171,8 @@ table.rank-table td.rank-legend-col-row {
     </div>
     <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
-    <button class="state-chip info-chip" id="stateInfoBtn" type="button" title="入札価格・PRオプションの説明などを表示する"><span class="chip-label">💡 全体の説明</span></button>
+    <!-- 【v206】title属性のラグ（OS標準ツールチップは0.5〜1秒遅延）を回避するため、data-tip属性＋CSSの即時ツールチップに変更。 -->
+    <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札価格・PRオプションの説明などを表示する"><span class="chip-label">💡 全体の説明</span></button>
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
