@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v206 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v207 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -386,6 +386,7 @@ body {
   position: relative;  /* 【v206】data-tipツールチップの基準点 */
 }
 /* 【v206】即時表示の自作ツールチップ（title属性のラグ回避） */
+/* 【v207】「順位取得CSV(GitHub反映)」ボタンのツールチップと同じスタイルに揃えて目立たせる */
 .state-chip.info-chip[data-tip]:hover::after {
   content: attr(data-tip);
   position: absolute;
@@ -394,25 +395,16 @@ body {
   transform: translateX(-50%);
   background: #1f2937;
   color: #fff;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 500;
+  line-height: 1.55;
   white-space: nowrap;
   z-index: 1200;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-}
-.state-chip.info-chip[data-tip]:hover::before {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-bottom-color: #1f2937;
-  z-index: 1200;
-  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  max-width: 480px;
 }
 .state-chip.info-chip:hover {
   background: var(--accent);
@@ -2163,7 +2155,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v206</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v207</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
