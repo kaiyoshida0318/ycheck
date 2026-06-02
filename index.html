@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v209 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v211 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1643,8 +1643,9 @@ tr.row-child .code-cell-inner::before {
   color: var(--red);
   font-size: 0.85rem;
 }
-.gh-reflect-hover:hover .gh-reflect-tooltip,
-.gh-reflect-hover:focus-within .gh-reflect-tooltip {
+/* 【v210】ホバー表示を廃止し、クリックで開く（.open）方式に。
+   開いたら、ポップアップ外をクリックする or Esc を押すまで出続ける */
+.gh-reflect-hover.open .gh-reflect-tooltip {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2155,7 +2156,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v209</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v211</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6021,6 +6022,36 @@ if (infoBtn && infoOverlay) {
   // Escキーで閉じる
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && infoOverlay.classList.contains('show')) infoHide();
+  });
+}
+
+// 【v210】「📍 反映場所を確認」ガイド：ホバー表示を廃止し、クリックで開く方式に。
+// 開いたら、ポップアップ外をクリックする or Esc を押すまで出続ける（誤って消えないように）。
+const ghReflectWrap = $('#btnShowGhReflectGuide');
+if (ghReflectWrap) {
+  const ghReflectBtn = ghReflectWrap.querySelector('button');
+  const ghReflectTip = ghReflectWrap.querySelector('.gh-reflect-tooltip');
+  const ghReflectClose = () => ghReflectWrap.classList.remove('open');
+  if (ghReflectBtn) {
+    ghReflectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();               // 直後の document クリックで即閉じしないように
+      ghReflectWrap.classList.toggle('open');
+    });
+  }
+  // ポップアップ内のクリック（画像など）では閉じない＝「別の場所」をクリックしていない
+  if (ghReflectTip) ghReflectTip.addEventListener('click', (e) => e.stopPropagation());
+  // ポップアップ外（別の場所）をクリックしたら閉じる。
+  // 【v211】ここで言う「別の場所」は “Ycheckのページ内の別の場所” のこと。
+  //   document への click はページ内クリックでしか発火しないので、デュアルモニターで
+  //   別モニター（＝別ウィンドウ/別アプリ）をクリックしてもこのリスナーは発火せず、閉じない（要望通り）。
+  //   ※ blur / focusout / visibilitychange で閉じる処理は絶対に足さないこと。
+  //     それらはウィンドウからフォーカスが外れた＝別モニターを見ただけで消えてしまい、要望に反する。
+  document.addEventListener('click', () => {
+    if (ghReflectWrap.classList.contains('open')) ghReflectClose();
+  });
+  // Escでも閉じる
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ghReflectWrap.classList.contains('open')) ghReflectClose();
   });
 }
 
