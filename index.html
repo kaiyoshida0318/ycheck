@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v212 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v213 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -943,6 +943,16 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   color: var(--text);
 }
 .filters input:focus, .filters select:focus { outline: none; border-color: var(--accent); }
+/* 【v213】状態カテゴリの説明文（ツールバー内・対応内容-全削除の右に表示） */
+.state-explain {
+  font-size: 0.8rem;
+  color: var(--text2);
+  font-weight: 500;
+  font-style: italic;
+  padding-left: 8px;
+  border-left: 3px solid var(--accent);
+  line-height: 1.4;
+}
 .filter-label { font-size: 0.8rem; color: var(--text3); font-weight: 500; }
 
 /* Table */
@@ -2156,7 +2166,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v212</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v213</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2375,6 +2385,7 @@ table.rank-table td.rank-legend-col-row {
           <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="入札価格全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
+          <span class="state-explain" id="adAdjustStateExplain" style="display:none;"></span>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust">
@@ -2411,6 +2422,7 @@ table.rank-table td.rank-legend-col-row {
           <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
+          <span class="state-explain" id="proAdjustStateExplain" style="display:none;"></span>
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -2489,11 +2501,11 @@ table.rank-table td.rank-legend-col-row {
     <section class="info-section">
       <h3 class="info-heading">■ 状態の説明</h3>
       <ul class="info-list">
-        <li><b class="info-tag ok">入札価格○</b>広告の入札価格が最安値の <b>25円</b> かつ、広告が <b>最上段に出ている</b> 状態。</li>
-        <li><b class="info-tag ng">入札価格✕</b><b>25円</b> かつ <b>広告最上段露出</b> を満たしていないもの。</li>
-        <li><b class="info-tag none">入札無し</b>広告を打っていない状態。</li>
-        <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>2列目以上</b> の状態。<br><span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
-        <li><b class="info-tag ng">PRオプ×</b><b>7%</b> かつ <b>SEO順位2列目以上</b> を満たしていないもの。</li>
+        <li><b class="info-tag ok">入札価格○</b>広告の入札価格が最安値の <b>25円</b> かつ、広告が <b>最上段に出ている</b> もの。</li>
+        <li><b class="info-tag ng">入札価格✕</b><b>「入札価格25円かつ広告最上段露出」</b> を満たしていないもの。</li>
+        <li><b class="info-tag none">入札無し</b>広告を打っていないもの。</li>
+        <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>2行目以上</b> のもの。<br><span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
+        <li><b class="info-tag ng">PRオプ×</b><b>「PRオプション7％かつSEO順位2行目以上」</b> を満たしていないもの。</li>
         <li><b class="info-tag warn">撤退検討▲</b>広告の採算が合わないため削除し、PRオプションのみで販売できるかを検証しているもの。</li>
         <li><b class="info-tag ng">撤退■</b>在庫が無くなり次第販売終了予定のもの。</li>
       </ul>
@@ -5944,6 +5956,15 @@ const STATE_FILTERS = {
   'unselected-pro':{ label: '選択前-PRオプ□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
 };
 
+// 【v213】状態カテゴリの説明文（チップで絞り込んだとき、対象ビューのツールバーに表示）
+const STATE_EXPLAIN = {
+  'ad-ok':   '広告の入札価格が最安値の25円かつ、広告が最上段に出ているもの',
+  'ad-ng':   '「入札価格25円かつ広告最上段露出」を満たしていないもの',
+  'ad-none': '広告を打っていないもの',
+  'pro-ok':  'PRオプションが最安値の7%かつ、SEO順位が2行目以上のもの',
+  'pro-ng':  '「PRオプション7％かつSEO順位2行目以上」を満たしていないもの'
+};
+
 function switchToView(viewName) {
   $$('.nav-tab').forEach(i => i.classList.remove('active'));
   const tab = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
@@ -5985,9 +6006,15 @@ function updateActiveStateChip() {
 function updateFilterBanners() {
   const adBanner = $('#adAdjustBanner');
   const proBanner = $('#proAdjustBanner');
+  // 【v213】状態カテゴリ説明文（ツールバー内）
+  const adExplain = $('#adAdjustStateExplain');
+  const proExplain = $('#proAdjustStateExplain');
+  const setExplain = (el, txt) => { if (el) { el.textContent = txt || ''; el.style.display = txt ? '' : 'none'; } };
   if (!state.activeStateFilter) {
     if (adBanner) adBanner.classList.remove('show');
     if (proBanner) proBanner.classList.remove('show');
+    setExplain(adExplain, '');
+    setExplain(proExplain, '');
     return;
   }
   const f = state.activeStateFilter;
@@ -6000,6 +6027,10 @@ function updateFilterBanners() {
     $('#proAdjustBannerLabel').textContent = f.label;
     if (adBanner) adBanner.classList.remove('show');
   }
+  // 説明文は対象ビュー側にだけ出し、もう片方は消す（バナーHTMLの有無に依存しない）
+  const explainTxt = STATE_EXPLAIN[f.type] || '';
+  if (f.targetView === 'ad-adjust') { setExplain(adExplain, explainTxt); setExplain(proExplain, ''); }
+  else if (f.targetView === 'pro-adjust') { setExplain(proExplain, explainTxt); setExplain(adExplain, ''); }
 }
 
 // 【状態】バッジクリック（info-chipはフィルタ対象外）
