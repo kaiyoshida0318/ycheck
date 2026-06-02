@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v215 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v218 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2165,7 +2165,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v215</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v218</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2355,11 +2355,25 @@ table.rank-table td.rank-legend-col-row {
       </div>
     </div>
 
-    <!-- View: 全-月別グラフ（折れ線グラフのみ） -->
+    <!-- View: 全-月別グラフ（折れ線グラフ + 月別表） -->
     <div class="view" id="view-graph">
       <div class="card">
         <h3 class="card-title">全-月別グラフ</h3>
         <div class="chart-box chart-box-fixed"><canvas id="chartAll"></canvas></div>
+        <div class="table-wrap">
+          <table id="tableGraphMonthly2">
+            <thead><tr>
+              <th>月</th>
+              <th class="num col-sales">総売上</th>
+              <th class="num col-sales">SEO売上</th>
+              <th class="num col-ad">広告売上</th>
+              <th class="num col-ad">実績額</th>
+              <th class="num col-ad">CVR</th>
+              <th class="num col-ad">ROAS</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -2375,6 +2389,8 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-sales">SEO売上</th>
               <th class="num col-ad">広告売上</th>
               <th class="num col-ad">実績額</th>
+              <th class="num col-ad">CVR</th>
+              <th class="num col-ad">ROAS</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -2839,6 +2855,11 @@ const fmtNum = (n) => (n == null || isNaN(n) || n === 0) ? '—' : Math.round(n)
 const fmtRoas = (n) => {
   if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
   return (n).toFixed(0) + '%';
+};
+// 【v218】CVRフォーマット: 小数1桁 + 末尾%（広告詳細レポートの表記に合わせる）
+const fmtCvr = (n) => {
+  if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
+  return (n).toFixed(1) + '%';
 };
 // PRオプ料率フォーマット: 小数点以下切り捨て + 末尾%
 const fmtProRate = (n) => {
@@ -3680,10 +3701,14 @@ function parseAd(rows) {
     if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
     const adCost = toNum(r['利用金額'] || r['広告費'] || r['実績額'] || r['消化金額'] || 0);
     const adRevenue = toNum(r['売上金額'] || r['売上金額（税込）'] || r['売上金額(税込)'] || r['広告経由売上'] || r['売上'] || 0);
+    const adClicks = toNum(r['クリック数'] || r['クリック'] || 0);   // 【v218】CVR算出用
+    const adOrders = toNum(r['注文数'] || 0);                      // 【v218】CVR算出用（注文個数ではなく注文数）
     const key = code + '|' + month;
-    if (!agg[key]) agg[key] = { code, month, adCost: 0, adRevenue: 0 };
+    if (!agg[key]) agg[key] = { code, month, adCost: 0, adRevenue: 0, adClicks: 0, adOrders: 0 };
     agg[key].adCost += adCost;
     agg[key].adRevenue += adRevenue;
+    agg[key].adClicks += adClicks;
+    agg[key].adOrders += adOrders;
   });
   return Object.values(agg);
 }
@@ -4765,15 +4790,15 @@ function renderRetired() {
 function renderGraph() {
   const months = getAvailableMonths();
   const data = months.map(m => {
-    let rev = 0, adRev = 0, adCost = 0;
+    let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0;
     (state.item || []).filter(i => i.month === m).forEach(i => { rev += i.revenue; });
-    (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue; adCost += a.adCost; });
+    (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue; adCost += a.adCost; adClicks += (a.adClicks || 0); adOrders += (a.adOrders || 0); });
     // overallの売上を優先（より正確な総売上）
     if (state.overall) {
       const o = state.overall.months.find(x => x.month === m);
       if (o && o.revenue > 0) rev = o.revenue;
     }
-    return { month: m, rev, adRev, adCost, seoRev: Math.max(0, rev - adRev) };
+    return { month: m, rev, adRev, adCost, adClicks, adOrders, seoRev: Math.max(0, rev - adRev) };
   });
 
   const labels = data.map(d => d.month);
@@ -4803,20 +4828,22 @@ function renderGraph() {
     }
   });
 
-  // 月別表（新しい順）
-  const tbody = document.querySelector('#tableGraphMonthly tbody');
-  if (tbody) {
-    const rows = [...data].reverse();
-    tbody.innerHTML = rows.map(d => `
+  // 月別表（新しい順）。全-月別データと全-月別グラフ下の両方の表に同じ内容を入れる
+  const rowsHtml = [...data].reverse().map(d => `
       <tr>
         <td>${d.month}</td>
         <td class="num col-sales">${fmt(d.rev)}</td>
         <td class="num col-sales">${fmt(d.seoRev)}</td>
         <td class="num col-ad">${fmt(d.adRev)}</td>
         <td class="num col-ad">${fmt(d.adCost)}</td>
+        <td class="num col-ad">${fmtCvr(d.adClicks > 0 ? d.adOrders / d.adClicks * 100 : NaN)}</td>
+        <td class="num col-ad">${fmtRoas(d.adCost > 0 ? d.adRev / d.adCost * 100 : NaN)}</td>
       </tr>
     `).join('');
-  }
+  ['#tableGraphMonthly tbody', '#tableGraphMonthly2 tbody'].forEach(sel => {
+    const tbody = document.querySelector(sel);
+    if (tbody) tbody.innerHTML = rowsHtml;
+  });
 }
 
 // ==================== Rendering: 広告全体 ====================
