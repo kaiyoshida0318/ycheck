@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v214 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v215 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2165,7 +2165,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v214</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v215</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2193,8 +2193,9 @@ table.rank-table td.rank-legend-col-row {
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired"><span class="ico">🗂</span>撤退済み商品</a>
   </div>
   <div class="nav-group">
-    <span class="nav-group-label">【グラフ】</span>
-    <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph"><span class="ico">📈</span>全-月別データ</a>
+    <span class="nav-group-label">【全体】</span>
+    <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata"><span class="ico">📋</span>全-月別データ</a>
+    <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph"><span class="ico">📈</span>全-月別グラフ</a>
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【取得データ】</span>
@@ -2354,11 +2355,18 @@ table.rank-table td.rank-legend-col-row {
       </div>
     </div>
 
-    <!-- View: 全-月別データ（グラフ + 月別表） -->
+    <!-- View: 全-月別グラフ（折れ線グラフのみ） -->
     <div class="view" id="view-graph">
       <div class="card">
-        <h3 class="card-title">全-月別データ（折れ線グラフ）</h3>
+        <h3 class="card-title">全-月別グラフ</h3>
         <div class="chart-box chart-box-fixed"><canvas id="chartAll"></canvas></div>
+      </div>
+    </div>
+
+    <!-- View: 全-月別データ（月別表のみ） -->
+    <div class="view" id="view-graphdata">
+      <div class="card">
+        <h3 class="card-title">全-月別データ</h3>
         <div class="table-wrap">
           <table id="tableGraphMonthly">
             <thead><tr>
@@ -5860,6 +5868,7 @@ function renderAll() {
   else if (state.currentView === 'monthly') renderMonthly();
   else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraph();
+  else if (state.currentView === 'graphdata') renderGraph();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
   else if (state.currentView === 'ad-rank') renderAdRank();
