@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v208 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v209 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2155,7 +2155,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v208</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v209</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7274,6 +7274,52 @@ function updateCsvDownloadButtonState() {
   btn.setAttribute('data-tooltip', lines.join('\n'));
 }
 
+// 【v209】変化コードを「別ファイル(.txt)」で出力するためのヘルパー。
+// 順位取得API用CSV(code,keyword)は1行目ヘッダーを含め一切変更しない（APIパーサを壊さないため）。
+// 変化があった商品コードはこのtxtに切り出し、CSVと同時ダウンロードする。
+function buildChangedCodesTxt(diff, prevItems, curItems, csvName) {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const out = [];
+  out.push('# 商品マスタ 変化コード（順位取得CSVと同時出力）');
+  out.push('# 対になるCSV: ' + csvName);
+  out.push('# 出力日時: ' + `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`);
+  out.push('# 比較基準: 前回ダウンロード時点のスナップショット');
+  out.push('');
+  const allCodes = [...diff.changed, ...diff.added, ...diff.removed];
+  out.push(`変化コード一覧（${allCodes.length}件）: ` + (allCodes.join(', ') || 'なし'));
+  out.push('');
+  if (diff.changed.length) {
+    out.push(`[メインKW変更] ${diff.changed.length}件`);
+    diff.changed.forEach(c => out.push(`  ${c}    ${prevItems[c] || ''} → ${curItems[c] || ''}`));
+    out.push('');
+  }
+  if (diff.added.length) {
+    out.push(`[新規追加] ${diff.added.length}件`);
+    diff.added.forEach(c => out.push(`  ${c}    (KW: ${curItems[c] || ''})`));
+    out.push('');
+  }
+  if (diff.removed.length) {
+    out.push(`[削除/撤退] ${diff.removed.length}件`);
+    diff.removed.forEach(c => out.push(`  ${c}    (旧KW: ${prevItems[c] || ''})`));
+    out.push('');
+  }
+  return '\uFEFF' + out.join('\r\n') + '\r\n';  // UTF-8 BOM付き（メモ帳等での文字化け防止）
+}
+
+// 【v209】任意のテキストをファイルとしてダウンロードする汎用ヘルパー
+function triggerTextDownload(text, filename) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function downloadBasicCsv() {
   const list = Array.isArray(state.basicListCache) ? state.basicListCache : [];
   if (list.length === 0) {
@@ -7300,6 +7346,11 @@ function downloadBasicCsv() {
     alert('出力対象がありません。メインKWが未登録の商品だけだった可能性があります。');
     return;
   }
+  // 【v209】CSVは順位取得API用に不変のまま出力する。変化コードは別txtに切り出すため、
+  // スナップショット上書き（関数末尾）より前に「今回反映する変化」を退避しておく。
+  const changedDiff = computeProductsCsvDiff();
+  const prevSnapItems = (state.productsCsvSnapshot && state.productsCsvSnapshot.items) || {};
+  const curSnapItems = buildCurrentProductsMap();
   const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -7313,6 +7364,14 @@ function downloadBasicCsv() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  // 【v209】変化があった場合のみ、変化コードを別ファイル(.txt)で同時ダウンロード。
+  // CSV側のクリック直後に2つ目をクリックするとブラウザにブロックされやすいので少し遅延させる。
+  if (changedDiff.hasSnapshot && changedDiff.total > 0) {
+    const txt = buildChangedCodesTxt(changedDiff, prevSnapItems, curSnapItems, `products_${ts}.csv`);
+    const txtName = `products_${ts}_変化コード.txt`;
+    setTimeout(() => triggerTextDownload(txt, txtName), 400);
+    console.log(`変化コード ${changedDiff.total}件 を ${txtName} に出力しました`);
+  }
   // ダウンロード成功時点のスナップショットを保存（GitHub反映のタイミングとみなす）
   state.productsCsvSnapshot = {
     savedAt: new Date().toISOString(),
