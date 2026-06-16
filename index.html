@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v219 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v221 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2080,6 +2080,16 @@ table.rank-table td.rank-legend-col-row {
   color: var(--accent);
   margin-right: 4px;
 }
+/* 【v220】取得元ページへのURLリンク */
+.file-slot-link {
+  font-size: 0.68rem;
+  margin-top: 3px;
+  line-height: 1.35;
+  word-break: break-all;
+}
+.file-slot-link a { color: var(--accent); text-decoration: none; }
+.file-slot-link a:hover { text-decoration: underline; }
+.file-slot-link .file-slot-link-icon { margin-right: 3px; }
 .slot-badge {
   display: inline-block;
   width: 8px; height: 8px;
@@ -2167,7 +2177,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v219</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v221</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2716,30 +2726,35 @@ table.rank-table td.rank-legend-col-row {
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge"></span>商品別売上(月次)<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 商品分析 → CSVファイルダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report</a></div>
       </div>
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート(月次)<span class="required-mark">必須</span></div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/report/adDetail" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/report/adDetail</a></div>
       </div>
       <div class="file-slot" id="slot-bid" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → アイテムリーチ → CSV入札・削除 → 商品データのダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629</a></div>
       </div>
       <div class="file-slot" id="slot-prorate" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge"></span>PRオプ（最新）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">data*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>商品登録 → 商品管理 → 商品データ → ダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/" target="_blank" rel="noopener">https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/</a></div>
       </div>
     </div>
 
