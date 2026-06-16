@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v221 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v223 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2177,7 +2177,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v221</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v223</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4904,6 +4904,11 @@ function renderAdAdjust() {
 
   // 引退済み商品（商品名なし）を除外
   list = list.filter(r => !isRetired(r.code));
+
+  // 【v223】入札状態が「入札無し」の商品は入札価格全体に表示しない。
+  //   インラインで入札無しに変更しても即時には消えない（変更ハンドラは再描画しないため）。
+  //   更新・別ビューへの移動など renderAdAdjust が再実行されたタイミングで除外される。
+  list = list.filter(r => (state.productMeta[r.code] || {}).adStatus !== '入札無し');
 
   const q = $('#adAdjustSearch').value.trim().toLowerCase();
   if (q) list = list.filter(r => {
