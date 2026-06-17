@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v223 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v224 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2177,7 +2177,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v223</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v224</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4517,7 +4517,7 @@ function renderBasic() {
   if (months.length === 0) {
     sel.innerHTML = '<option value="">データなし</option>';
   } else {
-    sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    sel.innerHTML = [...months].reverse().map(m => `<option value="${m}">${m}</option>`).join('');
     // 【v173】デフォルトは「ショップ売上(月次)CSVで取り込まれた最新月」
     if (!cur || !months.includes(cur)) {
       const latestOverall = getLatestOverallMonth();
@@ -4632,7 +4632,7 @@ function renderMonthly() {
     if (months.length === 0) {
       sel.innerHTML = '<option value="">データなし</option>';
     } else {
-      sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+      sel.innerHTML = [...months].reverse().map(m => `<option value="${m}">${m}</option>`).join('');
       // 【v173】デフォルトは「ショップ売上(月次)CSVで取り込まれた最新月」
       if (!cur || !months.includes(cur)) {
         const latestOverall = getLatestOverallMonth();
@@ -5760,7 +5760,7 @@ function renderRankTable(kind) {
     const fallback = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
     sel.innerHTML = `<option value="${fallback}">${fallback}</option>`;
   } else {
-    sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    sel.innerHTML = [...months].reverse().map(m => `<option value="${m}">${m}</option>`).join('');
     // 【v173】デフォルトは「最新月」（rank.jsonやCSVで取り込まれた中で最も新しい月）
     if (!cur || !months.includes(cur)) {
       sel.value = months[months.length - 1];
@@ -7977,11 +7977,11 @@ try {
       // 先にoption生成（renderの前にvalue設定するため）
       const months = getAvailableMonths();
       if (basicSel && months.length > 0) {
-        basicSel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+        basicSel.innerHTML = [...months].reverse().map(m => `<option value="${m}">${m}</option>`).join('');
         basicSel.value = latest;
       }
       if (monthlySel && months.length > 0) {
-        monthlySel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+        monthlySel.innerHTML = [...months].reverse().map(m => `<option value="${m}">${m}</option>`).join('');
         monthlySel.value = latest;
       }
     }
