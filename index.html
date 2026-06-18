@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v224 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v225 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2156,12 +2156,50 @@ table.rank-table td.rank-legend-col-row {
 .toast.success {
   background: var(--green);
 }
+/* 【v225】別タブ検知の警告バー */
+.tab-conflict-bar {
+  position: sticky;
+  top: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  background: #fef3c7;
+  color: #7c2d12;
+  border-bottom: 2px solid #f59e0b;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.tab-conflict-bar .tab-conflict-icon { font-size: 1.05rem; flex-shrink: 0; }
+.tab-conflict-bar .tab-conflict-text { flex: 1; }
+.tab-conflict-bar b { color: #b91c1c; }
+.tab-conflict-bar .tab-conflict-shop { color: #7c2d12; }
+.tab-conflict-close {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(0,0,0,0.06);
+  color: #7c2d12;
+  width: 24px; height: 24px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.tab-conflict-close:hover { background: rgba(0,0,0,0.12); }
 .toast.error {
   background: var(--red);
 }
 </style>
 </head>
 <body>
+
+<!-- 【v225】別タブ検知の警告バー（同一ショップを複数タブで開いた時に表示） -->
+<div id="tabConflictBar" class="tab-conflict-bar" style="display:none;" role="alert">
+  <span class="tab-conflict-icon">⚠️</span>
+  <span class="tab-conflict-text">同じショップ「<b class="tab-conflict-shop"></b>」が<b>別のタブ</b>でも開かれています。2つのタブで同時に編集・保存すると<b>保存が競合し、片方の変更が消える</b>ことがあります。編集は1つのタブだけで行ってください。</span>
+  <button type="button" class="tab-conflict-close" id="tabConflictClose" title="この警告を閉じる">✕</button>
+</div>
 
 <!-- Header -->
 <div class="header">
@@ -2177,7 +2215,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v224</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v225</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8069,6 +8107,70 @@ try {
 } catch (err) {
   console.error('Ycheck 初期化エラー:', err);
 }
+
+// 【v225】別タブ検知の警告バー。
+// 同じブラウザ内で同一ショップのYcheckを2つ以上のタブで開いたとき、保存競合(409)を防ぐため警告する。
+// BroadcastChannelで同一オリジンの他タブと通信。各タブは自分のshopIdを定期発信し、
+// 同じshopIdの他タブを検知したら警告バーを表示する。（別PC・別ブラウザは検知不可＝引き続き要注意）
+(function setupTabConflictGuard() {
+  let bc = null;
+  try { bc = new BroadcastChannel('ycheck_tabs'); } catch (e) { bc = null; }
+  if (!bc) return;  // 非対応ブラウザでは何もしない（従来どおり）
+
+  const TAB_ID = Math.random().toString(36).slice(2) + '_' + Date.now().toString(36);
+  const others = new Map();       // tabId -> { shopId, ts }
+  const EXPIRE_MS = 12000;        // この時間応答が無いタブは閉じたとみなす
+  const HEARTBEAT_MS = 4000;
+  let dismissed = false;          // ✕で閉じたら同一競合では再表示しない（リロードで復活）
+
+  const myShop = () => { try { return getCurrentShopId(); } catch (e) { return ''; } };
+
+  function send(type) {
+    try { bc.postMessage({ type, tabId: TAB_ID, shopId: myShop(), ts: Date.now() }); } catch (e) {}
+  }
+  function prune() {
+    const now = Date.now();
+    for (const [id, info] of others) if (now - info.ts > EXPIRE_MS) others.delete(id);
+  }
+  function hasConflict() {
+    prune();
+    const mine = myShop();
+    for (const [, info] of others) if (info.shopId === mine) return true;
+    return false;
+  }
+  function updateBar() {
+    const bar = document.getElementById('tabConflictBar');
+    if (!bar) return;
+    if (hasConflict() && !dismissed) {
+      const shopEl = bar.querySelector('.tab-conflict-shop');
+      if (shopEl) { try { shopEl.textContent = getCurrentShop().name; } catch (e) { shopEl.textContent = myShop(); } }
+      bar.style.display = '';
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  bc.onmessage = (e) => {
+    const m = e.data;
+    if (!m || m.tabId === TAB_ID) return;
+    if (m.type === 'bye') { others.delete(m.tabId); updateBar(); return; }
+    others.set(m.tabId, { shopId: m.shopId, ts: Date.now() });
+    // 新規タブの hello には自分の存在を返答（相手側も即検知できるように）
+    if (m.type === 'hello') send('hi');
+    updateBar();
+  };
+
+  const closeBtn = document.getElementById('tabConflictClose');
+  if (closeBtn) closeBtn.addEventListener('click', () => {
+    dismissed = true;
+    const bar = document.getElementById('tabConflictBar');
+    if (bar) bar.style.display = 'none';
+  });
+
+  send('hello');
+  setInterval(() => { send('heartbeat'); updateBar(); }, HEARTBEAT_MS);
+  window.addEventListener('beforeunload', () => send('bye'));
+})();
 </script>
 </body>
 </html>
