@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v227 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v228 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2187,6 +2187,28 @@ table.rank-table td.rank-legend-col-row {
   line-height: 1;
 }
 .tab-conflict-close:hover { background: rgba(0,0,0,0.12); }
+/* 【v228】再登録後のコード移行モーダル */
+.cm-body { display: flex; flex-direction: column; gap: 14px; padding: 2px; }
+.cm-desc { font-size: 0.88rem; color: var(--text2); line-height: 1.55; margin: 0; }
+.cm-desc b { color: var(--text); }
+.cm-note-box { font-size: 0.8rem; line-height: 1.5; background: var(--bg3); border-radius: 8px; padding: 9px 12px; display: flex; flex-direction: column; gap: 5px; }
+.cm-note-box b { color: var(--text); }
+.cm-row { display: flex; flex-direction: column; gap: 6px; }
+.cm-label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.cm-autocomplete { position: relative; }
+.cm-suggest {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 60;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px;
+  margin-top: 3px; max-height: 260px; overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+.cm-suggest-item { padding: 7px 12px; cursor: pointer; font-size: 0.85rem; display: flex; gap: 8px; align-items: baseline; }
+.cm-suggest-item:hover, .cm-suggest-item.active { background: var(--bg3); }
+.cm-suggest-code { font-weight: 700; color: var(--accent); flex: 0 0 auto; }
+.cm-suggest-name { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cm-suggest-empty { padding: 9px 12px; font-size: 0.82rem; color: var(--text3); }
+.cm-selected { font-size: 0.84rem; background: #ecfdf5; border: 1px solid var(--green); color: #065f46; border-radius: 6px; padding: 6px 10px; }
+.cm-selected b { color: #065f46; }
 .toast.error {
   background: var(--red);
 }
@@ -2215,7 +2237,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v227</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v228</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2228,6 +2250,7 @@ table.rank-table td.rank-legend-col-row {
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
+    <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub設定">
       <span class="gh-sync-status" id="ghSyncStatus">⚙️ GitHub</span>
     </div>
@@ -2704,6 +2727,39 @@ table.rank-table td.rank-legend-col-row {
     <div class="pe-actions">
       <button class="btn ghost" id="peCancel" type="button">キャンセル</button>
       <button class="btn primary" id="peSave" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 【v228】再登録後のコード移行モーダル -->
+<div class="modal-overlay" id="codeMigrateModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-header">
+      <h2 class="modal-title">🔁 再登録後のコード移行</h2>
+      <button class="modal-close" id="cmClose" type="button">×</button>
+    </div>
+    <div class="cm-body">
+      <p class="cm-desc">Yahoo!で商品ページを<b>削除して別の商品コードで作り直した</b>とき（商品内容は同じ）に、旧コードに溜まっていた履歴・設定を<b>新コードへ引き継ぐ</b>操作です。</p>
+      <div class="cm-note-box">
+        <div><b>引き継ぐ：</b>商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・状態・メモ・代表コード・<b>売上/広告の月次履歴</b></div>
+        <div><b>リセット：</b>広告順位・SEO順位（旧コード分は削除し、新コードで新たに取得していく）</div>
+      </div>
+      <div class="cm-row">
+        <label class="cm-label" for="cmOldSearch">① 旧コード（再登録前・Ycheckに残っている商品を検索して選択）</label>
+        <div class="cm-autocomplete">
+          <input type="text" id="cmOldSearch" class="pe-input" placeholder="商品コードや商品名で検索…" autocomplete="off">
+          <div class="cm-suggest" id="cmSuggest" style="display:none;"></div>
+        </div>
+        <div class="cm-selected" id="cmSelected" style="display:none;"></div>
+      </div>
+      <div class="cm-row">
+        <label class="cm-label" for="cmNewCode">② 新コード（再登録後の新しい商品コード）</label>
+        <input type="text" id="cmNewCode" class="pe-input" placeholder="例: si-24-02a" autocomplete="off">
+      </div>
+    </div>
+    <div class="pe-actions">
+      <button class="btn ghost" id="cmCancel" type="button">キャンセル</button>
+      <button class="btn primary" id="cmMigrate" type="button">この内容で移行する</button>
     </div>
   </div>
 </div>
@@ -7788,6 +7844,119 @@ function npClearAll() {
 
 // イベントバインド
 $('#btnJumpNewProduct').addEventListener('click', openNewProductModal);
+
+// 【v228】再登録後のコード移行モーダル（ヘッダーから開く・検索付き旧コード選択）
+const codeMigrateModal = $('#codeMigrateModal');
+let cmSelectedOldCode = null;
+let cmSuggestActive = -1;
+let cmCandidates = [];
+
+function openCodeMigrateModal() {
+  cmSelectedOldCode = null;
+  cmSuggestActive = -1;
+  $('#cmOldSearch').value = '';
+  $('#cmNewCode').value = '';
+  $('#cmSuggest').style.display = 'none';
+  const sel = $('#cmSelected'); sel.style.display = 'none'; sel.innerHTML = '';
+  // 候補＝全商品マスタ（削除した旧商品もYcheckには残っているため対象に含む）
+  cmCandidates = Object.keys(state.master || {}).map(code => ({
+    code,
+    name: (state.master[code] && state.master[code].name) || '',
+    retired: isRetired(code)
+  })).sort((a, b) => a.code.localeCompare(b.code, 'ja'));
+  codeMigrateModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => $('#cmOldSearch').focus(), 50);
+}
+function closeCodeMigrateModal() {
+  codeMigrateModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function cmRenderSuggest(q) {
+  const box = $('#cmSuggest');
+  const query = String(q || '').trim().toLowerCase();
+  if (!query) { box.style.display = 'none'; box.innerHTML = ''; cmSuggestActive = -1; return; }
+  const matches = cmCandidates.filter(c =>
+    c.code.toLowerCase().includes(query) || (c.name && c.name.toLowerCase().includes(query))
+  ).slice(0, 20);
+  if (matches.length === 0) {
+    box.innerHTML = '<div class="cm-suggest-empty">該当する商品がありません</div>';
+    box.style.display = ''; cmSuggestActive = -1; return;
+  }
+  box.innerHTML = matches.map((m, i) =>
+    `<div class="cm-suggest-item" data-code="${escapeHtml(m.code)}" data-i="${i}">
+       <span class="cm-suggest-code">${escapeHtml(m.code)}</span>
+       <span class="cm-suggest-name">${escapeHtml(m.name || '（商品名なし）')}${m.retired ? ' ・撤退済み' : ''}</span>
+     </div>`
+  ).join('');
+  box.style.display = '';
+  cmSuggestActive = -1;
+}
+function cmPick(code) {
+  cmSelectedOldCode = code;
+  $('#cmOldSearch').value = code;
+  $('#cmSuggest').style.display = 'none';
+  const m = state.master[code] || {};
+  const sel = $('#cmSelected');
+  sel.innerHTML = `選択中の旧コード: <b>${escapeHtml(code)}</b>（${escapeHtml(m.name || '商品名なし')}）`;
+  sel.style.display = '';
+}
+if (codeMigrateModal) {
+  $('#cmOldSearch').addEventListener('input', (e) => {
+    cmSelectedOldCode = null;
+    $('#cmSelected').style.display = 'none';
+    cmRenderSuggest(e.target.value);
+  });
+  $('#cmOldSearch').addEventListener('keydown', (e) => {
+    const box = $('#cmSuggest');
+    if (box.style.display === 'none') return;
+    const items = Array.from(box.querySelectorAll('.cm-suggest-item'));
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); cmSuggestActive = Math.min(cmSuggestActive + 1, items.length - 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); cmSuggestActive = Math.max(cmSuggestActive - 1, 0); }
+    else if (e.key === 'Enter') { e.preventDefault(); const idx = cmSuggestActive >= 0 ? cmSuggestActive : 0; cmPick(items[idx].dataset.code); return; }
+    else return;
+    items.forEach((el, i) => el.classList.toggle('active', i === cmSuggestActive));
+  });
+  $('#cmSuggest').addEventListener('click', (e) => {
+    const item = e.target.closest('.cm-suggest-item');
+    if (item) cmPick(item.dataset.code);
+  });
+  $('#cmClose').addEventListener('click', closeCodeMigrateModal);
+  $('#cmCancel').addEventListener('click', closeCodeMigrateModal);
+  codeMigrateModal.addEventListener('click', (e) => { if (e.target === codeMigrateModal) closeCodeMigrateModal(); });
+  $('#cmMigrate').addEventListener('click', () => {
+    let oldCode = cmSelectedOldCode;
+    if (!oldCode) {
+      const typed = $('#cmOldSearch').value.trim();
+      if (typed && state.master[typed]) oldCode = typed;  // 入力が既存コードに完全一致なら採用
+    }
+    if (!oldCode) { alert('旧コードを検索して一覧から選択してください。'); return; }
+    const newCode = $('#cmNewCode').value.trim();
+    if (!newCode) { alert('新コードを入力してください。'); return; }
+    if (newCode === oldCode) { alert('旧コードと新コードが同じです。'); return; }
+    if (codeExistsInYcheck(newCode)) {
+      alert(`新コード「${newCode}」は既にYcheck内で使われています。\n上書きを避けるため、移行を中止しました。`);
+      return;
+    }
+    const ok = confirm(
+      `「${oldCode}」→「${newCode}」へ移行します。\n\n` +
+      `【引き継ぐ】商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・状態・メモ・代表コード・売上/広告の月次履歴\n\n` +
+      `【リセット】広告順位・SEO順位（旧コード分は削除し、新コードで新たに取得）\n\n` +
+      `【更新】他商品の代表コード参照（旧→新）\n\n` +
+      `この操作は元に戻せません。よろしいですか？`
+    );
+    if (!ok) return;
+    migrateProductCode(oldCode, newCode);
+    const saved = saveToStorage();
+    if (!saved) { alert('保存に失敗しました（localStorageの容量超過の可能性）。'); return; }
+    log(`✓ 商品コードを移行: ${oldCode} → ${newCode}（順位はリセット）`, 'ok');
+    renderAll();
+    closeCodeMigrateModal();
+    showToast(`コードを移行しました（${oldCode} → ${newCode}）`, 'success');
+  });
+}
+$('#btnJumpCodeMigrate').addEventListener('click', openCodeMigrateModal);
 
 // ==================== 【v125/v126】代表コード絞り込み ====================
 function updateRepFilterUI() {
