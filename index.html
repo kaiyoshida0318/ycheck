@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v229 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v230 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -376,6 +376,27 @@ body {
 .state-chip[data-state="unselected-pro"].active {
   background: #94a3b8;
   border-color: #64748b;
+}
+
+/* 【v230】全体（ティール: 青と区別） */
+.state-chip[data-state="all-basic"] {
+  background: #d9f2ef;
+  border-color: #99e0d6;
+}
+.state-chip[data-state="all-basic"]:hover,
+.state-chip[data-state="all-basic"].active {
+  background: #0d9488;
+  border-color: #0f766e;
+}
+/* 【v230】新商品（青） */
+.state-chip[data-state="new-product"] {
+  background: #e3edfd;
+  border-color: #b6d0fb;
+}
+.state-chip[data-state="new-product"]:hover,
+.state-chip[data-state="new-product"].active {
+  background: var(--accent);
+  border-color: #1e4fbf;
 }
 
 /* 全体の説明ボタン（クリック不可のアイコン風） */
@@ -2237,7 +2258,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v229</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v230</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
