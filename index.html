@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v231 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v233 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1248,6 +1248,7 @@ th.col-bid {
 .status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
 .status-select.warn { background: rgba(217,119,6,0.08); color: var(--amber); border-color: rgba(217,119,6,0.3); }
 .status-select.none { background: var(--bg3); color: var(--text3); }
+.status-select.info { background: rgba(37,99,235,0.08); color: var(--accent); border-color: rgba(37,99,235,0.3); }
 
 /* Note cell (対応内容) */
 .note-cell {
@@ -2261,7 +2262,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v231</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v233</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2769,8 +2770,9 @@ table.rank-table td.rank-legend-col-row {
     <div class="cm-body">
       <p class="cm-desc">Yahoo!で商品ページを<b>削除して別の商品コードで作り直した</b>とき（商品内容は同じ）に、旧コードに溜まっていた履歴・設定を<b>新コードへ引き継ぐ</b>操作です。</p>
       <div class="cm-note-box">
-        <div><b>引き継ぐ：</b>商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・状態・メモ・代表コード・<b>売上/広告の月次履歴</b></div>
+        <div><b>引き継ぐ：</b>商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・入札/PRオプ状態・メモ・代表コード・<b>売上/広告の月次履歴</b></div>
         <div><b>リセット：</b>広告順位・SEO順位（旧コード分は削除し、新コードで新たに取得していく）</div>
+        <div><b>ステータス：</b>「新商品」に設定されます（再登録した商品のため）</div>
       </div>
       <div class="cm-row">
         <label class="cm-label" for="cmOldSearch">① 旧コード（再登録前・Ycheckに残っている商品を検索して選択）</label>
@@ -4615,7 +4617,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
     else if (value.includes('×') || value.includes('✕') || value === '撤退■') cls = 'ng';
     else if (value === '撤退済み') cls = 'ng';
     else if (value === '現役商品') cls = 'ok';
-    else if (value === '新商品') cls = 'none';
+    else if (value === '新商品') cls = 'info';
     else if (value === '入札無し') cls = 'none';
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
@@ -6636,6 +6638,7 @@ document.addEventListener('change', (e) => {
     else if (value.includes('×') || value.includes('✕') || value === '撤退■') cls = 'ng';
     else if (value === '撤退済み') cls = 'ng';
     else if (value === '現役商品') cls = 'ok';
+    else if (value === '新商品') cls = 'info';
     else if (value === '入札無し') cls = 'none';
   }
   e.target.className = 'status-select ' + cls;
@@ -7440,6 +7443,11 @@ function migrateProductCode(oldCode, newCode) {
     state.productMeta[newCode] = Object.assign({}, state.productMeta[oldCode]);
     delete state.productMeta[oldCode];
   }
+  // 【v233】再登録後の移行商品はステータスを「新商品」にする
+  if (!state.productMeta[newCode]) {
+    state.productMeta[newCode] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
+  }
+  state.productMeta[newCode].status = '新商品';
   // bid / proRate（小文字キー）
   if (state.bid && state.bid[oldL] != null) { state.bid[newL] = state.bid[oldL]; delete state.bid[oldL]; }
   if (state.proRate && state.proRate[oldL] != null) { state.proRate[newL] = state.proRate[oldL]; delete state.proRate[oldL]; }
@@ -7515,7 +7523,8 @@ $('#peChangeCodeBtn').addEventListener('click', () => {
   }
   const ok = confirm(
     `「${oldCode}」→「${newCode}」へ移行します。\n\n` +
-    `【引き継ぐ】商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・状態・メモ・代表コード・売上/広告の月次履歴\n\n` +
+    `【引き継ぐ】商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・入札/PRオプ状態・メモ・代表コード・売上/広告の月次履歴\n\n` +
+    `【新規設定】ステータス＝「新商品」（再登録した商品のため）\n\n` +
     `【リセット】広告順位・SEO順位（旧コード分は削除し、新コードで新たに取得）\n\n` +
     `【更新】他商品の代表コード参照（旧→新）\n\n` +
     `この操作は元に戻せません。よろしいですか？`
@@ -7984,7 +7993,8 @@ if (codeMigrateModal) {
     }
     const ok = confirm(
       `「${oldCode}」→「${newCode}」へ移行します。\n\n` +
-      `【引き継ぐ】商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・状態・メモ・代表コード・売上/広告の月次履歴\n\n` +
+      `【引き継ぐ】商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・入札/PRオプ状態・メモ・代表コード・売上/広告の月次履歴\n\n` +
+      `【新規設定】ステータス＝「新商品」（再登録した商品のため）\n\n` +
       `【リセット】広告順位・SEO順位（旧コード分は削除し、新コードで新たに取得）\n\n` +
       `【更新】他商品の代表コード参照（旧→新）\n\n` +
       `この操作は元に戻せません。よろしいですか？`
