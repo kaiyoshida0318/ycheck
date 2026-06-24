@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v228 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v229 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2237,7 +2237,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v228</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v229</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2292,6 +2292,8 @@ table.rank-table td.rank-legend-col-row {
     <span class="nav-group-label">【状態】</span>
     <!-- 【v162】「💡 全体の説明」はヘッダーへ移動済み。ここからは削除。 -->
     <!-- 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称。【v212】入札価格△・PRオプ△は廃止（既存の△は✕へ移行） -->
+    <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></button>
+    <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札価格○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札価格✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
     <button class="state-chip" data-state="ad-none"><span class="chip-label">入札無し</span><span class="chip-num" id="cntAdNone">(0)</span></button>
@@ -4376,6 +4378,7 @@ function updateStateCounts() {
   let proOk = 0, proWarn = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
+  let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
   allCodes.forEach(code => {
     // 引退済み商品はカウント対象外
     if (isRetired(code)) return;
@@ -4393,6 +4396,7 @@ function updateStateCounts() {
     const st = meta.status || '';
     if (st === '撤退検討▲') proWithdrawConsider++;
     else if (st === '撤退■') proWithdraw++;
+    if ((st || '新商品') === '新商品') newProductCount++;  // 【v229】新商品（未設定も含む）
     if (!adS) unselectedAd++;
     if (!proS) unselectedPro++;
   });
@@ -4410,6 +4414,9 @@ function updateStateCounts() {
   // Basic(商品-基本データ)タブの現役商品合計数を表示
   const cntBasic = $('#cntBasicActive');
   if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
+  // 【v229】状態ブロック左端: 全体（=現役商品合計）／新商品
+  const cntAll = $('#cntAll'); if (cntAll) cntAll.textContent = `(${activeCount})`;
+  const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
 }
 
 // 【v125/v130】商品コード表示（代表コード所属なら🔀バッジ付き）
@@ -4655,6 +4662,14 @@ function renderBasic() {
 
   // 引退済み商品（商品名なし）を除外
   list = list.filter(r => !isRetired(r.code));
+
+  // 【v229】【状態】チップで basic を対象にした絞り込み（全体／新商品）
+  if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
+    const f = STATE_FILTERS[state.activeStateFilter.type];
+    if (f && typeof f.match === 'function') {
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}));
+    }
+  }
 
   // 検索
   const q = $('#basicSearch').value.trim().toLowerCase();
@@ -6108,6 +6123,8 @@ $$('.nav-tab').forEach(item => {
 // 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称、入札価格△・PRオプ△を新設
 //   match関数は新ラベルと旧ラベル両方を判定（マイグレーション前のデータ互換）
 const STATE_FILTERS = {
+  'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
+  'new-product':   { label: '新商品',     targetView: 'basic',      match: (meta) => (meta.status || '新商品') === '新商品' },
   'ad-ok':         { label: '入札価格○',   targetView: 'ad-adjust',  match: (meta) => { const a = meta.adStatus || ''; return a === '入札価格○' || a === '広告○'; } },
   'ad-ng':         { label: '入札価格✕',   targetView: 'ad-adjust',  match: (meta) => { const a = meta.adStatus || ''; return a === '入札価格✕' || a === '広告×'; } },
   'ad-none':       { label: '入札無し',     targetView: 'pro-adjust', match: (meta) => { const a = meta.adStatus || ''; return a === '入札無し' || a === '広告無'; } },
