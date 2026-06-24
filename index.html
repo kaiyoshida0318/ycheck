@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v234 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v235 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2262,7 +2262,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v234</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v235</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8512,6 +8512,27 @@ try {
   send('hello');
   setInterval(() => { send('heartbeat'); updateBar(); }, HEARTBEAT_MS);
   window.addEventListener('beforeunload', () => send('bye'));
+})();
+
+// 【v235】商品検索欄の自動補完ドロップダウン（保存済みメール等）を確実に抑止する。
+// Chrome は autocomplete="off"（v234で付与済み）を無視するため、属性だけでは出続ける。
+// 対策: フォーカスを得る瞬間だけ input を readonly にしておく。Chrome は readonly の
+// フィールドにはオートフィル候補を出さない。focus ハンドラ内で readonly を外すので、
+// ユーザーはそのまま入力でき、blur で再び readonly に戻して次回フォーカスも抑止する。
+(function suppressSearchAutofill() {
+  const IDS = ['basicSearch','monthlySearch','retiredSearch','adAdjustSearch','proAdjustSearch','adRankSearch','seoRankSearch'];
+  IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // 初期状態を readonly に（最初のフォーカス時点で Chrome の判定を抑止）
+    el.setAttribute('readonly', 'readonly');
+    // フォーカスを得たら readonly を外して通常入力可能にする
+    const unlock = () => { if (el.hasAttribute('readonly')) el.removeAttribute('readonly'); };
+    el.addEventListener('focus', unlock);
+    el.addEventListener('focusin', unlock);
+    // フォーカスを外したら readonly に戻す（次回フォーカスでも候補を出させない）
+    el.addEventListener('blur', () => { el.setAttribute('readonly', 'readonly'); });
+  });
 })();
 </script>
 </body>
