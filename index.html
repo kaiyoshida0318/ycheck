@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v230 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v231 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -378,7 +378,10 @@ body {
   border-color: #64748b;
 }
 
-/* 【v230】全体（ティール: 青と区別） */
+/* 【v231】「ヘッダーを隠す」: ヘッダー＋上段ナビ（【基本】行・【定期チェック】行）を隠し、【状態】を最上部に */
+body.chrome-hidden .header,
+body.chrome-hidden .top-nav:not(.top-nav-3) { display: none; }
+body.chrome-hidden .top-nav-3 { top: 0; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -2258,7 +2261,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v230</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v231</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2325,6 +2328,8 @@ table.rank-table td.rank-legend-col-row {
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
   </div>
+  <!-- 【v231】ヘッダー＋上段ナビ（【定期チェック】以上）を隠して【状態】を最上部にするトグル。状態行の右端に配置 -->
+  <button class="btn sm ghost" id="btnToggleChrome" type="button" style="margin-left:auto; align-self:center; white-space:nowrap;" title="ヘッダーと上段ナビ（【定期チェック】以上）を隠して【状態】を最上部にします">🔼 ヘッダーを隠す</button>
 </nav>
 
 <!-- App Layout -->
@@ -7995,6 +8000,15 @@ if (codeMigrateModal) {
   });
 }
 $('#btnJumpCodeMigrate').addEventListener('click', openCodeMigrateModal);
+
+// 【v231】「ヘッダーを隠す」トグル: ヘッダー＋上段ナビ（【定期チェック】以上）を隠す／戻す
+const btnToggleChrome = $('#btnToggleChrome');
+if (btnToggleChrome) {
+  btnToggleChrome.addEventListener('click', () => {
+    const hidden = document.body.classList.toggle('chrome-hidden');
+    btnToggleChrome.textContent = hidden ? '🔽 ヘッダーを表示' : '🔼 ヘッダーを隠す';
+  });
+}
 
 // ==================== 【v125/v126】代表コード絞り込み ====================
 function updateRepFilterUI() {
