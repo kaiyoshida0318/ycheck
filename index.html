@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v225 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v227 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2215,7 +2215,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v225</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v227</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2662,6 +2662,7 @@ table.rank-table td.rank-legend-col-row {
       <div class="pe-row">
         <label class="pe-label">商品コード</label>
         <div class="pe-code-display" id="peCode">—</div>
+        <button class="btn sm ghost" id="peChangeCodeBtn" type="button" title="商品コードを別コードに変更し、データを丸ごと移行します（広告順位・SEO順位はリセット）">🔁 コード変更（履歴ごと移行）</button>
       </div>
       <div class="pe-row">
         <label class="pe-label" for="peName">商品名</label>
@@ -2679,6 +2680,11 @@ table.rank-table td.rank-legend-col-row {
       <div class="pe-row">
         <label class="pe-label" for="peRepCode">代表商品コード（＝送り込み元商品コード）</label>
         <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
+      </div>
+      <div class="pe-row">
+        <label class="pe-label" for="peProductUrl">商品ページURL</label>
+        <input type="url" id="peProductUrl" class="pe-input" placeholder="https://store.shopping.yahoo.co.jp/...">
+        <div class="pe-image-note" id="peProductUrlNote">商品名クリック時に開くページのURL。空欄にすると自動URL（店舗コード＋商品コード）に戻ります。</div>
       </div>
       <div class="pe-row">
         <label class="pe-label">商品画像</label>
@@ -4205,8 +4211,14 @@ function searchUrlCellHtml(code) {
   return `<a class="link-btn" href="${escapeHtml(m.searchUrl)}" target="_blank" rel="noopener">検索 ↗</a>`;
 }
 // 【v178】商品ページURL（store.shopping.yahoo.co.jp/{shopCode}/{code}.html）を生成
-function yahooProductUrl(code) {
+// 【v226】商品編集で保存された productUrl があればそれを優先（手動URL対応）
+function defaultYahooProductUrl(code) {
   return `https://store.shopping.yahoo.co.jp/${getCurrentShop().shopCode}/${encodeURIComponent(code)}.html`;
+}
+function yahooProductUrl(code) {
+  const m = getMaster(code);
+  if (m && m.productUrl) return m.productUrl;
+  return defaultYahooProductUrl(code);
 }
 function productUrlCellHtml(code) {
   const url = yahooProductUrl(code);
@@ -7123,6 +7135,8 @@ function openProductEditModal(code) {
   $('#peName').value = m.name || '';
   $('#peKw').value = m.kw || '';
   $('#peSearchUrl').value = m.searchUrl || '';
+  // 【v226】商品ページURL: 保存済みの手動URLがあればそれ、無ければ自動生成URLを表示
+  $('#peProductUrl').value = m.productUrl || defaultYahooProductUrl(code);
   // 【v124】代表商品コード
   $('#peRepCode').value = meta.repCode || '';
   // 画像編集の一時状態を現在のmaster値で初期化
@@ -7252,6 +7266,14 @@ function saveProductEdit(opts) {
   }
   state.master[code].name = newName;
   state.master[code].searchUrl = newUrl;
+  // 【v226】商品ページURL: 自動生成URLと同じ／空欄なら保存しない（自動にフォールバック）、
+  //   違う場合のみ手動URLとして保存。商品名リンクはこの値を優先して開く。
+  const newProductUrl = $('#peProductUrl').value.trim();
+  if (newProductUrl && newProductUrl !== defaultYahooProductUrl(code)) {
+    state.master[code].productUrl = newProductUrl;
+  } else {
+    delete state.master[code].productUrl;
+  }
   // メインKWが変わった場合は editedKw フラグも立てる（CSV更新時に保護されるように）
   if (newKw !== (state.master[code].kw || '')) {
     state.master[code].kw = newKw;
@@ -7284,6 +7306,65 @@ function saveProductEdit(opts) {
   // 代わりに「保存しました」トーストでフィードバック。renderAll は裏のテーブル更新のため必要。
   renderAll();
   showToast('保存しました', 'success');
+}
+
+// 【v227】商品コードがYcheck内で既に使われているか判定（移行先の重複チェック用）
+function codeExistsInYcheck(code) {
+  const c = code, cl = String(code).toLowerCase();
+  if (state.master && state.master[c]) return true;
+  if (state.productMeta && state.productMeta[c]) return true;
+  if (state.bid && state.bid[cl] != null) return true;
+  if (state.proRate && state.proRate[cl] != null) return true;
+  if ((state.item || []).some(r => String(r.code).toLowerCase() === cl)) return true;
+  if ((state.ad || []).some(r => String(r.code).toLowerCase() === cl)) return true;
+  return false;
+}
+
+// 【v227】商品コードを変更し、関連データを丸ごと新コードへ移行する。
+//   引き継ぐ: master / productMeta(repCode含む) / bid / proRate / item / ad / productsCsvSnapshot / 他商品のrepCode参照
+//   引き継がない（リセット）: rank / rankEdits（広告順位・SEO順位は新コードで新規取得）
+//   ※ rankMeta はコード非依存（last_updated等）のため対象外。
+function migrateProductCode(oldCode, newCode) {
+  const oldL = String(oldCode).toLowerCase();
+  const newL = String(newCode).toLowerCase();
+  // master（手動URLが旧コードを含む場合は新コードへ置換）
+  if (state.master && state.master[oldCode]) {
+    const m = Object.assign({}, state.master[oldCode], { code: newCode });
+    if (m.productUrl && m.productUrl.indexOf(oldCode) !== -1) {
+      m.productUrl = m.productUrl.split(oldCode).join(newCode);
+    }
+    state.master[newCode] = m;
+    delete state.master[oldCode];
+  }
+  // productMeta（入札/PRオプ状態・メモ・代表コード）
+  if (state.productMeta && state.productMeta[oldCode]) {
+    state.productMeta[newCode] = Object.assign({}, state.productMeta[oldCode]);
+    delete state.productMeta[oldCode];
+  }
+  // bid / proRate（小文字キー）
+  if (state.bid && state.bid[oldL] != null) { state.bid[newL] = state.bid[oldL]; delete state.bid[oldL]; }
+  if (state.proRate && state.proRate[oldL] != null) { state.proRate[newL] = state.proRate[oldL]; delete state.proRate[oldL]; }
+  // item / ad（配列の .code を付け替え＝売上・広告の月次履歴を引き継ぐ）
+  (state.item || []).forEach(r => { if (String(r.code).toLowerCase() === oldL) r.code = newCode; });
+  (state.ad || []).forEach(r => { if (String(r.code).toLowerCase() === oldL) r.code = newCode; });
+  // 順位CSVスナップショット（差分の誤検知防止のため付け替え）
+  const snap = state.productsCsvSnapshot && state.productsCsvSnapshot.items;
+  if (snap && (oldCode in snap)) { snap[newCode] = snap[oldCode]; delete snap[oldCode]; }
+  // rank / rankEdits: 引き継がず旧コード分を削除（順位は新コードで新規取得）
+  ['rank', 'rankEdits'].forEach(store => {
+    const obj = state[store];
+    if (!obj) return;
+    Object.keys(obj).forEach(ym => {
+      const byCode = obj[ym];
+      if (!byCode || typeof byCode !== 'object') return;
+      Object.keys(byCode).forEach(k => { if (String(k).toLowerCase() === oldL) delete byCode[k]; });
+    });
+  });
+  // 他商品の代表コード(repCode)参照を新コードへ更新
+  Object.keys(state.productMeta || {}).forEach(c => {
+    const meta = state.productMeta[c];
+    if (meta && meta.repCode === oldCode) meta.repCode = newCode;
+  });
 }
 
 // 画像ファイル選択→Base64変換→プレビュー
@@ -7319,6 +7400,36 @@ function handlePeImageFile(file) {
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
 $('#peSave').addEventListener('click', () => saveProductEdit());
+
+// 【v227】商品コード変更（履歴ごと移行）ボタン
+$('#peChangeCodeBtn').addEventListener('click', () => {
+  const oldCode = productEditModal.dataset.code;
+  if (!oldCode) return;
+  const input = prompt(`新しい商品コードを入力してください。\n旧コード「${oldCode}」のデータを新コードへ丸ごと移行します。`, oldCode);
+  if (input == null) return;  // キャンセル
+  const newCode = input.trim();
+  if (!newCode) { alert('商品コードが空です。'); return; }
+  if (newCode === oldCode) { alert('旧コードと同じです。'); return; }
+  if (codeExistsInYcheck(newCode)) {
+    alert(`新コード「${newCode}」は既にYcheck内で使われています。\n上書きを避けるため、移行を中止しました。`);
+    return;
+  }
+  const ok = confirm(
+    `「${oldCode}」→「${newCode}」へ移行します。\n\n` +
+    `【引き継ぐ】商品名・メインKW・画像・商品ページURL・入札価格・PRオプ料率・状態・メモ・代表コード・売上/広告の月次履歴\n\n` +
+    `【リセット】広告順位・SEO順位（旧コード分は削除し、新コードで新たに取得）\n\n` +
+    `【更新】他商品の代表コード参照（旧→新）\n\n` +
+    `この操作は元に戻せません。よろしいですか？`
+  );
+  if (!ok) return;
+  migrateProductCode(oldCode, newCode);
+  const saved = saveToStorage();
+  if (!saved) { alert('保存に失敗しました（localStorageの容量超過の可能性）。'); return; }
+  log(`✓ 商品コードを移行: ${oldCode} → ${newCode}（順位はリセット）`, 'ok');
+  renderAll();
+  openProductEditModal(newCode);  // 新コードで開き直す
+  showToast(`コードを移行しました（${oldCode} → ${newCode}）`, 'success');
+});
 
 // 【v127】前後の商品への移動ボタン
 if ($('#pePrevBtn')) $('#pePrevBtn').addEventListener('click', () => navigateToAdjacentProduct(-1));
