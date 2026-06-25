@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v235 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v236 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2018,6 +2018,40 @@ table.rank-table td.rank-legend-col-row {
   max-height: 90vh;
   overflow-y: auto;
 }
+/* 【v236】商品編集モーダル：キャンセル/保存ボタンを最初から常に表示する。
+   従来はモーダル全体が overflow-y:auto で、中身が縦に長いとボタンが下へ押し出され
+   スクロールしないと見えなかった。縦flexにして「ヘッダー固定／本文(pe-grid)だけ
+   スクロール／アクションを最下部に固定」に変更。あわせて行間・画像を少し圧縮。
+   ※オーバーレイの上下padding(40px×2)を差し引いた高さに収め、ページ全体のスクロールも防ぐ。 */
+#productEditModal .modal {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  max-height: calc(100vh - 80px);
+  overflow: hidden;            /* モーダル全体はスクロールさせない */
+}
+#productEditModal .modal-header {
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+#productEditModal .pe-grid {
+  flex: 1 1 auto;
+  min-height: 0;               /* flexの子を内部スクロール可能にする定番指定 */
+  overflow-y: auto;           /* 本文が長い時はここだけスクロール */
+  gap: 10px;
+  padding-right: 6px;          /* スクロールバー分の余白 */
+}
+#productEditModal .pe-actions {
+  flex: 0 0 auto;             /* 常に下端へ固定（最初から見える） */
+  margin-top: 12px;
+  padding-top: 12px;
+  background: var(--bg2);
+}
+/* 画像まわりをコンパクトに（初期表示で収まりやすく） */
+#productEditModal .pe-image-wrap { min-height: 104px; padding: 8px; }
+#productEditModal .pe-image { max-width: 130px; max-height: 120px; }
+#productEditModal .pe-image-placeholder { height: 96px; }
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -2262,7 +2296,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v235</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v236</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
