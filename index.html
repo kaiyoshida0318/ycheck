@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v236 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v237 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -378,7 +378,7 @@ body {
   border-color: #64748b;
 }
 
-/* 【v231】「ヘッダーを隠す」: ヘッダー＋上段ナビ（【基本】行・【定期チェック】行）を隠し、【状態】を最上部に */
+/* 【v231】「ヘッダーを隠す」: ヘッダー＋上段ナビ（【基本】行・【調整】行）を隠し、【状態】を最上部に */
 body.chrome-hidden .header,
 body.chrome-hidden .top-nav:not(.top-nav-3) { display: none; }
 body.chrome-hidden .top-nav-3 { top: 0; }
@@ -905,7 +905,7 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 }
 .nav-tab.active .chip-num { opacity: 0.9; }
 
-/* 2段目のタブバー：【定期チェック】用 */
+/* 2段目のタブバー：【調整】用（旧【定期チェック】） */
 .top-nav-2 {
   top: calc(64px + 36px);              /* 【v157】1段目高さの縮小に合わせて 52→36 へ */
   padding-top: 4px;                    /* 【v157】上 12→4 に詰めた */
@@ -2296,7 +2296,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v236</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v237</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2328,6 +2328,9 @@ table.rank-table td.rank-legend-col-row {
     <span class="nav-group-label">【全体】</span>
     <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata"><span class="ico">📋</span>全-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph"><span class="ico">📈</span>全-月別グラフ</a>
+    <!-- 【v237】旧【定期チェック】の2ビューを【全体】末尾へ移設（ビュー実体 #view-ad-adjust / #view-pro-adjust はそのまま） -->
+    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust"><span class="ico">🎯</span>入札価格全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust"><span class="ico">⭐</span>PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
   </div>
   <div class="nav-group">
     <span class="nav-group-label">【取得データ】</span>
@@ -2336,12 +2339,12 @@ table.rank-table td.rank-legend-col-row {
   </div>
 </nav>
 
-<!-- Second row: 定期チェック -->
+<!-- Second row: 調整（【v237】旧【定期チェック】を廃止し【調整】を新設。各ビューの中身は今後実装） -->
 <nav class="top-nav top-nav-2">
   <div class="nav-group">
-    <span class="nav-group-label">【定期チェック】</span>
-    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust"><span class="ico">🎯</span>入札価格全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
-    <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust"><span class="ico">⭐</span>PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
+    <span class="nav-group-label">【調整】</span>
+    <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune"><span class="ico">🎯</span>入札価格調整</a>
+    <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune"><span class="ico">⭐</span>PRオプ調整</a>
   </div>
 </nav>
 
@@ -2363,8 +2366,8 @@ table.rank-table td.rank-legend-col-row {
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
   </div>
-  <!-- 【v231】ヘッダー＋上段ナビ（【定期チェック】以上）を隠して【状態】を最上部にするトグル。状態行の右端に配置 -->
-  <button class="btn sm ghost" id="btnToggleChrome" type="button" style="margin-left:auto; align-self:center; white-space:nowrap;" title="ヘッダーと上段ナビ（【定期チェック】以上）を隠して【状態】を最上部にします">🔼 ヘッダーを隠す</button>
+  <!-- 【v231】ヘッダー＋上段ナビ（【調整】以上）を隠して【状態】を最上部にするトグル。状態行の右端に配置 -->
+  <button class="btn sm ghost" id="btnToggleChrome" type="button" style="margin-left:auto; align-self:center; white-space:nowrap;" title="ヘッダーと上段ナビ（【調整】以上）を隠して【状態】を最上部にします">🔼 ヘッダーを隠す</button>
 </nav>
 
 <!-- App Layout -->
@@ -2602,6 +2605,22 @@ table.rank-table td.rank-legend-col-row {
             <tbody></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- View: 入札価格調整（【v237】新設。中身は今後実装。クリック時に #view-ad-tune が無いとクラッシュするため空ビューを用意） -->
+    <div class="view" id="view-ad-tune">
+      <div class="card">
+        <h3 class="card-title">入札価格調整</h3>
+        <div style="padding:24px; color:var(--text3); font-size:0.9rem;">🛠 準備中です。（このビューの中身は今後実装予定）</div>
+      </div>
+    </div>
+
+    <!-- View: PRオプ調整（【v237】新設。中身は今後実装。空ビューを用意） -->
+    <div class="view" id="view-pro-tune">
+      <div class="card">
+        <h3 class="card-title">PRオプ調整</h3>
+        <div style="padding:24px; color:var(--text3); font-size:0.9rem;">🛠 準備中です。（このビューの中身は今後実装予定）</div>
       </div>
     </div>
 
@@ -8045,7 +8064,7 @@ if (codeMigrateModal) {
 }
 $('#btnJumpCodeMigrate').addEventListener('click', openCodeMigrateModal);
 
-// 【v231】「ヘッダーを隠す」トグル: ヘッダー＋上段ナビ（【定期チェック】以上）を隠す／戻す
+// 【v231】「ヘッダーを隠す」トグル: ヘッダー＋上段ナビ（【調整】以上）を隠す／戻す
 const btnToggleChrome = $('#btnToggleChrome');
 if (btnToggleChrome) {
   btnToggleChrome.addEventListener('click', () => {
