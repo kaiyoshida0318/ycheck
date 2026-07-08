@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v239 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v240 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2323,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v239</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v240</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5160,16 +5160,46 @@ function last3Months() {
 // ビューに入るたび 'fix'（修正あり）にリセットする。
 let tuneGroup = 'fix';
 
-// 入札状態・PRオプ状態の〇/×判定（新旧表記両対応。STATE_FILTERSと同じ基準）。
-function adStatusIsCircle(s) { return s === '入札価格〇' || s === '広告〇'; }
+// 入札状態・PRオプ状態の○/×判定（新旧表記両対応。STATE_FILTERSと同じ基準）。
+// ※丸は ○(U+25CB)。×は 入札=✕(U+2715) / PRオプ=×(U+00D7) と別文字なので注意。
+function adStatusIsCircle(s) { return s === '入札価格○' || s === '広告○'; }
 function adStatusIsCross(s)  { return s === '入札価格✕' || s === '広告×'; }
-function proStatusIsCircle(s){ return s === 'PRオプ〇' || s === 'PRO〇'; }
+function proStatusIsCircle(s){ return s === 'PRオプ○' || s === 'PRO○'; }
 function proStatusIsCross(s) { return s === 'PRオプ×' || s === 'PRO×'; }
 
-// 「最新日の順位」を返す。kind: 'ad'（広告順位=adRank） / 'seo'（SEO順位=seoRank）。
-// rank/rankEdits の全月を新しい順に、各月の日も新しい順に走査し、最初に見つかった数値を返す。
-// 値が無い（圏外・未取得）は null（＝圏外扱い）。
-function getLatestRankValue(code, kind) {
+// 【v240】最新日の順位「カテゴリ（上位/中位/下位）」を返す。
+//   順位は import 時に numericRankToCategory でカテゴリ文字列（例「4位以内◯」）に変換して
+//   state.rank に保存され、生の数値は残らない。よって数値ではなくカテゴリで判定する。
+//   返り値: 'top'（広告=4位以内 / SEO=5-8位以内）/ 'mid' / 'low' / null（圏外・未取得）。
+//   全月を新しい順に、各月の日も新しい順に走査し、最初に見つかった値を分類して返す。
+function classifyRankBucket(v, kind) {
+  if (v == null || v === '') return null;
+  // 数値（手動編集で生数値が入っている場合など）はしきい値で分類
+  const n = Number(v);
+  if (typeof v === 'number' || (!isNaN(n) && String(v).trim() !== '' && /^\s*\d+\s*$/.test(String(v)))) {
+    if (!isFinite(n) || n <= 0) return null;
+    if (kind === 'ad')  return (n <= 4) ? 'top' : (n <= 12 ? 'mid' : 'low');
+    return (n <= 8) ? 'top' : (n <= 18 ? 'mid' : 'low');   // seo
+  }
+  // カテゴリ文字列: 先頭の範囲テキストで判定（グリフ差異に依存しない）
+  const s = String(v);
+  if (kind === 'ad') {
+    if (s.indexOf('4位以内') !== -1)    return 'top';
+    if (s.indexOf('5-12位以内') !== -1) return 'mid';
+    if (s.indexOf('13位以下') !== -1)   return 'low';
+  } else {
+    if (s.indexOf('5-8位以内') !== -1)  return 'top';
+    if (s.indexOf('9-18位以内') !== -1) return 'mid';
+    if (s.indexOf('19位以下') !== -1)   return 'low';
+  }
+  // 新表記の末尾記号でのフォールバック（◯=上位/△=中位/✕・×=下位）
+  const tail = s.replace(/\s+/g, '');
+  if (/[◯○]$/.test(tail)) return 'top';
+  if (/△$/.test(tail))    return 'mid';
+  if (/[✕×]$/.test(tail)) return 'low';
+  return null; // 旧表記など判定不能は圏外扱い
+}
+function getLatestRankBucket(code, kind) {
   const field = (kind === 'ad') ? 'adRank' : 'seoRank';
   const monthsSet = new Set();
   if (state.rank) Object.keys(state.rank).forEach(m => monthsSet.add(m));
@@ -5180,28 +5210,30 @@ function getLatestRankValue(code, kind) {
     for (let d = days - 1; d >= 0; d--) {
       const eff = getEffectiveRankValue(ym, code, field, d);
       if (eff && eff.value != null && eff.value !== '') {
-        const n = Number(eff.value);
-        if (!isNaN(n)) return n;   // 数値の順位が見つかった＝最新日の順位
+        return classifyRankBucket(eff.value, kind);  // 最新日の値を分類して返す（nullなら圏外扱い→継続）
       }
     }
   }
-  return null; // どこにも数値が無い＝圏外扱い
+  return null; // どこにも値が無い＝圏外扱い
 }
 
-// 「修正あり」条件（マインドマップ準拠。圏外=最下位扱い）。
-//  ad : (入札価格〇 かつ 広告順位5位以下[圏外含む]) または (入札価格× かつ 広告順位4位以上[圏外は含めない])
-//  pro: (PRオプ〇 かつ SEO7位以下[圏外含む])       または (PRオプ× かつ SEO6位以上[圏外は含めない])
+// 「修正あり」条件（マインドマップ準拠。圏外=最下位扱い＝'top'ではない）。
+//  ad : (入札価格○ かつ 広告が上位でない[4位以内でない/圏外]) または (入札価格✕ かつ 広告が上位[4位以内])
+//       ※ マインドマップ「4位以上/5位以下」は広告カテゴリ境界(4/5)と完全一致。
+//  seo: (PRオプ○ かつ SEOが上位でない[5-8位以内でない/圏外]) または (PRオプ× かつ SEOが上位[5-8位以内])
+//       ※【要注意】保存データはカテゴリ(5-8位◯/9-18位△/19位以下✕)のみで、生数値が無いため
+//         マインドマップの「6位/7位」境界は再現できず、最も近い 8/9 境界(=◯カテゴリ)で判定している。
 function isTuneFix(code, kind) {
   const meta = state.productMeta[code] || {};
   if (kind === 'ad') {
-    const rank = getLatestRankValue(code, 'ad');   // null=圏外
-    if (adStatusIsCircle(meta.adStatus)) return (rank == null) || (rank >= 5);
-    if (adStatusIsCross(meta.adStatus))  return (rank != null) && (rank <= 4);
+    const bucket = getLatestRankBucket(code, 'ad');   // null=圏外
+    if (adStatusIsCircle(meta.adStatus)) return bucket !== 'top';        // 上位でない（圏外含む）
+    if (adStatusIsCross(meta.adStatus))  return bucket === 'top';        // 上位（圏外は含めない）
     return false;
   } else {
-    const rank = getLatestRankValue(code, 'seo');
-    if (proStatusIsCircle(meta.proStatus)) return (rank == null) || (rank >= 7);
-    if (proStatusIsCross(meta.proStatus))  return (rank != null) && (rank <= 6);
+    const bucket = getLatestRankBucket(code, 'seo');
+    if (proStatusIsCircle(meta.proStatus)) return bucket !== 'top';
+    if (proStatusIsCross(meta.proStatus))  return bucket === 'top';
     return false;
   }
 }
