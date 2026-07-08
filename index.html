@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v238 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v239 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -915,6 +915,34 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   align-self: center;
   margin-bottom: 6px;
 }
+
+/* 【v239】調整サブフィルタバー（【状態】の下に出る3ボタン: 修正あり/推移確認/未確認）。
+   ※ top-nav クラスは付けない（「ヘッダーを隠す」時に消えないようにするため）。 */
+.tune-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 20px 8px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.tune-filter-bar .nav-group-label { color: var(--text3); font-size: 0.78rem; font-weight: 600; margin-right: 4px; }
+.tune-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: var(--bg2);
+  color: var(--text2);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.tune-chip:hover { background: var(--bg3); }
+.tune-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tune-chip .tune-freq { font-size: 0.72rem; opacity: 0.75; }
+.tune-chip .chip-num { font-size: 0.78rem; opacity: 0.85; }
 
 .main {
   padding: 18px 20px;
@@ -2295,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v238</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v239</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2368,6 +2396,14 @@ table.rank-table td.rank-legend-col-row {
   <!-- 【v231】ヘッダー＋上段ナビ（【調整】以上）を隠して【状態】を最上部にするトグル。状態行の右端に配置 -->
   <button class="btn sm ghost" id="btnToggleChrome" type="button" style="margin-left:auto; align-self:center; white-space:nowrap;" title="ヘッダーと上段ナビ（【調整】以上）を隠して【状態】を最上部にします">🔼 ヘッダーを隠す</button>
 </nav>
+
+<!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
+<div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
+  <span class="nav-group-label">絞り込み</span>
+  <button class="tune-chip active" data-tune="fix"><span class="tune-freq">【毎日】</span>修正あり<span class="chip-num" id="cntTuneFix"></span></button>
+  <button class="tune-chip" data-tune="watch"><span class="tune-freq">【週3回】</span>推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
+  <button class="tune-chip" data-tune="unchecked"><span class="tune-freq">【月初】</span>未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
+</div>
 
 <!-- App Layout -->
 <div class="app">
@@ -2607,19 +2643,66 @@ table.rank-table td.rank-legend-col-row {
       </div>
     </div>
 
-    <!-- View: 入札価格調整（【v237】新設。中身は今後実装。クリック時に #view-ad-tune が無いとクラッシュするため空ビューを用意） -->
+    <!-- View: 入札価格調整（【v239】3グループ絞り込み。列は入札価格全体と同じ。表示は tuneFilterBar の選択で切替） -->
     <div class="view" id="view-ad-tune">
       <div class="card">
         <h3 class="card-title">入札価格調整</h3>
-        <div style="padding:24px; color:var(--text3); font-size:0.9rem;">🛠 準備中です。（このビューの中身は今後実装予定）</div>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+        </div>
+        <div class="table-wrap">
+          <table id="tableAdTune">
+            <thead><tr>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="num col-bid" data-sort="bid">入札価格</th>
+              <th data-sort="adNote">対応内容</th>
+              <th class="num col-ad" data-sort="adCost0" id="hAdTuneAdRev0">実績額<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="adCost1" id="hAdTuneAdRev1">実績額<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="adCost2" id="hAdTuneAdRev2">実績額<br>(前月)</th>
+              <th class="num col-ad" data-sort="roas0" id="hAdTuneRoas0">広告ROAS<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="roas1" id="hAdTuneRoas1">広告ROAS<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="roas2" id="hAdTuneRoas2">広告ROAS<br>(前月)</th>
+              <th class="status-col" data-sort="status">ステータス</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- View: PRオプ調整（【v237】新設。中身は今後実装。空ビューを用意） -->
+    <!-- View: PRオプ調整（【v239】3グループ絞り込み。列はPRオプ全体と同じ） -->
     <div class="view" id="view-pro-tune">
       <div class="card">
         <h3 class="card-title">PRオプ調整</h3>
-        <div style="padding:24px; color:var(--text3); font-size:0.9rem;">🛠 準備中です。（このビューの中身は今後実装予定）</div>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+        </div>
+        <div class="table-wrap">
+          <table id="tableProTune">
+            <thead><tr>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
+              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ料率</th>
+              <th data-sort="proNote">対応内容</th>
+              <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev2" id="hProTuneSeo2">SEO売上<br>(前月)</th>
+              <th class="status-col" data-sort="status">ステータス</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -5072,20 +5155,123 @@ function last3Months() {
   return months.slice(-3);
 }
 
+// ==================== 【v239】調整（3グループ絞り込み）ヘルパー ====================
+// tuneGroup: 現在選択中のサブグループ。'fix'=修正あり / 'watch'=推移確認 / 'unchecked'=未確認。
+// ビューに入るたび 'fix'（修正あり）にリセットする。
+let tuneGroup = 'fix';
+
+// 入札状態・PRオプ状態の〇/×判定（新旧表記両対応。STATE_FILTERSと同じ基準）。
+function adStatusIsCircle(s) { return s === '入札価格〇' || s === '広告〇'; }
+function adStatusIsCross(s)  { return s === '入札価格✕' || s === '広告×'; }
+function proStatusIsCircle(s){ return s === 'PRオプ〇' || s === 'PRO〇'; }
+function proStatusIsCross(s) { return s === 'PRオプ×' || s === 'PRO×'; }
+
+// 「最新日の順位」を返す。kind: 'ad'（広告順位=adRank） / 'seo'（SEO順位=seoRank）。
+// rank/rankEdits の全月を新しい順に、各月の日も新しい順に走査し、最初に見つかった数値を返す。
+// 値が無い（圏外・未取得）は null（＝圏外扱い）。
+function getLatestRankValue(code, kind) {
+  const field = (kind === 'ad') ? 'adRank' : 'seoRank';
+  const monthsSet = new Set();
+  if (state.rank) Object.keys(state.rank).forEach(m => monthsSet.add(m));
+  if (state.rankEdits) Object.keys(state.rankEdits).forEach(m => monthsSet.add(m));
+  const months = [...monthsSet].sort().reverse(); // 新しい月から
+  for (const ym of months) {
+    const days = getDaysInMonth(ym);
+    for (let d = days - 1; d >= 0; d--) {
+      const eff = getEffectiveRankValue(ym, code, field, d);
+      if (eff && eff.value != null && eff.value !== '') {
+        const n = Number(eff.value);
+        if (!isNaN(n)) return n;   // 数値の順位が見つかった＝最新日の順位
+      }
+    }
+  }
+  return null; // どこにも数値が無い＝圏外扱い
+}
+
+// 「修正あり」条件（マインドマップ準拠。圏外=最下位扱い）。
+//  ad : (入札価格〇 かつ 広告順位5位以下[圏外含む]) または (入札価格× かつ 広告順位4位以上[圏外は含めない])
+//  pro: (PRオプ〇 かつ SEO7位以下[圏外含む])       または (PRオプ× かつ SEO6位以上[圏外は含めない])
+function isTuneFix(code, kind) {
+  const meta = state.productMeta[code] || {};
+  if (kind === 'ad') {
+    const rank = getLatestRankValue(code, 'ad');   // null=圏外
+    if (adStatusIsCircle(meta.adStatus)) return (rank == null) || (rank >= 5);
+    if (adStatusIsCross(meta.adStatus))  return (rank != null) && (rank <= 4);
+    return false;
+  } else {
+    const rank = getLatestRankValue(code, 'seo');
+    if (proStatusIsCircle(meta.proStatus)) return (rank == null) || (rank >= 7);
+    if (proStatusIsCross(meta.proStatus))  return (rank != null) && (rank <= 6);
+    return false;
+  }
+}
+
+// 対応内容(note)の分類。isAutoTimestamp（更新日時スタンプ単独判定）を流用。
+function noteIsTimestampOnly(note) { const t = (note || '').trim(); return t !== '' && isAutoTimestamp(t); }
+function noteHasChangeContent(note){ const t = (note || '').trim(); return t !== '' && !isAutoTimestamp(t); }
+
+// 商品が属する調整グループを排他判定で返す（優先: 修正あり > 推移確認 > 未確認）。該当なしは null。
+function getTuneGroup(code, kind) {
+  if (isTuneFix(code, kind)) return 'fix';
+  const meta = state.productMeta[code] || {};
+  const note = (kind === 'ad') ? meta.adNote : meta.proNote;
+  if (noteHasChangeContent(note)) return 'watch';
+  if (noteIsTimestampOnly(note))  return 'unchecked';
+  return null;
+}
+
+// tuneFilterBar の表示/非表示・アクティブ表示・件数を更新する。
+function updateTuneBar() {
+  const bar = document.getElementById('tuneFilterBar');
+  if (!bar) return;
+  const view = state.currentView;
+  const isTune = (view === 'ad-tune' || view === 'pro-tune');
+  bar.style.display = isTune ? 'flex' : 'none';
+  if (!isTune) return;
+  const kind = (view === 'ad-tune') ? 'ad' : 'pro';
+  // アクティブ表示
+  bar.querySelectorAll('.tune-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tune === tuneGroup);
+  });
+  // 件数（引退除外。ad は入札無しも除外して全体表と件数を揃える）
+  const codes = new Set(Object.keys(state.master));
+  (state.item || []).forEach(i => codes.add(i.code));
+  (state.ad || []).forEach(a => codes.add(a.code));
+  let cFix = 0, cWatch = 0, cUnchecked = 0;
+  [...codes].forEach(code => {
+    if (isRetired(code)) return;
+    if (kind === 'ad' && (state.productMeta[code] || {}).adStatus === '入札無し') return;
+    const g = getTuneGroup(code, kind);
+    if (g === 'fix') cFix++;
+    else if (g === 'watch') cWatch++;
+    else if (g === 'unchecked') cUnchecked++;
+  });
+  const setNum = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? `(${n})` : ''; };
+  setNum('cntTuneFix', cFix); setNum('cntTuneWatch', cWatch); setNum('cntTuneUnchecked', cUnchecked);
+}
+
 let adAdjustSortKey = 'adCost2', adAdjustSortDir = -1;  // デフォルト: 前月の実績額降順
 // 【v208】並び順凍結: ビューに留まっている間は同じ並び順を保つ。
 // nullなら凍結なし（次回描画でソートして凍結）。配列ならその順序で並べる。
 // ソート切替・ビュー離脱でnullに戻る。
 let adAdjustFrozenOrder = null;
-function renderAdAdjust() {
+function renderAdAdjust(cfg) {
+  // 【v239】cfg で対象テーブル等を差し替え可能に。既定は「入札価格全体」。
+  //   tune（入札価格調整）は tableAdTune 等 + groupFilter を渡して同ロジックを再利用する。
+  cfg = cfg || {};
+  const tableSel  = cfg.tableSel  || '#tableAdAdjust';
+  const searchSel = cfg.searchSel || '#adAdjustSearch';
+  const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntAdAdjustActive';
+  const hPrefix   = cfg.hPrefix   || 'hAdAdjust';
+  const groupFilter = cfg.groupFilter || null;
   const months = last3Months();
   // 動的に見出しを更新（月が分かる場合）
-  if (months.length >= 1) $('#hAdAdjustAdRev0').innerHTML = `実績額<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#hAdAdjustAdRev1').innerHTML = `実績額<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#hAdAdjustAdRev2').innerHTML = `実績額<br>${months[2] || '(前月)'}`;
-  if (months.length >= 1) $('#hAdAdjustRoas0').innerHTML = `広告ROAS<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#hAdAdjustRoas1').innerHTML = `広告ROAS<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#hAdAdjustRoas2').innerHTML = `広告ROAS<br>${months[2] || '(前月)'}`;
+  if (months.length >= 1) $('#'+hPrefix+'AdRev0').innerHTML = `実績額<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#'+hPrefix+'AdRev1').innerHTML = `実績額<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#'+hPrefix+'AdRev2').innerHTML = `実績額<br>${months[2] || '(前月)'}`;
+  if (months.length >= 1) $('#'+hPrefix+'Roas0').innerHTML = `広告ROAS<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#'+hPrefix+'Roas1').innerHTML = `広告ROAS<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#'+hPrefix+'Roas2').innerHTML = `広告ROAS<br>${months[2] || '(前月)'}`;
 
   // 商品コード一覧
   const codes = new Set(Object.keys(state.master));
@@ -5111,7 +5297,8 @@ function renderAdAdjust() {
   //   更新・別ビューへの移動など renderAdAdjust が再実行されたタイミングで除外される。
   list = list.filter(r => (state.productMeta[r.code] || {}).adStatus !== '入札無し');
 
-  const q = $('#adAdjustSearch').value.trim().toLowerCase();
+  const _adSearchEl = $(searchSel);
+  const q = (_adSearchEl ? _adSearchEl.value : '').trim().toLowerCase();
   if (q) list = list.filter(r => {
     const m = getMaster(r.code);
     return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
@@ -5125,11 +5312,15 @@ function renderAdAdjust() {
     }
   }
 
-  const tbody = $('#tableAdAdjust tbody');
+  // 【v239】調整グループ絞り込み（tune用）。groupFilterがあれば該当商品のみ。
+  if (groupFilter) list = list.filter(r => groupFilter(r));
+
+  const _adEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
+  const tbody = $(tableSel + ' tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
-    updateSortIndicator('#tableAdAdjust', adAdjustSortKey, adAdjustSortDir);
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">' + _adEmptyMsg + '</td></tr>';
+    updateSortIndicator(tableSel, adAdjustSortKey, adAdjustSortDir);
     return;
   }
   // ソート
@@ -5204,24 +5395,45 @@ function renderAdAdjust() {
     `;
     tbody.appendChild(tr);
   });
-  updateSortIndicator('#tableAdAdjust', adAdjustSortKey, adAdjustSortDir);
+  updateSortIndicator(tableSel, adAdjustSortKey, adAdjustSortDir);
   // 【v166】広告全体タブ見出しの件数 (N) を更新（フィルタ・絞り込み適用後の実際の表示行数）
-  const _cntAdAdj = $('#cntAdAdjustActive');
-  if (_cntAdAdj) {
-    const _n = tbody.children.length;
-    _cntAdAdj.textContent = _n > 0 ? `(${_n})` : '';
+  if (cntSel) {
+    const _cntAdAdj = $(cntSel);
+    if (_cntAdAdj) {
+      const _n = tbody.children.length;
+      _cntAdAdj.textContent = _n > 0 ? `(${_n})` : '';
+    }
   }
+}
+
+// 【v239】入札価格調整（tune）: 入札価格全体と同ロジックを、選択中グループで絞り込んで描画。
+function renderAdTune() {
+  renderAdAdjust({
+    tableSel: '#tableAdTune',
+    searchSel: '#adTuneSearch',
+    cntSel: null,
+    hPrefix: 'hAdTune',
+    emptyMsg: 'このグループに該当する商品はありません',
+    groupFilter: (r) => getTuneGroup(r.code, 'ad') === tuneGroup
+  });
 }
 
 // ==================== Rendering: PRO調整 ====================
 let proAdjustSortKey = 'seoRev2', proAdjustSortDir = -1;  // デフォルト: 前月のSEO売上降順
 // 【v208】並び順凍結（renderAdAdjustと同じ仕組み）
 let proAdjustFrozenOrder = null;
-function renderProAdjust() {
+function renderProAdjust(cfg) {
+  // 【v239】cfg で対象テーブル等を差し替え可能に。既定は「PRオプ全体」。
+  cfg = cfg || {};
+  const tableSel  = cfg.tableSel  || '#tableProAdjust';
+  const searchSel = cfg.searchSel || '#proAdjustSearch';
+  const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntProAdjustActive';
+  const hPrefix   = cfg.hPrefix   || 'hProAdjust';
+  const groupFilter = cfg.groupFilter || null;
   const months = last3Months();
-  if (months.length >= 1) $('#hProAdjustSeo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#hProAdjustSeo1').innerHTML = `SEO売上<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#hProAdjustSeo2').innerHTML = `SEO売上<br>${months[2] || '(前月)'}`;
+  if (months.length >= 1) $('#'+hPrefix+'Seo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
+  if (months.length >= 2) $('#'+hPrefix+'Seo1').innerHTML = `SEO売上<br>${months[1] || '(2ヶ月前)'}`;
+  if (months.length >= 3) $('#'+hPrefix+'Seo2').innerHTML = `SEO売上<br>${months[2] || '(前月)'}`;
 
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
@@ -5238,7 +5450,8 @@ function renderProAdjust() {
   // 引退済み商品（商品名なし）を除外
   list = list.filter(r => !isRetired(r.code));
 
-  const q = $('#proAdjustSearch').value.trim().toLowerCase();
+  const _proSearchEl = $(searchSel);
+  const q = (_proSearchEl ? _proSearchEl.value : '').trim().toLowerCase();
   if (q) list = list.filter(r => {
     const m = getMaster(r.code);
     return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
@@ -5252,11 +5465,15 @@ function renderProAdjust() {
     }
   }
 
-  const tbody = $('#tableProAdjust tbody');
+  // 【v239】調整グループ絞り込み（tune用）
+  if (groupFilter) list = list.filter(r => groupFilter(r));
+
+  const _proEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
+  const tbody = $(tableSel + ' tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">データを読み込んでください</td></tr>';
-    updateSortIndicator('#tableProAdjust', proAdjustSortKey, proAdjustSortDir);
+    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">' + _proEmptyMsg + '</td></tr>';
+    updateSortIndicator(tableSel, proAdjustSortKey, proAdjustSortDir);
     return;
   }
   // ソート
@@ -5323,13 +5540,27 @@ function renderProAdjust() {
     `;
     tbody.appendChild(tr);
   });
-  updateSortIndicator('#tableProAdjust', proAdjustSortKey, proAdjustSortDir);
+  updateSortIndicator(tableSel, proAdjustSortKey, proAdjustSortDir);
   // 【v166】PRオプ全体タブ見出しの件数 (N) を更新（フィルタ・絞り込み適用後の実際の表示行数）
-  const _cntProAdj = $('#cntProAdjustActive');
-  if (_cntProAdj) {
-    const _n = tbody.children.length;
-    _cntProAdj.textContent = _n > 0 ? `(${_n})` : '';
+  if (cntSel) {
+    const _cntProAdj = $(cntSel);
+    if (_cntProAdj) {
+      const _n = tbody.children.length;
+      _cntProAdj.textContent = _n > 0 ? `(${_n})` : '';
+    }
   }
+}
+
+// 【v239】PRオプ調整（tune）: PRオプ全体と同ロジックを、選択中グループで絞り込んで描画。
+function renderProTune() {
+  renderProAdjust({
+    tableSel: '#tableProTune',
+    searchSel: '#proTuneSearch',
+    cntSel: null,
+    hPrefix: 'hProTune',
+    emptyMsg: 'このグループに該当する商品はありません',
+    groupFilter: (r) => getTuneGroup(r.code, 'pro') === tuneGroup
+  });
 }
 
 // ==================== Rendering: 広告順位 / SEO順位 ====================
@@ -6121,8 +6352,12 @@ function renderAll() {
   else if (state.currentView === 'graphdata') renderGraph();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
+  else if (state.currentView === 'ad-tune') renderAdTune();
+  else if (state.currentView === 'pro-tune') renderProTune();
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
+  // 【v239】調整サブフィルタバーの表示/件数を更新（毎日の順位更新後も renderAll 経由で自動反映）
+  if (typeof updateTuneBar === 'function') updateTuneBar();
   updateCsvDownloadButtonState();
   // 【v125】代表コード絞り込みUI
   if (typeof updateRepFilterUI === 'function') updateRepFilterUI();
@@ -6184,6 +6419,8 @@ $$('.nav-tab').forEach(item => {
     item.classList.add('active');
     const view = item.dataset.view;
     state.currentView = view;
+    // 【v239】調整ビューに入るたび、絞り込みを「修正あり」に戻す
+    if (view === 'ad-tune' || view === 'pro-tune') tuneGroup = 'fix';
     $$('.view').forEach(v => v.classList.remove('active'));
     $('#view-' + view).classList.add('active');
     // 【状態】フィルタも解除
@@ -6623,6 +6860,39 @@ $$('#tableProAdjust th[data-sort]').forEach(th => {
     else { proAdjustSortKey = k; proAdjustSortDir = -1; }
     proAdjustFrozenOrder = null;  // 【v208】ソート切替で凍結解除
     renderProAdjust();
+  });
+});
+
+// 【v239】調整（tune）ビューの検索・ソート・サブフィルタ配線
+if ($('#adTuneSearch'))  $('#adTuneSearch').addEventListener('input', renderAdTune);
+if ($('#proTuneSearch')) $('#proTuneSearch').addEventListener('input', renderProTune);
+$$('#tableAdTune th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (adAdjustSortKey === k) adAdjustSortDir *= -1;
+    else { adAdjustSortKey = k; adAdjustSortDir = -1; }
+    adAdjustFrozenOrder = null;
+    renderAdTune();
+  });
+});
+$$('#tableProTune th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (proAdjustSortKey === k) proAdjustSortDir *= -1;
+    else { proAdjustSortKey = k; proAdjustSortDir = -1; }
+    proAdjustFrozenOrder = null;
+    renderProTune();
+  });
+});
+// サブフィルタバーの3ボタン: グループを切り替えて現在の調整ビューを再描画
+$$('#tuneFilterBar .tune-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    tuneGroup = btn.dataset.tune;              // 'fix' | 'watch' | 'unchecked'
+    // 並び順凍結を解除して、選択グループで並べ直す
+    adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;
+    updateTuneBar();
+    if (state.currentView === 'ad-tune') renderAdTune();
+    else if (state.currentView === 'pro-tune') renderProTune();
   });
 });
 
@@ -7319,6 +7589,8 @@ function getCurrentViewCodesInOrder() {
     'retired':    '#tableRetired',
     'ad-adjust':  '#tableAdAdjust',
     'pro-adjust': '#tableProAdjust',
+    'ad-tune':    '#tableAdTune',
+    'pro-tune':   '#tableProTune',
     'ad-rank':    '#tableAdRank',
     'seo-rank':   '#tableSeoRank'
   };
@@ -8432,6 +8704,7 @@ try {
         $$('.nav-tab').forEach(i => i.classList.remove('active'));
         target.classList.add('active');
         state.currentView = initialView;
+        if (initialView === 'ad-tune' || initialView === 'pro-tune') tuneGroup = 'fix';
         $$('.view').forEach(v => v.classList.remove('active'));
         const viewEl = document.getElementById('view-' + initialView);
         if (viewEl) viewEl.classList.add('active');
@@ -8572,7 +8845,7 @@ try {
 // フィールドにはオートフィル候補を出さない。focus ハンドラ内で readonly を外すので、
 // ユーザーはそのまま入力でき、blur で再び readonly に戻して次回フォーカスも抑止する。
 (function suppressSearchAutofill() {
-  const IDS = ['basicSearch','monthlySearch','retiredSearch','adAdjustSearch','proAdjustSearch','adRankSearch','seoRankSearch'];
+  const IDS = ['basicSearch','monthlySearch','retiredSearch','adAdjustSearch','proAdjustSearch','adRankSearch','seoRankSearch','adTuneSearch','proTuneSearch'];
   IDS.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
