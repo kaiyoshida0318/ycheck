@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v240 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v241 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2323,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v240</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v241</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2650,6 +2650,9 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <button class="search-rep-badge" id="adTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdTune">
@@ -2683,6 +2686,9 @@ table.rank-table td.rank-legend-col-row {
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <button class="search-rep-badge" id="proTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
+          <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
         </div>
         <div class="table-wrap">
           <table id="tableProTune">
@@ -6825,6 +6831,11 @@ $('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad
 $('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 $('#btnDeleteAdNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
 $('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
+// 【v241】調整ビューにも同じ対応内容-削除ボタンを配線（機能は全体と同一：kind単位で全商品対象）
+if ($('#btnDeleteAdTuneNoteStamps'))  $('#btnDeleteAdTuneNoteStamps').addEventListener('click', () => deleteNoteStamps('ad'));
+if ($('#btnDeleteProTuneNoteStamps')) $('#btnDeleteProTuneNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
+if ($('#btnDeleteAdTuneNoteAll'))     $('#btnDeleteAdTuneNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
+if ($('#btnDeleteProTuneNoteAll'))    $('#btnDeleteProTuneNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
