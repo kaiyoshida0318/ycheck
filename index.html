@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v243 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v244 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2323,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v243</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v244</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3200,26 +3200,47 @@ const log = (msg, type = '') => {
 
 // ==================== Persistence ====================
 function saveToStorage() {
+  const data = {
+    overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
+    proRate: state.proRate,
+    master: state.master, productMeta: state.productMeta,
+    rank: state.rank,
+    rankEdits: state.rankEdits,
+    rankMeta: state.rankMeta,
+    productsCsvSnapshot: state.productsCsvSnapshot,
+    savedAt: new Date().toISOString()
+  };
+  // 【v244】localStorage容量オーバー(QuotaExceededError)対策。
+  //   従来は setItem が例外を投げると catch で握りつぶし、未保存フラグ設定もGitHub保存スケジュールも
+  //   実行されず、「保存したつもりで実は未保存」→リロードで古い値に戻る、という重大バグがあった。
+  //   ここでは (1) フル保存を試し、失敗したら再取得可能な rank を外して再試行、
+  //   (2) localStorageの成否に関わらず GitHub保存を必ずスケジュール（GitHubを真実の保存先とする）、
+  //   (3) 未保存フラグは「フル保存が成功した時だけ」立てる。
+  //       ローカルが不完全/失敗のときに立てると、起動時ガードが不完全なローカルをGitHubへ書き戻して
+  //       rank等を消す恐れがあるため。フラグ無し＝起動時はGitHubを正としてロードする。
+  let fullOk = false, anyOk = false;
   try {
-    const data = {
-      overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
-      proRate: state.proRate,
-      master: state.master, productMeta: state.productMeta,
-      rank: state.rank,
-      rankEdits: state.rankEdits,
-      rankMeta: state.rankMeta,
-      productsCsvSnapshot: state.productsCsvSnapshot,
-      savedAt: new Date().toISOString()
-    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    // 【v199】未保存フラグをlocalStorageにも永続化。GitHub保存成功時にクリアする。
-    // 起動時、このフラグが残っていたら「GitHubに保存し切れていないローカル変更がある」と判断し、
-    // GitHubデータでの上書きをスキップして消失を防ぐ。
-    try { localStorage.setItem(ghPendingFlagKey(), '1'); } catch (e) {}
-    // 【v95】GitHub連携: PATが設定されていれば、デバウンス保存をスケジュール
-    if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave();
-    return true;
-  } catch (err) { console.error(err); return false; }
+    fullOk = true; anyOk = true;
+  } catch (err) {
+    console.error('[Ycheck] localStorage保存に失敗（容量オーバーの可能性）:', err && err.message);
+    // rank(API順位。rank.json/GitHubから再取得可能)を外して少しでも残す
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, rank: {}, _rankOmitted: true }));
+      anyOk = true;
+      console.warn('[Ycheck] 容量オーバーのため rank を除いてlocalStorageへ保存しました（rankは再取得されます。GitHubには完全なデータを保存します）');
+    } catch (err2) {
+      console.error('[Ycheck] rank除外後もlocalStorage保存に失敗:', err2 && err2.message);
+    }
+  }
+  // 未保存フラグ: フル保存成功時のみ。それ以外は立てず（GitHubを正とする）。
+  try {
+    if (fullOk) localStorage.setItem(ghPendingFlagKey(), '1');
+    else localStorage.removeItem(ghPendingFlagKey());
+  } catch (e) {}
+  // localStorageの成否に関わらず、GitHub保存は必ずスケジュール（in-memoryの正しい値を確実に残す）
+  if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave();
+  return anyOk;
 }
 
 // ==================== 【v95】GitHub連携（データのクラウド共有） ====================
