@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v241 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v242 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2323,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v241</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v242</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4209,7 +4209,7 @@ async function processFiles(files) {
   validateBuffer();
 }
 
-function commitUpload() {
+async function commitUpload() {
   const buf = state.uploadBuffer;
   if (!validateBuffer()) return;
   const hasMonthly = buf.overall && buf.item && buf.ad;
@@ -4280,6 +4280,34 @@ function commitUpload() {
   saveToStorage();
   log(`💾 ブラウザに保存しました`, 'ok');
   renderAll();
+
+  // 【v242】取り込んだ値を確実に残すため、GitHub保存の完了を待ってからモーダルを閉じる。
+  //   従来は saveToStorage() 内の 1秒デバウンス保存に任せていたため、実行直後にリロードすると
+  //   保存前で、起動時にGitHubの古いデータで上書きされて「反映されない（元に戻る）」事故が起きていた。
+  //   ここで即時に保存し切り、失敗時は無音にせず警告してモーダルを開いたままにする。
+  if (typeof ghIsEnabled === 'function' && ghIsEnabled()) {
+    const confirmBtn = $('#btnConfirmUpload');
+    const prevLabel = confirmBtn ? confirmBtn.textContent : '';
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '☁ GitHubへ保存中...'; }
+    log('☁ GitHubへ保存中...', 'info');
+    try {
+      const r = await ghSaveToGitHub({ allowEmpty: false });
+      if (r && r.success) {
+        log('✅ GitHubに保存しました（リロードしても反映されます）', 'ok');
+      } else if (r && r.skipped) {
+        log('⚠ GitHub保存をスキップしました（' + (r.reason || '') + '）。この端末には保存済みです', 'err');
+      }
+    } catch (e) {
+      const msg = (e && e.message) ? e.message : String(e);
+      log('❌ GitHub保存に失敗: ' + msg, 'err');
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = prevLabel || '⬆ アップロード実行'; }
+      alert('GitHubへの保存に失敗しました。\n\nこの端末には保存されていますが、いまリロードすると元に戻る可能性があります。\n他のPC・タブでYcheckを開いていないか、通信状況を確認し、右上が「✓ 保存済み」になってからリロードしてください。\n\n詳細: ' + msg);
+      return; // 失敗に気づけるよう、モーダルは閉じない
+    }
+    if (confirmBtn) confirmBtn.textContent = prevLabel || '⬆ アップロード実行';
+  } else {
+    log('💾 この端末に保存しました（GitHub未設定のため、他PCには共有されません）', 'ok');
+  }
   closeUploadModal();
 }
 
