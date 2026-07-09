@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v242 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v243 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2323,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v242</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v243</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3448,6 +3448,7 @@ async function ghSaveToGitHub(options = {}) {
   }
   _ghSaveInFlight = (async () => {
     const jsonStr = ghBuildDataString();
+    try { const _d = JSON.parse(jsonStr); console.log('[Ycheck診断] GitHub保存開始: eq-22-01=', (_d.bid||{})['eq-22-01'], '| bid件数=', Object.keys(_d.bid||{}).length, '| savedAt=', _d.savedAt); } catch(e){}
     // 空データ誤上書き防止
     const dataObj = JSON.parse(jsonStr);
     const dataTotal = (dataObj.overall ? 1 : 0)
@@ -3463,6 +3464,7 @@ async function ghSaveToGitHub(options = {}) {
     try {
       await ghPutFile(jsonStr);
       _ghDirty = false;
+      console.log('[Ycheck診断] GitHub保存成功（この内容がGitHubに書き込まれました）');
       try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}  // 【v199】保存成功 → 未保存フラグ解除
       ghSetSyncStatus('saved');
       ghLog(`保存成功: ${ghFilePath()} (${(jsonStr.length / 1024).toFixed(1)} KB)`);
@@ -3492,7 +3494,7 @@ async function ghLoadFromGitHub() {
       return { notFound: true };
     }
     const data = JSON.parse(content);
-    // state に展開（loadFromStorage と同じロジック）
+    console.log('[Ycheck診断] GitHubから取得: savedAt=', data.savedAt, '| bid件数=', Object.keys(data.bid||{}).length, '| eq-22-01=', (data.bid||{})['eq-22-01'], '（この値でローカルを上書きします）');
     if (data.overall) state.overall = data.overall;
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
@@ -8795,7 +8797,12 @@ try {
     // GitHubデータでの上書きをスキップ（消失防止）。ローカルを保持し、保存を促す。
     let _hasPendingLocal = false;
     try { _hasPendingLocal = localStorage.getItem(ghPendingFlagKey()) === '1'; } catch (e) {}
+    try {
+      const _ls = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      console.log('[Ycheck診断] 起動: localStorage savedAt=', _ls.savedAt, '| eq-22-01=', (_ls.bid||{})['eq-22-01'], '| 未保存フラグ=', _hasPendingLocal);
+    } catch(e){}
     if (_hasPendingLocal) {
+      console.log('[Ycheck診断] 起動判定: 未保存ローカルあり → GitHub上書きをスキップし、ローカル値を保持して保存を試みます');
       console.warn(`[${curShop.id}] ⚠ 未保存のローカル変更を検出。GitHubからの上書きをスキップしました。`);
       _ghDirty = true;
       ghSetSyncStatus('dirty');
@@ -8816,6 +8823,7 @@ try {
         alert('前回保存し切れていない変更がローカルに残っており、GitHubへの保存も失敗しました。\n\nデータはこの端末に保持されています。右上が「✓保存済み」になるまで、設定から「今すぐGitHub保存」をお試しください。');
       });
     } else {
+      console.log('[Ycheck診断] 起動判定: 未保存フラグなし → GitHubから読み込み、ローカルを上書きします');
       console.log(`[${curShop.id}] GitHub連携が有効です - データを取得中...`);
       ghLoadFromGitHub().then(result => {
       if (result && result.success) {
