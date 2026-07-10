@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v247 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v249 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2323,7 +2323,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v247</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v249</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2403,6 +2403,7 @@ table.rank-table td.rank-legend-col-row {
   <button class="tune-chip active" data-tune="fix"><span class="tune-freq">【毎日】</span>修正あり<span class="chip-num" id="cntTuneFix"></span></button>
   <button class="tune-chip" data-tune="watch"><span class="tune-freq">【週3回】</span>推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
   <button class="tune-chip" data-tune="unchecked"><span class="tune-freq">【月初】</span>未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
+  <button class="tune-chip" data-tune="all">全体<span class="chip-num" id="cntTuneAll"></span></button>
 </div>
 
 <!-- App Layout -->
@@ -5321,13 +5322,42 @@ function noteIsTimestampOnly(note) { const t = (note || '').trim(); return t !==
 function noteHasChangeContent(note){ const t = (note || '').trim(); return t !== '' && !isAutoTimestamp(t); }
 
 // 商品が属する調整グループを排他判定で返す（優先: 修正あり > 推移確認 > 未確認）。該当なしは null。
+// 【v249】最終対応日時（ad/pro別）。手動対応の操作時に今日の日付(YYYY-MM-DD)を記録する。
+//   対応とみなす操作: 入札価格/PRオプ料率の値変更・入札状態/PRオプ状態プルダウン変更・対応内容欄の更新。
+//   ※一括アップロード(最新値を更新)は「対応」に含めない（手動編集のみ記録）。
+function tuneTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function tuneIsToday(s) { return !!s && s === tuneTodayStr(); }
+function tuneIsThisMonth(s) { return !!s && String(s).slice(0, 7) === tuneTodayStr().slice(0, 7); }
+function markTuneAction(code, kind) {
+  if (!code) return;
+  if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+  const today = tuneTodayStr();
+  if (kind === 'ad') state.productMeta[code].adActionAt = today;
+  else if (kind === 'pro') state.productMeta[code].proActionAt = today;
+}
+
+// 【v249】商品が属する調整サブグループを返す（排他）。該当なし(=全体にのみ出る)は null。
+//   F = 修正条件に該当（isTuneFix: 〇なのに上位でない / ×なのに上位）。※案B: メモ有無は無関係、順位条件のみ。
+//   ・修正あり(fix)     : F。ただし「今日対応済み」なら null（全体のみ）＝翌日リセット。
+//   ・推移確認(watch)   : 非F かつ メモ(更新日時以外)あり。ただし「今月対応済み」なら null＝月替わりリセット。
+//   ・未確認(unchecked) : 非F かつ（空欄 or スタンプのみ）。ただし「今月対応済み」なら null＝月替わりリセット。
+//   対応済み判定: adActionAt/proActionAt（対応操作時に記録）。fixは当日、watch/uncheckedは当月で判定。
 function getTuneGroup(code, kind) {
-  if (isTuneFix(code, kind)) return 'fix';
   const meta = state.productMeta[code] || {};
   const note = (kind === 'ad') ? meta.adNote : meta.proNote;
-  if (noteHasChangeContent(note)) return 'watch';
-  if (noteIsTimestampOnly(note))  return 'unchecked';
-  return null;
+  const actionAt = (kind === 'ad') ? meta.adActionAt : meta.proActionAt;
+  const F = isTuneFix(code, kind);
+  if (F) {
+    // 修正あり: 順位条件のみで該当。今日対応したものは外す（翌日には戻る）。
+    return tuneIsToday(actionAt) ? null : 'fix';
+  }
+  // 非F: 推移確認/未確認。今月対応したものは外す（月替わりで戻る）。
+  if (tuneIsThisMonth(actionAt)) return null;
+  if (noteHasChangeContent(note)) return 'watch';  // メモあり=推移確認
+  return 'unchecked';                              // 空欄 or スタンプのみ=未確認
 }
 
 // tuneFilterBar の表示/非表示・アクティブ表示・件数を更新する。
@@ -5347,17 +5377,18 @@ function updateTuneBar() {
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
-  let cFix = 0, cWatch = 0, cUnchecked = 0;
+  let cFix = 0, cWatch = 0, cUnchecked = 0, cAll = 0;
   [...codes].forEach(code => {
     if (isRetired(code)) return;
     if (kind === 'ad' && (state.productMeta[code] || {}).adStatus === '入札無し') return;
+    cAll++;  // この調整タブの対象商品（全体ボタンの対象）
     const g = getTuneGroup(code, kind);
     if (g === 'fix') cFix++;
     else if (g === 'watch') cWatch++;
     else if (g === 'unchecked') cUnchecked++;
   });
   const setNum = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? `(${n})` : ''; };
-  setNum('cntTuneFix', cFix); setNum('cntTuneWatch', cWatch); setNum('cntTuneUnchecked', cUnchecked);
+  setNum('cntTuneFix', cFix); setNum('cntTuneWatch', cWatch); setNum('cntTuneUnchecked', cUnchecked); setNum('cntTuneAll', cAll);
 }
 
 let adAdjustSortKey = 'adCost2', adAdjustSortDir = -1;  // デフォルト: 前月の実績額降順
@@ -5524,7 +5555,7 @@ function renderAdTune() {
     cntSel: null,
     hPrefix: 'hAdTune',
     emptyMsg: 'このグループに該当する商品はありません',
-    groupFilter: (r) => getTuneGroup(r.code, 'ad') === tuneGroup
+    groupFilter: (r) => (tuneGroup === 'all') ? true : (getTuneGroup(r.code, 'ad') === tuneGroup)
   });
 }
 
@@ -5669,7 +5700,7 @@ function renderProTune() {
     cntSel: null,
     hPrefix: 'hProTune',
     emptyMsg: 'このグループに該当する商品はありません',
-    groupFilter: (r) => getTuneGroup(r.code, 'pro') === tuneGroup
+    groupFilter: (r) => (tuneGroup === 'all') ? true : (getTuneGroup(r.code, 'pro') === tuneGroup)
   });
 }
 
@@ -7065,6 +7096,8 @@ document.addEventListener('change', (e) => {
   if (kind === 'ad') meta.adStatus = value;
   else if (kind === 'pro') meta.proStatus = value;
   else if (kind === 'status') meta.status = value || '新商品';
+  // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
+  if (kind === 'ad' || kind === 'pro') markTuneAction(code, kind);
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
   saveToStorage();
   // 見た目更新
@@ -7157,6 +7190,8 @@ document.addEventListener('blur', (e) => {
   e.target.textContent = newValue;
   if (kind === 'ad') meta.adNote = newValue;
   else meta.proNote = newValue;
+  // 【v249】対応内容欄の更新は「対応済み」として日時記録
+  markTuneAction(code, (kind === 'ad') ? 'ad' : 'pro');
   saveToStorage();
 }, true);
 
@@ -7263,6 +7298,7 @@ function startBidEdit(cell) {
       if (String(oldBid) !== String(newBid)) {
         if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
         state.productMeta[code].adNote = buildPriceChangeNote(state.productMeta[code].adNote, 'bid', oldBid, newBid);
+        markTuneAction(code, 'ad');  // 【v249】入札価格の値変更＝対応済み
       }
     }
     saveToStorage();
@@ -7366,6 +7402,7 @@ function startProRateEdit(cell) {
       if (String(oldRate) !== String(newRate)) {
         if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
         state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldRate, newRate);
+        markTuneAction(codeLower, 'pro');  // 【v249】PRオプ料率の値変更＝対応済み
         // 同じ行の対応内容(proNote)セルをピンポイント更新（renderAll回避でフォーカス維持）
         const row = cell.closest('tr');
         const noteCell = row ? row.querySelector('.note-cell[data-kind="pro"]') : null;
@@ -7519,8 +7556,10 @@ function startRankEditCell(cell) {
         if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
         if (isBid) {
           state.productMeta[codeLower].adNote = buildPriceChangeNote(state.productMeta[codeLower].adNote, 'bid', oldNum, newNum);
+          markTuneAction(codeLower, 'ad');  // 【v249】
         } else {
           state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldNum, newNum);
+          markTuneAction(codeLower, 'pro');  // 【v249】
         }
         saveToStorage();
       }
