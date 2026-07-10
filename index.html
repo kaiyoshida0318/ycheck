@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v249 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v250 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1057,6 +1057,8 @@ th[data-sort].sort-active::after { opacity: 1; color: var(--blue); }
 th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blue); }  /* ▲ */
 th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* 【v250】入札価格/PRオプ料率の2行ヘッダーは中央揃えできれいに（データセルは右揃えのまま） */
+thead th.col-bid { text-align: center; line-height: 1.4; }
 /* 【v150】行ホバー時の背景色変化を全廃止。青枠だけ残して、枠内の色は変えない方針。
    元: tbody tr:hover { background: var(--bg3); } */
 
@@ -2323,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v249</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v250</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2401,7 +2403,7 @@ table.rank-table td.rank-legend-col-row {
 <div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
   <span class="nav-group-label">絞り込み</span>
   <button class="tune-chip active" data-tune="fix"><span class="tune-freq">【毎日】</span>修正あり<span class="chip-num" id="cntTuneFix"></span></button>
-  <button class="tune-chip" data-tune="watch"><span class="tune-freq">【週3回】</span>推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
+  <button class="tune-chip" data-tune="watch"><span class="tune-freq">【月初】</span>推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
   <button class="tune-chip" data-tune="unchecked"><span class="tune-freq">【月初】</span>未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
   <button class="tune-chip" data-tune="all">全体<span class="chip-num" id="cntTuneAll"></span></button>
 </div>
@@ -2458,12 +2460,12 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低値7％)</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安値25円)</th>
+              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
@@ -2521,7 +2523,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安値25円)</th>
+              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -2594,7 +2596,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安値25円)</th>
+              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdAdjustAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdAdjustAdRev1">実績額<br>(2ヶ月前)</th>
@@ -2631,7 +2633,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低値7％)</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th data-sort="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
@@ -2664,7 +2666,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安値25円)</th>
+              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdTuneAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdTuneAdRev1">実績額<br>(2ヶ月前)</th>
@@ -2700,7 +2702,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低値7％)</th>
+              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th data-sort="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
