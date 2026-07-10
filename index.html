@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v255 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v256 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2325,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v255</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v256</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5440,7 +5440,7 @@ function renderAdAdjust(cfg) {
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntAdAdjustActive';
   const hPrefix   = cfg.hPrefix   || 'hAdAdjust';
   const groupFilter = cfg.groupFilter || null;
-  const completedOnly = !!cfg.completedOnly;
+  const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "ad-adjust");  // 【v256】状態チップ絞り込み中も当月除外
   const months = last3Months(completedOnly);
   // 動的に見出しを更新（月が分かる場合）
   if (months.length >= 1) $('#'+hPrefix+'AdRev0').innerHTML = `実績額<br>${months[0] || '(3ヶ月前)'}`;
@@ -5609,7 +5609,7 @@ function renderProAdjust(cfg) {
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntProAdjustActive';
   const hPrefix   = cfg.hPrefix   || 'hProAdjust';
   const groupFilter = cfg.groupFilter || null;
-  const completedOnly = !!cfg.completedOnly;
+  const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "pro-adjust");  // 【v256】状態チップ絞り込み中も当月除外
   const months = last3Months(completedOnly);
   if (months.length >= 1) $('#'+hPrefix+'Seo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
   if (months.length >= 2) $('#'+hPrefix+'Seo1').innerHTML = `SEO売上<br>${months[1] || '(2ヶ月前)'}`;
@@ -6662,6 +6662,11 @@ function applyStateFilter(filterKey) {
   const def = STATE_FILTERS[filterKey];
   if (!def) return;
   resetAllSorts();
+  // 【v256】状態チップで全体ビューへ絞り込むとき、最新完了月の値で降順にする。
+  //   入札価格関連(ad-adjust)=実績額(adCost2)／PRオプ関連(pro-adjust)=SEO売上(seoRev2)。
+  //   ※ resetAllSorts が ad を 'adRev2'（比較器に無い無効キー）にしていたのを、ここで実績額キーに上書き。
+  if (def.targetView === 'ad-adjust') { adAdjustSortKey = 'adCost2'; adAdjustSortDir = -1; }
+  else if (def.targetView === 'pro-adjust') { proAdjustSortKey = 'seoRev2'; proAdjustSortDir = -1; }
   state.activeStateFilter = { type: filterKey, targetView: def.targetView, label: def.label };
   switchToView(def.targetView);
   updateActiveStateChip();
