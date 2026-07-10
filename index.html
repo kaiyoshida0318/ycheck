@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v253 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v255 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2325,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v253</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v255</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5232,8 +5232,15 @@ function renderGraph() {
 // ==================== Rendering: 広告全体 ====================
 // 【v194】「データが実際に入っている」直近3ヶ月を返す。
 // getImportedDataMonths() は item/ad/overall 由来の月のみ（空の当月・前月を自動追加しない）。
-function last3Months() {
+function last3Months(excludeCurrent) {
   const months = getImportedDataMonths();
+  // 【v254/v255】excludeCurrent=true のとき、当月（まだ途中の月）を除外して完了済みの直近3ヶ月を返す。
+  //   調整ビュー(入札価格調整/PRオプ調整)からのみ true で呼ぶ。全体ビューは従来どおり（当月も含む）。
+  if (excludeCurrent) {
+    const now = new Date();
+    const curYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    return months.filter(m => m < curYM).slice(-3);
+  }
   return months.slice(-3);
 }
 
@@ -5433,7 +5440,8 @@ function renderAdAdjust(cfg) {
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntAdAdjustActive';
   const hPrefix   = cfg.hPrefix   || 'hAdAdjust';
   const groupFilter = cfg.groupFilter || null;
-  const months = last3Months();
+  const completedOnly = !!cfg.completedOnly;
+  const months = last3Months(completedOnly);
   // 動的に見出しを更新（月が分かる場合）
   if (months.length >= 1) $('#'+hPrefix+'AdRev0').innerHTML = `実績額<br>${months[0] || '(3ヶ月前)'}`;
   if (months.length >= 2) $('#'+hPrefix+'AdRev1').innerHTML = `実績額<br>${months[1] || '(2ヶ月前)'}`;
@@ -5580,6 +5588,7 @@ function renderAdTune() {
   ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   renderAdAdjust({
     tableSel: '#tableAdTune',
+    completedOnly: true,  // 【v255】調整ビューのみ当月除外
     searchSel: '#adTuneSearch',
     cntSel: null,
     hPrefix: 'hAdTune',
@@ -5600,7 +5609,8 @@ function renderProAdjust(cfg) {
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntProAdjustActive';
   const hPrefix   = cfg.hPrefix   || 'hProAdjust';
   const groupFilter = cfg.groupFilter || null;
-  const months = last3Months();
+  const completedOnly = !!cfg.completedOnly;
+  const months = last3Months(completedOnly);
   if (months.length >= 1) $('#'+hPrefix+'Seo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
   if (months.length >= 2) $('#'+hPrefix+'Seo1').innerHTML = `SEO売上<br>${months[1] || '(2ヶ月前)'}`;
   if (months.length >= 3) $('#'+hPrefix+'Seo2').innerHTML = `SEO売上<br>${months[2] || '(前月)'}`;
@@ -5726,6 +5736,7 @@ function renderProTune() {
   ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   renderProAdjust({
     tableSel: '#tableProTune',
+    completedOnly: true,  // 【v255】調整ビューのみ当月除外
     searchSel: '#proTuneSearch',
     cntSel: null,
     hPrefix: 'hProTune',
