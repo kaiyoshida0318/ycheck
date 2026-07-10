@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v256 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v257 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2325,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v256</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v257</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6933,11 +6933,22 @@ function buildPriceChangeNote(existingNote, kind, oldVal, newVal) {
 }
 
 function deleteNoteStamps(kind /* 'ad' | 'pro' */) {
+  const label = kind === 'ad' ? '入札価格全体' : 'PRオプ全体';
+  const field = kind === 'ad' ? 'adNote' : 'proNote';
+  // 【v257】削除対象（更新日時スタンプのみのセル）を事前カウントし、確認ダイアログを挟む
+  let target = 0;
+  Object.values(state.productMeta).forEach(meta => {
+    if (meta && isAutoTimestamp(meta[field])) target++;
+  });
+  if (target === 0) {
+    alert(`${label}：削除対象（更新日時のみの対応内容）はありません。`);
+    return;
+  }
+  if (!confirm(`${label}：対応内容が「更新日時のみ」の【${target}件】を空白にします。\n（メモ書きのあるセルはそのまま残します）\n\n本当に削除しますか？`)) return;
   let count = 0;
   Object.keys(state.productMeta).forEach(code => {
     const meta = state.productMeta[code];
     if (!meta) return;
-    const field = kind === 'ad' ? 'adNote' : 'proNote';
     if (isAutoTimestamp(meta[field])) {
       meta[field] = '';
       count++;
