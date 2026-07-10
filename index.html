@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v261 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v264 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -457,22 +457,15 @@ body.chrome-hidden .top-nav-3 { top: 0; }
   background: var(--bg2);
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  padding: 22px 28px;
-  max-width: 880px;   /* 【v261】幅を広げ、2セクションを横並びにして下スクロールを解消 */
+  padding: 22px 30px;
+  max-width: 1060px;   /* 【v264】1列のまま幅を広げ、文章の折返しを減らして下スクロールを解消 */
   width: 100%;
   max-height: 92vh;
   overflow-y: auto;
   border: 1px solid var(--border);
-  /* 【v261】「状態の説明」と「撤退までの流れ」を横2カラムに配置して縦の高さを抑える */
-  display: grid;
-  grid-template-columns: 1.75fr 1fr;
-  gap: 4px 34px;
-  align-items: start;
 }
-.info-panel .info-close { grid-column: 1 / -1; }   /* 絶対配置だがgrid安全のため */
-@media (max-width: 720px) {
-  .info-panel { grid-template-columns: 1fr; }   /* 狭い画面では1カラムに戻す */
-}
+/* 【v264】「状態の説明」は1列。パネル幅を広げて改行を減らし、下スクロールを解消 */
+.info-list li .info-note { margin-left: 6px; }   /* 例外注記をインライン継続（改行させない） */
 /* 【v205】×閉じるボタン */
 .info-close {
   position: absolute;
@@ -2365,7 +2358,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v261</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v264</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2814,7 +2807,7 @@ table.rank-table td.rank-legend-col-row {
         <li><b class="info-tag ok">入札価格○</b>広告の入札価格が最安値の <b>25円</b> かつ、広告順位が <b>1〜4位</b> のもの。</li>
         <li><b class="info-tag ng">入札価格✕</b><b>「入札価格25円かつ広告順位1〜4位」</b> を満たしていないもの。</li>
         <li><b class="info-tag none">入札無し</b>広告を打っていないもの。</li>
-        <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>1〜6位</b> のもの。<br><span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
+        <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>1〜6位</b> のもの。<span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
         <li><b class="info-tag ng">PRオプ×</b><b>「PRオプション7％かつSEO順位1〜6位」</b> を満たしていないもの。</li>
         <li><b class="info-tag warn">撤退検討▲</b>広告の採算が合わないため削除し、PRオプションのみで販売できるかを検証しているもの。</li>
         <li><b class="info-tag ng">撤退■</b>在庫が無くなり次第販売終了予定のもの。</li>
