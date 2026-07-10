@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v258 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v259 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2325,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v258</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v259</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3505,6 +3505,12 @@ async function ghSaveToGitHub(options = {}) {
       ghLog('全データが空のため保存スキップ（誤上書き防止）', 'warn');
       return { skipped: true, reason: 'empty-guard' };
     }
+    // 【v259】rankが空のときはGitHubへ保存しない（rank.json/GitHubの順位を空で上書きして消すのを防ぐ）。
+    //   起動直後の一時的な空状態で保存が走っても順位を消さない。rank.jsonで復元後の保存でGitHubも復旧する。
+    if (Object.keys(dataObj.rank || {}).length === 0 && !allowEmpty) {
+      ghLog('順位データ(rank)が空のため保存スキップ（順位の誤消去を防止）', 'warn');
+      return { skipped: true, reason: 'rank-empty-guard' };
+    }
     ghSetSyncStatus('saving');
     try {
       await ghPutFile(jsonStr);
@@ -3546,7 +3552,7 @@ async function ghLoadFromGitHub() {
     if (data.bid) state.bid = data.bid;
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
-    if (data.rank) state.rank = data.rank;
+    if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) state.rankMeta = data.rankMeta;
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
@@ -3751,7 +3757,7 @@ function loadFromStorage() {
     if (data.bid) state.bid = data.bid;
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
-    if (data.rank) state.rank = data.rank;
+    if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) state.rankMeta = data.rankMeta;
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
