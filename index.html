@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v268 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v269 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2359,7 +2359,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v268</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v269</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5427,6 +5427,13 @@ function markTuneAction(code, kind) {
   const today = tuneTodayStr();
   if (kind === 'ad') state.productMeta[code].adActionAt = today;
   else if (kind === 'pro') state.productMeta[code].proActionAt = today;
+  // 【v269】調整ビューで対応（値変更・状態変更・対応内容更新）した商品が、現在のサブフィルタ
+  //   （修正あり/推移確認/未確認）に該当しなくなったら、凍結メンバーから外して「全体」のみに落とす。
+  //   全体表示中や別ビューでは外さない。実際の再描画は各操作ハンドラ側で行う。
+  const curKind = (state.currentView === 'ad-tune') ? 'ad' : (state.currentView === 'pro-tune') ? 'pro' : null;
+  if (curKind && curKind === kind && tuneFrozenMembers && tuneGroup !== 'all' && getTuneGroup(code, kind) !== tuneGroup) {
+    tuneFrozenMembers.delete(code);
+  }
 }
 
 // 【v249】商品が属する調整サブグループを返す（排他）。該当なし(=全体にのみ出る)は null。
@@ -7298,6 +7305,9 @@ document.addEventListener('change', (e) => {
   // 【v77】件数バッジ・他ビューへの移動は即時反映せず、次のビュー切り替え時に更新
   // 以前: updateStateCounts() と renderAll() を即時実行していたが、
   // 編集中のスクロール位置や操作感を保つため、遅延反映に変更。
+  // 【v269】ただし入札価格調整/PRオプ調整では、状態変更＝対応済みで修正あり等から外れるため即時反映する。
+  if (kind === 'ad' && state.currentView === 'ad-tune') { renderAdTune(); updateTuneBar(); }
+  else if (kind === 'pro' && state.currentView === 'pro-tune') { renderProTune(); updateTuneBar(); }
 });
 
 // ==================== 対応内容（note）編集 ====================
@@ -7376,6 +7386,9 @@ document.addEventListener('blur', (e) => {
   // 【v249】対応内容欄の更新は「対応済み」として日時記録
   markTuneAction(code, (kind === 'ad') ? 'ad' : 'pro');
   saveToStorage();
+  // 【v269】調整ビューでは、対応済みになった商品を即時に「全体」のみへ落とす（修正あり等から外す）
+  if (state.currentView === 'ad-tune') { renderAdTune(); updateTuneBar(); }
+  else if (state.currentView === 'pro-tune') { renderProTune(); updateTuneBar(); }
 }, true);
 
 // ==================== KW 編集（✏ボタンで開始） ====================
