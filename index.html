@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v252 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v253 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2325,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v252</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v253</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4326,6 +4326,7 @@ async function commitUpload() {
 
   saveToStorage();
   log(`💾 ブラウザに保存しました`, 'ok');
+  resetTuneMembers();  // 【v253】「最新値を更新」取り込みは再分類の引き金
   renderAll();
 
   // 【v242】取り込んだ値を確実に残すため、GitHub保存の完了を待ってからモーダルを閉じる。
@@ -5241,6 +5242,27 @@ function last3Months() {
 // ビューに入るたび 'fix'（修正あり）にリセットする。
 let tuneGroup = 'fix';
 
+// 【v253】調整ビューの「表示メンバー凍結」。対応（値変更・状態変更・メモ）で renderAll が走っても、
+//   凍結中は同じ行を表示し続け、その場から動かさない。再分類（凍結の作り直し）の引き金は:
+//   サブフィルタ切替 / ビュー切替・リロード / 順位データ取得(rank.json) / 「最新値を更新」取り込み。
+//   null = 未凍結（次のtune描画時に現在の分類で作り直す）。
+let tuneFrozenMembers = null;
+function resetTuneMembers() { tuneFrozenMembers = null; }
+function ensureTuneMembers(kind) {
+  if (tuneFrozenMembers) return;  // 既に凍結済みなら作り直さない
+  const set = new Set();
+  const codes = new Set(Object.keys(state.master));
+  (state.item || []).forEach(i => codes.add(i.code));
+  (state.ad || []).forEach(a => codes.add(a.code));
+  codes.forEach(code => {
+    if (isRetired(code)) return;
+    if (kind === 'ad' && (state.productMeta[code] || {}).adStatus === '入札無し') return;
+    const inGroup = (tuneGroup === 'all') ? true : (getTuneGroup(code, kind) === tuneGroup);
+    if (inGroup) set.add(code);
+  });
+  tuneFrozenMembers = set;
+}
+
 // 入札状態・PRオプ状態の○/×判定（新旧表記両対応。STATE_FILTERSと同じ基準）。
 // ※丸は ○(U+25CB)。×は 入札=✕(U+2715) / PRオプ=×(U+00D7) と別文字なので注意。
 function adStatusIsCircle(s) { return s === '入札価格○' || s === '広告○'; }
@@ -5555,13 +5577,14 @@ function renderAdAdjust(cfg) {
 
 // 【v239】入札価格調整（tune）: 入札価格全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderAdTune() {
+  ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   renderAdAdjust({
     tableSel: '#tableAdTune',
     searchSel: '#adTuneSearch',
     cntSel: null,
     hPrefix: 'hAdTune',
     emptyMsg: 'このグループに該当する商品はありません',
-    groupFilter: (r) => (tuneGroup === 'all') ? true : (getTuneGroup(r.code, 'ad') === tuneGroup)
+    groupFilter: (r) => tuneFrozenMembers.has(r.code)
   });
 }
 
@@ -5700,13 +5723,14 @@ function renderProAdjust(cfg) {
 
 // 【v239】PRオプ調整（tune）: PRオプ全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderProTune() {
+  ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   renderProAdjust({
     tableSel: '#tableProTune',
     searchSel: '#proTuneSearch',
     cntSel: null,
     hPrefix: 'hProTune',
     emptyMsg: 'このグループに該当する商品はありません',
-    groupFilter: (r) => (tuneGroup === 'all') ? true : (getTuneGroup(r.code, 'pro') === tuneGroup)
+    groupFilter: (r) => tuneFrozenMembers.has(r.code)
   });
 }
 
@@ -5897,6 +5921,7 @@ async function fetchRankJson(options) {
     saveToStorage();
     // 対応月の表が自動生成されるよう、広告順位/SEO順位の月プルダウンを最新月にセット
     applyLatestRankMonth(result.months);
+    resetTuneMembers();  // 【v253】順位データ取得は再分類の引き金
     renderAll();
     updateRankLastUpdatedDisplay();
     if (!silent) {
@@ -6568,6 +6593,7 @@ $$('.nav-tab').forEach(item => {
     state.currentView = view;
     // 【v239】調整ビューに入るたび、絞り込みを「修正あり」に戻す
     if (view === 'ad-tune' || view === 'pro-tune') tuneGroup = 'fix';
+    resetTuneMembers();  // 【v253】ビュー切替は再分類の引き金
     $$('.view').forEach(v => v.classList.remove('active'));
     $('#view-' + view).classList.add('active');
     // 【状態】フィルタも解除
@@ -7039,9 +7065,10 @@ $$('#tableProTune th[data-sort]').forEach(th => {
 // サブフィルタバーの3ボタン: グループを切り替えて現在の調整ビューを再描画
 $$('#tuneFilterBar .tune-chip').forEach(btn => {
   btn.addEventListener('click', () => {
-    tuneGroup = btn.dataset.tune;              // 'fix' | 'watch' | 'unchecked'
-    // 並び順凍結を解除して、選択グループで並べ直す
+    tuneGroup = btn.dataset.tune;              // 'fix' | 'watch' | 'unchecked' | 'all'
+    // 並び順凍結・表示メンバー凍結を解除して、選択グループで作り直す
     adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;
+    resetTuneMembers();
     updateTuneBar();
     if (state.currentView === 'ad-tune') renderAdTune();
     else if (state.currentView === 'pro-tune') renderProTune();
@@ -8865,6 +8892,7 @@ try {
         target.classList.add('active');
         state.currentView = initialView;
         if (initialView === 'ad-tune' || initialView === 'pro-tune') tuneGroup = 'fix';
+        resetTuneMembers();  // 【v253】
         $$('.view').forEach(v => v.classList.remove('active'));
         const viewEl = document.getElementById('view-' + initialView);
         if (viewEl) viewEl.classList.add('active');
