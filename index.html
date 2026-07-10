@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v259 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v260 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1757,7 +1757,7 @@ table.rank-table td.rank-day:nth-child(7n+4) {
 }
 table.rank-table td.rank-day.empty { color: var(--text3); }
 /* 順位セルの状態別背景色（薄い色で状態を直感的に） */
-/* 【v161】新仕様：rank-best=青(4位以内/5-8位以内), rank-good=黄(5-12位/9-16位), rank-bad=赤(13位以下/17位以下) */
+/* 【v161】rank-best=青, rank-good=黄, rank-bad=赤。色は末尾記号(◯/△/✕)で決定。【v260】SEOカテゴリを 1-6◯/7-14△/15+✕ に是正 */
 /* 【v109】2段セルの場合は上段 div にのみ色を付け、下段（入札価格/PRオプ）には波及させない */
 table.rank-table td.rank-day:not(.rank-cell-2line).rank-best  { background: rgba(37,99,235,0.13);  color: var(--blue);   font-weight: 600; }
 table.rank-table td.rank-day:not(.rank-cell-2line).rank-good  { background: rgba(217,119,6,0.13);  color: var(--amber);  font-weight: 600; }
@@ -2300,6 +2300,37 @@ table.rank-table td.rank-legend-col-row {
 .toast.error {
   background: var(--red);
 }
+/* ==================== 【v260】表示条件モーダル ==================== */
+.tune-cond-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; margin-right: 4px;
+  font-size: 0.8rem; font-weight: 700; line-height: 1.2;
+  color: #1d4ed8; background: #e8f0fe;
+  border: 1px solid #c3d6fb; border-radius: 999px; cursor: pointer;
+  white-space: nowrap;
+}
+.tune-cond-btn:hover { background: #d6e4fd; border-color: #9ec0fa; }
+.tune-cond-body { padding: 2px; font-size: 13px; color: var(--text); line-height: 1.7; }
+.tc-sub { font-size: 12.5px; color: var(--text2); margin: 2px 2px 14px; }
+.tc-sub b { color: var(--text); }
+.tc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tc-table th, .tc-table td {
+  text-align: left; padding: 11px 12px; vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+.tc-table thead th { background: var(--bg3); color: var(--text2); font-weight: 600; font-size: 12px; }
+.tc-table tbody tr:last-child td { border-bottom: none; }
+.tc-name { white-space: nowrap; font-weight: 800; }
+.tc-name-ad  { color: #2563eb; }   /* 入札価格調整＝青 */
+.tc-name-pro { color: #16a34a; }   /* PRオプ調整＝緑 */
+.tc-li { display: block; margin-top: 4px; }
+.tc-neg { font-weight: 800; color: #c0392b; }
+.tc-table td small { color: var(--text2); display: block; margin-top: 6px; font-size: 11.5px; }
+.tc-foot {
+  color: var(--text2); font-size: 12px; background: var(--bg3);
+  border: 1px dashed var(--border); border-radius: 8px; padding: 11px 14px; margin-top: 14px; line-height: 1.7;
+}
+.tc-foot b { color: var(--text); }
 </style>
 </head>
 <body>
@@ -2325,7 +2356,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v259</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v260</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2401,6 +2432,7 @@ table.rank-table td.rank-legend-col-row {
 
 <!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
 <div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
+  <button class="tune-cond-btn" id="tuneCondBtn" type="button" title="このビューの表示条件を見る">？条件</button>
   <span class="nav-group-label">絞り込み</span>
   <button class="tune-chip active" data-tune="fix">修正あり<span class="chip-num" id="cntTuneFix"></span></button>
   <button class="tune-chip" data-tune="watch">推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
@@ -2787,6 +2819,17 @@ table.rank-table td.rank-legend-col-row {
         <li><span class="flow-step">それでも利益が出ない場合は撤退認定する</span></li>
       </ol>
     </section>
+  </div>
+</div>
+
+<!-- 【v260】表示条件モーダル（入札価格調整／PRオプ調整の各サブフィルタ条件） -->
+<div class="modal-overlay" id="tuneCondModal">
+  <div class="modal" style="max-width: 760px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="tuneCondTitle">表示条件</h2>
+      <button class="modal-close" id="tuneCondClose" type="button">×</button>
+    </div>
+    <div id="tuneCondBody" class="tune-cond-body"></div>
   </div>
 </div>
 
@@ -5286,7 +5329,7 @@ function proStatusIsCross(s) { return s === 'PRオプ×' || s === 'PRO×'; }
 // 【v240】最新日の順位「カテゴリ（上位/中位/下位）」を返す。
 //   順位は import 時に numericRankToCategory でカテゴリ文字列（例「4位以内◯」）に変換して
 //   state.rank に保存され、生の数値は残らない。よって数値ではなくカテゴリで判定する。
-//   返り値: 'top'（広告=4位以内 / SEO=5-8位以内）/ 'mid' / 'low' / null（圏外・未取得）。
+//   返り値: 'top'（広告=1〜4位 / SEO=1〜6位）/ 'mid' / 'low' / null（圏外・未取得）。【v260】広告=1〜4位・SEO=1〜6位に是正。
 //   全月を新しい順に、各月の日も新しい順に走査し、最初に見つかった値を分類して返す。
 function classifyRankBucket(v, kind) {
   if (v == null || v === '') return null;
@@ -5294,19 +5337,27 @@ function classifyRankBucket(v, kind) {
   const n = Number(v);
   if (typeof v === 'number' || (!isNaN(n) && String(v).trim() !== '' && /^\s*\d+\s*$/.test(String(v)))) {
     if (!isFinite(n) || n <= 0) return null;
-    if (kind === 'ad')  return (n <= 4) ? 'top' : (n <= 12 ? 'mid' : 'low');
-    return (n <= 8) ? 'top' : (n <= 18 ? 'mid' : 'low');   // seo
+    if (kind === 'ad')  return (n <= 4) ? 'top' : (n <= 6 ? 'mid' : 'low');   // 【v260】広告上位=1〜4位
+    return (n <= 6) ? 'top' : (n <= 14 ? 'mid' : 'low');   // seo 【v260】上位=1〜6位
   }
   // カテゴリ文字列: 先頭の範囲テキストで判定（グリフ差異に依存しない）
   const s = String(v);
   if (kind === 'ad') {
-    if (s.indexOf('4位以内') !== -1)    return 'top';
-    if (s.indexOf('5-12位以内') !== -1) return 'mid';
-    if (s.indexOf('13位以下') !== -1)   return 'low';
+    // 【v260】広告上位=1〜4位。旧表記(4位以内◯/5-12位△/13位以下✕)も後方互換で判定継続。
+    if (s.indexOf('1-4位以内') !== -1)  return 'top';
+    if (s.indexOf('5-6位以内') !== -1)  return 'mid';
+    if (s.indexOf('7位以下') !== -1)    return 'low';
+    if (s.indexOf('4位以内') !== -1)    return 'top';   // 旧表記
+    if (s.indexOf('5-12位以内') !== -1) return 'mid';   // 旧表記
+    if (s.indexOf('13位以下') !== -1)   return 'low';   // 旧表記
   } else {
-    if (s.indexOf('5-8位以内') !== -1)  return 'top';
-    if (s.indexOf('9-18位以内') !== -1) return 'mid';
-    if (s.indexOf('19位以下') !== -1)   return 'low';
+    // 【v260】SEO上位=1〜6位。旧表記(5-8位◯/9-18位△/19位以下✕)も後方互換で判定継続。
+    if (s.indexOf('1-6位以内') !== -1)  return 'top';
+    if (s.indexOf('7-14位以内') !== -1) return 'mid';
+    if (s.indexOf('15位以下') !== -1)   return 'low';
+    if (s.indexOf('5-8位以内') !== -1)  return 'top';   // 旧表記（rank.json再取得までの移行期間）
+    if (s.indexOf('9-18位以内') !== -1) return 'mid';   // 旧表記
+    if (s.indexOf('19位以下') !== -1)   return 'low';   // 旧表記
   }
   // 新表記の末尾記号でのフォールバック（◯=上位/△=中位/✕・×=下位）
   const tail = s.replace(/\s+/g, '');
@@ -5336,9 +5387,9 @@ function getLatestRankBucket(code, kind) {
 // 「修正あり」条件（マインドマップ準拠。圏外=最下位扱い＝'top'ではない）。
 //  ad : (入札価格○ かつ 広告が上位でない[4位以内でない/圏外]) または (入札価格✕ かつ 広告が上位[4位以内])
 //       ※ マインドマップ「4位以上/5位以下」は広告カテゴリ境界(4/5)と完全一致。
-//  seo: (PRオプ○ かつ SEOが上位でない[5-8位以内でない/圏外]) または (PRオプ× かつ SEOが上位[5-8位以内])
-//       ※【要注意】保存データはカテゴリ(5-8位◯/9-18位△/19位以下✕)のみで、生数値が無いため
-//         マインドマップの「6位/7位」境界は再現できず、最も近い 8/9 境界(=◯カテゴリ)で判定している。
+//  seo: (PRオプ○ かつ SEOが上位でない[1〜6位でない=7位以下/圏外]) または (PRオプ× かつ SEOが上位[1〜6位])
+//       【v260】上位=1〜6位に是正。rank.jsonの生順位を numericRankToCategory(1-6◯/7-14△/15+✕)で
+//       分類するため、6/7位境界で正しく判定される（旧v259までは誤って8/9境界だった）。
 function isTuneFix(code, kind) {
   const meta = state.productMeta[code] || {};
   if (kind === 'ad') {
@@ -6509,22 +6560,23 @@ function rankStatusClass(v) {
 }
 
 // 【v161】数値順位 → 表示用カテゴリ文字列に変換
-// kind: 'ad' = 広告順位（1-4=◯, 5-12=△, 13+=✕）
-//       'seo' = SEO順位（1-8=◯, 9-18=△, 19+=✕）  【v163】SEO閾値を9-16→9-18、17→19 に変更
+// kind: 'ad' = 広告順位（1-4=◯, 5-6=△, 7+=✕）  【v260】広告上位を1〜4位に是正（旧: 1-4◯/5-12△/13+✕）
+//       'seo' = SEO順位（1-6=◯, 7-14=△, 15+=✕）  【v260】SEO上位を1〜6位に是正（旧: 1-8◯/9-18△/19+✕）
 // 数値以外（null/'-'/空文字/NaN）は null を返す → 表示は空セル/「-」になる
 function numericRankToCategory(rank, kind) {
   if (rank == null || rank === '' || rank === '-') return null;
   const n = Number(rank);
   if (!Number.isFinite(n) || n <= 0) return null;
   if (kind === 'ad') {
-    if (n <= 4)  return '4位以内\n◯';
-    if (n <= 12) return '5-12位以内\n△';
-    return '13位以下\n✕';
+    // 【v260】広告上位=1〜4位（旧: 5-12△/13+✕ → 5-6△/7+✕ に是正）
+    if (n <= 4)  return '1-4位以内\n◯';
+    if (n <= 6)  return '5-6位以内\n△';
+    return '7位以下\n✕';
   } else {
-    // seo
-    if (n <= 8)  return '5-8位以内\n◯';
-    if (n <= 18) return '9-18位以内\n△';
-    return '19位以下\n✕';
+    // seo 【v260】上位=1〜6位に変更（旧: 5-8位◯/9-18位△/19位以下✕ は誤りだったため是正）
+    if (n <= 6)  return '1-6位以内\n◯';
+    if (n <= 14) return '7-14位以内\n△';
+    return '15位以下\n✕';
   }
 }
 
@@ -6757,6 +6809,69 @@ if (infoBtn && infoOverlay) {
   // Escキーで閉じる
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && infoOverlay.classList.contains('show')) infoHide();
+  });
+}
+
+// 【v260】表示条件モーダル：各調整ビューのサブフィルタ（修正あり/推移確認/未確認/全体）の条件を表で表示。
+//   入札価格調整=広告順位で判定（上位=1〜4位）、PRオプ調整=SEO順位で判定（上位=1〜6位）。
+function buildTuneCondHtml(kind) {
+  const isAd = (kind === 'ad');
+  const nameCls = isAd ? 'tc-name-ad' : 'tc-name-pro';           // 入札=青 / PRオプ=緑
+  const rankName = isAd ? '広告順位' : 'SEO順位';
+  const topRange = isAd ? '1〜4位' : '1〜6位';
+  const notTop   = isAd ? '5位以下 or 圏外' : '7位以下 or 圏外';
+  const okName   = isAd ? '入札○' : 'PRオプ○';
+  const ngName   = isAd ? '入札×' : 'PRオプ×';
+  const upName   = isAd ? '広告' : 'SEO';
+  const allText  = isAd
+    ? 'この調整タブの対象商品すべて（入札○・×の全商品。入札無しは除外）。絞り込みなし。'
+    : 'この調整タブの対象商品すべて（PRオプ○・×の全商品）。絞り込みなし。';
+  const sortFoot = isAd
+    ? '表の実績額・広告ROASは当月を除いた完了3ヶ月、最新完了月で降順。'
+    : '表のSEO売上は当月を除いた完了3ヶ月、最新完了月で降順。';
+  // 上位の定義（画像準拠）
+  const sub =
+    '<div class="tc-sub">上位の定義：' + rankName + 'が <b>' + topRange + '</b>（◯）。' +
+    (isAd ? '5位以下' : '7位以下') + '（△×）と圏外（順位なし）は「上位でない」扱い。</div>';
+  const rows =
+    '<tr><td class="tc-name ' + nameCls + '">修正あり</td><td>' +
+      '順位が状態と合っていない商品。' +
+      '<span class="tc-li">・' + okName + ' なのに ' + upName + 'が<span class="tc-neg">上位でない</span>（' + notTop + '）</span>' +
+      '<span class="tc-li">・' + ngName + ' なのに ' + upName + 'が上位（' + topRange + '）</span>' +
+      '<small>※その日に対応（値変更・状態変更・対応内容更新）すると当日だけ外れ、翌日また表示。</small></td></tr>' +
+    '<tr><td class="tc-name ' + nameCls + '">推移確認</td><td>' +
+      '修正ありに該当せず、状態が×で、対応内容に<b>メモ（更新日時以外）</b>が入っている商品。' +
+      '<small>※その月に対応すると外れ、翌月また表示。</small></td></tr>' +
+    '<tr><td class="tc-name ' + nameCls + '">未確認</td><td>' +
+      '修正ありに該当せず、状態が×で、対応内容が<b>空欄 または 更新日時のみ</b>の商品。' +
+      '<small>※その月に対応すると外れ、翌月また表示。</small></td></tr>' +
+    '<tr><td class="tc-name ' + nameCls + '">全体</td><td>' + allText + '</td></tr>';
+  const foot =
+    '<div class="tc-foot">共通：状態が○で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
+    sortFoot + '</div>';
+  return sub +
+    '<table class="tc-table"><thead><tr><th style="width:104px">ボタン</th><th>表示される商品</th></tr></thead><tbody>' +
+    rows + '</tbody></table>' + foot;
+}
+const tuneCondBtn = $('#tuneCondBtn');
+const tuneCondModal = $('#tuneCondModal');
+const tuneCondClose = $('#tuneCondClose');
+const tuneCondTitle = $('#tuneCondTitle');
+const tuneCondBody = $('#tuneCondBody');
+function tuneCondShow() {
+  if (!tuneCondModal) return;
+  const kind = (state.currentView === 'ad-tune') ? 'ad' : 'seo';
+  if (tuneCondTitle) tuneCondTitle.textContent = (kind === 'ad' ? '入札価格調整' : 'PRオプ調整') + ' — 各ボタンの表示条件';
+  if (tuneCondBody) tuneCondBody.innerHTML = buildTuneCondHtml(kind);
+  tuneCondModal.classList.add('open');
+}
+function tuneCondHide() { if (tuneCondModal) tuneCondModal.classList.remove('open'); }
+if (tuneCondBtn && tuneCondModal) {
+  tuneCondBtn.addEventListener('click', tuneCondShow);
+  if (tuneCondClose) tuneCondClose.addEventListener('click', tuneCondHide);
+  tuneCondModal.addEventListener('click', (e) => { if (e.target === tuneCondModal) tuneCondHide(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && tuneCondModal.classList.contains('open')) tuneCondHide();
   });
 }
 
@@ -7656,7 +7771,7 @@ document.addEventListener('click', (e) => {
 });
 
 // 【v129】上段セル（順位）のクリック編集 - プルダウン方式
-// 【v161】新表記に対応：広告は[―/4位以内◯/5-12位以内△/13位以下✕]、SEOは[―/5-8位以内◯/9-16位以内△/17位以下✕]
+// 【v161】新表記に対応：広告は[―/1-4位以内◯/5-6位以内△/7位以下✕]、SEOは[―/1-6位以内◯/7-14位以内△/15位以下✕]【v260】広告・SEO境界是正
 function startRankTopEditCell(cell) {
   if (cell.querySelector('select')) return;
   const code = cell.dataset.code;
@@ -7675,16 +7790,21 @@ function startRankTopEditCell(cell) {
   const options = isAd
     ? [
         { v: '', label: '—' },
-        { v: '4位以内\n◯',   label: '4位以内 ◯' },
-        { v: '5-12位以内\n△', label: '5-12位以内 △' },
-        { v: '13位以下\n✕',   label: '13位以下 ✕' }
+        { v: '1-4位以内\n◯',  label: '1-4位以内 ◯' },
+        { v: '5-6位以内\n△',  label: '5-6位以内 △' },
+        { v: '7位以下\n✕',    label: '7位以下 ✕' }
       ]
     : [
         { v: '', label: '—' },
-        { v: '5-8位以内\n◯',  label: '5-8位以内 ◯' },
-        { v: '9-18位以内\n△', label: '9-18位以内 △' },
-        { v: '19位以下\n✕',   label: '19位以下 ✕' }
+        { v: '1-6位以内\n◯',  label: '1-6位以内 ◯' },
+        { v: '7-14位以内\n△', label: '7-14位以内 △' },
+        { v: '15位以下\n✕',   label: '15位以下 ✕' }
       ];
+  // 【v260】旧表記の保存値が来た場合、プルダウンに選択肢が無いと「—」に見えてしまうため、
+  //   現在値が新表記の選択肢に無ければ先頭(—の後)に暫定選択肢として補う（表示・選択のズレ防止）。
+  if (currentVal && !options.some(o => o.v === currentVal)) {
+    options.splice(1, 0, { v: currentVal, label: currentVal.replace('\n', ' ') + '（旧）' });
+  }
   options.forEach(opt => {
     const o = document.createElement('option');
     o.value = opt.v;
