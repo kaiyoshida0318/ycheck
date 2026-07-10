@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v264 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v265 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2305,7 +2305,8 @@ table.rank-table td.rank-legend-col-row {
 /* ==================== 【v260】表示条件モーダル ==================== */
 .tune-cond-btn {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 4px 12px; margin-right: 4px;
+  padding: 4px 12px;
+  margin-left: 273px;   /* 【v265】説明用ボタン。4つのフィルタチップから離し、状態行のPRオプ×の真下あたりに配置 */
   font-size: 0.8rem; font-weight: 700; line-height: 1.2;
   color: #1d4ed8; background: #e8f0fe;
   border: 1px solid #c3d6fb; border-radius: 999px; cursor: pointer;
@@ -2358,7 +2359,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v264</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v265</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2434,12 +2435,11 @@ table.rank-table td.rank-legend-col-row {
 
 <!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
 <div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
-  <button class="tune-cond-btn" id="tuneCondBtn" type="button" title="このビューの表示条件を見る">？条件</button>
-  <span class="nav-group-label">絞り込み</span>
   <button class="tune-chip active" data-tune="fix">修正あり<span class="chip-num" id="cntTuneFix"></span></button>
   <button class="tune-chip" data-tune="watch">推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
   <button class="tune-chip" data-tune="unchecked">未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
   <button class="tune-chip" data-tune="all">全体<span class="chip-num" id="cntTuneAll"></span></button>
+  <button class="tune-cond-btn" id="tuneCondBtn" type="button" title="各ボタンに表示される商品の条件を見る">❓ 各ボタンの条件</button>
 </div>
 
 <!-- App Layout -->
