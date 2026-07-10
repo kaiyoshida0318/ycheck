@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v250 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v252 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2325,7 +2325,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v250</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v252</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5353,9 +5353,13 @@ function getTuneGroup(code, kind) {
   const actionAt = (kind === 'ad') ? meta.adActionAt : meta.proActionAt;
   const F = isTuneFix(code, kind);
   if (F) {
-    // 修正あり: 順位条件のみで該当。今日対応したものは外す（翌日には戻る）。
+    // 修正あり: 順位条件に該当。今日対応したものは外す（翌日には戻る）。
     return tuneIsToday(actionAt) ? null : 'fix';
   }
+  // 【v252】非該当（修正あり条件に該当しない）で、状態が○のもの（＝○かつ順位も上位＝直す必要なし）は
+  //   推移確認・未確認には出さず「全体」のみに表示する。
+  const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
+  if (isCircle) return null;
   // 非F: 推移確認/未確認。今月対応したものは外す（月替わりで戻る）。
   if (tuneIsThisMonth(actionAt)) return null;
   if (noteHasChangeContent(note)) return 'watch';  // メモあり=推移確認
