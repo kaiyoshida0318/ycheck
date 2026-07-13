@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v270 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v272 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2359,7 +2359,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v270</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v272</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3329,6 +3329,7 @@ let _ghSaveDebounceTimer = null;
 let _ghSaveInFlight = null;                // 並列保存防止 mutex
 let _ghLastKnownSha = null;                // 最新取得時のSHA
 let _ghDirty = false;                      // 未保存フラグ
+let _ghStaleWarnShown = false;             // 【v272】古い上書きガードの警告を1セッション1回に抑制
 
 // ショップ別のGitHub保存パス（設計ガイド: data/{shopId}/...）
 function ghFilePath() {
@@ -3556,6 +3557,42 @@ async function ghSaveToGitHub(options = {}) {
       ghLog('順位データ(rank)が空のため保存スキップ（順位の誤消去を防止）', 'warn');
       return { skipped: true, reason: 'rank-empty-guard' };
     }
+    // 【v272】古いデータでの上書き防止ガード。
+    //   別タブ/端末が「古い全データ」でGitHubを丸ごと上書きする事故（月・対応内容の消失）を防ぐ。
+    //   GitHub側の現行データと比較し、(a) GitHubにある月が消える／(b) item件数が現行の8割未満 なら
+    //   「古いデータでの上書き疑い」として保存を中止する。月が増える/同数の正常な保存は通す。
+    //   ネットワーク等で比較できない時は従来どおり保存（保存自体は止めない）。options.force で明示的にバイパス可。
+    if (!allowEmpty && !options.force) {
+      try {
+        const _remoteRes = await ghGetFile();  // _ghLastKnownSha も更新 → 後続PUTのSHA取得を兼ねる
+        if (_remoteRes && _remoteRes.content) {
+          const _remote = JSON.parse(_remoteRes.content);
+          const _monthsOf = (o) => {
+            const s = new Set();
+            (Array.isArray(o.item) ? o.item : []).forEach(r => { if (r && r.month) s.add(String(r.month)); });
+            (Array.isArray(o.ad) ? o.ad : []).forEach(r => { if (r && r.month) s.add(String(r.month)); });
+            return s;
+          };
+          const _rMonths = _monthsOf(_remote), _lMonths = _monthsOf(dataObj);
+          const _dropped = [..._rMonths].filter(m => !_lMonths.has(m));
+          const _rItems = Array.isArray(_remote.item) ? _remote.item.length : 0;
+          const _lItems = Array.isArray(dataObj.item) ? dataObj.item.length : 0;
+          const _bigShrink = _rItems >= 50 && _lItems < _rItems * 0.8;
+          if (_dropped.length > 0 || _bigShrink) {
+            const _detail = _dropped.length
+              ? `GitHubにある月が消えます（${_dropped.sort().join(', ')}）`
+              : `件数が大きく減っています（GitHub ${_rItems}件 → この画面 ${_lItems}件）`;
+            _ghDirty = true;
+            ghSetSyncStatus('error', '保存中止(古い可能性)');
+            ghLog('⚠ 古いデータの可能性のため保存を中止しました: ' + _detail, 'warn');
+            console.warn('[Ycheck] 上書き防止ガード発動:', _detail, '| dropped=', _dropped, '| rItems=', _rItems, 'lItems=', _lItems);
+            return { skipped: true, reason: 'stale-overwrite-guard', detail: _detail, dropped: _dropped, rItems: _rItems, lItems: _lItems };
+          }
+        }
+      } catch (e) {
+        console.warn('[Ycheck] 上書き前の比較に失敗、通常保存を続行:', e && e.message);
+      }
+    }
     ghSetSyncStatus('saving');
     try {
       await ghPutFile(jsonStr);
@@ -3614,8 +3651,18 @@ async function ghLoadFromGitHub() {
     migrateProStatusToStatus();
     migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
     migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
-    // localStorage にも即書き
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: new Date().toISOString() }));
+    // localStorage にも即書き（【v272】容量オーバーでも読み込みが失敗しないよう フル→スリム→握りつぶし）
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: new Date().toISOString() }));
+    } catch (eLsFull) {
+      try {
+        if (typeof setLsSlimMode === 'function') setLsSlimMode(true);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, rank: {}, _rankOmitted: true, savedAt: new Date().toISOString() }));
+        console.warn('[Ycheck] GitHub読み込み: 容量オーバーのためrankを除いてローカル保存（rankはrank.json/GitHubから復元）:', eLsFull && eLsFull.message);
+      } catch (eLsSlim) {
+        console.warn('[Ycheck] GitHub読み込み: ローカル保存は容量オーバーでスキップ（GitHubを正として継続）:', eLsSlim && eLsSlim.message);
+      }
+    }
     _ghDirty = false;
     ghSetSyncStatus('saved');
     ghLog(`取得成功: ${(content.length / 1024).toFixed(1)} KB`);
@@ -3747,8 +3794,22 @@ function initGitHubSettings() {
     if (!ghIsEnabled()) { alert('先にPATを保存してください'); return; }
     try {
       const result = await ghSaveToGitHub({ allowEmpty: false });
-      if (result.skipped) alert('保存スキップ: ' + result.reason);
-      else alert('GitHub保存が完了しました');
+      if (result.skipped && result.reason === 'stale-overwrite-guard') {
+        // 【v272】古い上書きガードで止まった → ユーザーが本当に上書きしたいなら確認して強制保存
+        const ok = confirm('⚠ このPC/タブのデータの方が、GitHubより古い可能性があります。\n\n' +
+          (result.detail || '') + '\n\n' +
+          'このまま上書きすると、GitHub側の新しいデータが失われるおそれがあります。\n' +
+          '（最新でないなら「⬇ GitHubから再取得」を先に実行してください。）\n\n' +
+          '本当にこの画面の内容でGitHubを上書きしますか？');
+        if (!ok) { alert('保存を中止しました。'); return; }
+        const forced = await ghSaveToGitHub({ allowEmpty: false, force: true });
+        if (forced.success) alert('強制保存しました（GitHubをこの画面の内容で上書き）。');
+        else alert('保存スキップ: ' + (forced.reason || ''));
+      } else if (result.skipped) {
+        alert('保存スキップ: ' + result.reason);
+      } else {
+        alert('GitHub保存が完了しました');
+      }
     } catch (err) {
       alert('保存エラー: ' + err.message);
     }
@@ -4750,18 +4811,31 @@ function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ?
 
 // 【v125】代表コード絞り込み
 // repFilter = null     → 全件そのまま
-// repFilter = '*'      → 代表コードを持つ商品（グループに所属する商品）のみ
-// repFilter = 'xxx'    → 代表コード == 'xxx' のグループのみ
+// repFilter = '*'      → 送り込みがある商品（子＝代表コードを持つ商品 ＋ 親＝他商品から代表コードとして参照される商品）
+// repFilter = 'xxx'    → 代表コード == 'xxx' のグループ（子）＋ その親自身（code == 'xxx'）
+// 【v271】送り込み元（親）は自身の repCode が空でも、子から参照されるため対象に含める。
+//   以前は rep.length>0 のみ判定で親が漏れていた。
+function getReferencedRepCodes() {
+  // どこかの商品の repCode として参照されているコード集合（＝送り込み元＝親）
+  const s = new Set();
+  const pm = state.productMeta || {};
+  for (const c in pm) {
+    const rep = ((pm[c] || {}).repCode || '').trim();
+    if (rep) s.add(rep);
+  }
+  return s;
+}
 function applyRepFilter(list) {
   const f = state.repFilter;
   if (!f) return list;
+  const referenced = getReferencedRepCodes();
   return list.filter(item => {
     const code = item && item.code;
     if (!code) return false;
     const meta = state.productMeta[code] || {};
     const rep = (meta.repCode || '').trim();
-    if (f === '*') return rep.length > 0;
-    return rep === f;
+    if (f === '*') return rep.length > 0 || referenced.has(code);  // 子 or 親（送り込み元）
+    return rep === f || code === f;                                // そのグループの子 or 親自身
   });
 }
 
@@ -9106,6 +9180,17 @@ try {
       ghSaveToGitHub({ allowEmpty: false }).then(result => {
         if (result && result.success) {
           console.log(`[${curShop.id}] 未保存変更をGitHubへ反映しました（警告不要）`);
+        } else if (result && result.reason === 'stale-overwrite-guard') {
+          // 【v272】このタブ/端末が古い可能性 → GitHubの新しいデータを守り、上書きを中止した。
+          //   ユーザーに気づいてもらう（1回だけ）。「GitHubから再取得」を促す。
+          console.warn(`[${curShop.id}] 起動時保存を中止（古い上書き防止）: ${result.detail || ''}`);
+          if (!_ghStaleWarnShown) {
+            _ghStaleWarnShown = true;
+            alert('⚠ このタブ/端末のデータは、GitHub上の最新データより古い可能性があります。\n\n' +
+              (result.detail || '') + '\n\n' +
+              'データ保護のため、GitHubへの上書きを中止しました（GitHub側の新しいデータは無事です）。\n\n' +
+              'この画面を最新にするには、GitHub設定の「⬇ GitHubから再取得」を実行してください。');
+          }
         } else if (result && result.skipped) {
           // 空ガード等でスキップ：ローカルは保持されているので静かに継続
           console.warn(`[${curShop.id}] 起動時保存スキップ: ${result.reason || ''}`);
