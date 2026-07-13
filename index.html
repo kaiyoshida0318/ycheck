@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v269 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v270 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2359,7 +2359,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v269</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v270</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2698,6 +2698,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
@@ -2708,7 +2709,6 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-ad" data-sort="roas0" id="hAdTuneRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="roas1" id="hAdTuneRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="roas2" id="hAdTuneRoas2">広告ROAS<br>(前月)</th>
-              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -2734,6 +2734,7 @@ table.rank-table td.rank-legend-col-row {
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="name">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
@@ -2741,7 +2742,6 @@ table.rank-table td.rank-legend-col-row {
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProTuneSeo2">SEO売上<br>(前月)</th>
-              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -5506,6 +5506,7 @@ function renderAdAdjust(cfg) {
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntAdAdjustActive';
   const hPrefix   = cfg.hPrefix   || 'hAdAdjust';
   const groupFilter = cfg.groupFilter || null;
+  const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
   const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "ad-adjust");  // 【v256】状態チップ絞り込み中も当月除外
   const months = last3Months(completedOnly);
   // 動的に見出しを更新（月が分かる場合）
@@ -5619,11 +5620,14 @@ function renderAdAdjust(cfg) {
     const tr = document.createElement('tr');
     const _pcCls = rowParentChildClass(r.code, _pcSetsAdAdj);
     if (_pcCls) tr.className = _pcCls;
+    // 【v270】調整ビュー(statusFirst)は「ステータス」列を入札状態の左に置く。全体ビューは従来どおり末尾。
+    const _tdStatus = `<td class="status-col">${statusSelectHtml(r.code, 'status')}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
+      ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
@@ -5634,7 +5638,7 @@ function renderAdAdjust(cfg) {
       <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
       <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
       <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
+      ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
   });
@@ -5659,6 +5663,7 @@ function renderAdTune() {
     cntSel: null,
     hPrefix: 'hAdTune',
     emptyMsg: 'このグループに該当する商品はありません',
+    statusFirst: true,   // 【v270】ステータス列を入札状態の左へ
     groupFilter: (r) => tuneFrozenMembers.has(r.code)
   });
 }
@@ -5675,6 +5680,7 @@ function renderProAdjust(cfg) {
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntProAdjustActive';
   const hPrefix   = cfg.hPrefix   || 'hProAdjust';
   const groupFilter = cfg.groupFilter || null;
+  const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
   const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "pro-adjust");  // 【v256】状態チップ絞り込み中も当月除外
   const months = last3Months(completedOnly);
   if (months.length >= 1) $('#'+hPrefix+'Seo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
@@ -5770,11 +5776,14 @@ function renderProAdjust(cfg) {
     const tr = document.createElement('tr');
     const _pcCls = rowParentChildClass(r.code, _pcSetsProAdj);
     if (_pcCls) tr.className = _pcCls;
+    // 【v270】調整ビュー(statusFirst)は「ステータス」列を入札状態の左に置く。全体ビューは従来どおり末尾。
+    const _tdStatus = `<td class="status-col">${statusSelectHtml(r.code, 'status')}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
+      ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
@@ -5782,7 +5791,7 @@ function renderProAdjust(cfg) {
       <td class="num col-sales">${fmt(r.seoRevs[0])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[1])}</td>
       <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
+      ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
   });
@@ -5807,6 +5816,7 @@ function renderProTune() {
     cntSel: null,
     hPrefix: 'hProTune',
     emptyMsg: 'このグループに該当する商品はありません',
+    statusFirst: true,   // 【v270】ステータス列を入札状態の左へ
     groupFilter: (r) => tuneFrozenMembers.has(r.code)
   });
 }
