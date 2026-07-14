@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v285 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v286 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2455,7 +2455,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v285</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v286</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3682,8 +3682,29 @@ function mergeProductMetaForSave(localPM, remotePM) {
   });
   return out;
 }
+// 【v286】入札価格(bid)/PRオプ料率(proRate) のマップも、同キーの productMeta の新しさ(recency)でマージ。
+//   ・bid は code、proRate は 小文字code をキーに持ち、値変更時に同キーの productMeta._ts が更新される
+//     （markTuneAction）ため、その recency を「そのキーの入札価格/料率の新しさ」として使える。
+//   ・削除(キー消し)も尊重: localにキーが無くても、remoteが新しくなければ復活させない（＝新しい削除を守る）。
+function mergeMapByPmRecency(localMap, remoteMap, localPM, remotePM) {
+  localMap = localMap || {}; remoteMap = remoteMap || {};
+  localPM = localPM || {}; remotePM = remotePM || {};
+  const out = {};
+  Object.keys(localMap).forEach(k => { out[k] = localMap[k]; });
+  Object.keys(remoteMap).forEach(k => {
+    const lr = pmEntryRecency(localPM[k]);
+    const rr = pmEntryRecency(remotePM[k]);
+    if (!(k in localMap)) {
+      // localに無い（未編集 or 削除済み）。remoteが新しい時だけ採用。古いなら local(＝削除)を尊重。
+      if (rr > lr) out[k] = remoteMap[k];
+    } else {
+      if (rr > lr) out[k] = remoteMap[k];  // remoteが新しければ上書き。同点/localが新しければ local維持。
+    }
+  });
+  return out;
+}
 
-// GitHubへの保存（mutex + 空データ誤上書き防止 + 【v285】productMetaマージ）
+// GitHubへの保存（mutex + 空データ誤上書き防止 + 【v285/v286】productMeta/入札価格/料率マージ）
 async function ghSaveToGitHub(options = {}) {
   const allowEmpty = options.allowEmpty === true;
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
@@ -3744,15 +3765,21 @@ async function ghSaveToGitHub(options = {}) {
             console.warn('[Ycheck] 上書き防止ガード発動:', _detail, '| dropped=', _dropped, '| rItems=', _rItems, 'lItems=', _lItems);
             return { skipped: true, reason: 'stale-overwrite-guard', detail: _detail, dropped: _dropped, rItems: _rItems, lItems: _lItems };
           }
-          // 【v285】productMetaを商品単位でマージ（新しい対応記録/メモ/状態を古いセッションが巻き戻さない）。
-          //   remoteに、この画面より新しく編集された商品があれば、その商品はremote側を採用してPUTに含める。
+          // 【v285/v286】productMeta・入札価格(bid)・PRオプ料率(proRate)を商品単位でマージ。
+          //   remoteに、この画面より新しく編集された商品があれば、その商品はremote側を採用してPUTに含める
+          //   （古いセッションが新しい対応記録/メモ/状態/入札価格/料率を巻き戻さない）。
           try {
-            const _beforeN = Object.keys(dataObj.productMeta || {}).length;
-            dataObj.productMeta = mergeProductMetaForSave(dataObj.productMeta, _remote.productMeta);
+            const _localPM = dataObj.productMeta || {};
+            const _remotePM = _remote.productMeta || {};
+            const _beforeN = Object.keys(_localPM).length;
+            dataObj.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
+            // 【v286】bid / proRate も同じ recency（同キーのproductMeta._ts等）でマージ
+            dataObj.bid     = mergeMapByPmRecency(dataObj.bid,     _remote.bid,     _localPM, _remotePM);
+            dataObj.proRate = mergeMapByPmRecency(dataObj.proRate, _remote.proRate, _localPM, _remotePM);
             outStr = JSON.stringify(dataObj);
             const _afterN = Object.keys(dataObj.productMeta || {}).length;
             if (_afterN !== _beforeN) console.log('[Ycheck] productMetaマージ: 商品数', _beforeN, '→', _afterN);
-          } catch (e2) { console.warn('[Ycheck] productMetaマージ失敗、ローカルのまま保存:', e2 && e2.message); }
+          } catch (e2) { console.warn('[Ycheck] マージ失敗、ローカルのまま保存:', e2 && e2.message); }
         }
       } catch (e) {
         console.warn('[Ycheck] 上書き前の比較に失敗、通常保存を続行:', e && e.message);
