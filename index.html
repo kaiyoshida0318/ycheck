@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v272 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v273 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2313,27 +2313,53 @@ table.rank-table td.rank-legend-col-row {
   white-space: nowrap;
 }
 .tune-cond-btn:hover { background: #d6e4fd; border-color: #9ec0fa; }
-.tune-cond-body { padding: 2px; font-size: 13px; color: var(--text); line-height: 1.7; }
-.tc-sub { font-size: 12.5px; color: var(--text2); margin: 2px 2px 14px; }
-.tc-sub b { color: var(--text); }
-.tc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.tc-table th, .tc-table td {
-  text-align: left; padding: 11px 12px; vertical-align: top;
-  border-bottom: 1px solid var(--border);
+/* 【v273】条件モーダルを大きく・カラフルに（視認性向上） */
+.tune-cond-body { padding: 2px; font-size: 14.5px; color: var(--text); line-height: 1.8; }
+.tc-sub {
+  font-size: 14.5px; color: var(--text); margin: 2px 0 16px; line-height: 1.7;
+  background: #eef4ff; border: 1px solid #cdddfb; border-left: 5px solid #2563eb;
+  border-radius: 8px; padding: 12px 15px;
 }
-.tc-table thead th { background: var(--bg3); color: var(--text2); font-weight: 600; font-size: 12px; }
-.tc-table tbody tr:last-child td { border-bottom: none; }
-.tc-name { white-space: nowrap; font-weight: 800; }
-.tc-name-ad  { color: #2563eb; }   /* 入札価格調整＝青 */
-.tc-name-pro { color: #16a34a; }   /* PRオプ調整＝緑 */
-.tc-li { display: block; margin-top: 4px; }
-.tc-neg { font-weight: 800; color: #c0392b; }
-.tc-table td small { color: var(--text2); display: block; margin-top: 6px; font-size: 11.5px; }
+.tc-sub b { color: #1d4ed8; }
+.tc-hi { background: #fff2c2; padding: 1px 7px; border-radius: 5px; font-weight: 800; color: #7a5b00; white-space: nowrap; }
+.tc-table { width: 100%; border-collapse: separate; border-spacing: 0 9px; font-size: 14.5px; }
+.tc-table thead th { text-align: left; padding: 2px 12px; color: var(--text2); font-weight: 700; font-size: 12.5px; }
+.tc-table td {
+  text-align: left; padding: 13px 14px; vertical-align: top; background: var(--bg2);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.tc-table td:first-child { border-left: 6px solid var(--border); border-radius: 9px 0 0 9px; white-space: nowrap; width: 118px; }
+.tc-table td:last-child  { border-right: 1px solid var(--border); border-radius: 0 9px 9px 0; }
+.tc-row-fix   td:first-child { border-left-color: #dc2626; background: #fdf4f4; }
+.tc-row-watch td:first-child { border-left-color: #d97706; background: #fdf9f0; }
+.tc-row-unch  td:first-child { border-left-color: #2563eb; background: #f3f7ff; }
+.tc-row-all   td:first-child { border-left-color: #16a34a; background: #f2fbf5; }
+.tc-badge { display: inline-block; font-size: 14px; font-weight: 800; padding: 5px 14px; border-radius: 999px; }
+.tc-b-fix   { background: #fce3e3; color: #c0392b; border: 1px solid #f0b2b2; }
+.tc-b-watch { background: #fbeecd; color: #a86407; border: 1px solid #eecb8c; }
+.tc-b-unch  { background: #e3edfe; color: #1d4ed8; border: 1px solid #b6cffb; }
+.tc-b-all   { background: #e0f5e8; color: #12813f; border: 1px solid #aadfbe; }
+.tc-li { display: block; margin-top: 7px; }
+.tc-num { display: inline-block; font-weight: 800; color: #fff; background: #64748b; border-radius: 50%;
+  width: 20px; height: 20px; line-height: 20px; text-align: center; font-size: 12.5px; margin-right: 7px; }
+.tc-ok  { color: #12813f; font-weight: 800; }
+.tc-ng  { color: #c0392b; font-weight: 800; }
+.tc-neg { color: #c0392b; font-weight: 800; }
+.tc-table td small { color: var(--text2); display: block; margin-top: 9px; font-size: 12.5px; line-height: 1.6; }
 .tc-foot {
-  color: var(--text2); font-size: 12px; background: var(--bg3);
-  border: 1px dashed var(--border); border-radius: 8px; padding: 11px 14px; margin-top: 14px; line-height: 1.7;
+  color: var(--text2); font-size: 13px; background: var(--bg3);
+  border: 1px dashed var(--border); border-radius: 8px; padding: 12px 15px; margin-top: 10px; line-height: 1.75;
 }
 .tc-foot b { color: var(--text); }
+/* 【v273】必要ページ一括オープン ボタン */
+.tune-openpages-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 14px; margin-left: 8px;
+  font-size: 0.8rem; font-weight: 700; line-height: 1.2;
+  color: #fff; background: #2563eb; border: 1px solid #1d4ed8;
+  border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+.tune-openpages-btn:hover { background: #1d4ed8; }
 </style>
 </head>
 <body>
@@ -2359,7 +2385,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v272</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v273</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2440,6 +2466,7 @@ table.rank-table td.rank-legend-col-row {
   <button class="tune-chip" data-tune="unchecked">未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
   <button class="tune-chip" data-tune="all">全体<span class="chip-num" id="cntTuneAll"></span></button>
   <button class="tune-cond-btn" id="tuneCondBtn" type="button" title="各ボタンに表示される商品の条件を見る">❓ 各ボタンの条件</button>
+  <button class="tune-openpages-btn" id="tuneOpenPagesBtn" type="button" title="このビューで必要なページを新しいタブで一括オープン">🗂 必要ページ一括オープン</button>
 </div>
 
 <!-- App Layout -->
@@ -6909,7 +6936,6 @@ if (infoBtn && infoOverlay) {
 //   入札価格調整=広告順位で判定（上位=1〜4位）、PRオプ調整=SEO順位で判定（上位=1〜6位）。
 function buildTuneCondHtml(kind) {
   const isAd = (kind === 'ad');
-  const nameCls = isAd ? 'tc-name-ad' : 'tc-name-pro';           // 入札=青 / PRオプ=緑
   const rankName = isAd ? '広告順位' : 'SEO順位';
   const topRange = isAd ? '1〜4位' : '1〜6位';
   const notTop   = isAd ? '5位以下 or 圏外' : '7位以下 or 圏外';
@@ -6917,33 +6943,32 @@ function buildTuneCondHtml(kind) {
   const ngName   = isAd ? '入札×' : 'PRオプ×';
   const upName   = isAd ? '広告' : 'SEO';
   const allText  = isAd
-    ? 'この調整タブの対象商品すべて（入札○・×の全商品。入札無しは除外）。絞り込みなし。'
-    : 'この調整タブの対象商品すべて（PRオプ○・×の全商品）。絞り込みなし。';
+    ? 'この調整タブの対象商品<b>すべて</b>（入札○・×の全商品。入札無しは除外）。絞り込みなし。'
+    : 'この調整タブの対象商品<b>すべて</b>（PRオプ○・×の全商品）。絞り込みなし。';
   const sortFoot = isAd
     ? '表の実績額・広告ROASは当月を除いた完了3ヶ月、最新完了月で降順。'
     : '表のSEO売上は当月を除いた完了3ヶ月、最新完了月で降順。';
-  // 上位の定義（画像準拠）
   const sub =
-    '<div class="tc-sub">上位の定義：' + rankName + 'が <b>' + topRange + '</b>（◯）。' +
-    (isAd ? '5位以下' : '7位以下') + '（△×）と圏外（順位なし）は「上位でない」扱い。</div>';
+    '<div class="tc-sub">上位の定義：' + rankName + 'が <span class="tc-hi">' + topRange + '</span>（◯）。' +
+    '<span class="tc-hi">' + (isAd ? '5位以下' : '7位以下') + '</span>（△×）と圏外（順位なし）は「上位でない」扱い。</div>';
   const rows =
-    '<tr><td class="tc-name ' + nameCls + '">修正あり</td><td>' +
-      '順位が状態と合っていない商品。' +
-      '<span class="tc-li">・' + okName + ' なのに ' + upName + 'が<span class="tc-neg">上位でない</span>（' + notTop + '）</span>' +
-      '<span class="tc-li">・' + ngName + ' なのに ' + upName + 'が上位（' + topRange + '）</span>' +
+    '<tr class="tc-row-fix"><td><span class="tc-badge tc-b-fix">修正あり</span></td><td>' +
+      '順位が状態と<b>合っていない</b>商品。' +
+      '<span class="tc-li"><span class="tc-num">1</span><span class="tc-ok">' + okName + '</span> なのに ' + upName + 'が<span class="tc-neg">上位でない</span>（<span class="tc-hi">' + notTop + '</span>）</span>' +
+      '<span class="tc-li"><span class="tc-num">2</span><span class="tc-ng">' + ngName + '</span> なのに ' + upName + 'が<b>上位</b>（<span class="tc-hi">' + topRange + '</span>）</span>' +
       '<small>※その日に対応（値変更・状態変更・対応内容更新）すると当日だけ外れ、翌日また表示。</small></td></tr>' +
-    '<tr><td class="tc-name ' + nameCls + '">推移確認</td><td>' +
-      '修正ありに該当せず、状態が×で、対応内容に<b>メモ（更新日時以外）</b>が入っている商品。' +
+    '<tr class="tc-row-watch"><td><span class="tc-badge tc-b-watch">推移確認</span></td><td>' +
+      '修正ありに該当せず、状態が<span class="tc-ng">×</span>で、対応内容に<b>メモ（更新日時以外）</b>が入っている商品。' +
       '<small>※その月に対応すると外れ、翌月また表示。</small></td></tr>' +
-    '<tr><td class="tc-name ' + nameCls + '">未確認</td><td>' +
-      '修正ありに該当せず、状態が×で、対応内容が<b>空欄 または 更新日時のみ</b>の商品。' +
+    '<tr class="tc-row-unch"><td><span class="tc-badge tc-b-unch">未確認</span></td><td>' +
+      '修正ありに該当せず、状態が<span class="tc-ng">×</span>で、対応内容が<b>空欄 または 更新日時のみ</b>の商品。' +
       '<small>※その月に対応すると外れ、翌月また表示。</small></td></tr>' +
-    '<tr><td class="tc-name ' + nameCls + '">全体</td><td>' + allText + '</td></tr>';
+    '<tr class="tc-row-all"><td><span class="tc-badge tc-b-all">全体</span></td><td>' + allText + '</td></tr>';
   const foot =
-    '<div class="tc-foot">共通：状態が○で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
+    '<div class="tc-foot">共通：状態が<span class="tc-ok">○</span>で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
     sortFoot + '</div>';
   return sub +
-    '<table class="tc-table"><thead><tr><th style="width:104px">ボタン</th><th>表示される商品</th></tr></thead><tbody>' +
+    '<table class="tc-table"><thead><tr><th style="width:118px">ボタン</th><th>表示される商品</th></tr></thead><tbody>' +
     rows + '</tbody></table>' + foot;
 }
 const tuneCondBtn = $('#tuneCondBtn');
@@ -6965,6 +6990,25 @@ if (tuneCondBtn && tuneCondModal) {
   tuneCondModal.addEventListener('click', (e) => { if (e.target === tuneCondModal) tuneCondHide(); });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && tuneCondModal.classList.contains('open')) tuneCondHide();
+  });
+}
+
+// 【v273】「必要ページ一括オープン」：調整ビューごとに必要な作業ページを新しいタブで一括で開く。
+const TUNE_OPEN_PAGES = {
+  'ad-tune': [
+    'https://kaiyoshida0318.github.io/ycheck/',
+    'https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629'
+  ],
+  'pro-tune': [
+    'https://kaiyoshida0318.github.io/ycheck/',
+    'https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/'
+  ]
+};
+const tuneOpenPagesBtn = $('#tuneOpenPagesBtn');
+if (tuneOpenPagesBtn) {
+  tuneOpenPagesBtn.addEventListener('click', () => {
+    const urls = TUNE_OPEN_PAGES[state.currentView] || [];
+    urls.forEach(u => window.open(u, '_blank', 'noopener'));
   });
 }
 
