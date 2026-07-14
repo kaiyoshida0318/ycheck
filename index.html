@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v280 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v281 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2393,6 +2393,30 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 /* 【v280】入札価格調整/PRオプ調整は「満了3ヶ月表示」に戻し、商品名・メインKWの省略(…)を廃止（v278/v279のコンパクト化・クランプを撤去）。
    商品名/メインKWは全体ビューと同じ全表示に戻す。ソート専用ボタン(上記(1))は継続。
    ※軽いバランス調整のみ残す（極端な縮小はしない）。 */
+
+/* ============================================================
+   【v281】入札価格調整(#tableAdTune)の「商品名」列だけ：幅を狭められる＋独立固定＋…省略。
+   ・列は独立キー data-resize-key="nameAdTune"（入札価格調整専用）。ドラッグで幅変更→都度その幅で固定
+     （保存キーが他テーブルの "name" と別なので、他テーブル/他列には一切影響しない）。
+   ・既定幅は「約7文字×2行」。それより狭めるとオーバー分は … で省略（-webkit-line-clamp:2）。
+   ・PRオプ調整(#tableProTune)や他テーブルの商品名・他の列は一切変更しない。
+   ============================================================ */
+#tableAdTune .name-cell-wrap { min-width: 0; }
+#tableAdTune .name-cell-wrap .name-cell {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;          /* 2行まで。はみ出しは … */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.35;
+  min-width: 0;
+}
+#tableAdTune .name-cell-wrap .name-cell .name-link { display: inline; }
+/* 列リサイズ未保存時の既定幅＝約7文字×2行（列全体で約150px）で固定。
+   auto-layoutで潰れないよう min/max も固定。ドラッグすると applyColWidths が inline で width/min/max を
+   上書きするので、都度その幅で固定される（狭めれば…省略、広げれば表示文字が増える）。 */
+#tableAdTune th[data-resize-key="nameAdTune"] { width: 165px; min-width: 165px; max-width: 165px; }
 </style>
 </head>
 <body>
@@ -2418,7 +2442,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v280</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v281</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2756,7 +2780,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameAdTune">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
