@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v277 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v278 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -1357,6 +1357,23 @@ th.col-bid {
   font-weight: 400;
   font-style: italic;
 }
+/* 【v278】入札価格調整/PRオプ調整の商品名は「約10文字×2行」で省略し、以降は … にする */
+#tableAdTune .name-cell-wrap,
+#tableProTune .name-cell-wrap { min-width: 0; }
+#tableAdTune .name-cell-wrap .name-cell,
+#tableProTune .name-cell-wrap .name-cell {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.35;
+  flex: 0 0 150px;    /* 約10文字/行の固定幅（auto-layoutで潰れるのを防ぐ） */
+  width: 150px; max-width: 150px;
+}
+#tableAdTune .name-cell-wrap .name-cell .name-link,
+#tableProTune .name-cell-wrap .name-cell .name-link { display: inline; }
 /* 【v179】商品名リンク：既存の色・太字を維持し、ホバー時のみ下線で外部リンク示唆 */
 .name-cell-wrap .name-link {
   color: inherit;
@@ -2385,7 +2402,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v277</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v278</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2729,13 +2746,15 @@ table.rank-table td.rank-legend-col-row {
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
-              <th data-sort="adNote">対応内容</th>
+              <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdTuneAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdTuneAdRev1">実績額<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost2" id="hAdTuneAdRev2">実績額<br>(前月)</th>
+              <th class="num col-ad" data-sort="adCost3" id="hAdTuneAdRev3">実績額<br>(当月)</th>
               <th class="num col-ad" data-sort="roas0" id="hAdTuneRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="roas1" id="hAdTuneRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="roas2" id="hAdTuneRoas2">広告ROAS<br>(前月)</th>
+              <th class="num col-ad" data-sort="roas3" id="hAdTuneRoas3">広告ROAS<br>(当月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -2765,10 +2784,11 @@ table.rank-table td.rank-legend-col-row {
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
-              <th data-sort="proNote">対応内容</th>
+              <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProTuneSeo2">SEO売上<br>(前月)</th>
+              <th class="num col-sales" data-sort="seoRev3" id="hProTuneSeo3">SEO売上<br>(当月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -5395,6 +5415,14 @@ function last3Months(excludeCurrent) {
   }
   return months.slice(-3);
 }
+// 【v278】調整ビュー用：完了済み直近3ヶ月 ＋ 当月 の計4ヶ月（当月にデータが無くても列は出す）
+function last4MonthsInclCurrent() {
+  const months = getImportedDataMonths();
+  const now = new Date();
+  const curYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const completed = months.filter(m => m < curYM).slice(-3);
+  return [...completed, curYM];
+}
 
 // ==================== 【v239】調整（3グループ絞り込み）ヘルパー ====================
 // tuneGroup: 現在選択中のサブグループ。'fix'=修正あり / 'watch'=推移確認 / 'unchecked'=未確認。
@@ -5605,14 +5633,13 @@ function renderAdAdjust(cfg) {
   const groupFilter = cfg.groupFilter || null;
   const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
   const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "ad-adjust");  // 【v256】状態チップ絞り込み中も当月除外
-  const months = last3Months(completedOnly);
-  // 動的に見出しを更新（月が分かる場合）
-  if (months.length >= 1) $('#'+hPrefix+'AdRev0').innerHTML = `実績額<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#'+hPrefix+'AdRev1').innerHTML = `実績額<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#'+hPrefix+'AdRev2').innerHTML = `実績額<br>${months[2] || '(前月)'}`;
-  if (months.length >= 1) $('#'+hPrefix+'Roas0').innerHTML = `広告ROAS<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#'+hPrefix+'Roas1').innerHTML = `広告ROAS<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#'+hPrefix+'Roas2').innerHTML = `広告ROAS<br>${months[2] || '(前月)'}`;
+  // 【v278】cfg.inclCurrent（調整ビュー）は 完了3ヶ月＋当月＝4ヶ月。全体は従来どおり3ヶ月。
+  const months = cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
+  // 動的に見出しを更新（月数ぶんループ。当月列も対応）
+  for (let i = 0; i < months.length; i++) {
+    const _rev = $('#'+hPrefix+'AdRev'+i); if (_rev) _rev.innerHTML = `実績額<br>${months[i] || ''}`;
+    const _ro  = $('#'+hPrefix+'Roas'+i); if (_ro)  _ro.innerHTML  = `広告ROAS<br>${months[i] || ''}`;
+  }
 
   // 商品コード一覧
   const codes = new Set(Object.keys(state.master));
@@ -5669,12 +5696,8 @@ function renderAdAdjust(cfg) {
     if (k === 'code') return r.code || '';
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
-    if (k === 'adCost0') return r.adCosts[0] || 0;
-    if (k === 'adCost1') return r.adCosts[1] || 0;
-    if (k === 'adCost2') return r.adCosts[2] || 0;
-    if (k === 'roas0') { const v = r.roass[0]; return (v == null || !isFinite(v)) ? -1 : v; }
-    if (k === 'roas1') { const v = r.roass[1]; return (v == null || !isFinite(v)) ? -1 : v; }
-    if (k === 'roas2') { const v = r.roass[2]; return (v == null || !isFinite(v)) ? -1 : v; }
+    { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
+    { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
     if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
@@ -5719,6 +5742,9 @@ function renderAdAdjust(cfg) {
     if (_pcCls) tr.className = _pcCls;
     // 【v270】調整ビュー(statusFirst)は「ステータス」列を入札状態の左に置く。全体ビューは従来どおり末尾。
     const _tdStatus = `<td class="status-col">${statusSelectHtml(r.code, 'status')}</td>`;
+    // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
+    const _revCells  = r.adCosts.map(v => `<td class="num col-ad">${fmt(v)}</td>`).join('');
+    const _roasCells = r.roass.map(v => `<td class="num col-ad ${roasClass(v)}">${fmtRoas(v)}</td>`).join('');
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -5729,12 +5755,8 @@ function renderAdAdjust(cfg) {
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
-      <td class="num col-ad">${fmt(r.adCosts[0])}</td>
-      <td class="num col-ad">${fmt(r.adCosts[1])}</td>
-      <td class="num col-ad">${fmt(r.adCosts[2])}</td>
-      <td class="num col-ad ${roasClass(r.roass[0])}">${fmtRoas(r.roass[0])}</td>
-      <td class="num col-ad ${roasClass(r.roass[1])}">${fmtRoas(r.roass[1])}</td>
-      <td class="num col-ad ${roasClass(r.roass[2])}">${fmtRoas(r.roass[2])}</td>
+      ${_revCells}
+      ${_roasCells}
       ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
@@ -5755,7 +5777,7 @@ function renderAdTune() {
   ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   renderAdAdjust({
     tableSel: '#tableAdTune',
-    completedOnly: true,  // 【v255】調整ビューのみ当月除外
+    inclCurrent: true,   // 【v278】完了3ヶ月＋当月＝4ヶ月表示
     searchSel: '#adTuneSearch',
     cntSel: null,
     hPrefix: 'hAdTune',
@@ -5779,10 +5801,11 @@ function renderProAdjust(cfg) {
   const groupFilter = cfg.groupFilter || null;
   const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
   const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "pro-adjust");  // 【v256】状態チップ絞り込み中も当月除外
-  const months = last3Months(completedOnly);
-  if (months.length >= 1) $('#'+hPrefix+'Seo0').innerHTML = `SEO売上<br>${months[0] || '(3ヶ月前)'}`;
-  if (months.length >= 2) $('#'+hPrefix+'Seo1').innerHTML = `SEO売上<br>${months[1] || '(2ヶ月前)'}`;
-  if (months.length >= 3) $('#'+hPrefix+'Seo2').innerHTML = `SEO売上<br>${months[2] || '(前月)'}`;
+  // 【v278】cfg.inclCurrent（調整ビュー）は 完了3ヶ月＋当月＝4ヶ月。全体は従来どおり3ヶ月。
+  const months = cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
+  for (let i = 0; i < months.length; i++) {
+    const _s = $('#'+hPrefix+'Seo'+i); if (_s) _s.innerHTML = `SEO売上<br>${months[i] || ''}`;
+  }
 
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
@@ -5829,9 +5852,7 @@ function renderProAdjust(cfg) {
   const proSortGet = (r, k) => {
     if (k === 'code') return r.code || '';
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
-    if (k === 'seoRev0') return r.seoRevs[0] || 0;
-    if (k === 'seoRev1') return r.seoRevs[1] || 0;
-    if (k === 'seoRev2') return r.seoRevs[2] || 0;
+    { const mm = /^seoRev(\d+)$/.exec(k); if (mm) return r.seoRevs[+mm[1]] || 0; }   // 【v278】当月列(seoRev3)も対応
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
     if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
@@ -5885,9 +5906,7 @@ function renderProAdjust(cfg) {
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
-      <td class="num col-sales">${fmt(r.seoRevs[0])}</td>
-      <td class="num col-sales">${fmt(r.seoRevs[1])}</td>
-      <td class="num col-sales">${fmt(r.seoRevs[2])}</td>
+      ${r.seoRevs.map(v => `<td class="num col-sales">${fmt(v)}</td>`).join('')}
       ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
@@ -5908,7 +5927,7 @@ function renderProTune() {
   ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   renderProAdjust({
     tableSel: '#tableProTune',
-    completedOnly: true,  // 【v255】調整ビューのみ当月除外
+    inclCurrent: true,   // 【v278】完了3ヶ月＋当月＝4ヶ月表示
     searchSel: '#proTuneSearch',
     cntSel: null,
     hPrefix: 'hProTune',
@@ -8987,8 +9006,10 @@ function installColResizeHandles() {
       const startWidth = ownerTh.getBoundingClientRect().width;
       handle.classList.add('is-resizing');
       document.body.classList.add('is-col-resizing');
+      let moved = false;   // 【v278】ドラッグしたか（誤ソート抑止用）
 
       const onMove = (ev) => {
+        moved = true;
         const dx = ev.clientX - startX;
         const newW = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, startWidth + dx));
         // ドラッグ中はこの th だけ即時更新（軽いプレビュー）
@@ -9004,6 +9025,16 @@ function installColResizeHandles() {
         const finalW = parseFloat(ownerTh.style.width) || COL_RESIZE_MIN_PX;
         saveColWidth(key, finalW);
         applyColWidths();
+        // 【v278】列幅ドラッグの直後に発火する spurious click を1回だけ握りつぶし、
+        //   ヘッダーのソートが誤発動しないようにする（全テーブル共通）。
+        if (moved) {
+          const swallow = (ce) => {
+            ce.stopPropagation(); ce.preventDefault();
+            document.removeEventListener('click', swallow, true);
+          };
+          document.addEventListener('click', swallow, true);
+          setTimeout(() => document.removeEventListener('click', swallow, true), 250);
+        }
       };
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
