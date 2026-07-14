@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v284 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v285 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2455,7 +2455,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v284</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v285</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3625,7 +3625,65 @@ function ghBuildDataString() {
   return JSON.stringify(data, null, 2);
 }
 
-// GitHubへの保存（mutex + 空データ誤上書き防止）
+// 【v285】productMetaマージ用ヘルパー（純関数）。
+//   目的: 別タブ/別端末（古いデータを持つセッション）が保存しても、商品ごとに「より新しく編集された方」を
+//   残すことで、新しい対応記録(adActionAt/proActionAt)・対応内容(note)・状態が巻き戻らないようにする。
+//   recency（新しさ）の判定:
+//     1) _ts（編集時に Date.now() を記録。最も精密） 2) それが無ければ日付シグナル（対応日/メモ内スタンプ）。
+//   いずれも epoch(ms) に正規化して比較。両方無し(=未編集)は 0。
+function _ycNormYmdToEpoch(ymd) {
+  // 'YYYYMMDD' → その日0時(UTC)のepoch ms。空は0。
+  if (!ymd || ymd.length !== 8) return 0;
+  const y = +ymd.slice(0, 4), m = +ymd.slice(4, 6), d = +ymd.slice(6, 8);
+  if (!y || !m || !d) return 0;
+  return Date.UTC(y, m - 1, d);
+}
+function _ycActionAtYmd(s) {
+  // 'YYYY-MM-DD' 等から 'YYYYMMDD' を抽出（無ければ ''）
+  const m = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (m[1] + m[2] + m[3]) : '';
+}
+function _ycNoteStampYmd(note) {
+  // 対応内容の日付スタンプを 'YYYYMMDD' に。対応形式:
+  //   更新日時-26-0714 / （26-0714） / (26-0714) / -26/0714 / 更新日時-26/0714
+  if (!note) return '';
+  const t = String(note);
+  let m = t.match(/更新日時-(\d{2})-(\d{2})(\d{2})/) ||
+          t.match(/[（(](\d{2})-(\d{2})(\d{2})[）)]/) ||
+          t.match(/更新日時-(\d{2})\/(\d{2})(\d{2})/) ||
+          t.match(/-(\d{2})\/(\d{2})(\d{2})(?!\d)/);
+  return m ? ('20' + m[1] + m[2] + m[3]) : '';
+}
+function pmEntryRecency(meta) {
+  // productMeta 1件の「最終編集の新しさ」を epoch(ms) 相当で返す。大きいほど新しい。
+  if (!meta || typeof meta !== 'object') return 0;
+  let r = 0;
+  if (typeof meta._ts === 'number' && isFinite(meta._ts)) r = meta._ts;
+  const ymds = [
+    _ycActionAtYmd(meta.adActionAt), _ycActionAtYmd(meta.proActionAt),
+    _ycNoteStampYmd(meta.adNote), _ycNoteStampYmd(meta.proNote)
+  ].filter(Boolean);
+  for (const y of ymds) { const e = _ycNormYmdToEpoch(y); if (e > r) r = e; }
+  return r;
+}
+function mergeProductMetaForSave(localPM, remotePM) {
+  // 商品ごとに recency の大きい（新しい）方のエントリを採用。
+  //   ・remoteにしか無い商品は残す（対応記録の取りこぼし防止）。
+  //   ・同点/localが新しい → local（今まさに保存しようとしている編集を優先）。
+  //   ・remoteが新しい → remote（古いローカルで新しい対応記録を消さない）。
+  localPM = localPM || {}; remotePM = remotePM || {};
+  const out = {};
+  Object.keys(localPM).forEach(c => { out[c] = localPM[c]; });
+  Object.keys(remotePM).forEach(c => {
+    if (!(c in out)) { out[c] = remotePM[c]; return; }
+    const lr = pmEntryRecency(localPM[c]);
+    const rr = pmEntryRecency(remotePM[c]);
+    out[c] = (rr > lr) ? remotePM[c] : localPM[c];
+  });
+  return out;
+}
+
+// GitHubへの保存（mutex + 空データ誤上書き防止 + 【v285】productMetaマージ）
 async function ghSaveToGitHub(options = {}) {
   const allowEmpty = options.allowEmpty === true;
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
@@ -3639,6 +3697,7 @@ async function ghSaveToGitHub(options = {}) {
     try { const _d = JSON.parse(jsonStr); console.log('[Ycheck診断] GitHub保存開始: eq-22-01=', (_d.bid||{})['eq-22-01'], '| bid件数=', Object.keys(_d.bid||{}).length, '| savedAt=', _d.savedAt); } catch(e){}
     // 空データ誤上書き防止
     const dataObj = JSON.parse(jsonStr);
+    let outStr = jsonStr;  // 【v285】実際にPUTする本文（productMetaマージ後に差し替わる）
     const dataTotal = (dataObj.overall ? 1 : 0)
       + (dataObj.item ? (Array.isArray(dataObj.item) ? dataObj.item.length : 1) : 0)
       + (dataObj.ad ? (Array.isArray(dataObj.ad) ? dataObj.ad.length : 1) : 0)
@@ -3685,6 +3744,15 @@ async function ghSaveToGitHub(options = {}) {
             console.warn('[Ycheck] 上書き防止ガード発動:', _detail, '| dropped=', _dropped, '| rItems=', _rItems, 'lItems=', _lItems);
             return { skipped: true, reason: 'stale-overwrite-guard', detail: _detail, dropped: _dropped, rItems: _rItems, lItems: _lItems };
           }
+          // 【v285】productMetaを商品単位でマージ（新しい対応記録/メモ/状態を古いセッションが巻き戻さない）。
+          //   remoteに、この画面より新しく編集された商品があれば、その商品はremote側を採用してPUTに含める。
+          try {
+            const _beforeN = Object.keys(dataObj.productMeta || {}).length;
+            dataObj.productMeta = mergeProductMetaForSave(dataObj.productMeta, _remote.productMeta);
+            outStr = JSON.stringify(dataObj);
+            const _afterN = Object.keys(dataObj.productMeta || {}).length;
+            if (_afterN !== _beforeN) console.log('[Ycheck] productMetaマージ: 商品数', _beforeN, '→', _afterN);
+          } catch (e2) { console.warn('[Ycheck] productMetaマージ失敗、ローカルのまま保存:', e2 && e2.message); }
         }
       } catch (e) {
         console.warn('[Ycheck] 上書き前の比較に失敗、通常保存を続行:', e && e.message);
@@ -3692,7 +3760,7 @@ async function ghSaveToGitHub(options = {}) {
     }
     ghSetSyncStatus('saving');
     try {
-      await ghPutFile(jsonStr);
+      await ghPutFile(outStr);
       _ghDirty = false;
       console.log('[Ycheck診断] GitHub保存成功（この内容がGitHubに書き込まれました）');
       try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}  // 【v199】保存成功 → 未保存フラグ解除
@@ -5606,6 +5674,7 @@ function markTuneAction(code, kind) {
   const today = tuneTodayStr();
   if (kind === 'ad') state.productMeta[code].adActionAt = today;
   else if (kind === 'pro') state.productMeta[code].proActionAt = today;
+  state.productMeta[code]._ts = Date.now();  // 【v285】最終編集時刻（保存時マージの新しさ判定に使用）
   // 【v276】対応（値変更・状態変更・対応内容更新）しても、その場では凍結メンバーから外さない
   //   ＝修正あり等にそのまま留める。次回の「最新値を更新」やビュー移動で resetTuneMembers→再分類
   //   された時に初めて「全体」のみへ移る（v253の凍結挙動）。adActionAt はその再分類判定に使う。
@@ -7495,6 +7564,7 @@ document.addEventListener('change', (e) => {
   if (kind === 'ad') meta.adStatus = value;
   else if (kind === 'pro') meta.proStatus = value;
   else if (kind === 'status') meta.status = value || '新商品';
+  meta._ts = Date.now();  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
   // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
   if (kind === 'ad' || kind === 'pro') markTuneAction(code, kind);
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
