@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v278 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v279 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2377,6 +2377,91 @@ table.rank-table td.rank-legend-col-row {
   border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
 .tune-openpages-btn:hover { background: #1d4ed8; }
+
+/* ============================================================
+   【v279】(1)ソート専用ボタン化 (2)商品名6文字×2行 (3)対応内容の初期幅
+   (4)入札価格調整/PRオプ調整の横スクロール解消（コンパクト化）
+   ※既存CSSを消さず、末尾に上書きブロックとして追加。
+   ============================================================ */
+
+/* (1) ソートはヘッダー本体ではなく専用ボタンからのみ発火させる。
+   ・th 本体のクリック誘発（cursor:pointer / hover 反転 / 疑似矢印）を打ち消す。
+   ・並び順の向きは th の sort-asc/sort-desc クラス（updateSortIndicator）でボタンに反映。 */
+th[data-sort] { cursor: default; }
+th[data-sort]:hover { background-color: #e8eaed; }        /* ヘッダーhoverの色変化を無効化 */
+th[data-sort]::after { content: none !important; }         /* 旧: th全体の疑似ソート矢印を廃止 */
+.th-sort-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  vertical-align: middle; margin-left: 5px; padding: 0 3px;
+  height: 17px; min-width: 18px;
+  border: 1px solid var(--border2); border-radius: 4px;
+  background: var(--bg2); color: var(--text3);
+  cursor: pointer; font-size: 0.72rem; line-height: 1;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.th-sort-btn::after { content: '\2195'; }                  /* ↕（既定） */
+.th-sort-btn:hover { background: var(--bg3); color: var(--accent); border-color: var(--accent); }
+th.sort-active .th-sort-btn { color: var(--blue); border-color: var(--blue); }
+th.sort-asc  .th-sort-btn::after { content: '\25B2'; }     /* ▲ */
+th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
+
+/* (4) 入札価格調整/PRオプ調整テーブル全体のコンパクト化（横スクロール解消の土台）。
+   ※列数が多い（当月列を含め計17列）ため、フォント・パディング・各列幅を実測で詰め、
+     テーブルの自然最小幅を約1285pxに収めた（フルスクリーンの1366/1440/1536幅で横スクロール無し）。 */
+#tableAdTune, #tableProTune { font-size: 0.74rem; }
+#tableAdTune thead th, #tableProTune thead th { font-size: 0.68rem; font-weight: 600; }
+#tableAdTune th, #tableAdTune td,
+#tableProTune th, #tableProTune td { padding: 3px 2px; }
+/* 画像を小さく */
+#tableAdTune .product-img, #tableAdTune .product-img-placeholder,
+#tableProTune .product-img, #tableProTune .product-img-placeholder { width: 26px; height: 26px; }
+/* 状態セレクトを詰める（入札状態/PRオプ状態/ステータス） */
+#tableAdTune .status-select, #tableProTune .status-select {
+  min-width: 40px; font-size: 0.68rem; padding: 2px 1px 2px 2px;
+}
+#tableAdTune td.status-col, #tableAdTune th.status-col,
+#tableProTune td.status-col, #tableProTune th.status-col { padding-left: 2px; padding-right: 2px; }
+/* 数値列（実績額/広告ROAS/SEO売上）を詰める */
+#tableAdTune td.num, #tableAdTune th.num,
+#tableProTune td.num, #tableProTune th.num { padding-left: 2px; padding-right: 2px; font-size: 0.70rem; }
+/* 入札価格/PRオプ料率の2行ヘッダー(最安25円/最低7％)は幅を食うので小さめに */
+#tableAdTune thead th.col-bid, #tableProTune thead th.col-bid { font-size: 0.63rem; }
+/* 商品コード列を固定幅で詰める */
+#tableAdTune th[data-resize-key="code"], #tableProTune th[data-resize-key="code"] {
+  width: 66px; min-width: 66px; max-width: 66px;
+}
+#tableAdTune .code-cell, #tableProTune .code-cell { font-size: 0.68rem; }
+/* メインKWは省略表示で狭く */
+#tableAdTune th[data-resize-key="kw"], #tableProTune th[data-resize-key="kw"] {
+  width: 48px; min-width: 48px; max-width: 48px;
+}
+#tableAdTune .kw-cell, #tableProTune .kw-cell {
+  display: inline-block; max-width: 48px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;
+}
+
+/* (2) 商品名を「6文字×2行」に縮小（v278の約10文字×2＝150px を上書き）。line-clamp:2 は維持、以降は…。 */
+#tableAdTune .name-cell-wrap, #tableProTune .name-cell-wrap { gap: 2px; min-width: 0; }
+#tableAdTune .name-cell-wrap .name-cell,
+#tableProTune .name-cell-wrap .name-cell {
+  flex: 0 0 68px;                 /* 約6文字/行 */
+  width: 68px; max-width: 68px;
+}
+/* 編集アイコンをコンパクトに（列幅を食い過ぎないように） */
+#tableAdTune .name-edit-btn, #tableProTune .name-edit-btn {
+  width: 15px; height: 15px; font-size: 0.66rem;
+}
+
+/* (3) 対応内容(note)列の初期幅を「更新日時-26-0710」がギリギリ見える幅に。
+   ※列リサイズ未保存時のデフォルト。ユーザーがドラッグすれば従来どおり上書き保存される。 */
+#tableAdTune th[data-resize-key="adNote"],
+#tableProTune th[data-resize-key="proNote"] {
+  width: 110px; min-width: 110px; max-width: 110px;
+}
+#tableAdTune .note-cell, #tableProTune .note-cell {
+  min-width: 0; max-width: none; width: 100%;
+  font-size: 0.62rem;      /* 「更新日時-26-0710」が既定幅(110px)で1行にギリギリ収まるように（実測で確定） */
+}
 </style>
 </head>
 <body>
@@ -2402,7 +2487,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v278</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v279</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5640,6 +5725,8 @@ function renderAdAdjust(cfg) {
     const _rev = $('#'+hPrefix+'AdRev'+i); if (_rev) _rev.innerHTML = `実績額<br>${months[i] || ''}`;
     const _ro  = $('#'+hPrefix+'Roas'+i); if (_ro)  _ro.innerHTML  = `広告ROAS<br>${months[i] || ''}`;
   }
+  // 【v279】月列(実績額/広告ROAS)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
+  if (typeof installSortButtons === 'function') installSortButtons();
 
   // 商品コード一覧
   const codes = new Set(Object.keys(state.master));
@@ -5806,6 +5893,8 @@ function renderProAdjust(cfg) {
   for (let i = 0; i < months.length; i++) {
     const _s = $('#'+hPrefix+'Seo'+i); if (_s) _s.innerHTML = `SEO売上<br>${months[i] || ''}`;
   }
+  // 【v279】月列(SEO売上)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
+  if (typeof installSortButtons === 'function') installSortButtons();
 
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
@@ -6741,6 +6830,10 @@ function renderAll() {
   if (typeof installColResizeHandles === 'function') {
     try { installColResizeHandles(); applyColWidths(); } catch (e) { /* 初期化前は無視 */ }
   }
+  // 【v279】再描画後に専用ソートボタンを再設置（月列th差し替え等でボタンが消えるのを補う）
+  if (typeof installSortButtons === 'function') {
+    try { installSortButtons(); } catch (e) { /* 初期化前は無視 */ }
+  }
 }
 
 // ==================== Sort Reset ====================
@@ -7287,80 +7380,88 @@ $('#seoRankMonth').addEventListener('change', renderSeoRank);
 $('#seoRankSearch').addEventListener('input', renderSeoRank);
 if ($('#btnRefreshAdRank')) $('#btnRefreshAdRank').addEventListener('click', () => fetchRankJson());
 if ($('#btnRefreshSeoRank')) $('#btnRefreshSeoRank').addEventListener('click', () => fetchRankJson());
-$$('#tableBasic th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (basicSortKey === k) basicSortDir *= -1;
-    else { basicSortKey = k; basicSortDir = -1; }
-    renderBasic();
+// 【v279】ソートはヘッダー本体クリックではなく、各見出し右の専用ボタン(.th-sort-btn)からのみ発火。
+//   ・installSortButtons(): 全 th[data-sort] に専用ボタンを設置（冪等）。月列(実績額/ROAS/SEO 当月列)は
+//     再描画で th.innerHTML が差し替わりボタンが消えるため renderAdAdjust/renderProAdjust 末尾でも再設置する。
+//   ・wireSort(): thead へのイベント委任。ボタンが作り直されても配線が生き続ける。ヘッダー本体クリックは無視。
+//   ・列リサイズのドラッグ直後の誤クリックは v278 の swallow 機構で吸収される（両立）。
+function installSortButtons() {
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    if (th.querySelector('.th-sort-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'th-sort-btn';
+    btn.title = 'この列で並び替え';
+    btn.setAttribute('aria-label', '並び替え');
+    th.appendChild(btn);
   });
+}
+function wireSort(tableSel, apply) {
+  const thead = $(tableSel + ' thead');
+  if (!thead) return;
+  thead.addEventListener('click', (e) => {
+    const btn = e.target.closest('.th-sort-btn');
+    if (!btn || !thead.contains(btn)) return;
+    const th = btn.closest('th[data-sort]');
+    if (!th) return;
+    e.stopPropagation();
+    apply(th.dataset.sort);
+  });
+}
+installSortButtons();
+wireSort('#tableBasic', (k) => {
+  if (basicSortKey === k) basicSortDir *= -1;
+  else { basicSortKey = k; basicSortDir = -1; }
+  renderBasic();
 });
 
 // Monthlyビューの操作
 $('#monthlySearch').addEventListener('input', renderMonthly);
 if ($('#monthlyMonth')) $('#monthlyMonth').addEventListener('change', renderMonthly);
-$$('#tableMonthly th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (monthlySortKey === k) monthlySortDir *= -1;
-    else { monthlySortKey = k; monthlySortDir = -1; }
-    renderMonthly();
-  });
+wireSort('#tableMonthly', (k) => {
+  if (monthlySortKey === k) monthlySortDir *= -1;
+  else { monthlySortKey = k; monthlySortDir = -1; }
+  renderMonthly();
 });
 
 // Retiredビューの操作
 $('#retiredSearch').addEventListener('input', renderRetired);
-$$('#tableRetired th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (retiredSortKey === k) retiredSortDir *= -1;
-    else { retiredSortKey = k; retiredSortDir = 1; }
-    renderRetired();
-  });
+wireSort('#tableRetired', (k) => {
+  if (retiredSortKey === k) retiredSortDir *= -1;
+  else { retiredSortKey = k; retiredSortDir = 1; }
+  renderRetired();
 });
 
 // 調整ビューの操作
 $('#adAdjustSearch').addEventListener('input', renderAdAdjust);
 $('#proAdjustSearch').addEventListener('input', renderProAdjust);
-$$('#tableAdAdjust th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (adAdjustSortKey === k) adAdjustSortDir *= -1;
-    else { adAdjustSortKey = k; adAdjustSortDir = -1; }
-    adAdjustFrozenOrder = null;  // 【v208】ソート切替で凍結解除→次の描画で新並びを凍結
-    renderAdAdjust();
-  });
+wireSort('#tableAdAdjust', (k) => {
+  if (adAdjustSortKey === k) adAdjustSortDir *= -1;
+  else { adAdjustSortKey = k; adAdjustSortDir = -1; }
+  adAdjustFrozenOrder = null;  // 【v208】ソート切替で凍結解除→次の描画で新並びを凍結
+  renderAdAdjust();
 });
-$$('#tableProAdjust th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (proAdjustSortKey === k) proAdjustSortDir *= -1;
-    else { proAdjustSortKey = k; proAdjustSortDir = -1; }
-    proAdjustFrozenOrder = null;  // 【v208】ソート切替で凍結解除
-    renderProAdjust();
-  });
+wireSort('#tableProAdjust', (k) => {
+  if (proAdjustSortKey === k) proAdjustSortDir *= -1;
+  else { proAdjustSortKey = k; proAdjustSortDir = -1; }
+  proAdjustFrozenOrder = null;  // 【v208】ソート切替で凍結解除
+  renderProAdjust();
 });
 
 // 【v239】調整（tune）ビューの検索・ソート・サブフィルタ配線
 if ($('#adTuneSearch'))  $('#adTuneSearch').addEventListener('input', renderAdTune);
 if ($('#proTuneSearch')) $('#proTuneSearch').addEventListener('input', renderProTune);
-$$('#tableAdTune th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (adAdjustSortKey === k) adAdjustSortDir *= -1;
-    else { adAdjustSortKey = k; adAdjustSortDir = -1; }
-    adAdjustFrozenOrder = null;
-    renderAdTune();
-  });
+wireSort('#tableAdTune', (k) => {
+  if (adAdjustSortKey === k) adAdjustSortDir *= -1;
+  else { adAdjustSortKey = k; adAdjustSortDir = -1; }
+  adAdjustFrozenOrder = null;
+  renderAdTune();
 });
-$$('#tableProTune th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.sort;
-    if (proAdjustSortKey === k) proAdjustSortDir *= -1;
-    else { proAdjustSortKey = k; proAdjustSortDir = -1; }
-    proAdjustFrozenOrder = null;
-    renderProTune();
-  });
+wireSort('#tableProTune', (k) => {
+  if (proAdjustSortKey === k) proAdjustSortDir *= -1;
+  else { proAdjustSortKey = k; proAdjustSortDir = -1; }
+  proAdjustFrozenOrder = null;
+  renderProTune();
 });
 // サブフィルタバーの3ボタン: グループを切り替えて現在の調整ビューを再描画
 $$('#tuneFilterBar .tune-chip').forEach(btn => {
