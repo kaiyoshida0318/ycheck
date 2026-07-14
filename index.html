@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v276 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v277 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2385,7 +2385,7 @@ table.rank-table td.rank-legend-col-row {
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v276</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v277</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9256,6 +9256,11 @@ try {
         renderAll();
         updateRankLastUpdatedDisplay();
         console.log(`[${curShop.id}] GitHub から最新データを取得・反映しました`);
+        // 【v277】GitHubのrank（ycheck_data.json）は日次で古くなりうるため、GitHub読み込みの後に
+        //   rank.json（CIが毎日更新する最新の順位）を再マージして最新日を優先させる。
+        //   これをしないと、GitHubの古いrankが rank.json より後に state.rank を上書きし、
+        //   直近数日の順位が「-」になる（起動時の取得順レースが原因）。
+        fetchRankJson({ silent: true });
       } else if (result && result.notFound) {
         console.log(`[${curShop.id}] GitHub にデータなし - localStorageを継続使用`);
       }
