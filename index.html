@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v282 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v283 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2419,15 +2419,17 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 #tableAdTune th[data-resize-key="nameAdTune"] { width: 165px; min-width: 165px; max-width: 165px; }
 
 /* ============================================================
-   【v282】ステータス(data-kind="status")のドロップダウンだけ、入札状態/PRオプ状態と差別化。
-   ベタ塗り＋白文字にして「ステータス列」だと一目で分かるように。
-   現役商品=緑 / 撤退検討▲=オレンジ / 撤退■・撤退済み=赤 / 新商品=青（青も揃えてベタ塗り＋白文字）。
-   ※入札状態(adStatus)・PRオプ状態(proStatus)の淡色（.status-select.ok/.ng/… 既定）はそのまま。
+   【v283】ステータス(data-kind="status")のドロップダウンだけ差別化。
+   「色は入札状態/PRオプ状態と同じ淡色のまま、文字を太字＋外枠を太く」する方式。
+   （v282のベタ塗り＋白文字から変更）
+   現役商品=緑 / 撤退検討▲=オレンジ / 撤退■・撤退済み=赤 / 新商品=青（背景色は既定の淡色を踏襲）。
+   ※入札状態(adStatus)・PRオプ状態(proStatus)は既定のまま（細枠・通常太さ）。
    ============================================================ */
-.status-select[data-kind="status"].ok   { background:#15803d; color:#fff; border-color:#166534; font-weight:600; }
-.status-select[data-kind="status"].ng   { background:#b91c1c; color:#fff; border-color:#991b1b; font-weight:600; }
-.status-select[data-kind="status"].warn { background:#c2410c; color:#fff; border-color:#9a3412; font-weight:600; }
-.status-select[data-kind="status"].info { background:#2563eb; color:#fff; border-color:#1d4ed8; font-weight:600; }
+.status-select[data-kind="status"] { font-weight: 800; border-width: 2.5px; }
+.status-select[data-kind="status"].ok   { background: rgba(22,163,74,0.08); color:#16a34a; border-color: rgba(22,163,74,0.60); }
+.status-select[data-kind="status"].ng   { background: rgba(220,38,38,0.06); color:#dc2626; border-color: rgba(220,38,38,0.60); }
+.status-select[data-kind="status"].warn { background: rgba(217,119,6,0.08); color:#d97706; border-color: rgba(217,119,6,0.60); }
+.status-select[data-kind="status"].info { background: rgba(37,99,235,0.08); color:#2563eb; border-color: rgba(37,99,235,0.60); }
 </style>
 </head>
 <body>
@@ -2453,7 +2455,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v282</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v283</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
