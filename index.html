@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v286 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v287 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2455,7 +2455,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v286</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v287</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3820,22 +3820,40 @@ async function ghLoadFromGitHub() {
     }
     const data = JSON.parse(content);
     console.log('[Ycheck診断] GitHubから取得: savedAt=', data.savedAt, '| bid件数=', Object.keys(data.bid||{}).length, '| eq-22-01=', (data.bid||{})['eq-22-01'], '（この値でローカルを上書きします）');
+    // 【v287】起動時の自己修復マージ用に、GitHubで上書きする前のローカル値を退避。
+    //   別セッション（古いタブ/端末）がGitHubを古い状態へ巻き戻していても、この端末のローカルに
+    //   より新しい対応記録/入札価格があれば「商品ごとに新しい方」を残して復元する。
+    const _localPM  = state.productMeta || {};
+    const _localBid = state.bid || {};
+    const _localPro = state.proRate || {};
+    const _remotePM = data.productMeta || {};
     if (data.overall) state.overall = data.overall;
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
-    if (data.bid) state.bid = data.bid;
-    if (data.proRate) state.proRate = data.proRate;
+    // 【v287】bid / proRate は「新しい方」を残してマージ（古い上書きで自分の変更が消えるのを防ぐ）
+    state.bid     = (data.bid)     ? mergeMapByPmRecency(_localBid, data.bid,     _localPM, _remotePM) : _localBid;
+    state.proRate = (data.proRate) ? mergeMapByPmRecency(_localPro, data.proRate, _localPM, _remotePM) : _localPro;
     if (data.master) state.master = data.master;
     if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) state.rankMeta = data.rankMeta;
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
+    // 【v287】productMeta も商品ごとに新しい方を残してマージ。ローカルの方が新しい商品が
+    //   あれば _ghHealed=true（＝GitHubは古い上書きを受けていた）とし、後で復元を再保存する。
+    let _ghHealed = false;
     if (data.productMeta) {
-      state.productMeta = data.productMeta;
+      Object.keys(_localPM).forEach(c => {
+        if (!(c in _remotePM)) { if (pmEntryRecency(_localPM[c]) > 0) _ghHealed = true; return; }
+        if (pmEntryRecency(_localPM[c]) > pmEntryRecency(_remotePM[c]) &&
+            JSON.stringify(_localPM[c]) !== JSON.stringify(_remotePM[c])) _ghHealed = true;
+      });
+      state.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
       Object.values(state.productMeta).forEach(m => {
         if (m && m.proStatus === 'PRO○') m.proStatus = 'PRオプ○';
         else if (m && m.proStatus === 'PRO×') m.proStatus = 'PRオプ×';
       });
+    } else {
+      state.productMeta = _localPM;
     }
     // マイグレーション
     migrateRetiredByMissingName();
@@ -3844,12 +3862,14 @@ async function ghLoadFromGitHub() {
     migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
     migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
     // localStorage にも即書き（【v272】容量オーバーでも読み込みが失敗しないよう フル→スリム→握りつぶし）
+    //   【v287】マージ後の値（state.productMeta/bid/proRate）で書く（GitHubの生dataではなく復元後を保存）。
+    const _persist = { ...data, productMeta: state.productMeta, bid: state.bid, proRate: state.proRate };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: new Date().toISOString() }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ..._persist, savedAt: new Date().toISOString() }));
     } catch (eLsFull) {
       try {
         if (typeof setLsSlimMode === 'function') setLsSlimMode(true);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, rank: {}, _rankOmitted: true, savedAt: new Date().toISOString() }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ..._persist, rank: {}, _rankOmitted: true, savedAt: new Date().toISOString() }));
         console.warn('[Ycheck] GitHub読み込み: 容量オーバーのためrankを除いてローカル保存（rankはrank.json/GitHubから復元）:', eLsFull && eLsFull.message);
       } catch (eLsSlim) {
         console.warn('[Ycheck] GitHub読み込み: ローカル保存は容量オーバーでスキップ（GitHubを正として継続）:', eLsSlim && eLsSlim.message);
@@ -3858,7 +3878,15 @@ async function ghLoadFromGitHub() {
     _ghDirty = false;
     ghSetSyncStatus('saved');
     ghLog(`取得成功: ${(content.length / 1024).toFixed(1)} KB`);
-    return { success: true, savedAt: data.savedAt };
+    // 【v287】ローカルの方が新しい変更を検出＝GitHubは別セッションの古い上書きを受けていた
+    //   → 復元した内容を再保存し、ユーザーに通知（古いセッションを閉じるよう促す）。
+    if (_ghHealed) {
+      _ghDirty = true;
+      console.warn('[Ycheck] 起動時自己修復: GitHubより新しいローカルの変更を検出→復元し再保存します（別セッションの古い上書きの可能性）。');
+      try { if (typeof showToast === 'function') showToast('⚠ 別のタブ/端末が古いデータで上書きした可能性があります。あなたの変更を復元して保存しました。古いYcheckは閉じてください。', 'warn'); } catch (e) {}
+      try { if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave(); } catch (e) {}
+    }
+    return { success: true, savedAt: data.savedAt, healed: _ghHealed };
   } catch (err) {
     ghSetSyncStatus('error', err.message);
     ghLog('取得失敗: ' + err.message, 'error');
