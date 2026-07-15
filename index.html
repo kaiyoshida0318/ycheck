@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v287 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v288 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2455,7 +2455,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v287</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v288</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8351,17 +8351,23 @@ function showToast(msg, type) {
   const el = document.createElement('div');
   el.className = 'toast' + (type ? ' ' + type : '');
   el.textContent = msg;
+  el.title = 'クリックで閉じる';
+  el.style.cursor = 'pointer';
   document.body.appendChild(el);
   // 1フレーム後に show を付けてフェードイン
   requestAnimationFrame(() => {
     requestAnimationFrame(() => el.classList.add('show'));
   });
-  // 2秒後にフェードアウト→0.25秒後にDOM除去
-  _toastTimer = setTimeout(() => {
+  // 【v288】表示時間を延長して読めるように。警告/エラーや長文はさらに長く。クリックで即閉じ可。
+  const _isImportant = (type === 'warn' || type === 'err' || type === 'error' || type === 'ng');
+  const _dur = Math.min(15000, (_isImportant ? 8000 : 2500) + Math.max(0, (msg || '').length - 20) * 80);
+  const _dismiss = () => {
     el.classList.remove('show');
     setTimeout(() => { if (el.parentNode) el.remove(); }, 250);
-    _toastTimer = null;
-  }, 2000);
+    if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  };
+  el.addEventListener('click', _dismiss);
+  _toastTimer = setTimeout(_dismiss, _dur);
 }
 
 function saveProductEdit(opts) {
