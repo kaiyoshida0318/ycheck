@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v288 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v289 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2430,6 +2430,32 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .status-select[data-kind="status"].ng   { background: rgba(220,38,38,0.06); color:#dc2626; border-color: rgba(220,38,38,0.60); }
 .status-select[data-kind="status"].warn { background: rgba(217,119,6,0.08); color:#d97706; border-color: rgba(217,119,6,0.60); }
 .status-select[data-kind="status"].info { background: rgba(37,99,235,0.08); color:#2563eb; border-color: rgba(37,99,235,0.60); }
+
+/* ============================================================
+   【v289】入札価格調整の商品名の仕様を全テーブルへ適用。
+   ・商品名は「2行まで＋はみ出しは…で省略」。
+   ・列端をドラッグで幅変更でき、その幅は「その表だけ」で固定（各表 独立キー nameBasic/…）。
+   ・初期表示の幅は各表とも従来どおり広め（min-width 240px）。狭めた分だけ…省略が増える。
+   ・入札価格調整(nameAdTune=165px)は既存設定を維持。
+   ============================================================ */
+.name-cell-wrap { min-width: 0; }   /* 基底の min-width:240 を解除してドラッグで狭められるように */
+.name-cell-wrap .name-cell {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;            /* 2行まで。超えた分は … */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-all;
+}
+.name-cell-wrap .name-cell .name-link { display: inline; }
+/* 各表の商品名列の既定幅＝従来どおり広め（floorのみ。ドラッグで inline 上書き＝その表だけ固定）。
+   ※rankテーブル(広告順位/SEO順位)は別セレクタで従来どおり。 */
+#tableBasic     th[data-resize-key="nameBasic"],
+#tableMonthly   th[data-resize-key="nameMonthly"],
+#tableRetired   th[data-resize-key="nameRetired"],
+#tableAdAdjust  th[data-resize-key="nameAdAdjust"],
+#tableProAdjust th[data-resize-key="nameProAdjust"],
+#tableProTune   th[data-resize-key="nameProTune"] { min-width: 240px; }
 </style>
 </head>
 <body>
@@ -2455,7 +2481,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v288</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v289</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2587,7 +2613,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameBasic">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
@@ -2623,7 +2649,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameMonthly">商品名</th>
               <th data-sort="month">月</th>
               <th class="num col-sales" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
@@ -2652,7 +2678,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameRetired">商品名</th>
               <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
               <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
               <th class="status-col" data-sort="status">ステータス</th>
@@ -2723,7 +2749,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameAdAdjust">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
@@ -2760,7 +2786,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameProAdjust">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
@@ -2829,7 +2855,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
-              <th data-sort="name" data-resize-key="name">商品名</th>
+              <th data-sort="name" data-resize-key="nameProTune">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
