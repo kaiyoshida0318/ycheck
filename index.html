@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v289 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v291 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2456,6 +2456,27 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 #tableAdAdjust  th[data-resize-key="nameAdAdjust"],
 #tableProAdjust th[data-resize-key="nameProAdjust"],
 #tableProTune   th[data-resize-key="nameProTune"] { min-width: 240px; }
+
+/* ============================================================
+   【v290】全-比較（売上ランキング比較 / バンプチャート。ADcheck「全-比較」転用）
+   ・ADcheck の --surface/--surface2 を Ycheck のテーマ変数へマッピングして流用。
+   ============================================================ */
+#view-compare { --surface: var(--bg2); --surface2: var(--bg3); }
+#view-compare .cmp-sub { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
+#view-compare .cmp-toolbar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+#view-compare .mbtn {
+  font-size:12px; padding:6px 14px; border-radius:6px; cursor:pointer; white-space:nowrap;
+  font-weight:600; border:1px solid var(--border); background:var(--surface2); color:var(--text3);
+  font-family:inherit;
+}
+#view-compare .mbtn.on { border:1px solid var(--accent); background:var(--accent); color:#fff; }
+#view-compare select {
+  font-size:12px; padding:6px 10px; border-radius:6px; border:1px solid var(--border);
+  background:var(--bg2); color:var(--text); cursor:pointer; font-family:inherit;
+}
+#view-compare .cmp-legend { margin-left:auto; display:flex; align-items:center; gap:10px; font-size:11px; color:var(--text2); flex-wrap:wrap; }
+#view-compare .cmp-legend .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:3px; vertical-align:middle; }
+#view-compare .cmp-area { position:relative; overflow-x:auto; }
 </style>
 </head>
 <body>
@@ -2481,7 +2502,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v289</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v291</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2513,6 +2534,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <span class="nav-group-label">【全体】</span>
     <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata">全-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-月別グラフ</a>
+    <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
     <!-- 【v237】旧【定期チェック】の2ビューを【全体】末尾へ移設（ビュー実体 #view-ad-adjust / #view-pro-adjust はそのまま） -->
     <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust">入札価格全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust">PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
@@ -2729,6 +2751,37 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <tbody></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- View: 全-比較（売上ランキング比較 / バンプチャート。ADcheck「全-比較」を転用） -->
+    <div class="view" id="view-compare">
+      <div class="card">
+        <h3 class="card-title">全-比較（売上ランキング比較）</h3>
+        <div class="cmp-sub">複数の月を売上順に並べ、同じ商品を線で結んで順位変動を見る。線色＝売上の前期比。</div>
+        <div class="cmp-toolbar" id="cmpToolbar">
+          <button id="cmpMYoy"  class="mbtn"    type="button" onclick="cmpSetMode('yoy')">前年同月比</button>
+          <button id="cmpMMom"  class="mbtn on" type="button" onclick="cmpSetMode('mom')">前月比較</button>
+          <button id="cmpMPick" class="mbtn"    type="button" onclick="cmpSetMode('pick')">特定月比較</button>
+          <select id="cmpSelMonth" onchange="cmpSetMonth(this.value)"></select>
+          <select id="cmpSelA" style="display:none" onchange="cmpSetPick('a',this.value)"></select>
+          <span id="cmpPickArrow" style="display:none;margin:0 4px;color:var(--text3);font-weight:700">→</span>
+          <select id="cmpSelB" style="display:none" onchange="cmpSetPick('b',this.value)"></select>
+          <button id="cmpTUp"   class="mbtn" type="button" onclick="cmpToggleLine('up')">上昇線</button>
+          <button id="cmpTDown" class="mbtn" type="button" onclick="cmpToggleLine('down')">下降線</button>
+          <button id="cmpCBlue"   class="mbtn" type="button" onclick="cmpToggleColor('blue')">青商品</button>
+          <button id="cmpCGreen"  class="mbtn" type="button" onclick="cmpToggleColor('green')">緑商品</button>
+          <button id="cmpCYellow" class="mbtn" type="button" onclick="cmpToggleColor('yellow')">黄色商品</button>
+          <button id="cmpCRed"    class="mbtn" type="button" onclick="cmpToggleColor('red')">赤商品</button>
+          <div class="cmp-legend">
+            <span style="font-weight:600">売上 前期比</span>
+            <span><span class="sw" style="background:#2563eb"></span>上昇</span>
+            <span><span class="sw" style="background:#16a34a"></span>上昇(2割以内)</span>
+            <span><span class="sw" style="background:#ca8a04"></span>減少(2割以内)</span>
+            <span><span class="sw" style="background:#dc2626"></span>2割超の減少</span>
+          </div>
+        </div>
+        <div class="cmp-area" id="cmpArea"></div>
       </div>
     </div>
 
@@ -6922,6 +6975,162 @@ function numericRankToCategory(rank, kind) {
 function renderAdRank()  { renderRankTable('ad'); }
 function renderSeoRank() { renderRankTable('seo'); }
 
+// ==================== 【v290】全-比較（売上ランキング比較 / バンプチャート。ADcheck転用）====================
+// 1レコード=商品×月。buildFullAggregate() から {ym:'YYYYMM', s:売上, sp:広告費, seo:SEO売上} を月×商品に集計。
+let cmpMode = 'mom', cmpMonth = '', cmpPickA = '', cmpPickB = '';
+let cmpHideUp = false, cmpHideDown = false, cmpFocus = null;
+let cmpColorFilter = new Set();
+const CMP_SROAS_COLORS = { g:'#1D9E75', y:'#BA7517', o:'#ED7D31', r:'#A32D2D', n:'#8a8d94' };
+function cmpSroasCat(v){ if(!(v>0)) return 'n'; if(v>=300) return 'g'; if(v>=100) return 'y'; return 'r'; }
+const CMP_YOYCOL = { blue:'#2563eb', green:'#16a34a', yellow:'#ca8a04', red:'#dc2626' };
+function cmpYoyCat(cur, prev){ if(cur<=0||prev<=0) return null; if(cur>=prev*1.2) return 'blue'; if(cur>prev) return 'green'; if(cur===prev) return null; if(cur>=prev*0.8) return 'yellow'; return 'red'; }
+function cmpLatestColor(p){ const n=p.v.length; return (n>=2)?cmpYoyCat(p.v[n-1].s, p.v[n-2].s):null; }
+function cmpYmAdd(ym, d){ let y=+ym.slice(0,4), m=+ym.slice(4,6)-1+d; y+=Math.floor(m/12); m=((m%12)+12)%12; return String(y)+String(m+1).padStart(2,'0'); }
+// Ycheck の state から 月×商品 に集計（ym は 'YYYYMM'）
+function cmpBuildAgg(){
+  const agg = {}, meta = {};
+  buildFullAggregate().forEach(function(r){
+    const ym = String(r.month || '').replace(/\//g,'-').replace('-','');  // 'YYYY-MM' → 'YYYYMM'
+    if (ym.length !== 6) return;
+    if (!agg[ym]) agg[ym] = {};
+    const a = agg[ym][r.code] || (agg[ym][r.code] = { s:0, sp:0, seo:0, ad:0 });
+    a.s += (+r.rev||0); a.sp += (+r.adCost||0); a.seo += (+r.seoRev||0); a.ad += (+r.adRev||0);
+    if (!meta[r.code]) { const m = getMaster(r.code) || {}; meta[r.code] = { name:(m.name||r.code), img:(getProductImageSrc(r.code)||'') }; }
+  });
+  return { agg: agg, yms: Object.keys(agg).sort(), meta: meta };
+}
+function cmpSetMode(m){ cmpMode=m; cmpFocus=null; renderCompare(); }
+function cmpSetMonth(v){ cmpMonth=v; cmpFocus=null; renderCompare(); }
+function cmpSetPick(w,v){ if(w==='a')cmpPickA=v; else cmpPickB=v; cmpFocus=null; renderCompare(); }
+function cmpSetFocus(code){ cmpFocus=(cmpFocus===code)?null:code; renderCompare(); }
+function cmpToggleLine(t){ if(t==='up')cmpHideUp=!cmpHideUp; else cmpHideDown=!cmpHideDown; renderCompare(); }
+function cmpToggleColor(c){ if(cmpColorFilter.has(c))cmpColorFilter.delete(c); else cmpColorFilter.add(c); renderCompare(); }
+function cmpSyncUI(){
+  ['cmpMYoy','cmpMMom','cmpMPick'].forEach(function(id){ const el=document.getElementById(id); if(el) el.classList.remove('on'); });
+  const onId = cmpMode==='yoy'?'cmpMYoy':(cmpMode==='mom'?'cmpMMom':'cmpMPick');
+  const onEl = document.getElementById(onId); if(onEl) onEl.classList.add('on');
+  const pick = (cmpMode==='pick');
+  const disp = function(id,show){ const el=document.getElementById(id); if(el) el.style.display=show?'':'none'; };
+  disp('cmpSelMonth', !pick); disp('cmpSelA', pick); disp('cmpSelB', pick); disp('cmpPickArrow', pick);
+  const base='font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;font-family:inherit;';
+  const strike='border:1px solid var(--border);background:var(--surface2);color:var(--text3);text-decoration:line-through;';
+  const up=document.getElementById('cmpTUp'); if(up) up.style.cssText='margin-left:12px;'+base+(cmpHideUp?strike:'border:1px solid #16a34a;background:#16a34a;color:#fff;');
+  const dn=document.getElementById('cmpTDown'); if(dn) dn.style.cssText=base+(cmpHideDown?strike:'border:1px solid #dc2626;background:#dc2626;color:#fff;');
+  const off='border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
+  const map={blue:['cmpCBlue','#2563eb'],green:['cmpCGreen','#16a34a'],yellow:['cmpCYellow','#ca8a04'],red:['cmpCRed','#dc2626']};
+  Object.keys(map).forEach(function(c){ const el=document.getElementById(map[c][0]); if(!el) return; const col=map[c][1]; const ml=(c==='blue')?'margin-left:12px;':''; el.style.cssText=ml+base+(cmpColorFilter.has(c)?('border:1px solid '+col+';background:'+col+';color:#fff;'):off); });
+}
+function renderCompare(){
+  cmpSyncUI();
+  const area = document.getElementById('cmpArea');
+  const sel = document.getElementById('cmpSelMonth');
+  if (!area) return;
+  const built = cmpBuildAgg();
+  const _agg = built.agg, _yms = built.yms, _meta = built.meta;
+  if (!_yms.length){ if(sel) sel.innerHTML=''; area.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">データがありません（レポートを取り込んでください）</div>'; return; }
+
+  let periods;
+  if (cmpMode==='pick'){
+    let A=(cmpPickA && _yms.includes(cmpPickA))?cmpPickA:(_yms[_yms.length-2]||_yms[0]);
+    let B=(cmpPickB && _yms.includes(cmpPickB))?cmpPickB:(_yms[_yms.length-1]);
+    const _opt=function(m,cm){ return '<option value="'+m+'"'+(m===cm?' selected':'')+'>'+m.slice(0,4)+'/'+m.slice(4,6)+'</option>'; };
+    const selA=document.getElementById('cmpSelA'), selB=document.getElementById('cmpSelB');
+    if(selA) selA.innerHTML=[..._yms].reverse().map(function(m){return _opt(m,A);}).join('');
+    if(selB) selB.innerHTML=[..._yms].reverse().map(function(m){return _opt(m,B);}).join('');
+    periods=[A,B];
+  } else {
+    const later=(cmpMonth && _yms.includes(cmpMonth))?cmpMonth:_yms[_yms.length-1];
+    if(sel){ sel.innerHTML=[..._yms].reverse().map(function(m){return '<option value="'+m+'"'+(m===later?' selected':'')+'>'+m.slice(0,4)+'/'+m.slice(4,6)+'</option>';}).join(''); }
+    if(cmpMode==='yoy'){ periods=[cmpYmAdd(later,-12), later]; }
+    else { periods=[cmpYmAdd(later,-2), cmpYmAdd(later,-1), later]; }
+  }
+  const lastK=periods.length-1;
+
+  const maps=periods.map(function(pm){ const src=_agg[pm]||{}; const mp={}; Object.keys(src).forEach(function(code){ const a=src[code]; mp[code]={ s:a.s||0, sp:a.sp||0, seo:a.seo||0, ad:a.ad||0 }; }); return mp; });
+  const allCodes=new Set(); maps.forEach(function(mp){ Object.keys(mp).forEach(function(c){ allCodes.add(c); }); });
+  let prods=[...allCodes].map(function(code){ const m=_meta[code]||{}; const v=maps.map(function(mp){ return mp[code]||{s:0,sp:0,seo:0,ad:0}; }); return { code:code, name:(m.name||code), img:(m.img||''), v:v }; })
+    .filter(function(p){ return p.v[lastK].s>0; });
+  if(!prods.length){ area.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">比較できる売上データがありません（選んだ月に売上のある商品がありません）</div>'; return; }
+
+  const top=[...prods].sort(function(a,b){ return b.v[lastK].s-a.v[lastK].s; });
+  const rowH=48, headerH=32, labelH=27, TW=452; let gapW=48;
+  if(periods.length===2){ const _aw=(area.clientWidth||1100); gapW=Math.min(900, Math.max(160, _aw-TW*2-6)); }
+  const orders=periods.map(function(_,k){ return [...top].sort(function(a,b){ return b.v[k].s-a.v[k].s; }); });
+  const idxs=orders.map(function(ord){ const m={}; ord.forEach(function(p,i){ m[p.code]=i; }); return m; });
+
+  const yen=function(v){ return '¥'+Math.round(v).toLocaleString('ja-JP'); };
+  const fmt=function(v){ return v>0?yen(v):'<span style="color:var(--text3)">—</span>'; };
+  const esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+
+  const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);background:var(--surface2)">'
+    +'<div style="width:48px;text-align:center">画像</div>'
+    +'<div style="flex:1;padding-left:8px">商品名</div>'
+    +'<div style="width:80px;text-align:right;padding-right:8px">商品売上</div>'
+    +'<div style="width:70px;text-align:right;padding-right:8px">広告費</div>'
+    +'<div style="width:80px;text-align:right;padding-right:8px">SEO売上</div>'
+    +'<div style="width:64px;text-align:right;padding-right:10px">広告ROAS</div></div>';
+
+  const tableHtml=function(ord,k){
+    let h='';
+    ord.forEach(function(p){ const vv=p.v[k]; const _r=(vv.sp>0)?Math.round(vv.ad/vv.sp*100):0;
+      const roasCell=(vv.sp>0)?('<span style="color:'+CMP_SROAS_COLORS[cmpSroasCat(_r)]+';font-weight:700">'+_r+'%</span>'):'<span style="color:var(--text3)">—</span>';
+      const ps=(k>0)?(p.v[k-1].s||0):0;
+      let salesCell;
+      if(vv.s<=0){ salesCell=fmt(vv.s); }
+      else { const _cat=(k>0)?cmpYoyCat(vv.s, ps):null; salesCell=_cat?('<span style="color:'+CMP_YOYCOL[_cat]+';font-weight:700">'+yen(vv.s)+'</span>'):yen(vv.s); }
+      const psSeo=(k>0)?(p.v[k-1].seo||0):0; let seoCell;
+      if(vv.seo<=0){ seoCell=fmt(vv.seo); }
+      else { const _c2=(k>0)?cmpYoyCat(vv.seo, psSeo):null; seoCell=_c2?('<span style="color:'+CMP_YOYCOL[_c2]+';font-weight:700">'+yen(vv.seo)+'</span>'):yen(vv.seo); }
+      const im=p.img?'<img src="'+esc(p.img)+'" style="width:44px;height:44px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">':'<div style="width:44px;height:44px;background:var(--surface2);border-radius:4px"></div>';
+      const foc=(cmpFocus===p.code);
+      h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
+        +'<div style="width:48px;display:flex;justify-content:center">'+im+'</div>'
+        +'<div style="flex:1;padding-left:8px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
+        +'<div style="width:80px;text-align:right;padding-right:8px;font-family:monospace;font-size:12px">'+salesCell+'</div>'
+        +'<div style="width:70px;text-align:right;padding-right:8px;font-family:monospace;font-size:12px">'+fmt(vv.sp)+'</div>'
+        +'<div style="width:80px;text-align:right;padding-right:8px;font-family:monospace;font-size:12px">'+seoCell+'</div>'
+        +'<div style="width:64px;text-align:right;padding-right:10px;font-family:monospace;font-size:12px">'+roasCell+'</div></div>';
+    });
+    return h;
+  };
+
+  const bodyH=top.length*rowH;
+  const svgBetween=function(kL,kR){
+    let lines='';
+    top.forEach(function(p){
+      if(p.v[kL].s<=0 || p.v[kR].s<=0) return;
+      const yL=idxs[kL][p.code]*rowH+rowH/2;
+      const yR=idxs[kR][p.code]*rowH+rowH/2;
+      const same=idxs[kR][p.code]===idxs[kL][p.code];
+      const upl=idxs[kR][p.code]<idxs[kL][p.code];
+      if(cmpFocus){ if(p.code!==cmpFocus) return; }
+      else {
+        if(!same){ if(upl && cmpHideUp) return; if(!upl && cmpHideDown) return; }
+        if(cmpColorFilter.size){ const lc=cmpLatestColor(p); if(!lc || !cmpColorFilter.has(lc)) return; }
+      }
+      const col=same?'#9ca3af':(upl?'#16a34a':'#dc2626');
+      const sw=(cmpFocus===p.code)?3.6:2.4, op=(cmpFocus===p.code)?'1':'0.8';
+      lines+='<line x1="0" y1="'+yL+'" x2="'+gapW+'" y2="'+yR+'" stroke="'+col+'" stroke-width="'+sw+'" opacity="'+op+'"/>';
+    });
+    return '<svg width="'+gapW+'" height="'+bodyH+'" style="display:block">'+lines+'</svg>';
+  };
+
+  const note=cmpMode==='pick'?['','']:(cmpMode==='yoy'?['去年同月','今年同月']:['2ヶ月前','前月','選択月']);
+  const lblStyle='text-align:center;font-weight:700;font-size:12px;height:'+labelH+'px;line-height:'+labelH+'px;color:var(--text2);background:var(--surface)';
+  const minW=TW*periods.length+gapW*(periods.length-1);
+  const headBlock=function(k){ return '<div style="width:'+TW+'px;flex-shrink:0;border:1px solid var(--border);border-radius:6px 6px 0 0;overflow:hidden">'
+    +'<div style="'+lblStyle+'">'+periods[k].slice(0,4)+'/'+periods[k].slice(4,6)+(note[k]?'（'+note[k]+'）':'')+'</div>'+colH+'</div>'; };
+  const rowsBlock=function(k){ return '<div style="width:'+TW+'px;flex-shrink:0;border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;overflow:hidden">'+tableHtml(orders[k],k)+'</div>'; };
+  const gapSpacer='<div style="width:'+gapW+'px;flex-shrink:0"></div>';
+  const svgCol=function(kL,kR){ return '<div style="width:'+gapW+'px;flex-shrink:0">'+svgBetween(kL,kR)+'</div>'; };
+  let _hd='', _bd='';
+  for(let k=0;k<periods.length;k++){ if(k>0){ _hd+=gapSpacer; _bd+=svgCol(k-1,k); } _hd+=headBlock(k); _bd+=rowsBlock(k); }
+  const head='<div style="display:flex;align-items:flex-end;position:sticky;top:0;z-index:10;background:var(--surface);min-width:'+minW+'px">'+_hd+'</div>';
+  const body='<div style="display:flex;align-items:flex-start;min-width:'+minW+'px">'+_bd+'</div>';
+  area.innerHTML='<div style="position:relative">'+head+body+'</div>';
+}
+window.addEventListener('resize', function(){ if(state.currentView==='compare') renderCompare(); });
+
 // ==================== Render All ====================
 function renderAll() {
   updateStateCounts();
@@ -6930,6 +7139,7 @@ function renderAll() {
   else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraph();
   else if (state.currentView === 'graphdata') renderGraph();
+  else if (state.currentView === 'compare') renderCompare();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
   else if (state.currentView === 'ad-tune') renderAdTune();
