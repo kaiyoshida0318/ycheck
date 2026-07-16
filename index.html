@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v299 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v301 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v299</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v301</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4722,6 +4722,7 @@ async function commitUpload() {
     //   調整バーの「本日更新済み」チップ判定と、対応前ガードの当日判定に使う。
     state.rankMeta = state.rankMeta || {};
     state.rankMeta.lastSpotUpdate = tuneTodayStr();
+    state.rankMeta.lastSpotUpdateTs = Date.now();  // 【v301】このサイクルの起点。以後の対応(adActionTs等)はこれより新しい＝当サイクル対応済み→全体のみ。
     _spotStaleAckedDate = '';  // 更新したので「未更新のまま続ける」確認は当日分をリセット
   }
   // 【v202】PRオプCSV（=Yahoo公開中の全商品リスト）に載っていない既存商品を撤退済みに。
@@ -5819,9 +5820,12 @@ function markTuneAction(code, kind) {
   if (!code) return;
   if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
   const today = tuneTodayStr();
-  if (kind === 'ad') state.productMeta[code].adActionAt = today;
-  else if (kind === 'pro') state.productMeta[code].proActionAt = today;
-  state.productMeta[code]._ts = Date.now();  // 【v285】最終編集時刻（保存時マージの新しさ判定に使用）
+  const nowTs = Date.now();
+  // 【v301】対応時刻(ミリ秒)も記録。推移確認/未確認は「最新値更新サイクル」内で対応済みかを
+  //   lastSpotUpdateTs と比較して判定する（対応→全体のみ、次の最新値更新でリセット）。
+  if (kind === 'ad') { state.productMeta[code].adActionAt = today; state.productMeta[code].adActionTs = nowTs; }
+  else if (kind === 'pro') { state.productMeta[code].proActionAt = today; state.productMeta[code].proActionTs = nowTs; }
+  state.productMeta[code]._ts = nowTs;  // 【v285】最終編集時刻（保存時マージの新しさ判定に使用）
   // 【v276】対応（値変更・状態変更・対応内容更新）しても、その場では凍結メンバーから外さない
   //   ＝修正あり等にそのまま留める。次回の「最新値を更新」やビュー移動で resetTuneMembers→再分類
   //   された時に初めて「全体」のみへ移る（v253の凍結挙動）。adActionAt はその再分類判定に使う。
@@ -5830,8 +5834,8 @@ function markTuneAction(code, kind) {
 // 【v249】商品が属する調整サブグループを返す（排他）。該当なし(=全体にのみ出る)は null。
 //   F = 修正条件に該当（isTuneFix: 〇なのに上位でない / ×なのに上位）。※案B: メモ有無は無関係、順位条件のみ。
 //   ・修正あり(fix)     : F。ただし「今日対応済み」なら null（全体のみ）＝翌日リセット。
-//   ・推移確認(watch)   : 非F かつ メモ(更新日時以外)あり。ただし「今月対応済み」なら null＝月替わりリセット。
-//   ・未確認(unchecked) : 非F かつ（空欄 or スタンプのみ）。ただし「今月対応済み」なら null＝月替わりリセット。
+//   ・推移確認(watch)   : 非F かつ メモ(更新日時以外)あり。【v301】当「最新値」サイクルで対応した商品は全体のみ（除外）。
+//   ・未確認(unchecked) : 非F かつ（空欄 or スタンプのみ）。【v301】同上。対応→全体のみ、次の最新値更新でリセット再振り分け。
 //   対応済み判定: adActionAt/proActionAt（対応操作時に記録）。fixは当日、watch/uncheckedは当月で判定。
 function getTuneGroup(code, kind) {
   const meta = state.productMeta[code] || {};
@@ -5846,10 +5850,15 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
-  // 非F: 推移確認/未確認。今月対応したものは外す（月替わりで戻る）。
-  if (tuneIsThisMonth(actionAt)) return null;
-  if (noteHasChangeContent(note)) return 'watch';  // メモあり=推移確認
-  return 'unchecked';                              // 空欄 or スタンプのみ=未確認
+  // 【v301】非F: 「最新値更新サイクル」で対応した商品は全体のみに置く（推移確認/未確認から外す）。
+  //   対応＝メモ記入・更新日時スタンプ・対応内容-全更新処理・入札価格/PRオプ料率の変更（=markTuneAction）。
+  //   判定: そのkindの対応時刻(adActionTs/proActionTs)が、直近の最新値更新時刻(lastSpotUpdateTs)より新しいか。
+  //   「最新値を更新」すると lastSpotUpdateTs が更新され、以前の対応は過去扱いになりリセット→下の条件で再振り分け。
+  const doneTs = (kind === 'ad') ? meta.adActionTs : meta.proActionTs;
+  const spotTs = (state.rankMeta && state.rankMeta.lastSpotUpdateTs) || 0;
+  if (doneTs && doneTs > spotTs) return null;      // 当サイクルで対応済み → 全体のみ
+  if (noteHasChangeContent(note)) return 'watch';  // メモ(更新日時以外)あり=推移確認
+  return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
 }
 
 // tuneFilterBar の表示/非表示・アクティブ表示・件数を更新する。
@@ -7419,10 +7428,10 @@ function buildTuneCondHtml(kind) {
       '<small>※その日に対応（値変更・状態変更・対応内容更新）すると当日だけ外れ、翌日また表示。</small></td></tr>' +
     '<tr class="tc-row-watch"><td><span class="tc-badge tc-b-watch">推移確認</span></td><td>' +
       '修正ありに該当せず、状態が<span class="tc-ng">×</span>で、対応内容に<b>メモ（更新日時以外）</b>が入っている商品。' +
-      '<small>※その月に対応すると外れ、翌月また表示。</small></td></tr>' +
+      '<small>※対応（メモ記入・更新日時スタンプ・全更新処理・入札価格変更）した商品は全体のみに移り、「最新値を更新」で再表示されます。</small></td></tr>' +
     '<tr class="tc-row-unch"><td><span class="tc-badge tc-b-unch">未確認</span></td><td>' +
       '修正ありに該当せず、状態が<span class="tc-ng">×</span>で、対応内容が<b>空欄 または 更新日時のみ</b>の商品。' +
-      '<small>※その月に対応すると外れ、翌月また表示。</small></td></tr>' +
+      '<small>※対応した商品は全体のみに移り、「最新値を更新」で再表示。メモ付きは推移確認へ振り分けられます。</small></td></tr>' +
     '<tr class="tc-row-all"><td><span class="tc-badge tc-b-all">全体</span></td><td>' + allText + '</td></tr>';
   const foot =
     '<div class="tc-foot">共通：状態が<span class="tc-ok">○</span>で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
@@ -8097,12 +8106,18 @@ function isSpotUpdatedToday() {
 //   rank.json の meta（fetchRankJson）や GitHub由来 meta には lastSpotUpdate が無いため、そのまま代入すると
 //   「本日更新済み」が消え、リロードで「本日未更新」に戻る不具合になる。日付は 'YYYY-MM-DD' で文字列比較=日付比較。
 function _assignRankMetaKeepSpot(newMeta) {
-  const prevSpot = state.rankMeta && state.rankMeta.lastSpotUpdate;
+  const prev = state.rankMeta || {};
   const nm = newMeta || {};
-  const a = prevSpot, b = nm.lastSpotUpdate;
-  const keep = (!a) ? b : (!b ? a : (a >= b ? a : b));   // 新しい日付を採用（無い方は無視）
-  if (keep) nm.lastSpotUpdate = keep;
+  // lastSpotUpdate（日付）と対の lastSpotUpdateTs（ms）は新旧で新しい日付の方をペアで残す。
+  const a = prev.lastSpotUpdate, b = nm.lastSpotUpdate;
+  let keepDate, keepTs;
+  if (!a)              { keepDate = b; keepTs = nm.lastSpotUpdateTs; }
+  else if (!b)         { keepDate = a; keepTs = prev.lastSpotUpdateTs; }
+  else if (a >= b)     { keepDate = a; keepTs = prev.lastSpotUpdateTs; }
+  else                 { keepDate = b; keepTs = nm.lastSpotUpdateTs; }
   state.rankMeta = nm;
+  if (keepDate) nm.lastSpotUpdate = keepDate;
+  if (keepTs != null) nm.lastSpotUpdateTs = keepTs;
 }
 // 調整ビュー(ad-tune/pro-tune)で入札価格/PRオプ料率を編集する直前に呼ぶ。
 // 未更新かつ当日未確認なら1回だけ confirm。OK=続行(当日は再確認しない)、キャンセル=編集中止。
