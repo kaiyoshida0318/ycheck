@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v301 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v302 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v301</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v302</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4413,8 +4413,14 @@ function classifyFile(filename, rows) {
 function parseOverall(rows) {
   const monthMap = {};
   rows.forEach(r => {
-    const dateStr = r['日付'] || '';
-    const revenue = toNum(r['売上合計値'] || r['売上']);
+    const dateStr = r['日付'] || r['年月'] || r['月'] || '';
+    // 【v302】ショップ売上(月次)KPI CSV の総売上列は「合算値売上合計値」(PC+スマホ+アプリの合算＝既に合計)。
+    //   旧候補(売上合計値/売上)はこのCSVに存在せず revenue=0 になり、全-月別データが商品合計へフォールバックしていた。
+    //   合算値を最優先で読む。PC売上合計値/スマホ.../アプリ... は個別値なので合算しない(合算値が既に総計)。
+    const revenue = toNum(
+      r['合算値売上合計値'] || r['売上合計値（税込）'] || r['売上合計値(税込)'] ||
+      r['売上合計値'] || r['総売上'] || r['売上金額'] || r['売上合計'] || r['売上'] || 0
+    );
     if (!dateStr) return;
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
     if (!m) return;
