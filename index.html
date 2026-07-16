@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v295 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v296 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -924,9 +924,10 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 20px 8px;
+  padding: 8px 20px 8px;   /* 【v296】修正あり行の上下の白余白を左右対称(8px)に＝下の白い隙間と同じ高さ */
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
+  margin-top: 8px;   /* 【v296】【状態】バーとの間を少し開ける */
 }
 .tune-filter-bar .nav-group-label { color: var(--text3); font-size: 0.78rem; font-weight: 600; margin-right: 4px; }
 .tune-chip {
@@ -2502,7 +2503,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v295</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v296</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
