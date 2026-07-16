@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v304 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v305 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v304</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v305</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7184,7 +7184,7 @@ function renderCompare(){
       const foc=(cmpFocus===p.code);
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
         +'<div style="width:60px;display:flex;justify-content:center">'+im+'</div>'
-        +'<div style="flex:1;padding-left:10px;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
+        +'<div style="flex:1;padding-left:10px;font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
         +'<div style="width:108px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+salesCell+'</div>'
         +'<div style="width:92px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+fmt(vv.sp)+'</div>'
         +'<div style="width:104px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+seoCell+'</div>'
@@ -7642,6 +7642,16 @@ document.addEventListener('keydown', (e) => {
 // ==================== Events ====================
 $('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.1));
 $('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.1));
+
+// 【v305】取得元URL(レポート追加/最新値を更新モーダル内)は必ず新しいタブで開き、
+//   現在のYcheckページは絶対に遷移させない（preventDefaultで既定遷移を止め、window.openで別タブ）。
+document.addEventListener('click', (e) => {
+  const a = e.target.closest && e.target.closest('.file-slot-link a[href]');
+  if (!a) return;
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;  // 修飾キー/中クリックはブラウザ既定に任せる
+  e.preventDefault();
+  window.open(a.href, '_blank', 'noopener');
+});
 
 const dropzone = $('#dropzone');
 const fileInput = $('#fileInput');
