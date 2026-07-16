@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0318 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0319 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2516,7 +2516,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0318</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0319</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3917,6 +3917,18 @@ async function ghSaveToGitHub(options = {}) {
             // 【v286】bid / proRate も同じ recency（同キーのproductMeta._ts等）でマージ
             dataObj.bid     = mergeMapByPmRecency(dataObj.bid,     _remote.bid,     _localPM, _remotePM);
             dataObj.proRate = mergeMapByPmRecency(dataObj.proRate, _remote.proRate, _localPM, _remotePM);
+            // 【v1.0319】productsCsvSnapshot も「新しい方(savedAt)」を残す。
+            //   古い(=248時代の)スナップショットを持ったまま生きている別セッション/タブが、
+            //   保存のたびに GitHub のスナップショットを古い状態へ巻き戻し、「順位取得CSV(GitHub反映)」ボタンが
+            //   誤って赤く戻る ping-pong を防ぐ（master自体は最新なので、古いsnapshotだと差分＝赤になっていた）。
+            try {
+              const _pt = function (s) { try { return (s && s.savedAt) ? (Date.parse(s.savedAt) || 0) : 0; } catch (e) { return 0; } };
+              const _rSnap = _remote.productsCsvSnapshot;
+              if (_rSnap && _pt(_rSnap) > _pt(dataObj.productsCsvSnapshot)) {
+                dataObj.productsCsvSnapshot = _rSnap;   // remoteの方が新しい → remoteを採用（巻き戻し防止）
+                console.log('[Ycheck] 順位CSVスナップショット: remoteの方が新しいため採用（古い上書きを防止）');
+              }
+            } catch (eSnap) { /* 失敗時はローカルのまま */ }
             outStr = JSON.stringify(dataObj);
             const _afterN = Object.keys(dataObj.productMeta || {}).length;
             if (_afterN !== _beforeN) console.log('[Ycheck] productMetaマージ: 商品数', _beforeN, '→', _afterN);
