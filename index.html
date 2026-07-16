@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v306 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v307 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v306</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v307</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7108,8 +7108,26 @@ function renderCompare(){
   if(!prods.length){ area.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">比較できる売上データがありません（選んだ月に売上のある商品がありません）</div>'; return; }
 
   const top=[...prods].sort(function(a,b){ return b.v[lastK].s-a.v[lastK].s; });
-  const rowH=60, headerH=40, labelH=34, TW=600; let gapW=60;  // 【v295】ADcheck相当に拡大
-  if(periods.length===2){ const _aw=(area.clientWidth||1100); gapW=Math.min(900, Math.max(160, _aw-TW*2-6)); }
+  // 【v307】ブロック数でサイズ調整。3ブロック(前月比較)は画面幅に収めて横スクロールを出さない（ADcheck相当のコンパクト）。2ブロックはv295の大きめ表示を維持。
+  const nP = periods.length;
+  const _aw = area.clientWidth || 1200;
+  const compact = nP >= 3;
+  const S = compact
+    ? { imgBox:44, imgSz:40, nameF:14, numF:13, hdrF:12, lblF:15, cSales:94, cAd:78, cSeo:90, cRoas:64, padR:8, padRoas:10, rowH:48, headerH:34, labelH:30 }
+    : { imgBox:60, imgSz:54, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
+  const rowH=S.rowH, headerH=S.headerH, labelH=S.labelH;
+  const colsFixed = S.imgBox + S.cSales + S.cAd + S.cSeo + S.cRoas;  // 商品名以外の列幅合計
+  let TW, gapW;
+  if (compact) {
+    gapW = 44;
+    TW = Math.floor((_aw - gapW*(nP-1) - 4) / nP);   // 画面幅に3ブロックを収める
+    const minTW = colsFixed;                         // 商品名は0まで縮む(overflow:hiddenで…省略)。列自体が入らない極小画面のみ横スクロール
+    if (TW < minTW) TW = minTW;
+  } else if (nP === 2) {
+    TW = 600; gapW = Math.min(900, Math.max(160, _aw - TW*2 - 6));
+  } else {
+    TW = 600; gapW = 60;
+  }
   const orders=periods.map(function(_,k){ return [...top].sort(function(a,b){ return b.v[k].s-a.v[k].s; }); });
   const idxs=orders.map(function(ord){ const m={}; ord.forEach(function(p,i){ m[p.code]=i; }); return m; });
 
@@ -7117,13 +7135,13 @@ function renderCompare(){
   const fmt=function(v){ return v>0?yen(v):'<span style="color:var(--text3)">—</span>'; };
   const esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
 
-  const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:13px;font-weight:700;color:var(--text3);background:var(--surface2)">'
-    +'<div style="width:60px;text-align:center">画像</div>'
+  const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:'+S.hdrF+'px;font-weight:700;color:var(--text3);background:var(--surface2)">'
+    +'<div style="width:'+S.imgBox+'px;text-align:center">画像</div>'
     +'<div style="flex:1;padding-left:10px">商品名</div>'
-    +'<div style="width:108px;text-align:right;padding-right:10px">商品売上</div>'
-    +'<div style="width:92px;text-align:right;padding-right:10px">広告費</div>'
-    +'<div style="width:104px;text-align:right;padding-right:10px">SEO売上</div>'
-    +'<div style="width:84px;text-align:right;padding-right:12px">広告ROAS</div></div>';
+    +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px">商品売上</div>'
+    +'<div style="width:'+S.cAd+'px;text-align:right;padding-right:'+S.padR+'px">広告費</div>'
+    +'<div style="width:'+S.cSeo+'px;text-align:right;padding-right:'+S.padR+'px">SEO売上</div>'
+    +'<div style="width:'+S.cRoas+'px;text-align:right;padding-right:'+S.padRoas+'px">広告ROAS</div></div>';
 
   const tableHtml=function(ord,k){
     let h='';
@@ -7136,15 +7154,15 @@ function renderCompare(){
       const psSeo=(k>0)?(p.v[k-1].seo||0):0; let seoCell;
       if(vv.seo<=0){ seoCell=fmt(vv.seo); }
       else { const _c2=(k>0)?cmpYoyCat(vv.seo, psSeo):null; seoCell=_c2?('<span style="color:'+CMP_YOYCOL[_c2]+';font-weight:700">'+yen(vv.seo)+'</span>'):yen(vv.seo); }
-      const im=p.img?'<img src="'+esc(p.img)+'" style="width:54px;height:54px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">':'<div style="width:54px;height:54px;background:var(--surface2);border-radius:4px"></div>';
+      const im=p.img?'<img src="'+esc(p.img)+'" style="width:'+S.imgSz+'px;height:'+S.imgSz+'px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">':'<div style="width:'+S.imgSz+'px;height:'+S.imgSz+'px;background:var(--surface2);border-radius:4px"></div>';
       const foc=(cmpFocus===p.code);
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
-        +'<div style="width:60px;display:flex;justify-content:center">'+im+'</div>'
-        +'<div style="flex:1;padding-left:10px;font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
-        +'<div style="width:108px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+salesCell+'</div>'
-        +'<div style="width:92px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+fmt(vv.sp)+'</div>'
-        +'<div style="width:104px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+seoCell+'</div>'
-        +'<div style="width:84px;text-align:right;padding-right:12px;font-family:monospace;font-size:15px">'+roasCell+'</div></div>';
+        +'<div style="width:'+S.imgBox+'px;display:flex;justify-content:center">'+im+'</div>'
+        +'<div style="flex:1;padding-left:10px;font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
+        +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+salesCell+'</div>'
+        +'<div style="width:'+S.cAd+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+fmt(vv.sp)+'</div>'
+        +'<div style="width:'+S.cSeo+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+seoCell+'</div>'
+        +'<div style="width:'+S.cRoas+'px;text-align:right;padding-right:'+S.padRoas+'px;font-family:monospace;font-size:'+S.numF+'px">'+roasCell+'</div></div>';
     });
     return h;
   };
@@ -7171,7 +7189,7 @@ function renderCompare(){
   };
 
   const note=cmpMode==='pick'?['','']:(cmpMode==='yoy'?['去年同月','今年同月']:['2ヶ月前','前月','選択月']);
-  const lblStyle='text-align:center;font-weight:700;font-size:16px;height:'+labelH+'px;line-height:'+labelH+'px;color:var(--text2);background:var(--surface)';
+  const lblStyle='text-align:center;font-weight:700;font-size:'+S.lblF+'px;height:'+labelH+'px;line-height:'+labelH+'px;color:var(--text2);background:var(--surface)';
   const minW=TW*periods.length+gapW*(periods.length-1);
   const headBlock=function(k){ return '<div style="width:'+TW+'px;flex-shrink:0;border:1px solid var(--border);border-radius:6px 6px 0 0;overflow:hidden">'
     +'<div style="'+lblStyle+'">'+periods[k].slice(0,4)+'/'+periods[k].slice(4,6)+(note[k]?'（'+note[k]+'）':'')+'</div>'+colH+'</div>'; };
