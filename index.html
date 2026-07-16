@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v302 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v303 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v302</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v303</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2764,7 +2764,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="view" id="view-compare">
       <div class="card">
         <h3 class="card-title">全-比較（売上ランキング比較）</h3>
-        <div class="cmp-sub">複数の月を売上順に並べ、同じ商品を線で結んで順位変動を見る。線色＝売上の前期比。</div>
         <div class="cmp-toolbar" id="cmpToolbar">
           <button id="cmpMYoy"  class="mbtn"    type="button" onclick="cmpSetMode('yoy')">前年同月比</button>
           <button id="cmpMMom"  class="mbtn on" type="button" onclick="cmpSetMode('mom')">前月比較</button>
@@ -7029,15 +7028,22 @@ function cmpYoyCat(cur, prev){ if(cur<=0||prev<=0) return null; if(cur>=prev*1.2
 function cmpLatestColor(p){ const n=p.v.length; return (n>=2)?cmpYoyCat(p.v[n-1].s, p.v[n-2].s):null; }
 function cmpYmAdd(ym, d){ let y=+ym.slice(0,4), m=+ym.slice(4,6)-1+d; y+=Math.floor(m/12); m=((m%12)+12)%12; return String(y)+String(m+1).padStart(2,'0'); }
 // Ycheck の state から 月×商品 に集計（ym は 'YYYYMM'）
+// 【v303】代表商品コード(repCode)がある親子商品は、代表コードに各項目を合算して1行にまとめる。
+//   groupKey = repCode(あれば) / 無ければ自コード。親(repCode空＝子から参照される元、または自己参照)も子も同じキーへ集約。
+function cmpRepCode(code){
+  const rc = ((state.productMeta[code] || {}).repCode || '').trim();
+  return rc || code;
+}
 function cmpBuildAgg(){
   const agg = {}, meta = {};
   buildFullAggregate().forEach(function(r){
     const ym = String(r.month || '').replace(/\//g,'-').replace('-','');  // 'YYYY-MM' → 'YYYYMM'
     if (ym.length !== 6) return;
+    const rep = cmpRepCode(r.code);   // 【v303】代表コードへ合算
     if (!agg[ym]) agg[ym] = {};
-    const a = agg[ym][r.code] || (agg[ym][r.code] = { s:0, sp:0, seo:0, ad:0 });
+    const a = agg[ym][rep] || (agg[ym][rep] = { s:0, sp:0, seo:0, ad:0 });
     a.s += (+r.rev||0); a.sp += (+r.adCost||0); a.seo += (+r.seoRev||0); a.ad += (+r.adRev||0);
-    if (!meta[r.code]) { const m = getMaster(r.code) || {}; meta[r.code] = { name:(m.name||r.code), img:(getProductImageSrc(r.code)||'') }; }
+    if (!meta[rep]) { const m = getMaster(rep) || {}; meta[rep] = { name:(m.name||rep), img:(getProductImageSrc(rep)||'') }; }
   });
   return { agg: agg, yms: Object.keys(agg).sort(), meta: meta };
 }
