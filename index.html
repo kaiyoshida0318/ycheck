@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v294 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v295 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2462,20 +2462,20 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
    ・ADcheck の --surface/--surface2 を Ycheck のテーマ変数へマッピングして流用。
    ============================================================ */
 #view-compare { --surface: var(--bg2); --surface2: var(--bg3); }
-#view-compare .cmp-sub { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
-#view-compare .cmp-toolbar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+#view-compare .cmp-sub { font-size: 13px; color: var(--text3); margin-bottom: 14px; }
+#view-compare .cmp-toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
 #view-compare .mbtn {
-  font-size:12px; padding:6px 14px; border-radius:6px; cursor:pointer; white-space:nowrap;
+  font-size:15px; padding:9px 18px; border-radius:8px; cursor:pointer; white-space:nowrap;
   font-weight:600; border:1px solid var(--border); background:var(--surface2); color:var(--text3);
   font-family:inherit;
 }
 #view-compare .mbtn.on { border:1px solid var(--accent); background:var(--accent); color:#fff; }
 #view-compare select {
-  font-size:12px; padding:6px 10px; border-radius:6px; border:1px solid var(--border);
+  font-size:15px; padding:8px 14px; border-radius:8px; border:1px solid var(--border);
   background:var(--bg2); color:var(--text); cursor:pointer; font-family:inherit;
 }
-#view-compare .cmp-legend { margin-left:auto; display:flex; align-items:center; gap:10px; font-size:11px; color:var(--text2); flex-wrap:wrap; }
-#view-compare .cmp-legend .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:3px; vertical-align:middle; }
+#view-compare .cmp-legend { margin-left:auto; display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text2); flex-wrap:wrap; }
+#view-compare .cmp-legend .sw { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:4px; vertical-align:middle; }
 #view-compare .cmp-area { position:relative; overflow-x:auto; }
 </style>
 </head>
@@ -2502,7 +2502,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v294</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v295</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7034,7 +7034,7 @@ function cmpSyncUI(){
   const pick = (cmpMode==='pick');
   const disp = function(id,show){ const el=document.getElementById(id); if(el) el.style.display=show?'':'none'; };
   disp('cmpSelMonth', !pick); disp('cmpSelA', pick); disp('cmpSelB', pick); disp('cmpPickArrow', pick);
-  const base='font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;font-family:inherit;';
+  const base='font-size:15px;padding:9px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;font-family:inherit;';  // 【v295】ADcheck相当に拡大
   const strike='border:1px solid var(--border);background:var(--surface2);color:var(--text3);text-decoration:line-through;';
   const up=document.getElementById('cmpTUp'); if(up) up.style.cssText='margin-left:12px;'+base+(cmpHideUp?strike:'border:1px solid #16a34a;background:#16a34a;color:#fff;');
   const dn=document.getElementById('cmpTDown'); if(dn) dn.style.cssText=base+(cmpHideDown?strike:'border:1px solid #dc2626;background:#dc2626;color:#fff;');
@@ -7075,7 +7075,7 @@ function renderCompare(){
   if(!prods.length){ area.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">比較できる売上データがありません（選んだ月に売上のある商品がありません）</div>'; return; }
 
   const top=[...prods].sort(function(a,b){ return b.v[lastK].s-a.v[lastK].s; });
-  const rowH=48, headerH=32, labelH=27, TW=452; let gapW=48;
+  const rowH=60, headerH=40, labelH=34, TW=600; let gapW=60;  // 【v295】ADcheck相当に拡大
   if(periods.length===2){ const _aw=(area.clientWidth||1100); gapW=Math.min(900, Math.max(160, _aw-TW*2-6)); }
   const orders=periods.map(function(_,k){ return [...top].sort(function(a,b){ return b.v[k].s-a.v[k].s; }); });
   const idxs=orders.map(function(ord){ const m={}; ord.forEach(function(p,i){ m[p.code]=i; }); return m; });
@@ -7084,13 +7084,13 @@ function renderCompare(){
   const fmt=function(v){ return v>0?yen(v):'<span style="color:var(--text3)">—</span>'; };
   const esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
 
-  const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);background:var(--surface2)">'
-    +'<div style="width:48px;text-align:center">画像</div>'
-    +'<div style="flex:1;padding-left:8px">商品名</div>'
-    +'<div style="width:80px;text-align:right;padding-right:8px">商品売上</div>'
-    +'<div style="width:70px;text-align:right;padding-right:8px">広告費</div>'
-    +'<div style="width:80px;text-align:right;padding-right:8px">SEO売上</div>'
-    +'<div style="width:64px;text-align:right;padding-right:10px">広告ROAS</div></div>';
+  const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:13px;font-weight:700;color:var(--text3);background:var(--surface2)">'
+    +'<div style="width:60px;text-align:center">画像</div>'
+    +'<div style="flex:1;padding-left:10px">商品名</div>'
+    +'<div style="width:108px;text-align:right;padding-right:10px">商品売上</div>'
+    +'<div style="width:92px;text-align:right;padding-right:10px">広告費</div>'
+    +'<div style="width:104px;text-align:right;padding-right:10px">SEO売上</div>'
+    +'<div style="width:84px;text-align:right;padding-right:12px">広告ROAS</div></div>';
 
   const tableHtml=function(ord,k){
     let h='';
@@ -7103,15 +7103,15 @@ function renderCompare(){
       const psSeo=(k>0)?(p.v[k-1].seo||0):0; let seoCell;
       if(vv.seo<=0){ seoCell=fmt(vv.seo); }
       else { const _c2=(k>0)?cmpYoyCat(vv.seo, psSeo):null; seoCell=_c2?('<span style="color:'+CMP_YOYCOL[_c2]+';font-weight:700">'+yen(vv.seo)+'</span>'):yen(vv.seo); }
-      const im=p.img?'<img src="'+esc(p.img)+'" style="width:44px;height:44px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">':'<div style="width:44px;height:44px;background:var(--surface2);border-radius:4px"></div>';
+      const im=p.img?'<img src="'+esc(p.img)+'" style="width:54px;height:54px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">':'<div style="width:54px;height:54px;background:var(--surface2);border-radius:4px"></div>';
       const foc=(cmpFocus===p.code);
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
-        +'<div style="width:48px;display:flex;justify-content:center">'+im+'</div>'
-        +'<div style="flex:1;padding-left:8px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
-        +'<div style="width:80px;text-align:right;padding-right:8px;font-family:monospace;font-size:12px">'+salesCell+'</div>'
-        +'<div style="width:70px;text-align:right;padding-right:8px;font-family:monospace;font-size:12px">'+fmt(vv.sp)+'</div>'
-        +'<div style="width:80px;text-align:right;padding-right:8px;font-family:monospace;font-size:12px">'+seoCell+'</div>'
-        +'<div style="width:64px;text-align:right;padding-right:10px;font-family:monospace;font-size:12px">'+roasCell+'</div></div>';
+        +'<div style="width:60px;display:flex;justify-content:center">'+im+'</div>'
+        +'<div style="flex:1;padding-left:10px;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
+        +'<div style="width:108px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+salesCell+'</div>'
+        +'<div style="width:92px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+fmt(vv.sp)+'</div>'
+        +'<div style="width:104px;text-align:right;padding-right:10px;font-family:monospace;font-size:15px">'+seoCell+'</div>'
+        +'<div style="width:84px;text-align:right;padding-right:12px;font-family:monospace;font-size:15px">'+roasCell+'</div></div>';
     });
     return h;
   };
@@ -7138,7 +7138,7 @@ function renderCompare(){
   };
 
   const note=cmpMode==='pick'?['','']:(cmpMode==='yoy'?['去年同月','今年同月']:['2ヶ月前','前月','選択月']);
-  const lblStyle='text-align:center;font-weight:700;font-size:12px;height:'+labelH+'px;line-height:'+labelH+'px;color:var(--text2);background:var(--surface)';
+  const lblStyle='text-align:center;font-weight:700;font-size:16px;height:'+labelH+'px;line-height:'+labelH+'px;color:var(--text2);background:var(--surface)';
   const minW=TW*periods.length+gapW*(periods.length-1);
   const headBlock=function(k){ return '<div style="width:'+TW+'px;flex-shrink:0;border:1px solid var(--border);border-radius:6px 6px 0 0;overflow:hidden">'
     +'<div style="'+lblStyle+'">'+periods[k].slice(0,4)+'/'+periods[k].slice(4,6)+(note[k]?'（'+note[k]+'）':'')+'</div>'+colH+'</div>'; };
