@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v308 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v309 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v308</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v309</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7110,26 +7110,35 @@ function renderCompare(){
   if(!prods.length){ area.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">比較できる売上データがありません（選んだ月に売上のある商品がありません）</div>'; return; }
 
   const top=[...prods].sort(function(a,b){ return b.v[lastK].s-a.v[lastK].s; });
-  // 【v307】ブロック数でサイズ調整。3ブロック(前月比較)は画面幅に収めて横スクロールを出さない（ADcheck相当のコンパクト）。2ブロックはv295の大きめ表示を維持。
+  // 【v309】3ブロック(前月比較)は「商品名6文字幅固定＋収まる範囲で最大フォント」でADcheck風に。2ブロックはv295の大きめ表示を維持。
   const nP = periods.length;
   const _aw = area.clientWidth || 1200;
   const compact = nP >= 3;
-  const S = compact
-    ? { imgBox:44, imgSz:40, nameF:14, numF:13, hdrF:12, lblF:15, cSales:94, cAd:78, cSeo:90, cRoas:64, padR:8, padRoas:10, rowH:48, headerH:34, labelH:30 }
-    : { imgBox:60, imgSz:54, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
-  const rowH=S.rowH, headerH=S.headerH, labelH=S.labelH;
-  const colsFixed = S.imgBox + S.cSales + S.cAd + S.cSeo + S.cRoas;  // 商品名以外の列幅合計
-  let TW, gapW;
+  let S, TW, gapW;
   if (compact) {
     gapW = 44;
     TW = Math.floor((_aw - gapW*(nP-1) - 4) / nP);   // 画面幅に3ブロックを収める
-    const minTW = colsFixed;                         // 商品名は0まで縮む(overflow:hiddenで…省略)。列自体が入らない極小画面のみ横スクロール
-    if (TW < minTW) TW = minTW;
+    const imgBox = 48;
+    // フォントfに応じた各列幅（商品名は6文字幅固定＝round(6.4f)。数値はmonospaceで約0.6f/桁）
+    const need = function(f){
+      const nameW = Math.round(6.4*f);               // 商品名6文字ぶんの幅
+      const cS = Math.round(6*f)+7, cA = Math.round(4.8*f)+7, cSe = Math.round(6*f)+7, cR = Math.round(3*f)+7;
+      return { nameW:nameW, cS:cS, cA:cA, cSe:cSe, cR:cR, total: imgBox + (nameW+10) + cS + cA + cSe + cR };
+    };
+    let f = 11, N = need(11);
+    [12,13,14,15,16].forEach(function(c){ const n = need(c); if (n.total <= TW){ f = c; N = n; } });  // 収まる最大フォントを採用（昇順で更新）
+    if (TW < N.total) TW = N.total;                  // 最小(11px)でも入らない極小画面のみ横スクロール
+    S = { imgBox:imgBox, imgSz:42, nameFixed:true, nameW:N.nameW, nameF:f, numF:f, hdrF:Math.max(11,f-2), lblF:f+2,
+          cSales:N.cS, cAd:N.cA, cSeo:N.cSe, cRoas:N.cR, padR:7, padRoas:9,
+          rowH:Math.round(f*3.4), headerH:Math.round(f*2.4), labelH:Math.round(f*2.1) };
   } else if (nP === 2) {
+    S = { imgBox:60, imgSz:54, nameFixed:false, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
     TW = 600; gapW = Math.min(900, Math.max(160, _aw - TW*2 - 6));
   } else {
+    S = { imgBox:60, imgSz:54, nameFixed:false, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
     TW = 600; gapW = 60;
   }
+  const rowH=S.rowH, headerH=S.headerH, labelH=S.labelH;
   const orders=periods.map(function(_,k){ return [...top].sort(function(a,b){ return b.v[k].s-a.v[k].s; }); });
   const idxs=orders.map(function(ord){ const m={}; ord.forEach(function(p,i){ m[p.code]=i; }); return m; });
 
@@ -7137,9 +7146,12 @@ function renderCompare(){
   const fmt=function(v){ return v>0?yen(v):'<span style="color:var(--text3)">—</span>'; };
   const esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
 
+  // 【v309】商品名: コンパクトは6文字幅固定＋spacerで数値を右寄せ。通常(2ブロック)は従来どおりflexで伸縮。
+  const nameFlex = S.nameFixed ? ('width:'+S.nameW+'px;flex:0 0 '+S.nameW+'px;') : 'flex:1;';
+  const spacer = S.nameFixed ? '<div style="flex:1"></div>' : '';
   const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:'+S.hdrF+'px;font-weight:700;color:var(--text3);background:var(--surface2)">'
     +'<div style="width:'+S.imgBox+'px;text-align:center">画像</div>'
-    +'<div style="flex:1;padding-left:10px">商品名</div>'
+    +'<div style="'+nameFlex+'padding-left:10px">商品名</div>'+spacer
     +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px">商品売上</div>'
     +'<div style="width:'+S.cAd+'px;text-align:right;padding-right:'+S.padR+'px">広告費</div>'
     +'<div style="width:'+S.cSeo+'px;text-align:right;padding-right:'+S.padR+'px">SEO売上</div>'
@@ -7160,7 +7172,7 @@ function renderCompare(){
       const foc=(cmpFocus===p.code);
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
         +'<div style="width:'+S.imgBox+'px;display:flex;justify-content:center">'+im+'</div>'
-        +'<div onclick="event.stopPropagation()" ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+'" style="flex:1;padding-left:10px;font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:text;-webkit-user-select:text">'+esc(p.name)+'</div>'
+        +'<div onclick="event.stopPropagation()" ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+'" style="'+nameFlex+'padding-left:10px;font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:text;-webkit-user-select:text">'+esc(p.name)+'</div>'+spacer
         +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+salesCell+'</div>'
         +'<div style="width:'+S.cAd+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+fmt(vv.sp)+'</div>'
         +'<div style="width:'+S.cSeo+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+seoCell+'</div>'
