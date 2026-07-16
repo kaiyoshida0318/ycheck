@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v292 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v293 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2502,7 +2502,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v292</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v293</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5883,7 +5883,8 @@ function updateTuneBar() {
       const md = (d.length >= 10) ? (d.slice(5, 7) + '/' + d.slice(8, 10)) : '';
       fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:700;color:var(--green);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.45);border-radius:6px;padding:3px 9px;white-space:nowrap">✓ 最新値 本日更新済み' + (md ? '（' + md + '）' : '') + '</span>';
     } else {
-      fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:800;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 9px;white-space:nowrap">⚠ 最新値 本日未更新</span>'
+      // 【v293】未更新は「アラート帯」（左アクセントバー＋淡塗り・角片側丸め）＝塗りボタンと形で差別化。
+      fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;font-weight:700;color:#92400e;background:rgba(217,119,6,0.12);border-left:4px solid var(--amber);border-radius:0 5px 5px 0;padding:5px 12px 5px 10px;white-space:nowrap">⚠ 最新値 本日未更新</span>'
         + '<button type="button" onclick="openUploadModal(\'spot\')" title="最新の入札価格／PRオプ料率を取り込む" style="font-size:0.76rem;font-weight:700;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">＋ 最新値を更新</button>';
     }
   }
