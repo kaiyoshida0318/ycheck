@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0319 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0321 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2516,7 +2516,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0319</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0321</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3225,7 +3225,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <h2 class="modal-title">📂 レポートを追加</h2>
       <button class="modal-close" id="modalClose">×</button>
     </div>
-    <p class="dropzone-hint" id="uploadModeHint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートの3つをセットで、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
+    <p class="dropzone-hint" id="uploadModeHint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートは1つ以上、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📥</div>
       <div class="dropzone-text">ここに <b>CSV</b> または <b>ZIP</b> をまとめてドロップ　または　<b>クリックして選択</b></div>
@@ -3235,21 +3235,21 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 
     <div class="file-slots">
       <div class="file-slot" id="slot-overall" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）<span class="required-mark">必須</span></div>
+        <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上(月次)<span class="required-mark">必須</span></div>
+        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上(月次)</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 商品分析 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report</a></div>
       </div>
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート(月次)<span class="required-mark">必須</span></div>
+        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート(月次)</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
@@ -3272,7 +3272,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
 
     <div class="validation-box" id="validationBox">
-      <div class="validation-msg" id="validationMsg">📋 必須3ファイル（月次データ）、または入札価格を単独でアップロードできます</div>
+      <div class="validation-msg" id="validationMsg">📋 月次データ（ショップ売上／商品別売上／広告詳細）は1つ以上でアップロードできます。入札価格などは「+最新値を更新」側で</div>
     </div>
 
     <div class="upload-actions">
@@ -4662,7 +4662,7 @@ function validateBuffer() {
   const hasAnyMonthly = hasOverall || hasItem || hasAd;
   if (!hasAnyMonthly && !hasMaster) {
     box.className = 'validation-box info';
-    msg.textContent = '📋 ショップ売上・商品別売上・広告詳細レポートの3つをセットでアップロードしてください';
+    msg.textContent = '📋 ショップ売上・商品別売上・広告詳細レポートのいずれか（1つ以上）をドロップしてください';
     btn.disabled = true;
     return false;
   }
@@ -4672,38 +4672,33 @@ function validateBuffer() {
     btn.disabled = false;
     return true;
   }
-  if (!hasFullMonthly) {
-    const missing = [];
-    if (!hasOverall) missing.push('ショップ売上');
-    if (!hasItem) missing.push('商品別売上');
-    if (!hasAd) missing.push('広告詳細レポート');
-    box.className = 'validation-box info';
-    msg.textContent = `📋 あと${missing.length}ファイル必要です: ${missing.join(' / ')}`;
-    btn.disabled = true;
-    return false;
-  }
-  const overallMonth = buf.overall.month;
-  const adMonth = buf.ad.month;
-  if (!overallMonth) {
+  // 【v1.0321】月次は1ファイルからでもアップ可能に（従来は3ファイル必須だった）。
+  //   月の整合だけ確認する：ショップ売上・広告が両方あって月が違う場合のみエラー。
+  const overallMonth = hasOverall ? buf.overall.month : null;
+  const adMonth = hasAd ? buf.ad.month : null;
+  if (hasOverall && !overallMonth) {
     box.className = 'validation-box err';
     msg.textContent = `❌ ショップ売上CSVから月を検出できませんでした`;
     btn.disabled = true; return false;
   }
-  if (!adMonth) {
+  if (hasAd && !adMonth) {
     box.className = 'validation-box err';
     msg.textContent = `❌ 広告詳細レポートから月を検出できませんでした`;
     btn.disabled = true; return false;
   }
-  if (overallMonth !== adMonth) {
+  if (overallMonth && adMonth && overallMonth !== adMonth) {
     box.className = 'validation-box err';
-    msg.textContent = `❌ 月が一致しません：ショップ売上=${overallMonth} / 広告=${adMonth}`;
+    msg.textContent = `❌ 月が一致しません：ショップ売上=${overallMonth} / 広告=${adMonth}（同じ月のファイルにしてください）`;
     btn.disabled = true; return false;
   }
+  const present = [];
+  if (hasOverall) present.push('ショップ売上');
+  if (hasItem) present.push('商品別売上');
+  if (hasAd) present.push('広告詳細レポート');
+  if (hasMaster) present.push('商品マスタ');
+  const _ml = overallMonth || adMonth;
   box.className = 'validation-box ok';
-  const extras = [];
-  if (hasMaster) extras.push('商品マスタ');
-  const extraTxt = extras.length > 0 ? ' + ' + extras.join(' + ') : '';
-  msg.textContent = `✓ ${overallMonth}月分として3ファイル確認OK${extraTxt} — アップロード実行できます`;
+  msg.textContent = `✓ ${present.join(' + ')}${_ml ? `（${_ml}月分）` : ''} をアップロード実行できます`;
   btn.disabled = false;
   return true;
 }
@@ -4752,11 +4747,11 @@ async function processFiles(files) {
 async function commitUpload() {
   const buf = state.uploadBuffer;
   if (!validateBuffer()) return;
-  const hasMonthly = buf.overall && buf.item && buf.ad;
-
-  if (hasMonthly) {
-    const targetMonth = buf.overall.month;
-    // overall
+  // 【v1.0321】月次は各ファイルを個別に反映（1ファイルからでもOK。従来は overall/item/ad の3点必須だった）。
+  //   月の基準: ショップ売上 → 広告 → 商品別売上 の検出月。存在するファイルだけ処理する。
+  const targetMonth = (buf.overall && buf.overall.month) || (buf.ad && buf.ad.month)
+    || (buf.item ? detectMonthFromRows(buf.item.rows) : null) || null;
+  if (buf.overall) {
     const overallMonths = parseOverall(buf.overall.rows).months;
     if (!state.overall) state.overall = { months: [] };
     overallMonths.forEach(newM => {
@@ -4765,15 +4760,25 @@ async function commitUpload() {
       else state.overall.months.push(newM);
     });
     state.overall.months.sort((a, b) => a.month.localeCompare(b.month));
-    // item（monthは店舗overallの月で強制）
-    const itemParsed = parseItem(buf.item.rows).map(r => ({ ...r, month: targetMonth }));
+    log(`✅ ショップ売上(月次)を反映${targetMonth ? `（${targetMonth}月）` : ''}`, 'ok');
+  }
+  if (buf.item) {
+    // 月が特定できればその月に統一（従来挙動）。特定できなければCSVの各行の月をそのまま使う。
+    let itemParsed = parseItem(buf.item.rows);
+    if (targetMonth) itemParsed = itemParsed.map(r => ({ ...r, month: targetMonth }));
     if (!state.item) state.item = [];
-    state.item = state.item.filter(r => r.month !== targetMonth).concat(itemParsed);
-    // ad：そのままパース＆マージ。月を必ずtargetMonthに統一（日付書式ゆれ対策）
-    const adParsed = parseAd(buf.ad.rows).map(r => ({ ...r, month: targetMonth }));
+    const _ims = new Set(itemParsed.map(r => r.month));
+    state.item = state.item.filter(r => !_ims.has(r.month)).concat(itemParsed);
+    log(`✅ 商品別売上(月次)を反映（${itemParsed.length}行）`, 'ok');
+  }
+  if (buf.ad) {
+    const _am = (buf.ad && buf.ad.month) || targetMonth;
+    let adParsed = parseAd(buf.ad.rows);
+    if (_am) adParsed = adParsed.map(r => ({ ...r, month: _am }));
     if (!state.ad) state.ad = [];
-    state.ad = state.ad.filter(r => r.month !== targetMonth).concat(adParsed);
-    log(`✅ ${targetMonth}月分の月次データを反映`, 'ok');
+    const _ams = new Set(adParsed.map(r => r.month));
+    state.ad = state.ad.filter(r => !_ams.has(r.month)).concat(adParsed);
+    log(`✅ 広告詳細レポート(月次)を反映（${adParsed.length}行）`, 'ok');
   }
   if (buf.bid) {
     state.bid = parseBid(buf.bid.rows);
@@ -7728,7 +7733,7 @@ function openUploadModal(mode) {
       if (hintEl) hintEl.textContent = '入札価格（BID_ITEM*.csv）・PRオプ料率（data*.csv）をアップロードできます（CSVまたはZIP）';
     } else {
       if (titleEl) titleEl.textContent = '📂 レポートを追加（月次）';
-      if (hintEl) hintEl.textContent = 'ショップ売上・商品別売上・広告詳細レポートの3つをセットでアップロードします（CSVまたはZIP）';
+      if (hintEl) hintEl.textContent = 'ショップ売上・商品別売上・広告詳細レポートを1つ以上アップロードできます（CSVまたはZIP）';
     }
     state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
     ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
@@ -7771,14 +7776,30 @@ document.addEventListener('keydown', (e) => {
 $('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.1));
 $('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.1));
 
-// 【v305】取得元URL(レポート追加/最新値を更新モーダル内)は必ず新しいタブで開き、
-//   現在のYcheckページは絶対に遷移させない（preventDefaultで既定遷移を止め、window.openで別タブ）。
+// 【v305/v1.0320】取得元URL(レポート追加・最新値を更新モーダル内)は必ず新しいタブで開き、
+//   現在のYcheckページは絶対に遷移させない。さらに【v1.0320】は「背面タブ」で開き、
+//   Ycheckの画面(フォーカス)を切り替えず今の画面のまま維持する。
+//   Chromeは Ctrl(Win/Linux)/Cmd(Mac)+クリックのリンクを背面タブで開くので、合成クリックで再現。
+//   （うまく背面にならない環境でも、少なくとも新しいタブで開くので従来と同等以上）
 document.addEventListener('click', (e) => {
   const a = e.target.closest && e.target.closest('.file-slot-link a[href]');
   if (!a) return;
-  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;  // 修飾キー/中クリックはブラウザ既定に任せる
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;  // 実際の修飾キー/中クリックはブラウザ既定に任せる
   e.preventDefault();
-  window.open(a.href, '_blank', 'noopener');
+  const href = a.href;
+  try {
+    const ua = navigator.platform || navigator.userAgent || '';
+    const isMac = /Mac|iPhone|iPad/.test(ua);
+    const link = document.createElement('a');
+    link.href = href; link.target = '_blank'; link.rel = 'noopener';
+    document.body.appendChild(link);
+    // Ctrl(Win/Linux) または Cmd(Mac) 付きの合成クリック → 背面タブで開く（フォーカスは Ycheck に残る）
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, ctrlKey: !isMac, metaKey: isMac }));
+    document.body.removeChild(link);
+  } catch (err) {
+    // フォールバック: 従来どおり新しいタブで開く（フォーカスは移るが遷移はしない）
+    try { window.open(href, '_blank', 'noopener'); } catch (e2) {}
+  }
 });
 
 const dropzone = $('#dropzone');
