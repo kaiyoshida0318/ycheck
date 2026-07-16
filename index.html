@@ -6,7 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v317 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0318 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -70,7 +71,7 @@ body {
 .logo { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
 .logo-img { height: 56px; width: auto; display: block; }  /* v97: 40px→56px (約1.4倍) */
 .logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
-.logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
+.logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.02em; }
 
 /* ショップ選択（ADcheck風 v101〜, v103でheader-leftにまとめて左端固定） */
 .shop-selector {
@@ -2484,6 +2485,12 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 /* 【v314】分析ボタン(ADcheck風・確認メモを開く) */
 .btn-bunseki{font-size:0.78rem;font-weight:600;padding:6px 14px;border-radius:6px;border:none;background:#5C6BC0;color:#fff;cursor:pointer;white-space:nowrap;line-height:1.2;margin-left:2px}
 .btn-bunseki:hover{background:#4d5bb0}
+/* 【v1.0318】メインページの分類ラベルを分類ごとに色分け（分析の確認場所ドロップダウンと同じ配色に統一） */
+.nav-group-label.g-basic   { color:#2563eb; }  /* 【基本】 */
+.nav-group-label.g-zentai  { color:#dc2626; }  /* 【全体】 */
+.nav-group-label.g-shutoku { color:#0891b2; }  /* 【取得データ】 */
+.nav-group-label.g-chosei  { color:#16a34a; }  /* 【調整】 */
+.nav-group-label.g-jotai   { color:#9333ea; }  /* 【状態】 */
 </style>
 </head>
 <body>
@@ -2509,7 +2516,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v317</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0318</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2535,13 +2542,13 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 <!-- Top Tab Navigation -->
 <nav class="top-nav">
   <div class="nav-group">
-    <span class="nav-group-label">【基本】</span>
+    <span class="nav-group-label g-basic">【基本】</span>
     <a class="nav-tab nav-tab-link active" data-view="basic" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired">撤退済み商品</a>
   </div>
   <div class="nav-group">
-    <span class="nav-group-label">【全体】</span>
+    <span class="nav-group-label g-zentai">【全体】</span>
     <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata">全-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-月別グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
@@ -2550,7 +2557,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust">PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
   </div>
   <div class="nav-group">
-    <span class="nav-group-label">【取得データ】</span>
+    <span class="nav-group-label g-shutoku">【取得データ】</span>
     <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank">広告順位</a>
     <a class="nav-tab nav-tab-link" data-view="seo-rank" href="?view=seo-rank">SEO順位</a>
   </div>
@@ -2559,7 +2566,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 <!-- Second row: 調整（【v237】旧【定期チェック】を廃止し【調整】を新設。各ビューの中身は今後実装） -->
 <nav class="top-nav top-nav-2">
   <div class="nav-group">
-    <span class="nav-group-label">【調整】</span>
+    <span class="nav-group-label g-chosei">【調整】</span>
     <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">入札価格調整</a>
     <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">PRオプ調整</a>
   </div>
@@ -2568,7 +2575,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 <!-- Third row: 状態 -->
 <nav class="top-nav top-nav-3">
   <div class="nav-group">
-    <span class="nav-group-label">【状態】</span>
+    <span class="nav-group-label g-jotai">【状態】</span>
     <!-- 【v162】「💡 全体の説明」はヘッダーへ移動済み。ここからは削除。 -->
     <!-- 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札無し に改称。【v212】入札価格△・PRオプ△は廃止（既存の△は✕へ移行） -->
     <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></button>
@@ -2638,8 +2645,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <span class="gh-reflect-fallback" style="display:none;">reflect-guide.png が読み込めませんでした</span>
             </span>
           </span>
-          <!-- 【v168】商品コード+メインKWだけのCSV出力ボタン（1列目=code, 2列目=keyword） -->
-          <button class="btn sm ghost" id="btnDownloadCodeKwCsv" type="button" title="表示中の商品の商品コード(code)とメインKW(keyword)だけをCSV出力">📥 商品コード+KW CSV</button>
+          <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
         </div>
         <div class="table-wrap">
           <table id="tableBasic">
@@ -7965,7 +7971,7 @@ $('#basicSearch').addEventListener('input', renderBasic);
 if ($('#btnDownloadBasicCsv')) $('#btnDownloadBasicCsv').addEventListener('click', downloadBasicCsv);
 // 【v168】「📥 商品コード+KW CSV」ボタン: 既存のdownloadBasicCsvと同じCSV(code,keyword)を出力。
 // 機能は完全に同じだが、ユーザーから見て「順位取得用」と「単純なKW一覧」を別UIとして提供したい意図のためボタンを分離。
-if ($('#btnDownloadCodeKwCsv')) $('#btnDownloadCodeKwCsv').addEventListener('click', downloadBasicCsv);
+/* 【v1.0318】商品コード+KW CSVボタン撤去に伴いリスナーも削除（downloadBasicCsvは順位取得CSVボタンで使用継続） */
 
 // 広告順位 / SEO順位 ビューの操作
 $('#adRankMonth').addEventListener('change', renderAdRank);
