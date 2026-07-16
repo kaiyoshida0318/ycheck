@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v305 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v306 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v305</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v306</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3065,18 +3065,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         <b>⚠ 初回利用時の注意</b><br>
         GitHub上にまだデータが無い状態で「今すぐGitHub保存」を実行すると、このPCのデータがGitHubの初期データとしてアップロードされます。<br>
         他PCから先にアップロード済みの場合は、先に「GitHubから再取得」を実行してください。
-      </div>
-
-      <!-- 【v304】今回限りの旧データ(全体月次)取込 -->
-      <div style="margin-top:14px;padding:10px 12px;background:#eef4ff;border:1px dashed var(--accent);border-radius:6px;font-size:0.8rem;color:var(--text2);line-height:1.6;">
-        <b>🕒 旧データ(全体月次)の取込 ― 今回限り</b><br>
-        「年/月・総売上・実績額・広告売上」（任意で「クリック数・注文数」）を含むCSVを取り込み、<b>全-月別データ／全-月別グラフの過去月</b>として反映します（overallへ保存）。<br>
-        <div style="margin:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="file" id="histImportFile" accept=".csv,text/csv">
-          <button class="btn sm primary" id="histImportBtn" type="button">この内容を反映してGitHub保存</button>
-        </div>
-        <div id="histImportMsg" style="font-size:0.76rem;min-height:1em;"></div>
-        <div style="font-size:0.72rem;color:var(--text3);margin-top:4px;">※CVRは「クリック数・注文数」列がある月のみ算出されます（無ければ空欄）。文字コードはUTF-8のCSVを推奨。</div>
       </div>
     </div>
   </div>
@@ -4440,38 +4428,6 @@ function parseOverall(rows) {
   });
   const months = Object.keys(monthMap).sort().map(k => ({ month: k, revenue: monthMap[k] }));
   return { months };
-}
-
-// 【v304】今回限りの「旧データ(全体月次)取込」。CSV各行を state.overall.months にマージ。
-//   列: 年/月・総売上・実績額・広告売上（任意でクリック数・注文数）。ROASは表示側で 広告売上÷実績額 から算出。
-//   CVRは クリック数・注文数 がある月のみ 注文数÷クリック数 で算出（無ければ空欄のまま）。
-function importHistoricalOverall(rows) {
-  if (!state.overall) state.overall = { months: [] };
-  if (!Array.isArray(state.overall.months)) state.overall.months = [];
-  const byMonth = {};
-  state.overall.months.forEach(m => { byMonth[m.month] = m; });
-  let n = 0;
-  (rows || []).forEach(r => {
-    const dateStr = r['年/月'] || r['年月'] || r['月'] || r['日付'] || '';
-    const mm = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
-    if (!mm) return;
-    const month = mm[1] + '-' + String(mm[2]).padStart(2, '0');
-    const rev    = toNum(r['総売上'] || r['合算値売上合計値'] || r['売上'] || 0);
-    const adCost = toNum(r['実績額'] || r['広告費'] || r['利用金額'] || 0);
-    const adRev  = toNum(r['広告売上'] || r['売上金額'] || 0);
-    const hasClicks = ('クリック数' in r) || ('クリック' in r);
-    const hasOrders = ('注文数' in r);
-    let e = byMonth[month];
-    if (!e) { e = { month }; state.overall.months.push(e); byMonth[month] = e; }
-    e.revenue = rev;
-    e.adCost = adCost;
-    e.adRevenue = adRev;
-    if (hasClicks) e.adClicks = toNum(r['クリック数'] || r['クリック'] || 0);
-    if (hasOrders) e.adOrders = toNum(r['注文数'] || 0);
-    n++;
-  });
-  state.overall.months.sort((a, b) => String(a.month).localeCompare(String(b.month)));
-  return n;
 }
 
 function parseItem(rows) {
@@ -7848,28 +7804,6 @@ if ($('#btnDeleteProTuneNoteAll'))    $('#btnDeleteProTuneNoteAll').addEventList
 // 【v294】対応内容-全更新処理
 if ($('#btnUpdateAllAdTune'))  $('#btnUpdateAllAdTune').addEventListener('click', () => bulkMarkTuneDone('ad'));
 if ($('#btnUpdateAllProTune')) $('#btnUpdateAllProTune').addEventListener('click', () => bulkMarkTuneDone('pro'));
-
-// 【v304】今回限りの旧データ(全体月次)CSV取込
-if ($('#histImportBtn')) $('#histImportBtn').addEventListener('click', () => {
-  const fi = $('#histImportFile'), msg = $('#histImportMsg');
-  const setMsg = (t, ok) => { if (msg) { msg.textContent = t; msg.style.color = ok ? 'var(--green)' : 'var(--red)'; } };
-  const f = fi && fi.files && fi.files[0];
-  if (!f) { setMsg('CSVファイルを選んでください。', false); return; }
-  if (typeof Papa === 'undefined') { setMsg('CSVパーサ(papaparse)が読み込まれていません。オンラインで再読込してください。', false); return; }
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const parsed = Papa.parse(String(ev.target.result), { header: true, skipEmptyLines: true });
-      const n = importHistoricalOverall(parsed.data || []);
-      if (n === 0) { setMsg('取り込める行がありませんでした（列名「年/月・総売上・実績額・広告売上」を確認してください）。', false); return; }
-      saveToStorage();
-      renderAll();
-      setMsg('✓ ' + n + 'ヶ月分を反映し、GitHub保存を実行しました。全-月別データ／グラフをご確認ください。', true);
-    } catch (err) { setMsg('エラー: ' + err.message, false); }
-  };
-  reader.onerror = () => setMsg('ファイルの読み込みに失敗しました。', false);
-  reader.readAsText(f, 'utf-8');
-});
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
