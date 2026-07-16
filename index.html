@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v298 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v299 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v298</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v299</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3923,7 +3923,7 @@ async function ghLoadFromGitHub() {
     if (data.master) state.master = data.master;
     if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
-    if (data.rankMeta) state.rankMeta = data.rankMeta;
+    if (data.rankMeta) _assignRankMetaKeepSpot(data.rankMeta);  // 【v299】lastSpotUpdateを消さない
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v287】productMeta も商品ごとに新しい方を残してマージ。ローカルの方が新しい商品が
     //   あれば _ghHealed=true（＝GitHubは古い上書きを受けていた）とし、後で復元を再保存する。
@@ -4172,7 +4172,7 @@ function loadFromStorage() {
     if (data.master) state.master = data.master;
     if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
-    if (data.rankMeta) state.rankMeta = data.rankMeta;
+    if (data.rankMeta) _assignRankMetaKeepSpot(data.rankMeta);  // 【v299】lastSpotUpdateを消さない
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     if (data.productMeta) {
       state.productMeta = data.productMeta;
@@ -6391,8 +6391,8 @@ function mergeRankJson(json) {
       total++;
     }
   }
-  // meta を別途保管
-  if (json.meta) state.rankMeta = json.meta;
+  // meta を別途保管（【v299】lastSpotUpdate は rank.json meta に無いので保持する）
+  if (json.meta) _assignRankMetaKeepSpot(json.meta);
   return { months: Array.from(mergedMonths).sort(), total };
 }
 
@@ -8092,6 +8092,17 @@ document.addEventListener('click', (e) => {
 let _spotStaleAckedDate = '';  // 未更新のまま「続ける」を選んだ日付。同日は再確認しない。
 function isSpotUpdatedToday() {
   return !!(state.rankMeta && state.rankMeta.lastSpotUpdate === tuneTodayStr());
+}
+// 【v299】rankMeta を差し替える時に lastSpotUpdate（最新値更新の当日フラグ）だけは新旧で新しい方を残す。
+//   rank.json の meta（fetchRankJson）や GitHub由来 meta には lastSpotUpdate が無いため、そのまま代入すると
+//   「本日更新済み」が消え、リロードで「本日未更新」に戻る不具合になる。日付は 'YYYY-MM-DD' で文字列比較=日付比較。
+function _assignRankMetaKeepSpot(newMeta) {
+  const prevSpot = state.rankMeta && state.rankMeta.lastSpotUpdate;
+  const nm = newMeta || {};
+  const a = prevSpot, b = nm.lastSpotUpdate;
+  const keep = (!a) ? b : (!b ? a : (a >= b ? a : b));   // 新しい日付を採用（無い方は無視）
+  if (keep) nm.lastSpotUpdate = keep;
+  state.rankMeta = nm;
 }
 // 調整ビュー(ad-tune/pro-tune)で入札価格/PRオプ料率を編集する直前に呼ぶ。
 // 未更新かつ当日未確認なら1回だけ confirm。OK=続行(当日は再確認しない)、キャンセル=編集中止。
