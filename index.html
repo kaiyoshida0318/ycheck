@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v309 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v310 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v309</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v310</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7119,18 +7119,24 @@ function renderCompare(){
     gapW = 44;
     TW = Math.floor((_aw - gapW*(nP-1) - 4) / nP);   // 画面幅に3ブロックを収める
     const imgBox = 48;
-    // フォントfに応じた各列幅（商品名は6文字幅固定＝round(6.4f)。数値はmonospaceで約0.6f/桁）
+    // 【v310】商品名は「6文字＋…」がちょうど収まる幅に是正。全体 box-sizing:border-box のため
+    //   セル内テキスト幅 = nameW - 左padding(10px)。実測で6文字表示に必要な内容幅は 7.0f〜8.0f、
+    //   その中央 7.5f を採用（v309では 6.4f-10px＝4文字しか出ていなかったのを6文字に）。
     const need = function(f){
-      const nameW = Math.round(6.4*f);               // 商品名6文字ぶんの幅
+      const nameW = Math.round(7.5*f) + 10;          // 商品名6文字ぶん(内容7.5f)＋左padding10(border-box)
       const cS = Math.round(6*f)+7, cA = Math.round(4.8*f)+7, cSe = Math.round(6*f)+7, cR = Math.round(3*f)+7;
-      return { nameW:nameW, cS:cS, cA:cA, cSe:cSe, cR:cR, total: imgBox + (nameW+10) + cS + cA + cSe + cR };
+      return { nameW:nameW, cS:cS, cA:cA, cSe:cSe, cR:cR, total: imgBox + nameW + cS + cA + cSe + cR };  // border-boxなので nameW をそのまま加算
     };
     let f = 11, N = need(11);
     [12,13,14,15,16].forEach(function(c){ const n = need(c); if (n.total <= TW){ f = c; N = n; } });  // 収まる最大フォントを採用（昇順で更新）
     if (TW < N.total) TW = N.total;                  // 最小(11px)でも入らない極小画面のみ横スクロール
-    S = { imgBox:imgBox, imgSz:42, nameFixed:true, nameW:N.nameW, nameF:f, numF:f, hdrF:Math.max(11,f-2), lblF:f+2,
-          cSales:N.cS, cAd:N.cA, cSeo:N.cSe, cRoas:N.cR, padR:7, padRoas:9,
-          rowH:Math.round(f*3.4), headerH:Math.round(f*2.4), labelH:Math.round(f*2.1) };
+    // 【v310】余白(slack)を「商品名の後ろのgap＋数値4列」に均等配分。1箇所に大穴を作らず列間をバランス良く。
+    const slack = Math.max(0, (TW - 2) - N.total);   // -2 はブロック枠(border 1px×2)ぶん
+    const unit = Math.floor(slack / 5);
+    const nameGap = slack - unit*4;                  // 端数は商品名の後ろgapへ
+    S = { imgBox:imgBox, imgSz:42, nameFixed:true, nameW:N.nameW, nameGap:nameGap, nameF:f, numF:f, hdrF:Math.max(11,f-2), lblF:f+2,
+          cSales:N.cS+unit, cAd:N.cA+unit, cSeo:N.cSe+unit, cRoas:N.cR+unit, padR:7, padRoas:9,
+          rowH:Math.round(f*3.75), headerH:Math.round(f*2.4), labelH:Math.round(f*2.1) };  // 【v310】rowH 3.4→3.75（初期表示10行→9行）
   } else if (nP === 2) {
     S = { imgBox:60, imgSz:54, nameFixed:false, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
     TW = 600; gapW = Math.min(900, Math.max(160, _aw - TW*2 - 6));
@@ -7148,7 +7154,8 @@ function renderCompare(){
 
   // 【v309】商品名: コンパクトは6文字幅固定＋spacerで数値を右寄せ。通常(2ブロック)は従来どおりflexで伸縮。
   const nameFlex = S.nameFixed ? ('width:'+S.nameW+'px;flex:0 0 '+S.nameW+'px;') : 'flex:1;';
-  const spacer = S.nameFixed ? '<div style="flex:1"></div>' : '';
+  // 【v310】固定名の後ろは flex:1 の「大穴」ではなく、slackを配分した固定gap(nameGap)にして列間を均等化
+  const spacer = S.nameFixed ? '<div style="flex:0 0 '+S.nameGap+'px"></div>' : '';
   const colH='<div style="display:flex;height:'+headerH+'px;align-items:center;border-bottom:2px solid var(--border);font-size:'+S.hdrF+'px;font-weight:700;color:var(--text3);background:var(--surface2)">'
     +'<div style="width:'+S.imgBox+'px;text-align:center">画像</div>'
     +'<div style="'+nameFlex+'padding-left:10px">商品名</div>'+spacer
