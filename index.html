@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v307 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v308 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v307</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v308</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7058,6 +7058,8 @@ function cmpSetMode(m){ cmpMode=m; cmpFocus=null; renderCompare(); }
 function cmpSetMonth(v){ cmpMonth=v; cmpFocus=null; renderCompare(); }
 function cmpSetPick(w,v){ if(w==='a')cmpPickA=v; else cmpPickB=v; cmpFocus=null; renderCompare(); }
 function cmpSetFocus(code){ cmpFocus=(cmpFocus===code)?null:code; renderCompare(); }
+// 【v308】全-比較の商品名: 行クリック(cmpSetFocus)を発火させず、ダブルクリックで名前全体を選択（コピー用）。
+function cmpSelName(el, e){ if(e) e.stopPropagation(); try{ const r=document.createRange(); r.selectNodeContents(el); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(_){} }
 function cmpToggleLine(t){ if(t==='up')cmpHideUp=!cmpHideUp; else cmpHideDown=!cmpHideDown; renderCompare(); }
 function cmpToggleColor(c){ if(cmpColorFilter.has(c))cmpColorFilter.delete(c); else cmpColorFilter.add(c); renderCompare(); }
 function cmpSyncUI(){
@@ -7158,7 +7160,7 @@ function renderCompare(){
       const foc=(cmpFocus===p.code);
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
         +'<div style="width:'+S.imgBox+'px;display:flex;justify-content:center">'+im+'</div>'
-        +'<div style="flex:1;padding-left:10px;font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.name)+'</div>'
+        +'<div onclick="event.stopPropagation()" ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+'" style="flex:1;padding-left:10px;font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:text;-webkit-user-select:text">'+esc(p.name)+'</div>'
         +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+salesCell+'</div>'
         +'<div style="width:'+S.cAd+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+fmt(vv.sp)+'</div>'
         +'<div style="width:'+S.cSeo+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+seoCell+'</div>'
