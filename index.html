@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v315 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v316 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2509,7 +2509,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v315</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v316</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3300,6 +3300,38 @@ function getCurrentShopId() {
 function getCurrentShop() {
   return SHOPS_INITIAL[getCurrentShopId()] || SHOPS_INITIAL[DEFAULT_SHOP_ID];
 }
+
+// 【v316】URLパラメータでショップを指定して直接開けるように（スピードダイヤル／ブックマーク用）。
+//   例: index.html?shop=yukaiya / index.html?shop=kairy （短縮 ?s= も可）。
+//   初期化より前に localStorage(ycheck_current_shop) を書き換えるので、開いた瞬間にそのショップで開く（リロード不要）。
+//   旧表記・別名も吸収（kai-ry / KAIRY / burariya=shopCode 等）。不正値は無視して今のショップのまま安全に開く。
+(function applyShopFromUrl() {
+  try {
+    var qs = (location.search || '').replace(/^\?/, '');
+    if (!qs) return;
+    var params = {};
+    qs.split('&').forEach(function (kv) {
+      var i = kv.indexOf('='); var k = i < 0 ? kv : kv.slice(0, i); var v = i < 0 ? '' : kv.slice(i + 1);
+      try { params[decodeURIComponent(k).toLowerCase()] = decodeURIComponent((v || '').replace(/\+/g, ' ')); } catch (e) {}
+    });
+    var raw = params.shop || params.s;
+    if (!raw) return;
+    // 正規化: 小文字化＋空白/ハイフン/アンダースコア除去（"kai-ry"→"kairy" 等を吸収）
+    var key = String(raw).trim().toLowerCase().replace(/[\s\-_]/g, '');
+    var ALIAS = { 'ゆかい屋': 'yukaiya', 'yukai': 'yukaiya', 'y': 'yukaiya', 'k': 'kairy', 'kairyu': 'kairy' };
+    var target = null;
+    if (SHOPS_INITIAL[key]) target = key;                 // 正規ID一致
+    else if (ALIAS[key]) target = ALIAS[key];             // 別名一致
+    else {                                                // shopCode一致（burariya=kairy 等）
+      for (var id in SHOPS_INITIAL) {
+        if (SHOPS_INITIAL.hasOwnProperty(id) && String(SHOPS_INITIAL[id].shopCode || '').toLowerCase() === key) { target = id; break; }
+      }
+    }
+    if (target && SHOPS_INITIAL[target]) {
+      localStorage.setItem(CURRENT_SHOP_STORAGE_KEY, target);  // 初期化前に確定
+    }
+  } catch (e) {}
+})();
 
 // localStorageキーは必ずショップ依存にする（ドキュメント指示「2. localStorage キーをショップ非依存にしない」）
 const STORAGE_KEY_BASE = 'ycheck_data_v1';
