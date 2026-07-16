@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v293 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v294 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2502,7 +2502,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v293</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v294</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2867,6 +2867,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="search-rep-badge" id="adTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
+          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdTune">
@@ -2903,6 +2904,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="search-rep-badge" id="proTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
+          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
         </div>
         <div class="table-wrap">
           <table id="tableProTune">
@@ -7700,6 +7702,53 @@ function deleteAllNotes(kind /* 'ad' | 'pro' */) {
   alert(`${label}の対応内容を ${count}件 削除しました。`);
 }
 
+// 【v294】対応内容-全更新処理（入札価格調整/PRオプ調整のツールバー）。
+//   今この一覧に表示されている全商品（サブフィルタ・検索の絞り込み後）を「対応済み」にして一覧から消す。
+//   ・対応内容が「空欄」または「更新日時のみ」→ 本日の更新日時スタンプ（更新日時-YY-MMDD）を記入。
+//   ・対応内容にメモ（更新日時以外）が入っている → そのまま維持。
+//   いずれも markTuneAction で当日「対応済み」となり、resetTuneMembers→再描画で修正あり等から外れる。
+function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
+  const tableSel = (kind === 'ad') ? '#tableAdTune' : '#tableProTune';
+  const field = (kind === 'ad') ? 'adNote' : 'proNote';
+  const label = (kind === 'ad') ? '入札価格調整' : 'PRオプ調整';
+  // 今表示されている行の商品コードを収集（各行に1つの .note-cell[data-code]）
+  const codes = [];
+  const seen = {};
+  document.querySelectorAll(tableSel + ' tbody .note-cell[data-code]').forEach(c => {
+    const cd = c.dataset.code;
+    if (cd && !seen[cd]) { seen[cd] = 1; codes.push(cd); }
+  });
+  if (!codes.length) { alert(`${label}：ここに表示されている商品がありません。`); return; }
+  // 内訳（更新日時を記入する件数 / メモを維持する件数）
+  let stampCount = 0, keepCount = 0;
+  codes.forEach(code => {
+    const note = ((state.productMeta[code] || {})[field] || '').trim();
+    if (note === '' || isAutoTimestamp(note)) stampCount++; else keepCount++;
+  });
+  const msg = `${label}：今ここに表示されている【${codes.length}件】をすべて「対応済み」にします。\n\n`
+    + `・空欄／更新日時のみ … ${stampCount}件 → 本日の更新日時を記入\n`
+    + `・メモが入っている行 … ${keepCount}件 → 対応内容はそのまま維持\n\n`
+    + `いずれもこの一覧（修正あり等）からは消えます。\n実行してよろしいですか？`;
+  if (!confirm(msg)) return;
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const stamp = `更新日時-${yy}-${mm}${dd}`;
+  codes.forEach(code => {
+    if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+    const meta = state.productMeta[code];
+    const note = (meta[field] || '').trim();
+    if (note === '' || isAutoTimestamp(note)) meta[field] = stamp;  // 空欄/更新日時のみ→本日の更新日時
+    // メモがある行は対応内容を変更しない
+    markTuneAction(code, kind);  // 当日「対応済み」＝この一覧から外れる
+  });
+  resetTuneMembers();  // 凍結解除→再分類で対応済みを一覧から外す
+  saveToStorage();
+  renderAll();
+  alert(`${label}：${codes.length}件を対応済みにしました（更新日時を記入 ${stampCount}件／メモ維持 ${keepCount}件）。`);
+}
+
 $('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad'));
 $('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 $('#btnDeleteAdNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
@@ -7709,6 +7758,9 @@ if ($('#btnDeleteAdTuneNoteStamps'))  $('#btnDeleteAdTuneNoteStamps').addEventLi
 if ($('#btnDeleteProTuneNoteStamps')) $('#btnDeleteProTuneNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 if ($('#btnDeleteAdTuneNoteAll'))     $('#btnDeleteAdTuneNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
 if ($('#btnDeleteProTuneNoteAll'))    $('#btnDeleteProTuneNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
+// 【v294】対応内容-全更新処理
+if ($('#btnUpdateAllAdTune'))  $('#btnUpdateAllAdTune').addEventListener('click', () => bulkMarkTuneDone('ad'));
+if ($('#btnUpdateAllProTune')) $('#btnUpdateAllProTune').addEventListener('click', () => bulkMarkTuneDone('pro'));
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
