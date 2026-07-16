@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v296 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v298 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -127,6 +127,9 @@ body {
   transition: background 0.15s ease;
 }
 .gh-sync-area:hover { background: var(--bg3); }
+/* 【v297】固定ラベル（常時「⚙️ GitHub連携」を表示＝設定ボタンだと分かる）＋状態バッジを分離 */
+.gh-sync-label { font-weight: 700; white-space: nowrap; color: var(--text2); }
+.gh-sync-status { padding-left: 7px; border-left: 1px solid var(--border2); white-space: nowrap; box-sizing: border-box; min-width: 88px; text-align: center; }
 .gh-sync-area.gh-disabled { color: var(--text3); }
 .gh-sync-area.gh-saved    { color: var(--green); border-color: var(--green); background: rgba(22,163,74,0.06); }
 .gh-sync-area.gh-dirty    { color: #d97706; border-color: #d97706; background: rgba(217,119,6,0.08); animation: ghDirtyPulse 1.2s ease-in-out infinite; }
@@ -2503,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v296</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v298</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2517,8 +2520,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
     <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
-    <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub設定">
-      <span class="gh-sync-status" id="ghSyncStatus">⚙️ GitHub</span>
+    <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
+      <span class="gh-sync-label">⚙️ GitHub連携</span>
+      <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
     </div>
   </div>
 </div>
@@ -3998,7 +4002,7 @@ function ghSetSyncStatus(state, detail) {
   switch (state) {
     case 'disabled':
       el.classList.add('gh-disabled');
-      txt.textContent = '⚙️ GitHub 未設定';
+      txt.textContent = '未設定';
       el.title = 'クリックしてPATを設定すると複数PCで共有できます';
       break;
     case 'saved':
@@ -4008,12 +4012,12 @@ function ghSetSyncStatus(state, detail) {
       break;
     case 'dirty':
       el.classList.add('gh-dirty');
-      txt.textContent = '● 未保存（自動保存中…）';
+      txt.textContent = '● 未保存';
       el.title = '編集内容を1秒後に自動保存します。\n保存完了（✓保存済み）まではページをリロードしないでください。\nクリックで設定';
       break;
     case 'saving':
       el.classList.add('gh-saving');
-      txt.textContent = 'GitHub保存中...';
+      txt.textContent = '保存中…';
       el.title = '保存中です';
       break;
     case 'error':
