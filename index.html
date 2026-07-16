@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v310 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v312 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2506,7 +2506,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v310</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v312</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7139,7 +7139,10 @@ function renderCompare(){
           rowH:Math.round(f*3.75), headerH:Math.round(f*2.4), labelH:Math.round(f*2.1) };  // 【v310】rowH 3.4→3.75（初期表示10行→9行）
   } else if (nP === 2) {
     S = { imgBox:60, imgSz:54, nameFixed:false, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
-    TW = 600; gapW = Math.min(900, Math.max(160, _aw - TW*2 - 6));
+    // 【v312】2ブロック(前年同月比/特定月比較)の中央gapを3ブロック(前月比較)と同じ44pxに固定。
+    //   従来は _aw に応じて 160〜900px に広がりブロックが左右端に張り付いていた。
+    //   [block600][gap44][block600] を画面中央に配置し左右対称にする（centeringは head/body の margin:0 auto）。
+    TW = 600; gapW = 44;
   } else {
     S = { imgBox:60, imgSz:54, nameFixed:false, nameF:16, numF:15, hdrF:13, lblF:16, cSales:108, cAd:92, cSeo:104, cRoas:84, padR:10, padRoas:12, rowH:60, headerH:40, labelH:34 };
     TW = 600; gapW = 60;
@@ -7219,8 +7222,10 @@ function renderCompare(){
   const svgCol=function(kL,kR){ return '<div style="width:'+gapW+'px;flex-shrink:0">'+svgBetween(kL,kR)+'</div>'; };
   let _hd='', _bd='';
   for(let k=0;k<periods.length;k++){ if(k>0){ _hd+=gapSpacer; _bd+=svgCol(k-1,k); } _hd+=headBlock(k); _bd+=rowsBlock(k); }
-  const head='<div style="display:flex;align-items:flex-end;position:sticky;top:0;z-index:10;background:var(--surface);min-width:'+minW+'px">'+_hd+'</div>';
-  const body='<div style="display:flex;align-items:flex-start;min-width:'+minW+'px">'+_bd+'</div>';
+  // 【v312】ブロック群を画面中央に配置（左右対称）。width:minW＋margin:0 auto で、
+  //   画面が広ければ中央寄せ、狭ければ margin が 0 に潰れて左端から通常の横スクロール（中央寄せの左切れ回避）。
+  const head='<div style="display:flex;align-items:flex-end;position:sticky;top:0;z-index:10;background:var(--surface);width:'+minW+'px;margin:0 auto">'+_hd+'</div>';
+  const body='<div style="display:flex;align-items:flex-start;width:'+minW+'px;margin:0 auto">'+_bd+'</div>';
   area.innerHTML='<div style="position:relative">'+head+body+'</div>';
 }
 window.addEventListener('resize', function(){ if(state.currentView==='compare') renderCompare(); });
