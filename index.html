@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v291 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v292 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2502,7 +2502,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v291</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v292</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2579,6 +2579,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 
 <!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
 <div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
+  <div id="tuneFreshChip" style="display:none;align-items:center;gap:8px;margin-right:6px;"></div>
   <button class="tune-chip active" data-tune="fix">修正あり<span class="chip-num" id="cntTuneFix"></span></button>
   <button class="tune-chip" data-tune="watch">推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
   <button class="tune-chip" data-tune="unchecked">未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
@@ -4710,6 +4711,11 @@ async function commitUpload() {
     } catch (e) {
       console.warn('overwriteTodayRankEditsFromLatest(upload) エラー:', e);
     }
+    // 【v292】最新値(入札価格/PRオプ料率)を取り込んだ日付を記録。
+    //   調整バーの「本日更新済み」チップ判定と、対応前ガードの当日判定に使う。
+    state.rankMeta = state.rankMeta || {};
+    state.rankMeta.lastSpotUpdate = tuneTodayStr();
+    _spotStaleAckedDate = '';  // 更新したので「未更新のまま続ける」確認は当日分をリセット
   }
   // 【v202】PRオプCSV（=Yahoo公開中の全商品リスト）に載っていない既存商品を撤退済みに。
   // 確認ダイアログでOKのときだけ適用。saveToStorageより前なので撤退結果も保存される。
@@ -5868,6 +5874,19 @@ function updateTuneBar() {
   });
   const setNum = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? `(${n})` : ''; };
   setNum('cntTuneFix', cFix); setNum('cntTuneWatch', cWatch); setNum('cntTuneUnchecked', cUnchecked); setNum('cntTuneAll', cAll);
+  // 【v292】最新値の本日更新チップ（修正ありの左）。未更新=アンバー警告＋更新ボタン / 更新済み=緑の確認。
+  const fresh = document.getElementById('tuneFreshChip');
+  if (fresh) {
+    fresh.style.display = 'inline-flex';
+    if (isSpotUpdatedToday()) {
+      const d = (state.rankMeta && state.rankMeta.lastSpotUpdate) || '';
+      const md = (d.length >= 10) ? (d.slice(5, 7) + '/' + d.slice(8, 10)) : '';
+      fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:700;color:var(--green);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.45);border-radius:6px;padding:3px 9px;white-space:nowrap">✓ 最新値 本日更新済み' + (md ? '（' + md + '）' : '') + '</span>';
+    } else {
+      fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:800;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 9px;white-space:nowrap">⚠ 最新値 本日未更新</span>'
+        + '<button type="button" onclick="openUploadModal(\'spot\')" title="最新の入札価格／PRオプ料率を取り込む" style="font-size:0.76rem;font-weight:700;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">＋ 最新値を更新</button>';
+    }
+  }
 }
 
 let adAdjustSortKey = 'adCost2', adAdjustSortDir = -1;  // デフォルト: 前月の実績額降順
@@ -8010,11 +8029,30 @@ document.addEventListener('click', (e) => {
   startKwEdit(cell);
 });
 
+// ==================== 【v292】最新値の本日更新ガード ====================
+// 「+ 最新値を更新」を今日実行したか。調整ビューでの対応前に未更新を検知する。
+let _spotStaleAckedDate = '';  // 未更新のまま「続ける」を選んだ日付。同日は再確認しない。
+function isSpotUpdatedToday() {
+  return !!(state.rankMeta && state.rankMeta.lastSpotUpdate === tuneTodayStr());
+}
+// 調整ビュー(ad-tune/pro-tune)で入札価格/PRオプ料率を編集する直前に呼ぶ。
+// 未更新かつ当日未確認なら1回だけ confirm。OK=続行(当日は再確認しない)、キャンセル=編集中止。
+function guardSpotFreshBeforeTuneEdit() {
+  const view = state.currentView;
+  if (view !== 'ad-tune' && view !== 'pro-tune') return true;  // 調整ビュー以外は対象外
+  if (isSpotUpdatedToday()) return true;
+  if (_spotStaleAckedDate === tuneTodayStr()) return true;
+  const ok = confirm('⚠ 「＋ 最新値を更新」が本日まだ実行されていません。\n\n古い入札価格／PRオプ料率のまま対応を続けますか？\n（キャンセルして「＋ 最新値を更新」で最新化できます）');
+  if (ok) { _spotStaleAckedDate = tuneTodayStr(); return true; }
+  return false;
+}
+
 // ==================== 入札価格 クリック編集 ====================
 function startBidEdit(cell) {
   if (cell.querySelector('input')) return;
   const code = cell.dataset.code;
   if (!code) return;
+  if (!guardSpotFreshBeforeTuneEdit()) return;  // 【v292】未更新なら1回だけ確認
   const currentBid = (state.bid && state.bid[code]) || '';
   const originalHtml = cell.innerHTML;
   cell.innerHTML = '';
@@ -8116,6 +8154,7 @@ function startProRateEdit(cell) {
   if (cell.querySelector('input')) return;
   const code = cell.dataset.code;
   if (!code) return;
+  if (!guardSpotFreshBeforeTuneEdit()) return;  // 【v292】未更新なら1回だけ確認
   const currentRaw = getProRate(code);
   const currentDisp = (currentRaw == null || isNaN(currentRaw)) ? '' : String(currentRaw);
   const originalHtml = cell.innerHTML;
