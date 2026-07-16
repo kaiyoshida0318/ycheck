@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v314 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v315 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -2509,7 +2509,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン">v314</div>
+    <div class="logo-sub" title="Ycheckのバージョン">v315</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3931,6 +3931,7 @@ async function ghLoadFromGitHub() {
     const _localPro = state.proRate || {};
     const _remotePM = data.productMeta || {};
     if (data.overall) state.overall = data.overall;
+    if (typeof ensureOldOverall === 'function') ensureOldOverall();   // 【v315】GitHub読込後に旧データを補完
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
     // 【v287】bid / proRate は「新しい方」を残してマージ（古い上書きで自分の変更が消えるのを防ぐ）
@@ -4181,6 +4182,7 @@ function loadFromStorage() {
     if (!raw) return false;
     const data = JSON.parse(raw);
     if (data.overall) state.overall = data.overall;
+    if (typeof ensureOldOverall === 'function') ensureOldOverall();   // 【v315】localStorage読込後に旧データを補完
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
     if (data.bid) state.bid = data.bid;
@@ -5629,8 +5631,51 @@ function renderRetired() {
   updateSortIndicator('#tableRetired', retiredSortKey, retiredSortDir);
 }
 
+// ==================== 【v315】旧データ(全体月次)の埋め込み＆補完 ====================
+// お渡しCSV「ycheck_旧データ_全体月次_202406_202506」の内容(2024-06〜2025-06)を埋め込み。
+//   総売上→revenue / 実績額→adCost / 広告売上→adRevenue（クリック数・注文数は無いのでCVRは空欄）。
+// 取り込んでも GitHub に残らず「開き直すと消える」問題への恒久対策として、読み込みのたびに
+//   state.overall の不足月へ **非破壊で補完**（既存の月・値は上書きしない）。埋め込みなので
+//   GitHubのデータに手を入れずとも、どの端末でも全-月別データ/グラフに必ず表示される。
+var OLD_OVERALL_2406_2506 = [
+  { month:'2024-06', revenue:1239740, adCost:46638,  adRevenue:146450 },
+  { month:'2024-07', revenue:1305807, adCost:78964,  adRevenue:254520 },
+  { month:'2024-08', revenue:1599843, adCost:88600,  adRevenue:394990 },
+  { month:'2024-09', revenue:1613860, adCost:100150, adRevenue:321850 },
+  { month:'2024-10', revenue:1423386, adCost:86367,  adRevenue:240570 },
+  { month:'2024-11', revenue:1654546, adCost:88236,  adRevenue:287790 },
+  { month:'2024-12', revenue:2472006, adCost:96030,  adRevenue:446080 },
+  { month:'2025-01', revenue:1923124, adCost:105788, adRevenue:371020 },
+  { month:'2025-02', revenue:1585978, adCost:81938,  adRevenue:275460 },
+  { month:'2025-03', revenue:1829040, adCost:93082,  adRevenue:318300 },
+  { month:'2025-04', revenue:1653406, adCost:112860, adRevenue:351700 },
+  { month:'2025-05', revenue:1575280, adCost:120253, adRevenue:416480 },
+  { month:'2025-06', revenue:1608000, adCost:119027, adRevenue:436158 }
+];
+function ensureOldOverall() {
+  if (!state.overall) state.overall = { months: [] };
+  if (!Array.isArray(state.overall.months)) state.overall.months = [];
+  var changed = false;
+  OLD_OVERALL_2406_2506.forEach(function (o) {
+    var ex = state.overall.months.find(function (x) { return x && x.month === o.month; });
+    if (!ex) {
+      // 月ごと無い → 追加
+      state.overall.months.push({ month: o.month, revenue: o.revenue, adCost: o.adCost, adRevenue: o.adRevenue });
+      changed = true;
+    } else {
+      // 既にある月は非破壊（既存の実データを優先）。欠けている値だけ補完する。
+      if (!(ex.revenue > 0) && o.revenue > 0) { ex.revenue = o.revenue; changed = true; }
+      if (ex.adCost == null && o.adCost != null) { ex.adCost = o.adCost; changed = true; }
+      if (ex.adRevenue == null && o.adRevenue != null) { ex.adRevenue = o.adRevenue; changed = true; }
+    }
+  });
+  if (changed) state.overall.months.sort(function (a, b) { return a.month.localeCompare(b.month); });
+  return changed;
+}
+
 // ==================== Rendering: 全-月別データ（グラフ）====================
 function renderGraph() {
+  ensureOldOverall();   // 【v315】旧データ(2024-06〜2025-06)を毎回補完（消えない）
   const months = getAvailableMonths();
   const data = months.map(m => {
     let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0;
