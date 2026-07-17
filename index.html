@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0331 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0332 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0331</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0332</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3939,6 +3939,23 @@ async function ghSaveToGitHub(options = {}) {
                 console.log('[Ycheck] 順位CSVスナップショット: remoteの方が新しいため採用（古い上書きを防止）');
               }
             } catch (eSnap) { /* 失敗時はローカルのまま */ }
+            // 【v1.0332】rankMeta.lastSpotUpdate（＝「最新値 本日更新済み」チップの判定日）も、
+            //   productMeta等と同じく「新しい日付の方を残す」マージにする。
+            //   これが無いと、rankMetaは保存時マージされず古いセッション/別PCの保存でそのまま上書きされ、
+            //   GitHub上のlastSpotUpdateが巻き戻り、リロード時に「本日更新済み」→「本日未更新」に戻る不具合が起きる。
+            //   日付は 'YYYY-MM-DD' 文字列＝日付比較。remoteの方が新しい日付なら、その日付とペアのTsを採用。
+            try {
+              const _lRM = dataObj.rankMeta || {};
+              const _rRM = _remote.rankMeta || {};
+              const _lSpot = _lRM.lastSpotUpdate, _rSpot = _rRM.lastSpotUpdate;
+              if (_rSpot && (!_lSpot || _rSpot > _lSpot)) {
+                dataObj.rankMeta = Object.assign({}, _lRM, {
+                  lastSpotUpdate: _rSpot,
+                  lastSpotUpdateTs: _rRM.lastSpotUpdateTs
+                });
+                console.log('[Ycheck] rankMeta.lastSpotUpdate: remoteの方が新しいため採用（本日更新フラグの巻き戻しを防止）');
+              }
+            } catch (eRM) { /* 失敗時はローカルのまま */ }
             outStr = JSON.stringify(dataObj);
             const _afterN = Object.keys(dataObj.productMeta || {}).length;
             if (_afterN !== _beforeN) console.log('[Ycheck] productMetaマージ: 商品数', _beforeN, '→', _afterN);
