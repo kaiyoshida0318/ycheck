@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0325 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0326 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0325</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0326</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5227,36 +5227,20 @@ function getReferencedRepCodes() {
   }
   return s;
 }
-// 【v1.0325】自己参照(repCode=自分)を除いた「他商品から参照される親コード」集合。
-//   repCode=自分だけ（実際の子がいない自己参照）を「送り込みあり」に数えないための判定に使う。
-function getReferencedRepCodesByOthers() {
-  const s = new Set();
-  const pm = state.productMeta || {};
-  for (const c in pm) {
-    const rep = ((pm[c] || {}).repCode || '').trim();
-    if (rep && rep !== c) s.add(rep);   // 自己参照は除外
-  }
-  return s;
-}
 function applyRepFilter(list) {
   const f = state.repFilter;
   if (!f) return list;
-  const referencedByOthers = getReferencedRepCodesByOthers();
+  // 【v1.0326】v1.0325の「子のいない自己参照を除外」を撤回。代表コードを付けた商品（自己参照の親を含む）は
+  //   送り込みフィルタに表示する。※子（変種）が親の下に並ばないのは、その子側に代表コードが
+  //   設定されていないため（データ側の紐づけ不足）で、フィルタの不具合ではない。
+  const referenced = getReferencedRepCodes();
   return list.filter(item => {
     const code = item && item.code;
     if (!code) return false;
     const meta = state.productMeta[code] || {};
     const rep = (meta.repCode || '').trim();
-    if (f === '*') {
-      // 【v1.0325】実際に親子関係のある商品だけを表示する。
-      //   子 = 別商品を親(repCode)に持つ（rep が自分以外）。
-      //   親 = 別商品から repCode として参照される（自己参照は除く）。
-      //   「repCode=自分だけ（子が居ない自己参照）」は送り込みが無いので除外（＝親だけ並ぶ不具合の修正）。
-      const isChild  = rep.length > 0 && rep !== String(code);
-      const isParent = referencedByOthers.has(String(code));
-      return isChild || isParent;
-    }
-    return rep === f || code === f;                                // そのグループの子 or 親自身
+    if (f === '*') return rep.length > 0 || referenced.has(String(code));  // 代表コード有(子/自己参照親) or 参照される親
+    return rep === f || code === f;                                        // そのグループの子 or 親自身
   });
 }
 
