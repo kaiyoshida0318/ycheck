@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0326 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0327 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0326</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0327</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9044,6 +9044,10 @@ function saveProductEdit(opts) {
   // 【v124】代表商品コードを保存（空文字なら削除扱い）
   if (newRepCode) state.productMeta[code].repCode = newRepCode;
   else delete state.productMeta[code].repCode;
+  // 【v1.0327】商品編集（代表コード/KW/状態など）の変更時刻を記録。
+  //   これが無いと、古いセッション/端末が保存した時のマージ(mergeProductMetaForSave)で
+  //   「新しい方」と判定されず、代表コード等が巻き戻り・消失する事故が起きていた（実際に発生）。
+  state.productMeta[code]._ts = Date.now();
   const ok = saveToStorage();
   // 【v313】localStorage失敗でも GitHub連携があれば保存は継続（GitHubが真の保存先）。
   //   誤解を招く「画像が大きすぎる」警告は廃止し、GitHub未設定時のみ正確に警告して中断する。
