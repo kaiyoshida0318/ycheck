@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0330 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0331 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0330</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0331</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9401,7 +9401,13 @@ function triggerTextDownload(text, filename) {
 }
 
 function downloadBasicCsv() {
-  const list = Array.isArray(state.basicListCache) ? state.basicListCache : [];
+  // 【v1.0331】絞り込み（検索／広告あり・なし／送り込み）の状態に関係なく、
+  //   常に「撤退済み以外の全商品」の商品マスタを出力する。
+  //   以前は state.basicListCache（＝画面に表示中の絞り込み後リスト）を使っていたため、
+  //   絞り込み中にボタンを押すと表示中の商品コードしか出力されない不具合があった。
+  const list = Object.keys(state.master || {})
+    .filter(code => !isRetired(code))
+    .map(code => ({ code: code }));
   if (list.length === 0) {
     alert('ダウンロードする行がありません。データを読み込んでください。');
     return;
