@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0323 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0324 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0323</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0324</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5247,12 +5247,18 @@ function applyRepFilter(list) {
 // 引数: sortedList = すでにソート済みの配列（各要素に .code があること）
 function applyRepGrouping(sortedList) {
   if (!Array.isArray(sortedList) || sortedList.length === 0) return sortedList;
-  // 各商品の repCode を取得
+  // 【v1.0324】送り込みの親が repCode 空（自己参照していない）だと、子と同じグループに入らず
+  //   親と子が離れて表示され「親は出るが子が親の所に出ない」ように見えていた不具合を修正。
+  //   親（repCode空でも、子から repCode として参照されている商品）は自分のコードをキーにして子と同居させる。
+  const referenced = getReferencedRepCodes();
   const getRepCode = (item) => {
     const code = item && item.code;
     if (!code) return '';
     const meta = state.productMeta[code] || {};
-    return (meta.repCode || '').trim();
+    const rep = (meta.repCode || '').trim();
+    if (rep) return rep;                                // 子（または自己参照の親）
+    if (referenced.has(String(code))) return String(code);  // 【v1.0324】repCode空だが参照される親 → 自コードをキーに（子と同居）
+    return '';
   };
   // 同じrepCodeを持つグループを先に集める
   const groups = new Map();  // repCode -> [items]
