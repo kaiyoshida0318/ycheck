@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0340 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0342 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0340</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0342</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2742,6 +2742,13 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="filter-label">検索</span>
           <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button class="search-rep-badge" id="retiredRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+        </div>
+        <!-- 【v1.0341】撤退チェック(パターン①): ストアクリエイターの商品リストと突き合わせ、無い商品=Yahoo削除=撤退済みに -->
+        <div style="margin: 4px 0 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <button class="btn sm" id="btnRetireCheck" type="button" style="border-color: var(--red); color: var(--red); font-weight: 600;"
+            data-tooltip="ストクリ（ストアクリエイターPro）の商品リスト(PRオプ料率CSV / data*.csv)を取り込み、そこに載っていない＝Yahooで商品ページが削除された商品を「撤退済み」にします。①Yahooだけ撤退・楽天継続の運用に。">🔍 撤退チェック（ストクリ突き合わせ）</button>
+          <input type="file" id="retireCheckFile" accept=".csv,text/csv" style="display:none">
+          <span style="font-size: 0.78rem; color: var(--text3);">ストクリの商品リストに無い商品を撤退済みに（Yahooページ削除の反映）</span>
         </div>
         <div class="table-wrap">
           <table id="tableRetired">
@@ -5079,6 +5086,36 @@ function applyRetireByProRate(proRateMap) {
     n++;
   });
   return n;
+}
+// 【v1.0341】撤退チェック(パターン①): ストアクリエイターの商品リスト(PRオプ料率CSV/data*.csv)を単体で取り込み、
+//   そこに載っていない現役商品＝Yahooでページ削除された商品を「撤退済み」にする。
+//   ※「最新値を更新」と違い、入札価格/PRオプ料率や lastSpotUpdate などは一切変更しない（突き合わせ専用）。
+async function runRetireCheck(file) {
+  try {
+    const rows = await readCsvFile(file);
+    if (!rows || !rows.length) {
+      alert('CSVを読み込めませんでした。\nストクリの商品リスト（PRオプ料率CSV／data*.csv）を選んでください。');
+      return;
+    }
+    const liveMap = parseProRate(rows);  // キー=公開中の商品コード(小文字)
+    if (!liveMap || Object.keys(liveMap).length === 0) {
+      alert('このCSVから商品コードを読み取れませんでした。\nファイルが正しいかご確認ください（列：code もしくは 商品コード）。');
+      return;
+    }
+    const candidates = detectRetiredByProRate(liveMap);
+    if (candidates.length === 0) {
+      alert('撤退候補は見つかりませんでした。\n（マスタの現役商品はすべて、取り込んだ商品リストに存在しています）');
+      return;
+    }
+    const n = applyRetireByProRate(liveMap);  // 確認ダイアログ→OKで撤退済みに一括セット
+    if (n > 0) {
+      saveToStorage();
+      renderAll();
+      alert(`${n}件を「撤退済み」にしました。\n「撤退済み商品」ブロックに移動し、他の表からは外れます。`);
+    }
+  } catch (e) {
+    alert('撤退チェックに失敗しました: ' + ((e && e.message) || e));
+  }
 }
 function getMeta(code) {
   if (!state.productMeta[code]) {
@@ -8144,6 +8181,9 @@ if ($('#btnDeleteProTuneNoteAll'))    $('#btnDeleteProTuneNoteAll').addEventList
 // 【v294】対応内容-全更新処理
 if ($('#btnUpdateAllAdTune'))  $('#btnUpdateAllAdTune').addEventListener('click', () => bulkMarkTuneDone('ad'));
 if ($('#btnUpdateAllProTune')) $('#btnUpdateAllProTune').addEventListener('click', () => bulkMarkTuneDone('pro'));
+// 【v1.0341】撤退チェック(①): ボタン→ファイル選択→突き合わせ→撤退済み
+if ($('#btnRetireCheck')) $('#btnRetireCheck').addEventListener('click', () => { const inp = $('#retireCheckFile'); if (inp) { inp.value = ''; inp.click(); } });
+if ($('#retireCheckFile')) $('#retireCheckFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) runRetireCheck(f); });
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
