@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0334 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0335 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0334</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0335</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3847,6 +3847,9 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const pAt = _newerYmd(L.proActionAt, R.proActionAt);  if (pAt) w.proActionAt = pAt;
     const aTs = _newerTs(L.adActionTs,   R.adActionTs);   if (aTs != null) w.adActionTs  = aTs;
     const pTs = _newerTs(L.proActionTs,  R.proActionTs);  if (pTs != null) w.proActionTs = pTs;
+    // 【v1.0335】値変更時刻(adChgTs/proChgTs)も新しい方を残す（案A: 値変更ベース再分類の判定に使うため）
+    const aCg = _newerTs(L.adChgTs,      R.adChgTs);      if (aCg != null) w.adChgTs     = aCg;
+    const pCg = _newerTs(L.proChgTs,     R.proChgTs);     if (pCg != null) w.proChgTs    = pCg;
     out[c] = w;
   });
   return out;
@@ -4825,12 +4828,35 @@ async function commitUpload() {
     state.ad = state.ad.filter(r => !_ams.has(r.month)).concat(adParsed);
     log(`✅ 広告詳細レポート(月次)を反映（${adParsed.length}行）`, 'ok');
   }
+  // 【v1.0335】最新値取り込み時に「値が実際に変わった商品」を検出して per-item の変更時刻を刻む。
+  //   これを getTuneGroup が使い、値が変わった商品だけを推移確認/未確認へ戻す（対応済みは維持＝案A）。
+  //   bid/proRate は小文字コード、productMeta は元コードなので、小文字→productMetaキーの索引で対応付ける。
+  const _pmKeyByLower = {};
+  Object.keys(state.productMeta || {}).forEach(k => { _pmKeyByLower[String(k).toLowerCase()] = k; });
+  const _stampChg = (lowerCode, field, ts) => {
+    const pk = _pmKeyByLower[lowerCode];
+    if (pk && state.productMeta[pk]) state.productMeta[pk][field] = ts;  // マスタ外はスキップ
+  };
   if (buf.bid) {
-    state.bid = parseBid(buf.bid.rows);
+    const _oldBid = state.bid || {};
+    const _newBid = parseBid(buf.bid.rows);
+    const _nowChg = Date.now();
+    Object.keys(_newBid).forEach(code => {
+      const ov = _oldBid[code], nv = _newBid[code];
+      if (ov == null || Number(ov) !== Number(nv)) _stampChg(code, 'adChgTs', _nowChg);  // 追加/変更のみ（削除は無視）
+    });
+    state.bid = _newBid;
     log(`✅ 入札価格を反映（${Object.keys(state.bid).length}件）`, 'ok');
   }
   if (buf.proRate) {
-    state.proRate = parseProRate(buf.proRate.rows);
+    const _oldPro = state.proRate || {};
+    const _newPro = parseProRate(buf.proRate.rows);
+    const _nowChg = Date.now();
+    Object.keys(_newPro).forEach(code => {
+      const ov = _oldPro[code], nv = _newPro[code];
+      if (ov == null || Number(ov) !== Number(nv)) _stampChg(code, 'proChgTs', _nowChg);  // 追加/変更のみ
+    });
+    state.proRate = _newPro;
     log(`✅ PRオプ料率を反映（${Object.keys(state.proRate).length}件）`, 'ok');
   }
   // 【v190】入札価格／PRオプ料率を取り込んだら、その最新値で順位表の「今日」のセルを強制上書き。
@@ -6056,18 +6082,18 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
-  // 【v301/v1.0333】非F: 「最新値更新サイクル」で対応した商品は全体のみに置く（推移確認/未確認から外す）。
-  //   対応＝メモ記入・更新日時スタンプ・対応内容-全更新処理・入札価格/PRオプ料率の変更（=markTuneAction）。
-  //   【v1.0333】判定を「日付」で行う（proActionAt と lastSpotUpdate を YYYY-MM-DD で比較）。
-  //     旧v301はミリ秒(proActionTs > lastSpotUpdateTs)で比較していたが、別PCの同日再取得や
-  //     保存時マージ(_assignRankMetaKeepSpot / v1.0332)で lastSpotUpdateTs が対応時刻より後ろへ動くと、
-  //     対応済みが誤って推移確認/未確認へ戻る不具合があった（閉じて開き直すと処理済みが復活する）。
-  //   ・対応日 ≧ 最新値取り込み日 → 当サイクルで対応済み＝全体のみ（＝処理済みは巻き戻らない）。
-  //   ・対応日 ＜ 最新値取り込み日 → 未対応扱いにリセット（下で watch/unchecked へ再分類）。
-  //     ＝翌日以降に新しく最新値を取り込むと lastSpotUpdate がその日付へ進み、前日以前の対応はリセットされる。
-  const actAt  = (kind === 'ad') ? meta.adActionAt : meta.proActionAt;  // 'YYYY-MM-DD'
-  const spotAt = (state.rankMeta && state.rankMeta.lastSpotUpdate) || '';
-  if (actAt && (!spotAt || actAt >= spotAt)) return null;  // 当サイクルで対応済み → 全体のみ
+  // 【v1.0335】非F: 「値変更ベース」で再分類する（案A）。
+  //   考え方: 一度対応した商品は、その商品の値（入札価格 or PRオプ料率）が実際に変わるまで
+  //   推移確認/未確認へ戻さない。最新値を取り込んだ時に「値が実際に変わった商品」にだけ
+  //   per-item の変更時刻(adChgTs/proChgTs)を刻む（commitUpload参照）。
+  //   ・対応時刻(adActionTs/proActionTs) ≧ 変更時刻(adChgTs/proChgTs) → 対応後に値が動いていない
+  //     ＝対応済みを維持して「全体のみ」（推移確認/未確認に戻さない）。
+  //   ・変更時刻 ＞ 対応時刻（対応後に値が変わった）／未対応 → 推移確認・未確認へ戻して再確認を促す。
+  //   （旧v301/v1.0333は最新値の取り込み"日"で一律リセットしていたため、値が変わっていない対応済みまで
+  //     推移確認へ戻り、閉じて開き直すたびに復活していた。順位崩れは修正あり(F)が常に最新で拾うため安全網は残る。）
+  const doneTs = (kind === 'ad') ? meta.adActionTs : meta.proActionTs;
+  const chgTs  = (kind === 'ad') ? (meta.adChgTs || 0) : (meta.proChgTs || 0);
+  if (doneTs && doneTs >= chgTs) return null;      // 対応後に値変更なし → 全体のみ（対応済み維持）
   if (noteHasChangeContent(note)) return 'watch';  // メモ(更新日時以外)あり=推移確認
   return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
 }
