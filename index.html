@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0342 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0343 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0342</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0343</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2743,13 +2743,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <input type="search" id="retiredSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button class="search-rep-badge" id="retiredRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
         </div>
-        <!-- 【v1.0341】撤退チェック(パターン①): ストアクリエイターの商品リストと突き合わせ、無い商品=Yahoo削除=撤退済みに -->
-        <div style="margin: 4px 0 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <button class="btn sm" id="btnRetireCheck" type="button" style="border-color: var(--red); color: var(--red); font-weight: 600;"
-            data-tooltip="ストクリ（ストアクリエイターPro）の商品リスト(PRオプ料率CSV / data*.csv)を取り込み、そこに載っていない＝Yahooで商品ページが削除された商品を「撤退済み」にします。①Yahooだけ撤退・楽天継続の運用に。">🔍 撤退チェック（ストクリ突き合わせ）</button>
-          <input type="file" id="retireCheckFile" accept=".csv,text/csv" style="display:none">
-          <span style="font-size: 0.78rem; color: var(--text3);">ストクリの商品リストに無い商品を撤退済みに（Yahooページ削除の反映）</span>
-        </div>
         <div class="table-wrap">
           <table id="tableRetired">
             <thead><tr>
@@ -2887,6 +2880,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
           <span class="state-explain" id="proAdjustStateExplain" style="display:none;"></span>
+          <!-- 【v1.0343】撤退チェック(①): 【状態】撤退■で絞り込んだ時だけ表示。ストクリ商品リストと突き合わせ→撤退済み -->
+          <button class="btn sm" id="btnRetireCheck" type="button" style="display:none; border-color: var(--red); color: var(--red); font-weight: 600;"
+            data-tooltip="ストクリ（ストアクリエイターPro）の商品リスト(PRオプ料率CSV / data*.csv)を取り込み、そこに載っていない＝Yahooで商品ページが削除された商品を「撤退済み」にします。①Yahooだけ撤退・楽天継続の運用に。">🔍 撤退チェック（ストクリ突き合わせ）</button>
+          <input type="file" id="retireCheckFile" accept=".csv,text/csv" style="display:none">
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -7717,6 +7714,9 @@ function updateActiveStateChip() {
 }
 
 function updateFilterBanners() {
+  // 【v1.0343】撤退チェックボタンは「【状態】撤退■」で絞り込んだ時だけ表示する。
+  const _retireBtn = document.getElementById('btnRetireCheck');
+  if (_retireBtn) _retireBtn.style.display = (state.activeStateFilter && state.activeStateFilter.type === 'pro-w') ? '' : 'none';
   const adBanner = $('#adAdjustBanner');
   const proBanner = $('#proAdjustBanner');
   // 【v213】状態カテゴリ説明文（ツールバー内）
