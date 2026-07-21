@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0332 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0333 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0332</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0333</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6038,13 +6038,18 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
-  // 【v301】非F: 「最新値更新サイクル」で対応した商品は全体のみに置く（推移確認/未確認から外す）。
+  // 【v301/v1.0333】非F: 「最新値更新サイクル」で対応した商品は全体のみに置く（推移確認/未確認から外す）。
   //   対応＝メモ記入・更新日時スタンプ・対応内容-全更新処理・入札価格/PRオプ料率の変更（=markTuneAction）。
-  //   判定: そのkindの対応時刻(adActionTs/proActionTs)が、直近の最新値更新時刻(lastSpotUpdateTs)より新しいか。
-  //   「最新値を更新」すると lastSpotUpdateTs が更新され、以前の対応は過去扱いになりリセット→下の条件で再振り分け。
-  const doneTs = (kind === 'ad') ? meta.adActionTs : meta.proActionTs;
-  const spotTs = (state.rankMeta && state.rankMeta.lastSpotUpdateTs) || 0;
-  if (doneTs && doneTs > spotTs) return null;      // 当サイクルで対応済み → 全体のみ
+  //   【v1.0333】判定を「日付」で行う（proActionAt と lastSpotUpdate を YYYY-MM-DD で比較）。
+  //     旧v301はミリ秒(proActionTs > lastSpotUpdateTs)で比較していたが、別PCの同日再取得や
+  //     保存時マージ(_assignRankMetaKeepSpot / v1.0332)で lastSpotUpdateTs が対応時刻より後ろへ動くと、
+  //     対応済みが誤って推移確認/未確認へ戻る不具合があった（閉じて開き直すと処理済みが復活する）。
+  //   ・対応日 ≧ 最新値取り込み日 → 当サイクルで対応済み＝全体のみ（＝処理済みは巻き戻らない）。
+  //   ・対応日 ＜ 最新値取り込み日 → 未対応扱いにリセット（下で watch/unchecked へ再分類）。
+  //     ＝翌日以降に新しく最新値を取り込むと lastSpotUpdate がその日付へ進み、前日以前の対応はリセットされる。
+  const actAt  = (kind === 'ad') ? meta.adActionAt : meta.proActionAt;  // 'YYYY-MM-DD'
+  const spotAt = (state.rankMeta && state.rankMeta.lastSpotUpdate) || '';
+  if (actAt && (!spotAt || actAt >= spotAt)) return null;  // 当サイクルで対応済み → 全体のみ
   if (noteHasChangeContent(note)) return 'watch';  // メモ(更新日時以外)あり=推移確認
   return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
 }
