@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0335 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0336 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -1065,7 +1065,7 @@ th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blu
 th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* 【v250】入札価格/PRオプ料率の2行ヘッダーは中央揃えできれいに（データセルは右揃えのまま） */
-thead th.col-bid { text-align: center; line-height: 1.4; }
+thead th.col-bid, thead th.col-pro, thead th.col-bidonly { text-align: center; line-height: 1.4; }
 /* 【v150】行ホバー時の背景色変化を全廃止。青枠だけ残して、枠内の色は変えない方針。
    元: tbody tr:hover { background: var(--bg3); } */
 
@@ -1272,13 +1272,23 @@ th.col-ad {
   background-color: #fae6ce;
 }
 
-/* グループ3: 入札価格（入札系 / ブルー） */
+/* グループ3: （旧）入札系ブルー ※現在は未使用（col-total/col-pro/col-bidonlyへ移行） */
 th.col-bid, td.col-bid {
   background-color: #f0f3fd;
 }
 th.col-bid {
   background-color: #d6e1fa;
 }
+/* 【v1.0336】列の色分けを関連性に合わせて変更:
+   ・総売上 = ブルー（旧・入札/PRオプの色）
+   ・PRオプ料率 = SEO売上のグリーンを少し濃くした色（SEOと関連）
+   ・入札価格 = 広告売上のオレンジ(アンバー)を少し濃くした色（広告売上と関連） */
+th.col-total, td.col-total { background-color: #f0f3fd; }   /* 総売上: ブルー(淡) */
+th.col-total { background-color: #d6e1fa; }                 /* 総売上: ブルー(見出し) */
+th.col-pro, td.col-pro { background-color: #d7eede; }       /* PRオプ料率: 濃いめグリーン(淡) */
+th.col-pro { background-color: #b9dfc6; }                   /* PRオプ料率: 濃いめグリーン(見出し) */
+th.col-bidonly, td.col-bidonly { background-color: #fbe7ca; } /* 入札価格: 濃いめオレンジ(淡) */
+th.col-bidonly { background-color: #f5cf96; }              /* 入札価格: 濃いめオレンジ(見出し) */
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
 .status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
@@ -1578,6 +1588,10 @@ tr.row-child td.col-bid,
 tr.row-child:hover td.col-bid {
   background-color: #f0f3fd;
 }
+/* 【v1.0336】子行でも新しい色分け列(col-total/col-pro/col-bidonly)の色を維持 */
+tr.row-child td.col-total, tr.row-child:hover td.col-total { background-color: #f0f3fd; }
+tr.row-child td.col-pro,   tr.row-child:hover td.col-pro   { background-color: #d7eede; }
+tr.row-child td.col-bidonly, tr.row-child:hover td.col-bidonly { background-color: #fbe7ca; }
 /* 子行の商品コードに └ ツリー記号 + 字下げ */
 tr.row-child .code-cell-inner {
   position: relative;
@@ -2524,7 +2538,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0335</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0336</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2663,14 +2677,14 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
               <th class="nosort" data-resize-key="kw">メインKW</th>
-              <th class="num col-sales" data-sort="rev">総売上</th>
+              <th class="num col-total" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
               <th class="num col-ad" data-sort="roas">広告ROAS</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
@@ -2700,7 +2714,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameMonthly">商品名</th>
               <th data-sort="month">月</th>
-              <th class="num col-sales" data-sort="rev">総売上</th>
+              <th class="num col-total" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
               <th class="num col-ad" data-sort="adCost">実績額</th>
@@ -2728,8 +2742,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameRetired">商品名</th>
-              <th class="num col-sales" data-sort="rev">総売上（直近月）</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-total" data-sort="rev">総売上（直近月）</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -2747,7 +2761,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <table id="tableGraphMonthly2">
             <thead><tr>
               <th>月</th>
-              <th class="num col-sales">総売上</th>
+              <th class="num col-total">総売上</th>
               <th class="num col-sales">SEO売上</th>
               <th class="num col-ad">広告売上</th>
               <th class="num col-ad">実績額</th>
@@ -2768,7 +2782,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <table id="tableGraphMonthly">
             <thead><tr>
               <th>月</th>
-              <th class="num col-sales">総売上</th>
+              <th class="num col-total">総売上</th>
               <th class="num col-sales">SEO売上</th>
               <th class="num col-ad">広告売上</th>
               <th class="num col-ad">実績額</th>
@@ -2832,7 +2846,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdAdjustAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdAdjustAdRev1">実績額<br>(2ヶ月前)</th>
@@ -2869,7 +2883,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort" data-resize-key="kw">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th data-sort="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
@@ -2904,7 +2918,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdTuneAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdTuneAdRev1">実績額<br>(2ヶ月前)</th>
@@ -2941,7 +2955,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-bid" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
@@ -5579,14 +5593,14 @@ function renderBasic() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
-      <td class="num col-sales">${fmt(r.rev)}</td>
+      <td class="num col-total">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
-      <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
+      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-ad">${fmt(r.adRev)}</td>
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
-      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
@@ -5695,7 +5709,7 @@ function renderMonthly() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${monthDisplay}</td>
-      <td class="num col-sales">${fmt(r.rev)}</td>
+      <td class="num col-total">${fmt(r.rev)}</td>
       <td class="num col-sales">${fmt(r.seoRev)}</td>
       <td class="num col-ad">${fmt(r.adRev)}</td>
       <td class="num col-ad">${fmt(r.adCost)}</td>
@@ -5779,8 +5793,8 @@ function renderRetired() {
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      <td class="num col-sales">${fmt(r.rev)}</td>
-      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${r.bid != null && r.bid > 0 ? "¥" + r.bid : "—"}</td>
+      <td class="num col-total">${fmt(r.rev)}</td>
+      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${r.bid != null && r.bid > 0 ? "¥" + r.bid : "—"}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
@@ -5884,7 +5898,7 @@ function renderGraph() {
   const rowsHtml = [...data].reverse().map(d => `
       <tr>
         <td>${d.month}</td>
-        <td class="num col-sales">${fmt(d.rev)}</td>
+        <td class="num col-total">${fmt(d.rev)}</td>
         <td class="num col-sales">${fmt(d.seoRev)}</td>
         <td class="num col-ad">${fmt(d.adRev)}</td>
         <td class="num col-ad">${fmt(d.adCost)}</td>
@@ -6281,7 +6295,7 @@ function renderAdAdjust(cfg) {
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
-      <td class="num col-bid bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_revCells}
       ${_roasCells}
@@ -6434,7 +6448,7 @@ function renderProAdjust(cfg) {
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
-      <td class="num col-bid pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
+      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.seoRevs.map(v => `<td class="num col-sales">${fmt(v)}</td>`).join('')}
       ${statusFirst ? '' : _tdStatus}
