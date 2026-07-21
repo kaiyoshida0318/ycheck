@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0333 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0334 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2524,7 +2524,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0333</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0334</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3830,6 +3830,24 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const lr = pmEntryRecency(localPM[c]);
     const rr = pmEntryRecency(remotePM[c]);
     out[c] = (rr > lr) ? remotePM[c] : localPM[c];
+  });
+  // 【v1.0334】対応マーカー（adActionAt/Ts・proActionAt/Ts）は、勝ったエントリに関わらず
+  //   「両者のうち新しい方」を残す（フィールド単位マージ）。
+  //   whole-entryマージだけだと、別タブ/端末が同一商品のメモ等を後から保存した(＝_tsが新しい)だけで、
+  //   こちらの当日の全更新処理/対応(proActionAt/Ts)が丸ごと消え、推移確認/未確認へ戻る不具合があった。
+  //   日付(YYYY-MM-DD)は文字列比較、Ts(ms)は数値比較で新しい方を採用。分類(getTuneGroup)は
+  //   proActionAt≧lastSpotUpdate を「当サイクル対応済み」と判定するため、この保護で処理済みが巻き戻らない。
+  const _newerYmd = (a, b) => { a = a || ''; b = b || ''; return (a >= b) ? a : b; };
+  const _newerTs  = (a, b) => { const x = (typeof a === 'number') ? a : 0, y = (typeof b === 'number') ? b : 0; const m = Math.max(x, y); return m > 0 ? m : undefined; };
+  Object.keys(out).forEach(c => {
+    const L = localPM[c], R = remotePM[c];
+    if (!L || !R) return;   // 片方にしか無い商品はマージ不要
+    const w = Object.assign({}, out[c]);   // 勝者を複製してから対応マーカーだけ上書き（元オブジェクトを汚さない）
+    const aAt = _newerYmd(L.adActionAt,  R.adActionAt);   if (aAt) w.adActionAt  = aAt;
+    const pAt = _newerYmd(L.proActionAt, R.proActionAt);  if (pAt) w.proActionAt = pAt;
+    const aTs = _newerTs(L.adActionTs,   R.adActionTs);   if (aTs != null) w.adActionTs  = aTs;
+    const pTs = _newerTs(L.proActionTs,  R.proActionTs);  if (pTs != null) w.proActionTs = pTs;
+    out[c] = w;
   });
   return out;
 }
