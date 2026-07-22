@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0348 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0349 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0348</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0349</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3925,6 +3925,13 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const _lpTs = (typeof L.proActionTs === 'number') ? L.proActionTs : 0;
     const _rpTs = (typeof R.proActionTs === 'number') ? R.proActionTs : 0;
     if (_lpTs !== _rpTs) w.proNote = (_lpTs > _rpTs) ? L.proNote : R.proNote;
+    // 【v1.0349】対応済みフラグ(adDone/proDone)は「doneTsが新しい側」を採用（対応=ON / 値変更取込=OFF のうち新しい方）。
+    const _laDn = (typeof L.adDoneTs === 'number') ? L.adDoneTs : 0;
+    const _raDn = (typeof R.adDoneTs === 'number') ? R.adDoneTs : 0;
+    if (_laDn !== _raDn) { const s = (_laDn > _raDn) ? L : R; w.adDone = s.adDone; w.adDoneTs = s.adDoneTs; }
+    const _lpDn = (typeof L.proDoneTs === 'number') ? L.proDoneTs : 0;
+    const _rpDn = (typeof R.proDoneTs === 'number') ? R.proDoneTs : 0;
+    if (_lpDn !== _rpDn) { const s = (_lpDn > _rpDn) ? L : R; w.proDone = s.proDone; w.proDoneTs = s.proDoneTs; }
     out[c] = w;
   });
   return out;
@@ -4985,13 +4992,22 @@ async function commitUpload() {
     const pk = _pmKeyByLower[lowerCode];
     if (pk && state.productMeta[pk]) state.productMeta[pk][field] = ts;  // マスタ外はスキップ
   };
+  // 【v1.0349】値が変わった商品は「対応済みフラグ」をOFFにする（案A: 推移確認/未確認へ戻す）。
+  //   doneTs も更新して、保存時マージで「OFFにした方（新しい方）」が残るようにする。
+  const _clearDone = (lowerCode, kind, ts) => {
+    const pk = _pmKeyByLower[lowerCode];
+    if (!pk || !state.productMeta[pk]) return;
+    if (kind === 'ad') { state.productMeta[pk].adDone = false; state.productMeta[pk].adDoneTs = ts; }
+    else { state.productMeta[pk].proDone = false; state.productMeta[pk].proDoneTs = ts; }
+    state.productMeta[pk]._ts = ts;
+  };
   if (buf.bid) {
     const _oldBid = state.bid || {};
     const _newBid = parseBid(buf.bid.rows);
     const _nowChg = Date.now();
     Object.keys(_newBid).forEach(code => {
       const ov = _oldBid[code], nv = _newBid[code];
-      if (ov == null || Number(ov) !== Number(nv)) _stampChg(code, 'adChgTs', _nowChg);  // 追加/変更のみ（削除は無視）
+      if (ov == null || Number(ov) !== Number(nv)) { _stampChg(code, 'adChgTs', _nowChg); _clearDone(code, 'ad', _nowChg); }  // 追加/変更のみ
     });
     state.bid = _newBid;
     log(`✅ 入札価格を反映（${Object.keys(state.bid).length}件）`, 'ok');
@@ -5002,7 +5018,7 @@ async function commitUpload() {
     const _nowChg = Date.now();
     Object.keys(_newPro).forEach(code => {
       const ov = _oldPro[code], nv = _newPro[code];
-      if (ov == null || Number(ov) !== Number(nv)) _stampChg(code, 'proChgTs', _nowChg);  // 追加/変更のみ
+      if (ov == null || Number(ov) !== Number(nv)) { _stampChg(code, 'proChgTs', _nowChg); _clearDone(code, 'pro', _nowChg); }  // 追加/変更のみ
     });
     state.proRate = _newPro;
     log(`✅ PRオプ料率を反映（${Object.keys(state.proRate).length}件）`, 'ok');
@@ -6235,6 +6251,11 @@ function markTuneAction(code, kind) {
   //   lastSpotUpdateTs と比較して判定する（対応→全体のみ、次の最新値更新でリセット）。
   if (kind === 'ad') { state.productMeta[code].adActionAt = today; state.productMeta[code].adActionTs = nowTs; }
   else if (kind === 'pro') { state.productMeta[code].proActionAt = today; state.productMeta[code].proActionTs = nowTs; }
+  // 【v1.0349】状態の単純化: 「対応済み」を単純なフラグ(adDone/proDone)にする。分類(getTuneGroup)はこれを読むだけ。
+  //   ・対応するとON。最新値取り込みで値が変わった商品だけOFF（案A / commitUpload参照）。
+  //   ・フラグはマージで「新しい方(doneTs)」を残すので、時刻の突き合わせ計算に頼らず巻き戻りに強い。
+  if (kind === 'ad') { state.productMeta[code].adDone = true; state.productMeta[code].adDoneTs = nowTs; }
+  else if (kind === 'pro') { state.productMeta[code].proDone = true; state.productMeta[code].proDoneTs = nowTs; }
   state.productMeta[code]._ts = nowTs;  // 【v285】最終編集時刻（保存時マージの新しさ判定に使用）
   // 【v276】対応（値変更・状態変更・対応内容更新）しても、その場では凍結メンバーから外さない
   //   ＝修正あり等にそのまま留める。次回の「最新値を更新」やビュー移動で resetTuneMembers→再分類
@@ -6260,20 +6281,22 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
-  // 【v1.0335】非F: 「値変更ベース」で再分類する（案A）。
-  //   考え方: 一度対応した商品は、その商品の値（入札価格 or PRオプ料率）が実際に変わるまで
-  //   推移確認/未確認へ戻さない。最新値を取り込んだ時に「値が実際に変わった商品」にだけ
-  //   per-item の変更時刻(adChgTs/proChgTs)を刻む（commitUpload参照）。
-  //   ・対応時刻(adActionTs/proActionTs) ≧ 変更時刻(adChgTs/proChgTs) → 対応後に値が動いていない
-  //     ＝対応済みを維持して「全体のみ」（推移確認/未確認に戻さない）。
-  //   ・変更時刻 ＞ 対応時刻（対応後に値が変わった）／未対応 → 推移確認・未確認へ戻して再確認を促す。
-  //   （旧v301/v1.0333は最新値の取り込み"日"で一律リセットしていたため、値が変わっていない対応済みまで
-  //     推移確認へ戻り、閉じて開き直すたびに復活していた。順位崩れは修正あり(F)が常に最新で拾うため安全網は残る。）
-  const doneTs = (kind === 'ad') ? meta.adActionTs : meta.proActionTs;
-  const chgTs  = (kind === 'ad') ? (meta.adChgTs || 0) : (meta.proChgTs || 0);
-  if (doneTs && doneTs >= chgTs) return null;      // 対応後に値変更なし → 全体のみ（対応済み維持）
+  // 【v1.0349】非F(推移確認/未確認): 「対応済みフラグ(adDone/proDone)」を読むだけにする（状態の単純化）。
+  //   ・フラグON → 全体のみ（対応済み維持）。
+  //   ・フラグOFF/未確認 → メモありは推移確認、それ以外は未確認。
+  //   フラグは対応でON、最新値取り込みで値が変わった商品だけOFF（案A）。時刻の突き合わせ計算を排除し巻き戻りに強くした。
+  if (_tuneIsDone(meta, kind)) return null;        // 対応済み → 全体のみ
   if (noteHasChangeContent(note)) return 'watch';  // メモ(更新日時以外)あり=推移確認
   return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
+}
+// 【v1.0349】「対応済み」判定。フラグ(adDone/proDone)があればそれを使う。
+//   未設定の既存データ(移行前)は、従来ロジック(対応時刻≧値変更時刻)で対応済みを推定する。
+function _tuneIsDone(meta, kind) {
+  const flag = (kind === 'ad') ? meta.adDone : meta.proDone;
+  if (flag !== undefined) return !!flag;   // 明示フラグ優先（新モデル）
+  const dTs = (kind === 'ad') ? meta.adActionTs : meta.proActionTs;   // 移行フォールバック
+  const cTs = (kind === 'ad') ? (meta.adChgTs || 0) : (meta.proChgTs || 0);
+  return !!dTs && dTs >= cTs;
 }
 
 // tuneFilterBar の表示/非表示・アクティブ表示・件数を更新する。
