@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0344 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0345 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0344</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0345</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3943,9 +3943,87 @@ function mergeMapByPmRecency(localMap, remoteMap, localPM, remotePM) {
 }
 
 // GitHubへの保存（mutex + 空データ誤上書き防止 + 【v285/v286】productMeta/入札価格/料率マージ）
+// ============ 【v1.0345】複数タブ/別PC対策: A タブ検知＋警告／B フォーカス自動同期／C 保存競合ガード ============
+// リモートの最新SHAだけを軽く取得（大きいファイルは Contents API が content を省くため軽い）。
+async function ghGetRemoteSha() {
+  if (!ghIsEnabled()) return null;
+  try {
+    const path = ghFilePath();
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ghGetPat()}`, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, cache: 'no-store' });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.sha || null;
+  } catch (e) { return null; }
+}
+// A: 複数タブ検知（同一ブラウザ）。別タブが居るかを直近15秒で判定。
+let _ycTabId = 'tab-' + Math.random().toString(36).slice(2);
+let _ycOtherTabSeenTs = 0;
+function _ycMultiTabActive() { return (Date.now() - _ycOtherTabSeenTs) < 15000; }
+function _ycShowMultiTabBanner() {
+  let el = document.getElementById('ycMultiTabBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'ycMultiTabBanner';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99998;background:#b45309;color:#fff;font-size:0.82rem;font-weight:700;text-align:center;padding:7px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.25)';
+    el.innerHTML = '⚠ 別のタブ／PCでYcheckが開いています。競合を避けるため<u>1つだけ</u>にするのがおすすめです（このタブは戻るたびに最新へ自動同期します）。<button id="ycMultiTabX" type="button" style="margin-left:10px;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:5px;padding:2px 9px;cursor:pointer;font-weight:700">閉じる</button>';
+    document.body.appendChild(el);
+    const x = document.getElementById('ycMultiTabX'); if (x) x.addEventListener('click', () => { el.style.display = 'none'; });
+  }
+  el.style.display = '';
+}
+let _ycBc = null;
+try { _ycBc = new BroadcastChannel('ycheck-tabs-' + (typeof getCurrentShopId === 'function' ? getCurrentShopId() : '')); } catch (e) {}
+if (_ycBc) {
+  _ycBc.onmessage = (ev) => {
+    const m = ev.data || {};
+    if (!m || m.id === _ycTabId) return;
+    if (m.type === 'hello' || m.type === 'here') {
+      _ycOtherTabSeenTs = Date.now();
+      _ycShowMultiTabBanner();
+      if (m.type === 'hello') { try { _ycBc.postMessage({ type: 'here', id: _ycTabId }); } catch (e) {} }
+    }
+  };
+  try { _ycBc.postMessage({ type: 'hello', id: _ycTabId }); } catch (e) {}
+}
+// B: タブに戻った時（可視化/フォーカス）、リモートが更新されていれば読み直してマージ。未保存があれば先に保存。
+let _ghLastFocusSyncTs = 0;
+let _ghFocusSyncing = false;
+async function ghFocusSync(reason) {
+  if (!ghIsEnabled() || _ghSaveInFlight || _ghFocusSyncing || document.hidden) return;
+  const now = Date.now();
+  if (now - _ghLastFocusSyncTs < 8000) return;   // スロットル8秒
+  _ghLastFocusSyncTs = now;
+  _ghFocusSyncing = true;
+  try {
+    const remoteSha = await ghGetRemoteSha();
+    if (!remoteSha || remoteSha === _ghLastKnownSha) return;  // リモートに変化なし
+    if (_ghDirty) {
+      await ghSaveToGitHub();      // ローカルに未保存 → 保存前マージで安全に反映（C）
+      console.log('[Ycheck] フォーカス同期: 未保存をマージ保存しました');
+    } else {
+      await ghLoadFromGitHub();    // リモートが新しい → 読み直してマージ（自己修復）
+      if (typeof renderAll === 'function') renderAll();
+      console.log('[Ycheck] フォーカス同期: 別セッションの更新を取り込みました（' + (reason || '') + '）');
+    }
+  } catch (e) { console.warn('[Ycheck] フォーカス同期エラー:', e && e.message); }
+  finally { _ghFocusSyncing = false; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { ghFocusSync('visible'); if (_ycBc) { try { _ycBc.postMessage({ type: 'here', id: _ycTabId }); } catch (e) {} } } });
+window.addEventListener('focus', () => ghFocusSync('focus'));
+
 async function ghSaveToGitHub(options = {}) {
   const allowEmpty = options.allowEmpty === true;
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
+  // 【v1.0345】A: 別タブが居る状態で、非表示（バックグラウンド）タブが古い状態のまま保存してGitHubを
+  //   巻き戻すのを防ぐ。非表示 かつ 別タブ検知中 は push せず未保存フラグだけ立て、次にこのタブが
+  //   表示された時に focus同期(ghFocusSync)がマージ保存する。force/allowEmpty は従来どおり通す。
+  if (document.hidden && _ycMultiTabActive() && !options.force && !allowEmpty) {
+    _ghDirty = true;
+    try { ghSetSyncStatus('dirty'); } catch (e) {}
+    console.log('[Ycheck] 非表示×別タブのため保存を保留（表示時に同期保存）');
+    return { skipped: true, reason: 'hidden-multitab-defer' };
+  }
   // mutex: 既に実行中なら待つ
   if (_ghSaveInFlight) {
     ghLog('既存の保存処理を待機中...');
