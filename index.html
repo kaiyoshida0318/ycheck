@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0349 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0350 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0349</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0350</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3932,6 +3932,19 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const _lpDn = (typeof L.proDoneTs === 'number') ? L.proDoneTs : 0;
     const _rpDn = (typeof R.proDoneTs === 'number') ? R.proDoneTs : 0;
     if (_lpDn !== _rpDn) { const s = (_lpDn > _rpDn) ? L : R; w.proDone = s.proDone; w.proDoneTs = s.proDoneTs; }
+    // 【v1.0350】状態(adStatus/proStatus/status)を「状態専用Ts(adStatusTs/proStatusTs/statusTs)が新しい側」で保護。
+    //   従来はwhole-entryの勝者からしか状態を引き継がず、_ts はメモ/値変更など状態以外の編集でも更新されるため、
+    //   状態を変えていない古いセッション（別タブ/別PC）が後から保存すると、○に変えた proStatus が巻き戻る不具合があった（§6）。
+    //   専用Tsが両側とも無い(=旧データ/未編集)ときは何もしない → 従来挙動を維持（回帰なし）。片側でも状態編集すれば以後は保護される。
+    const _laSt = (typeof L.adStatusTs  === 'number') ? L.adStatusTs  : 0;
+    const _raSt = (typeof R.adStatusTs  === 'number') ? R.adStatusTs  : 0;
+    if (_laSt !== _raSt) { const s = (_laSt > _raSt) ? L : R; w.adStatus  = s.adStatus;  w.adStatusTs  = s.adStatusTs;  }
+    const _lpSt = (typeof L.proStatusTs === 'number') ? L.proStatusTs : 0;
+    const _rpSt = (typeof R.proStatusTs === 'number') ? R.proStatusTs : 0;
+    if (_lpSt !== _rpSt) { const s = (_lpSt > _rpSt) ? L : R; w.proStatus = s.proStatus; w.proStatusTs = s.proStatusTs; }
+    const _lsSt = (typeof L.statusTs    === 'number') ? L.statusTs    : 0;
+    const _rsSt = (typeof R.statusTs    === 'number') ? R.statusTs    : 0;
+    if (_lsSt !== _rsSt) { const s = (_lsSt > _rsSt) ? L : R; w.status    = s.status;    w.statusTs    = s.statusTs;    }
     out[c] = w;
   });
   return out;
@@ -5200,7 +5213,10 @@ function applyRetireByProRate(proRateMap) {
   let n = 0;
   candidates.forEach(code => {
     const meta = getMeta(code);
+    const _rtTs = Date.now();  // 【v1.0350】撤退も状態変更 → 専用Ts(statusTs)と_tsを打ち、古いセッションの巻き戻しから保護する。
     meta.status = '撤退済み';
+    meta.statusTs = _rtTs;
+    meta._ts = _rtTs;
     n++;
   });
   return n;
@@ -8535,10 +8551,11 @@ document.addEventListener('change', (e) => {
   const kind = e.target.dataset.kind;
   const value = e.target.value;
   const meta = getMeta(code);
-  if (kind === 'ad') meta.adStatus = value;
-  else if (kind === 'pro') meta.proStatus = value;
-  else if (kind === 'status') meta.status = value || '新商品';
-  meta._ts = Date.now();  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
+  const _stTs = Date.now();  // 【v1.0350】状態変更専用の時刻。保存時マージで状態を「フィールド単位」で保護するのに使う。
+  if (kind === 'ad') { meta.adStatus = value; meta.adStatusTs = _stTs; }
+  else if (kind === 'pro') { meta.proStatus = value; meta.proStatusTs = _stTs; }
+  else if (kind === 'status') { meta.status = value || '新商品'; meta.statusTs = _stTs; }
+  meta._ts = _stTs;  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
   // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
   if (kind === 'ad' || kind === 'pro') markTuneAction(code, kind);
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
