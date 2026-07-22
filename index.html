@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0346 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0347 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0346</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0347</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10443,6 +10443,18 @@ try {
         // 本当に保存に失敗したときだけ警告（データはローカルに残っている）
         console.error(`[${curShop.id}] 起動時の保存に失敗:`, err);
         alert('前回保存し切れていない変更がローカルに残っており、GitHubへの保存も失敗しました。\n\nデータはこの端末に保持されています。右上が「✓保存済み」になるまで、設定から「今すぐGitHub保存」をお試しください。');
+      }).finally(() => {
+        // 【v1.0347】未保存フラグ経路では、保存(=GitHubとマージ)後に「GitHubの最新（マージ済み）」を
+        //   読み直して画面に反映する。これをしないと、古いローカルの状態が画面に残り続け、
+        //   本日対応した商品が「修正あり」に戻って見える（GitHub上は正しいのに表示だけ古い）不具合が起きる。
+        //   ghLoadFromGitHub はマージ（新しい方を残す）なので、この直前に保存した内容も失われない。
+        try {
+          ghLoadFromGitHub().then(() => {
+            if (typeof renderAll === 'function') renderAll();
+            if (typeof updateRankLastUpdatedDisplay === 'function') updateRankLastUpdatedDisplay();
+            console.log('[Ycheck] 起動時: 保存後にGitHub最新を読み直して表示を同期しました');
+          }).catch(() => {});
+        } catch (e) {}
       });
     } else {
       console.log('[Ycheck診断] 起動判定: 未保存フラグなし → GitHubから読み込み、ローカルを上書きします');
