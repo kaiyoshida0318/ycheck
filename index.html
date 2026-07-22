@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0354 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0355 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -1229,6 +1229,7 @@ td[data-resize-key] {
 .yc-reflect-btn.yc-dirty { background: #d97706; border-color: #d97706; animation: ycReflectPulse 1.1s ease-in-out infinite; }
 .yc-reflect-btn.yc-clean { background: var(--bg3); border-color: var(--border); color: var(--text3); cursor: default; box-shadow: none; }
 .yc-reflect-btn[hidden] { display: none !important; }
+.filters .yc-reflect-btn { margin-left: auto; }  /* 【v1.0355】各ビューの操作行（.filters）の右端に配置 */
 @keyframes ycReflectPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(217,119,6,.5);} 50%{ box-shadow:0 0 0 6px rgba(217,119,6,0);} }
 #ycSaveLock {
   position: fixed; inset: 0; z-index: 2147483000; display: none;
@@ -2572,7 +2573,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0354</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0355</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2588,7 +2589,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
     <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
-    <button class="yc-reflect-btn" id="ycReflectBtn" type="button" onclick="ycReflect()" title="変更をGitHubに反映（保存）します。押すまでは書き込みません。保存中は操作できません。">⬆ 反映する</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
       <span class="gh-sync-label">⚙️ GitHub連携</span>
       <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
@@ -4279,7 +4279,7 @@ async function ghLoadFromGitHub() {
       }
     }
     _ghDirty = false;
-    ghSetSyncStatus('saved');
+    ghSetSyncStatus('synced');   // 【v1.0355】読み込み完了は「✓ 最新」（保存ではない）
     ghLog(`取得成功: ${(content.length / 1024).toFixed(1)} KB`);
     // 【v287】ローカルの方が新しい変更を検出＝GitHubは別セッションの古い上書きを受けていた
     //   → 復元した内容を再保存し、ユーザーに通知（古いセッションを閉じるよう促す）。
@@ -4414,18 +4414,33 @@ function scheduleGitHubSave() {
 
 // 【v1.0354】========= 「反映する」ボタン + 保存中フルロック =========
 function _ycUpdateReflectBtn() {
-  const b = document.getElementById('ycReflectBtn');
-  if (!b) return;
-  if (!ghIsEnabled()) { b.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
-  b.hidden = false;
-  if (_ghDirty) {
-    b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
-    b.textContent = '⬆ 反映する（未反映）';
-  } else {
-    b.classList.add('yc-clean'); b.classList.remove('yc-dirty');
-    b.textContent = '✓ 反映済み';
-  }
+  const editable = (typeof ghIsEnabled === 'function') && ghIsEnabled();
+  document.querySelectorAll('.yc-reflect-btn').forEach(b => {
+    if (!editable) { b.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
+    b.hidden = false;
+    if (_ghDirty) {
+      b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
+      b.textContent = '⬆ 反映する（未反映）';
+    } else {
+      b.classList.add('yc-clean'); b.classList.remove('yc-dirty');
+      b.textContent = '✓ 反映済み';
+    }
+  });
 }
+// 【v1.0355】各ビューの操作行(.filters)の右端に「反映する」ボタンを注入
+function _ycInjectReflectButtons() {
+  document.querySelectorAll('.filters').forEach(f => {
+    if (f.querySelector('.yc-reflect-btn')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'yc-reflect-btn'; b.textContent = '⬆ 反映する';
+    b.title = '変更をGitHubに反映（保存）します。押すまでは書き込みません。保存中は操作できません。';
+    b.addEventListener('click', ycReflect);
+    f.appendChild(b);
+  });
+  _ycUpdateReflectBtn();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _ycInjectReflectButtons);
+else _ycInjectReflectButtons();
 function _ycBlockKey(e) { e.stopPropagation(); e.preventDefault(); }
 function ycLockUI(on, msg) {
   let ov = document.getElementById('ycSaveLock');
@@ -4490,8 +4505,14 @@ function ghSetSyncStatus(state, detail) {
       break;
     case 'saved':
       el.classList.add('gh-saved');
-      txt.textContent = '✓ 保存済み';
-      el.title = `最終保存: ${new Date().toLocaleTimeString('ja-JP')}\nクリックで設定`;
+      txt.textContent = '✓ 反映済み';
+      el.title = `最終反映: ${new Date().toLocaleTimeString('ja-JP')}\nクリックで設定`;
+      break;
+    case 'synced':
+      // 【v1.0355】読み込み完了（＝最新取得済み・未変更）。保存はしていないことを明示。
+      el.classList.add('gh-saved');
+      txt.textContent = '✓ 最新';
+      el.title = '最新データを取得済み（未変更）。編集して「⬆ 反映する」を押すとGitHubに保存されます。開いただけでは保存しません。';
       break;
     case 'dirty':
       el.classList.add('gh-dirty');
