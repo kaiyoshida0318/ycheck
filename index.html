@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0355 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0356 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2573,7 +2573,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0355</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0356</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3675,7 +3675,33 @@ let _ghStaleWarnShown = false;             // 【v272】古い上書きガード
 
 // ショップ別のGitHub保存パス（設計ガイド: data/{shopId}/...）
 function ghFilePath() {
+  // 【v1.0356】保存先を新ファイルに分離。古い版のセッション(幽霊)は旧ファイルを書き続けるが、
+  //   新版はこの新ファイルだけを読み書きするため、幽霊の巻き戻しと衝突しなくなる。
+  return `data/${getCurrentShopId()}/ycheck_data_v2.json`;
+}
+function ghFilePathLegacy() {
   return `data/${getCurrentShopId()}/ycheck_data.json`;
+}
+// 【v1.0356】読み込み用: 新ファイルがまだ無ければ旧ファイルから読む（初回移行）。保存(PUT)は常に新ファイル。
+async function ghGetFileForLoad() {
+  const r = await ghGetFile();                 // 新ファイル
+  if (r && r.content) return { sha: r.sha, content: r.content, fromLegacy: false };
+  try {
+    const path = ghFilePathLegacy();
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ghGetPat()}`, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, cache: 'no-store' });
+    if (!res.ok) return { sha: null, content: null, fromLegacy: false };
+    const json = await res.json();
+    let decoded = '';
+    if (json.content && json.content.replace(/\s/g, '').length > 0) {
+      const raw = atob(json.content.replace(/\s/g, ''));
+      decoded = new TextDecoder('utf-8').decode(Uint8Array.from(raw, c => c.charCodeAt(0)));
+    } else if (json.download_url) {   // 1MB超は download_url から取得
+      const r2 = await fetch(json.download_url, { cache: 'no-store' });
+      decoded = await r2.text();
+    }
+    return { sha: null, content: decoded, fromLegacy: true };   // sha:null → 次のPUTは新ファイルを新規作成
+  } catch (e) { return { sha: null, content: null, fromLegacy: false }; }
 }
 
 // PAT取得・設定
@@ -4214,11 +4240,22 @@ async function ghLoadFromGitHub() {
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
   ghSetSyncStatus('loading');  // 【v1.0354】読み込み中は「読込中」表示（書き込みではないことを明示）
   try {
-    const { content } = await ghGetFile();
+    const _loaded = await ghGetFileForLoad();   // 【v1.0356】新ファイル優先・無ければ旧ファイル
+    const content = _loaded.content;
     if (!content) {
-      ghSetSyncStatus(_ghDirty ? 'dirty' : 'saved');
+      ghSetSyncStatus(_ghDirty ? 'dirty' : 'synced');
       ghLog('GitHubにデータがまだありません');
       return { notFound: true };
+    }
+    if (_loaded.fromLegacy) {
+      // 初回移行: 旧ファイルから読み込んだ。ユーザーが「反映」を押すと新ファイルに保存される。
+      ghLog('【移行】旧ファイル(ycheck_data.json)から読み込みました。「⬆ 反映する」で新ファイルに保存されます。', 'warn');
+      setTimeout(() => {
+        try { if (typeof showToast === 'function') showToast('【初回移行】旧データを読み込みました。内容を確認して「⬆ 反映する」を押すと新ファイル(ycheck_data_v2.json)に保存されます。以後は幽霊の巻き戻しの影響を受けません。', 'warn'); } catch (e) {}
+        _ghDirty = true;
+        if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
+        ghSetSyncStatus('dirty');
+      }, 800);
     }
     const data = JSON.parse(content);
     console.log('[Ycheck診断] GitHubから取得: savedAt=', data.savedAt, '| bid件数=', Object.keys(data.bid||{}).length, '| eq-22-01=', (data.bid||{})['eq-22-01'], '（この値でローカルを上書きします）');
@@ -4304,8 +4341,8 @@ async function ghLoadFromGitHub() {
 //     → ここで GitHub Pages の公開URL（相対パス, rank.json と同方式）から読み、閲覧端末でも最新の全データを表示する。
 async function ghGetFilePublic() {
   try {
-    const url = ghFilePath() + '?t=' + Date.now();   // 相対URL → GitHub Pagesが公開配信（認証不要）
-    const res = await fetch(url, { cache: 'no-store' });
+    let res = await fetch(ghFilePath() + '?t=' + Date.now(), { cache: 'no-store' });   // 新ファイル(公開URL)
+    if (!res.ok) res = await fetch(ghFilePathLegacy() + '?t=' + Date.now(), { cache: 'no-store' });  // 【v1.0356】無ければ旧ファイル
     if (!res.ok) return { content: null };
     return { content: await res.text() };
   } catch (e) { return { content: null }; }
@@ -4619,7 +4656,7 @@ function initGitHubSettings() {
           '（最新でないなら「⬇ GitHubから再取得」を先に実行してください。）\n\n' +
           '本当にこの画面の内容でGitHubを上書きしますか？');
         if (!ok) { alert('保存を中止しました。'); return; }
-        const forced = await ghSaveToGitHub({ allowEmpty: false, force: true });
+        const forced = await ghSaveToGitHub({ allowEmpty: false, force: true, manual: true });
         if (forced.success) alert('強制保存しました（GitHubをこの画面の内容で上書き）。');
         else alert('保存スキップ: ' + (forced.reason || ''));
       } else if (result.skipped) {
