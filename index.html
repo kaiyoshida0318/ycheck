@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0352 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0353 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0352</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0353</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4361,8 +4361,20 @@ async function ghDemoteToViewer(reason) {
 }
 
 // 編集後のデバウンス自動保存
+// 【v1.0353】起動直後（未操作）のGitHub自動保存を抑制する武装フラグ。
+//   目的: 「開いただけ」のタブが、GitHub読込が終わる前の古いlocalStorageで自動保存し、
+//         他タブ/前回入れた新しい変更（特に保護の無いproRate/メモ）を巻き戻す事故を防ぐ。
+//   解除: ユーザーが実際に操作（クリック/キー入力）した瞬間のみ。未操作のタブは一切書き込まない。
+let _ycAutoSaveArmed = false;
+function _ycArmAutoSave() { _ycAutoSaveArmed = true; }
+try {
+  window.addEventListener('pointerdown', _ycArmAutoSave, { once: true, capture: true });
+  window.addEventListener('keydown', _ycArmAutoSave, { once: true, capture: true });
+} catch (e) { _ycAutoSaveArmed = true; }
+
 function scheduleGitHubSave() {
   if (!ghIsEnabled()) return;
+  if (!_ycAutoSaveArmed) { console.log('[Ycheck] 未操作のため自動保存を抑制（開き直しでの上書き防止）'); return; }  // 【v1.0353】
   _ghDirty = true;
   ghSetSyncStatus('dirty');
   if (_ghSaveDebounceTimer) clearTimeout(_ghSaveDebounceTimer);
