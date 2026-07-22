@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0345 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0346 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0345</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0346</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3916,6 +3916,15 @@ function mergeProductMetaForSave(localPM, remotePM) {
     // 【v1.0335】値変更時刻(adChgTs/proChgTs)も新しい方を残す（案A: 値変更ベース再分類の判定に使うため）
     const aCg = _newerTs(L.adChgTs,      R.adChgTs);      if (aCg != null) w.adChgTs     = aCg;
     const pCg = _newerTs(L.proChgTs,     R.proChgTs);     if (pCg != null) w.proChgTs    = pCg;
+    // 【v1.0346】対応内容(adNote/proNote)は「直近に対応した側（＝対応時刻adActionTs/proActionTsが新しい側）」の
+    //   値を採用する。別セッションが古い状態のままエントリ全体を奪って保存しても、本日入れた対応内容が
+    //   巻き戻らないようにする（対応内容の編集・全更新処理は必ずactionTsを更新するため、これで最新の対応内容が残る）。
+    const _laTs = (typeof L.adActionTs === 'number') ? L.adActionTs : 0;
+    const _raTs = (typeof R.adActionTs === 'number') ? R.adActionTs : 0;
+    if (_laTs !== _raTs) w.adNote = (_laTs > _raTs) ? L.adNote : R.adNote;
+    const _lpTs = (typeof L.proActionTs === 'number') ? L.proActionTs : 0;
+    const _rpTs = (typeof R.proActionTs === 'number') ? R.proActionTs : 0;
+    if (_lpTs !== _rpTs) w.proNote = (_lpTs > _rpTs) ? L.proNote : R.proNote;
     out[c] = w;
   });
   return out;
