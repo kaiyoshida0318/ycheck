@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0350 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0352 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0350</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0352</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3693,6 +3693,7 @@ async function ghGetFile() {
     },
     cache: 'no-store'
   });
+  if (res.status === 401) { ghDemoteToViewer('GET 401'); throw new Error(`GET ${path} unauthorized(401) → 閲覧専用に切替`); }  // 【v1.0352】
   if (res.status === 404) return { sha: null, content: null };
   if (!res.ok) {
     const text = await res.text();
@@ -3798,6 +3799,7 @@ async function ghPutFile(contentString, retryCount = 0) {
     body: JSON.stringify(body)
   });
 
+  if (res.status === 401) { ghDemoteToViewer('PUT 401'); throw new Error(`PUT ${path} unauthorized(401) → 閲覧専用に切替`); }  // 【v1.0352】トークン無効 → 自動で閲覧専用へ
   // 【v201】409(SHA競合) と 422(SHA未供給/不正) はどちらも「最新SHAを取り直して再送」で解決する。
   // 422は従来リトライされず即エラー＝保存不能ループの原因だったため、ここに含める。
   if ((res.status === 409 || res.status === 422) && retryCount < GH_MAX_RETRY) {
@@ -4264,6 +4266,100 @@ async function ghLoadFromGitHub() {
   }
 }
 
+// 【v1.0351】========= 閲覧専用モード（トークン未設定端末）=========
+//   目的: トークンを持たない端末では「全データ閲覧OK・編集/保存は一切不可」にする。
+//   ・保存は元々トークン必須（ghSaveToGitHub の no-pat スキップ）なので、書き込みは構造的に不可能。
+//   ・本体データ（ycheck_data.json）は認証API経由で読んでいたため、従来はトークン無しだと読めなかった。
+//     → ここで GitHub Pages の公開URL（相対パス, rank.json と同方式）から読み、閲覧端末でも最新の全データを表示する。
+async function ghGetFilePublic() {
+  try {
+    const url = ghFilePath() + '?t=' + Date.now();   // 相対URL → GitHub Pagesが公開配信（認証不要）
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return { content: null };
+    return { content: await res.text() };
+  } catch (e) { return { content: null }; }
+}
+async function ghLoadFromPublic() {
+  try {
+    const { content } = await ghGetFilePublic();
+    if (!content) { ghLog('閲覧専用: 公開データがまだありません'); return false; }
+    const data = JSON.parse(content);
+    if (data.overall) state.overall = data.overall;
+    if (typeof ensureOldOverall === 'function') ensureOldOverall();
+    if (data.item) state.item = data.item;
+    if (data.ad) state.ad = data.ad;
+    if (data.bid) state.bid = data.bid;
+    if (data.proRate) state.proRate = data.proRate;
+    if (data.master) state.master = data.master;
+    if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;
+    if (data.rankEdits) state.rankEdits = data.rankEdits;
+    if (data.rankMeta) { if (typeof _assignRankMetaKeepSpot === 'function') _assignRankMetaKeepSpot(data.rankMeta); else state.rankMeta = data.rankMeta; }
+    if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
+    if (data.productMeta) {
+      state.productMeta = data.productMeta;   // 閲覧端末は公開データをそのまま採用（編集しないためマージ不要）
+      Object.values(state.productMeta).forEach(m => {
+        if (m && m.proStatus === 'PRO○') m.proStatus = 'PRオプ○';
+        else if (m && m.proStatus === 'PRO×') m.proStatus = 'PRオプ×';
+      });
+    }
+    migrateRetiredByMissingName();
+    migrateBidKeysLowercase();
+    migrateProStatusToStatus();
+    migrateAdStatusLabels();
+    migrateRemoveWarnStatus();
+    ghLog(`閲覧専用: 公開データ取得成功 (${(content.length / 1024).toFixed(1)} KB)`);
+    return true;
+  } catch (err) {
+    ghLog('閲覧専用: 公開データ取得失敗 ' + (err && err.message), 'error');
+    return false;
+  }
+}
+let _viewerModeApplied = false;
+let _viewerLastRefresh = 0;
+async function ghViewerFocusRefresh() {
+  if (ghIsEnabled() || document.hidden) return;   // 編集端末(トークンあり)は対象外
+  const now = Date.now();
+  if (now - _viewerLastRefresh < 8000) return;     // スロットル8秒
+  _viewerLastRefresh = now;
+  const ok = await ghLoadFromPublic();
+  if (ok && typeof renderAll === 'function') { renderAll(); if (typeof updateRankLastUpdatedDisplay === 'function') updateRankLastUpdatedDisplay(); }
+}
+function ghApplyViewerMode() {
+  if (_viewerModeApplied) return;
+  _viewerModeApplied = true;
+  try { document.body.classList.add('viewer-mode'); } catch (e) {}
+  ghSetSyncStatus('viewer');
+  // 主要な編集ボタンを無効化（閲覧端末では使えないことを明示）
+  ['btnJumpUploadMonthly', 'btnJumpUploadSpot', 'btnJumpNewProduct', 'btnJumpCodeMigrate'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) { b.disabled = true; b.title = '閲覧専用モードでは使用できません（編集はトークンを設定した端末のみ）'; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed'; }
+  });
+  // タブに戻った時に最新の公開データへ更新
+  try {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ghViewerFocusRefresh(); });
+    window.addEventListener('focus', () => ghViewerFocusRefresh());
+  } catch (e) {}
+}
+// 【v1.0352】トークンが無効(401)と判明したら、この端末を自動的に閲覧専用へ切り替える。
+//   運用: 編集PCでトークンを再発行し古いトークンをrevokeすると、古いトークンを持つ他PCは
+//   次の読込/保存で401になり、ここで自動的に「👁 閲覧専用」へ落ちる（各PCを手で触らなくてよい）。
+//   401(認証失敗=トークン無効)のみ対象。通信障害(5xx)やレート制限(403)では切り替えない。
+let _ghDemotedToViewer = false;
+async function ghDemoteToViewer(reason) {
+  if (_ghDemotedToViewer) return;
+  _ghDemotedToViewer = true;
+  console.warn('[Ycheck] トークンが無効(401)のため閲覧専用へ切り替えます:', reason || '');
+  try { ghSetPat(''); } catch (e) {}   // 無効トークンを消去 → ghIsEnabled()=false=閲覧専用
+  _ghDirty = false;
+  if (_ghSaveDebounceTimer) { clearTimeout(_ghSaveDebounceTimer); _ghSaveDebounceTimer = null; }
+  ghApplyViewerMode();
+  try { if (typeof showToast === 'function') showToast('⚠ このトークンは無効です。閲覧専用モードに切り替えました（編集はトークンを設定した端末で行ってください）。', 'warn'); } catch (e) {}
+  try {
+    const ok = await ghLoadFromPublic();
+    if (ok && typeof renderAll === 'function') { renderAll(); if (typeof updateRankLastUpdatedDisplay === 'function') updateRankLastUpdatedDisplay(); }
+  } catch (e) {}
+}
+
 // 編集後のデバウンス自動保存
 function scheduleGitHubSave() {
   if (!ghIsEnabled()) return;
@@ -4281,8 +4377,15 @@ function ghSetSyncStatus(state, detail) {
   const el = document.getElementById('ghSyncArea');
   const txt = document.getElementById('ghSyncStatus');
   if (!el || !txt) return;
+  if (_viewerModeApplied && state !== 'viewer') state = 'viewer';   // 【v1.0352】閲覧専用へ切替後は常に閲覧専用表示を維持（保存エラー等で上書きしない）
   el.classList.remove('gh-disabled', 'gh-saved', 'gh-dirty', 'gh-saving', 'gh-error');
   switch (state) {
+    case 'viewer':
+      // 【v1.0351】閲覧専用（トークン未設定）。全データ閲覧OK・編集/保存は不可。
+      el.classList.add('gh-disabled');
+      txt.textContent = '👁 閲覧専用';
+      el.title = 'この端末はトークン未設定のため閲覧専用です（全データ閲覧OK・編集/保存はできません）。編集はトークンを設定した端末で行ってください。';
+      break;
     case 'disabled':
       el.classList.add('gh-disabled');
       txt.textContent = '未設定';
@@ -5645,13 +5748,13 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
     else if (adStatusIsNone(value)) cls = 'none';
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
-  return `<select class="status-select ${cls}" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
+  return `<select class="status-select ${cls}"${ghIsEnabled() ? '' : ' disabled'} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
 }
 
 function noteCellHtml(code, kind /* 'ad' | 'pro' */) {
   const meta = getMeta(code);
   const value = kind === 'ad' ? meta.adNote : meta.proNote;
-  return `<div class="note-cell" contenteditable="true" data-code="${escapeHtml(code)}" data-kind="${kind}">${escapeHtml(value || '')}</div>`;
+  return `<div class="note-cell" contenteditable="${ghIsEnabled() ? 'true' : 'false'}" data-code="${escapeHtml(code)}" data-kind="${kind}">${escapeHtml(value || '')}</div>`;
 }
 
 // ==================== KW Cell editable ====================
@@ -8547,6 +8650,7 @@ function applyUpdateStampToNote(currentNote) {
 
 document.addEventListener('change', (e) => {
   if (!e.target.classList.contains('status-select')) return;
+  if (!ghIsEnabled()) return;   // 【v1.0351】閲覧専用モード（トークン未設定）は状態編集を無効化（保存もされない）
   const code = e.target.dataset.code;
   const kind = e.target.dataset.kind;
   const value = e.target.value;
@@ -8587,6 +8691,7 @@ document.addEventListener('focus', (e) => {
 
 document.addEventListener('blur', (e) => {
   if (!e.target.classList || !e.target.classList.contains('note-cell')) return;
+  if (!ghIsEnabled()) return;   // 【v1.0351】閲覧専用モードは対応内容の編集を無効化
   const code = e.target.dataset.code;
   const kind = e.target.dataset.kind;
   const meta = getMeta(code);
@@ -10523,6 +10628,15 @@ try {
       console.warn(`[${curShop.id}] GitHub取得失敗（localStorageで継続）:`, err.message);
     });
     }
+  }
+  else {
+    // 【v1.0351】トークン未設定 → 閲覧専用モード: 公開URL(GitHub Pages)から全データを読み込み表示（保存はしない）
+    console.log(`[${curShop.id}] 閲覧専用モード（トークン未設定）: 公開データを取得します`);
+    ghApplyViewerMode();
+    ghLoadFromPublic().then((ok) => {
+      if (ok) { renderAll(); if (typeof updateRankLastUpdatedDisplay === 'function') updateRankLastUpdatedDisplay(); }
+      fetchRankJson({ silent: true });
+    }).catch(() => {});
   }
 } catch (err) {
   console.error('Ycheck 初期化エラー:', err);
