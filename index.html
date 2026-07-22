@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0343 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0344 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0343</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0344</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2880,10 +2880,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
           <span class="state-explain" id="proAdjustStateExplain" style="display:none;"></span>
-          <!-- 【v1.0343】撤退チェック(①): 【状態】撤退■で絞り込んだ時だけ表示。ストクリ商品リストと突き合わせ→撤退済み -->
+          <!-- 【v1.0343/1.0344】撤退チェック(①): 【状態】撤退■で絞り込んだ時だけ表示。押すとモーダルが開く -->
           <button class="btn sm" id="btnRetireCheck" type="button" style="display:none; border-color: var(--red); color: var(--red); font-weight: 600;"
             data-tooltip="ストクリ（ストアクリエイターPro）の商品リスト(PRオプ料率CSV / data*.csv)を取り込み、そこに載っていない＝Yahooで商品ページが削除された商品を「撤退済み」にします。①Yahooだけ撤退・楽天継続の運用に。">🔍 撤退チェック（ストクリ突き合わせ）</button>
-          <input type="file" id="retireCheckFile" accept=".csv,text/csv" style="display:none">
         </div>
         <div class="table-wrap">
           <table id="tableProAdjust">
@@ -3254,6 +3253,30 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 </div>
 
 <!-- Upload Modal -->
+<!-- 【v1.0344】撤退チェック（ストクリ突き合わせ）モーダル -->
+<div class="modal-overlay" id="retireCheckModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-header">
+      <h2 class="modal-title">🔍 撤退チェック（ストクリ突き合わせ）</h2>
+      <button class="modal-close" id="retireCheckClose" type="button">×</button>
+    </div>
+    <p class="dropzone-hint" style="margin:0 0 12px 0; line-height:1.8; font-size:0.8rem;">
+      ストクリ（ストアクリエイターPro）の<b>商品リスト（PRオプ料率CSV／data*.csv）</b>を取り込み、そこに<b>載っていない商品＝Yahooで商品ページが削除された商品</b>を「撤退済み」にします。<br>
+      Yahooのページを削除したあとに実行してください。「反映する」を押すと撤退候補の一覧が出るので、確認してから確定できます。入札価格・PRオプ料率・本日更新フラグ等には変更を加えません。
+    </p>
+    <div class="dropzone" id="retireCheckDrop">
+      <div class="dropzone-icon">📥</div>
+      <div class="dropzone-text" id="retireCheckDropText">ここに <b>CSV</b> をドロップ　または　<b>クリックして選択</b></div>
+      <div class="dropzone-hint">PRオプ料率CSV（data*.csv）／Shift_JIS・UTF-8対応</div>
+    </div>
+    <input type="file" id="retireCheckFile" accept=".csv,text/csv" style="display:none;">
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+      <button class="btn sm ghost" id="retireCheckCancel" type="button">キャンセル</button>
+      <button class="btn sm" id="retireCheckApply" type="button" disabled style="background:var(--red); color:#fff; border-color:var(--red); font-weight:700; opacity:0.5; pointer-events:none;">反映する</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
     <div class="modal-header">
@@ -8181,9 +8204,54 @@ if ($('#btnDeleteProTuneNoteAll'))    $('#btnDeleteProTuneNoteAll').addEventList
 // 【v294】対応内容-全更新処理
 if ($('#btnUpdateAllAdTune'))  $('#btnUpdateAllAdTune').addEventListener('click', () => bulkMarkTuneDone('ad'));
 if ($('#btnUpdateAllProTune')) $('#btnUpdateAllProTune').addEventListener('click', () => bulkMarkTuneDone('pro'));
-// 【v1.0341】撤退チェック(①): ボタン→ファイル選択→突き合わせ→撤退済み
-if ($('#btnRetireCheck')) $('#btnRetireCheck').addEventListener('click', () => { const inp = $('#retireCheckFile'); if (inp) { inp.value = ''; inp.click(); } });
-if ($('#retireCheckFile')) $('#retireCheckFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) runRetireCheck(f); });
+// 【v1.0341/1.0344】撤退チェック(①): ボタン→モーダル（説明＋スロット＋反映/キャンセル）
+let _retirePendingFile = null;
+function openRetireCheckModal() {
+  _retirePendingFile = null;
+  const m = document.getElementById('retireCheckModal'); if (!m) return;
+  const t = document.getElementById('retireCheckDropText');
+  if (t) t.innerHTML = 'ここに <b>CSV</b> をドロップ　または　<b>クリックして選択</b>';
+  const ap = document.getElementById('retireCheckApply');
+  if (ap) { ap.disabled = true; ap.style.opacity = '0.5'; ap.style.pointerEvents = 'none'; }
+  const fi = document.getElementById('retireCheckFile'); if (fi) fi.value = '';
+  m.classList.add('open');
+}
+function closeRetireCheckModal() { const m = document.getElementById('retireCheckModal'); if (m) m.classList.remove('open'); _retirePendingFile = null; }
+function _retireSetFile(file) {
+  if (!file) return;
+  _retirePendingFile = file;
+  const t = document.getElementById('retireCheckDropText');
+  if (t) t.innerHTML = '選択中：<b>' + escapeHtml(file.name) + '</b>（クリックで選び直し）';
+  const ap = document.getElementById('retireCheckApply');
+  if (ap) { ap.disabled = false; ap.style.opacity = ''; ap.style.pointerEvents = ''; }
+}
+if ($('#btnRetireCheck')) $('#btnRetireCheck').addEventListener('click', openRetireCheckModal);
+if ($('#retireCheckClose')) $('#retireCheckClose').addEventListener('click', closeRetireCheckModal);
+if ($('#retireCheckCancel')) $('#retireCheckCancel').addEventListener('click', closeRetireCheckModal);
+{ const _m = document.getElementById('retireCheckModal'); if (_m) _m.addEventListener('click', (e) => { if (e.target === _m) closeRetireCheckModal(); }); }
+{ const dz = document.getElementById('retireCheckDrop'); const fi = document.getElementById('retireCheckFile');
+  if (dz && fi) {
+    dz.addEventListener('click', () => { fi.value = ''; fi.click(); });
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault(); dz.classList.remove('dragover');
+      const f = (e.dataTransfer.files && e.dataTransfer.files[0]);
+      if (f && f.name.toLowerCase().endsWith('.csv')) _retireSetFile(f);
+      else if (f) alert('CSVファイル（PRオプ料率CSV／data*.csv）を選んでください。');
+    });
+    fi.addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) _retireSetFile(f); });
+  }
+}
+if ($('#retireCheckApply')) $('#retireCheckApply').addEventListener('click', async () => {
+  if (!_retirePendingFile) return;
+  const f = _retirePendingFile;
+  closeRetireCheckModal();
+  await runRetireCheck(f);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { const m = document.getElementById('retireCheckModal'); if (m && m.classList.contains('open')) closeRetireCheckModal(); }
+});
 
 // Basicビューの操作
 $('#basicMonth').addEventListener('change', renderBasic);
