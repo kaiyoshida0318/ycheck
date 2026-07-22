@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0347 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0348 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2545,7 +2545,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0347</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0348</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4024,15 +4024,10 @@ window.addEventListener('focus', () => ghFocusSync('focus'));
 async function ghSaveToGitHub(options = {}) {
   const allowEmpty = options.allowEmpty === true;
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
-  // 【v1.0345】A: 別タブが居る状態で、非表示（バックグラウンド）タブが古い状態のまま保存してGitHubを
-  //   巻き戻すのを防ぐ。非表示 かつ 別タブ検知中 は push せず未保存フラグだけ立て、次にこのタブが
-  //   表示された時に focus同期(ghFocusSync)がマージ保存する。force/allowEmpty は従来どおり通す。
-  if (document.hidden && _ycMultiTabActive() && !options.force && !allowEmpty) {
-    _ghDirty = true;
-    try { ghSetSyncStatus('dirty'); } catch (e) {}
-    console.log('[Ycheck] 非表示×別タブのため保存を保留（表示時に同期保存）');
-    return { skipped: true, reason: 'hidden-multitab-defer' };
-  }
+  // 【v1.0348】v1.0345で入れていた「非表示×別タブなら保存を保留」は撤去した。
+  //   デバウンス保存(1秒)が、対応直後にタブを切り替え/非表示にした瞬間に発火すると、
+  //   （別タブが1つでも開いていると）保留＝スキップされ、本日の対応がGitHubに届かず消える事故を
+  //   起こしていたため。巻き戻り防止は保存前マージ(mergeProductMetaForSave＝新しい方を残す)側で担保する。
   // mutex: 既に実行中なら待つ
   if (_ghSaveInFlight) {
     ghLog('既存の保存処理を待機中...');
