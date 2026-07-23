@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0360 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0361 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2578,7 +2578,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0360</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0361</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3657,6 +3657,7 @@ let _ghSaveInFlight = null;                // 並列保存防止 mutex
 let _ghLastKnownSha = null;                // 最新取得時のSHA
 let _ghDirty = false;                      // 未保存フラグ
 let _ghRemergeFn = null;                    // 【v1.0357】409/422再送時に最新リモートへ再マージする関数（ghSaveToGitHub保存中だけ設定）
+let _ghQuiet = 0;                           // 【v1.0361】>0 の間は「未反映」を立てない（読込/同期/マイグレーション等の自動処理を包む）
 let _ghStaleWarnShown = false;             // 【v272】古い上書きガードの警告を1セッション1回に抑制
 
 // ショップ別のGitHub保存パス（設計ガイド: data/{shopId}/...）
@@ -4267,6 +4268,7 @@ async function ghSaveToGitHub(options = {}) {
 async function ghLoadFromGitHub() {
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
   ghSetSyncStatus('loading');  // 【v1.0354】読み込み中は「読込中」表示（書き込みではないことを明示）
+  _ghQuiet++;                  // 【v1.0361】読込中のsaveToStorage(マイグレーション等)で未反映を立てない
   try {
     const _loaded = await ghGetFileForLoad();   // 【v1.0356】新ファイル優先・無ければ旧ファイル
     const content = _loaded.content;
@@ -4349,16 +4351,17 @@ async function ghLoadFromGitHub() {
     // 【v287】ローカルの方が新しい変更を検出＝GitHubは別セッションの古い上書きを受けていた
     //   → 復元した内容を再保存し、ユーザーに通知（古いセッションを閉じるよう促す）。
     if (_ghHealed) {
-      _ghDirty = true;
-      console.warn('[Ycheck] 起動時自己修復: GitHubより新しいローカルの変更を検出→復元し再保存します（別セッションの古い上書きの可能性）。');
-      try { if (typeof showToast === 'function') showToast('⚠ 別のタブ/端末が古いデータで上書きした可能性があります。あなたの変更を復元して保存しました。古いYcheckは閉じてください。', 'warn'); } catch (e) {}
-      try { if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave(); } catch (e) {}
+      // 【v1.0361】自己修復(ローカルの方が新しい)は手動編集ではないため「未反映」にしない。
+      //   復元内容はローカルに保持され、次のユーザー編集＋「反映する」時のマージで確実にGitHubへ載る。
+      console.warn('[Ycheck] 起動時自己修復: GitHubより新しいローカルの変更を検出し復元しました（未反映にはしません）。');
     }
     return { success: true, savedAt: data.savedAt, healed: _ghHealed };
   } catch (err) {
     ghSetSyncStatus('error', err.message);
     ghLog('取得失敗: ' + err.message, 'error');
     throw err;
+  } finally {
+    _ghQuiet = Math.max(0, _ghQuiet - 1);   // 【v1.0361】読込完了で解除
   }
 }
 
@@ -4471,6 +4474,7 @@ try {
 function scheduleGitHubSave() {
   if (!ghIsEnabled()) return;
   if (!_ycAutoSaveArmed) return;   // 【v1.0353】起動直後の未操作は無視
+  if (_ghQuiet > 0) return;        // 【v1.0361】自動処理(読込/同期/マイグレーション)中はユーザー変更ではないので未反映にしない
   // 【v1.0354】自動保存は廃止。ここでは「未反映（要・反映ボタン）」状態にするだけ。実際の保存は「反映する」ボタン。
   _ghDirty = true;
   ghSetSyncStatus('dirty');
