@@ -6,8 +6,10 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0372 — Yahoo!ショッピング売上管理ダッシュボード</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Ycheck v1.0375 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -75,7 +77,7 @@ body {
 }
 .logo { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
 .logo-img { height: 56px; width: auto; display: block; }  /* v97: 40px→56px (約1.4倍) */
-.logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
+.logo-main { font-size: 1.25rem; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; font-family: 'Noto Sans JP', sans-serif; }  /* 【v1.0375】ヘッダーのフォントをADcheckと同じに */
 .logo-sub { font-size: 0.72rem; color: var(--text3); font-weight: 500; font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.02em; }
 
 /* ショップ選択（ADcheck風 v101〜, v103でheader-leftにまとめて左端固定） */
@@ -880,6 +882,7 @@ body.chrome-hidden .top-nav-3 { top: 0; }
   padding: 0 4px 6px 0;
   align-self: flex-end;
   white-space: nowrap;
+  font-family: 'Noto Sans JP', sans-serif;   /* 【v1.0375】ヘッダーのフォントをADcheckと同じに */
 }
 .nav-tab {
   padding: 8px 14px;
@@ -896,6 +899,7 @@ body.chrome-hidden .top-nav-3 { top: 0; }
   white-space: nowrap;
   font-weight: 500;
   text-decoration: none;   /* 【v105】<a>タグ化された順位タブ用 */
+  font-family: 'Noto Sans JP', sans-serif;   /* 【v1.0375】ヘッダーのフォントをADcheckと同じに */
 }
 a.nav-tab { color: var(--text2); }
 a.nav-tab:hover { color: var(--text); text-decoration: none; }
@@ -2579,7 +2583,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0372</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0375</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2608,6 +2612,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <span class="nav-group-label g-basic">【基本】</span>
     <a class="nav-tab nav-tab-link active" data-view="basic" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-月別データ</a>
+    <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired">撤退済み商品</a>
   </div>
   <div class="nav-group">
@@ -2747,6 +2752,36 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         </div>
         <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。最大12ヶ月を表示し、それ以前は「表示範囲」で切り替えます。</p>
         <div id="mi-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
+      </div>
+    </div>
+
+    <!-- 【v1.0373】View: 商品-グラフ -->
+    <div class="view" id="view-itemgraph">
+      <div class="card">
+        <h3 class="card-title">商品-グラフ</h3>
+        <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center;position:relative">
+          <span class="filter-label">商品</span>
+          <input type="search" id="igSearch" placeholder="商品コード・商品名で検索して選択..." autocomplete="off" data-lpignore="true" data-1p-ignore oninput="_igSuggest(this.value)" onfocus="_igSuggest(this.value)" onblur="setTimeout(function(){var b=document.getElementById('igSuggest');if(b)b.style.display='none';},200)" style="width:260px">
+          <div id="igSuggest" style="display:none;position:absolute;top:40px;left:60px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.18);max-height:340px;overflow:auto;min-width:360px"></div>
+          <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
+          <span class="filter-label">指標</span>
+          <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
+            <option value="totSales">総売上</option>
+            <option value="seoSales">SEO売上</option>
+            <option value="adSales">広告売上</option>
+            <option value="spend">実績額（広告費）</option>
+            <option value="roas">広告ROAS</option>
+            <option value="cvr">CVR</option>
+            <option value="orders">広告個数</option>
+            <option value="avgPrice">平均単価</option>
+          </select>
+          <span class="filter-label">期間</span>
+          <select id="igMonthFrom" onchange="renderItemGraph()" style="font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <span style="color:var(--text3)">〜</span>
+          <select id="igMonthTo" onchange="renderItemGraph()" style="font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+        </div>
+        <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
+        <div id="igTableWrap" style="overflow:auto;max-height:44vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
 
@@ -6257,7 +6292,7 @@ function renderMonthly() {
   // 【v1.0366】全幅表示：table-layout:fixed で 月〜広告ROAS を広く（倍）、商品列は残り幅を全部使って広げ、商品名は省略せず全表示。数値サイズは基本表(0.90rem)に統一。
   const DW = 160;   // データ各列の幅(px)＝従来比 約2倍
   const MW = 128;   // 月列の幅(px)
-  const HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>'
+  const HEAD = '<th style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>'
     + '<th style="width:' + MW + 'px;padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;color:var(--text3);background:var(--bg3)">月</th>'
     + MI_COLS.map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('');
 
@@ -8061,10 +8096,153 @@ function openBunseki(){
 window.openBunseki=openBunseki;
 
 // ==================== Render All ====================
+// ==================== 【v1.0373】商品-グラフ（ADcheck「商品-グラフ」をYcheck向けに簡略移植：1種広告・月別・親子合算・項目調整/日別なし） ====================
+let _igSelected = null;   // 選択中の家族（代表コード）
+let _igMetric = 'totSales';
+let _igChart = null;
+
+// グラフ用の指標定義（Ycheckのデータ＝1種広告に合わせる。CTR/KW/20円は無し）
+const _IG_METRICS = {
+  totSales: { label:'総売上',   unit:'y', color:'#2563eb', calc:(it,ad)=> it.rev||0 },
+  seoSales: { label:'SEO売上',  unit:'y', color:'#16a34a', calc:(it,ad)=> Math.max(0,(it.rev||0)-(ad.r||0)) },
+  adSales:  { label:'広告売上', unit:'y', color:'#d97706', calc:(it,ad)=> ad.r||0 },
+  spend:    { label:'実績額',   unit:'y', color:'#b45309', calc:(it,ad)=> ad.c||0 },
+  roas:     { label:'広告ROAS', unit:'p', color:'#dc2626', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },
+  cvr:      { label:'CVR',      unit:'p', color:'#7c3aed', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
+  orders:   { label:'広告個数', unit:'n', color:'#0891b2', calc:(it,ad)=> ad.or||0 },
+  avgPrice: { label:'平均単価', unit:'y', color:'#db2777', calc:(it,ad)=> it.qty>0?Math.round((it.rev||0)/it.qty):0 },
+};
+const _IG_TABLE_COLS = [
+  { label:'総売上',   unit:'y', hbg:'#d6e1fa', bg:'#f0f3fd', calc:(it,ad)=> it.rev||0 },
+  { label:'SEO売上',  unit:'y', hbg:'#dff0e3', bg:'#f1faf4', calc:(it,ad)=> Math.max(0,(it.rev||0)-(ad.r||0)) },
+  { label:'広告売上', unit:'y', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.r||0 },
+  { label:'実績額',   unit:'y', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.c||0 },
+  { label:'広告ROAS', unit:'p', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },
+  { label:'CVR',      unit:'p', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
+  { label:'広告個数', unit:'n', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=> ad.or||0 },
+  { label:'平均単価', unit:'y', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=> it.qty>0?Math.round((it.rev||0)/it.qty):0 },
+];
+
+// 親子（代表コード）で家族にまとめる — 商品-月別データと同じルール
+function _igFamilies() {
+  const _pm = state.productMeta || {};
+  const repKeyOf = (code) => { const r = String((_pm[code] || {}).repCode || '').trim(); return r || code; };
+  const codeSet = new Set();
+  Object.keys(state.master || {}).forEach(c => codeSet.add(c));
+  (state.item || []).forEach(i => codeSet.add(i.code));
+  (state.ad || []).forEach(a => codeSet.add(a.code));
+  const fam = {};
+  [...codeSet].forEach(code => {
+    if (typeof isRetired === 'function' && isRetired(code)) return;
+    const k = repKeyOf(code);
+    (fam[k] || (fam[k] = [])).push(code);
+  });
+  return fam;
+}
+function _igFamilyName(key, members) {
+  const _mn = (c) => String(((typeof getMaster === 'function' ? getMaster(c) : null) || {}).name || '');
+  const repHas = !!(typeof getMaster === 'function' && getMaster(key));
+  const disp = repHas ? key : ((members || []).find(c => _mn(c)) || (members || [])[0] || key);
+  let name = _mn(disp) || key;
+  if ((members || []).length > 1) {
+    let n = name, p;
+    do { p = n; n = n.replace(/[（(][^（()）]*[0-9０-９][^（()）]*[）)]\s*$/, '').replace(/[0-9０-９]+\s*セット\s*$/, '').trim(); } while (n !== p);
+    name = n + '【親】';
+  }
+  return { name, imgCode: disp };
+}
+
+function _igSuggest(q) {
+  const box = document.getElementById('igSuggest');
+  if (!box) return;
+  q = String(q || '').trim().toLowerCase();
+  const fam = _igFamilies();
+  const _mn = (c) => String(((typeof getMaster === 'function' ? getMaster(c) : null) || {}).name || '');
+  let items = Object.keys(fam).map(key => { const nm = _igFamilyName(key, fam[key]); return { key, name: nm.name, members: fam[key] }; });
+  if (q) items = items.filter(it => it.key.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.members.some(c => c.toLowerCase().includes(q) || _mn(c).toLowerCase().includes(q)));
+  items.sort((a, b) => a.name.localeCompare(b.name));
+  items = items.slice(0, 50);
+  if (items.length === 0) { box.style.display = 'none'; return; }
+  const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s));
+  box.innerHTML = items.map(it => '<div onmousedown="event.preventDefault();_igSelect(\'' + String(it.key).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'"><span style="font-family:\'DM Mono\',ui-monospace,monospace;color:var(--text3);font-size:11px">' + esc(it.key) + '</span>　' + esc(it.name) + '</div>').join('');
+  box.style.display = 'block';
+}
+function _igSelect(key) {
+  _igSelected = key;
+  const box = document.getElementById('igSuggest'); if (box) box.style.display = 'none';
+  const fam = _igFamilies();
+  const nm = _igFamilyName(key, fam[key] || [key]);
+  const lbl = document.getElementById('igLabel'); if (lbl) lbl.textContent = '▶ ' + nm.name + '（' + key + '）';
+  const inp = document.getElementById('igSearch'); if (inp) inp.value = '';
+  renderItemGraph();
+}
+function _igMetricChange(v) { _igMetric = v; renderItemGraph(); }
+
+function renderItemGraph() {
+  const canvas = document.getElementById('igCanvas');
+  const tableWrap = document.getElementById('igTableWrap');
+  if (!canvas || !tableWrap) return;
+  const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice(); // 昇順
+  // 期間セレクトの初期化（月数が変わった時だけ作り直す）
+  const selF = document.getElementById('igMonthFrom'), selT = document.getElementById('igMonthTo');
+  if (selF && selT && selF.dataset.n !== String(months.length)) {
+    const opts = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
+    selF.innerHTML = opts; selT.innerHTML = opts;
+    selF.dataset.n = selT.dataset.n = String(months.length);
+    if (months.length) { selF.value = months[Math.max(0, months.length - 12)]; selT.value = months[months.length - 1]; }
+  }
+  const fam = _igFamilies();
+  if (!_igSelected || !fam[_igSelected]) {
+    if (_igChart) { _igChart.destroy(); _igChart = null; }
+    tableWrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">上の「商品」欄で商品を検索して選ぶと、その商品（親子はまとめ）のグラフと明細が出ます。</div>';
+    return;
+  }
+  const members = fam[_igSelected];
+  const itemMap = {}, adMap = {};
+  (state.item || []).forEach(i => { if (members.indexOf(i.code) < 0) return; (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0 })); itemMap[i.month].rev += i.revenue || 0; itemMap[i.month].qty += i.qty || 0; });
+  (state.ad || []).forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
+  const from = selF ? selF.value : '', to = selT ? selT.value : '';
+  const range = months.filter(m => (!from || m >= from) && (!to || m <= to));
+  const labels = range.map(m => m.replace('-', '/'));
+  const md = _IG_METRICS[_igMetric] || _IG_METRICS.totSales;
+  const fmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
+  const vals = range.map(m => md.calc(itemMap[m] || {}, adMap[m] || {}));
+
+  if (_igChart) { _igChart.destroy(); _igChart = null; }
+  if (typeof Chart !== 'undefined') {
+    _igChart = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { labels, datasets: [{ label: md.label, data: vals, borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: true }, tooltip: { callbacks: { label: (c) => md.label + ': ' + fmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmt(v) } }, x: { ticks: { maxRotation: 0, autoSkip: true } } }
+      }
+    });
+  }
+
+  // 明細テーブル（全指標 × 月／新しい順）
+  const cols = _IG_TABLE_COLS;
+  const th = '<th style="padding:8px 10px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'
+    + cols.map(c => '<th style="padding:8px 10px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+  const body = range.slice().reverse().map(m => {
+    const it = itemMap[m] || {}, ad = adMap[m] || {};
+    const tds = cols.map(c => {
+      const v = c.calc(it, ad);
+      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
+      return '<td style="padding:6px 10px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
+    }).join('');
+    return '<tr><td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + '</tr>';
+  }).join('');
+  tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
+}
+
 function renderAll() {
   updateStateCounts();
   if (state.currentView === 'basic') renderBasic();
   else if (state.currentView === 'monthly') renderMonthly();
+  else if (state.currentView === 'itemgraph') renderItemGraph();
   else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraph();
   else if (state.currentView === 'graphdata') renderGraph();
