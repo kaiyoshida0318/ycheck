@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0379 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0380 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1392,6 +1392,9 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
   opacity: 0.55;
 }
 .kw-cell .kw-edit-btn:hover { opacity: 1; background: rgba(37,99,235,0.12); color: var(--accent); }
+/* 【v1.0380】列リサイズ：狭めた時にヘッダー/セル内容がはみ出さないようクリップ（既定幅は自然幅のまま＝見た目不変）。メインKW等をギリギリまで縮小可能に。 */
+th[data-resize-key] { overflow: hidden; }
+.kw-cell .kw-edit-btn { flex: 0 1 auto; min-width: 0; overflow: hidden; }
 
 /* 商品名セル（全表示＋右端に編集アイコン） */
 .name-cell-wrap {
@@ -1464,9 +1467,12 @@ td:has(> .name-cell-wrap) {
 }
 
 /* 【v1.0377】商品-グラフ：操作系の文字を少し大きく＋期間プリセットのボタン（ADcheck準拠） */
-#view-itemgraph .filter-label { font-size: 14px; }
-#view-itemgraph #igMetric { font-size: 15px; }
-#view-itemgraph #igLabel { font-size: 15px; }
+#view-itemgraph .filter-label { font-size: 0.86rem; }
+#view-itemgraph #igMetric,
+#view-itemgraph #igMonthFrom,
+#view-itemgraph #igMonthTo,
+#view-itemgraph #igSearch { font-size: 0.86rem; }
+#view-itemgraph #igLabel { font-size: 0.86rem; }
 .ig-presets { display: inline-flex; gap: 6px; align-items: center; }
 .ig-preset-btn {
   font-size: 13px; font-weight: 600; padding: 6px 12px;
@@ -2602,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0379</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0380</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2784,7 +2790,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <div id="igSuggest" style="display:none;position:absolute;top:40px;left:60px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.18);max-height:340px;overflow:auto;min-width:360px"></div>
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
           <span class="filter-label">指標</span>
-          <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
+          <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
             <option value="totSales">総売上</option>
             <option value="seoSales">SEO売上</option>
             <option value="adSales">広告売上</option>
@@ -2795,9 +2801,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <option value="avgPrice">平均単価</option>
           </select>
           <span class="filter-label">期間</span>
-          <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
           <span style="color:var(--text3)">〜</span>
-          <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
           <!-- 【v1.0377】期間プリセット（ADcheck準拠）: 1月始まり/5月始まり/2年横並び -->
           <span class="ig-presets" role="group" aria-label="期間プリセット">
             <button type="button" class="ig-preset-btn" data-igp="jan" onclick="_igPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
@@ -3641,12 +3647,27 @@ function setLsSlimMode(on) {
   try { if (on) localStorage.setItem(LS_SLIM_FLAG_KEY, '1'); else localStorage.removeItem(LS_SLIM_FLAG_KEY); } catch (e) {}
 }
 
+// 【v1.0380】端末キャッシュ(localStorage)に載せる順位は直近Nヶ月だけに制限して容量を節約する。
+//   ・月キー（YYYY-MM / YYYY/MM）だけを新しい順にNヶ月残し、'meta'等の非月キーは保持。
+//   ・GitHub(rank.json/ycheck_data.json)には従来どおり全期間を保存するので履歴は失われない。
+//   ・localStorageは起動時の一時表示用キャッシュ。全期間の順位は起動後にGitHub/rank.jsonから復元される。
+function _rankRecentOnly(rank, n) {
+  try {
+    if (!rank || typeof rank !== 'object') return rank || {};
+    const isMonth = (k) => /^\d{4}[-\/]\d{2}$/.test(k);
+    const months = Object.keys(rank).filter(isMonth).sort();
+    const keep = new Set(months.slice(-Math.max(0, n)));
+    const out = {};
+    Object.keys(rank).forEach(k => { if (!isMonth(k) || keep.has(k)) out[k] = rank[k]; });
+    return out;
+  } catch (e) { return rank || {}; }
+}
 function saveToStorage() {
   const data = {
     overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
     proRate: state.proRate,
     master: state.master, productMeta: state.productMeta,
-    rank: state.rank,
+    rank: _rankRecentOnly(state.rank, 2),   // 【v1.0380】端末キャッシュは直近2ヶ月のみ（GitHubは全保持）
     rankEdits: state.rankEdits,
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
@@ -4555,7 +4576,7 @@ function _ycUpdateReflectBtn() {
       b.textContent = '⬆ 反映する（未反映）';
     } else {
       b.classList.add('yc-clean'); b.classList.remove('yc-dirty');
-      b.textContent = '✓ 反映済み';
+      b.hidden = true;   /* 【v1.0380】反映完了後はボタン自体を消す（反映済み表示は残さない） */
     }
   });
 }
@@ -6339,7 +6360,7 @@ function renderMonthly() {
       const bB = last ? 'border-bottom:2px solid var(--border)' : '';
       const prod = first ? '<td rowspan="' + stats.length + '" style="padding:9px 12px;vertical-align:middle;border-top:2px solid var(--border);border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;justify-content:center;gap:10px">'
         + imgBox
-        + '<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:16.5px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace">' + code + '</div><div style="font-size:1.35rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + safeFull + '">' + safeFull + '</div></div></div></td>' : '';
+        + '<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:16.5px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace">' + code + '</div><div style="font-size:1.1475rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + safeFull + '">' + safeFull + '</div></div></div></td>' : '';
       const cells = MI_COLS.map(c => {
         const v = m[c.key];
         const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
@@ -8290,18 +8311,18 @@ function renderItemGraph() {
 
   // 明細テーブル（全指標 × 月／新しい順）
   const cols = _IG_TABLE_COLS;
-  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:1.0rem;color:var(--text3);white-space:nowrap">月</th>'   /* 【v1.0377】文字拡大 0.82→1.0rem */
-    + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:1.0rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'   /* 【v1.0377】文字拡大 0.82→1.0rem */
+    + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
   const body = range.slice().reverse().map(m => {
     const it = itemMap[m] || {}, ad = adMap[m] || {};
     const tds = cols.map(c => {
       const v = c.calc(it, ad);
       const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
-      return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:1.06rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';   /* 【v1.0377】文字拡大 0.9→1.06rem */
+      return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';   /* 【v1.0377】文字拡大 0.9→1.06rem */
     }).join('');
-    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:1.02rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + '</tr>';
+    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + '</tr>';
   }).join('');
-  tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:1.06rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
+  tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 function renderAll() {
@@ -10801,7 +10822,7 @@ npSlot.addEventListener('drop', (e) => {
 // 設定は localStorage に保存され、リロードしても復元される。
 // テーブルをまたいで同じ data-resize-key を持つ列は同じ幅を共有（基本データで広げたら広告全体でも同じ幅）。
 const COL_WIDTHS_STORAGE_KEY = 'ycheck_col_widths_v1';
-const COL_RESIZE_MIN_PX = 16;     // 【v1.0367】最小幅を大幅に縮小（いくらでも短くできる）
+const COL_RESIZE_MIN_PX = 8;      // 【v1.0380】メインKW等をギリギリまで縮められるよう最小幅をさらに縮小（16→8）
 const COL_RESIZE_MAX_PX = 800;    // 最大幅（広げすぎ防止）
 
 function loadColWidths() {
@@ -10821,19 +10842,41 @@ function saveColWidth(key, px) {
   } catch (e) { console.warn('列幅の保存に失敗:', e); }
 }
 
-// 保存済み列幅を全テーブルに適用（th と、対応する列番目の td にwidth/min-width/max-widthを設定）
+// 【v1.0380】data-resize-keyを持つ表を「現在の自然幅をキャプチャ→table-layout:fixed」に一度だけ変換する。
+//   目的: auto-layoutではthのwidth/max-widthが content幅より小さくならず、メインKW等を「ギリギリまで左に」縮められない。
+//   対策: 表示済み(幅測定可能)かつ行がある時点で全列の自然幅を採寸し、その幅でfixed化。以後は各列を保存幅まで自由に縮小可。
+//   見た目: キャプチャした自然幅をそのまま採用するので、変換直後の既定表示は従来と同じ。
+function _ensureFixedLayout() {
+  document.querySelectorAll('table').forEach(table => {
+    if (table.dataset.fixedInit === '1') return;                 // 変換済みはスキップ
+    if (!table.querySelector('th[data-resize-key]')) return;     // リサイズ対象の表のみ
+    if (!table.querySelector('tbody tr')) return;                // 行がまだ無い（データ前）なら見送り
+    if (!table.getBoundingClientRect().width) return;            // 非表示（幅0）の表は測れないので見送り
+    const ths = Array.from(table.querySelectorAll('thead th'));
+    if (!ths.length) return;
+    const natural = ths.map(th => Math.round(th.getBoundingClientRect().width));
+    if (natural.some(w => !w)) return;                            // 測定不能列があれば見送り
+    table.style.tableLayout = 'fixed';
+    ths.forEach((th, i) => { if (!th.style.width) th.style.width = natural[i] + 'px'; });  // 自然幅を明示（既存インライン幅は保持）
+    table.dataset.fixedInit = '1';
+  });
+}
+// 保存済み列幅を全テーブルに適用（th に width/min-width/max-width を設定）
 function applyColWidths() {
+  _ensureFixedLayout();
   const widths = loadColWidths();
   // data-resize-key を持つ全 th を走査
   document.querySelectorAll('th[data-resize-key]').forEach(th => {
     const key = th.dataset.resizeKey;
     if (!key) return;
+    const tbl = th.closest('table');
+    const isFixed = !!(tbl && tbl.dataset.fixedInit === '1');
     const px = widths[key];
     if (px == null) {
-      // 保存値なし → インラインstyleを除去（CSSデフォルトに戻す）
-      th.style.width = '';
+      // 保存値なし → min/maxは解除。fixed表はキャプチャした自然幅(th.style.width)を保持、auto表はCSS既定へ戻す。
       th.style.minWidth = '';
       th.style.maxWidth = '';
+      if (!isFixed) th.style.width = '';
     } else {
       const v = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, px));
       th.style.width = v + 'px';
