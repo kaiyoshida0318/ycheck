@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0381 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0382 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2608,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0381</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0382</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10856,6 +10856,8 @@ function saveColWidth(key, px) {
 //   見た目: キャプチャした自然幅をそのまま採用するので、変換直後の既定表示は従来と同じ。
 function _ensureFixedLayout() {
   document.querySelectorAll('table').forEach(table => {
+    // 【v1.0382】固定レイアウト化は商品-基本データ(#tableBasic)のみに限定。入札価格調整/PRオプ調整等は固定列・色付き列があり自然幅キャプチャで列崩れ(かぶり/隙間)が出たため対象外に戻す。
+    if (table.id !== 'tableBasic') return;
     if (table.dataset.fixedInit === '1') return;                 // 変換済みはスキップ
     if (!table.querySelector('th[data-resize-key]')) return;     // リサイズ対象の表のみ
     if (!table.querySelector('tbody tr')) return;                // 行がまだ無い（データ前）なら見送り
