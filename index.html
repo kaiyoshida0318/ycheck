@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0359 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0360 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2578,7 +2578,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0359</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0360</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2739,12 +2739,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <div class="card">
         <h3 class="card-title">商品-月別データ</h3>
         <div class="filters" style="flex-wrap:wrap;gap:8px 10px;align-items:center">
-          <span class="filter-label">月</span>
-          <div id="miYmBtns" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center"></div>
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
         </div>
-        <p class="dropzone-hint" style="margin:0 0 10px 0;">選んだ月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（青=良い〜赤=悪い）。上＝新しい月／下＝古い月。</p>
+        <p class="dropzone-hint" style="margin:0 0 10px 0;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（青=良い〜赤=悪い）。上＝新しい月／下＝古い月。</p>
         <div id="mi-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
@@ -6104,12 +6102,7 @@ function renderBasic() {
 // 【v110】月プルダウンで1ヶ月に絞り込み（基本データと同じ方式）
 let monthlySortKey = 'rev', monthlySortDir = -1;
 let monthlyAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み
-let _miSelectedYms = [];
-function _miToggleYm(ym, checked) {
-  if (checked) { if (!_miSelectedYms.includes(ym)) _miSelectedYms.push(ym); }
-  else { _miSelectedYms = _miSelectedYms.filter(m => m !== ym); }
-  renderMonthly();
-}
+// 【v1.0360】月選択機能は廃止（利用可能な全月を自動表示）。
 const MI_COLS = [
   { key:'totSales', label:'総売上★',  hbg:'#bfdbfe', bg:'#eff6ff', hi:true,  t:'y' },
   { key:'seoSales', label:'SEO売上',   hbg:'#dbeafe', bg:'#f0f9ff', hi:true,  t:'y' },
@@ -6122,27 +6115,10 @@ const MI_COLS = [
 // 【v1.0358】商品-月別データ：ADcheckの「商品-日月別データ」を月別のみで移植（日別・並び替え・項目調整なし）。
 function renderMonthly() {
   const wrap = document.getElementById('mi-wrap');
-  const btnsEl = document.getElementById('miYmBtns');
   if (!wrap) return;
   const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice(); // 'YYYY-MM' 昇順
-  const ymsDesc = months.slice().reverse();
-  // 選択の初期化＆整合（存在しない月は落とす／初回は直近6ヶ月）
-  _miSelectedYms = _miSelectedYms.filter(m => months.includes(m));
-  if (_miSelectedYms.length === 0) _miSelectedYms = ymsDesc.slice(0, Math.min(6, ymsDesc.length));
-  // 月チェックボックス
-  if (btnsEl) {
-    if (ymsDesc.length === 0) {
-      btnsEl.innerHTML = '<span style="font-size:12px;color:var(--text3)">データなし</span>';
-    } else {
-      btnsEl.innerHTML = ymsDesc.map(ym => {
-        const on = _miSelectedYms.includes(ym);
-        const lbl = ym.replace('-', '/');
-        return '<label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;white-space:nowrap;padding:3px 9px;border-radius:5px;border:1px solid ' + (on ? 'var(--accent)' : 'var(--border2)') + ';background:' + (on ? '#e8f0fe' : 'var(--bg2)') + ';color:' + (on ? 'var(--accent)' : 'var(--text)') + '"><input type="checkbox" style="display:none" ' + (on ? 'checked' : '') + ' onchange="_miToggleYm(\'' + ym + '\',this.checked)">' + lbl + '</label>';
-      }).join('');
-    }
-  }
-  const selYms = _miSelectedYms.slice().sort().reverse(); // 新しい月を上の行に
-  if (selYms.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">月を選択してください</div>'; return; }
+  const selYms = months.slice().reverse(); // 【v1.0360】月選択は廃止＝利用可能な全月を新しい順で表示
+  if (selYms.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
 
   // 集計マップ（商品|月）
   const itemMap = {}, adMap = {};
