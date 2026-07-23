@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0382 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0383 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2608,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0382</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0383</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4425,7 +4425,10 @@ async function ghLoadFromGitHub() {
     migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
     // localStorage にも即書き（【v272】容量オーバーでも読み込みが失敗しないよう フル→スリム→握りつぶし）
     //   【v287】マージ後の値（state.productMeta/bid/proRate）で書く（GitHubの生dataではなく復元後を保存）。
-    const _persist = { ...data, productMeta: state.productMeta, bid: state.bid, proRate: state.proRate };
+    //   【v1.0383】rankは直近2ヶ月に絞る（saveToStorageと統一）。従来はGitHubのフルrank(全期間)を書こうとして
+    //     容量超過で書込が失敗し、起動直後にsaveToStorageが書いた「古いproductMeta」がlocalStorageに残り続ける
+    //     不整合（表示は最新なのに保存は旧）が起きていた。軽量化してこの書き戻しを確実に成功させる。
+    const _persist = { ...data, productMeta: state.productMeta, bid: state.bid, proRate: state.proRate, rank: _rankRecentOnly(data.rank, 2) };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ..._persist, savedAt: new Date().toISOString() }));
     } catch (eLsFull) {
