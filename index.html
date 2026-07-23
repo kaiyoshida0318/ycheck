@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0362 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0363 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2578,7 +2578,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0362</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0363</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5310,27 +5310,49 @@ async function commitUpload() {
     else { state.productMeta[pk].proDone = false; state.productMeta[pk].proDoneTs = ts; }
     state.productMeta[pk]._ts = ts;
   };
+  // 【v1.0363】「当日の手編集」を保護：今日 対応済み(Done)にした商品は、取り込み(CSV)値で上書きしない。
+  const _todayStr = (typeof tuneTodayStr === 'function') ? tuneTodayStr() : '';
+  const _isManualEditedToday = (lowerCode, kind) => {
+    const pk = _pmKeyByLower[lowerCode];
+    const pm = pk && state.productMeta[pk];
+    if (!pm) return false;
+    return (kind === 'ad')
+      ? (pm.adDone === true && pm.adActionAt === _todayStr)
+      : (pm.proDone === true && pm.proActionAt === _todayStr);
+  };
   if (buf.bid) {
     const _oldBid = state.bid || {};
     const _newBid = parseBid(buf.bid.rows);
     const _nowChg = Date.now();
+    const _mergedBid = Object.assign({}, _newBid);
+    let _keptBid = 0;
     Object.keys(_newBid).forEach(code => {
       const ov = _oldBid[code], nv = _newBid[code];
-      if (ov == null || Number(ov) !== Number(nv)) { _stampChg(code, 'adChgTs', _nowChg); _clearDone(code, 'ad', _nowChg); }  // 追加/変更のみ
+      if (ov == null || Number(ov) !== Number(nv)) {
+        if (ov != null && _isManualEditedToday(code, 'ad')) { _mergedBid[code] = ov; _keptBid++; return; }  // 【v1.0363】当日手編集は上書きしない
+        _stampChg(code, 'adChgTs', _nowChg); _clearDone(code, 'ad', _nowChg);
+      }
     });
-    state.bid = _newBid;
+    state.bid = _mergedBid;
     log(`✅ 入札価格を反映（${Object.keys(state.bid).length}件）`, 'ok');
+    if (_keptBid > 0) log(`🛡 当日手編集の入札価格 ${_keptBid}件は取込値で上書きせず維持しました`, 'ok');
   }
   if (buf.proRate) {
     const _oldPro = state.proRate || {};
     const _newPro = parseProRate(buf.proRate.rows);
     const _nowChg = Date.now();
+    const _mergedPro = Object.assign({}, _newPro);
+    let _keptPro = 0;
     Object.keys(_newPro).forEach(code => {
       const ov = _oldPro[code], nv = _newPro[code];
-      if (ov == null || Number(ov) !== Number(nv)) { _stampChg(code, 'proChgTs', _nowChg); _clearDone(code, 'pro', _nowChg); }  // 追加/変更のみ
+      if (ov == null || Number(ov) !== Number(nv)) {
+        if (ov != null && _isManualEditedToday(code, 'pro')) { _mergedPro[code] = ov; _keptPro++; return; }  // 【v1.0363】当日手編集は上書きしない
+        _stampChg(code, 'proChgTs', _nowChg); _clearDone(code, 'pro', _nowChg);
+      }
     });
-    state.proRate = _newPro;
+    state.proRate = _mergedPro;
     log(`✅ PRオプ料率を反映（${Object.keys(state.proRate).length}件）`, 'ok');
+    if (_keptPro > 0) log(`🛡 当日手編集のPRオプ料率 ${_keptPro}件は取込値で上書きせず維持しました`, 'ok');
   }
   // 【v190】入札価格／PRオプ料率を取り込んだら、その最新値で順位表の「今日」のセルを強制上書き。
   // （既に今日の値が入っていても上書きする。過去日は触らない）
