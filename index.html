@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0380 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0381 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2608,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0380</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0381</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3753,6 +3753,9 @@ function ghFilePath() {
 function ghFilePathLegacy() {
   return `data/${getCurrentShopId()}/ycheck_data.json`;
 }
+// 【v1.0381】raw.githubusercontent.com の download_url はブランチ参照でCDNが約5分キャッシュするため、
+//   一意のクエリ(?t=…)を付けてCDNキャッシュを確実に回避する（cache:'no-store'はブラウザ自身のキャッシュのみ）。
+function _ghCacheBust(u) { if (!u) return u; return u + (u.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(); }
 // 【v1.0356】読み込み用: 新ファイルがまだ無ければ旧ファイルから読む（初回移行）。保存(PUT)は常に新ファイル。
 async function ghGetFileForLoad() {
   const r = await ghGetFile();                 // 新ファイル
@@ -3768,7 +3771,7 @@ async function ghGetFileForLoad() {
       const raw = atob(json.content.replace(/\s/g, ''));
       decoded = new TextDecoder('utf-8').decode(Uint8Array.from(raw, c => c.charCodeAt(0)));
     } else if (json.download_url) {   // 1MB超は download_url から取得
-      const r2 = await fetch(json.download_url, { cache: 'no-store' });
+      const r2 = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
       decoded = await r2.text();
     }
     return { sha: null, content: decoded, fromLegacy: true };   // sha:null → 次のPUTは新ファイルを新規作成
@@ -3852,7 +3855,7 @@ async function ghFetchLargeContent(json) {
   // 1) download_url: 署名付きの一時URL。認証ヘッダ不要で raw を返す
   if (json.download_url) {
     try {
-      const r = await fetch(json.download_url, { cache: 'no-store' });
+      const r = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
       if (r.ok) {
         const txt = await r.text();
         if (txt && txt.length > 0) return txt;
@@ -4054,12 +4057,17 @@ function mergeProductMetaForSave(localPM, remotePM) {
     // 【v1.0346】対応内容(adNote/proNote)は「直近に対応した側（＝対応時刻adActionTs/proActionTsが新しい側）」の
     //   値を採用する。別セッションが古い状態のままエントリ全体を奪って保存しても、本日入れた対応内容が
     //   巻き戻らないようにする（対応内容の編集・全更新処理は必ずactionTsを更新するため、これで最新の対応内容が残る）。
-    const _laTs = (typeof L.adActionTs === 'number') ? L.adActionTs : 0;
-    const _raTs = (typeof R.adActionTs === 'number') ? R.adActionTs : 0;
-    if (_laTs !== _raTs) w.adNote = (_laTs > _raTs) ? L.adNote : R.adNote;
-    const _lpTs = (typeof L.proActionTs === 'number') ? L.proActionTs : 0;
-    const _rpTs = (typeof R.proActionTs === 'number') ? R.proActionTs : 0;
-    if (_lpTs !== _rpTs) w.proNote = (_lpTs > _rpTs) ? L.proNote : R.proNote;
+    // 【v1.0381】対応内容(adNote/proNote)の採用は adActionTs だけでなく、対応日(adActionAt)・メモ内日付スタンプも
+    //   加味した「総合recency」で判定する。片側(特にリモート)にadActionTsが無くても、日付が新しい方の
+    //   対応内容を正しく採用し、古い空メモへ巻き戻らないようにする（通常は精密なTsが最大値になり従来と同一挙動）。
+    const _adR = (m) => Math.max((typeof m.adActionTs === 'number') ? m.adActionTs : 0,
+      _ycNormYmdToEpoch(_ycActionAtYmd(m.adActionAt)), _ycNormYmdToEpoch(_ycNoteStampYmd(m.adNote)));
+    const _laR = _adR(L), _raR = _adR(R);
+    if (_laR !== _raR) w.adNote = (_laR > _raR) ? L.adNote : R.adNote;
+    const _prR = (m) => Math.max((typeof m.proActionTs === 'number') ? m.proActionTs : 0,
+      _ycNormYmdToEpoch(_ycActionAtYmd(m.proActionAt)), _ycNormYmdToEpoch(_ycNoteStampYmd(m.proNote)));
+    const _lpR = _prR(L), _rpR = _prR(R);
+    if (_lpR !== _rpR) w.proNote = (_lpR > _rpR) ? L.proNote : R.proNote;
     // 【v1.0349】対応済みフラグ(adDone/proDone)は「doneTsが新しい側」を採用（対応=ON / 値変更取込=OFF のうち新しい方）。
     const _laDn = (typeof L.adDoneTs === 'number') ? L.adDoneTs : 0;
     const _raDn = (typeof R.adDoneTs === 'number') ? R.adDoneTs : 0;
