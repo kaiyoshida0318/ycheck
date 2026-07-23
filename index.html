@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0383 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0384 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2608,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0383</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0384</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4357,6 +4357,29 @@ async function ghSaveToGitHub(options = {}) {
 }
 
 // GitHubから読み込んでstateに反映 + localStorage上書き
+// 【v1.0384】コンソール診断: 任意の商品コードについて state / localStorage / bid の実値を並べて表示する。
+//   使い方: ハードリロード後、DevToolsコンソールで  ycDiag('cg-22-03')  を実行。
+//   state=表示に使う値, localStorage=保存済みキャッシュ。両者と実際の対応内容を突き合わせて原因レイヤーを特定できる。
+window.ycDiag = function(code) {
+  code = code || (window._ycDiagCode || 'cg-22-03');
+  let ls = null, raw = '';
+  try { raw = localStorage.getItem(STORAGE_KEY) || ''; ls = JSON.parse(raw || '{}'); } catch (e) {}
+  const r = {
+    code,
+    state_pm: (state.productMeta || {})[code] || null,
+    ls_pm: (ls && ls.productMeta || {})[code] || null,
+    state_bid: (state.bid || {})[code],
+    ls_bid: (ls && ls.bid || {})[code],
+    ls_savedAt: ls && ls.savedAt,
+    ls_sizeKB: Math.round(raw.length / 1024),
+    ls_rankOmitted: !!(ls && ls._rankOmitted),
+    ghEnabled: (typeof ghIsEnabled === 'function') ? ghIsEnabled() : null,
+    pendingFlag: (function(){ try { return localStorage.getItem(ghPendingFlagKey()) === '1'; } catch(e){ return null; } })()
+  };
+  console.log('[ycDiag] ' + code + ':\n' + JSON.stringify(r, null, 2));
+  return r;
+};
+
 async function ghLoadFromGitHub() {
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
   ghSetSyncStatus('loading');  // 【v1.0354】読み込み中は「読込中」表示（書き込みではないことを明示）
@@ -4417,29 +4440,46 @@ async function ghLoadFromGitHub() {
     } else {
       state.productMeta = _localPM;
     }
-    // マイグレーション
-    migrateRetiredByMissingName();
-    migrateBidKeysLowercase();
-    migrateProStatusToStatus();
-    migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
-    migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
-    // localStorage にも即書き（【v272】容量オーバーでも読み込みが失敗しないよう フル→スリム→握りつぶし）
-    //   【v287】マージ後の値（state.productMeta/bid/proRate）で書く（GitHubの生dataではなく復元後を保存）。
-    //   【v1.0383】rankは直近2ヶ月に絞る（saveToStorageと統一）。従来はGitHubのフルrank(全期間)を書こうとして
-    //     容量超過で書込が失敗し、起動直後にsaveToStorageが書いた「古いproductMeta」がlocalStorageに残り続ける
-    //     不整合（表示は最新なのに保存は旧）が起きていた。軽量化してこの書き戻しを確実に成功させる。
-    const _persist = { ...data, productMeta: state.productMeta, bid: state.bid, proRate: state.proRate, rank: _rankRecentOnly(data.rank, 2) };
+    // 【v1.0384診断】取得内容とマージ結果を可視化（表示は最新なのにlocalStorageが旧、の原因レイヤー切り分け用）。
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ..._persist, savedAt: new Date().toISOString() }));
-    } catch (eLsFull) {
+      const _dcode = (window._ycDiagCode || 'cg-22-03');
+      console.log('[Ycheck診断-load] 取得: savedAt=', data.savedAt,
+        '| content KB=', (content.length / 1024).toFixed(0),
+        '| data.productMeta件数=', Object.keys(data.productMeta || {}).length,
+        '| remote[' + _dcode + '].adNote=', ((data.productMeta || {})[_dcode] || {}).adNote,
+        '| merged[' + _dcode + '].adNote=', ((state.productMeta || {})[_dcode] || {}).adNote,
+        '| merged[' + _dcode + '].adActionAt=', ((state.productMeta || {})[_dcode] || {}).adActionAt);
+    } catch (e) {}
+    // マイグレーション（【v1.0384】1つが例外でも読込全体を止めない＝表示/保存が旧のまま残る事故を防ぐ）
+    try {
+      migrateRetiredByMissingName();
+      migrateBidKeysLowercase();
+      migrateProStatusToStatus();
+      migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
+      migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
+    } catch (eMig) { console.warn('[Ycheck診断-load] マイグレーションで例外（読込は継続）:', eMig && eMig.message); }
+    // 【v1.0384】localStorageへ書き戻し。容量超過でも critical(productMeta/bid/proRate) は必ず残るよう、
+    //   rank→item→ad の順に段階的に落として最小構成でも書き切る。従来は「フル→rank無し」で失敗すると
+    //   何も書けず、起動直後saveToStorageの古いproductMetaがlocalStorageに残り続ける不整合が起きていた。
+    const _base = { ...data, productMeta: state.productMeta, bid: state.bid, proRate: state.proRate, savedAt: new Date().toISOString() };
+    const _variants = [
+      ['full(rank2mo)',  { ..._base, rank: _rankRecentOnly(data.rank, 2) }],
+      ['no-rank',        { ..._base, rank: {}, _rankOmitted: true }],
+      ['no-rank/item',   { ..._base, rank: {}, item: [], _rankOmitted: true, _itemOmitted: true }],
+      ['min',            { ..._base, rank: {}, item: [], ad: [], _rankOmitted: true, _itemOmitted: true }],
+    ];
+    let _wrote = null;
+    for (const [label, obj] of _variants) {
       try {
-        if (typeof setLsSlimMode === 'function') setLsSlimMode(true);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ..._persist, rank: {}, _rankOmitted: true, savedAt: new Date().toISOString() }));
-        console.warn('[Ycheck] GitHub読み込み: 容量オーバーのためrankを除いてローカル保存（rankはrank.json/GitHubから復元）:', eLsFull && eLsFull.message);
-      } catch (eLsSlim) {
-        console.warn('[Ycheck] GitHub読み込み: ローカル保存は容量オーバーでスキップ（GitHubを正として継続）:', eLsSlim && eLsSlim.message);
-      }
+        const s = JSON.stringify(obj);
+        localStorage.setItem(STORAGE_KEY, s);
+        _wrote = { label, kb: (s.length / 1024).toFixed(0) };
+        if (label !== 'full(rank2mo)' && typeof setLsSlimMode === 'function') setLsSlimMode(true);
+        break;
+      } catch (eW) { /* 次の縮小版へ */ }
     }
+    if (_wrote) console.log('[Ycheck診断-load] localStorage書き戻し成功: ' + _wrote.label + ' ' + _wrote.kb + 'KB / productMeta ' + Object.keys(state.productMeta || {}).length + '件');
+    else console.warn('[Ycheck診断-load] localStorage書き戻しは最小構成でも失敗（他アプリのlocalStorage逼迫の可能性）。GitHubを正として継続。');
     _ghDirty = false;
     ghSetSyncStatus('synced');   // 【v1.0355】読み込み完了は「✓ 最新」（保存ではない）
     ghLog(`取得成功: ${(content.length / 1024).toFixed(1)} KB`);
