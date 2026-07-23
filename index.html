@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0376 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0377 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1471,6 +1471,21 @@ td:has(> .name-cell-wrap) {
 #view-basic .code-cell { font-size: 1.17rem; }                        /* 0.78rem → 1.17rem */
 #view-basic .name-cell-wrap .name-cell { font-size: 1.275rem; }       /* 0.85rem(継承) → 1.275rem */
 
+/* 【v1.0377】商品-グラフ：操作系の文字を少し大きく＋期間プリセットのボタン（ADcheck準拠） */
+#view-itemgraph .filter-label { font-size: 14px; }
+#view-itemgraph #igMetric { font-size: 15px; }
+#view-itemgraph #igLabel { font-size: 15px; }
+.ig-presets { display: inline-flex; gap: 6px; align-items: center; }
+.ig-preset-btn {
+  font-size: 13px; font-weight: 600; padding: 6px 12px;
+  border: 1px solid var(--border2); border-radius: 6px;
+  background: var(--bg2); color: var(--text2); cursor: pointer;
+  white-space: nowrap; line-height: 1.2;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.ig-preset-btn:hover { background: var(--bg3); color: var(--text); }
+.ig-preset-btn.on { background: #f97316; border-color: #f97316; color: #fff; }
+
 /* 商品情報編集モーダル */
 .pe-grid {
   display: flex;
@@ -2591,7 +2606,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0376</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0377</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2773,7 +2788,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <div id="igSuggest" style="display:none;position:absolute;top:40px;left:60px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.18);max-height:340px;overflow:auto;min-width:360px"></div>
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
           <span class="filter-label">指標</span>
-          <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
+          <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
             <option value="totSales">総売上</option>
             <option value="seoSales">SEO売上</option>
             <option value="adSales">広告売上</option>
@@ -2784,9 +2799,15 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <option value="avgPrice">平均単価</option>
           </select>
           <span class="filter-label">期間</span>
-          <select id="igMonthFrom" onchange="renderItemGraph()" style="font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
           <span style="color:var(--text3)">〜</span>
-          <select id="igMonthTo" onchange="renderItemGraph()" style="font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <!-- 【v1.0377】期間プリセット（ADcheck準拠）: 1月始まり/5月始まり/2年横並び -->
+          <span class="ig-presets" role="group" aria-label="期間プリセット">
+            <button type="button" class="ig-preset-btn" data-igp="jan" onclick="_igPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
+            <button type="button" class="ig-preset-btn" data-igp="may" onclick="_igPreset('may')" title="今年の5月から当月まで">5月始まり</button>
+            <button type="button" class="ig-preset-btn" data-igp="y2" onclick="_igPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
+          </span>
         </div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
         <div id="igTableWrap" style="overflow:auto;max-height:44vh;border:1px solid var(--border);border-radius:8px"></div>
@@ -5066,12 +5087,16 @@ function parseItem(rows) {
     let month = '';
     const m = String(dateStr).match(/(\d{4})[-\/年]?(\d{1,2})/);
     if (m) month = `${m[1]}-${m[2].padStart(2, '0')}`;
-    const qty = toNum(r['注文点数合計'] || r['注文点数'] || r['注文数合計'] || r['販売数'] || r['数量'] || r['個数'] || 0);
+    const qty = toNum(r['注文点数合計'] || r['注文点数'] || r['販売数'] || r['数量'] || r['個数'] || 0);
+    // 【v1.0377】平均単価の分母用に「注文数（＝件数）」を別途取り込む。点数(qty)とは別物。
+    // 注文点数系のヘッダは除外し、件数系ヘッダのみを対象にする。
+    const orders = toNum(r['注文数合計'] || r['注文数'] || r['注文件数'] || r['ご注文件数'] || r['受注件数'] || 0);
     const revenue = toNum(r['売上合計値（税込）'] || r['売上合計値(税込)'] || r['売上合計値'] || r['売上金額'] || r['売上合計'] || r['売上'] || 0);
     const key = code + '|' + month;
-    if (!agg[key]) agg[key] = { code, month, qty: 0, revenue: 0 };
+    if (!agg[key]) agg[key] = { code, month, qty: 0, revenue: 0, orders: 0 };
     agg[key].qty += qty;
     agg[key].revenue += revenue;
+    agg[key].orders += orders;
   });
   return Object.values(agg);
 }
@@ -8119,7 +8144,7 @@ const _IG_METRICS = {
   roas:     { label:'広告ROAS', unit:'p', color:'#dc2626', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },
   cvr:      { label:'CVR',      unit:'p', color:'#7c3aed', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
   orders:   { label:'広告個数', unit:'n', color:'#0891b2', calc:(it,ad)=> ad.or||0 },
-  avgPrice: { label:'平均単価', unit:'y', color:'#db2777', calc:(it,ad)=> it.qty>0?Math.round((it.rev||0)/it.qty):0 },
+  avgPrice: { label:'平均単価', unit:'y', color:'#db2777', calc:(it,ad)=>{ var _d=(it.orders>0)?it.orders:(it.qty||0); return _d>0?Math.round((it.rev||0)/_d):0; } },  /* 【v1.0377】客単価＝総売上÷注文数(件数)。件数の無い月は点数(qty)で代替 */
 };
 const _IG_TABLE_COLS = [
   { label:'総売上',   unit:'y', hbg:'#d6e1fa', bg:'#f0f3fd', calc:(it,ad)=> it.rev||0 },
@@ -8129,7 +8154,7 @@ const _IG_TABLE_COLS = [
   { label:'広告ROAS', unit:'p', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },
   { label:'CVR',      unit:'p', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
   { label:'広告個数', unit:'n', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=> ad.or||0 },
-  { label:'平均単価', unit:'y', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=> it.qty>0?Math.round((it.rev||0)/it.qty):0 },
+  { label:'平均単価', unit:'y', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=>{ var _d=(it.orders>0)?it.orders:(it.qty||0); return _d>0?Math.round((it.rev||0)/_d):0; } },  /* 【v1.0377】客単価＝総売上÷注文数(件数)。件数の無い月は点数(qty)で代替 */
 ];
 
 // 親子（代表コード）で家族にまとめる — 商品-月別データと同じルール
@@ -8187,6 +8212,41 @@ function _igSelect(key) {
 }
 function _igMetricChange(v) { _igMetric = v; renderItemGraph(); }
 
+// 【v1.0377】期間プリセット（ADcheck準拠）。1月始まり/5月始まり/2年横並び(前年同月〜当月・当月が右端)。
+let _igActivePreset = '';
+function _igSetPresetActive(kind) {
+  _igActivePreset = kind || '';
+  const btns = document.querySelectorAll('#view-itemgraph .ig-preset-btn');
+  btns.forEach(b => b.classList.toggle('on', !!kind && b.getAttribute('data-igp') === kind));
+}
+function _igClearPreset() { _igSetPresetActive(''); }
+window._igClearPreset = _igClearPreset;
+function _igPreset(kind) {
+  const selF = document.getElementById('igMonthFrom'), selT = document.getElementById('igMonthTo');
+  if (!selF || !selT) return;
+  const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice(); // 昇順 'YYYY-MM'
+  if (!months.length) return;
+  const pad = n => String(n).padStart(2, '0');
+  // 「当月」は実際の今日ベースで算出（データに無い月でも可）。取得不可なら最新データ月にフォールバック。
+  const td = (typeof tuneTodayStr === 'function' ? tuneTodayStr() : '') || '';
+  let cy, cm; const mt = String(td).match(/^(\d{4})-(\d{2})/);
+  if (mt) { cy = +mt[1]; cm = +mt[2]; } else { const p = months[months.length - 1].split('-'); cy = +p[0]; cm = +p[1]; }
+  const toTarget = cy + '-' + pad(cm);
+  let fromTarget;
+  if (kind === 'jan') fromTarget = cy + '-01';
+  else if (kind === 'may') fromTarget = cy + '-05';
+  else if (kind === 'y2') fromTarget = (cy - 1) + '-' + pad(cm); // 前年同月
+  else return;
+  // 実在する月にクランプ（当月＝toTarget以下の最大、開始＝fromTarget以上の最小）
+  const toOpt = months.filter(m => m <= toTarget).pop() || months[months.length - 1];
+  let fromOpt = months.find(m => m >= fromTarget) || months[0];
+  if (fromOpt > toOpt) fromOpt = months.filter(m => m <= toOpt).slice(-1)[0] || months[0];
+  selF.value = fromOpt; selT.value = toOpt;
+  _igSetPresetActive(kind);
+  renderItemGraph();
+}
+window._igPreset = _igPreset;
+
 function renderItemGraph() {
   const canvas = document.getElementById('igCanvas');
   const tableWrap = document.getElementById('igTableWrap');
@@ -8208,7 +8268,7 @@ function renderItemGraph() {
   }
   const members = fam[_igSelected];
   const itemMap = {}, adMap = {};
-  (state.item || []).forEach(i => { if (members.indexOf(i.code) < 0) return; (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0 })); itemMap[i.month].rev += i.revenue || 0; itemMap[i.month].qty += i.qty || 0; });
+  (state.item || []).forEach(i => { if (members.indexOf(i.code) < 0) return; const _e = (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0, orders: 0 })); _e.rev += i.revenue || 0; _e.qty += i.qty || 0; _e.orders += i.orders || 0; });
   (state.ad || []).forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
   const from = selF ? selF.value : '', to = selT ? selT.value : '';
   const range = months.filter(m => (!from || m >= from) && (!to || m <= to));
@@ -8225,26 +8285,27 @@ function renderItemGraph() {
       options: {
         responsive: true, maintainAspectRatio: false, animation: false,
         interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: true }, tooltip: { callbacks: { label: (c) => md.label + ': ' + fmt(c.parsed.y) } } },
-        scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmt(v) } }, x: { ticks: { maxRotation: 0, autoSkip: true } } }
+        /* 【v1.0377】グラフ内の文字を拡大（凡例・軸・ツールチップ） */
+        plugins: { legend: { display: true, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => md.label + ': ' + fmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: (v) => fmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
   }
 
   // 明細テーブル（全指標 × 月／新しい順）
   const cols = _IG_TABLE_COLS;
-  const th = '<th style="padding:8px 10px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'
-    + cols.map(c => '<th style="padding:8px 10px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:1.0rem;color:var(--text3);white-space:nowrap">月</th>'   /* 【v1.0377】文字拡大 0.82→1.0rem */
+    + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:1.0rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
   const body = range.slice().reverse().map(m => {
     const it = itemMap[m] || {}, ad = adMap[m] || {};
     const tds = cols.map(c => {
       const v = c.calc(it, ad);
       const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
-      return '<td style="padding:6px 10px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
+      return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:1.06rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';   /* 【v1.0377】文字拡大 0.9→1.06rem */
     }).join('');
-    return '<tr><td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + '</tr>';
+    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:1.02rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + '</tr>';
   }).join('');
-  tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
+  tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:1.06rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 function renderAll() {
