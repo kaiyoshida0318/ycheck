@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0366 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0367 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2578,7 +2578,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0366</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0367</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2716,7 +2716,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
-              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="kwBasic">メインKW</th>
               <th class="num col-total" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
@@ -2865,7 +2865,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdAdjust">商品名</th>
-              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="kwAdAdjust">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
@@ -2905,7 +2905,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProAdjust">商品名</th>
-              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="kwProAdjust">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
@@ -2939,7 +2939,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdTune">商品名</th>
-              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
@@ -2976,7 +2976,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProTune">商品名</th>
-              <th class="nosort" data-resize-key="kw">メインKW</th>
+              <th class="nosort" data-resize-key="kwProTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
@@ -10530,7 +10530,7 @@ npSlot.addEventListener('drop', (e) => {
 // 設定は localStorage に保存され、リロードしても復元される。
 // テーブルをまたいで同じ data-resize-key を持つ列は同じ幅を共有（基本データで広げたら広告全体でも同じ幅）。
 const COL_WIDTHS_STORAGE_KEY = 'ycheck_col_widths_v1';
-const COL_RESIZE_MIN_PX = 60;     // 最小幅（潰しすぎ防止）
+const COL_RESIZE_MIN_PX = 16;     // 【v1.0367】最小幅を大幅に縮小（いくらでも短くできる）
 const COL_RESIZE_MAX_PX = 800;    // 最大幅（広げすぎ防止）
 
 function loadColWidths() {
