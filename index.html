@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0361 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0362 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2578,7 +2578,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0361</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0362</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6108,23 +6108,21 @@ let monthlySortKey = 'rev', monthlySortDir = -1;
 let monthlyAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み
 // 【v1.0360】月選択機能は廃止（利用可能な全月を自動表示）。
 const MI_COLS = [
-  { key:'totSales', label:'総売上★',  hbg:'#bfdbfe', bg:'#eff6ff', hi:true,  t:'y' },
-  { key:'seoSales', label:'SEO売上',   hbg:'#dbeafe', bg:'#f0f9ff', hi:true,  t:'y' },
-  { key:'adSales',  label:'広告売上',   hbg:'#ceead4', bg:'#f0fdf4', hi:true,  t:'y' },
-  { key:'spend',    label:'実績額',     hbg:'#fef08a', bg:'#fefce8', hi:false, t:'y' },
-  { key:'cvr',      label:'CVR',       hbg:'#fed7aa', bg:'#fff7ed', hi:true,  t:'p' },
-  { key:'sroas',    label:'売上ROAS★', hbg:'#bfdbfe', bg:'#eff6ff', hi:true,  t:'p' },
-  { key:'roas',     label:'広告ROAS',   hbg:'#fecdd3', bg:'#fff1f2', hi:true,  t:'p' },
+  { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' }, // ブルー（Ycheck 総売上）
+  { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y' }, // グリーン（Ycheck SEO売上）
+  { key:'adSales',  label:'広告売上',  hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'y' }, // オレンジ（Ycheck 広告系）
+  { key:'spend',    label:'実績額',    hbg:'#fae6ce', bg:'#fcf6ec', hi:false, t:'y' },
+  { key:'cvr',      label:'CVR',      hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'p' },
+  { key:'roas',     label:'広告ROAS',  hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'p' },
 ];
-// 【v1.0358】商品-月別データ：ADcheckの「商品-日月別データ」を月別のみで移植（日別・並び替え・項目調整なし）。
+// 【v1.0358/v1.0362】商品-月別データ：ADcheck「商品-日月別データ」を月別のみで移植（日別・並び替え・項目調整・月選択なし）。
 function renderMonthly() {
   const wrap = document.getElementById('mi-wrap');
   if (!wrap) return;
   const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice(); // 'YYYY-MM' 昇順
-  const selYms = months.slice().reverse(); // 【v1.0360】月選択は廃止＝利用可能な全月を新しい順で表示
+  const selYms = months.slice().reverse(); // 利用可能な全月を新しい順で表示
   if (selYms.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
 
-  // 集計マップ（商品|月）
   const itemMap = {}, adMap = {};
   (state.item || []).forEach(i => { const k = i.code + '|' + i.month; (itemMap[k] || (itemMap[k] = { rev:0 })); itemMap[k].rev += i.revenue || 0; });
   (state.ad || []).forEach(a => { const k = a.code + '|' + a.month; (adMap[k] || (adMap[k] = { adCost:0, adRev:0, cl:0, or:0 })); adMap[k].adCost += a.adCost || 0; adMap[k].adRev += a.adRevenue || 0; adMap[k].cl += a.adClicks || 0; adMap[k].or += a.adOrders || 0; });
@@ -6134,13 +6132,11 @@ function renderMonthly() {
     const ad = adMap[code + '|' + ym] || { adCost:0, adRev:0, cl:0, or:0 };
     const totSales = it.rev || 0, spend = ad.adCost || 0, adSales = ad.adRev || 0;
     const seoSales = Math.max(0, totSales - adSales);
-    const roas  = spend > 0 ? Math.round(adSales / spend * 1000) / 10 : 0;
-    const sroas = (spend > 0 && totSales > 0) ? Math.round(totSales / spend * 1000) / 10 : 0;
-    const cvr   = ad.cl > 0 ? Math.round(ad.or / ad.cl * 1000) / 10 : 0;
-    return { label: ym.replace('-', '/'), totSales, seoSales, adSales, spend, cvr, sroas, roas };
+    const roas = spend > 0 ? Math.round(adSales / spend * 1000) / 10 : 0;
+    const cvr  = ad.cl > 0 ? Math.round(ad.or / ad.cl * 1000) / 10 : 0;
+    return { label: ym.replace('-', '/'), totSales, seoSales, adSales, spend, cvr, roas };
   };
 
-  // 対象商品（撤退除外）
   const codeSet = new Set();
   Object.keys(state.master || {}).forEach(c => codeSet.add(c));
   (state.item || []).forEach(i => codeSet.add(i.code));
@@ -6160,7 +6156,7 @@ function renderMonthly() {
     const stats = selYms.map(ym => _statFor(code, ym));
     if (!q && stats.every(s => s.totSales === 0 && s.spend === 0 && s.adSales === 0)) return;
     const m = (typeof getMaster === 'function' ? getMaster(code) : null) || {};
-    rows.push({ code, name: m.name || code, img: m.img || null, stats });
+    rows.push({ code, name: m.name || code, stats });
   });
   rows.sort((a, b) => b.stats.reduce((s, m) => s + (m.totSales || 0), 0) - a.stats.reduce((s, m) => s + (m.totSales || 0), 0));
 
@@ -6168,8 +6164,8 @@ function renderMonthly() {
   const shown = rows.slice(0, limit);
   if (shown.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">該当する商品がありません</div>'; return; }
   const note = rows.length > limit
-    ? '<div style="padding:6px 12px;font-size:12px;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件中 上位' + limit + '件（総売上順）を表示。商品コード・商品名で検索すると特定商品を表示できます。</div>'
-    : (q ? '<div style="padding:6px 12px;font-size:12px;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件 該当</div>' : '');
+    ? '<div style="padding:7px 12px;font-size:13px;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件中 上位' + limit + '件（総売上順）を表示。商品コード・商品名で検索すると特定商品を表示できます。</div>'
+    : (q ? '<div style="padding:7px 12px;font-size:13px;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件 該当</div>' : '');
 
   const _rank5 = (val, allVals, hi) => {
     if (!val || val === 0 || allVals.length === 0) return 'bk';
@@ -6185,31 +6181,36 @@ function renderMonthly() {
   const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
   const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
 
-  const HEAD = '<th style="padding:8px 8px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;min-width:150px;position:sticky;left:0;background:var(--bg3);z-index:4">商品</th>'
-    + '<th style="padding:8px 6px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:11px;color:var(--text3);background:var(--bg3)">月</th>'
-    + MI_COLS.map(c => '<th style="padding:8px 6px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:11px;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('');
+  const PW = 168; // 商品列の固定幅(px)
+  const HEAD = '<th style="padding:9px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;width:' + PW + 'px;min-width:' + PW + 'px;max-width:' + PW + 'px;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:13px;color:var(--text2)">商品</th>'
+    + '<th style="padding:9px 8px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:13px;color:var(--text3);background:var(--bg3)">月</th>'
+    + MI_COLS.map(c => '<th style="padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:13px;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('');
 
-  const body = shown.map(({ code, name, img, stats }) => {
+  const body = shown.map(({ code, name, stats }) => {
     const pool = {}; MI_COLS.forEach(c => { pool[c.key] = stats.map(s => s[c.key]).filter(v => v > 0); });
     const safeName = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(code) : '';
+    const imgBox = '<div style="width:44px;height:44px;border-radius:7px;background:var(--bg3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'
+      + (src ? '<img loading="lazy" src="' + src + '" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">' : '<span style="font-size:20px">📦</span>')
+      + '</div>';
     return stats.map((m, mi) => {
       const first = mi === 0, last = mi === stats.length - 1;
       const bT = first ? 'border-top:2px solid var(--border)' : 'border-top:1px dashed var(--border2)';
       const bB = last ? 'border-bottom:2px solid var(--border)' : '';
-      const prod = first ? '<td rowspan="' + stats.length + '" style="padding:8px 8px;vertical-align:middle;border-top:2px solid var(--border);border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;gap:7px">'
-        + (img ? '<img loading="lazy" src="' + img + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.visibility=\'hidden\'">' : '<div style="width:32px;height:32px;border-radius:6px;background:var(--bg3);flex-shrink:0"></div>')
-        + '<div style="overflow:hidden"><div style="font-size:10px;color:var(--text3);font-family:\'DM Mono\',monospace">' + code + '</div><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px" title="' + safeName + '">' + safeName + '</div></div></div></td>' : '';
+      const prod = first ? '<td rowspan="' + stats.length + '" style="padding:9px 10px;vertical-align:middle;width:' + PW + 'px;min-width:' + PW + 'px;max-width:' + PW + 'px;border-top:2px solid var(--border);border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;gap:9px">'
+        + imgBox
+        + '<div style="overflow:hidden"><div style="font-size:11px;color:var(--text3);font-family:\'DM Mono\',monospace">' + code + '</div><div style="font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:104px" title="' + safeName + '">' + safeName + '</div></div></div></td>' : '';
       const cells = MI_COLS.map(c => {
         const v = m[c.key];
         const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
         const inner = (!v || v === 0) ? disp : '<span class="c-' + _rank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
-        return '<td style="padding:5px 7px;text-align:right;font-family:\'DM Mono\',monospace;' + bT + ';' + bB + ';background:' + c.bg + ';white-space:nowrap">' + inner + '</td>';
+        return '<td style="padding:7px 10px;text-align:right;font-size:14px;font-family:\'DM Mono\',monospace;' + bT + ';' + bB + ';background:' + c.bg + ';white-space:nowrap">' + inner + '</td>';
       }).join('');
-      return '<tr>' + prod + '<td style="padding:5px 7px;text-align:right;font-weight:700;font-size:11px;color:var(--accent);' + bT + ';' + bB + ';background:var(--bg3);font-family:\'DM Mono\',monospace;white-space:nowrap">' + m.label + '</td>' + cells + '</tr>';
+      return '<tr>' + prod + '<td style="padding:7px 8px;text-align:right;font-weight:700;font-size:13px;color:var(--accent);' + bT + ';' + bB + ';background:var(--bg3);font-family:\'DM Mono\',monospace;white-space:nowrap">' + m.label + '</td>' + cells + '</tr>';
     }).join('');
   }).join('');
 
-  wrap.innerHTML = note + '<table style="border-collapse:collapse;font-size:12px;width:100%"><thead><tr style="position:sticky;top:0;z-index:3">' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+  wrap.innerHTML = note + '<table style="border-collapse:collapse;font-size:14px;width:100%"><thead><tr style="position:sticky;top:0;z-index:3">' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 // ==================== Rendering: 撤退済み商品 ====================
