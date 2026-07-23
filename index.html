@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0378 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0379 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1478,6 +1478,10 @@ td:has(> .name-cell-wrap) {
 .ig-preset-btn:hover { background: var(--bg3); color: var(--text); }
 .ig-preset-btn.on { background: #f97316; border-color: #f97316; color: #fff; }
 
+/* 【v1.0379】商品-グラフ：画面固定をやめ、ビュー全体を縦スクロールに。表の内部スクロール(max-height/overflow)は廃止しページごとスクロール。 */
+#view-itemgraph { overflow-y: auto; }
+#view-itemgraph .card { flex: 0 0 auto; }
+
 /* 商品情報編集モーダル */
 .pe-grid {
   display: flex;
@@ -2598,7 +2602,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0378</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0379</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2802,7 +2806,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           </span>
         </div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
-        <div id="igTableWrap" style="overflow:auto;max-height:44vh;border:1px solid var(--border);border-radius:8px"></div>
+        <div id="igTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
 
