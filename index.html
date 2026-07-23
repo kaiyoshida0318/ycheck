@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0356 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0357 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="ycheck-icon.svg">
 <link rel="alternate icon" type="image/png" href="ycheck-icon.png">
@@ -2573,7 +2573,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0356</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0357</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3671,6 +3671,7 @@ let _ghSaveDebounceTimer = null;
 let _ghSaveInFlight = null;                // 並列保存防止 mutex
 let _ghLastKnownSha = null;                // 最新取得時のSHA
 let _ghDirty = false;                      // 未保存フラグ
+let _ghRemergeFn = null;                    // 【v1.0357】409/422再送時に最新リモートへ再マージする関数（ghSaveToGitHub保存中だけ設定）
 let _ghStaleWarnShown = false;             // 【v272】古い上書きガードの警告を1セッション1回に抑制
 
 // ショップ別のGitHub保存パス（設計ガイド: data/{shopId}/...）
@@ -3857,12 +3858,20 @@ async function ghPutFile(contentString, retryCount = 0) {
   // 【v201】409(SHA競合) と 422(SHA未供給/不正) はどちらも「最新SHAを取り直して再送」で解決する。
   // 422は従来リトライされず即エラー＝保存不能ループの原因だったため、ここに含める。
   if ((res.status === 409 || res.status === 422) && retryCount < GH_MAX_RETRY) {
-    ghLog(`${res.status} - 最新SHAを取得してリトライ (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
+    ghLog(`${res.status} - 最新SHAを取得し再マージして再送 (${retryCount + 1}/${GH_MAX_RETRY})`, 'warn');
     // 最新のSHAを取り直してリトライ（指数バックオフ: 500ms, 800ms, 1100ms, ...）
     await new Promise(r => setTimeout(r, 500 + retryCount * 300));
     const latest = await ghGetFile();
     _ghLastKnownSha = latest.sha;
-    return ghPutFile(contentString, retryCount + 1);
+    // 【v1.0357】#2修正: SHAだけ取り直して"同じ古い本文"を再送すると、GET〜PUTの隙に別セッションが
+    //   入れた新しい編集を古い本文で丸ごと上書きしてしまう（新版どうしでも巻き戻る）。楽観ロックを力ずくで
+    //   突破していたのがこれ。→ 最新リモートの中身に対して商品単位で再マージした本文を作ってから再送する。
+    let _body = contentString;
+    if (typeof _ghRemergeFn === 'function' && latest && latest.content) {
+      try { _body = await _ghRemergeFn(latest.content); }
+      catch (e) { console.warn('[Ycheck] 再マージ失敗、元の本文で再送:', e && e.message); }
+    }
+    return ghPutFile(_body, retryCount + 1);
   }
   if (res.status === 429) {
     ghLog('429 Too Many Requests - 少し待ってリトライ', 'warn');
@@ -4118,6 +4127,31 @@ async function ghSaveToGitHub(options = {}) {
     // 空データ誤上書き防止
     const dataObj = JSON.parse(jsonStr);
     let outStr = jsonStr;  // 【v285】実際にPUTする本文（productMetaマージ後に差し替わる）
+    // 【v1.0357】pristineなローカル(jsonStr)を、与えられた最新リモートに対して商品単位で再マージし、PUT本文を返す。
+    //   初回保存でも、409/422再送時(_ghRemergeFn経由)でも同じ関数を使い、常に「最新のリモート」に対してマージする。
+    //   既存のマージ関数(mergeProductMetaForSave / mergeMapByPmRecency)をそのまま再利用（挙動は従来と同一）。
+    const ghMergeOutAgainstRemote = (remoteObj) => {
+      const o = JSON.parse(jsonStr);                 // 常にpristineなローカルから作り直す
+      remoteObj = remoteObj || {};
+      const _localPM  = o.productMeta || {};
+      const _remotePM = remoteObj.productMeta || {};
+      o.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
+      o.bid     = mergeMapByPmRecency(o.bid,     remoteObj.bid,     _localPM, _remotePM);
+      o.proRate = mergeMapByPmRecency(o.proRate, remoteObj.proRate, _localPM, _remotePM);
+      try {
+        const _pt = (s) => { try { return (s && s.savedAt) ? (Date.parse(s.savedAt) || 0) : 0; } catch (e) { return 0; } };
+        const _rSnap = remoteObj.productsCsvSnapshot;
+        if (_rSnap && _pt(_rSnap) > _pt(o.productsCsvSnapshot)) o.productsCsvSnapshot = _rSnap;  // 新しい方を残す
+      } catch (eSnap) { /* ローカルのまま */ }
+      try {
+        const _lRM = o.rankMeta || {}, _rRM = remoteObj.rankMeta || {};
+        const _lSpot = _lRM.lastSpotUpdate, _rSpot = _rRM.lastSpotUpdate;
+        if (_rSpot && (!_lSpot || _rSpot > _lSpot)) {   // remoteの日付が新しければ採用（本日更新フラグの巻き戻し防止）
+          o.rankMeta = Object.assign({}, _lRM, { lastSpotUpdate: _rSpot, lastSpotUpdateTs: _rRM.lastSpotUpdateTs });
+        }
+      } catch (eRM) { /* ローカルのまま */ }
+      return JSON.stringify(o);
+    };
     const dataTotal = (dataObj.overall ? 1 : 0)
       + (dataObj.item ? (Array.isArray(dataObj.item) ? dataObj.item.length : 1) : 0)
       + (dataObj.ad ? (Array.isArray(dataObj.ad) ? dataObj.ad.length : 1) : 0)
@@ -4214,6 +4248,13 @@ async function ghSaveToGitHub(options = {}) {
       }
     }
     ghSetSyncStatus('saving');
+    // 【v1.0357】force/allowEmpty以外の通常保存では、409/422再送時にも最新リモートへ再マージさせる。
+    if (!allowEmpty && !options.force) {
+      _ghRemergeFn = (remoteContentStr) => {
+        try { return ghMergeOutAgainstRemote(JSON.parse(remoteContentStr)); }
+        catch (e) { return outStr; }
+      };
+    }
     try {
       await ghPutFile(outStr);
       _ghDirty = false;
@@ -4226,6 +4267,8 @@ async function ghSaveToGitHub(options = {}) {
       ghSetSyncStatus('error', err.message);
       ghLog('保存失敗: ' + err.message, 'error');
       throw err;
+    } finally {
+      _ghRemergeFn = null;   // 【v1.0357】保存ごとにクリア（古いクロージャを残さない）
     }
   })();
   try {
