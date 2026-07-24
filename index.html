@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0384 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0385 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2608,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0384</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0385</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2845,42 +2845,45 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="view" id="view-graph">
       <div class="card">
         <h3 class="card-title">全-月別グラフ</h3>
-        <div class="chart-box chart-box-fixed"><canvas id="chartAll"></canvas></div>
-        <div class="table-wrap">
-          <table id="tableGraphMonthly2">
-            <thead><tr>
-              <th>月</th>
-              <th class="num col-total">総売上</th>
-              <th class="num col-sales">SEO売上</th>
-              <th class="num col-ad">広告売上</th>
-              <th class="num col-ad">実績額</th>
-              <th class="num col-ad">CVR</th>
-              <th class="num col-ad">ROAS</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
+        <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center;position:relative">
+          <span class="filter-label">指標</span>
+          <select id="zgMetric" onchange="_zgMetricChange(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
+            <option value="totSales">総売上</option>
+            <option value="seoSales">SEO売上</option>
+            <option value="adSales">広告売上</option>
+            <option value="spend">実績額</option>
+            <option value="roas">広告ROAS</option>
+            <option value="cvr">CVR</option>
+            <option value="orders">広告個数</option>
+            <option value="avgPrice">平均単価</option>
+          </select>
+          <span class="filter-label">期間</span>
+          <select id="zgMonthFrom" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <span style="color:var(--text3)">〜</span>
+          <select id="zgMonthTo" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <span class="ig-presets" role="group" aria-label="期間プリセット">
+            <button type="button" class="ig-preset-btn" data-zgp="jan" onclick="_zgPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
+            <button type="button" class="ig-preset-btn" data-zgp="may" onclick="_zgPreset('may')" title="今年の5月から当月まで">5月始まり</button>
+            <button type="button" class="ig-preset-btn" data-zgp="y2" onclick="_zgPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
+          </span>
         </div>
+        <div id="zgChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="zgCanvas"></canvas></div>
+        <div id="zgTableWrap" style="overflow:auto;max-height:44vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
 
-    <!-- View: 全-月別データ（月別表のみ） -->
+    <!-- View: 全-月別データ（縦=月×横=指標のランク色分け表・ADcheck転用） -->
     <div class="view" id="view-graphdata">
       <div class="card">
         <h3 class="card-title">全-月別データ</h3>
-        <div class="table-wrap">
-          <table id="tableGraphMonthly">
-            <thead><tr>
-              <th>月</th>
-              <th class="num col-total">総売上</th>
-              <th class="num col-sales">SEO売上</th>
-              <th class="num col-ad">広告売上</th>
-              <th class="num col-ad">実績額</th>
-              <th class="num col-ad">CVR</th>
-              <th class="num col-ad">ROAS</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
+        <div id="zdSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>
+        <div class="filters" style="align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="filter-label">表示</span>
+          <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
+          <button type="button" class="ig-preset-btn zd-mode-btn" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
+          <span style="margin-left:10px;font-size:12px;color:var(--text3)">色分け: <b class="c-g1">上位</b>〜<b class="c-r">下位</b>（最新月は評価対象外）</span>
         </div>
+        <div id="zdTableWrap" class="table-wrap" style="overflow:auto;max-height:70vh"></div>
       </div>
     </div>
 
@@ -6549,71 +6552,172 @@ function ensureOldOverall() {
 }
 
 // ==================== Rendering: 全-月別データ（グラフ）====================
-function renderGraph() {
-  ensureOldOverall();   // 【v315】旧データ(2024-06〜2025-06)を毎回補完（消えない）
-  const months = getAvailableMonths();
-  const data = months.map(m => {
-    let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0;
-    (state.item || []).filter(i => i.month === m).forEach(i => { rev += i.revenue; });
-    (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue; adCost += a.adCost; adClicks += (a.adClicks || 0); adOrders += (a.adOrders || 0); });
-    // overallの売上を優先（より正確な総売上）
-    if (state.overall) {
+// ==================== 【v1.0385】全-月別データ / 全-月別グラフ（ADcheck「全-月別データ/全-日月別グラフ」をYcheck向けに転用） ====================
+// 店舗全体の月別集計（両ビュー共用）。1要素=1ヶ月。Ycheckが持つ指標のみ。
+function _zenMonthlyRows() {
+  if (typeof ensureOldOverall === 'function') ensureOldOverall();
+  const months = getAvailableMonths();  // 昇順 'YYYY-MM'
+  return months.map(m => {
+    let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0;
+    (state.item || []).filter(i => i.month === m).forEach(i => { rev += i.revenue || 0; orders += i.orders || 0; });
+    (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue || 0; adCost += a.adCost || 0; adClicks += a.adClicks || 0; adOrders += a.adOrders || 0; });
+    if (state.overall && Array.isArray(state.overall.months)) {
       const o = state.overall.months.find(x => x.month === m);
-      if (o) {
-        if (o.revenue > 0) rev = o.revenue;
-        // 【v304】overall に全体の広告系の値があれば優先採用（過去データ一括取込用。商品別adが無い月でも表示できる）
-        if (o.adRevenue != null) adRev = o.adRevenue;
-        if (o.adCost != null) adCost = o.adCost;
-        if (o.adClicks != null) adClicks = o.adClicks;
-        if (o.adOrders != null) adOrders = o.adOrders;
-      }
+      if (o) { if (o.revenue > 0) rev = o.revenue; if (o.adRevenue != null) adRev = o.adRevenue; if (o.adCost != null) adCost = o.adCost; if (o.adClicks != null) adClicks = o.adClicks; if (o.adOrders != null) adOrders = o.adOrders; }
     }
-    return { month: m, rev, adRev, adCost, adClicks, adOrders, seoRev: Math.max(0, rev - adRev) };
+    const seoRev = Math.max(0, rev - adRev);
+    return {
+      month: m, label: m.replace('-', '/'),
+      totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
+      cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
+      roas: adCost > 0 ? adRev / adCost * 100 : 0,
+      orders: adOrders,
+      avgPrice: orders > 0 ? Math.round(rev / orders) : 0,
+      adClicks: adClicks
+    };
   });
+}
+function _zenRank5(val, allVals, hi) {
+  if (!val || val === 0 || !allVals.length) return 'bk';
+  const s = allVals.slice().sort((a, b) => hi ? b - a : a - b);
+  let idx = s.indexOf(val); if (idx < 0) idx = 0;
+  const n = s.length;
+  if (idx < Math.ceil(n * 0.10)) return 'g1';
+  if (idx < Math.ceil(n * 0.20)) return 'g2';
+  if (idx >= Math.floor(n * 0.90)) return 'r';
+  if (idx >= Math.floor(n * 0.80)) return 'o';
+  return 'bk';
+}
+function _zenYoyOrder(rowsDesc) {
+  const out = [], used = new Set();
+  rowsDesc.forEach(r => {
+    const mm = r.month.slice(-2);
+    rowsDesc.forEach(r2 => { if (r2.month.slice(-2) === mm && !used.has(r2.month)) { used.add(r2.month); out.push(Object.assign({}, r2, { _grpTop: r2.month === r.month })); } });
+  });
+  return out;
+}
 
-  const labels = data.map(d => d.month);
-  const ctx = document.getElementById('chartAll').getContext('2d');
-  if (state.charts.chartAll) state.charts.chartAll.destroy();
-  state.charts.chartAll = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: '総売上', data: data.map(d => d.rev), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
-        { label: 'SEO売上', data: data.map(d => d.seoRev), borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
-        { label: '広告売上', data: data.map(d => d.adRev), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 },
-        { label: '実績額', data: data.map(d => d.adCost), borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.08)', tension: 0.3, spanGaps: true, borderWidth: 2 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#4a4d52' }, position: 'top' },
-        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ¥${Math.round(c.parsed.y).toLocaleString()}` } }
-      },
-      scales: {
-        x: { title: { display: true, text: '月', color: '#8a8d94' }, ticks: { color: '#8a8d94' }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y: { title: { display: true, text: '金額（円）', color: '#8a8d94' }, ticks: { color: '#8a8d94', callback: v => '¥' + v.toLocaleString() }, grid: { color: 'rgba(0,0,0,0.06)' } }
+// ---------- 全-月別データ（縦=月×横=指標 のランク色分け表 + サマリー + 通常/前年同月比） ----------
+let _zdMode = 'normal';
+function _zdSetMode(m) { _zdMode = m; document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-zdm') === m)); renderGraphData(); }
+window._zdSetMode = _zdSetMode;
+function renderGraphData() {
+  const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
+  const asc = _zenMonthlyRows();
+  const sumEl = document.getElementById('zdSummary');
+  if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; if (sumEl) sumEl.innerHTML = ''; return; }
+  const S = asc.reduce((a, r) => { a.rev += r.totSales; a.adRev += r.adSales; a.adCost += r.spend; a.cl += r.adClicks; return a; }, { rev: 0, adRev: 0, adCost: 0, cl: 0 });
+  const avgRoas = S.adCost > 0 ? S.adRev / S.adCost * 100 : 0;
+  const cards = [['累計総売上', '¥' + Math.round(S.rev).toLocaleString(), '#2563eb'], ['累計広告売上', '¥' + Math.round(S.adRev).toLocaleString(), '#d97706'], ['累計実績額', '¥' + Math.round(S.adCost).toLocaleString(), '#b45309'], ['累計クリック', Math.round(S.cl).toLocaleString(), '#475569'], ['平均広告ROAS', (Math.round(avgRoas * 10) / 10) + '%', '#dc2626']];
+  if (sumEl) sumEl.innerHTML = cards.map(c => '<div style="flex:1 1 150px;min-width:150px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--text3);margin-bottom:2px">' + c[0] + '</div><div style="font-size:1.2rem;font-weight:700;color:' + c[2] + ';font-family:\'DM Mono\',ui-monospace,monospace">' + c[1] + '</div></div>').join('');
+  const pool = {}; MI_COLS.forEach(c => { pool[c.key] = asc.slice(0, -1).map(r => r[c.key]).filter(v => v > 0); });
+  const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
+  const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
+  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">月</th>'
+    + MI_COLS.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+  const desc = asc.slice().reverse();
+  const drows = _zdMode === 'yoy' ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
+  const body = drows.map(r => {
+    const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
+    const cells = MI_COLS.map(c => {
+      const v = r[c.key]; const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
+      const inner = (!v || v === 0) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+      return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + inner + '</td>';
+    }).join('');
+    return '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + '</tr>';
+  }).join('');
+  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+}
+
+// ---------- 全-月別グラフ（商品-月別グラフ準拠：月別・指標切替・期間プリセット） ----------
+const _ZG_METRICS = {
+  totSales: { label: '総売上', unit: 'y', color: '#2563eb' },
+  seoSales: { label: 'SEO売上', unit: 'y', color: '#16a34a' },
+  adSales: { label: '広告売上', unit: 'y', color: '#d97706' },
+  spend: { label: '実績額', unit: 'y', color: '#b45309' },
+  roas: { label: '広告ROAS', unit: 'p', color: '#dc2626' },
+  cvr: { label: 'CVR', unit: 'p', color: '#7c3aed' },
+  orders: { label: '広告個数', unit: 'n', color: '#0891b2' },
+  avgPrice: { label: '平均単価', unit: 'y', color: '#db2777' }
+};
+const _ZG_TABLE_COLS = [
+  { key: 'totSales', label: '総売上', unit: 'y', hbg: '#d6e1fa', bg: '#f0f3fd' },
+  { key: 'seoSales', label: 'SEO売上', unit: 'y', hbg: '#dff0e3', bg: '#f1faf4' },
+  { key: 'adSales', label: '広告売上', unit: 'y', hbg: '#fae6ce', bg: '#fcf6ec' },
+  { key: 'spend', label: '実績額', unit: 'y', hbg: '#fae6ce', bg: '#fcf6ec' },
+  { key: 'roas', label: '広告ROAS', unit: 'p', hbg: '#fae6ce', bg: '#fcf6ec' },
+  { key: 'cvr', label: 'CVR', unit: 'p', hbg: '#fae6ce', bg: '#fcf6ec' },
+  { key: 'orders', label: '広告個数', unit: 'n', hbg: '#e8eaed', bg: '#f7f8fa' },
+  { key: 'avgPrice', label: '平均単価', unit: 'y', hbg: '#e8eaed', bg: '#f7f8fa' }
+];
+let _zgMetric = 'totSales';
+let _zgActivePreset = '';
+function _zgMetricChange(v) { _zgMetric = v; renderGraphAll(); }
+window._zgMetricChange = _zgMetricChange;
+function _zgSetPresetActive(kind) { _zgActivePreset = kind || ''; document.querySelectorAll('#view-graph .ig-preset-btn').forEach(b => b.classList.toggle('on', !!kind && b.getAttribute('data-zgp') === kind)); }
+function _zgClearPreset() { _zgSetPresetActive(''); }
+window._zgClearPreset = _zgClearPreset;
+function _zgPreset(kind) {
+  const selF = document.getElementById('zgMonthFrom'), selT = document.getElementById('zgMonthTo');
+  if (!selF || !selT) return;
+  const months = getAvailableMonths().slice(); if (!months.length) return;
+  const pad = n => String(n).padStart(2, '0');
+  const td = (typeof tuneTodayStr === 'function' ? tuneTodayStr() : '') || '';
+  let cy, cm; const mt = String(td).match(/^(\d{4})-(\d{2})/);
+  if (mt) { cy = +mt[1]; cm = +mt[2]; } else { const p = months[months.length - 1].split('-'); cy = +p[0]; cm = +p[1]; }
+  const toTarget = cy + '-' + pad(cm);
+  let fromTarget;
+  if (kind === 'jan') fromTarget = cy + '-01';
+  else if (kind === 'may') fromTarget = cy + '-05';
+  else if (kind === 'y2') fromTarget = (cy - 1) + '-' + pad(cm);
+  else return;
+  const toOpt = months.filter(m => m <= toTarget).pop() || months[months.length - 1];
+  let fromOpt = months.find(m => m >= fromTarget) || months[0];
+  if (fromOpt > toOpt) fromOpt = months.filter(m => m <= toOpt).slice(-1)[0] || months[0];
+  selF.value = fromOpt; selT.value = toOpt; _zgSetPresetActive(kind); renderGraphAll();
+}
+window._zgPreset = _zgPreset;
+function renderGraphAll() {
+  const canvas = document.getElementById('zgCanvas'); const tableWrap = document.getElementById('zgTableWrap');
+  if (!canvas || !tableWrap) return;
+  const all = _zenMonthlyRows();
+  const months = all.map(r => r.month);
+  const selF = document.getElementById('zgMonthFrom'), selT = document.getElementById('zgMonthTo');
+  if (selF && selT && selF.dataset.n !== String(months.length)) {
+    const opts = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
+    selF.innerHTML = opts; selT.innerHTML = opts; selF.dataset.n = selT.dataset.n = String(months.length);
+    if (months.length) { selF.value = months[Math.max(0, months.length - 12)]; selT.value = months[months.length - 1]; }
+  }
+  const from = selF ? selF.value : '', to = selT ? selT.value : '';
+  const rows = all.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
+  const labels = rows.map(r => r.label);
+  const md = _ZG_METRICS[_zgMetric] || _ZG_METRICS.totSales;
+  const fmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
+  const vals = rows.map(r => r[_zgMetric] || 0);
+  if (state.charts.chartAll) { state.charts.chartAll.destroy(); state.charts.chartAll = null; }
+  if (typeof Chart !== 'undefined') {
+    state.charts.chartAll = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { labels: labels, datasets: [{ label: md.label, data: vals, borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: true, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => md.label + ': ' + fmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: v => fmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
-    }
-  });
-
-  // 月別表（新しい順）。全-月別データと全-月別グラフ下の両方の表に同じ内容を入れる
-  const rowsHtml = [...data].reverse().map(d => `
-      <tr>
-        <td>${d.month}</td>
-        <td class="num col-total">${fmt(d.rev)}</td>
-        ${shareRevCell(d.seoRev, d.adRev, true, "col-sales")}
-        ${shareRevCell(d.adRev, d.seoRev, false, "col-ad")}
-        <td class="num col-ad">${fmt(d.adCost)}</td>
-        <td class="num col-ad">${fmtCvr(d.adClicks > 0 ? d.adOrders / d.adClicks * 100 : NaN)}</td>
-        <td class="num col-ad">${fmtRoas(d.adCost > 0 ? d.adRev / d.adCost * 100 : NaN)}</td>
-      </tr>
-    `).join('');
-  ['#tableGraphMonthly tbody', '#tableGraphMonthly2 tbody'].forEach(sel => {
-    const tbody = document.querySelector(sel);
-    if (tbody) tbody.innerHTML = rowsHtml;
-  });
+    });
+  }
+  const cols = _ZG_TABLE_COLS;
+  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'
+    + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+  const body = rows.slice().reverse().map(r => {
+    const tds = cols.map(c => {
+      const v = r[c.key];
+      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
+      return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
+    }).join('');
+    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + r.label + '</td>' + tds + '</tr>';
+  }).join('');
+  tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 // ==================== Rendering: 広告全体 ====================
@@ -8382,8 +8486,8 @@ function renderAll() {
   else if (state.currentView === 'monthly') renderMonthly();
   else if (state.currentView === 'itemgraph') renderItemGraph();
   else if (state.currentView === 'retired') renderRetired();
-  else if (state.currentView === 'graph') renderGraph();
-  else if (state.currentView === 'graphdata') renderGraph();
+  else if (state.currentView === 'graph') renderGraphAll();
+  else if (state.currentView === 'graphdata') renderGraphData();
   else if (state.currentView === 'compare') renderCompare();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
