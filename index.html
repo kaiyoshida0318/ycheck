@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0385 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0386 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2608,7 +2608,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0385</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0386</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4024,6 +4024,20 @@ function pmEntryRecency(meta) {
   for (const y of ymds) { const e = _ycNormYmdToEpoch(y); if (e > r) r = e; }
   return r;
 }
+// 【v1.0386】フィールド別recency: bid(ad系)/proRate(pro系) をそれぞれ「その系の actionTs・chgTs・対応日・メモ内日付」の最大で評価。
+//   pmEntryRecency(エントリ全体=_ts含む)だと ad側変更や他編集で _ts が上がった時に pro値まで巻き戻り、
+//   メモ(proNote)は pro側recencyで残るのに 値(proRate)だけ負ける、というデシンク(例: メモ p18-16 なのに料率18)が起きる。
+//   値マージと対応メモマージを同じこの式に揃え、値とメモが必ず同じ側を採用するようにする。
+function _pmFieldRecency(meta, kind) {
+  if (!meta || typeof meta !== 'object') return 0;
+  const num = x => (typeof x === 'number' && isFinite(x)) ? x : 0;
+  if (kind === 'ad') {
+    return Math.max(num(meta.adActionTs), num(meta.adChgTs),
+      _ycNormYmdToEpoch(_ycActionAtYmd(meta.adActionAt)), _ycNormYmdToEpoch(_ycNoteStampYmd(meta.adNote)));
+  }
+  return Math.max(num(meta.proActionTs), num(meta.proChgTs),
+    _ycNormYmdToEpoch(_ycActionAtYmd(meta.proActionAt)), _ycNormYmdToEpoch(_ycNoteStampYmd(meta.proNote)));
+}
 function mergeProductMetaForSave(localPM, remotePM) {
   // 商品ごとに recency の大きい（新しい）方のエントリを採用。
   //   ・remoteにしか無い商品は残す（対応記録の取りこぼし防止）。
@@ -4063,13 +4077,10 @@ function mergeProductMetaForSave(localPM, remotePM) {
     // 【v1.0381】対応内容(adNote/proNote)の採用は adActionTs だけでなく、対応日(adActionAt)・メモ内日付スタンプも
     //   加味した「総合recency」で判定する。片側(特にリモート)にadActionTsが無くても、日付が新しい方の
     //   対応内容を正しく採用し、古い空メモへ巻き戻らないようにする（通常は精密なTsが最大値になり従来と同一挙動）。
-    const _adR = (m) => Math.max((typeof m.adActionTs === 'number') ? m.adActionTs : 0,
-      _ycNormYmdToEpoch(_ycActionAtYmd(m.adActionAt)), _ycNormYmdToEpoch(_ycNoteStampYmd(m.adNote)));
-    const _laR = _adR(L), _raR = _adR(R);
+    // 【v1.0386】値マージ(mergeMapByPmRecency)と同じ _pmFieldRecency で判定 → 料率/入札価格の値と対応メモが必ず同じ側を採用（デシンク防止）。
+    const _laR = _pmFieldRecency(L, 'ad'), _raR = _pmFieldRecency(R, 'ad');
     if (_laR !== _raR) w.adNote = (_laR > _raR) ? L.adNote : R.adNote;
-    const _prR = (m) => Math.max((typeof m.proActionTs === 'number') ? m.proActionTs : 0,
-      _ycNormYmdToEpoch(_ycActionAtYmd(m.proActionAt)), _ycNormYmdToEpoch(_ycNoteStampYmd(m.proNote)));
-    const _lpR = _prR(L), _rpR = _prR(R);
+    const _lpR = _pmFieldRecency(L, 'pro'), _rpR = _pmFieldRecency(R, 'pro');
     if (_lpR !== _rpR) w.proNote = (_lpR > _rpR) ? L.proNote : R.proNote;
     // 【v1.0349】対応済みフラグ(adDone/proDone)は「doneTsが新しい側」を採用（対応=ON / 値変更取込=OFF のうち新しい方）。
     const _laDn = (typeof L.adDoneTs === 'number') ? L.adDoneTs : 0;
@@ -4099,14 +4110,14 @@ function mergeProductMetaForSave(localPM, remotePM) {
 //   ・bid は code、proRate は 小文字code をキーに持ち、値変更時に同キーの productMeta._ts が更新される
 //     （markTuneAction）ため、その recency を「そのキーの入札価格/料率の新しさ」として使える。
 //   ・削除(キー消し)も尊重: localにキーが無くても、remoteが新しくなければ復活させない（＝新しい削除を守る）。
-function mergeMapByPmRecency(localMap, remoteMap, localPM, remotePM) {
+function mergeMapByPmRecency(localMap, remoteMap, localPM, remotePM, kind) {
   localMap = localMap || {}; remoteMap = remoteMap || {};
   localPM = localPM || {}; remotePM = remotePM || {};
   const out = {};
   Object.keys(localMap).forEach(k => { out[k] = localMap[k]; });
   Object.keys(remoteMap).forEach(k => {
-    const lr = pmEntryRecency(localPM[k]);
-    const rr = pmEntryRecency(remotePM[k]);
+    const lr = _pmFieldRecency(localPM[k], kind);   // 【v1.0386】フィールド別recencyで判定（bid=ad系/proRate=pro系）
+    const rr = _pmFieldRecency(remotePM[k], kind);
     if (!(k in localMap)) {
       // localに無い（未編集 or 削除済み）。remoteが新しい時だけ採用。古いなら local(＝削除)を尊重。
       if (rr > lr) out[k] = remoteMap[k];
@@ -4217,8 +4228,8 @@ async function ghSaveToGitHub(options = {}) {
       const _localPM  = o.productMeta || {};
       const _remotePM = remoteObj.productMeta || {};
       o.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
-      o.bid     = mergeMapByPmRecency(o.bid,     remoteObj.bid,     _localPM, _remotePM);
-      o.proRate = mergeMapByPmRecency(o.proRate, remoteObj.proRate, _localPM, _remotePM);
+      o.bid     = mergeMapByPmRecency(o.bid,     remoteObj.bid,     _localPM, _remotePM, 'ad');
+      o.proRate = mergeMapByPmRecency(o.proRate, remoteObj.proRate, _localPM, _remotePM, 'pro');
       try {
         const _pt = (s) => { try { return (s && s.savedAt) ? (Date.parse(s.savedAt) || 0) : 0; } catch (e) { return 0; } };
         const _rSnap = remoteObj.productsCsvSnapshot;
@@ -4288,8 +4299,8 @@ async function ghSaveToGitHub(options = {}) {
             const _beforeN = Object.keys(_localPM).length;
             dataObj.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
             // 【v286】bid / proRate も同じ recency（同キーのproductMeta._ts等）でマージ
-            dataObj.bid     = mergeMapByPmRecency(dataObj.bid,     _remote.bid,     _localPM, _remotePM);
-            dataObj.proRate = mergeMapByPmRecency(dataObj.proRate, _remote.proRate, _localPM, _remotePM);
+            dataObj.bid     = mergeMapByPmRecency(dataObj.bid,     _remote.bid,     _localPM, _remotePM, 'ad');
+            dataObj.proRate = mergeMapByPmRecency(dataObj.proRate, _remote.proRate, _localPM, _remotePM, 'pro');
             // 【v1.0319】productsCsvSnapshot も「新しい方(savedAt)」を残す。
             //   古い(=248時代の)スナップショットを持ったまま生きている別セッション/タブが、
             //   保存のたびに GitHub のスナップショットを古い状態へ巻き戻し、「順位取得CSV(GitHub反映)」ボタンが
@@ -4419,8 +4430,8 @@ async function ghLoadFromGitHub() {
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
     // 【v287】bid / proRate は「新しい方」を残してマージ（古い上書きで自分の変更が消えるのを防ぐ）
-    state.bid     = (data.bid)     ? mergeMapByPmRecency(_localBid, data.bid,     _localPM, _remotePM) : _localBid;
-    state.proRate = (data.proRate) ? mergeMapByPmRecency(_localPro, data.proRate, _localPM, _remotePM) : _localPro;
+    state.bid     = (data.bid)     ? mergeMapByPmRecency(_localBid, data.bid,     _localPM, _remotePM, 'ad') : _localBid;
+    state.proRate = (data.proRate) ? mergeMapByPmRecency(_localPro, data.proRate, _localPM, _remotePM, 'pro') : _localPro;
     if (data.master) state.master = data.master;
     if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
