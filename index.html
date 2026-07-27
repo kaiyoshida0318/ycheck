@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0391 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0392 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1020,6 +1020,12 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   line-height: 1.4;
 }
 .filter-label { font-size: 0.8rem; color: var(--text3); font-weight: 500; }
+/* 【v1.0392】商品-月別データ：表示範囲・検索まわりの文字を少し大きく＋濃く（この画面のみ） */
+#view-monthly .filter-label { font-size: 0.95rem; color: var(--text2); font-weight: 600; }
+#view-monthly .filters input, #view-monthly .filters select { font-size: 0.95rem; color: var(--text); }
+#view-monthly #monthlySearch::placeholder { color: var(--text2); }
+#view-monthly .mi-mode-btn { font-size: 0.9rem; padding: 5px 12px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 600; }
+#view-monthly .mi-mode-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* Table */
 .table-wrap {
@@ -2608,7 +2614,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0391</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0392</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2770,12 +2776,17 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <div class="card">
         <h3 class="card-title">商品-月別データ</h3>
         <div class="filters" style="flex-wrap:wrap;gap:8px 10px;align-items:center">
+          <span class="filter-label">表示</span>
+          <span id="miModeSeg" role="group" aria-label="表示モード" style="display:inline-flex;gap:4px">
+            <button type="button" class="mi-mode-btn on" data-mode="recent" onclick="_miSetMode('recent')" title="最新月から12ヶ月ずつ表示">直近12ヶ月</button>
+            <button type="button" class="mi-mode-btn" data-mode="year" onclick="_miSetMode('year')" title="暦年（1〜12月）ごとに表示">年度（1〜12月）</button>
+          </span>
           <span class="filter-label" id="miRangeLabel" style="display:none">表示範囲</span>
-          <select id="miRangeSel" onchange="_miSetRange(this.value)" style="display:none;font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <select id="miRangeSel" onchange="_miSetRange(this.value)" style="display:none;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
         </div>
-        <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。最大12ヶ月を表示し、それ以前は「表示範囲」で切り替えます。</p>
+        <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。「表示」で<b>直近12ヶ月</b>（最新月から）か<b>年度（1〜12月）</b>を切り替え、それ以外の期間は「表示範囲」で選びます。</p>
         <div id="mi-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
@@ -6297,7 +6308,9 @@ let monthlySortKey = 'rev', monthlySortDir = -1;
 let monthlyAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み
 // 【v1.0360】月選択機能は廃止（利用可能な全月を自動表示）。
 let _miRangePage = 0; // 【v1.0364】12ヶ月ページの現在位置（0=直近）
+let _miRangeMode = 'recent'; // 【v1.0392】'recent'=直近12ヶ月ずつ / 'year'=暦年(1〜12月)ごと
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
+function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 const MI_COLS = [
   { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' }, // ブルー（Ycheck 総売上）
   { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y' }, // グリーン（Ycheck SEO売上）
@@ -6313,24 +6326,35 @@ function renderMonthly() {
   const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice(); // 'YYYY-MM' 昇順
   const ymsAll = months.slice().reverse(); // 新しい順（全月）
   if (ymsAll.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
-  // 【v1.0364】12ヶ月ごとに区切って表示。それ以前は「表示範囲」ドロップダウンで切替。
+  // 【v1.0364/v1.0392】表示範囲：'recent'=直近12ヶ月ずつ／'year'=暦年(1〜12月)ごと。それ以前は「表示範囲」ドロップダウンで切替。
   const WINDOW = 12;
-  const pageCount = Math.ceil(ymsAll.length / WINDOW);
-  if (_miRangePage < 0 || _miRangePage >= pageCount) _miRangePage = 0;
-  const selYms = ymsAll.slice(_miRangePage * WINDOW, _miRangePage * WINDOW + WINDOW);
+  let selYms, pageCount, _buildOpts;
+  if (_miRangeMode === 'year') {
+    // 暦年（1〜12月）ごとに区切る。年は新しい順。
+    const years = []; const _seenY = new Set();
+    ymsAll.forEach(ym => { const y = ym.slice(0, 4); if (!_seenY.has(y)) { _seenY.add(y); years.push(y); } });
+    pageCount = years.length;
+    if (_miRangePage < 0 || _miRangePage >= pageCount) _miRangePage = 0;
+    const _selYear = years[_miRangePage];
+    selYms = ymsAll.filter(ym => ym.slice(0, 4) === _selYear); // その年の月（新しい順）
+    _buildOpts = () => years.map((y, p) => '<option value="' + p + '"' + (p === _miRangePage ? ' selected' : '') + '>' + y + '年' + (p === 0 ? '（最新）' : '') + '</option>').join('');
+  } else {
+    // 直近12ヶ月ずつ（当月＝最新月から）
+    pageCount = Math.ceil(ymsAll.length / WINDOW);
+    if (_miRangePage < 0 || _miRangePage >= pageCount) _miRangePage = 0;
+    selYms = ymsAll.slice(_miRangePage * WINDOW, _miRangePage * WINDOW + WINDOW);
+    _buildOpts = () => { let o = ''; for (let p = 0; p < pageCount; p++) { const ch = ymsAll.slice(p * WINDOW, p * WINDOW + WINDOW); const lab = ch[ch.length - 1].replace('-', '/') + '〜' + ch[0].replace('-', '/') + (p === 0 ? '（直近）' : ''); o += '<option value="' + p + '"' + (p === _miRangePage ? ' selected' : '') + '>' + lab + '</option>'; } return o; };
+  }
+  // モード切替ボタンの選択状態
+  const _seg = document.getElementById('miModeSeg');
+  if (_seg) _seg.querySelectorAll('.mi-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === _miRangeMode));
   const _rangeSel = document.getElementById('miRangeSel');
   const _rangeLbl = document.getElementById('miRangeLabel');
   if (_rangeSel && _rangeLbl) {
     if (pageCount <= 1) { _rangeSel.style.display = 'none'; _rangeLbl.style.display = 'none'; }
     else {
       _rangeSel.style.display = ''; _rangeLbl.style.display = '';
-      let _opts = '';
-      for (let p = 0; p < pageCount; p++) {
-        const ch = ymsAll.slice(p * WINDOW, p * WINDOW + WINDOW);
-        const lab = ch[ch.length - 1].replace('-', '/') + '〜' + ch[0].replace('-', '/') + (p === 0 ? '（直近）' : '');
-        _opts += '<option value="' + p + '"' + (p === _miRangePage ? ' selected' : '') + '>' + lab + '</option>';
-      }
-      _rangeSel.innerHTML = _opts;
+      _rangeSel.innerHTML = _buildOpts();
     }
   }
 
