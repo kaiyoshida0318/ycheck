@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0394 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0395 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2614,7 +2614,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0394</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0395</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9630,11 +9630,15 @@ document.addEventListener('blur', (e) => {
   }
 
   e.target.textContent = newValue;
-  if (kind === 'ad') meta.adNote = newValue;
-  else meta.proNote = newValue;
-  // 【v249】対応内容欄の更新は「対応済み」として日時記録
-  markTuneAction(code, (kind === 'ad') ? 'ad' : 'pro');
-  saveToStorage();
+  // 【v1.0395】実際に内容が変わったときだけ保存＝「反映する（未反映）」を出す。
+  //   メモ欄にフォーカスして無編集で離脱（例: 検索欄をクリック）した場合は変更なし＝未反映にしない。
+  if (newValue !== originalValue) {
+    if (kind === 'ad') meta.adNote = newValue;
+    else meta.proNote = newValue;
+    // 【v249】対応内容欄の更新は「対応済み」として日時記録
+    markTuneAction(code, (kind === 'ad') ? 'ad' : 'pro');
+    saveToStorage();
+  }
   // 【v276】対応内容を書いても、その場では修正あり等から外さない（凍結）。次の更新/ビュー移動で反映。
 }, true);
 
