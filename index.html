@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0398 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0399 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2614,7 +2614,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0398</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0399</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3013,7 +3013,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
           <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
-          <button class="btn sm ghost" id="btnRepairAdTune" style="border-color:#b45309;color:#b45309;" title="対応メモに記録した『変更後の入札価格』と、現在の入札価格が食い違う商品を、メモの値に直します（例: メモは16なのに値が18に巻き戻っている時、16へ修正）。実行後は「反映する」でGitHubにも保存されます。">🔧 メモに合わせて修正</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdTune">
@@ -3051,7 +3050,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
-          <button class="btn sm ghost" id="btnRepairProTune" style="border-color:#b45309;color:#b45309;" title="対応メモに記録した『変更後のPRオプ料率』と、現在のPRオプ料率が食い違う商品を、メモの値に直します（例: メモは16なのに値が18に巻き戻っている時、16へ修正）。実行後は「反映する」でGitHubにも保存されます。">🔧 メモに合わせて修正</button>
         </div>
         <div class="table-wrap">
           <table id="tableProTune">
@@ -8595,7 +8593,6 @@ function renderAll() {
   if (typeof installSortButtons === 'function') {
     try { installSortButtons(); } catch (e) { /* 初期化前は無視 */ }
   }
-  try { if (typeof _updateRepairButtons === 'function') _updateRepairButtons(); } catch (e) {}   // 【v1.0389】メモ修正ボタンの件数/活性を更新
 }
 
 // ==================== Sort Reset ====================
@@ -9206,110 +9203,6 @@ function _memoNewVal(note, kind) {
   const n = parseInt(last[2], 10);
   return isNaN(n) ? null : n;
 }
-// 【v1.0388】文字選択・コピーできる確認ダイアログ（native confirm/alert は選択コピー不可）。本文は textarea に入れて選択＆📋コピー可能に。
-function _ycConfirmCopyable(title, body, note, onOk) {
-  const btnBase = 'font-size:14px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;border:1px solid ';
-  const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;padding:20px';
-  const box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:12px;max-width:660px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,0.3);overflow:hidden';
-  const head = document.createElement('div');
-  head.style.cssText = 'padding:14px 18px;font-weight:700;font-size:1.05rem;border-bottom:1px solid #e5e7eb;color:#1a1a1a';
-  head.textContent = title || '';
-  const ta = document.createElement('textarea');
-  ta.readOnly = true; ta.value = body || '';
-  ta.style.cssText = 'margin:14px 18px 6px;flex:1;min-height:200px;resize:vertical;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.6;padding:10px 12px;border:1px solid #d4d7de;border-radius:8px;white-space:pre;overflow:auto;color:#1a1a1a;background:#fbfbfd';
-  const noteEl = document.createElement('div');
-  noteEl.style.cssText = 'padding:2px 18px 8px;font-size:12px;color:#667';
-  noteEl.textContent = note || '';
-  const foot = document.createElement('div');
-  foot.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:12px 18px;border-top:1px solid #e5e7eb;flex-wrap:wrap';
-  const copyBtn = document.createElement('button'); copyBtn.type = 'button'; copyBtn.textContent = '📋 コピー';
-  copyBtn.style.cssText = btnBase + '#cbd5e1;background:#f1f5f9;color:#334155;margin-right:auto';
-  const cancelBtn = document.createElement('button'); cancelBtn.type = 'button'; cancelBtn.textContent = 'キャンセル';
-  cancelBtn.style.cssText = btnBase + '#d4d7de;background:#fff;color:#333';
-  const okBtn = document.createElement('button'); okBtn.type = 'button'; okBtn.textContent = '実行する';
-  okBtn.style.cssText = btnBase + '#2563eb;background:#2563eb;color:#fff';
-  const close = function () { try { document.body.removeChild(ov); } catch (e) {} document.removeEventListener('keydown', onKey); };
-  const onKey = function (e) { if (e.key === 'Escape') close(); };
-  copyBtn.addEventListener('click', function () {
-    try { ta.focus(); ta.select(); } catch (e) {}
-    let ok = false;
-    try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(ta.value); ok = true; } } catch (e) {}
-    if (!ok) { try { ok = document.execCommand('copy'); } catch (e) {} }
-    const _t = copyBtn.textContent; copyBtn.textContent = ok ? '✓ コピーしました' : '本文を選択して Ctrl/⌘+C'; setTimeout(function () { copyBtn.textContent = _t; }, 1600);
-  });
-  cancelBtn.addEventListener('click', close);
-  okBtn.addEventListener('click', function () { close(); try { onOk && onOk(); } catch (e) { console.error(e); } });
-  ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
-  document.addEventListener('keydown', onKey);
-  foot.appendChild(copyBtn); foot.appendChild(cancelBtn); foot.appendChild(okBtn);
-  box.appendChild(head); box.appendChild(ta); box.appendChild(noteEl); box.appendChild(foot);
-  ov.appendChild(box); document.body.appendChild(ov);
-  setTimeout(function () { try { ta.focus(); } catch (e) {} }, 30);
-}
-// 【v1.0389】メモの記録値と現在の入札価格/PRオプ料率が食い違う商品を抽出（修正候補）。
-function _getMemoMismatches(kind) {
-  const field = kind === 'bid' ? 'adNote' : 'proNote';
-  const map = kind === 'bid' ? (state.bid || {}) : (state.proRate || {});
-  const fixes = [];
-  Object.keys(state.productMeta || {}).forEach(function (code) {
-    const pm = state.productMeta[code]; if (!pm) return;
-    if (typeof isRetired === 'function' && isRetired(code)) return;
-    const memoNew = _memoNewVal(pm[field], kind);
-    if (memoNew == null) return;
-    const lc = String(code).toLowerCase();
-    const cur = map[lc];
-    if (cur == null) return;
-    if (Number(cur) !== Number(memoNew)) fixes.push({ code: code, lc: lc, cur: Number(cur), memoNew: memoNew });
-  });
-  return fixes;
-}
-// 【v1.0389】メモ修正ボタンの件数表示＋活性/非活性（0件ならグレーで押せない）。
-function _updateRepairButtons() {
-  [['#btnRepairAdTune', 'bid'], ['#btnRepairProTune', 'pro']].forEach(function (pair) {
-    const btn = document.querySelector(pair[0]); if (!btn) return;
-    const n = _getMemoMismatches(pair[1]).length;
-    const base = '🔧 メモに合わせて修正';
-    if (n > 0) {
-      btn.textContent = base + '（' + n + '）';
-      btn.disabled = false;
-      btn.style.opacity = '';
-      btn.style.cursor = 'pointer';
-      btn.title = 'メモの記録値と現在値が食い違う ' + n + ' 件を、メモの値へ直します。';
-    } else {
-      btn.textContent = base;
-      btn.disabled = true;
-      btn.style.opacity = '0.4';
-      btn.style.cursor = 'not-allowed';
-      btn.title = 'メモの記録値と現在値の食い違いはありません。';
-    }
-  });
-}
-function repairValueFromMemo(kind) {
-  const field = kind === 'bid' ? 'adNote' : 'proNote';
-  const label = kind === 'bid' ? '入札価格' : 'PRオプ料率';
-  const rkField = kind === 'bid' ? 'bid' : 'proRate';
-  const tsField = kind === 'bid' ? 'adActionTs' : 'proActionTs';
-  const map = kind === 'bid' ? (state.bid = state.bid || {}) : (state.proRate = state.proRate || {});
-  const fixes = _getMemoMismatches(kind);
-  if (!fixes.length) { alert(label + '：対応メモの記録と現在値が食い違う商品は見つかりませんでした。'); return; }
-  const _listText = fixes.map(f => '・' + f.code + '：' + f.cur + ' → ' + f.memoNew).join('\n');
-  const _body = label + 'が「対応メモの記録（変更後の値）」と一致しない商品が ' + fixes.length + ' 件 あります。\n各商品の' + label + 'を、メモに記録された値へ直します：\n\n' + _listText;
-  // 【v1.0388】確認画面を「文字選択・コピー可能」な独自ダイアログに（native confirm は選択コピー不可のため）。
-  _ycConfirmCopyable('メモに合わせて修正（' + label + '）', _body, '「実行する」で修正後、内容を確認して「⬆ 反映する」でGitHubにも保存されます。', function () {
-    const now = Date.now();
-    fixes.forEach(function (f) {
-      map[f.lc] = f.memoNew;
-      const pm = state.productMeta[f.code]; if (pm) pm[tsField] = now;
-      try { const t = getTodayYmAndIndex(); setRankEditValue(t.ym, f.lc, rkField, t.dayIndex, f.memoNew); } catch (e) {}
-    });
-    saveToStorage();
-    if (typeof renderAll === 'function') renderAll();
-    alert(label + ' ' + fixes.length + ' 件を対応メモの値に修正しました。\n「⬆ 反映する」を押すとGitHubにも保存されます。');
-  });
-}
-window.repairValueFromMemo = repairValueFromMemo;
 $('#btnDeleteAdNoteStamps').addEventListener('click', () => deleteNoteStamps('ad'));
 $('#btnDeleteProNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 $('#btnDeleteAdNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
@@ -9318,8 +9211,6 @@ $('#btnDeleteProNoteAll').addEventListener('click', () => deleteAllNotes('pro'))
 if ($('#btnDeleteAdTuneNoteStamps'))  $('#btnDeleteAdTuneNoteStamps').addEventListener('click', () => deleteNoteStamps('ad'));
 if ($('#btnDeleteProTuneNoteStamps')) $('#btnDeleteProTuneNoteStamps').addEventListener('click', () => deleteNoteStamps('pro'));
 if ($('#btnDeleteAdTuneNoteAll'))     $('#btnDeleteAdTuneNoteAll').addEventListener('click', () => deleteAllNotes('ad'));
-if ($('#btnRepairAdTune'))  $('#btnRepairAdTune').addEventListener('click', () => repairValueFromMemo('bid'));
-if ($('#btnRepairProTune')) $('#btnRepairProTune').addEventListener('click', () => repairValueFromMemo('pro'));
 if ($('#btnDeleteProTuneNoteAll'))    $('#btnDeleteProTuneNoteAll').addEventListener('click', () => deleteAllNotes('pro'));
 // 【v294】対応内容-全更新処理
 if ($('#btnUpdateAllAdTune'))  $('#btnUpdateAllAdTune').addEventListener('click', () => bulkMarkTuneDone('ad'));
