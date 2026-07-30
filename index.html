@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0396 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0397 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2614,7 +2614,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0396</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0397</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6958,12 +6958,11 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
-  // 【v1.0349】非F(推移確認/未確認): 「対応済みフラグ(adDone/proDone)」を読むだけにする（状態の単純化）。
-  //   ・フラグON → 全体のみ（対応済み維持）。
-  //   ・フラグOFF/未確認 → メモありは推移確認、それ以外は未確認。
-  //   フラグは対応でON、最新値取り込みで値が変わった商品だけOFF（案A）。時刻の突き合わせ計算を排除し巻き戻りに強くした。
-  if (_tuneIsDone(meta, kind)) return null;        // 対応済み → 全体のみ
-  if (noteHasChangeContent(note)) return 'watch';  // メモ(更新日時以外)あり=推移確認
+  // 【v1.0397】非F(推移確認/未確認): 「対応済み(adDone/proDone)ゲート」を撤廃し、対応内容メモの中身だけで振り分ける。
+  //   ・対応の有無に関わらず、数値変更で自動記入される「￥旧-新（日付）」等の変更表記あり → 推移確認。
+  //   ・空欄、または更新日時スタンプのみ → 未確認。
+  //   ※これは表示のグループ分け（読み取りのみ）で、保存値・メモ・同期には影響しない＝巻き戻りは起きない。
+  if (noteHasChangeContent(note)) return 'watch';  // 変更表記あり=推移確認
   return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
 }
 // 【v1.0349】「対応済み」判定。フラグ(adDone/proDone)があればそれを使う。
