@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0397 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0398 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2614,7 +2614,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0397</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0398</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4102,6 +4102,13 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const _lpDn = (typeof L.proDoneTs === 'number') ? L.proDoneTs : 0;
     const _rpDn = (typeof R.proDoneTs === 'number') ? R.proDoneTs : 0;
     if (_lpDn !== _rpDn) { const s = (_lpDn > _rpDn) ? L : R; w.proDone = s.proDone; w.proDoneTs = s.proDoneTs; }
+    // 【v1.0398】レビュー済みフラグ(adReviewed/proReviewed)も「Tsが新しい側」を採用（全更新処理=ON / 値再調整・取込変更=OFF）。
+    const _laRv = (typeof L.adReviewedTs === 'number') ? L.adReviewedTs : 0;
+    const _raRv = (typeof R.adReviewedTs === 'number') ? R.adReviewedTs : 0;
+    if (_laRv !== _raRv) { const s = (_laRv > _raRv) ? L : R; w.adReviewed = s.adReviewed; w.adReviewedTs = s.adReviewedTs; }
+    const _lpRv = (typeof L.proReviewedTs === 'number') ? L.proReviewedTs : 0;
+    const _rpRv = (typeof R.proReviewedTs === 'number') ? R.proReviewedTs : 0;
+    if (_lpRv !== _rpRv) { const s = (_lpRv > _rpRv) ? L : R; w.proReviewed = s.proReviewed; w.proReviewedTs = s.proReviewedTs; }
     // 【v1.0350】状態(adStatus/proStatus/status)を「状態専用Ts(adStatusTs/proStatusTs/statusTs)が新しい側」で保護。
     //   従来はwhole-entryの勝者からしか状態を引き継がず、_ts はメモ/値変更など状態以外の編集でも更新されるため、
     //   状態を変えていない古いセッション（別タブ/別PC）が後から保存すると、○に変えた proStatus が巻き戻る不具合があった（§6）。
@@ -5472,8 +5479,8 @@ async function commitUpload() {
   const _clearDone = (lowerCode, kind, ts) => {
     const pk = _pmKeyByLower[lowerCode];
     if (!pk || !state.productMeta[pk]) return;
-    if (kind === 'ad') { state.productMeta[pk].adDone = false; state.productMeta[pk].adDoneTs = ts; }
-    else { state.productMeta[pk].proDone = false; state.productMeta[pk].proDoneTs = ts; }
+    if (kind === 'ad') { state.productMeta[pk].adDone = false; state.productMeta[pk].adDoneTs = ts; state.productMeta[pk].adReviewed = false; state.productMeta[pk].adReviewedTs = ts; }
+    else { state.productMeta[pk].proDone = false; state.productMeta[pk].proDoneTs = ts; state.productMeta[pk].proReviewed = false; state.productMeta[pk].proReviewedTs = ts; }
     state.productMeta[pk]._ts = ts;
   };
   // 【v1.0363】「当日の手編集」を保護：今日 対応済み(Done)にした商品は、取り込み(CSV)値で上書きしない。
@@ -6939,6 +6946,16 @@ function markTuneAction(code, kind) {
   //   された時に初めて「全体」のみへ移る（v253の凍結挙動）。adActionAt はその再分類判定に使う。
 }
 
+// 【v1.0398】「対応内容-全更新処理」専用のレビュー済みフラグ。値を再調整(bid/proRate変更)すると解除して推移確認/未確認へ戻す。
+//   ※取込保護に使う adDone とは別物。分類(getTuneGroup)の推移確認/未確認ゲートにのみ使う。
+function _setTuneReviewed(code, kind, on) {
+  if (!code || !state.productMeta[code]) return;
+  const ts = Date.now();
+  if (kind === 'ad') { state.productMeta[code].adReviewed = !!on; state.productMeta[code].adReviewedTs = ts; }
+  else { state.productMeta[code].proReviewed = !!on; state.productMeta[code].proReviewedTs = ts; }
+  state.productMeta[code]._ts = ts;
+}
+
 // 【v249】商品が属する調整サブグループを返す（排他）。該当なし(=全体にのみ出る)は null。
 //   F = 修正条件に該当（isTuneFix: 〇なのに上位でない / ×なのに上位）。※案B: メモ有無は無関係、順位条件のみ。
 //   ・修正あり(fix)     : F。ただし「今日対応済み」なら null（全体のみ）＝翌日リセット。
@@ -6962,6 +6979,9 @@ function getTuneGroup(code, kind) {
   //   ・対応の有無に関わらず、数値変更で自動記入される「￥旧-新（日付）」等の変更表記あり → 推移確認。
   //   ・空欄、または更新日時スタンプのみ → 未確認。
   //   ※これは表示のグループ分け（読み取りのみ）で、保存値・メモ・同期には影響しない＝巻き戻りは起きない。
+  // 【v1.0398】「対応内容-全更新処理」でレビュー済みにした商品は全体のみ。値を再調整すると解除されて推移確認/未確認へ戻る。
+  const reviewed = (kind === 'ad') ? meta.adReviewed : meta.proReviewed;
+  if (reviewed) return null;
   if (noteHasChangeContent(note)) return 'watch';  // 変更表記あり=推移確認
   return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
 }
@@ -9165,7 +9185,8 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
     const note = (meta[field] || '').trim();
     if (note === '' || isAutoTimestamp(note)) meta[field] = stamp;  // 空欄/更新日時のみ→本日の更新日時
     // メモがある行は対応内容を変更しない
-    markTuneAction(code, kind);  // 当日「対応済み」＝この一覧から外れる
+    markTuneAction(code, kind);  // 当日「対応済み」＝修正あり等から外れる
+    _setTuneReviewed(code, kind, true);  // 【v1.0398】レビュー済み→推移確認/未確認から外して全体のみに
   });
   resetTuneMembers();  // 凍結解除→再分類で対応済みを一覧から外す
   saveToStorage();
@@ -9808,6 +9829,7 @@ function startBidEdit(cell) {
         if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
         state.productMeta[code].adNote = buildPriceChangeNote(state.productMeta[code].adNote, 'bid', oldBid, newBid);
         markTuneAction(code, 'ad');  // 【v249】入札価格の値変更＝対応済み
+        _setTuneReviewed(code, 'ad', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
       }
     }
     saveToStorage();
@@ -9913,6 +9935,7 @@ function startProRateEdit(cell) {
         if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
         state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldRate, newRate);
         markTuneAction(codeLower, 'pro');  // 【v249】PRオプ料率の値変更＝対応済み
+        _setTuneReviewed(codeLower, 'pro', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
         // 同じ行の対応内容(proNote)セルをピンポイント更新（renderAll回避でフォーカス維持）
         const row = cell.closest('tr');
         const noteCell = row ? row.querySelector('.note-cell[data-kind="pro"]') : null;
@@ -10067,9 +10090,11 @@ function startRankEditCell(cell) {
         if (isBid) {
           state.productMeta[codeLower].adNote = buildPriceChangeNote(state.productMeta[codeLower].adNote, 'bid', oldNum, newNum);
           markTuneAction(codeLower, 'ad');  // 【v249】
+          _setTuneReviewed(codeLower, 'ad', false);  // 【v1.0398】値を再調整→レビュー済み解除
         } else {
           state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldNum, newNum);
           markTuneAction(codeLower, 'pro');  // 【v249】
+          _setTuneReviewed(codeLower, 'pro', false);  // 【v1.0398】値を再調整→レビュー済み解除
         }
         saveToStorage();
       }
