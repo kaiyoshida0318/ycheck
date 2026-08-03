@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0399 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0400 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1026,6 +1026,9 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 #view-monthly #monthlySearch::placeholder { color: var(--text2); }
 #view-monthly .mi-mode-btn { font-size: 0.9rem; padding: 5px 12px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 600; }
 #view-monthly .mi-mode-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない） */
+.tune-period-btn { font-size: 0.88rem; padding: 6px 12px; border: 1px solid var(--border2); border-radius: 7px; background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 600; white-space: nowrap; }
+.tune-period-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* Table */
 .table-wrap {
@@ -2614,7 +2617,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0399</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0400</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3013,6 +3016,13 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
           <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月">今月含む</button>
+            </span>
+          </span>
         </div>
         <div class="table-wrap">
           <table id="tableAdTune">
@@ -3050,6 +3060,13 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月">今月含む</button>
+            </span>
+          </span>
         </div>
         <div class="table-wrap">
           <table id="tableProTune">
@@ -6796,6 +6813,26 @@ function last4MonthsInclCurrent() {
   const completed = months.filter(m => m < curYM).slice(-3);
   return [...completed, curYM];
 }
+// 【v1.0400】調整ビュー用：当月を含む直近3ヶ月（例 6・7・8月）。当月にデータが無くても列は出す。
+function last3MonthsInclCurrent() {
+  const months = getImportedDataMonths();
+  const now = new Date();
+  const curYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const completed = months.filter(m => m < curYM).slice(-2);  // 直近2ヶ月（完了）
+  return [...completed, curYM];                               // ＋当月＝3ヶ月
+}
+// 【v1.0400】入札価格調整/PRオプ調整の「表示時期」トグル。false=今月含まない(例5-7月) / true=今月含む(例6-8月)。
+let _tunePeriodInclCurrent = false;
+function _setTunePeriod(incl) {
+  _tunePeriodInclCurrent = !!incl;
+  if (state.currentView === 'ad-tune') renderAdTune();
+  else if (state.currentView === 'pro-tune') renderProTune();
+}
+function _syncTunePeriodSegs() {
+  document.querySelectorAll('.tune-period-btn').forEach(b => {
+    b.classList.toggle('on', (b.dataset.inclcur === '1') === _tunePeriodInclCurrent);
+  });
+}
 
 // ==================== 【v239】調整（3グループ絞り込み）ヘルパー ====================
 // tuneGroup: 現在選択中のサブグループ。'fix'=修正あり / 'watch'=推移確認 / 'unchecked'=未確認。
@@ -7054,8 +7091,8 @@ function renderAdAdjust(cfg) {
   const groupFilter = cfg.groupFilter || null;
   const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
   const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "ad-adjust");  // 【v256】状態チップ絞り込み中も当月除外
-  // 【v278】cfg.inclCurrent（調整ビュー）は 完了3ヶ月＋当月＝4ヶ月。全体は従来どおり3ヶ月。
-  const months = cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
+  // 【v278/v1.0400】cfg.incl3Current=当月含む直近3ヶ月 / cfg.inclCurrent=完了3ヶ月＋当月(4ヶ月) / それ以外=完了直近3ヶ月。
+  const months = cfg.incl3Current ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
   // 動的に見出しを更新（月数ぶんループ。当月列も対応）
   for (let i = 0; i < months.length; i++) {
     const _rev = $('#'+hPrefix+'AdRev'+i); if (_rev) _rev.innerHTML = `実績額<br>${months[i] || ''}`;
@@ -7198,9 +7235,11 @@ function renderAdAdjust(cfg) {
 // 【v239】入札価格調整（tune）: 入札価格全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderAdTune() {
   ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
+  _syncTunePeriodSegs();    // 【v1.0400】表示時期トグルの選択状態を反映
   renderAdAdjust({
     tableSel: '#tableAdTune',
     completedOnly: true,   // 【v280】満了(完了)済みの直近3ヶ月表示に戻す（v278の当月列を廃止）
+    incl3Current: _tunePeriodInclCurrent,   // 【v1.0400】今月含むトグルON→当月含む直近3ヶ月
     searchSel: '#adTuneSearch',
     cntSel: null,
     hPrefix: 'hAdTune',
@@ -7224,8 +7263,8 @@ function renderProAdjust(cfg) {
   const groupFilter = cfg.groupFilter || null;
   const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
   const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "pro-adjust");  // 【v256】状態チップ絞り込み中も当月除外
-  // 【v278】cfg.inclCurrent（調整ビュー）は 完了3ヶ月＋当月＝4ヶ月。全体は従来どおり3ヶ月。
-  const months = cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
+  // 【v278/v1.0400】cfg.incl3Current=当月含む直近3ヶ月 / cfg.inclCurrent=完了3ヶ月＋当月(4ヶ月) / それ以外=完了直近3ヶ月。
+  const months = cfg.incl3Current ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
   for (let i = 0; i < months.length; i++) {
     const _s = $('#'+hPrefix+'Seo'+i); if (_s) _s.innerHTML = `SEO売上<br>${months[i] || ''}`;
   }
@@ -7350,9 +7389,11 @@ function renderProAdjust(cfg) {
 // 【v239】PRオプ調整（tune）: PRオプ全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderProTune() {
   ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
+  _syncTunePeriodSegs();     // 【v1.0400】表示時期トグルの選択状態を反映
   renderProAdjust({
     tableSel: '#tableProTune',
     completedOnly: true,   // 【v280】満了(完了)済みの直近3ヶ月表示に戻す（v278の当月列を廃止）
+    incl3Current: _tunePeriodInclCurrent,   // 【v1.0400】今月含むトグルON→当月含む直近3ヶ月
     searchSel: '#proTuneSearch',
     cntSel: null,
     hPrefix: 'hProTune',
