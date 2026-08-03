@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0410 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0411 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2637,7 +2637,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0410</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0411</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2800,12 +2800,12 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         <div class="filters" style="flex-wrap:wrap;gap:8px 10px;align-items:center">
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
           <span class="filter-label">表示</span>
           <span id="miModeSeg" role="group" aria-label="表示モード" style="display:inline-flex;gap:4px">
             <button type="button" class="mi-mode-btn on" data-mode="recent" onclick="_miSetMode('recent')" title="最新月から12ヶ月ずつ表示">直近12ヶ月</button>
             <button type="button" class="mi-mode-btn" data-mode="year" onclick="_miSetMode('year')" title="暦年（1〜12月）ごとに表示">年度（1〜12月）</button>
           </span>
-          <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
           <span class="filter-label" id="miRangeLabel" style="display:none">表示範囲</span>
           <select id="miRangeSel" onchange="_miSetRange(this.value)" style="display:none;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
         </div>
