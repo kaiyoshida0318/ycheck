@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0408 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0410 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2637,7 +2637,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0408</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0410</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2823,6 +2823,12 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <input type="search" id="igSearch" placeholder="商品コード・商品名で検索して選択..." autocomplete="off" data-lpignore="true" data-1p-ignore oninput="_igSuggest(this.value)" onfocus="_igSuggest(this.value)" onblur="setTimeout(function(){var b=document.getElementById('igSuggest');if(b)b.style.display='none';},200)" style="width:260px">
           <div id="igSuggest" style="display:none;position:absolute;top:40px;left:60px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.18);max-height:340px;overflow:auto;min-width:360px"></div>
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
+          <!-- 【v1.0409】期間プリセットを指標の左へ移動 -->
+          <span class="ig-presets" role="group" aria-label="期間プリセット">
+            <button type="button" class="ig-preset-btn" data-igp="jan" onclick="_igPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
+            <button type="button" class="ig-preset-btn" data-igp="may" onclick="_igPreset('may')" title="今年の5月から当月まで">5月始まり</button>
+            <button type="button" class="ig-preset-btn" data-igp="y2" onclick="_igPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
+          </span>
           <span class="filter-label">指標</span>
           <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
             <option value="sales">売上(総売上/SEO/広告/送り込み)</option>
@@ -2836,12 +2842,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
           <span style="color:var(--text3)">〜</span>
           <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
-          <!-- 【v1.0377】期間プリセット（ADcheck準拠）: 1月始まり/5月始まり/2年横並び -->
-          <span class="ig-presets" role="group" aria-label="期間プリセット">
-            <button type="button" class="ig-preset-btn" data-igp="jan" onclick="_igPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
-            <button type="button" class="ig-preset-btn" data-igp="may" onclick="_igPreset('may')" title="今年の5月から当月まで">5月始まり</button>
-            <button type="button" class="ig-preset-btn" data-igp="y2" onclick="_igPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
-          </span>
         </div>
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
@@ -2888,15 +2888,16 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <option value="orders">広告個数</option>
             <option value="avgPrice">平均単価</option>
           </select>
-          <span class="filter-label">期間</span>
-          <select id="zgMonthFrom" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
-          <span style="color:var(--text3)">〜</span>
-          <select id="zgMonthTo" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <!-- 【v1.0409】期間プリセットを期間の左へ移動 -->
           <span class="ig-presets" role="group" aria-label="期間プリセット">
             <button type="button" class="ig-preset-btn" data-zgp="jan" onclick="_zgPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
             <button type="button" class="ig-preset-btn" data-zgp="may" onclick="_zgPreset('may')" title="今年の5月から当月まで">5月始まり</button>
             <button type="button" class="ig-preset-btn" data-zgp="y2" onclick="_zgPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
           </span>
+          <span class="filter-label">期間</span>
+          <select id="zgMonthFrom" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <span style="color:var(--text3)">〜</span>
+          <select id="zgMonthTo" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
         </div>
         <div id="zgSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="zgChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="zgCanvas"></canvas></div>
@@ -6421,15 +6422,18 @@ function renderMonthly() {
   const _pm = state.productMeta || {};
   const repKeyOf = (code) => { const r = String((_pm[code] || {}).repCode || '').trim(); return r || code; };
   const _statForFamily = (members, ym) => {
-    let rev = 0, spend = 0, adSales = 0, cl = 0, or = 0;
+    let rev = 0, spend = 0, adSales = 0, cl = 0, or = 0, soikomi = 0;
     members.forEach(code => {
       const it = itemMap[code + '|' + ym]; if (it) rev += it.rev || 0;
+      // 【v1.0410】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
+      const _rep = String((_pm[code] || {}).repCode || '').trim();
+      if (_rep && _rep !== code && it) soikomi += it.rev || 0;
       const ad = adMap[code + '|' + ym]; if (ad) { spend += ad.adCost || 0; adSales += ad.adRev || 0; cl += ad.cl || 0; or += ad.or || 0; }
     });
     const totSales = rev, seoSales = Math.max(0, totSales - adSales);
     const roas = spend > 0 ? Math.round(adSales / spend * 1000) / 10 : 0;
     const cvr  = cl > 0 ? Math.round(or / cl * 1000) / 10 : 0;
-    return { label: ym.replace('-', '/'), totSales, seoSales, adSales, spend, cvr, roas };
+    return { label: ym.replace('-', '/'), totSales, seoSales, adSales, spend, cvr, roas, soikomi };
   };
 
   // 全コード → 家族(代表コード)ごとにメンバーをまとめる（撤退は除外）
@@ -6505,10 +6509,12 @@ function renderMonthly() {
   const MW = 128;   // 月列の幅(px)
   const HEAD = '<th style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>'
     + '<th style="width:' + MW + 'px;padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;color:var(--text3);background:var(--bg3)">月</th>'
-    + MI_COLS.map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('');
+    + MI_COLS.map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('')
+    + '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);border-left:2px solid #c4b5fd;white-space:nowrap;font-size:0.82rem;font-weight:700;color:#7c3aed;background:#ece0fb">送り込み売上</th>';
 
   const body = shown.map(({ code, dispCode, name, memberCount, stats }) => {
     const pool = {}; MI_COLS.forEach(c => { pool[c.key] = stats.map(s => s[c.key]).filter(v => v > 0); });
+    const soiPool = stats.map(s => s.soikomi).filter(v => v > 0);   // 【v1.0410】送り込み売上の色分け母集団
     const _esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     const safeFull = _esc(String(name));
     const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(dispCode) : '';
@@ -6528,7 +6534,11 @@ function renderMonthly() {
         const inner = (!v || v === 0) ? disp : '<span class="c-' + _rank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
         return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;' + bT + ';' + bB + ';background:' + c.bg + ';white-space:nowrap">' + inner + '</td>';
       }).join('');
-      return '<tr>' + prod + '<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);' + bT + ';' + bB + ';background:var(--bg3);font-family:\'DM Mono\',ui-monospace,monospace;white-space:nowrap">' + m.label + '</td>' + cells + '</tr>';
+      // 【v1.0410】右端: 送り込み売上（子商品分）
+      const _sv = m.soikomi;
+      const _sinner = (!_sv || _sv === 0) ? fmtY(_sv) : '<span class="c-' + _rank5(_sv, soiPool, true) + '">' + fmtY(_sv) + '</span>';
+      const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;' + bT + ';' + bB + ';background:#f7f1fe;border-left:2px solid #c4b5fd;white-space:nowrap">' + _sinner + '</td>';
+      return '<tr>' + prod + '<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);' + bT + ';' + bB + ';background:var(--bg3);font-family:\'DM Mono\',ui-monospace,monospace;white-space:nowrap">' + m.label + '</td>' + cells + soiCell + '</tr>';
     }).join('');
   }).join('');
 
