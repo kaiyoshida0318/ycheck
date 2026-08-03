@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0411 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0412 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -428,6 +428,16 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .state-chip[data-state="new-product"].active {
   background: var(--accent);
   border-color: #1e4fbf;
+}
+/* 【v186】通常商品（緑） */
+.state-chip[data-state="status-normal"] {
+  background: #dcfce7;
+  border-color: #a7e8bf;
+}
+.state-chip[data-state="status-normal"]:hover,
+.state-chip[data-state="status-normal"].active {
+  background: #16a34a;
+  border-color: #15803d;
 }
 
 /* 全体の説明ボタン（クリック不可のアイコン風） */
@@ -2604,6 +2614,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .nav-group-label.g-shutoku { color:#0891b2; }  /* 【取得データ】 */
 .nav-group-label.g-chosei  { color:#16a34a; }  /* 【調整】 */
 .nav-group-label.g-jotai   { color:#9333ea; }  /* 【状態】 */
+.nav-group-label.g-status  { color:#0d9488; }  /* 【ステータス】 */
 /* 【v1.0322】広告あり/無し 絞り込み（商品-基本/月別データ）。検索欄の隣のセグメントボタン */
 .ad-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:6px; vertical-align:middle; }
 .ad-filter .adf-btn { font-size:0.8rem; padding:5px 11px; border:none; border-left:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; font-weight:500; white-space:nowrap; line-height:1.3; }
@@ -2637,7 +2648,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0411</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0412</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2698,18 +2709,23 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
   <div class="nav-group">
     <span class="nav-group-label g-jotai">【状態】</span>
     <!-- 【v162】「💡 全体の説明」はヘッダーへ移動済み。ここからは削除。 -->
-    <!-- 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札なし に改称。【v212】入札価格△・PRオプ△は廃止（既存の△は✕へ移行） -->
+    <!-- 【v186】入札◯/入札×/入札なし、PR◯/PR× に改称。新商品・撤退系は【ステータス】ブロックへ移動 -->
     <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></button>
-    <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
-    <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札価格○</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-    <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札価格✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+    <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×</span><span class="chip-num" id="cntAdNg">(0)</span></button>
     <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
-    <button class="state-chip" data-state="pro-ok"><span class="chip-label">PRオプ○</span><span class="chip-num" id="cntProOk">(0)</span></button>
-    <button class="state-chip" data-state="pro-ng"><span class="chip-label">PRオプ×</span><span class="chip-num" id="cntProNg">(0)</span></button>
-    <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
-    <button class="state-chip" data-state="pro-w"><span class="chip-label">撤退■</span><span class="chip-num" id="cntProWithdraw">(0)</span></button>
+    <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
+    <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+  </div>
+  <!-- 【v186】ステータス（商品ライフサイクル）ブロック -->
+  <div class="nav-group">
+    <span class="nav-group-label g-status">【ステータス】</span>
+    <button class="state-chip" data-state="status-normal"><span class="chip-label">通常商品</span><span class="chip-num" id="cntStatusNormal">(0)</span></button>
+    <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
+    <button class="state-chip" data-state="pro-w"><span class="chip-label">撤退■</span><span class="chip-num" id="cntProWithdraw">(0)</span></button>
   </div>
   <!-- 【v231】ヘッダー＋上段ナビ（【調整】以上）を隠して【状態】を最上部にするトグル。状態行の右端に配置 -->
   <button class="btn sm ghost" id="btnToggleChrome" type="button" style="margin-left:auto; align-self:center; white-space:nowrap;" title="ヘッダーと上段ナビ（【調整】以上）を隠して【状態】を最上部にします">🔼 ヘッダーを隠す</button>
@@ -3162,14 +3178,30 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <button class="info-close" id="stateInfoClose" type="button" aria-label="閉じる">×</button>
     <section class="info-section">
       <h3 class="info-heading">■ 状態の説明</h3>
+      <h4 class="info-subheading" style="margin:2px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">入札価格状態</h4>
       <ul class="info-list">
-        <li><b class="info-tag ok">入札価格○</b>広告の入札価格が最安値の <b>25円</b> かつ、広告順位が <b>1〜4位</b> のもの。</li>
-        <li><b class="info-tag ng">入札価格✕</b><b>「入札価格25円かつ広告順位1〜4位」</b> を満たしていないもの。</li>
-        <li><b class="info-tag none">入札なし</b>広告を打っていないもの。</li>
-        <li><b class="info-tag ok">PRオプ○</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>1〜6位</b> のもの。<span class="info-note">（送り込み元で上に上げておきたいものは、7%でなくても例外的に○。）</span></li>
-        <li><b class="info-tag ng">PRオプ×</b><b>「PRオプション7％かつSEO順位1〜6位」</b> を満たしていないもの。</li>
+        <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">入札◯</b>広告の入札価格が最安値の <b>25円</b> かつ、広告順位が <b>1〜4位</b> のもの。</li>
+        <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">入札×-調整中</b><b>「入札25円かつ広告1〜4位」</b> を満たすよう調整中のもの。</li>
+        <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">入札△-飛ぶ手前固定</b>下げると広告が飛ぶ手前の金額で <b>固定完了</b>（これ以上の対応は不要）。</li>
+        <li><b class="info-tag" style="color:#6b7280;background:#f1f3f5;border:1px solid var(--border2)">入札なし</b>広告を打っていないもの。</li>
+      </ul>
+      <h4 class="info-subheading" style="margin:12px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">PRオプ状態</h4>
+      <ul class="info-list">
+        <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">PR◯</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>1〜6位</b> のもの。</li>
+        <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">PR△-親-下げ挑戦中</b><b>親商品</b>。30%等で上位表示させ子へ送り込むが、料率の <b>下げに挑戦中</b> のもの。</li>
+        <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-親-飛ぶ手前固定</b><b>親商品</b>。下げ挑戦の結果、ギリギリの％で <b>固定完了</b> したもの（対応不要）。</li>
+        <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-子-7％固定</b><b>子商品</b>。PR◯条件は未達でも良し。<b>7%固定</b> で親から送り込むもの（対応不要）。</li>
+        <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">PR×</b><b>「PRオプ7％かつSEO1〜6位」</b> を満たしていないもの。</li>
+      </ul>
+    </section>
+    <section class="info-section">
+      <h3 class="info-heading">■ ステータスの説明</h3>
+      <ul class="info-list">
+        <li><b class="info-tag ok">通常商品</b>通常どおり販売・運用している商品。</li>
+        <li><b class="info-tag info" style="color:#2563eb;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.3)">新商品</b>登録して間もない、運用を立ち上げ中の商品。</li>
         <li><b class="info-tag warn">撤退検討▲</b>広告の採算が合わないため削除し、PRオプションのみで販売できるかを検証しているもの。</li>
-        <li><b class="info-tag ng">撤退■</b>在庫が無くなり次第販売終了予定のもの。</li>
+        <li><b class="info-tag ng">撤退■</b>在庫が無くなり次第、販売終了予定のもの。</li>
+        <li><b class="info-tag none">撤退済み</b>販売を終了した商品。</li>
       </ul>
     </section>
     <section class="info-section">
@@ -5018,18 +5050,25 @@ function migrateProStatusToStatus() {
 //   meta.adStatus は内部キー名のまま使い続ける（保存値の文字列だけ書き換える）
 function migrateAdStatusLabels() {
   if (!state.productMeta) return;
-  const map = { '広告○': '入札価格○', '広告×': '入札価格✕', '広告無': '入札なし', '入札無し': '入札なし' };  // 【v1.0323】入札無し→入札なしに正規化
+  // 【v186】旧ラベル → 新ラベルへ自動移行。入札価格○/✕ → 入札◯/入札×-調整中、PRオプ○/× → PR◯/PR×、現役商品 → 通常商品。
+  //   ※固定系・下げ挑戦中系（△）は新規入力のみ。既存の×は「調整中」相当として入札×-調整中/PR×へ寄せる。
+  const adMap = {
+    '広告○': '入札◯', '広告×': '入札×-調整中', '広告無': '入札なし', '入札無し': '入札なし',  // 旧広告ラベル
+    '入札価格○': '入札◯', '入札価格✕': '入札×-調整中'                                      // v185ラベル
+  };
+  const proMap = {
+    'PRオプ○': 'PR◯', 'PRO○': 'PR◯', 'PRオプ×': 'PR×', 'PRO×': 'PR×'
+  };
   let migrated = 0;
   Object.keys(state.productMeta).forEach(code => {
     const m = state.productMeta[code];
     if (!m) return;
-    if (m.adStatus && map[m.adStatus]) {
-      m.adStatus = map[m.adStatus];
-      migrated++;
-    }
+    if (m.adStatus && adMap[m.adStatus]) { m.adStatus = adMap[m.adStatus]; migrated++; }
+    if (m.proStatus && proMap[m.proStatus]) { m.proStatus = proMap[m.proStatus]; migrated++; }
+    if (m.status === '現役商品') { m.status = '通常商品'; migrated++; }
   });
   if (migrated > 0) {
-    console.log(`Ycheck: 入札状態（旧:広告状態）の表示ラベル ${migrated}件を新形式に移行しました`);
+    console.log(`Ycheck: 状態/ステータスの表示ラベル ${migrated}件を新形式(v186)に移行しました`);
     saveToStorage();
   }
 }
@@ -5042,8 +5081,8 @@ function migrateRemoveWarnStatus() {
   Object.keys(state.productMeta).forEach(code => {
     const m = state.productMeta[code];
     if (!m) return;
-    if (m.adStatus === '入札価格△') { m.adStatus = '入札価格✕'; migrated++; }
-    if (m.proStatus === 'PRオプ△') { m.proStatus = 'PRオプ×'; migrated++; }
+    if (m.adStatus === '入札価格△') { m.adStatus = '入札×-調整中'; migrated++; }  // 【v186】旧△は新ラベルの×-調整中へ
+    if (m.proStatus === 'PRオプ△') { m.proStatus = 'PR×'; migrated++; }
   });
   if (migrated > 0) {
     console.log(`Ycheck: 入札価格△/PRオプ△ ${migrated}件を✕へ移行しました（△廃止 v212）`);
@@ -5958,6 +5997,7 @@ function updateStateCounts() {
   let unselectedAd = 0, unselectedPro = 0;
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
+  let statusNormalCount = 0;  // 【v186】ステータス=通常商品
   allCodes.forEach(code => {
     // 引退済み商品はカウント対象外
     if (isRetired(code)) return;
@@ -5965,17 +6005,18 @@ function updateStateCounts() {
     const meta = state.productMeta[code] || {};
     const adS = meta.adStatus || '';
     const proS = meta.proStatus || '';
-    // 【v185】新ラベル＋旧ラベル両方判定（マイグレーション前のデータ互換）
-    if (adS === '入札価格○' || adS === '広告○') adOk++;
-    else if (adS === '入札価格✕' || adS === '広告×') adNg++;
+    // 【v186】新ラベル＋旧ラベル両方判定（分類ヘルパー経由でマイグレーション前のデータも互換）
+    if (adStatusIsCircle(adS)) adOk++;
+    else if (adStatusIsCross(adS)) adNg++;
     else if (adStatusIsNone(adS)) adNone++;
-    if (proS === 'PRオプ○' || proS === 'PRO○') proOk++;
-    else if (proS === 'PRオプ×' || proS === 'PRO×') proNg++;
+    if (proStatusIsCircle(proS)) proOk++;
+    else if (proStatusIsCross(proS)) proNg++;
     // 撤退検討▲・撤退■ は status フィールドから判定（v56〜）
     const st = meta.status || '';
     if (st === '撤退検討▲') proWithdrawConsider++;
     else if (st === '撤退■') proWithdraw++;
     if ((st || '新商品') === '新商品') newProductCount++;  // 【v229】新商品（未設定も含む）
+    if (st === '通常商品' || st === '現役商品') statusNormalCount++;  // 【v186】通常商品（旧:現役商品）
     if (!adS) unselectedAd++;
     if (!proS) unselectedPro++;
   });
@@ -5996,6 +6037,7 @@ function updateStateCounts() {
   // 【v229】状態ブロック左端: 全体（=現役商品合計）／新商品
   const cntAll = $('#cntAll'); if (cntAll) cntAll.textContent = `(${activeCount})`;
   const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
+  const cntNormal = $('#cntStatusNormal'); if (cntNormal) cntNormal.textContent = `(${statusNormalCount})`;  // 【v186】通常商品
 }
 
 // 【v125/v130】商品コード表示（代表コード所属なら🔀バッジ付き）
@@ -6017,16 +6059,17 @@ function codeCellHtml(code) {
 //   旧ラベルもキーとして残し、未マイグレーションデータでもソートが安定するようにする
 const AD_STATUS_ORDER = {
   '': 0,
-  '入札価格○': 1, '入札価格✕': 3, '入札なし': 4, '入札無し': 4,
-  '広告○': 1, '広告×': 3, '広告無': 4   // 互換用（マイグレーション前の値もソート可能に）
+  '入札◯': 1, '入札△-飛ぶ手前固定': 2, '入札×-調整中': 3, '入札なし': 4,
+  '入札価格○': 1, '入札価格✕': 3, '入札無し': 4,   // 互換用（旧ラベル）
+  '広告○': 1, '広告×': 3, '広告無': 4              // 互換用（マイグレーション前の値もソート可能に）
 };
-// 【v185】PRオプ△を新設
+// 【v186】PRオプ状態の新ラベル
 const PRO_STATUS_ORDER = {
   '': 0,
-  'PRオプ○': 1, 'PRオプ×': 3,
-  'PRO○': 1, 'PRO×': 3
+  'PR◯': 1, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR×': 3,
+  'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
-const STATUS_ORDER = { '新商品': 0, '現役商品': 1, '撤退検討▲': 2, '撤退■': 3, '撤退済み': 4, '': 0 };
+const STATUS_ORDER = { '新商品': 0, '通常商品': 1, '現役商品': 1, '撤退検討▲': 2, '撤退■': 3, '撤退済み': 4, '': 0 };
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
 function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
@@ -6168,30 +6211,52 @@ function rowParentChildClass(code, sets) {
   return '';
 }
 
+// 【v186】入札価格状態・PRオプ状態の値ごとの文字色（サンプル画像準拠。背景は白、文字色のみ着色）。
+const STATUS_TEXT_COLOR = {
+  // 入札価格状態
+  '入札◯': '#2563eb',              // 青
+  '入札×-調整中': '#ea7317',        // オレンジ
+  '入札△-飛ぶ手前固定': '#c99700',  // 黄色
+  '入札なし': '#9ca3af',            // グレー
+  // PRオプ状態
+  'PR◯': '#2563eb',                // 青
+  'PR△-親-下げ挑戦中': '#c99700',   // 黄色
+  'PR△-親-飛ぶ手前固定': '#12a5c8', // 水色
+  'PR△-子-7％固定': '#12a5c8',      // 水色
+  'PR×': '#ea7317'                 // オレンジ
+};
+function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; }  // -（未設定）は黒
+
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
   let value, options;
   if (kind === 'ad') {
     value = meta.adStatus;
-    // 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札なし に改称、入札価格△を新設
-    options = ['', '入札価格○', '入札価格✕', '入札なし'];
+    // 【v186】入札◯/入札×-調整中/入札△-飛ぶ手前固定/入札なし
+    options = ['', '入札◯', '入札×-調整中', '入札△-飛ぶ手前固定', '入札なし'];
   } else if (kind === 'pro') {
     value = meta.proStatus;
-    // 【v185】PRオプ△を新設
-    options = ['', 'PRオプ○', 'PRオプ×'];
+    // 【v186】PR◯/PR△-親-下げ挑戦中/PR△-親-飛ぶ手前固定/PR△-子-7％固定/PR×
+    options = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-親-飛ぶ手前固定', 'PR△-子-7％固定', 'PR×'];
   } else if (kind === 'status') {
     value = meta.status || '新商品';
-    options = ['新商品', '現役商品', '撤退検討▲', '撤退■', '撤退済み'];
+    if (value === '現役商品') value = '通常商品';  // 【v186】現役商品→通常商品（旧値フォールバック）
+    options = ['新商品', '通常商品', '撤退検討▲', '撤退■', '撤退済み'];
   }
+  // 【v186】入札価格状態・PRオプ状態は白背景＋値ごとの文字色（サンプル画像準拠）。
+  if (kind === 'ad' || kind === 'pro') {
+    const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusTextColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
+    const c = statusTextColor(value);
+    const bd = value ? c : '#cbd5e1';
+    return `<select class="status-select"${ghIsEnabled() ? '' : ' disabled'} style="background:#fff;color:${c};border:1.5px solid ${bd};font-weight:600" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
+  }
+  // ステータス（通常商品/新商品/撤退…）は従来どおりクラスで色分け。
   let cls = 'none';
   if (value) {
-    if (value.includes('○')) cls = 'ok';
-    else if (value.includes('△') || value === '撤退検討▲') cls = 'warn';
-    else if (value.includes('×') || value.includes('✕') || value === '撤退■') cls = 'ng';
-    else if (value === '撤退済み') cls = 'ng';
-    else if (value === '現役商品') cls = 'ok';
+    if (value === '撤退検討▲') cls = 'warn';
+    else if (value === '撤退■' || value === '撤退済み') cls = 'ng';
+    else if (value === '通常商品' || value === '現役商品') cls = 'ok';
     else if (value === '新商品') cls = 'info';
-    else if (adStatusIsNone(value)) cls = 'none';
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   return `<select class="status-select ${cls}"${ghIsEnabled() ? '' : ' disabled'} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
@@ -6946,11 +7011,17 @@ function ensureTuneMembers(kind) {
 
 // 入札状態・PRオプ状態の○/×判定（新旧表記両対応。STATE_FILTERSと同じ基準）。
 // ※丸は ○(U+25CB)。×は 入札=✕(U+2715) / PRオプ=×(U+00D7) と別文字なので注意。
-function adStatusIsCircle(s) { return s === '入札価格○' || s === '広告○'; }
-function adStatusIsCross(s)  { return s === '入札価格✕' || s === '広告×'; }
+// 【v186】新ラベル（入札◯/入札×-調整中/入札△-飛ぶ手前固定/入札なし、PR◯/PR△-親-下げ挑戦中/PR△-親-飛ぶ手前固定/PR△-子-7％固定/PR×）に対応。旧ラベルも許容。
+//   ・◯（circle）: 条件達成。上位でなければ「修正あり」。
+//   ・×/調整中/下げ挑戦中（cross）: 未達・調整中。上位なら「修正あり」、それ以外は推移確認/未確認へ。
+//   ・△-飛ぶ手前固定 / △-子-7％固定（settled）: 対応完了で固定。修正あり・推移確認・未確認から除外（全体のみ）。
+function adStatusIsCircle(s) { return s === '入札◯' || s === '入札価格○' || s === '広告○'; }
+function adStatusIsCross(s)  { return s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }
+function adStatusIsSettled(s){ return s === '入札△-飛ぶ手前固定'; }  // 固定＝対応不要
 function adStatusIsNone(s)   { return s === '入札なし' || s === '入札無し' || s === '広告無'; }  // 【v1.0323】入札なし判定（旧表記も許容）
-function proStatusIsCircle(s){ return s === 'PRオプ○' || s === 'PRO○'; }
-function proStatusIsCross(s) { return s === 'PRオプ×' || s === 'PRO×'; }
+function proStatusIsCircle(s){ return s === 'PR◯' || s === 'PRオプ○' || s === 'PRO○'; }
+function proStatusIsCross(s) { return s === 'PR×' || s === 'PR△-親-下げ挑戦中' || s === 'PRオプ×' || s === 'PRO×'; }
+function proStatusIsSettled(s){ return s === 'PR△-親-飛ぶ手前固定' || s === 'PR△-子-7％固定'; }  // 固定＝対応不要
 
 // 【v240】最新日の順位「カテゴリ（上位/中位/下位）」を返す。
 //   順位は import 時に numericRankToCategory でカテゴリ文字列（例「4位以内◯」）に変換して
@@ -7094,6 +7165,9 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
+  // 【v186】△-飛ぶ手前固定 等の「固定＝対応不要」ステータスは推移確認/未確認から除外（全体のみ）。
+  const isSettled = (kind === 'ad') ? adStatusIsSettled(meta.adStatus) : proStatusIsSettled(meta.proStatus);
+  if (isSettled) return null;
   // 【v1.0397】非F(推移確認/未確認): 「対応済み(adDone/proDone)ゲート」を撤廃し、対応内容メモの中身だけで振り分ける。
   //   ・対応の有無に関わらず、数値変更で自動記入される「￥旧-新（日付）」等の変更表記あり → 推移確認。
   //   ・空欄、または更新日時スタンプのみ → 未確認。
@@ -8825,11 +8899,12 @@ $$('.nav-tab').forEach(item => {
 const STATE_FILTERS = {
   'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
   'new-product':   { label: '新商品',     targetView: 'basic',      match: (meta) => (meta.status || '新商品') === '新商品' },
-  'ad-ok':         { label: '入札価格○',   targetView: 'ad-adjust',  match: (meta) => { const a = meta.adStatus || ''; return a === '入札価格○' || a === '広告○'; } },
-  'ad-ng':         { label: '入札価格✕',   targetView: 'ad-adjust',  match: (meta) => { const a = meta.adStatus || ''; return a === '入札価格✕' || a === '広告×'; } },
+  'status-normal': { label: '通常商品',   targetView: 'basic',      match: (meta) => { const s = meta.status || '新商品'; return s === '通常商品' || s === '現役商品'; } },
+  'ad-ok':         { label: '入札◯',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCircle(meta.adStatus || '') },
+  'ad-ng':         { label: '入札×',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCross(meta.adStatus || '') },
   'ad-none':       { label: '入札なし',     targetView: 'pro-adjust', match: (meta) => adStatusIsNone(meta.adStatus || '') },
-  'pro-ok':        { label: 'PRオプ○',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ○' || p === 'PRO○'; } },
-  'pro-ng':        { label: 'PRオプ×',     targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PRオプ×' || p === 'PRO×'; } },
+  'pro-ok':        { label: 'PR◯',        targetView: 'pro-adjust', match: (meta) => proStatusIsCircle(meta.proStatus || '') },
+  'pro-ng':        { label: 'PR×',        targetView: 'pro-adjust', match: (meta) => proStatusIsCross(meta.proStatus || '') },
   'pro-wc':        { label: '撤退検討▲',   targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退検討▲' },
   'pro-w':         { label: '撤退■',       targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退■' },
   'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
@@ -9606,17 +9681,23 @@ document.addEventListener('change', (e) => {
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
   saveToStorage();
   // 見た目更新
-  let cls = 'none';
-  if (value) {
-    if (value.includes('○')) cls = 'ok';
-    else if (value.includes('△') || value === '撤退検討▲') cls = 'warn';
-    else if (value.includes('×') || value.includes('✕') || value === '撤退■') cls = 'ng';
-    else if (value === '撤退済み') cls = 'ng';
-    else if (value === '現役商品') cls = 'ok';
+  if (kind === 'ad' || kind === 'pro') {
+    // 【v186】入札価格状態・PRオプ状態は白背景＋値ごとの文字色。
+    const c = statusTextColor(value);
+    const bd = value ? c : '#cbd5e1';
+    e.target.className = 'status-select';
+    e.target.style.background = '#fff';
+    e.target.style.color = c;
+    e.target.style.border = '1.5px solid ' + bd;
+    e.target.style.fontWeight = '600';
+  } else {
+    let cls = 'none';
+    if (value === '撤退検討▲') cls = 'warn';
+    else if (value === '撤退■' || value === '撤退済み') cls = 'ng';
+    else if (value === '通常商品' || value === '現役商品') cls = 'ok';
     else if (value === '新商品') cls = 'info';
-    else if (adStatusIsNone(value)) cls = 'none';
+    e.target.className = 'status-select ' + cls;
   }
-  e.target.className = 'status-select ' + cls;
   // 【v77】件数バッジ・他ビューへの移動は即時反映せず、次のビュー切り替え時に更新
   // 以前: updateStateCounts() と renderAll() を即時実行していたが、
   // 編集中のスクロール位置や操作感を保つため、遅延反映に変更。
