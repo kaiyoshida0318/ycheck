@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0401 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0404 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -239,6 +239,23 @@ body {
 .btn.ghost { background: transparent; border-color: var(--border); color: var(--text2); }
 .btn.ghost:hover { background: var(--bg3); }
 .btn.sm { padding: 4px 10px; font-size: 0.8rem; }
+/* 【v1.0402/v1.0403】月が変わって先月分の月次レポートが未追加のとき、+レポート追加(月次)ボタンに青い波紋（順位取得CSVのdrift-pulseと同方式）を出す */
+@keyframes ycReportRipple {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.45); }
+  50%      { box-shadow: 0 0 0 5px rgba(37,99,235,0.22); }
+}
+.btn.report-due { animation: ycReportRipple 1.6s ease-in-out infinite; position: relative; }
+/* 【v1.0404】青は保ちつつ、未追加を知らせる赤い通知ドット（右上） */
+.btn.report-due::after {
+  content: '';
+  position: absolute;
+  top: -5px; right: -5px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: 2px solid #fff;
+  box-shadow: 0 0 3px rgba(0,0,0,0.28);
+}
 .btn:disabled {
   background: var(--bg3);
   color: var(--text3);
@@ -2617,7 +2634,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0401</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0404</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5881,6 +5898,17 @@ function getLatestImportedMonth() {
   const all = getAvailableMonths();
   return all.length > 0 ? all[all.length - 1] : '';
 }
+// 【v1.0402】月次レポート未追加（取込済み最新月 < 先月）なら +レポート追加(月次) ボタンを光らせる。
+function _updateReportDueGlow() {
+  const btn = document.getElementById('btnJumpUploadMonthly');
+  if (!btn) return;
+  const latest = (typeof getLatestImportedMonth === 'function') ? getLatestImportedMonth() : '';
+  const prev = (typeof getPrevYm === 'function') ? getPrevYm() : '';
+  const due = !!latest && !!prev && latest < prev;   // 先月分がまだ無い＝月が変わって未追加
+  btn.classList.toggle('report-due', due);
+  if (due) btn.title = '月が変わりました。先月（' + prev + '）の月次レポートがまだ追加されていません。';
+  else btn.removeAttribute('title');
+}
 // 【v173】ショップ売上(月次)CSVで取り込まれた最新月を返す（YYYY-MM）。基本データ・月次タブのデフォルト用
 function getLatestOverallMonth() {
   if (!state.overall || !Array.isArray(state.overall.months) || state.overall.months.length === 0) return '';
@@ -8623,6 +8651,7 @@ function renderAll() {
   else if (state.currentView === 'seo-rank') renderSeoRank();
   // 【v239】調整サブフィルタバーの表示/件数を更新（毎日の順位更新後も renderAll 経由で自動反映）
   if (typeof updateTuneBar === 'function') updateTuneBar();
+  if (typeof _updateReportDueGlow === 'function') _updateReportDueGlow();  // 【v1.0402】月次レポート未追加なら光らせる
   updateCsvDownloadButtonState();
   // 【v125】代表コード絞り込みUI
   if (typeof updateRepFilterUI === 'function') updateRepFilterUI();
