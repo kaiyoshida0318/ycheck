@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0406 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0408 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2637,7 +2637,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0406</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0408</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2798,15 +2798,16 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <div class="card">
         <h3 class="card-title">商品-月別データ</h3>
         <div class="filters" style="flex-wrap:wrap;gap:8px 10px;align-items:center">
+          <span class="filter-label">検索</span>
+          <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <span class="filter-label">表示</span>
           <span id="miModeSeg" role="group" aria-label="表示モード" style="display:inline-flex;gap:4px">
             <button type="button" class="mi-mode-btn on" data-mode="recent" onclick="_miSetMode('recent')" title="最新月から12ヶ月ずつ表示">直近12ヶ月</button>
             <button type="button" class="mi-mode-btn" data-mode="year" onclick="_miSetMode('year')" title="暦年（1〜12月）ごとに表示">年度（1〜12月）</button>
           </span>
+          <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
           <span class="filter-label" id="miRangeLabel" style="display:none">表示範囲</span>
           <select id="miRangeSel" onchange="_miSetRange(this.value)" style="display:none;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
-          <span class="filter-label">検索</span>
-          <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
         </div>
         <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。「表示」で<b>直近12ヶ月</b>（最新月から）か<b>年度（1〜12月）</b>を切り替え、それ以外の期間は「表示範囲」で選びます。</p>
         <div id="mi-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
@@ -3302,6 +3303,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="pe-actions">
       <button class="btn ghost" id="peCancel" type="button">キャンセル</button>
       <button class="btn primary" id="peSave" type="button">保存</button>
+      <button class="btn primary" id="peSaveClose" type="button">保存して閉じる</button>
     </div>
   </div>
 </div>
@@ -6358,8 +6360,10 @@ let monthlyAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み
 // 【v1.0360】月選択機能は廃止（利用可能な全月を自動表示）。
 let _miRangePage = 0; // 【v1.0364】12ヶ月ページの現在位置（0=直近）
 let _miRangeMode = 'recent'; // 【v1.0392】'recent'=直近12ヶ月ずつ / 'year'=暦年(1〜12月)ごと
+let _miParentOnly = false;   // 【v1.0408】親子商品グループ(メンバー2件以上)だけに絞る
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
+function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
 const MI_COLS = [
   { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' }, // ブルー（Ycheck 総売上）
   { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y' }, // グリーン（Ycheck SEO売上）
@@ -6397,6 +6401,8 @@ function renderMonthly() {
   // モード切替ボタンの選択状態
   const _seg = document.getElementById('miModeSeg');
   if (_seg) _seg.querySelectorAll('.mi-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === _miRangeMode));
+  const _pBtn = document.getElementById('miParentOnlyBtn');   // 【v1.0408】親子のみボタンの選択状態
+  if (_pBtn) _pBtn.classList.toggle('on', _miParentOnly);
   const _rangeSel = document.getElementById('miRangeSel');
   const _rangeLbl = document.getElementById('miRangeLabel');
   if (_rangeSel && _rangeLbl) {
@@ -6444,12 +6450,13 @@ function renderMonthly() {
   const rows = [];
   Object.keys(families).forEach(key => {
     const members = families[key];
+    if (_miParentOnly && members.length < 2) return;   // 【v1.0408】親子のみ: メンバー2件以上（実際に親子設定）だけ
     if (q) {
       const hit = members.some(c => c.toLowerCase().includes(q) || _mname(c).toLowerCase().includes(q));
       if (!hit) return;
     }
     const stats = selYms.map(ym => _statForFamily(members, ym));
-    if (!q && stats.every(s => s.totSales === 0 && s.spend === 0 && s.adSales === 0)) return;
+    if (!q && !_miParentOnly && stats.every(s => s.totSales === 0 && s.spend === 0 && s.adSales === 0)) return;
     const repHasMaster = !!(typeof getMaster === 'function' && getMaster(key));
     const dispCode = repHasMaster ? key : (members.find(c => _mname(c)) || members[0] || key);
     let _dispName = _mname(dispCode) || key;
@@ -6470,12 +6477,14 @@ function renderMonthly() {
   });
   rows.sort((a, b) => b.stats.reduce((s, m) => s + (m.totSales || 0), 0) - a.stats.reduce((s, m) => s + (m.totSales || 0), 0));
 
-  const limit = q ? 30 : 8;
+  const limit = _miParentOnly ? rows.length : (q ? 30 : 8);   // 【v1.0408】親子のみは上限なし（全件）
   const shown = rows.slice(0, limit);
-  if (shown.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">該当する商品がありません</div>'; return; }
-  const note = rows.length > limit
-    ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件中 上位' + limit + '件（総売上順）を表示。商品コード・商品名で検索すると特定商品を表示できます。</div>'
-    : (q ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件 該当</div>' : '');
+  if (shown.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">' + (_miParentOnly ? '親子設定された商品グループがありません' : '該当する商品がありません') + '</div>'; return; }
+  const note = _miParentOnly
+    ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">親子商品グループ ' + rows.length + '件（親＋子の合計・総売上順）を表示中' + (q ? '（検索で絞り込み）' : '') + '</div>'
+    : (rows.length > limit
+      ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件中 上位' + limit + '件（総売上順）を表示。商品コード・商品名で検索すると特定商品を表示できます。</div>'
+      : (q ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件 該当</div>' : ''));
 
   const _rank5 = (val, allVals, hi) => {
     if (!val || val === 0 || allVals.length === 0) return 'bk';
@@ -10461,6 +10470,7 @@ function saveProductEdit(opts) {
   // 代わりに「保存しました」トーストでフィードバック。renderAll は裏のテーブル更新のため必要。
   renderAll();
   showToast('保存しました', 'success');
+  if (opts.close) closeProductEditModal();  // 【v1.0407】「保存して閉じる」: 保存成功後にモーダルを閉じる
 }
 
 // 【v227】商品コードがYcheck内で既に使われているか判定（移行先の重複チェック用）
@@ -10560,6 +10570,7 @@ function handlePeImageFile(file) {
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
 $('#peSave').addEventListener('click', () => saveProductEdit());
+$('#peSaveClose').addEventListener('click', () => saveProductEdit({ close: true }));
 
 // 【v227】商品コード変更（履歴ごと移行）ボタン
 $('#peChangeCodeBtn').addEventListener('click', () => {
