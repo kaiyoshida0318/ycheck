@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0405 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0406 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1513,6 +1513,9 @@ td:has(> .name-cell-wrap) {
 /* 【v1.0379】商品-グラフ：画面固定をやめ、ビュー全体を縦スクロールに。表の内部スクロール(max-height/overflow)は廃止しページごとスクロール。 */
 #view-itemgraph { overflow-y: auto; }
 #view-itemgraph .card { flex: 0 0 auto; }
+/* 【v1.0406】全-月別グラフも同様に、ヘッダー下からページ全体スクロールに（表の内部スクロール廃止） */
+#view-graph { overflow-y: auto; }
+#view-graph .card { flex: 0 0 auto; }
 
 /* 商品情報編集モーダル */
 .pe-grid {
@@ -2634,7 +2637,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0405</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0406</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2821,9 +2824,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
           <span class="filter-label">指標</span>
           <select id="igMetric" onchange="_igMetricChange(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
-            <option value="totSales">総売上</option>
-            <option value="seoSales">SEO売上</option>
-            <option value="adSales">広告売上</option>
+            <option value="sales">売上(総売上/SEO/広告/送り込み)</option>
             <option value="spend">実績額（広告費）</option>
             <option value="roas">広告ROAS</option>
             <option value="cvr">CVR</option>
@@ -2841,6 +2842,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <button type="button" class="ig-preset-btn" data-igp="y2" onclick="_igPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
           </span>
         </div>
+        <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
         <div id="igTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
       </div>
@@ -2878,9 +2880,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center;position:relative">
           <span class="filter-label">指標</span>
           <select id="zgMetric" onchange="_zgMetricChange(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
-            <option value="totSales">総売上</option>
-            <option value="seoSales">SEO売上</option>
-            <option value="adSales">広告売上</option>
+            <option value="sales">売上(総売上/SEO/広告/送り込み)</option>
             <option value="spend">実績額</option>
             <option value="roas">広告ROAS</option>
             <option value="cvr">CVR</option>
@@ -2897,8 +2897,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <button type="button" class="ig-preset-btn" data-zgp="y2" onclick="_zgPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
           </span>
         </div>
+        <div id="zgSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="zgChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="zgCanvas"></canvas></div>
-        <div id="zgTableWrap" style="overflow:auto;max-height:44vh;border:1px solid var(--border);border-radius:8px"></div>
+        <div id="zgTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
 
@@ -6753,9 +6754,31 @@ const _ZG_TABLE_COLS = [
   { key: 'roas', label: '広告ROAS', unit: 'p', hbg: '#fae6ce', bg: '#fcf6ec' },
   { key: 'cvr', label: 'CVR', unit: 'p', hbg: '#fae6ce', bg: '#fcf6ec' },
   { key: 'orders', label: '広告個数', unit: 'n', hbg: '#e8eaed', bg: '#f7f8fa' },
-  { key: 'avgPrice', label: '平均単価', unit: 'y', hbg: '#e8eaed', bg: '#f7f8fa' }
+  { key: 'avgPrice', label: '平均単価', unit: 'y', hbg: '#e8eaed', bg: '#f7f8fa' },
+  { key: 'soikomi', label: '送り込み売上', unit: 'y', hbg: '#ece0fb', bg: '#f7f1fe' }
 ];
-let _zgMetric = 'totSales';
+// 【v1.0406】売上（複合）指標の系列定義＋系列トグル（全-月別グラフ / 商品-グラフ 共通）。押すとその線を消す。
+const _SALES_SERIES = [
+  { key: 'totSales', label: '総売上',       color: '#2563eb' },
+  { key: 'seoSales', label: 'SEO売上',      color: '#16a34a' },
+  { key: 'adSales',  label: '広告売上',     color: '#d97706' },
+  { key: 'soikomi',  label: '送り込み売上', color: '#7c3aed' }
+];
+let _zgSalesHidden = new Set();
+let _igSalesHidden = new Set();
+function _zgToggleSales(k){ if(_zgSalesHidden.has(k)) _zgSalesHidden.delete(k); else _zgSalesHidden.add(k); renderGraphAll(); }
+function _igToggleSales(k){ if(_igSalesHidden.has(k)) _igSalesHidden.delete(k); else _igSalesHidden.add(k); renderItemGraph(); }
+window._zgToggleSales = _zgToggleSales; window._igToggleSales = _igToggleSales;
+function _renderSalesToggles(containerId, hiddenSet, fnName, active){
+  const wrap = document.getElementById(containerId); if(!wrap) return;
+  if(!active){ wrap.style.display='none'; wrap.innerHTML=''; return; }
+  wrap.style.display='flex';
+  wrap.innerHTML = _SALES_SERIES.map(function(s){
+    const on = !hiddenSet.has(s.key);
+    return '<button type="button" onclick="'+fnName+'(\''+s.key+'\')" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;border:2px solid '+s.color+';background:'+(on?s.color:'transparent')+';color:'+(on?'#fff':'var(--text3)')+';opacity:'+(on?'1':'0.55')+';text-decoration:'+(on?'none':'line-through')+'"><span style="width:9px;height:9px;border-radius:50%;background:'+(on?'#fff':s.color)+';display:inline-block"></span>'+s.label+'</button>';
+  }).join('');
+}
+let _zgMetric = 'sales';
 let _zgActivePreset = '';
 function _zgMetricChange(v) { _zgMetric = v; renderGraphAll(); }
 window._zgMetricChange = _zgMetricChange;
@@ -6796,18 +6819,26 @@ function renderGraphAll() {
   const from = selF ? selF.value : '', to = selT ? selT.value : '';
   const rows = all.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
   const labels = rows.map(r => r.label);
-  const md = _ZG_METRICS[_zgMetric] || _ZG_METRICS.totSales;
-  const fmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
-  const vals = rows.map(r => r[_zgMetric] || 0);
+  const isSales = (_zgMetric === 'sales');
+  _renderSalesToggles('zgSalesToggles', _zgSalesHidden, '_zgToggleSales', isSales);
   if (state.charts.chartAll) { state.charts.chartAll.destroy(); state.charts.chartAll = null; }
   if (typeof Chart !== 'undefined') {
+    let datasets, yFmt;
+    if (isSales) {
+      yFmt = v => '¥' + Math.round(v).toLocaleString();
+      datasets = _SALES_SERIES.filter(s => !_zgSalesHidden.has(s.key)).map(s => ({ label: s.label, data: rows.map(r => r[s.key] || 0), borderColor: s.color, backgroundColor: s.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: s.color, tension: 0.25, fill: false }));
+    } else {
+      const md = _ZG_METRICS[_zgMetric] || _ZG_METRICS.totSales;
+      yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
+      datasets = [{ label: md.label, data: rows.map(r => r[_zgMetric] || 0), borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }];
+    }
     state.charts.chartAll = new Chart(canvas.getContext('2d'), {
       type: 'line',
-      data: { labels: labels, datasets: [{ label: md.label, data: vals, borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }] },
+      data: { labels: labels, datasets: datasets },
       options: {
         responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: true, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => md.label + ': ' + fmt(c.parsed.y) } } },
-        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: v => fmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
+        plugins: { legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: v => yFmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
   }
@@ -8464,7 +8495,7 @@ window.ycGetNavGroups=function(){
 // ==================== Render All ====================
 // ==================== 【v1.0373】商品-グラフ（ADcheck「商品-グラフ」をYcheck向けに簡略移植：1種広告・月別・親子合算・項目調整/日別なし） ====================
 let _igSelected = null;   // 選択中の家族（代表コード）
-let _igMetric = 'totSales';
+let _igMetric = 'sales';
 let _igChart = null;
 
 // グラフ用の指標定義（Ycheckのデータ＝1種広告に合わせる。CTR/KW/20円は無し）
@@ -8599,43 +8630,71 @@ function renderItemGraph() {
     return;
   }
   const members = fam[_igSelected];
-  const itemMap = {}, adMap = {};
-  (state.item || []).forEach(i => { if (members.indexOf(i.code) < 0) return; const _e = (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0, orders: 0 })); _e.rev += i.revenue || 0; _e.qty += i.qty || 0; _e.orders += i.orders || 0; });
+  const itemMap = {}, adMap = {}, childMap = {};
+  const _pmC = state.productMeta || {};
+  (state.item || []).forEach(i => {
+    if (members.indexOf(i.code) < 0) return;
+    const _e = (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0, orders: 0 })); _e.rev += i.revenue || 0; _e.qty += i.qty || 0; _e.orders += i.orders || 0;
+    // 【v1.0406】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
+    const _rep = ((_pmC[i.code] || {}).repCode || '').trim();
+    if (_rep && _rep !== i.code) { (childMap[i.month] || (childMap[i.month] = { rev: 0 })).rev += i.revenue || 0; }
+  });
   (state.ad || []).forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
   const from = selF ? selF.value : '', to = selT ? selT.value : '';
   const range = months.filter(m => (!from || m >= from) && (!to || m <= to));
   const labels = range.map(m => m.replace('-', '/'));
-  const md = _IG_METRICS[_igMetric] || _IG_METRICS.totSales;
-  const fmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
-  const vals = range.map(m => md.calc(itemMap[m] || {}, adMap[m] || {}));
+  // 【v1.0406】売上（複合）指標の月次値: 総売上/SEO/広告/送り込み。
+  const _igSalesVal = (m, key) => {
+    const it = itemMap[m] || {}, ad = adMap[m] || {};
+    if (key === 'totSales') return it.rev || 0;
+    if (key === 'seoSales') return Math.max(0, (it.rev || 0) - (ad.r || 0));
+    if (key === 'adSales') return ad.r || 0;
+    if (key === 'soikomi') return (childMap[m] || {}).rev || 0;
+    return 0;
+  };
+  const isSales = (_igMetric === 'sales');
+  _renderSalesToggles('igSalesToggles', _igSalesHidden, '_igToggleSales', isSales);
 
   if (_igChart) { _igChart.destroy(); _igChart = null; }
   if (typeof Chart !== 'undefined') {
+    let datasets, yFmt;
+    if (isSales) {
+      yFmt = v => '¥' + Math.round(v).toLocaleString();
+      datasets = _SALES_SERIES.filter(s => !_igSalesHidden.has(s.key)).map(s => ({ label: s.label, data: range.map(m => _igSalesVal(m, s.key)), borderColor: s.color, backgroundColor: s.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: s.color, tension: 0.25, fill: false }));
+    } else {
+      const md = _IG_METRICS[_igMetric] || _IG_METRICS.totSales;
+      yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
+      datasets = [{ label: md.label, data: range.map(m => md.calc(itemMap[m] || {}, adMap[m] || {})), borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }];
+    }
     _igChart = new Chart(canvas.getContext('2d'), {
       type: 'line',
-      data: { labels, datasets: [{ label: md.label, data: vals, borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }] },
+      data: { labels, datasets: datasets },
       options: {
         responsive: true, maintainAspectRatio: false, animation: false,
         interaction: { mode: 'index', intersect: false },
-        /* 【v1.0377】グラフ内の文字を拡大（凡例・軸・ツールチップ） */
-        plugins: { legend: { display: true, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => md.label + ': ' + fmt(c.parsed.y) } } },
-        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: (v) => fmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
+        plugins: { legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: (v) => yFmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
   }
 
-  // 明細テーブル（全指標 × 月／新しい順）
+  // 明細テーブル（全指標 × 月／新しい順）＋ 右端に送り込み売上（子商品分）
   const cols = _IG_TABLE_COLS;
-  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'   /* 【v1.0377】文字拡大 0.82→1.0rem */
-    + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+  const _SOI_HBG = '#ece0fb', _SOI_BG = '#f7f1fe', _SOI_BD = '2px solid #c4b5fd';
+  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'
+    + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
+    + '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + _SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + _SOI_BD + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const body = range.slice().reverse().map(m => {
     const it = itemMap[m] || {}, ad = adMap[m] || {};
     const tds = cols.map(c => {
       const v = c.calc(it, ad);
       const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
-      return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';   /* 【v1.0377】文字拡大 0.9→1.06rem */
+      return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
     }).join('');
-    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + '</tr>';
+    const sv = (childMap[m] || {}).rev || 0;
+    const sdisp = (!sv || sv === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(sv).toLocaleString();
+    const soiTd = '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + _SOI_BG + ';border-left:' + _SOI_BD + ';border-bottom:1px solid var(--border);white-space:nowrap">' + sdisp + '</td>';
+    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + soiTd + '</tr>';
   }).join('');
   tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
