@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0413 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0414 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1303,6 +1303,22 @@ td[data-resize-key] {
   min-width: 68px;
   cursor: pointer;
 }
+/* 【v188】入札状態・PRオプ状態: セル表示は2行略称のファサード、その上に透明selectを重ねて操作。 */
+.status-cell { position: relative; display: inline-block; vertical-align: middle; }
+.status-facade {
+  display: inline-flex; align-items: center; justify-content: center;
+  text-align: center; gap: 3px; line-height: 1.18; white-space: normal;
+  background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
+  font-size: 0.78rem; font-weight: 600; padding: 3px 7px;
+  min-width: 68px; min-height: 28px; box-sizing: border-box; cursor: pointer;
+}
+.status-chev { font-size: 0.66em; opacity: 0.55; margin-left: 1px; }
+.status-select.status-overlay {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  min-width: 0; margin: 0; padding: 0; border: 0;
+  opacity: 0; cursor: pointer;
+}
+.status-select.status-overlay:disabled { cursor: default; }
 
 /* status-selectを含むセル（td/th）の左右paddingを詰めて列間を狭く */
 th.status-col,
@@ -2658,7 +2674,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0413</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0414</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6237,6 +6253,19 @@ const STATUS_TEXT_COLOR = {
 };
 function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; }  // -（未設定）は黒
 
+// 【v188】列（セル）での表示用ラベル。ドロップダウンの選択肢は正式名のまま、セルの閉じた表示だけ2行の略称にする。
+//   ※HTMLを返す（<br>で改行）。固定4値のみ略称化し、他は正式名（1行）。
+const STATUS_DISPLAY_LABEL = {
+  'PR△-親-下げ挑戦中':   'PR△-親<br>下げ挑戦中',
+  'PR△-親-飛ぶ手前固定': 'PRオプ△-親<br>飛ぶ手前固定',
+  'PR△-子-7％固定':      'PR△-子<br>7％固定',
+  '入札△-飛ぶ手前固定':  '入札△<br>飛ぶ手前固定'
+};
+function statusDisplayLabel(value) {
+  if (STATUS_DISPLAY_LABEL[value]) return STATUS_DISPLAY_LABEL[value];  // 固定略称（静的HTML・安全）
+  return escapeHtml(value) || '—';
+}
+
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
   let value, options;
@@ -6254,11 +6283,17 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
     options = ['新商品', '通常商品', '撤退検討▲', '撤退■', '撤退済み'];
   }
   // 【v186】入札価格状態・PRオプ状態は白背景＋値ごとの文字色（サンプル画像準拠）。
+  // 【v188】セルの閉じた表示は「表示用ラベル(2行略称)」を表示するファサードにし、その上に透明なselectを重ねる。
+  //   ドロップダウン(選択肢)は正式名のまま。selectのchangeでファサードを更新する。
   if (kind === 'ad' || kind === 'pro') {
     const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusTextColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
     const c = statusTextColor(value);
     const bd = value ? c : '#cbd5e1';
-    return `<select class="status-select"${ghIsEnabled() ? '' : ' disabled'} style="background:#fff;color:${c};border:1.5px solid ${bd};font-weight:600" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
+    const dis = ghIsEnabled() ? '' : ' disabled';
+    return `<span class="status-cell">`
+      + `<span class="status-facade" style="color:${c};border-color:${bd}">${statusDisplayLabel(value)}<span class="status-chev">▾</span></span>`
+      + `<select class="status-select status-overlay"${dis} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`
+      + `</span>`;
   }
   // ステータス（通常商品/新商品/撤退…）は従来どおりクラスで色分け。
   let cls = 'none';
@@ -9692,14 +9727,16 @@ document.addEventListener('change', (e) => {
   saveToStorage();
   // 見た目更新
   if (kind === 'ad' || kind === 'pro') {
-    // 【v186】入札価格状態・PRオプ状態は白背景＋値ごとの文字色。
+    // 【v188】ファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
     const c = statusTextColor(value);
     const bd = value ? c : '#cbd5e1';
-    e.target.className = 'status-select';
-    e.target.style.background = '#fff';
-    e.target.style.color = c;
-    e.target.style.border = '1.5px solid ' + bd;
-    e.target.style.fontWeight = '600';
+    const cell = e.target.closest('.status-cell');
+    const fac = cell && cell.querySelector('.status-facade');
+    if (fac) {
+      fac.style.color = c;
+      fac.style.borderColor = bd;
+      fac.innerHTML = statusDisplayLabel(value) + '<span class="status-chev">▾</span>';
+    }
   } else {
     let cls = 'none';
     if (value === '撤退検討▲') cls = 'warn';
