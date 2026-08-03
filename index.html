@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0404 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0405 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2634,7 +2634,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0404</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0405</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2671,9 +2671,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata">全-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-月別グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
-    <!-- 【v237】旧【定期チェック】の2ビューを【全体】末尾へ移設（ビュー実体 #view-ad-adjust / #view-pro-adjust はそのまま） -->
-    <a class="nav-tab nav-tab-link" data-view="ad-adjust" href="?view=ad-adjust">入札価格全体<span class="chip-num" id="cntAdAdjustActive"></span></a>
-    <a class="nav-tab nav-tab-link" data-view="pro-adjust" href="?view=pro-adjust">PRオプ全体<span class="chip-num" id="cntProAdjustActive"></span></a>
+    <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
+    <span id="cntAdAdjustActive" style="display:none"></span><span id="cntProAdjustActive" style="display:none"></span>
   </div>
   <div class="nav-group">
     <span class="nav-group-label g-shutoku">【取得データ】</span>
@@ -2907,7 +2906,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="view" id="view-graphdata">
       <div class="card">
         <h3 class="card-title">全-月別データ</h3>
-        <div id="zdSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>
         <div class="filters" style="align-items:center;gap:8px;flex-wrap:wrap">
           <span class="filter-label">表示</span>
           <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
@@ -6657,8 +6655,13 @@ function _zenMonthlyRows() {
   if (typeof ensureOldOverall === 'function') ensureOldOverall();
   const months = getAvailableMonths();  // 昇順 'YYYY-MM'
   return months.map(m => {
-    let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0;
-    (state.item || []).filter(i => i.month === m).forEach(i => { rev += i.revenue || 0; orders += i.orders || 0; });
+    let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0, soikomi = 0;
+    (state.item || []).filter(i => i.month === m).forEach(i => {
+      rev += i.revenue || 0; orders += i.orders || 0;
+      // 【v1.0405】送り込み売上＝子商品（黄色バッジ＝repCodeが設定され自コードと異なる）の売上合計
+      const _rep = ((state.productMeta[i.code] || {}).repCode || '').trim();
+      if (_rep && _rep !== i.code) soikomi += i.revenue || 0;
+    });
     (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue || 0; adCost += a.adCost || 0; adClicks += a.adClicks || 0; adOrders += a.adOrders || 0; });
     if (state.overall && Array.isArray(state.overall.months)) {
       const o = state.overall.months.find(x => x.month === m);
@@ -6672,7 +6675,8 @@ function _zenMonthlyRows() {
       roas: adCost > 0 ? adRev / adCost * 100 : 0,
       orders: adOrders,
       avgPrice: orders > 0 ? Math.round(rev / orders) : 0,
-      adClicks: adClicks
+      adClicks: adClicks,
+      soikomi: soikomi
     };
   });
 }
@@ -6703,17 +6707,16 @@ window._zdSetMode = _zdSetMode;
 function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
   const asc = _zenMonthlyRows();
-  const sumEl = document.getElementById('zdSummary');
-  if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; if (sumEl) sumEl.innerHTML = ''; return; }
-  const S = asc.reduce((a, r) => { a.rev += r.totSales; a.adRev += r.adSales; a.adCost += r.spend; a.cl += r.adClicks; return a; }, { rev: 0, adRev: 0, adCost: 0, cl: 0 });
-  const avgRoas = S.adCost > 0 ? S.adRev / S.adCost * 100 : 0;
-  const cards = [['累計総売上', '¥' + Math.round(S.rev).toLocaleString(), '#2563eb'], ['累計広告売上', '¥' + Math.round(S.adRev).toLocaleString(), '#d97706'], ['累計実績額', '¥' + Math.round(S.adCost).toLocaleString(), '#b45309'], ['累計クリック', Math.round(S.cl).toLocaleString(), '#475569'], ['平均広告ROAS', (Math.round(avgRoas * 10) / 10) + '%', '#dc2626']];
-  if (sumEl) sumEl.innerHTML = cards.map(c => '<div style="flex:1 1 150px;min-width:150px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--text3);margin-bottom:2px">' + c[0] + '</div><div style="font-size:1.2rem;font-weight:700;color:' + c[2] + ';font-family:\'DM Mono\',ui-monospace,monospace">' + c[1] + '</div></div>').join('');
+  if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
   const pool = {}; MI_COLS.forEach(c => { pool[c.key] = asc.slice(0, -1).map(r => r[c.key]).filter(v => v > 0); });
+  // 【v1.0405】送り込み売上列（子商品の月次売上合計）。色は他列と別（紫系）。
+  const SOI_HBG = '#ece0fb', SOI_BG = '#f7f1fe', SOI_BORDER = '2px solid #c4b5fd';
+  const soiPool = asc.slice(0, -1).map(r => r.soikomi).filter(v => v > 0);
   const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
   const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
   const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">月</th>'
-    + MI_COLS.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
+    + MI_COLS.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
+    + '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const desc = asc.slice().reverse();
   const drows = _zdMode === 'yoy' ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
   const body = drows.map(r => {
@@ -6723,7 +6726,10 @@ function renderGraphData() {
       const inner = (!v || v === 0) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
       return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + inner + '</td>';
     }).join('');
-    return '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + '</tr>';
+    const sv = r.soikomi; const sdisp = fmtY(sv);
+    const sinner = (!sv || sv === 0) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
+    const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
+    return '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + soiCell + '</tr>';
   }).join('');
   wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
