@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0412 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0413 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1365,6 +1365,16 @@ th.col-pro, td.col-pro { background-color: #d7eede; }       /* PRオプ料率: �
 th.col-pro { background-color: #b9dfc6; }                   /* PRオプ料率: 濃いめグリーン(見出し) */
 th.col-bidonly, td.col-bidonly { background-color: #fbe7ca; } /* 入札価格: 濃いめオレンジ(淡) */
 th.col-bidonly { background-color: #f5cf96; }              /* 入札価格: 濃いめオレンジ(見出し) */
+
+/* 【v187】主要テーブル（商品リスト・順位表）: 商品コード/商品名/メインKW 以外の列を中央揃え。 */
+.data-grid th, .data-grid td { text-align: center; }
+.data-grid th[data-sort="code"],
+.data-grid th[data-sort="name"],
+.data-grid th[data-resize-key^="kw"],
+.data-grid td.code-cell,
+.data-grid td:has(> .name-cell-wrap),
+.data-grid td:has(> .kw-cell) { text-align: left; }
+
 /* 【v1.0337-1.0339】SEO売上/広告売上セル: メイン数値を行の縦中央に置き、その下に構成比%を配置。
    上下対称のパディングでメイン数値が行の中央に来るようにし（行の高さを確保）、%は下部に絶対配置。 */
 td.share-cell { position: relative; padding-top: 17px; padding-bottom: 17px; }
@@ -2648,7 +2658,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0412</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0413</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2786,7 +2796,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
         </div>
         <div class="table-wrap">
-          <table id="tableBasic">
+          <table id="tableBasic" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
@@ -2875,7 +2885,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="search-rep-badge" id="retiredRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
         </div>
         <div class="table-wrap">
-          <table id="tableRetired">
+          <table id="tableRetired" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
@@ -2978,7 +2988,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="state-explain" id="adAdjustStateExplain" style="display:none;"></span>
         </div>
         <div class="table-wrap">
-          <table id="tableAdAdjust">
+          <table id="tableAdAdjust" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
@@ -3018,7 +3028,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             data-tooltip="ストクリ（ストアクリエイターPro）の商品リスト(PRオプ料率CSV / data*.csv)を取り込み、そこに載っていない＝Yahooで商品ページが削除された商品を「撤退済み」にします。①Yahooだけ撤退・楽天継続の運用に。">🔍 撤退チェック（ストクリ突き合わせ）</button>
         </div>
         <div class="table-wrap">
-          <table id="tableProAdjust">
+          <table id="tableProAdjust" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
@@ -3059,7 +3069,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           </span>
         </div>
         <div class="table-wrap">
-          <table id="tableAdTune">
+          <table id="tableAdTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
@@ -3103,7 +3113,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           </span>
         </div>
         <div class="table-wrap">
-          <table id="tableProTune">
+          <table id="tableProTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
@@ -3138,7 +3148,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="filter-label" id="adRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
         <div class="table-wrap">
-          <table id="tableAdRank" class="rank-table">
+          <table id="tableAdRank" class="rank-table data-grid">
             <thead><tr id="adRankHeadRow"></tr></thead>
             <tbody></tbody>
           </table>
@@ -3160,7 +3170,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="filter-label" id="seoRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
         </div>
         <div class="table-wrap">
-          <table id="tableSeoRank" class="rank-table">
+          <table id="tableSeoRank" class="rank-table data-grid">
             <thead><tr id="seoRankHeadRow"></tr></thead>
             <tbody></tbody>
           </table>
