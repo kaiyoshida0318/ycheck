@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0439 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0440 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2775,7 +2775,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0439</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0440</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7082,14 +7082,19 @@ function renderOyako(){
     const stats = monthsToShow.map(ym=>_famStat(key, members, ym));
     return { key, dispCode, name, stats };
   });
-  // ソート（親％／子％。直近3ヶ月は最新月[stats[0]]基準）。未指定は総売上順。
+  // ソート（SEO％／広告％／親％／子％。直近3ヶ月は最新月[stats[0]]基準）。未指定は総売上順。
+  // 【v1.0440】SEO売上・広告売上もソート対象に追加。
+  const _oyMetric = (s, key) => {
+    if (!s) return -1;
+    const salesTot = s.groupSEO + s.adRev;
+    if (key === 'seo')    return salesTot > 0 ? s.groupSEO / salesTot : -1;
+    if (key === 'ad')     return salesTot > 0 ? s.adRev / salesTot : -1;
+    if (key === 'parent') return s.groupSEO > 0 ? s.parentSEO / s.groupSEO : -1;
+    if (key === 'child')  return s.groupSEO > 0 ? s.childSEO / s.groupSEO : -1;
+    return -1;
+  };
   if (_oySortKey){
-    rowsData.sort((a,b)=>{
-      const sa=a.stats[0], sb=b.stats[0];
-      const pa = sa.groupSEO>0 ? (_oySortKey==='parent'?sa.parentSEO:sa.childSEO)/sa.groupSEO : -1;
-      const pb = sb.groupSEO>0 ? (_oySortKey==='parent'?sb.parentSEO:sb.childSEO)/sb.groupSEO : -1;
-      return _oySortDir*(pa-pb);
-    });
+    rowsData.sort((a,b)=> _oySortDir*(_oyMetric(a.stats[0],_oySortKey) - _oyMetric(b.stats[0],_oySortKey)));
   } else {
     rowsData.sort((a,b)=> b.stats.reduce((s,m)=>s+m.totSales,0) - a.stats.reduce((s,m)=>s+m.totSales,0));
   }
@@ -7108,18 +7113,20 @@ function renderOyako(){
   const showMonthCol = (_oyMode==='last3');
   const sortArrow = (k)=> _oySortKey===k ? (_oySortDir<0?' ▼':' ▲') : ' ⇅';
   const DIV = 'border-left:2px solid #64748b';   // 【v209】売上系と親子系の区切り「｜」
-  const th = (txt, extra='') => `<th style="padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);${extra}">${txt}</th>`;
+  // 【v1.0440】ヘッダー文字を数字の拡大に合わせて大きく（0.82rem→0.86rem、注記10px→10.5px）。
+  const th = (txt, extra='') => `<th style="padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.86rem;font-weight:700;color:var(--text2);${extra}">${txt}</th>`;
   // 比率＋金額の列見出し（下に「比率／金額」の小さな注記）
-  const thR = (txt, bg, tcol, extra='', click='') => `<th ${click} style="padding:8px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:${tcol};background:${bg};line-height:1.2;${click?'cursor:pointer;user-select:none;':''}${extra}">${txt}<div style="font-size:10px;font-weight:600;color:#8794a3;margin-top:1px">比率／金額</div></th>`;
+  const thR = (txt, bg, tcol, extra='', click='') => `<th ${click} style="padding:8px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.86rem;font-weight:700;color:${tcol};background:${bg};line-height:1.2;${click?'cursor:pointer;user-select:none;':''}${extra}">${txt}<div style="font-size:10.5px;font-weight:600;color:#8794a3;margin-top:1px">比率／金額</div></th>`;
   // 【v1.0439】全ヘッダーの文字色をステータス見出しと同じ var(--text2) に統一。背景色は維持。
-  let HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>';
+  const _arr = (k)=>'<span style="color:#64748b;font-size:11.6px">'+sortArrow(k)+'</span>';
+  let HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.89rem;color:var(--text2)">商品</th>';
   if (showMonthCol) HEAD += th('月','text-align:right;background:var(--bg3)');
   HEAD += th('総売上','text-align:right;background:#eef2f7');   // 【v1.0439】SEO売上の左に総売上（金額）
-  HEAD += thR('SEO売上','#d7efe0','var(--text2)');
-  HEAD += thR('広告売上','#fbe7ca','var(--text2)');
+  HEAD += thR('SEO売上'+_arr('seo'),'#d7efe0','var(--text2)', '', `onclick="_oySort('seo')"`);   // 【v1.0440】ソート追加
+  HEAD += thR('広告売上'+_arr('ad'),'#fbe7ca','var(--text2)', '', `onclick="_oySort('ad')"`);      // 【v1.0440】ソート追加
   HEAD += th('広告金額','text-align:right;background:#fdf0dd');
-  HEAD += thR('親商品<span style="color:#64748b;font-size:11px">'+sortArrow('parent')+'</span>','#e0f2e6','var(--text2)', DIV, `onclick="_oySort('parent')"`);
-  HEAD += thR('子商品<span style="color:#64748b;font-size:11px">'+sortArrow('child')+'</span>','#fbf1c9','var(--text2)', '', `onclick="_oySort('child')"`);   // 【v1.0439】個商品→子商品
+  HEAD += thR('親商品'+_arr('parent'),'#e0f2e6','var(--text2)', DIV, `onclick="_oySort('parent')"`);
+  HEAD += thR('子商品'+_arr('child'),'#fbf1c9','var(--text2)', '', `onclick="_oySort('child')"`);   // 【v1.0439】個商品→子商品
   HEAD += th('ステータス','text-align:center');
 
   const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':'¥'+Math.round(v).toLocaleString();
@@ -7130,8 +7137,8 @@ function renderOyako(){
   const pctCell = (num, den, bg, bb, extra='') => {
     if (!den || den<=0) return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><span style="color:var(--text3)">—</span></td>`;
     const pct = Math.round(num/den*100);
-    const amt = _oyShowAmt ? `<div style="font-size:11.5px;color:#64748b;margin-top:3px;font-family:'DM Mono',ui-monospace,monospace">¥${Math.round(num).toLocaleString()}</div>` : '';
-    return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><div style="font-size:16px;font-weight:800;line-height:1.05;color:${pctBandColor(pct)}">${pct}%</div>${amt}</td>`;
+    const amt = _oyShowAmt ? `<div style="font-size:12.65px;color:#64748b;margin-top:3px;font-family:'DM Mono',ui-monospace,monospace">¥${Math.round(num).toLocaleString()}</div>` : '';
+    return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><div style="font-size:16.8px;font-weight:800;line-height:1.05;color:${pctBandColor(pct)}">${pct}%</div>${amt}</td>`;
   };
 
   const body = rowsData.map(({key,dispCode,name,stats})=>{
@@ -7144,12 +7151,12 @@ function renderOyako(){
       const first = mi===0, last = mi===stats.length-1;
       const bb = last ? GRPSEP : '1px solid var(--border)';   // グループ内は薄線、最終行だけ濃い境目
       const prod = first ? `<td rowspan="${rs}" style="padding:9px 12px;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP};background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;gap:10px"><div style="flex:0 0 auto">${imgBox}</div><div style="text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:'DM Mono',ui-monospace,monospace">${_esc(key)}</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap" title="${safeFull}">${safeFull}</div></div></div></td>` : '';
-      const monthCell = showMonthCol ? `<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);font-family:'DM Mono',ui-monospace,monospace;white-space:nowrap;border-bottom:${bb}">${m.ym.replace('-','/')}</td>` : '';
+      const monthCell = showMonthCol ? `<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.8925rem;color:var(--accent);background:var(--bg3);font-family:'DM Mono',ui-monospace,monospace;white-space:nowrap;border-bottom:${bb}">${m.ym.replace('-','/')}</td>` : '';
       const salesTot = m.groupSEO + m.adRev;                    // SEO売上比率／広告売上比率 の分母（SEO%＋広告%＝100%）
-      const totCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.9rem;font-weight:700;background:#f3f6fb;border-bottom:${bb};white-space:nowrap">${fmtY(m.totSales)}</td>`;   // 【v1.0439】総売上（金額）
+      const totCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.945rem;font-weight:700;background:#f3f6fb;border-bottom:${bb};white-space:nowrap">${fmtY(m.totSales)}</td>`;   // 【v1.0439】総売上（金額）
       const seoCell = pctCell(m.groupSEO, salesTot, '#eafaf0', bb);   // SEO売上：比率＋金額
       const adCell  = pctCell(m.adRev,    salesTot, '#fdf1e3', bb);   // 広告売上：比率＋金額
-      const adCostCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.9rem;background:#fdf6ec;border-bottom:${bb};white-space:nowrap">${fmtY(m.adCost)}</td>`;
+      const adCostCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.945rem;background:#fdf6ec;border-bottom:${bb};white-space:nowrap">${fmtY(m.adCost)}</td>`;
       const pCell = pctCell(m.parentSEO, m.groupSEO, '#f2fbf5', bb, DIV);   // 親商品：区切り線付き
       const cCell = pctCell(m.childSEO, m.groupSEO, '#fefce8', bb);
       const stCell = first ? `<td rowspan="${rs}" style="padding:8px 12px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP}">${statusSelectHtml(key,'status')}</td>` : '';
