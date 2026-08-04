@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0426 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0427 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -418,10 +418,9 @@ body {
   border-color: #64748b;
 }
 
-/* 【v231/v196】「ヘッダーを隠す」: ヘッダー＋上段ナビ＋【ステータス】ブロックを隠し、【状態】を最上部に */
+/* 【v231/v202】「ヘッダーを隠す」: ヘッダー＋上段ナビ（【基本】〜【調整】行）を隠し、【ステータス】を最上部に */
 body.chrome-hidden .header,
 body.chrome-hidden .top-nav:not(.top-nav-3) { display: none; }
-body.chrome-hidden .nav-group-status { display: none; }  /* 【v196】ステータスブロックも隠す（状態ブロックより上を隠す） */
 body.chrome-hidden .top-nav-3 { top: 0; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
@@ -466,8 +465,8 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 /* 【v200】【入札状態】＋【PR状態】を1行に横並び。溢れたら折り返し。 */
 .nav-row-states { display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 4px; width: 100%; }
 .nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
-/* 【v196/v200】ヘッダーを隠すボタンは状態行の右端へ */
-.nav-row-states #btnToggleChrome { margin-left: auto; white-space: nowrap; }
+/* 【v202】ヘッダーを隠すボタンは【ステータス】行の右端へ */
+.nav-group-status #btnToggleChrome { margin-left: auto; white-space: nowrap; }
 /* 【v197/v200】チップのグループ区切り（縦線） */
 .top-nav-3 .chip-sep { flex: 0 0 auto; width: 2px; height: 22px; align-self: center; background: #8b94a3; border-radius: 1px; margin: 0 4px; }
 /* 【v200】入札状態⇔PR状態の境目は少し高く濃い区切り */
@@ -2752,7 +2751,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0426</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0427</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2826,6 +2825,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-out"><span class="chip-label">撤退予定-out記入済</span><span class="chip-num" id="cntStatusWithdrawOut">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
+    <!-- 【v202】ヘッダーを隠すトグル。【ステータス】行の右端に配置。押すと【ステータス】より上を隠す。 -->
+    <button class="btn sm ghost" id="btnToggleChrome" type="button" title="ヘッダー＋上段ナビを隠して【ステータス】を最上部にします">🔼 ヘッダーを隠す</button>
   </div>
   <!-- 【v200】【入札状態】＋【PR状態】を1行に横並び。 -->
   <div class="nav-row-states">
@@ -2857,8 +2858,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     </div>
-    <!-- 【v196】ヘッダーを隠すトグル。状態行の右端に配置。 -->
-    <button class="btn sm ghost" id="btnToggleChrome" type="button" title="ヘッダー＋上段ナビ＋【ステータス】を隠して【入札状態】を最上部にします">🔼 ヘッダーを隠す</button>
   </div>
 </nav>
 
