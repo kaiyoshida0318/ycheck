@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0416 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0417 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2678,7 +2678,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0416</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0417</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5658,6 +5658,18 @@ async function commitUpload() {
     _setSpotMark(tuneTodayStr());  // 【v1.0359】端末マーカーにも当日を刻む（当日後退防止）
     state.rankMeta.lastSpotUpdateTs = Date.now();  // 【v301】このサイクルの起点。以後の対応(adActionTs等)はこれより新しい＝当サイクル対応済み→全体のみ。
     _spotStaleAckedDate = '';  // 更新したので「未更新のまま続ける」確認は当日分をリセット
+    // 【v191】最新値を更新＝新しい確認サイクルの開始。前サイクルのレビュー済み(adReviewed/proReviewed)を
+    //   全解除し、推移確認/未確認を「今日の分類」で再表示する（「全更新処理」の確認印は当サイクル限り）。
+    //   ※従来は値が変わった商品(_clearDone)だけ解除だったため、料率/入札価格が変わらない商品は
+    //     全更新処理後にずっと「全体のみ」に留まり、順位が更新されても推移確認/未確認に戻らなかった。
+    const _cycTs = Date.now();
+    let _cycCleared = 0;
+    Object.keys(state.productMeta || {}).forEach(k => {
+      const m = state.productMeta[k]; if (!m) return;
+      if (m.adReviewed)  { m.adReviewed  = false; m.adReviewedTs  = _cycTs; m._ts = _cycTs; _cycCleared++; }
+      if (m.proReviewed) { m.proReviewed = false; m.proReviewedTs = _cycTs; m._ts = _cycTs; _cycCleared++; }
+    });
+    if (_cycCleared > 0) log(`🔄 新しい確認サイクル開始：レビュー済み ${_cycCleared}件を解除（推移確認/未確認を再表示）`, 'ok');
   }
   // 【v202】PRオプCSV（=Yahoo公開中の全商品リスト）に載っていない既存商品を撤退済みに。
   // 確認ダイアログでOKのときだけ適用。saveToStorageより前なので撤退結果も保存される。
