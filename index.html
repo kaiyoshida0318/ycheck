@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0415 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0416 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1305,13 +1305,13 @@ td[data-resize-key] {
 }
 /* 【v188/v189】入札状態・PRオプ状態: セル表示は2行略称のファサード、その上に透明selectを重ねて操作。
    列幅は「一番長い文言」ぴったり（列内の全ファサードを同一幅に揃え、中央寄せ）。余分な余白は付けない。 */
-.status-cell { position: relative; display: block; width: 100%; vertical-align: middle; }
+.status-cell { position: relative; display: block; width: 100%; text-align: center; vertical-align: middle; }
 .status-facade {
-  display: flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   text-align: center; gap: 2px; line-height: 1.18; white-space: nowrap;  /* 改行は<br>のみ。自動折返し・1文字折返しを禁止 */
   background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
-  font-size: 0.78rem; font-weight: 600; padding: 2px 6px;
-  width: 100%; min-width: 0; min-height: 28px; box-sizing: border-box; cursor: pointer;
+  font-size: 0.624rem; font-weight: 600; padding: 2px 6px;  /* 【v190】現状(0.78rem)の80% */
+  width: 90px; min-width: 0; min-height: 28px; box-sizing: border-box; cursor: pointer;  /* 【v190】入札状態・PRオプ状態で共通の固定枠幅（最長ラベル87.3pxに合わせて統一） */
 }
 .status-chev { font-size: 0.66em; opacity: 0.55; flex: 0 0 auto; }
 .status-select.status-overlay {
@@ -2678,7 +2678,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0415</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0416</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
