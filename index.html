@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0442 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0446 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -452,10 +452,9 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .state-chip[data-state="status-churitsu-ad"].active, .state-chip[data-state="status-churitsu-noad"].active { background:#c99700; border-color:#a67e00; }
 .state-chip[data-state="pro-wc"] { background:#fdeede; border-color:#f5c99a; }
 .state-chip[data-state="pro-wc"]:hover, .state-chip[data-state="pro-wc"].active { background:#ea7317; border-color:#c85f0f; }
-.state-chip[data-state="status-withdraw-plan"],
-.state-chip[data-state="status-withdraw-out"] { background:#fde9e8; border-color:#f5b8b5; }
-.state-chip[data-state="status-withdraw-plan"]:hover, .state-chip[data-state="status-withdraw-out"]:hover,
-.state-chip[data-state="status-withdraw-plan"].active, .state-chip[data-state="status-withdraw-out"].active { background:#dc2626; border-color:#b91c1c; }
+.state-chip[data-state="status-withdraw-plan"] { background:#fde9e8; border-color:#f5b8b5; }
+.state-chip[data-state="status-withdraw-plan"]:hover,
+.state-chip[data-state="status-withdraw-plan"].active { background:#dc2626; border-color:#b91c1c; }
 .state-chip[data-state="status-withdrawn"] { background:#efe4da; border-color:#d9c3ad; }
 .state-chip[data-state="status-withdrawn"]:hover, .state-chip[data-state="status-withdrawn"].active { background:#8b5a2b; border-color:#6f4720; }
 
@@ -504,8 +503,7 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .top-nav-3 .state-chip[data-state="status-churitsu-ad"] { color: #a67c00; }   /* 濃い黄色 */
 .top-nav-3 .state-chip[data-state="status-churitsu-noad"] { color: #caa61e; } /* 少し薄い黄色 */
 .top-nav-3 .state-chip[data-state="pro-wc"] { color: #ea7317; }
-.top-nav-3 .state-chip[data-state="status-withdraw-plan"],
-.top-nav-3 .state-chip[data-state="status-withdraw-out"] { color: #dc2626; }
+.top-nav-3 .state-chip[data-state="status-withdraw-plan"] { color: #dc2626; }
 .top-nav-3 .state-chip[data-state="status-withdrawn"] { color: #8b5a2b; }
 
 /* 全体の説明ボタン（クリック不可のアイコン風） */
@@ -1129,14 +1127,30 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 #view-monthly .mi-mode-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 /* 【v205】商品-親子売上比率：セグメント切替ボタン（月別/直近3ヶ月、金額あり/なし） */
 /* 【v1.0439】トグルのペアをボックスで囲むセグメント型UI */
-#view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 7px; }
-#view-oyako .oy-ctl-label { font-size: 0.78rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
-#view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 9px; overflow: hidden; background: #eef1f4; }
-#view-oyako .oy-btn { font-size: 0.88rem; padding: 5.3px 13px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0442】高さを約95%に */
+#view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 5px; }
+#view-oyako .oy-ctl-label { font-size: 0.72rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
+#view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 8px; overflow: hidden; background: #eef1f4; }
+#view-oyako .oy-btn { font-size: 0.8rem; padding: 4.4px 8.5px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0446】1行に収めるためボタン・文字を少し縮小 */
 #view-oyako .oy-seg .oy-btn + .oy-btn { border-left: 1px solid #cdd5de; }
 #view-oyako .oy-btn:hover { background: #e2e7ee; }
 #view-oyako .oy-btn.on { background: #1c8fc9; color: #fff; }
 #view-oyako .oy-btn.on:hover { background: #1783ba; }
+/* 【v1.0443】親比率バンド：0-20が良い(緑)→80-100が悪い(赤)。左が良・右が悪を色で表現。 */
+#view-oyako #oyBandSeg .oy-btn[data-band="0"] { color: #15803d; background: #e7f6ec; }
+#view-oyako #oyBandSeg .oy-btn[data-band="1"] { color: #4d7c0f; background: #eef6df; }
+#view-oyako #oyBandSeg .oy-btn[data-band="2"] { color: #a16207; background: #fbf3d6; }
+#view-oyako #oyBandSeg .oy-btn[data-band="3"] { color: #c2410c; background: #fdeadd; }
+#view-oyako #oyBandSeg .oy-btn[data-band="4"] { color: #b91c1c; background: #fce7e7; }
+#view-oyako #oyBandSeg .oy-btn[data-band="0"]:hover { background: #d6efdf; }
+#view-oyako #oyBandSeg .oy-btn[data-band="1"]:hover { background: #e4f0cd; }
+#view-oyako #oyBandSeg .oy-btn[data-band="2"]:hover { background: #f7ebc2; }
+#view-oyako #oyBandSeg .oy-btn[data-band="3"]:hover { background: #fbddc9; }
+#view-oyako #oyBandSeg .oy-btn[data-band="4"]:hover { background: #f9d5d5; }
+#view-oyako #oyBandSeg .oy-btn[data-band="0"].on { background: #16a34a; color: #fff; }
+#view-oyako #oyBandSeg .oy-btn[data-band="1"].on { background: #65a30d; color: #fff; }
+#view-oyako #oyBandSeg .oy-btn[data-band="2"].on { background: #ca8a04; color: #fff; }
+#view-oyako #oyBandSeg .oy-btn[data-band="3"].on { background: #ea580c; color: #fff; }
+#view-oyako #oyBandSeg .oy-btn[data-band="4"].on { background: #dc2626; color: #fff; }
 /* 表は内容幅で中央寄せ（画面いっぱいに間延びさせない） */
 #view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-width: 100%; max-height: 76vh; }  /* 【v1.0442】ヘッダー固定：この枠を縦横スクロールのコンテナにする（overflow:hiddenだとstickyが効かない） */
 /* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない） */
@@ -2775,7 +2789,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0442</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0446</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2848,7 +2862,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
-    <button class="state-chip" data-state="status-withdraw-out"><span class="chip-label">撤退予定-out記入済</span><span class="chip-num" id="cntStatusWithdrawOut">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
     <!-- 【v202】ヘッダーを隠すトグル。【ステータス】行の右端に配置。押すと【ステータス】より上を隠す。 -->
     <button class="btn sm ghost" id="btnToggleChrome" type="button" title="ヘッダー＋上段ナビを隠して【ステータス】を最上部にします">🔼 ヘッダーを隠す</button>
@@ -3024,18 +3037,19 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="view" id="view-oyako">
       <div class="card">
         <h3 class="card-title">商品-各比率</h3>
-        <div class="filters oy-toolbar" style="flex-wrap:wrap;gap:14px 34px;align-items:center;justify-content:center">
+        <div class="filters oy-toolbar" style="flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center">
           <span class="oy-ctl"><span class="oy-ctl-label">表示</span>
             <span id="oyModeSeg" class="oy-seg" role="group" aria-label="表示モード">
               <button type="button" class="oy-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
               <button type="button" class="oy-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
             </span>
-            <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+            <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:13px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
           </span>
           <span class="oy-ctl"><span class="oy-ctl-label">広告</span>
             <span id="oyAdSeg" class="oy-seg" role="group" aria-label="広告フィルタ">
               <button type="button" class="oy-btn on" data-ad="all" onclick="_oySetAd('all')" title="全ての商品を表示">全体</button>
-              <button type="button" class="oy-btn" data-ad="ad" onclick="_oySetAd('ad')" title="広告のある商品のみ表示">広告あり</button>
+              <button type="button" class="oy-btn" data-ad="ad" onclick="_oySetAd('ad')" title="広告を出している商品のみ表示">あり</button>
+              <button type="button" class="oy-btn" data-ad="none" onclick="_oySetAd('none')" title="広告を出していない商品のみ表示">なし</button>
             </span>
           </span>
           <span class="oy-ctl"><span class="oy-ctl-label">金額</span>
@@ -5286,6 +5300,7 @@ function migrateRemoveWarnStatus() {
     if (!m) return;
     if (m.adStatus === '入札価格△') { m.adStatus = '入札×-調整中'; migrated++; }  // 【v186】旧△は新ラベルの×-調整中へ
     if (m.proStatus === 'PRオプ△') { m.proStatus = 'PR×'; migrated++; }
+    if (m.status === '撤退予定-out記入済') { m.status = '撤退予定'; m.statusTs = Date.now(); migrated++; }  // 【v1.0445】撤退予定-out記入済を廃止 → 撤退予定へ統合
   });
   if (migrated > 0) {
     console.log(`Ycheck: 入札価格△/PRオプ△ ${migrated}件を✕へ移行しました（△廃止 v212）`);
@@ -6292,7 +6307,7 @@ function updateStateCounts() {
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
   // 【v195】新ステータス別カウント
-  let sKenzenAd = 0, sKenzenNoad = 0, sChuritsuAd = 0, sChuritsuNoad = 0, sWithdrawConsider = 0, sWithdrawPlan = 0, sWithdrawOut = 0, withdrawnCount = 0;
+  let sKenzenAd = 0, sKenzenNoad = 0, sChuritsuAd = 0, sChuritsuNoad = 0, sWithdrawConsider = 0, sWithdrawPlan = 0, withdrawnCount = 0;
   allCodes.forEach(code => {
     // 【v195】撤退済みは別集計（isRetiredで以降スキップされるため先に数える）
     if (((state.productMeta[code] || {}).status || '') === '撤退済み') { withdrawnCount++; return; }
@@ -6320,8 +6335,7 @@ function updateStateCounts() {
     else if (st === '中立-広告あり□') sChuritsuAd++;
     else if (st === '中立-広告なし□') sChuritsuNoad++;
     else if (st === '撤退検討▲') sWithdrawConsider++;
-    else if (st === '撤退予定' || st === '撤退■') sWithdrawPlan++;
-    else if (st === '撤退予定-out記入済') sWithdrawOut++;
+    else if (st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済') sWithdrawPlan++;   // 【v1.0445】out記入済は撤退予定へ統合
     if (!adS) unselectedAd++;
     if (!proS) unselectedPro++;
     // 【v208】入札状態の「全体」＝入札価格が記入されている商品数
@@ -6348,7 +6362,6 @@ function updateStateCounts() {
   _setTx('#cntStatusChuritsuAd', sChuritsuAd);
   _setTx('#cntStatusChuritsuNoad', sChuritsuNoad);
   _setTx('#cntStatusWithdrawPlan', sWithdrawPlan);
-  _setTx('#cntStatusWithdrawOut', sWithdrawOut);
   _setTx('#cntStatusWithdrawn', withdrawnCount);
   // Basic(商品-基本データ)タブの現役商品合計数を表示
   const cntBasic = $('#cntBasicActive');
@@ -6390,8 +6403,8 @@ const PRO_STATUS_ORDER = {
   'PR◯': 1, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR×': 3,
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
-const STATUS_ORDER = { '新商品': 0, '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退予定-out記入済': 7, '撤退済み': 8,
-  '通常商品': 1, '現役商品': 1, '撤退■': 6, '': 0 };  // 互換用（旧値）
+const STATUS_ORDER = { '新商品': 0, '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
+  '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0 };  // 互換用（旧値。out記入済は撤退予定へ統合）
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
 function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
@@ -6571,14 +6584,14 @@ const STATUS_LIFE_COLOR = {
   '中立-広告なし□': '#caa61e',      // 少し薄い黄色（可読性は確保）
   '撤退検討▲': '#ea7317',          // オレンジ
   '撤退予定': '#dc2626',           // 赤
-  '撤退予定-out記入済': '#dc2626',  // 赤
   '撤退済み': '#8b5a2b'            // 茶色
 };
-const STATUS_LIFE_OPTIONS = ['新商品', '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退予定-out記入済', '撤退済み'];
+const STATUS_LIFE_OPTIONS = ['新商品', '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
 function statusLifeColor(value) { return STATUS_LIFE_COLOR[value] || '#1a1a1a'; }
 // 旧値→新値の表示フォールバック（保存データ未移行でもドロップダウンに選択状態を出す）。
 function statusLifeDisplayValue(v) {
   if (v === '撤退■') return '撤退予定';
+  if (v === '撤退予定-out記入済') return '撤退予定';  // 【v1.0445】廃止 → 撤退予定へ寄せる
   if (v === '通常商品' || v === '現役商品') return '新商品';  // 【v195】通常商品は新商品へ寄せた
   return v;
 }
@@ -6587,8 +6600,7 @@ const STATUS_LIFE_DISPLAY_LABEL = {
   '健常-広告あり◯': '健常<br>広告あり◯',
   '健常-広告なし◯': '健常<br>広告なし◯',
   '中立-広告あり□': '中立<br>広告あり□',
-  '中立-広告なし□': '中立<br>広告なし□',
-  '撤退予定-out記入済': '撤退予定<br>out記入済'
+  '中立-広告なし□': '中立<br>広告なし□'
 };
 function statusLifeDisplayLabel(value) {
   if (STATUS_LIFE_DISPLAY_LABEL[value]) return STATUS_LIFE_DISPLAY_LABEL[value];  // 固定略称（静的HTML・安全）
@@ -7010,7 +7022,7 @@ let _oyAdFilter = 'all';    // 【v1.0442】'all'（全体）| 'ad'（広告あ�
 const OY_BANDS = [[0,20],[20,40],[40,60],[60,80],[80,100]];
 function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
 function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
-function _oySetAd(v){ _oyAdFilter = (v === 'ad') ? 'ad' : 'all'; renderOyako(); }
+function _oySetAd(v){ _oyAdFilter = (v === 'ad' || v === 'none') ? v : 'all'; renderOyako(); }
 
 function renderOyako(){
   const wrap = document.getElementById('oy-wrap');
@@ -7107,9 +7119,11 @@ function renderOyako(){
   } else {
     rowsData.sort((a,b)=> b.stats.reduce((s,m)=>s+m.totSales,0) - a.stats.reduce((s,m)=>s+m.totSales,0));
   }
-  // 【v1.0442】広告フィルタ：広告あり＝表示月のいずれかで広告売上または広告金額がある商品
+  // 【v1.0442/1.0444】広告フィルタ：あり＝表示月のいずれかで広告売上/広告金額がある商品、なし＝いずれの月にも広告がない商品
   if (_oyAdFilter === 'ad') {
     rowsData = rowsData.filter(r => r.stats.some(s => (s.adRev > 0 || s.adCost > 0)));
+  } else if (_oyAdFilter === 'none') {
+    rowsData = rowsData.filter(r => !r.stats.some(s => (s.adRev > 0 || s.adCost > 0)));
   }
   // 【v1.0439】親比率バンドで絞り込み（stats[0]=最新表示月の親％基準）
   if (_oyParentBand != null && OY_BANDS[_oyParentBand]) {
@@ -9492,8 +9506,7 @@ const STATE_FILTERS = {
   'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
   'pro-ng':        { label: 'PR×',              targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic',   match: (meta) => (meta.status || '') === '撤退検討▲' },
-  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic',   match: (meta) => { const s = meta.status || ''; return s === '撤退予定' || s === '撤退■'; } },
-  'status-withdraw-out':  { label: '撤退予定-out記入済', targetView: 'basic', match: (meta) => (meta.status || '') === '撤退予定-out記入済' },
+  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic',   match: (meta) => { const s = meta.status || ''; return s === '撤退予定' || s === '撤退■' || s === '撤退予定-out記入済'; } },
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
   'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
   'unselected-pro':{ label: '選択前-PRオプ□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
@@ -9552,10 +9565,10 @@ function updateActiveStateChip() {
 }
 
 function updateFilterBanners() {
-  // 【v1.0343/v195】撤退チェックボタンは「撤退予定／撤退予定-out記入済」で絞り込んだ時だけ表示する。
+  // 【v1.0343/v195/v1.0445】撤退チェックボタンは「撤退予定」で絞り込んだ時だけ表示する。
   const _retireBtn = document.getElementById('btnRetireCheck');
   const _rt = state.activeStateFilter && state.activeStateFilter.type;
-  if (_retireBtn) _retireBtn.style.display = (_rt === 'status-withdraw-plan' || _rt === 'status-withdraw-out' || _rt === 'pro-w') ? '' : 'none';
+  if (_retireBtn) _retireBtn.style.display = (_rt === 'status-withdraw-plan' || _rt === 'pro-w') ? '' : 'none';
   const adBanner = $('#adAdjustBanner');
   const proBanner = $('#proAdjustBanner');
   // 【v213】状態カテゴリ説明文（ツールバー内）
