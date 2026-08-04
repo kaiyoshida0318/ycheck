@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0436 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0437 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1492,6 +1492,18 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
 .status-select.none { background: var(--bg3); color: var(--text3); }
 .status-select.info { background: rgba(37,99,235,0.08); color: var(--accent); border-color: rgba(37,99,235,0.3); }
 
+/* 【v1.0437】親子ステータス継承：追従表示＋個別/追従トグル */
+.status-life-wrap { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.status-facade-linked { border-style: dashed; opacity: 0.9; }
+.status-link-badge { font-size: 0.8em; opacity: 0.75; margin-right: 1px; }
+.status-link-btn {
+  font-size: 10px; line-height: 1; padding: 3px 5px; border: 1px solid var(--border2);
+  border-radius: 4px; background: var(--bg2); color: var(--text3); cursor: pointer;
+  white-space: nowrap; flex: 0 0 auto;
+}
+.status-link-btn:hover { background: var(--bg3); color: var(--text2); border-color: var(--accent); }
+.status-link-btn:disabled { opacity: 0.4; cursor: default; }
+
 /* Note cell (対応内容) */
 .note-cell {
   min-width: 180px;
@@ -2768,7 +2780,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0436</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0437</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4725,6 +4737,7 @@ async function ghLoadFromGitHub() {
       migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
       migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
       migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
+      migrateStatusLink();        // 【v1.0437】親子ステータス継承の初回マイグレーション
     } catch (eMig) { console.warn('[Ycheck診断-load] マイグレーションで例外（読込は継続）:', eMig && eMig.message); }
     // 【v1.0384】localStorageへ書き戻し。容量超過でも critical(productMeta/bid/proRate) は必ず残るよう、
     //   rank→item→ad の順に段階的に落として最小構成でも書き切る。従来は「フル→rank無し」で失敗すると
@@ -4810,6 +4823,7 @@ async function ghLoadFromPublic() {
     migrateAdStatusLabels();
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
+    migrateStatusLink();        // 【v1.0437】親子ステータス継承の初回マイグレーション
     ghLog(`閲覧専用: 公開データ取得成功 (${(content.length / 1024).toFixed(1)} KB)`);
     return true;
   } catch (err) {
@@ -5177,6 +5191,7 @@ function loadFromStorage() {
     // 【マイグレーション v212】入札価格△/PRオプ△を廃止し ✕ へ移行
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
+    migrateStatusLink();        // 【v1.0437】親子ステータス継承の初回マイグレーション
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
 }
@@ -6055,6 +6070,71 @@ function getMeta(code) {
   }
   return state.productMeta[code];
 }
+
+// ==================== 【v1.0437】親子ステータス継承 ====================
+// 子（repCodeが設定されていて自コードと異なる）は、既定で親のライフサイクル・ステータス(status)に追従する。
+//   ・meta.statusLinked === false … 個別設定（親から切り離し、独自のstatusを持つ）
+//   ・meta.statusLinked が undefined/true … 追従（親のstatusに同期）
+//   ・入札状態(adStatus)/PRオプ状態(proStatus)は子ごとに固定のまま（継承しない）。
+// この code の「親コード」を返す（子でなければ ''）。
+function statusParentCode(code) {
+  const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
+  return (rep && rep !== String(code)) ? rep : '';
+}
+// この code が「親に追従中の子」か。
+function isStatusLinkedChild(code) {
+  if (!statusParentCode(code)) return false;         // 親・孤児は対象外
+  const m = (state.productMeta || {})[code];
+  return !m || m.statusLinked !== false;             // 既定は追従(true)
+}
+// 親 parentCode に追従している子コード一覧。
+function statusLinkedChildrenOf(parentCode) {
+  const out = [];
+  const pm = state.productMeta || {};
+  Object.keys(pm).forEach(c => {
+    if (statusParentCode(c) === String(parentCode) && isStatusLinkedChild(c)) out.push(c);
+  });
+  return out;
+}
+// 追従中の子の status を親の status に同期する（表示・件数・撤退判定などの整合をとる派生処理）。
+//   ・呼び出しは renderAll 先頭とステータス変更時。値が変わったものだけ更新（冪等）。
+function syncLinkedChildrenStatus() {
+  const pm = state.productMeta;
+  if (!pm) return false;
+  let changed = false;
+  Object.keys(pm).forEach(code => {
+    if (!isStatusLinkedChild(code)) return;
+    const p = statusParentCode(code);
+    const parent = pm[p];
+    const pv = statusLifeDisplayValue((parent && parent.status) || '新商品');
+    if (statusLifeDisplayValue(pm[code].status || '新商品') !== pv) {
+      pm[code].status = pv;
+      pm[code].statusTs = (parent && parent.statusTs) ? parent.statusTs : (pm[code].statusTs || Date.now());
+      pm[code]._ts = pm[code].statusTs;
+      changed = true;
+    }
+  });
+  return changed;
+}
+// 初回マイグレーション：既存の子は「親と現在同値なら追従、異値なら個別（現状維持）」として明示フラグを立てる。
+//   → アップグレード時に見た目のステータスは変わらず、以後“同値だった子”へ親変更が自動伝播する。
+function migrateStatusLink() {
+  if (!state.productMeta) return;
+  state.rankMeta = state.rankMeta || {};
+  if (state.rankMeta.statusLinkMigrated) return;
+  const pm = state.productMeta;
+  Object.keys(pm).forEach(code => {
+    const p = statusParentCode(code);
+    if (!p) return;                                   // 子でなければ対象外
+    if (pm[code].statusLinked !== undefined) return;  // 既に設定済みは尊重
+    const parent = pm[p];
+    const pv = statusLifeDisplayValue((parent && parent.status) || '新商品');
+    const cv = statusLifeDisplayValue(pm[code].status || '新商品');
+    pm[code].statusLinked = (cv === pv);              // 同値→追従 / 異値→個別
+  });
+  state.rankMeta.statusLinkMigrated = true;
+  saveToStorage();
+}
 // 商品画像URLを取得（優先：ユーザーアップロード > 削除フラグならなし > Yahoo!デフォルト）
 function getProductImageSrc(code) {
   const m = state.master[code];
@@ -6548,14 +6628,37 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
       + `</span>`;
   }
   // 【v195/v204】ステータスは白背景＋値ごとの文字色。セルの閉じた表示は一部を2行略称にするファサード、上に透明select。
+  // 【v1.0437】親子：子は既定で親のステータスに追従。追従中は編集不可＋「個別」トグル、個別中は編集可＋「追従」トグル。
+  const _stParent = statusParentCode(code);
+  const _stDis = ghIsEnabled() ? '' : ' disabled';
+  if (_stParent && isStatusLinkedChild(code)) {
+    const pv = statusLifeDisplayValue(((state.productMeta[_stParent]) || {}).status || '新商品');
+    const pc = statusLifeColor(pv);
+    const pbd = pv ? pc : '#cbd5e1';
+    return `<span class="status-life-wrap">`
+      + `<span class="status-cell status-cell-life">`
+      +   `<span class="status-facade status-facade-life status-facade-linked" style="color:${pc};border-color:${pbd}" title="親（${escapeHtml(_stParent)}）のステータスに追従中。「個別」で切り離して編集できます">`
+      +     `<span class="status-link-badge">🔗</span>${statusLifeDisplayLabel(pv)}`
+      +   `</span>`
+      + `</span>`
+      + `<button type="button" class="status-link-btn" data-code="${escapeHtml(code)}" data-link="unlink"${_stDis} title="親から切り離して個別に設定する">個別</button>`
+      + `</span>`;
+  }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
-  const dis = ghIsEnabled() ? '' : ' disabled';
-  return `<span class="status-cell status-cell-life">`
+  const dis = _stDis;
+  const _lifeCell = `<span class="status-cell status-cell-life">`
     + `<span class="status-facade status-facade-life" style="color:${c};border-color:${bd}">${statusLifeDisplayLabel(value)}<span class="status-chev">▾</span></span>`
     + `<select class="status-select status-overlay"${dis} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`
     + `</span>`;
+  if (_stParent) {
+    // 個別設定中の子：編集可能なセル＋「追従」トグル
+    return `<span class="status-life-wrap">${_lifeCell}`
+      + `<button type="button" class="status-link-btn" data-code="${escapeHtml(code)}" data-link="link"${_stDis} title="親のステータスに追従させる">追従</button>`
+      + `</span>`;
+  }
+  return _lifeCell;
 }
 
 function noteCellHtml(code, kind /* 'ad' | 'pro' */) {
@@ -7023,7 +7126,9 @@ function renderOyako(){
 
   const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':'¥'+Math.round(v).toLocaleString();
   // 【v206】グループ（商品）の境目をはっきりさせる濃い区切り線。グループ最終行の下＝境目。
-  const GRPSEP = '2px solid #64748b';   // 濃いグレー
+  // 【v1.0437】濃い黒線は「直近3ヶ月」（1グループ3行）でグループの塊を分けるためのもの。
+  //   月別は1グループ1行なので濃い線だと重すぎる → 元の細線（1px）に戻す。
+  const GRPSEP = (_oyMode === 'last3') ? '2px solid #64748b' : '1px solid var(--border)';
   const pctCell = (num, den, bg, bb, extra='') => {
     if (!den || den<=0) return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><span style="color:var(--text3)">—</span></td>`;
     const pct = Math.round(num/den*100);
@@ -9242,6 +9347,7 @@ function renderItemGraph() {
 }
 
 function renderAll() {
+  if (typeof syncLinkedChildrenStatus === 'function') syncLinkedChildrenStatus();  // 【v1.0437】追従中の子ステータスを親へ同期（表示・件数・撤退判定の整合）
   updateStateCounts();
   if (state.currentView === 'basic') renderBasic();
   else if (state.currentView === 'monthly') renderMonthly();
@@ -10147,6 +10253,13 @@ document.addEventListener('change', (e) => {
   if (kind === 'ad' || kind === 'pro') markTuneAction(code, kind);
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
   saveToStorage();
+  // 【v1.0437】親のステータスを変えたら、追従中の子へ伝播して全再描画（子の表示も一緒に更新）
+  if (kind === 'status' && statusLinkedChildrenOf(code).length) {
+    syncLinkedChildrenStatus();
+    saveToStorage();
+    renderAll();
+    return;
+  }
   // 見た目更新
   if (kind === 'ad' || kind === 'pro') {
     // 【v188】ファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
@@ -10175,6 +10288,32 @@ document.addEventListener('change', (e) => {
   // 以前: updateStateCounts() と renderAll() を即時実行していたが、
   // 編集中のスクロール位置や操作感を保つため、遅延反映に変更。
   // 【v276】調整ビューでも状態変更＝対応でその場では動かさない（凍結）。次の更新/ビュー移動で反映。
+});
+
+// ==================== 【v1.0437】親子ステータス「個別／追従」トグル ====================
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.status-link-btn');
+  if (!btn) return;
+  if (!ghIsEnabled()) return;   // 閲覧専用は編集不可
+  e.preventDefault();
+  const code = btn.dataset.code;
+  const toLink = btn.dataset.link === 'link';
+  const meta = getMeta(code);
+  const ts = Date.now();
+  meta.statusLinked = !!toLink;
+  meta._ts = ts;
+  if (toLink) {
+    // 追従に戻す → 親の現在値へ即同期
+    const p = statusParentCode(code);
+    const parent = p && state.productMeta[p];
+    if (parent && parent.status) { meta.status = statusLifeDisplayValue(parent.status); meta.statusTs = ts; }
+  } else {
+    // 個別に切替 → 現在の（親から引き継いだ）値を自分の値として明示保存
+    meta.statusTs = ts;
+  }
+  syncLinkedChildrenStatus();
+  saveToStorage();
+  renderAll();
 });
 
 // ==================== 対応内容（note）編集 ====================
