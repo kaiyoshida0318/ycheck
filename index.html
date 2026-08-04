@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0417 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0418 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1310,8 +1310,8 @@ td[data-resize-key] {
   display: inline-flex; align-items: center; justify-content: center;
   text-align: center; gap: 2px; line-height: 1.18; white-space: nowrap;  /* 改行は<br>のみ。自動折返し・1文字折返しを禁止 */
   background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
-  font-size: 0.624rem; font-weight: 600; padding: 2px 6px;  /* 【v190】現状(0.78rem)の80% */
-  width: 90px; min-width: 0; min-height: 28px; box-sizing: border-box; cursor: pointer;  /* 【v190】入札状態・PRオプ状態で共通の固定枠幅（最長ラベル87.3pxに合わせて統一） */
+  font-size: 12.6px; font-weight: 600; padding: 2px 6px;  /* 【v192】12.6px・太さ600 */
+  width: 98px; min-width: 0; min-height: 28px; box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
 }
 .status-chev { font-size: 0.66em; opacity: 0.55; flex: 0 0 auto; }
 .status-select.status-overlay {
@@ -2506,6 +2506,9 @@ table.rank-table td.rank-legend-col-row {
 .tc-ng  { color: #c0392b; font-weight: 800; }
 .tc-neg { color: #c0392b; font-weight: 800; }
 .tc-table td small { color: var(--text2); display: block; margin-top: 9px; font-size: 12.5px; line-height: 1.6; }
+/* 【v192】表示条件モーダルのセル説明文を折り返す。グローバルの th,td{white-space:nowrap} を打ち消し、右端の文字切れを解消。 */
+.tc-table td, .tc-table th { white-space: normal; word-break: break-word; }
+.tc-table td:first-child { white-space: nowrap; }  /* バッジ列だけは従来どおり1行 */
 .tc-foot {
   color: var(--text2); font-size: 13px; background: var(--bg3);
   border: 1px dashed var(--border); border-radius: 8px; padding: 12px 15px; margin-top: 10px; line-height: 1.75;
@@ -2678,7 +2681,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0417</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0418</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
