@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0428 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0429 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1382,6 +1382,9 @@ td[data-resize-key] {
   width: 98px; min-width: 0; min-height: 28px; box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
 }
 .status-chev { font-size: 0.66em; opacity: 0.55; flex: 0 0 auto; }
+/* 【v204】ステータスのファサードは内容に合わせて可変幅（入札/PRの固定98pxは使わない）。 */
+.status-cell-life { display: inline-block; width: auto; }
+.status-facade-life { width: auto; min-width: 84px; padding: 3px 8px; }
 .status-select.status-overlay {
   position: absolute; inset: 0; width: 100%; height: 100%;
   min-width: 0; margin: 0; padding: 0; border: 0;
@@ -2751,7 +2754,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0428</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0429</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6485,6 +6488,18 @@ function statusLifeDisplayValue(v) {
   if (v === '通常商品' || v === '現役商品') return '新商品';  // 【v195】通常商品は新商品へ寄せた
   return v;
 }
+// 【v204】ステータスのセル表示用の2行ラベル（ドロップダウンの選択肢は正式名のまま）。<br>で改行。
+const STATUS_LIFE_DISPLAY_LABEL = {
+  '健常-広告あり◯': '健常<br>広告あり◯',
+  '健常-広告なし◯': '健常<br>広告なし◯',
+  '中立-広告あり□': '中立<br>広告あり□',
+  '中立-広告なし□': '中立<br>広告なし□',
+  '撤退予定-out記入済': '撤退予定<br>out記入済'
+};
+function statusLifeDisplayLabel(value) {
+  if (STATUS_LIFE_DISPLAY_LABEL[value]) return STATUS_LIFE_DISPLAY_LABEL[value];  // 固定略称（静的HTML・安全）
+  return escapeHtml(value) || '—';
+}
 
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
@@ -6514,11 +6529,15 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
       + `<select class="status-select status-overlay"${dis} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`
       + `</span>`;
   }
-  // 【v195】ステータスは白背景＋値ごとの文字色（新商品=緑/健常=青/中立=黄/撤退検討=橙/撤退予定=赤/撤退済み=茶）。
+  // 【v195/v204】ステータスは白背景＋値ごとの文字色。セルの閉じた表示は一部を2行略称にするファサード、上に透明select。
   const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
-  return `<select class="status-select"${ghIsEnabled() ? '' : ' disabled'} style="background:#fff;color:${c};border:1.5px solid ${bd};font-weight:600" data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`;
+  const dis = ghIsEnabled() ? '' : ' disabled';
+  return `<span class="status-cell status-cell-life">`
+    + `<span class="status-facade status-facade-life" style="color:${c};border-color:${bd}">${statusLifeDisplayLabel(value)}<span class="status-chev">▾</span></span>`
+    + `<select class="status-select status-overlay"${dis} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`
+    + `</span>`;
 }
 
 function noteCellHtml(code, kind /* 'ad' | 'pro' */) {
@@ -10106,14 +10125,16 @@ document.addEventListener('change', (e) => {
       fac.innerHTML = statusDisplayLabel(value) + '<span class="status-chev">▾</span>';
     }
   } else {
-    // 【v195】ステータスは白背景＋値ごとの文字色。
+    // 【v204】ステータスもファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
     const c = statusLifeColor(value);
     const bd = value ? c : '#cbd5e1';
-    e.target.className = 'status-select';
-    e.target.style.background = '#fff';
-    e.target.style.color = c;
-    e.target.style.border = '1.5px solid ' + bd;
-    e.target.style.fontWeight = '600';
+    const cell = e.target.closest('.status-cell');
+    const fac = cell && cell.querySelector('.status-facade');
+    if (fac) {
+      fac.style.color = c;
+      fac.style.borderColor = bd;
+      fac.innerHTML = statusLifeDisplayLabel(value) + '<span class="status-chev">▾</span>';
+    }
   }
   // 【v77】件数バッジ・他ビューへの移動は即時反映せず、次のビュー切り替え時に更新
   // 以前: updateStateCounts() と renderAll() を即時実行していたが、
