@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0435 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0436 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -501,8 +501,8 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
 .top-nav-3 .state-chip[data-state="status-kenzen-ad"] { color: #2563eb; }
 .top-nav-3 .state-chip[data-state="status-kenzen-noad"] { color: #12a5c8; }  /* 【v207】水色 */
-.top-nav-3 .state-chip[data-state="status-churitsu-ad"],
-.top-nav-3 .state-chip[data-state="status-churitsu-noad"] { color: #c99700; }
+.top-nav-3 .state-chip[data-state="status-churitsu-ad"] { color: #a67c00; }   /* 濃い黄色 */
+.top-nav-3 .state-chip[data-state="status-churitsu-noad"] { color: #caa61e; } /* 少し薄い黄色 */
 .top-nav-3 .state-chip[data-state="pro-wc"] { color: #ea7317; }
 .top-nav-3 .state-chip[data-state="status-withdraw-plan"],
 .top-nav-3 .state-chip[data-state="status-withdraw-out"] { color: #dc2626; }
@@ -978,6 +978,12 @@ body.chrome-hidden .top-nav-3 { top: 0; }
   align-self: flex-end;
   white-space: nowrap;
   font-family: 'Noto Sans JP', sans-serif;   /* 【v1.0375】ヘッダーのフォントをADcheckと同じに */
+}
+/* 【v210】タブ行（【基本】〜【調整】）のグループ見出しを、後ろのタブ文言とサイズ・高さを揃える */
+.top-nav:not(.top-nav-3) .nav-group-label {
+  font-size: 0.85rem;
+  padding: 8px 6px 8px 0;
+  border-bottom: 2px solid transparent;
 }
 .nav-tab {
   padding: 8px 14px;
@@ -2762,7 +2768,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0435</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0436</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6485,8 +6491,8 @@ const STATUS_LIFE_COLOR = {
   '新商品': '#16a34a',              // 緑
   '健常-広告あり◯': '#2563eb',      // 青
   '健常-広告なし◯': '#12a5c8',      // 水色（PR△-親-飛ぶ手前固定と同色）
-  '中立-広告あり□': '#c99700',      // 黄色
-  '中立-広告なし□': '#c99700',      // 黄色
+  '中立-広告あり□': '#a67c00',      // 濃い黄色
+  '中立-広告なし□': '#caa61e',      // 少し薄い黄色（可読性は確保）
   '撤退検討▲': '#ea7317',          // オレンジ
   '撤退予定': '#dc2626',           // 赤
   '撤退予定-out記入済': '#dc2626',  // 赤
