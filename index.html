@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0450 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0451 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2786,7 +2786,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0450</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0451</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -11843,6 +11843,8 @@ if (btnToggleChrome) {
   btnToggleChrome.addEventListener('click', () => {
     const hidden = document.body.classList.toggle('chrome-hidden');
     btnToggleChrome.textContent = hidden ? '🔽 ヘッダーを表示' : '🔼 ヘッダーを隠す';
+    // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
+    if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
   });
 }
 
