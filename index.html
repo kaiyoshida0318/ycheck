@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0451 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0454 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1148,6 +1148,19 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 #view-oyako #oyBandSeg .oy-btn[data-band="1"].on { background: #65a30d; color: #fff; }
 #view-oyako #oyBandSeg .oy-btn[data-band="2"].on { background: #ea580c; color: #fff; }
 #view-oyako #oyBandSeg .oy-btn[data-band="3"].on { background: #dc2626; color: #fff; }
+/* 【v1.0453】売上規模：10万〜(緑,大)→〜1万(赤,小)。親比率と同じ配色。 */
+#view-oyako #oySalesSeg .oy-btn[data-tier="0"] { color: #15803d; background: #e7f6ec; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="1"] { color: #4d7c0f; background: #eef6df; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="2"] { color: #c2410c; background: #fdeadd; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="3"] { color: #b91c1c; background: #fce7e7; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="0"]:hover { background: #d6efdf; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="1"]:hover { background: #e4f0cd; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="2"]:hover { background: #fbddc9; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="3"]:hover { background: #f9d5d5; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="0"].on { background: #16a34a; color: #fff; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="1"].on { background: #65a30d; color: #fff; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="2"].on { background: #ea580c; color: #fff; }
+#view-oyako #oySalesSeg .oy-btn[data-tier="3"].on { background: #dc2626; color: #fff; }
 /* 表は内容幅で中央寄せ（画面いっぱいに間延びさせない） */
 #view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-width: 100%; max-height: 76vh; }  /* 【v1.0442】ヘッダー固定：この枠を縦横スクロールのコンテナにする（overflow:hiddenだとstickyが効かない） */
 /* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない） */
@@ -1372,7 +1385,17 @@ td[data-resize-key] {
 .yc-reflect-btn.yc-dirty { background: #d97706; border-color: #d97706; animation: ycReflectPulse 1.1s ease-in-out infinite; }
 .yc-reflect-btn.yc-clean { background: var(--bg3); border-color: var(--border); color: var(--text3); cursor: default; box-shadow: none; }
 .yc-reflect-btn[hidden] { display: none !important; }
-.filters .yc-reflect-btn { margin-left: auto; }  /* 【v1.0355】各ビューの操作行（.filters）の右端に配置 */
+/* 【v1.0452】キャンセル＋反映のペアをまとめて操作行の右端へ */
+.filters .yc-reflect-wrap { margin-left: auto; display: inline-flex; align-items: center; }
+.yc-reflect-wrap .yc-reflect-btn { margin-left: 0; }
+/* 【v1.0452】「反映する」の左に出るキャンセル（未反映の変更を破棄して保存済みへ戻す） */
+.yc-cancel-btn {
+  appearance: none; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2);
+  font-weight: 700; font-size: 0.86rem; padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  white-space: nowrap; margin-right: 8px;
+}
+.yc-cancel-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--red); }
+.yc-cancel-btn[hidden] { display: none !important; }
 @keyframes ycReflectPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(217,119,6,.5);} 50%{ box-shadow:0 0 0 6px rgba(217,119,6,0);} }
 #ycSaveLock {
   position: fixed; inset: 0; z-index: 2147483000; display: none;
@@ -2786,7 +2809,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0451</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0454</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3061,13 +3084,22 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <button type="button" class="oy-btn" data-scope="group" onclick="_oySetScope('group')" title="親子グループのみ表示">親子のみ</button>
             </span>
           </span>
+          <span class="oy-ctl"><span class="oy-ctl-label">売上規模</span>
+            <span id="oySalesSeg" class="oy-seg" role="group" aria-label="総売上フィルタ">
+              <button type="button" class="oy-btn on" data-tier="all" onclick="_oySetTier('all')" title="総売上で絞らない">全て</button>
+              <button type="button" class="oy-btn" data-tier="0" onclick="_oySetTier(0)" title="総売上 10万円以上">10万〜</button>
+              <button type="button" class="oy-btn" data-tier="1" onclick="_oySetTier(1)" title="総売上 5万〜10万円">5〜10万</button>
+              <button type="button" class="oy-btn" data-tier="2" onclick="_oySetTier(2)" title="総売上 1万〜5万円">1〜5万</button>
+              <button type="button" class="oy-btn" data-tier="3" onclick="_oySetTier(3)" title="総売上 1万円未満">〜1万</button>
+            </span>
+          </span>
           <span class="oy-ctl"><span class="oy-ctl-label">親比率</span>
             <span id="oyBandSeg" class="oy-seg" role="group" aria-label="親比率フィルタ">
               <button type="button" class="oy-btn on" data-band="all" onclick="_oySetBand('all')" title="親比率で絞らない">全て</button>
-              <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜25%（良い）">0-25</button>
-              <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 25〜50%（そこそこ良い）">25-50</button>
-              <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 50〜75%（あまり良くない）">50-75</button>
-              <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 75〜100%（良くない）">75-100</button>
+              <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜25%（良い）">0-25％</button>
+              <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 25〜50%（そこそこ良い）">25-50％</button>
+              <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 50〜75%（あまり良くない）">50-75％</button>
+              <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 75〜100%（良くない）">75-100％</button>
             </span>
           </span>
         </div>
@@ -4690,7 +4722,8 @@ window.ycDiag = function(code) {
   return r;
 };
 
-async function ghLoadFromGitHub() {
+async function ghLoadFromGitHub(opts) {
+  const _discardLocal = !!(opts && opts.discardLocal);   // 【v1.0452】キャンセル：ローカル未反映を破棄しGitHubをそのまま採用
   if (!ghIsEnabled()) return { skipped: true, reason: 'no-pat' };
   ghSetSyncStatus('loading');  // 【v1.0354】読み込み中は「読込中」表示（書き込みではないことを明示）
   _ghQuiet++;                  // 【v1.0361】読込中のsaveToStorage(マイグレーション等)で未反映を立てない
@@ -4726,8 +4759,8 @@ async function ghLoadFromGitHub() {
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
     // 【v287】bid / proRate は「新しい方」を残してマージ（古い上書きで自分の変更が消えるのを防ぐ）
-    state.bid     = (data.bid)     ? mergeMapByPmRecency(_localBid, data.bid,     _localPM, _remotePM, 'ad') : _localBid;
-    state.proRate = (data.proRate) ? mergeMapByPmRecency(_localPro, data.proRate, _localPM, _remotePM, 'pro') : _localPro;
+    state.bid     = (data.bid)     ? (_discardLocal ? data.bid     : mergeMapByPmRecency(_localBid, data.bid,     _localPM, _remotePM, 'ad'))  : (_discardLocal ? {} : _localBid);
+    state.proRate = (data.proRate) ? (_discardLocal ? data.proRate : mergeMapByPmRecency(_localPro, data.proRate, _localPM, _remotePM, 'pro')) : (_discardLocal ? {} : _localPro);
     if (data.master) state.master = data.master;
     if (data.rank && Object.keys(data.rank).length > 0) state.rank = data.rank;  // 【v259】空rankでの上書き防止（rank.jsonの順位を消さない）
     if (data.rankEdits) state.rankEdits = data.rankEdits;
@@ -4737,18 +4770,22 @@ async function ghLoadFromGitHub() {
     //   あれば _ghHealed=true（＝GitHubは古い上書きを受けていた）とし、後で復元を再保存する。
     let _ghHealed = false;
     if (data.productMeta) {
-      Object.keys(_localPM).forEach(c => {
-        if (!(c in _remotePM)) { if (pmEntryRecency(_localPM[c]) > 0) _ghHealed = true; return; }
-        if (pmEntryRecency(_localPM[c]) > pmEntryRecency(_remotePM[c]) &&
-            JSON.stringify(_localPM[c]) !== JSON.stringify(_remotePM[c])) _ghHealed = true;
-      });
-      state.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
+      if (_discardLocal) {
+        state.productMeta = data.productMeta;   // 【v1.0452】取り消し：GitHubをそのまま採用（ローカル未反映を破棄）
+      } else {
+        Object.keys(_localPM).forEach(c => {
+          if (!(c in _remotePM)) { if (pmEntryRecency(_localPM[c]) > 0) _ghHealed = true; return; }
+          if (pmEntryRecency(_localPM[c]) > pmEntryRecency(_remotePM[c]) &&
+              JSON.stringify(_localPM[c]) !== JSON.stringify(_remotePM[c])) _ghHealed = true;
+        });
+        state.productMeta = mergeProductMetaForSave(_localPM, _remotePM);
+      }
       Object.values(state.productMeta).forEach(m => {
         if (m && m.proStatus === 'PRO○') m.proStatus = 'PRオプ○';
         else if (m && m.proStatus === 'PRO×') m.proStatus = 'PRオプ×';
       });
     } else {
-      state.productMeta = _localPM;
+      state.productMeta = _discardLocal ? {} : _localPM;
     }
     // 【v1.0384診断】取得内容とマージ結果を可視化（表示は最新なのにlocalStorageが旧、の原因レイヤー切り分け用）。
     try {
@@ -4932,14 +4969,17 @@ function scheduleGitHubSave() {
 function _ycUpdateReflectBtn() {
   const editable = (typeof ghIsEnabled === 'function') && ghIsEnabled();
   document.querySelectorAll('.yc-reflect-btn').forEach(b => {
-    if (!editable) { b.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
+    const cb = b.parentElement ? b.parentElement.querySelector('.yc-cancel-btn') : null;   // 【v1.0452】同じ行のキャンセル
+    if (!editable) { b.hidden = true; if (cb) cb.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
     b.hidden = false;
     if (_ghDirty) {
       b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
       b.textContent = '⬆ 反映する（未反映）';
+      if (cb) cb.hidden = false;   // 反映ボタンが出るときだけキャンセルも表示
     } else {
       b.classList.add('yc-clean'); b.classList.remove('yc-dirty');
       b.hidden = true;   /* 【v1.0380】反映完了後はボタン自体を消す（反映済み表示は残さない） */
+      if (cb) cb.hidden = true;
     }
   });
 }
@@ -4947,13 +4987,45 @@ function _ycUpdateReflectBtn() {
 function _ycInjectReflectButtons() {
   document.querySelectorAll('.filters').forEach(f => {
     if (f.querySelector('.yc-reflect-btn')) return;
+    // 【v1.0452】キャンセル（左）＋反映（右）をラッパーにまとめ、操作行の右端へ配置
+    const wrap = document.createElement('span');
+    wrap.className = 'yc-reflect-wrap';
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'yc-cancel-btn'; c.textContent = '✕ キャンセル';
+    c.title = '未反映の変更をすべて取り消し、GitHubに保存済みの状態へ戻します。';
+    c.hidden = true;
+    c.addEventListener('click', ycCancelReflect);
+    wrap.appendChild(c);
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'yc-reflect-btn'; b.textContent = '⬆ 反映する';
     b.title = '変更をGitHubに反映（保存）します。押すまでは書き込みません。保存中は操作できません。';
     b.addEventListener('click', ycReflect);
-    f.appendChild(b);
+    wrap.appendChild(b);
+    f.appendChild(wrap);
   });
   _ycUpdateReflectBtn();
+}
+// 【v1.0452】未反映の変更を取り消してGitHubの保存済みデータに戻す
+async function ycCancelReflect() {
+  if (!ghIsEnabled()) { alert('この端末は閲覧専用です（トークン未設定）。'); return; }
+  if (!_ghDirty) return;
+  if (!confirm('未反映の変更をすべて取り消して、GitHubに保存済みの状態に戻します。\nこの操作は元に戻せません。よろしいですか？')) return;
+  ycLockUI(true, '取り消し中… 操作しないでください');
+  try {
+    const r = await ghLoadFromGitHub({ discardLocal: true });
+    if (r && r.success) {
+      _ghDirty = false;
+      if (typeof renderAll === 'function') renderAll();
+      if (typeof showToast === 'function') { try { showToast('未反映の変更を取り消し、保存済みの状態に戻しました。', 'info'); } catch (e) {} }
+    } else if (r && (r.notFound || r.skipped)) {
+      alert('GitHubに保存済みデータがまだないため、取り消せませんでした。');
+    }
+  } catch (e) {
+    alert('取り消しに失敗しました: ' + (e && e.message ? e.message : e));
+  } finally {
+    ycLockUI(false);
+    _ycUpdateReflectBtn();
+  }
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _ycInjectReflectButtons);
 else _ycInjectReflectButtons();
@@ -7015,10 +7087,13 @@ function _oySort(k){ if (_oySortKey === k) _oySortDir *= -1; else { _oySortKey =
 let _oyScope = 'all';       // 'all'（全商品）| 'group'（親子グループのみ）
 let _oyParentBand = null;   // null（全て）| 0..3（親比率バンドのindex）
 let _oyAdFilter = 'all';    // 【v1.0442】'all'（全体）| 'ad'（広告あり）
+let _oySalesTier = null;    // 【v1.0453】総売上の層 null（全て）| 0..3
 const OY_BANDS = [[0,25],[25,50],[50,75],[75,100]];   // 【v1.0449】4分割（0-25良い→75-100良くない）
+const OY_SALES_TIERS = [[100000, Infinity], [50000, 100000], [10000, 50000], [0, 10000]];   // 【v1.0453】10万〜／5〜10万／1〜5万／〜1万
 function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
 function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
 function _oySetAd(v){ _oyAdFilter = (v === 'ad' || v === 'none') ? v : 'all'; renderOyako(); }
+function _oySetTier(t){ _oySalesTier = (t === 'all' || t == null) ? null : (+t); renderOyako(); }
 
 function renderOyako(){
   const wrap = document.getElementById('oy-wrap');
@@ -7065,6 +7140,7 @@ function renderOyako(){
   const amtSeg=document.getElementById('oyAmtSeg'); if(amtSeg) amtSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', (b.dataset.amt==='on')===_oyShowAmt));
   const scopeSeg=document.getElementById('oyScopeSeg'); if(scopeSeg) scopeSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.scope===_oyScope));
   const bandSeg=document.getElementById('oyBandSeg'); if(bandSeg) bandSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.band==='all')?(_oyParentBand==null):(+b.dataset.band===_oyParentBand); b.classList.toggle('on', on); });
+  const salesSeg=document.getElementById('oySalesSeg'); if(salesSeg) salesSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.tier==='all')?(_oySalesTier==null):(+b.dataset.tier===_oySalesTier); b.classList.toggle('on', on); });
   const adSeg=document.getElementById('oyAdSeg'); if(adSeg) adSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.ad===_oyAdFilter));
 
   const monthsToShow = (_oyMode==='last3') ? last3.slice().reverse() : [_oyMonth].filter(Boolean);  // 新しい順
@@ -7120,6 +7196,15 @@ function renderOyako(){
     rowsData = rowsData.filter(r => r.stats.some(s => (s.adRev > 0 || s.adCost > 0)));
   } else if (_oyAdFilter === 'none') {
     rowsData = rowsData.filter(r => !r.stats.some(s => (s.adRev > 0 || s.adCost > 0)));
+  }
+  // 【v1.0453】売上規模（総売上の層）で絞り込み（stats[0]=最新表示月の総売上基準）
+  if (_oySalesTier != null && OY_SALES_TIERS[_oySalesTier]) {
+    const lo = OY_SALES_TIERS[_oySalesTier][0], hi = OY_SALES_TIERS[_oySalesTier][1];
+    rowsData = rowsData.filter(r => {
+      const s = r.stats[0];
+      const v = s ? s.totSales : 0;
+      return v >= lo && v < hi;
+    });
   }
   // 【v1.0439】親比率バンドで絞り込み（stats[0]=最新表示月の親％基準）
   if (_oyParentBand != null && OY_BANDS[_oyParentBand]) {
