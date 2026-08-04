@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0441 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0442 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1132,13 +1132,13 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 #view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 7px; }
 #view-oyako .oy-ctl-label { font-size: 0.78rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
 #view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 9px; overflow: hidden; background: #eef1f4; }
-#view-oyako .oy-btn { font-size: 0.88rem; padding: 6px 13px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }
+#view-oyako .oy-btn { font-size: 0.88rem; padding: 5.3px 13px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0442】高さを約95%に */
 #view-oyako .oy-seg .oy-btn + .oy-btn { border-left: 1px solid #cdd5de; }
 #view-oyako .oy-btn:hover { background: #e2e7ee; }
 #view-oyako .oy-btn.on { background: #1c8fc9; color: #fff; }
 #view-oyako .oy-btn.on:hover { background: #1783ba; }
 /* 表は内容幅で中央寄せ（画面いっぱいに間延びさせない） */
-#view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-width: 100%; }
+#view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-width: 100%; max-height: 76vh; }  /* 【v1.0442】ヘッダー固定：この枠を縦横スクロールのコンテナにする（overflow:hiddenだとstickyが効かない） */
 /* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない） */
 .tune-period-btn { font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 600; white-space: nowrap; }
 .tune-period-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -2775,7 +2775,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0441</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0442</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3032,6 +3032,12 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             </span>
             <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
           </span>
+          <span class="oy-ctl"><span class="oy-ctl-label">広告</span>
+            <span id="oyAdSeg" class="oy-seg" role="group" aria-label="広告フィルタ">
+              <button type="button" class="oy-btn on" data-ad="all" onclick="_oySetAd('all')" title="全ての商品を表示">全体</button>
+              <button type="button" class="oy-btn" data-ad="ad" onclick="_oySetAd('ad')" title="広告のある商品のみ表示">広告あり</button>
+            </span>
+          </span>
           <span class="oy-ctl"><span class="oy-ctl-label">金額</span>
             <span id="oyAmtSeg" class="oy-seg" role="group" aria-label="金額表示">
               <button type="button" class="oy-btn on" data-amt="on" onclick="_oySetAmt(true)" title="％の下に売上金額を表示">あり</button>
@@ -3055,7 +3061,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             </span>
           </span>
         </div>
-        <div id="oy-wrap" style="overflow:auto;max-height:76vh;text-align:center"></div>
+        <div id="oy-wrap" style="text-align:center"></div>
       </div>
     </div>
 
@@ -7000,9 +7006,11 @@ function _oySort(k){ if (_oySortKey === k) _oySortDir *= -1; else { _oySortKey =
 // 【v1.0439】表示対象スコープ（全体／親子のみ）と親比率バンドフィルタ
 let _oyScope = 'all';       // 'all'（全商品）| 'group'（親子グループのみ）
 let _oyParentBand = null;   // null（全て）| 0..4（親比率バンドのindex）
+let _oyAdFilter = 'all';    // 【v1.0442】'all'（全体）| 'ad'（広告あり）
 const OY_BANDS = [[0,20],[20,40],[40,60],[60,80],[80,100]];
 function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
 function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
+function _oySetAd(v){ _oyAdFilter = (v === 'ad') ? 'ad' : 'all'; renderOyako(); }
 
 function renderOyako(){
   const wrap = document.getElementById('oy-wrap');
@@ -7049,6 +7057,7 @@ function renderOyako(){
   const amtSeg=document.getElementById('oyAmtSeg'); if(amtSeg) amtSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', (b.dataset.amt==='on')===_oyShowAmt));
   const scopeSeg=document.getElementById('oyScopeSeg'); if(scopeSeg) scopeSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.scope===_oyScope));
   const bandSeg=document.getElementById('oyBandSeg'); if(bandSeg) bandSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.band==='all')?(_oyParentBand==null):(+b.dataset.band===_oyParentBand); b.classList.toggle('on', on); });
+  const adSeg=document.getElementById('oyAdSeg'); if(adSeg) adSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.ad===_oyAdFilter));
 
   const monthsToShow = (_oyMode==='last3') ? last3.slice().reverse() : [_oyMonth].filter(Boolean);  // 新しい順
   if (monthsToShow.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">表示できる月がありません（月次レポートを取り込んでください）</div>'; return; }
@@ -7098,6 +7107,10 @@ function renderOyako(){
   } else {
     rowsData.sort((a,b)=> b.stats.reduce((s,m)=>s+m.totSales,0) - a.stats.reduce((s,m)=>s+m.totSales,0));
   }
+  // 【v1.0442】広告フィルタ：広告あり＝表示月のいずれかで広告売上または広告金額がある商品
+  if (_oyAdFilter === 'ad') {
+    rowsData = rowsData.filter(r => r.stats.some(s => (s.adRev > 0 || s.adCost > 0)));
+  }
   // 【v1.0439】親比率バンドで絞り込み（stats[0]=最新表示月の親％基準）
   if (_oyParentBand != null && OY_BANDS[_oyParentBand]) {
     const lo = OY_BANDS[_oyParentBand][0], hi = OY_BANDS[_oyParentBand][1];
@@ -7114,12 +7127,13 @@ function renderOyako(){
   const sortArrow = (k)=> _oySortKey===k ? (_oySortDir<0?' ▼':' ▲') : ' ⇅';
   const DIV = 'border-left:2px solid #64748b';   // 【v209】売上系と親子系の区切り「｜」
   // 【v1.0440】ヘッダー文字を数字の拡大に合わせて大きく（0.82rem→0.86rem、注記10px→10.5px）。
-  const th = (txt, extra='') => `<th style="padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.86rem;font-weight:700;color:var(--text2);${extra}">${txt}</th>`;
+  // 【v1.0442】ヘッダー行を固定（position:sticky;top:0）。cellに背景を敷いて本文が透けないようにする。
+  const th = (txt, extra='') => `<th style="position:sticky;top:0;z-index:3;padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.86rem;font-weight:700;color:var(--text2);background:var(--bg3);${extra}">${txt}</th>`;
   // 比率＋金額の列見出し（下に「比率／金額」の小さな注記）
-  const thR = (txt, bg, tcol, extra='', click='') => `<th ${click} style="padding:8px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.86rem;font-weight:700;color:${tcol};background:${bg};line-height:1.2;${click?'cursor:pointer;user-select:none;':''}${extra}">${txt}<div style="font-size:10.5px;font-weight:600;color:#8794a3;margin-top:1px">比率／金額</div></th>`;
+  const thR = (txt, bg, tcol, extra='', click='') => `<th ${click} style="position:sticky;top:0;z-index:3;padding:8px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.86rem;font-weight:700;color:${tcol};background:${bg};line-height:1.2;${click?'cursor:pointer;user-select:none;':''}${extra}">${txt}<div style="font-size:10.5px;font-weight:600;color:#8794a3;margin-top:1px">比率／金額</div></th>`;
   // 【v1.0439】全ヘッダーの文字色をステータス見出しと同じ var(--text2) に統一。背景色は維持。
   const _arr = (k)=>'<span style="color:#64748b;font-size:11.6px">'+sortArrow(k)+'</span>';
-  let HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.89rem;color:var(--text2)">商品</th>';
+  let HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;left:0;background:var(--bg3);z-index:6;font-size:0.89rem;color:var(--text2)">商品</th>';   // 【v1.0442】左＋上で固定（角セルは最前面）
   if (showMonthCol) HEAD += th('月','text-align:right;background:var(--bg3)');
   HEAD += th('総売上','text-align:right;background:#eef2f7');   // 【v1.0439】SEO売上の左に総売上（金額）
   HEAD += thR('SEO売上'+_arr('seo'),'#d7efe0','var(--text2)', '', `onclick="_oySort('seo')"`);   // 【v1.0440】ソート追加
@@ -7165,7 +7179,8 @@ function renderOyako(){
   }).join('');
 
   // 【v205】表は内容幅で中央寄せ（間延び防止）。oy-wrap は text-align:center。
-  wrap.innerHTML = '<div class="oy-tablebox"><table style="border-collapse:collapse;width:auto"><thead><tr style="position:sticky;top:0;z-index:3">'+HEAD+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  // 【v1.0442】ヘッダー固定のため border-collapse:separate（collapseだと position:sticky が無効化される）。
+  wrap.innerHTML = '<div class="oy-tablebox"><table style="border-collapse:separate;border-spacing:0;width:auto"><thead><tr>'+HEAD+'</tr></thead><tbody>'+body+'</tbody></table></div>';
 }
 
 // ==================== Rendering: 撤退済み商品 ====================
