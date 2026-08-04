@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0427 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0428 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2751,7 +2751,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0427</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0428</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2781,6 +2781,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <a class="nav-tab nav-tab-link active" data-view="basic" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
+    <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-親子売上比率</a>
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired">撤退済み商品</a>
   </div>
   <div class="nav-group">
@@ -2992,6 +2993,24 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
         <div id="igTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
+      </div>
+    </div>
+
+    <!-- 【v203】View: 商品-親子売上比率 -->
+    <div class="view" id="view-oyako">
+      <div class="card">
+        <h3 class="card-title">商品-親子売上比率</h3>
+        <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center">
+          <span id="oyModeSeg" role="group" aria-label="表示モード" style="display:inline-flex;gap:4px">
+            <button type="button" class="mi-mode-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
+            <button type="button" class="mi-mode-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
+          </span>
+          <span class="filter-label" id="oyMonthLabel">月</span>
+          <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <button type="button" class="mi-mode-btn on" id="oyAmtBtn" onclick="_oyToggleAmt()" title="％の下の売上金額の表示/非表示を切り替え">💴 金額表示：ON</button>
+          <span class="filter-label" style="color:var(--text3)">親子商品グループのみ（SEO売上に占める親／子の割合）</span>
+        </div>
+        <div id="oy-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
 
@@ -6850,6 +6869,144 @@ function renderMonthly() {
   wrap.innerHTML = note + '<table style="border-collapse:collapse;width:100%;table-layout:fixed"><thead><tr style="position:sticky;top:0;z-index:3">' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
+// ==================== 【v203】商品-親子売上比率 ====================
+let _oyMode = 'monthly';   // 'monthly' | 'last3'
+let _oyMonth = '';         // 選択月（monthlyモード）
+let _oyShowAmt = true;     // ％の下の売上金額を表示するか
+let _oySortKey = null;     // null | 'parent' | 'child'
+let _oySortDir = -1;
+function _oySetMode(m){ _oyMode = (m === 'last3') ? 'last3' : 'monthly'; renderOyako(); }
+function _oySetMonth(v){ _oyMonth = v; renderOyako(); }
+function _oyToggleAmt(){ _oyShowAmt = !_oyShowAmt; renderOyako(); }
+function _oySort(k){ if (_oySortKey === k) _oySortDir *= -1; else { _oySortKey = k; _oySortDir = -1; } renderOyako(); }
+
+function renderOyako(){
+  const wrap = document.getElementById('oy-wrap');
+  if (!wrap) return;
+  const itemMap = {}, adMap = {};
+  (state.item || []).forEach(i => { const k=i.code+'|'+i.month; (itemMap[k]||(itemMap[k]={rev:0})).rev += i.revenue||0; });
+  (state.ad || []).forEach(a => { const k=a.code+'|'+a.month; (adMap[k]||(adMap[k]={adRev:0})).adRev += a.adRevenue||0; });
+  const _pm = state.productMeta || {};
+  const repKeyOf = (code) => { const r = String((_pm[code]||{}).repCode||'').trim(); return r || code; };
+  // 家族化（撤退除外）→ メンバー2件以上（＝親子グループ）だけ対象
+  const codeSet = new Set();
+  Object.keys(state.master||{}).forEach(c=>codeSet.add(c));
+  (state.item||[]).forEach(i=>codeSet.add(i.code));
+  (state.ad||[]).forEach(a=>codeSet.add(a.code));
+  const families = {};
+  [...codeSet].forEach(code => { if (typeof isRetired==='function' && isRetired(code)) return; const key=repKeyOf(code); (families[key]||(families[key]=[])).push(code); });
+  const groups = Object.keys(families).filter(key => families[key].length >= 2);
+
+  // 月の決定
+  const allMonths = getImportedDataMonths();      // 昇順（データのある月）
+  const curYM = getCurrentYm();
+  const completedAll = allMonths.filter(m => m < curYM);    // 満了（当月除外）
+  const latestCompleted = completedAll.length ? completedAll[completedAll.length-1] : (allMonths.length? allMonths[allMonths.length-1] : '');
+  const last3 = (typeof last3Months==='function') ? last3Months(true) : completedAll.slice(-3);
+
+  // 月セレクタ（monthlyのみ表示）
+  const monthSel = document.getElementById('oyMonthSel');
+  const monthLbl = document.getElementById('oyMonthLabel');
+  if (_oyMode === 'monthly') {
+    if (monthLbl) monthLbl.style.display='';
+    if (monthSel) {
+      monthSel.style.display='';
+      const opts = completedAll.slice().reverse();   // 新しい順
+      monthSel.innerHTML = opts.length ? opts.map(m=>`<option value="${m}">${m}</option>`).join('') : '<option value="">データなし</option>';
+      if (!_oyMonth || !opts.includes(_oyMonth)) _oyMonth = latestCompleted;
+      monthSel.value = _oyMonth;
+    }
+  } else {
+    if (monthLbl) monthLbl.style.display='none';
+    if (monthSel) monthSel.style.display='none';
+  }
+  const seg=document.getElementById('oyModeSeg'); if(seg) seg.querySelectorAll('.mi-mode-btn').forEach(b=>b.classList.toggle('on', b.dataset.mode===_oyMode));
+  const amtBtn=document.getElementById('oyAmtBtn'); if(amtBtn){ amtBtn.classList.toggle('on', _oyShowAmt); amtBtn.textContent='💴 金額表示：'+(_oyShowAmt?'ON':'OFF'); }
+
+  const monthsToShow = (_oyMode==='last3') ? last3.slice().reverse() : [_oyMonth].filter(Boolean);  // 新しい順
+  if (monthsToShow.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">表示できる月がありません（月次レポートを取り込んでください）</div>'; return; }
+
+  const _memberSEO = (code, ym) => { const it=itemMap[code+'|'+ym]; const ad=adMap[code+'|'+ym]; const rev=it?it.rev:0; const ar=ad?ad.adRev:0; return Math.max(0, rev-ar); };
+  const _famStat = (key, members, ym) => {
+    let totSales=0, parentSEO=0, childSEO=0;
+    members.forEach(code=>{
+      const it=itemMap[code+'|'+ym];
+      totSales += it?it.rev:0;
+      const seo=_memberSEO(code,ym);   // 各メンバーのSEO売上（rev-広告売上, 0未満は0）
+      const rep=String((_pm[code]||{}).repCode||'').trim();
+      if (rep && rep!==code) childSEO += seo;   // 子（黄色バッジ）
+      else parentSEO += seo;                    // 親（家族キー／孤児は親扱い）
+    });
+    // 【v203】分母は「親SEO＋子SEO」に統一（親％＋子％＝必ず100%）。SEO売上列もこの合計を表示。
+    const groupSEO = parentSEO + childSEO;
+    return { ym, totSales, groupSEO, parentSEO, childSEO };
+  };
+
+  const _mname = (c)=>String(((typeof getMaster==='function'?getMaster(c):null)||{}).name||'');
+  const rowsData = groups.map(key=>{
+    const members = families[key];
+    const repHasMaster = !!(typeof getMaster==='function' && getMaster(key));
+    const dispCode = repHasMaster ? key : (members.find(c=>_mname(c))||members[0]||key);
+    let name=_mname(dispCode)||key;
+    let _n=name,_prev; do{_prev=_n;_n=_n.replace(/[（(][^（()）]*[0-9０-９][^（()）]*[）)]\s*$/,'').replace(/[0-9０-９]+\s*セット\s*$/,'').trim();}while(_n!==_prev);
+    name=_n+'【親】';
+    const stats = monthsToShow.map(ym=>_famStat(key, members, ym));
+    return { key, dispCode, name, stats };
+  });
+  // ソート（親％／子％。直近3ヶ月は最新月[stats[0]]基準）。未指定は総売上順。
+  if (_oySortKey){
+    rowsData.sort((a,b)=>{
+      const sa=a.stats[0], sb=b.stats[0];
+      const pa = sa.groupSEO>0 ? (_oySortKey==='parent'?sa.parentSEO:sa.childSEO)/sa.groupSEO : -1;
+      const pb = sb.groupSEO>0 ? (_oySortKey==='parent'?sb.parentSEO:sb.childSEO)/sb.groupSEO : -1;
+      return _oySortDir*(pa-pb);
+    });
+  } else {
+    rowsData.sort((a,b)=> b.stats.reduce((s,m)=>s+m.totSales,0) - a.stats.reduce((s,m)=>s+m.totSales,0));
+  }
+  if (rowsData.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">親子設定された商品グループがありません</div>'; return; }
+
+  const showMonthCol = (_oyMode==='last3');
+  const sortArrow = (k)=> _oySortKey===k ? (_oySortDir<0?' ▼':' ▲') : ' ⇅';
+  const th = (txt, extra='') => `<th style="padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);${extra}">${txt}</th>`;
+  let HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>';
+  if (showMonthCol) HEAD += th('月','text-align:right;background:var(--bg3);color:var(--text3)');
+  HEAD += th('総売上','text-align:right;background:#d6e1fa');
+  HEAD += th('SEO売上','text-align:right;background:#c3ead2');
+  HEAD += `<th onclick="_oySort('parent')" style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:#12813f;background:#e0f2e6;cursor:pointer;line-height:1.25;user-select:none">親商品<br>PR30％<span style="color:#64748b;font-size:11px">${sortArrow('parent')}</span></th>`;
+  HEAD += `<th onclick="_oySort('child')" style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:#a86407;background:#fbf1c9;cursor:pointer;line-height:1.25;user-select:none">子商品<br>PR7％<span style="color:#64748b;font-size:11px">${sortArrow('child')}</span></th>`;
+  HEAD += th('ステータス','text-align:center');
+
+  const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':'¥'+Math.round(v).toLocaleString();
+  const pctCell = (num, den, bg) => {
+    if (!den || den<=0) return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:1px solid var(--border)"><span style="color:var(--text3)">—</span></td>`;
+    const pct = Math.round(num/den*100);
+    const amt = _oyShowAmt ? `<div style="font-size:11.5px;color:#64748b;margin-top:3px;font-family:'DM Mono',ui-monospace,monospace">¥${Math.round(num).toLocaleString()}</div>` : '';
+    return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:1px solid var(--border)"><div style="font-size:16px;font-weight:800;line-height:1.05;color:${pctBandColor(pct)}">${pct}%</div>${amt}</td>`;
+  };
+
+  const body = rowsData.map(({key,dispCode,name,stats})=>{
+    const _esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    const safeFull=_esc(name);
+    const src=(typeof getProductImageSrc==='function')?getProductImageSrc(dispCode):'';
+    const imgBox='<div style="width:56px;height:56px;border-radius:7px;background:var(--bg3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'+(src?'<img loading="lazy" src="'+src+'" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">':'<span style="font-size:24px">📦</span>')+'</div>';
+    const rs=stats.length;
+    return stats.map((m,mi)=>{
+      const first = mi===0;
+      const prod = first ? `<td rowspan="${rs}" style="padding:9px 12px;vertical-align:middle;border-top:2px solid var(--border);border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;gap:10px">${imgBox}<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:'DM Mono',ui-monospace,monospace">${_esc(key)}</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${safeFull}">${safeFull}</div></div></div></td>` : '';
+      const monthCell = showMonthCol ? `<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);font-family:'DM Mono',ui-monospace,monospace;white-space:nowrap;border-bottom:1px solid var(--border)">${m.ym.replace('-','/')}</td>` : '';
+      const totCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.9rem;background:#f0f3fd;border-bottom:1px solid var(--border);white-space:nowrap">${fmtY(m.totSales)}</td>`;
+      const seoCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.9rem;background:#eafaf0;border-bottom:1px solid var(--border);white-space:nowrap">${fmtY(m.groupSEO)}</td>`;
+      const pCell = pctCell(m.parentSEO, m.groupSEO, '#f2fbf5');
+      const cCell = pctCell(m.childSEO, m.groupSEO, '#fefce8');
+      const stCell = first ? `<td rowspan="${rs}" style="padding:8px 12px;text-align:center;vertical-align:middle;border-top:2px solid var(--border);border-bottom:2px solid var(--border)">${statusSelectHtml(key,'status')}</td>` : '';
+      return '<tr>'+prod+monthCell+totCell+seoCell+pCell+cCell+stCell+'</tr>';
+    }).join('');
+  }).join('');
+
+  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead><tr style="position:sticky;top:0;z-index:3">'+HEAD+'</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
 // ==================== Rendering: 撤退済み商品 ====================
 let retiredSortKey = 'code', retiredSortDir = 1;
 function renderRetired() {
@@ -9037,6 +9194,7 @@ function renderAll() {
   if (state.currentView === 'basic') renderBasic();
   else if (state.currentView === 'monthly') renderMonthly();
   else if (state.currentView === 'itemgraph') renderItemGraph();
+  else if (state.currentView === 'oyako') renderOyako();
   else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraphAll();
   else if (state.currentView === 'graphdata') renderGraphData();
