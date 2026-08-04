@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0438 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0439 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1128,10 +1128,14 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 #view-monthly .mi-mode-btn { font-size: 0.9rem; padding: 5px 12px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 600; }
 #view-monthly .mi-mode-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 /* 【v205】商品-親子売上比率：セグメント切替ボタン（月別/直近3ヶ月、金額あり/なし） */
-#view-oyako .oy-seg { display: inline-flex; gap: 6px; }
-#view-oyako .oy-btn { font-size: 0.9rem; padding: 6px 15px; border: 1px solid #d5dbe2; border-radius: 7px; background: #eef1f4; color: #5b6470; cursor: pointer; font-weight: 700; }
-#view-oyako .oy-btn:hover { background: #e3e8ee; }
-#view-oyako .oy-btn.on { background: #1c8fc9; color: #fff; border-color: #1783ba; }
+/* 【v1.0439】トグルのペアをボックスで囲むセグメント型UI */
+#view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 7px; }
+#view-oyako .oy-ctl-label { font-size: 0.78rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
+#view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 9px; overflow: hidden; background: #eef1f4; }
+#view-oyako .oy-btn { font-size: 0.88rem; padding: 6px 13px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }
+#view-oyako .oy-seg .oy-btn + .oy-btn { border-left: 1px solid #cdd5de; }
+#view-oyako .oy-btn:hover { background: #e2e7ee; }
+#view-oyako .oy-btn.on { background: #1c8fc9; color: #fff; }
 #view-oyako .oy-btn.on:hover { background: #1783ba; }
 /* 表は内容幅で中央寄せ（画面いっぱいに間延びさせない） */
 #view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-width: 100%; }
@@ -2771,7 +2775,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0438</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0439</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3020,15 +3024,35 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="view" id="view-oyako">
       <div class="card">
         <h3 class="card-title">商品-各比率</h3>
-        <div class="filters" style="flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center">
-          <span id="oyModeSeg" class="oy-seg" role="group" aria-label="表示モード">
-            <button type="button" class="oy-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
-            <button type="button" class="oy-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
+        <div class="filters oy-toolbar" style="flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:center">
+          <span class="oy-ctl"><span class="oy-ctl-label">表示</span>
+            <span id="oyModeSeg" class="oy-seg" role="group" aria-label="表示モード">
+              <button type="button" class="oy-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
+              <button type="button" class="oy-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
+            </span>
           </span>
           <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
-          <span id="oyAmtSeg" class="oy-seg" role="group" aria-label="金額表示">
-            <button type="button" class="oy-btn on" data-amt="on" onclick="_oySetAmt(true)" title="％の下に売上金額を表示">金額あり</button>
-            <button type="button" class="oy-btn" data-amt="off" onclick="_oySetAmt(false)" title="売上金額を非表示">金額なし</button>
+          <span class="oy-ctl"><span class="oy-ctl-label">金額</span>
+            <span id="oyAmtSeg" class="oy-seg" role="group" aria-label="金額表示">
+              <button type="button" class="oy-btn on" data-amt="on" onclick="_oySetAmt(true)" title="％の下に売上金額を表示">あり</button>
+              <button type="button" class="oy-btn" data-amt="off" onclick="_oySetAmt(false)" title="売上金額を非表示">なし</button>
+            </span>
+          </span>
+          <span class="oy-ctl"><span class="oy-ctl-label">対象</span>
+            <span id="oyScopeSeg" class="oy-seg" role="group" aria-label="表示対象">
+              <button type="button" class="oy-btn on" data-scope="all" onclick="_oySetScope('all')" title="全ての商品を表示">全体</button>
+              <button type="button" class="oy-btn" data-scope="group" onclick="_oySetScope('group')" title="親子グループのみ表示">親子のみ</button>
+            </span>
+          </span>
+          <span class="oy-ctl"><span class="oy-ctl-label">親比率</span>
+            <span id="oyBandSeg" class="oy-seg" role="group" aria-label="親比率フィルタ">
+              <button type="button" class="oy-btn on" data-band="all" onclick="_oySetBand('all')" title="親比率で絞らない">全て</button>
+              <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜20%">0-20</button>
+              <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 20〜40%">20-40</button>
+              <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 40〜60%">40-60</button>
+              <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 60〜80%">60-80</button>
+              <button type="button" class="oy-btn" data-band="4" onclick="_oySetBand(4)" title="親比率 80〜100%">80-100</button>
+            </span>
           </span>
         </div>
         <div id="oy-wrap" style="overflow:auto;max-height:76vh;text-align:center"></div>
@@ -6973,6 +6997,12 @@ function _oySetMonth(v){ _oyMonth = v; renderOyako(); }
 function _oyToggleAmt(){ _oyShowAmt = !_oyShowAmt; renderOyako(); }
 function _oySetAmt(v){ _oyShowAmt = !!v; renderOyako(); }
 function _oySort(k){ if (_oySortKey === k) _oySortDir *= -1; else { _oySortKey = k; _oySortDir = -1; } renderOyako(); }
+// 【v1.0439】表示対象スコープ（全体／親子のみ）と親比率バンドフィルタ
+let _oyScope = 'all';       // 'all'（全商品）| 'group'（親子グループのみ）
+let _oyParentBand = null;   // null（全て）| 0..4（親比率バンドのindex）
+const OY_BANDS = [[0,20],[20,40],[40,60],[60,80],[80,100]];
+function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
+function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
 
 function renderOyako(){
   const wrap = document.getElementById('oy-wrap');
@@ -6982,14 +7012,15 @@ function renderOyako(){
   (state.ad || []).forEach(a => { const k=a.code+'|'+a.month; const o=(adMap[k]||(adMap[k]={adRev:0,adCost:0})); o.adRev += a.adRevenue||0; o.adCost += a.adCost||0; });
   const _pm = state.productMeta || {};
   const repKeyOf = (code) => { const r = String((_pm[code]||{}).repCode||'').trim(); return r || code; };
-  // 家族化（撤退除外）→ メンバー2件以上（＝親子グループ）だけ対象
+  // 家族化（撤退除外）。【v1.0439】対象は「全体（全商品）」か「親子のみ（メンバー2件以上）」を切替。
   const codeSet = new Set();
   Object.keys(state.master||{}).forEach(c=>codeSet.add(c));
   (state.item||[]).forEach(i=>codeSet.add(i.code));
   (state.ad||[]).forEach(a=>codeSet.add(a.code));
   const families = {};
   [...codeSet].forEach(code => { if (typeof isRetired==='function' && isRetired(code)) return; const key=repKeyOf(code); (families[key]||(families[key]=[])).push(code); });
-  const groups = Object.keys(families).filter(key => families[key].length >= 2);
+  const groupKeys = Object.keys(families).filter(key => families[key].length >= 2);
+  const keys = (_oyScope === 'group') ? groupKeys : Object.keys(families);
 
   // 月の決定
   const allMonths = getImportedDataMonths();      // 昇順（データのある月）
@@ -7016,6 +7047,8 @@ function renderOyako(){
   }
   const seg=document.getElementById('oyModeSeg'); if(seg) seg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.mode===_oyMode));
   const amtSeg=document.getElementById('oyAmtSeg'); if(amtSeg) amtSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', (b.dataset.amt==='on')===_oyShowAmt));
+  const scopeSeg=document.getElementById('oyScopeSeg'); if(scopeSeg) scopeSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.scope===_oyScope));
+  const bandSeg=document.getElementById('oyBandSeg'); if(bandSeg) bandSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.band==='all')?(_oyParentBand==null):(+b.dataset.band===_oyParentBand); b.classList.toggle('on', on); });
 
   const monthsToShow = (_oyMode==='last3') ? last3.slice().reverse() : [_oyMonth].filter(Boolean);  // 新しい順
   if (monthsToShow.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">表示できる月がありません（月次レポートを取り込んでください）</div>'; return; }
@@ -7039,13 +7072,13 @@ function renderOyako(){
   };
 
   const _mname = (c)=>String(((typeof getMaster==='function'?getMaster(c):null)||{}).name||'');
-  const rowsData = groups.map(key=>{
+  let rowsData = keys.map(key=>{
     const members = families[key];
     const repHasMaster = !!(typeof getMaster==='function' && getMaster(key));
     const dispCode = repHasMaster ? key : (members.find(c=>_mname(c))||members[0]||key);
     let name=_mname(dispCode)||key;
     let _n=name,_prev; do{_prev=_n;_n=_n.replace(/[（(][^（()）]*[0-9０-９][^（()）]*[）)]\s*$/,'').replace(/[0-9０-９]+\s*セット\s*$/,'').trim();}while(_n!==_prev);
-    name=_n+'【親】';
+    name=_n+((members.length>=2)?'【親】':'');   // 【v1.0439】単独商品には【親】を付けない
     const stats = monthsToShow.map(ym=>_famStat(key, members, ym));
     return { key, dispCode, name, stats };
   });
@@ -7060,7 +7093,17 @@ function renderOyako(){
   } else {
     rowsData.sort((a,b)=> b.stats.reduce((s,m)=>s+m.totSales,0) - a.stats.reduce((s,m)=>s+m.totSales,0));
   }
-  if (rowsData.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">親子設定された商品グループがありません</div>'; return; }
+  // 【v1.0439】親比率バンドで絞り込み（stats[0]=最新表示月の親％基準）
+  if (_oyParentBand != null && OY_BANDS[_oyParentBand]) {
+    const lo = OY_BANDS[_oyParentBand][0], hi = OY_BANDS[_oyParentBand][1];
+    rowsData = rowsData.filter(r => {
+      const s = r.stats[0];
+      if (!s || s.groupSEO <= 0) return false;
+      const p = Math.round(s.parentSEO / s.groupSEO * 100);
+      return (_oyParentBand===0 ? p>=lo : p>lo) && p<=hi;
+    });
+  }
+  if (rowsData.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">該当する商品がありません</div>'; return; }
 
   const showMonthCol = (_oyMode==='last3');
   const sortArrow = (k)=> _oySortKey===k ? (_oySortDir<0?' ▼':' ▲') : ' ⇅';
@@ -7068,13 +7111,15 @@ function renderOyako(){
   const th = (txt, extra='') => `<th style="padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);${extra}">${txt}</th>`;
   // 比率＋金額の列見出し（下に「比率／金額」の小さな注記）
   const thR = (txt, bg, tcol, extra='', click='') => `<th ${click} style="padding:8px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:${tcol};background:${bg};line-height:1.2;${click?'cursor:pointer;user-select:none;':''}${extra}">${txt}<div style="font-size:10px;font-weight:600;color:#8794a3;margin-top:1px">比率／金額</div></th>`;
+  // 【v1.0439】全ヘッダーの文字色をステータス見出しと同じ var(--text2) に統一。背景色は維持。
   let HEAD = '<th style="padding:9px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>';
-  if (showMonthCol) HEAD += th('月','text-align:right;background:var(--bg3);color:var(--text3)');
-  HEAD += thR('SEO売上','#d7efe0','#12813f');
-  HEAD += thR('広告売上','#fbe7ca','#b45309');
-  HEAD += th('広告金額','text-align:right;background:#fdf0dd;color:#b45309');
-  HEAD += thR('親商品<span style="color:#64748b;font-size:11px">'+sortArrow('parent')+'</span>','#e0f2e6','#12813f', DIV, `onclick="_oySort('parent')"`);
-  HEAD += thR('個商品<span style="color:#64748b;font-size:11px">'+sortArrow('child')+'</span>','#fbf1c9','#a86407', '', `onclick="_oySort('child')"`);
+  if (showMonthCol) HEAD += th('月','text-align:right;background:var(--bg3)');
+  HEAD += th('総売上','text-align:right;background:#eef2f7');   // 【v1.0439】SEO売上の左に総売上（金額）
+  HEAD += thR('SEO売上','#d7efe0','var(--text2)');
+  HEAD += thR('広告売上','#fbe7ca','var(--text2)');
+  HEAD += th('広告金額','text-align:right;background:#fdf0dd');
+  HEAD += thR('親商品<span style="color:#64748b;font-size:11px">'+sortArrow('parent')+'</span>','#e0f2e6','var(--text2)', DIV, `onclick="_oySort('parent')"`);
+  HEAD += thR('子商品<span style="color:#64748b;font-size:11px">'+sortArrow('child')+'</span>','#fbf1c9','var(--text2)', '', `onclick="_oySort('child')"`);   // 【v1.0439】個商品→子商品
   HEAD += th('ステータス','text-align:center');
 
   const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':'¥'+Math.round(v).toLocaleString();
@@ -7101,13 +7146,14 @@ function renderOyako(){
       const prod = first ? `<td rowspan="${rs}" style="padding:9px 12px;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP};background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;gap:10px"><div style="flex:0 0 auto">${imgBox}</div><div style="text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:'DM Mono',ui-monospace,monospace">${_esc(key)}</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap" title="${safeFull}">${safeFull}</div></div></div></td>` : '';
       const monthCell = showMonthCol ? `<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);font-family:'DM Mono',ui-monospace,monospace;white-space:nowrap;border-bottom:${bb}">${m.ym.replace('-','/')}</td>` : '';
       const salesTot = m.groupSEO + m.adRev;                    // SEO売上比率／広告売上比率 の分母（SEO%＋広告%＝100%）
+      const totCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.9rem;font-weight:700;background:#f3f6fb;border-bottom:${bb};white-space:nowrap">${fmtY(m.totSales)}</td>`;   // 【v1.0439】総売上（金額）
       const seoCell = pctCell(m.groupSEO, salesTot, '#eafaf0', bb);   // SEO売上：比率＋金額
       const adCell  = pctCell(m.adRev,    salesTot, '#fdf1e3', bb);   // 広告売上：比率＋金額
       const adCostCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.9rem;background:#fdf6ec;border-bottom:${bb};white-space:nowrap">${fmtY(m.adCost)}</td>`;
       const pCell = pctCell(m.parentSEO, m.groupSEO, '#f2fbf5', bb, DIV);   // 親商品：区切り線付き
       const cCell = pctCell(m.childSEO, m.groupSEO, '#fefce8', bb);
       const stCell = first ? `<td rowspan="${rs}" style="padding:8px 12px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP}">${statusSelectHtml(key,'status')}</td>` : '';
-      return '<tr>'+prod+monthCell+seoCell+adCell+adCostCell+pCell+cCell+stCell+'</tr>';
+      return '<tr>'+prod+monthCell+totCell+seoCell+adCell+adCostCell+pCell+cCell+stCell+'</tr>';
     }).join('');
   }).join('');
 
