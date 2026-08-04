@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0446 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0449 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1128,29 +1128,26 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 /* 【v205】商品-親子売上比率：セグメント切替ボタン（月別/直近3ヶ月、金額あり/なし） */
 /* 【v1.0439】トグルのペアをボックスで囲むセグメント型UI */
 #view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 5px; }
-#view-oyako .oy-ctl-label { font-size: 0.72rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
+#view-oyako .oy-ctl-label { font-size: 0.79rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
 #view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 8px; overflow: hidden; background: #eef1f4; }
-#view-oyako .oy-btn { font-size: 0.8rem; padding: 4.4px 8.5px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0446】1行に収めるためボタン・文字を少し縮小 */
+#view-oyako .oy-btn { font-size: 0.88rem; padding: 4.8px 9.4px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0447】ボタン群を約10%拡大 */
 #view-oyako .oy-seg .oy-btn + .oy-btn { border-left: 1px solid #cdd5de; }
 #view-oyako .oy-btn:hover { background: #e2e7ee; }
 #view-oyako .oy-btn.on { background: #1c8fc9; color: #fff; }
 #view-oyako .oy-btn.on:hover { background: #1783ba; }
-/* 【v1.0443】親比率バンド：0-20が良い(緑)→80-100が悪い(赤)。左が良・右が悪を色で表現。 */
+/* 【v1.0449】親比率バンド(4分割)：0-25良い(緑)→25-50そこそこ良い(黄緑)→50-75あまり良くない(橙)→75-100良くない(赤) */
 #view-oyako #oyBandSeg .oy-btn[data-band="0"] { color: #15803d; background: #e7f6ec; }
 #view-oyako #oyBandSeg .oy-btn[data-band="1"] { color: #4d7c0f; background: #eef6df; }
-#view-oyako #oyBandSeg .oy-btn[data-band="2"] { color: #a16207; background: #fbf3d6; }
-#view-oyako #oyBandSeg .oy-btn[data-band="3"] { color: #c2410c; background: #fdeadd; }
-#view-oyako #oyBandSeg .oy-btn[data-band="4"] { color: #b91c1c; background: #fce7e7; }
+#view-oyako #oyBandSeg .oy-btn[data-band="2"] { color: #c2410c; background: #fdeadd; }
+#view-oyako #oyBandSeg .oy-btn[data-band="3"] { color: #b91c1c; background: #fce7e7; }
 #view-oyako #oyBandSeg .oy-btn[data-band="0"]:hover { background: #d6efdf; }
 #view-oyako #oyBandSeg .oy-btn[data-band="1"]:hover { background: #e4f0cd; }
-#view-oyako #oyBandSeg .oy-btn[data-band="2"]:hover { background: #f7ebc2; }
-#view-oyako #oyBandSeg .oy-btn[data-band="3"]:hover { background: #fbddc9; }
-#view-oyako #oyBandSeg .oy-btn[data-band="4"]:hover { background: #f9d5d5; }
+#view-oyako #oyBandSeg .oy-btn[data-band="2"]:hover { background: #fbddc9; }
+#view-oyako #oyBandSeg .oy-btn[data-band="3"]:hover { background: #f9d5d5; }
 #view-oyako #oyBandSeg .oy-btn[data-band="0"].on { background: #16a34a; color: #fff; }
 #view-oyako #oyBandSeg .oy-btn[data-band="1"].on { background: #65a30d; color: #fff; }
-#view-oyako #oyBandSeg .oy-btn[data-band="2"].on { background: #ca8a04; color: #fff; }
-#view-oyako #oyBandSeg .oy-btn[data-band="3"].on { background: #ea580c; color: #fff; }
-#view-oyako #oyBandSeg .oy-btn[data-band="4"].on { background: #dc2626; color: #fff; }
+#view-oyako #oyBandSeg .oy-btn[data-band="2"].on { background: #ea580c; color: #fff; }
+#view-oyako #oyBandSeg .oy-btn[data-band="3"].on { background: #dc2626; color: #fff; }
 /* 表は内容幅で中央寄せ（画面いっぱいに間延びさせない） */
 #view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-width: 100%; max-height: 76vh; }  /* 【v1.0442】ヘッダー固定：この枠を縦横スクロールのコンテナにする（overflow:hiddenだとstickyが効かない） */
 /* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない） */
@@ -2789,7 +2786,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0446</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0449</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3043,7 +3040,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <button type="button" class="oy-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
               <button type="button" class="oy-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
             </span>
-            <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:13px;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+            <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:0.88rem;padding:4.8px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:700"></select>
           </span>
           <span class="oy-ctl"><span class="oy-ctl-label">広告</span>
             <span id="oyAdSeg" class="oy-seg" role="group" aria-label="広告フィルタ">
@@ -3067,15 +3064,14 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="oy-ctl"><span class="oy-ctl-label">親比率</span>
             <span id="oyBandSeg" class="oy-seg" role="group" aria-label="親比率フィルタ">
               <button type="button" class="oy-btn on" data-band="all" onclick="_oySetBand('all')" title="親比率で絞らない">全て</button>
-              <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜20%">0-20</button>
-              <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 20〜40%">20-40</button>
-              <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 40〜60%">40-60</button>
-              <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 60〜80%">60-80</button>
-              <button type="button" class="oy-btn" data-band="4" onclick="_oySetBand(4)" title="親比率 80〜100%">80-100</button>
+              <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜25%（良い）">0-25</button>
+              <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 25〜50%（そこそこ良い）">25-50</button>
+              <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 50〜75%（あまり良くない）">50-75</button>
+              <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 75〜100%（良くない）">75-100</button>
             </span>
           </span>
         </div>
-        <div id="oy-wrap" style="text-align:center"></div>
+        <div id="oy-wrap" style="text-align:center;margin-top:16px"></div>
       </div>
     </div>
 
@@ -7017,9 +7013,9 @@ function _oySetAmt(v){ _oyShowAmt = !!v; renderOyako(); }
 function _oySort(k){ if (_oySortKey === k) _oySortDir *= -1; else { _oySortKey = k; _oySortDir = -1; } renderOyako(); }
 // 【v1.0439】表示対象スコープ（全体／親子のみ）と親比率バンドフィルタ
 let _oyScope = 'all';       // 'all'（全商品）| 'group'（親子グループのみ）
-let _oyParentBand = null;   // null（全て）| 0..4（親比率バンドのindex）
+let _oyParentBand = null;   // null（全て）| 0..3（親比率バンドのindex）
 let _oyAdFilter = 'all';    // 【v1.0442】'all'（全体）| 'ad'（広告あり）
-const OY_BANDS = [[0,20],[20,40],[40,60],[60,80],[80,100]];
+const OY_BANDS = [[0,25],[25,50],[50,75],[75,100]];   // 【v1.0449】4分割（0-25良い→75-100良くない）
 function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
 function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
 function _oySetAd(v){ _oyAdFilter = (v === 'ad' || v === 'none') ? v : 'all'; renderOyako(); }
@@ -7195,6 +7191,22 @@ function renderOyako(){
   // 【v205】表は内容幅で中央寄せ（間延び防止）。oy-wrap は text-align:center。
   // 【v1.0442】ヘッダー固定のため border-collapse:separate（collapseだと position:sticky が無効化される）。
   wrap.innerHTML = '<div class="oy-tablebox"><table style="border-collapse:separate;border-spacing:0;width:auto"><thead><tr>'+HEAD+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  _oyFitHeight();   // 【v1.0449】表枠の高さをビューポート内に収め、下までスクロールで全行見られるようにする
+}
+// 【v1.0449】商品-各比率の表枠(oy-tablebox)の高さを、画面内に収まるよう動的に設定する。
+//   固定の max-height:76vh だと枠の下端が画面外に出て、最下部の行までスクロールできない不具合があった。
+function _oyFitHeight(){
+  const wrap = document.getElementById('oy-wrap');
+  if (!wrap) return;
+  const box = wrap.querySelector('.oy-tablebox');
+  if (!box) return;
+  const top = box.getBoundingClientRect().top;   // 枠の上端（ヘッダー・ツールバー分だけ下がる）
+  const avail = Math.max(260, Math.floor(window.innerHeight - top - 20));  // 画面下端まで（余白20px）
+  box.style.maxHeight = avail + 'px';
+}
+// ビューポートのリサイズ時（oyako表示中のみ）に高さを追従
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => { if (state && state.currentView === 'oyako') _oyFitHeight(); });
 }
 
 // ==================== Rendering: 撤退済み商品 ====================
