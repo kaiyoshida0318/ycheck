@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0418 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0420 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -345,6 +345,7 @@ body {
 .state-chip[data-state="ad-ok"],
 .state-chip[data-state="ad-warn"],
 .state-chip[data-state="ad-ng"],
+.state-chip[data-state="ad-fixed"],
 .state-chip[data-state="ad-none"] {
   background: #fdf3e2;
   border-color: #f5d8a4;
@@ -352,27 +353,38 @@ body {
 .state-chip[data-state="ad-ok"]:hover,
 .state-chip[data-state="ad-warn"]:hover,
 .state-chip[data-state="ad-ng"]:hover,
+.state-chip[data-state="ad-fixed"]:hover,
 .state-chip[data-state="ad-none"]:hover,
 .state-chip[data-state="ad-ok"].active,
 .state-chip[data-state="ad-warn"].active,
 .state-chip[data-state="ad-ng"].active,
+.state-chip[data-state="ad-fixed"].active,
 .state-chip[data-state="ad-none"].active {
   background: #f4b860;
   border-color: #e09824;
 }
 
-/* グループ2: PRオプ系（薄いパープル）【v185】pro-warn を追加 */
+/* グループ2: PRオプ系（薄いパープル）【v185】pro-warn を追加。【v194】固定/挑戦中も同色。 */
 .state-chip[data-state="pro-ok"],
 .state-chip[data-state="pro-warn"],
+.state-chip[data-state="pro-lower"],
+.state-chip[data-state="pro-pfixed"],
+.state-chip[data-state="pro-cfixed"],
 .state-chip[data-state="pro-ng"] {
   background: #f1ebfa;
   border-color: #d4c4ed;
 }
 .state-chip[data-state="pro-ok"]:hover,
 .state-chip[data-state="pro-warn"]:hover,
+.state-chip[data-state="pro-lower"]:hover,
+.state-chip[data-state="pro-pfixed"]:hover,
+.state-chip[data-state="pro-cfixed"]:hover,
 .state-chip[data-state="pro-ng"]:hover,
 .state-chip[data-state="pro-ok"].active,
 .state-chip[data-state="pro-warn"].active,
+.state-chip[data-state="pro-lower"].active,
+.state-chip[data-state="pro-pfixed"].active,
+.state-chip[data-state="pro-cfixed"].active,
 .state-chip[data-state="pro-ng"].active {
   background: #a880d8;
   border-color: #8b5cf6;
@@ -2681,7 +2693,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0418</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0420</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2745,9 +2757,13 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <!-- 【v186】入札◯/入札×/入札なし、PR◯/PR× に改称。新商品・撤退系は【ステータス】ブロックへ移動 -->
     <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></button>
     <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-    <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
     <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
     <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
+    <button class="state-chip" data-state="pro-lower"><span class="chip-label">PR△-親-下げ挑戦中</span><span class="chip-num" id="cntProLower">(0)</span></button>
+    <button class="state-chip" data-state="pro-pfixed"><span class="chip-label">PR△-親-飛ぶ手前固定</span><span class="chip-num" id="cntProPfixed">(0)</span></button>
+    <button class="state-chip" data-state="pro-cfixed"><span class="chip-label">PR△-子-7％固定</span><span class="chip-num" id="cntProCfixed">(0)</span></button>
     <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
@@ -6037,8 +6053,8 @@ function updateStateCounts() {
   const allCodes = new Set();
   (state.item || []).forEach(i => allCodes.add(i.code));
   Object.keys(state.master).forEach(c => allCodes.add(c));
-  let adOk = 0, adWarn = 0, adNg = 0, adNone = 0;
-  let proOk = 0, proWarn = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
+  let adOk = 0, adWarn = 0, adNg = 0, adFixed = 0, adNone = 0;
+  let proOk = 0, proWarn = 0, proLower = 0, proPfixed = 0, proCfixed = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
@@ -6053,9 +6069,13 @@ function updateStateCounts() {
     // 【v186】新ラベル＋旧ラベル両方判定（分類ヘルパー経由でマイグレーション前のデータも互換）
     if (adStatusIsCircle(adS)) adOk++;
     else if (adStatusIsCross(adS)) adNg++;
+    else if (adStatusIsSettled(adS)) adFixed++;
     else if (adStatusIsNone(adS)) adNone++;
     if (proStatusIsCircle(proS)) proOk++;
-    else if (proStatusIsCross(proS)) proNg++;
+    else if (proS === 'PR△-親-下げ挑戦中') proLower++;
+    else if (proS === 'PR△-親-飛ぶ手前固定') proPfixed++;
+    else if (proS === 'PR△-子-7％固定') proCfixed++;
+    else if (proS === 'PR×' || proS === 'PRオプ×' || proS === 'PRO×') proNg++;
     // 撤退検討▲・撤退■ は status フィールドから判定（v56〜）
     const st = meta.status || '';
     if (st === '撤退検討▲') proWithdrawConsider++;
@@ -6068,9 +6088,13 @@ function updateStateCounts() {
   $('#cntAdOk').textContent = `(${adOk})`;
   const cntAdWarn = $('#cntAdWarn'); if (cntAdWarn) cntAdWarn.textContent = `(${adWarn})`;
   $('#cntAdNg').textContent = `(${adNg})`;
+  const cntAdFixed = $('#cntAdFixed'); if (cntAdFixed) cntAdFixed.textContent = `(${adFixed})`;
   $('#cntAdNone').textContent = `(${adNone})`;
   $('#cntProOk').textContent = `(${proOk})`;
   const cntProWarn = $('#cntProWarn'); if (cntProWarn) cntProWarn.textContent = `(${proWarn})`;
+  const cntProLower = $('#cntProLower'); if (cntProLower) cntProLower.textContent = `(${proLower})`;
+  const cntProPfixed = $('#cntProPfixed'); if (cntProPfixed) cntProPfixed.textContent = `(${proPfixed})`;
+  const cntProCfixed = $('#cntProCfixed'); if (cntProCfixed) cntProCfixed.textContent = `(${proCfixed})`;
   $('#cntProNg').textContent = `(${proNg})`;
   $('#cntProWithdrawConsider').textContent = `(${proWithdrawConsider})`;
   $('#cntProWithdraw').textContent = `(${proWithdraw})`;
@@ -8964,11 +8988,15 @@ const STATE_FILTERS = {
   'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
   'new-product':   { label: '新商品',     targetView: 'basic',      match: (meta) => (meta.status || '新商品') === '新商品' },
   'status-normal': { label: '通常商品',   targetView: 'basic',      match: (meta) => { const s = meta.status || '新商品'; return s === '通常商品' || s === '現役商品'; } },
-  'ad-ok':         { label: '入札◯',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCircle(meta.adStatus || '') },
-  'ad-ng':         { label: '入札×',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCross(meta.adStatus || '') },
-  'ad-none':       { label: '入札なし',     targetView: 'pro-adjust', match: (meta) => adStatusIsNone(meta.adStatus || '') },
-  'pro-ok':        { label: 'PR◯',        targetView: 'pro-adjust', match: (meta) => proStatusIsCircle(meta.proStatus || '') },
-  'pro-ng':        { label: 'PR×',        targetView: 'pro-adjust', match: (meta) => proStatusIsCross(meta.proStatus || '') },
+  'ad-ok':         { label: '入札◯',            targetView: 'ad-adjust',  match: (meta) => adStatusIsCircle(meta.adStatus || '') },
+  'ad-ng':         { label: '入札×-調整中',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCross(meta.adStatus || '') },
+  'ad-fixed':      { label: '入札△-飛ぶ手前固定', targetView: 'ad-adjust',  match: (meta) => adStatusIsSettled(meta.adStatus || '') },
+  'ad-none':       { label: '入札なし',          targetView: 'pro-adjust', match: (meta) => adStatusIsNone(meta.adStatus || '') },
+  'pro-ok':        { label: 'PR◯',              targetView: 'pro-adjust', match: (meta) => proStatusIsCircle(meta.proStatus || '') },
+  'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-親-下げ挑戦中' },
+  'pro-pfixed':    { label: 'PR△-親-飛ぶ手前固定', targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-親-飛ぶ手前固定' },
+  'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
+  'pro-ng':        { label: 'PR×',              targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
   'pro-wc':        { label: '撤退検討▲',   targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退検討▲' },
   'pro-w':         { label: '撤退■',       targetView: 'pro-adjust', match: (meta) => (meta.status || '') === '撤退■' },
   'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
@@ -9127,8 +9155,13 @@ function buildTuneCondHtml(kind) {
       '修正ありに該当せず、状態が<span class="tc-ng">×</span>で、対応内容が<b>空欄 または 更新日時のみ</b>の商品。' +
       '<small>※対応した商品は全体のみに移り、「最新値を更新」で再表示。メモ付きは推移確認へ振り分けられます。</small></td></tr>' +
     '<tr class="tc-row-all"><td><span class="tc-badge tc-b-all">全体</span></td><td>' + allText + '</td></tr>';
+  // 【v193】固定系（△-飛ぶ手前固定 等）は対応不要のため「全体」のみに出る、という説明を追記。
+  const fixedText = isAd
+    ? '固定系（<span class="tc-hi">入札△-飛ぶ手前固定</span>）は調整完了・対応不要のため、推移確認・未確認には出さず「全体」のみに表示。'
+    : '固定系（<span class="tc-hi">PR△-親-飛ぶ手前固定</span>・<span class="tc-hi">PR△-子-7％固定</span>）は調整完了・対応不要のため、推移確認・未確認には出さず「全体」のみに表示。';
   const foot =
     '<div class="tc-foot">共通：状態が<span class="tc-ok">○</span>で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
+    fixedText + '<br>' +
     sortFoot + '</div>';
   return sub +
     '<table class="tc-table"><thead><tr><th style="width:118px">ボタン</th><th>表示される商品</th></tr></thead><tbody>' +
