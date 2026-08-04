@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0454 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0455 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1128,6 +1128,7 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 /* 【v205】商品-親子売上比率：セグメント切替ボタン（月別/直近3ヶ月、金額あり/なし） */
 /* 【v1.0439】トグルのペアをボックスで囲むセグメント型UI */
 #view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 5px; }
+#view-oyako .oy-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 18px; width: 100%; }   /* 【v1.0455】ツールバーを2行に分けて中央揃え */
 #view-oyako .oy-ctl-label { font-size: 0.79rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
 #view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 8px; overflow: hidden; background: #eef1f4; }
 #view-oyako .oy-btn { font-size: 0.88rem; padding: 4.8px 9.4px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0447】ボタン群を約10%拡大 */
@@ -1396,6 +1397,7 @@ td[data-resize-key] {
 }
 .yc-cancel-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--red); }
 .yc-cancel-btn[hidden] { display: none !important; }
+.yc-reflect-wrap[hidden] { display: none !important; }   /* 【v1.0455】未反映が無いときはラッパーごと隠して余白を作らない */
 @keyframes ycReflectPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(217,119,6,.5);} 50%{ box-shadow:0 0 0 6px rgba(217,119,6,0);} }
 #ycSaveLock {
   position: fixed; inset: 0; z-index: 2147483000; display: none;
@@ -2809,7 +2811,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0454</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0455</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3057,51 +3059,55 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <div class="view" id="view-oyako">
       <div class="card">
         <h3 class="card-title">商品-各比率</h3>
-        <div class="filters oy-toolbar" style="flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:center;margin:22px 0 26px">
-          <span class="oy-ctl"><span class="oy-ctl-label">表示</span>
-            <span id="oyModeSeg" class="oy-seg" role="group" aria-label="表示モード">
-              <button type="button" class="oy-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
-              <button type="button" class="oy-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
+        <div class="filters oy-toolbar" style="display:flex;flex-direction:column;align-items:center;gap:12px;margin:22px 0 26px">
+          <div class="oy-row">
+            <span class="oy-ctl"><span class="oy-ctl-label">表示</span>
+              <span id="oyModeSeg" class="oy-seg" role="group" aria-label="表示モード">
+                <button type="button" class="oy-btn on" data-mode="monthly" onclick="_oySetMode('monthly')" title="1グループ1行。選んだ月で表示">月別</button>
+                <button type="button" class="oy-btn" data-mode="last3" onclick="_oySetMode('last3')" title="各グループを直近3ヶ月（完了月）×3行で表示">直近3ヶ月</button>
+              </span>
+              <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:0.88rem;padding:4.8px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:700"></select>
             </span>
-            <select id="oyMonthSel" onchange="_oySetMonth(this.value)" style="margin-left:2px;font-size:0.88rem;padding:4.8px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:700"></select>
-          </span>
-          <span class="oy-ctl"><span class="oy-ctl-label">広告</span>
-            <span id="oyAdSeg" class="oy-seg" role="group" aria-label="広告フィルタ">
-              <button type="button" class="oy-btn on" data-ad="all" onclick="_oySetAd('all')" title="全ての商品を表示">全体</button>
-              <button type="button" class="oy-btn" data-ad="ad" onclick="_oySetAd('ad')" title="広告を出している商品のみ表示">あり</button>
-              <button type="button" class="oy-btn" data-ad="none" onclick="_oySetAd('none')" title="広告を出していない商品のみ表示">なし</button>
+            <span class="oy-ctl"><span class="oy-ctl-label">広告</span>
+              <span id="oyAdSeg" class="oy-seg" role="group" aria-label="広告フィルタ">
+                <button type="button" class="oy-btn on" data-ad="all" onclick="_oySetAd('all')" title="全ての商品を表示">全体</button>
+                <button type="button" class="oy-btn" data-ad="ad" onclick="_oySetAd('ad')" title="広告を出している商品のみ表示">あり</button>
+                <button type="button" class="oy-btn" data-ad="none" onclick="_oySetAd('none')" title="広告を出していない商品のみ表示">なし</button>
+              </span>
             </span>
-          </span>
-          <span class="oy-ctl"><span class="oy-ctl-label">金額</span>
-            <span id="oyAmtSeg" class="oy-seg" role="group" aria-label="金額表示">
-              <button type="button" class="oy-btn on" data-amt="on" onclick="_oySetAmt(true)" title="％の下に売上金額を表示">あり</button>
-              <button type="button" class="oy-btn" data-amt="off" onclick="_oySetAmt(false)" title="売上金額を非表示">なし</button>
+            <span class="oy-ctl"><span class="oy-ctl-label">金額</span>
+              <span id="oyAmtSeg" class="oy-seg" role="group" aria-label="金額表示">
+                <button type="button" class="oy-btn on" data-amt="on" onclick="_oySetAmt(true)" title="％の下に売上金額を表示">あり</button>
+                <button type="button" class="oy-btn" data-amt="off" onclick="_oySetAmt(false)" title="売上金額を非表示">なし</button>
+              </span>
             </span>
-          </span>
-          <span class="oy-ctl"><span class="oy-ctl-label">対象</span>
-            <span id="oyScopeSeg" class="oy-seg" role="group" aria-label="表示対象">
-              <button type="button" class="oy-btn on" data-scope="all" onclick="_oySetScope('all')" title="全ての商品を表示">全体</button>
-              <button type="button" class="oy-btn" data-scope="group" onclick="_oySetScope('group')" title="親子グループのみ表示">親子のみ</button>
+            <span class="oy-ctl"><span class="oy-ctl-label">対象</span>
+              <span id="oyScopeSeg" class="oy-seg" role="group" aria-label="表示対象">
+                <button type="button" class="oy-btn on" data-scope="all" onclick="_oySetScope('all')" title="全ての商品を表示">全体</button>
+                <button type="button" class="oy-btn" data-scope="group" onclick="_oySetScope('group')" title="親子グループのみ表示">親子のみ</button>
+              </span>
             </span>
-          </span>
-          <span class="oy-ctl"><span class="oy-ctl-label">売上規模</span>
-            <span id="oySalesSeg" class="oy-seg" role="group" aria-label="総売上フィルタ">
-              <button type="button" class="oy-btn on" data-tier="all" onclick="_oySetTier('all')" title="総売上で絞らない">全て</button>
-              <button type="button" class="oy-btn" data-tier="0" onclick="_oySetTier(0)" title="総売上 10万円以上">10万〜</button>
-              <button type="button" class="oy-btn" data-tier="1" onclick="_oySetTier(1)" title="総売上 5万〜10万円">5〜10万</button>
-              <button type="button" class="oy-btn" data-tier="2" onclick="_oySetTier(2)" title="総売上 1万〜5万円">1〜5万</button>
-              <button type="button" class="oy-btn" data-tier="3" onclick="_oySetTier(3)" title="総売上 1万円未満">〜1万</button>
+          </div>
+          <div class="oy-row">
+            <span class="oy-ctl"><span class="oy-ctl-label">売上規模</span>
+              <span id="oySalesSeg" class="oy-seg" role="group" aria-label="総売上フィルタ">
+                <button type="button" class="oy-btn on" data-tier="all" onclick="_oySetTier('all')" title="総売上で絞らない">全て</button>
+                <button type="button" class="oy-btn" data-tier="0" onclick="_oySetTier(0)" title="総売上 10万円以上">10万〜</button>
+                <button type="button" class="oy-btn" data-tier="1" onclick="_oySetTier(1)" title="総売上 5万〜10万円">5〜10万</button>
+                <button type="button" class="oy-btn" data-tier="2" onclick="_oySetTier(2)" title="総売上 1万〜5万円">1〜5万</button>
+                <button type="button" class="oy-btn" data-tier="3" onclick="_oySetTier(3)" title="総売上 1万円未満">〜1万</button>
+              </span>
             </span>
-          </span>
-          <span class="oy-ctl"><span class="oy-ctl-label">親比率</span>
-            <span id="oyBandSeg" class="oy-seg" role="group" aria-label="親比率フィルタ">
-              <button type="button" class="oy-btn on" data-band="all" onclick="_oySetBand('all')" title="親比率で絞らない">全て</button>
-              <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜25%（良い）">0-25％</button>
-              <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 25〜50%（そこそこ良い）">25-50％</button>
-              <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 50〜75%（あまり良くない）">50-75％</button>
-              <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 75〜100%（良くない）">75-100％</button>
+            <span class="oy-ctl"><span class="oy-ctl-label">親比率</span>
+              <span id="oyBandSeg" class="oy-seg" role="group" aria-label="親比率フィルタ">
+                <button type="button" class="oy-btn on" data-band="all" onclick="_oySetBand('all')" title="親比率で絞らない">全て</button>
+                <button type="button" class="oy-btn" data-band="0" onclick="_oySetBand(0)" title="親比率 0〜25%（良い）">0-25％</button>
+                <button type="button" class="oy-btn" data-band="1" onclick="_oySetBand(1)" title="親比率 25〜50%（そこそこ良い）">25-50％</button>
+                <button type="button" class="oy-btn" data-band="2" onclick="_oySetBand(2)" title="親比率 50〜75%（あまり良くない）">50-75％</button>
+                <button type="button" class="oy-btn" data-band="3" onclick="_oySetBand(3)" title="親比率 75〜100%（良くない）">75-100％</button>
+              </span>
             </span>
-          </span>
+          </div>
         </div>
         <div id="oy-wrap" style="text-align:center;margin-top:0"></div>
       </div>
@@ -4969,17 +4975,20 @@ function scheduleGitHubSave() {
 function _ycUpdateReflectBtn() {
   const editable = (typeof ghIsEnabled === 'function') && ghIsEnabled();
   document.querySelectorAll('.yc-reflect-btn').forEach(b => {
-    const cb = b.parentElement ? b.parentElement.querySelector('.yc-cancel-btn') : null;   // 【v1.0452】同じ行のキャンセル
-    if (!editable) { b.hidden = true; if (cb) cb.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
+    const wrap = b.closest('.yc-reflect-wrap');                               // 【v1.0455】ラッパーごと表示制御
+    const cb = wrap ? wrap.querySelector('.yc-cancel-btn') : (b.parentElement ? b.parentElement.querySelector('.yc-cancel-btn') : null);
+    if (!editable) { b.hidden = true; if (cb) cb.hidden = true; if (wrap) wrap.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
     b.hidden = false;
     if (_ghDirty) {
       b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
       b.textContent = '⬆ 反映する（未反映）';
       if (cb) cb.hidden = false;   // 反映ボタンが出るときだけキャンセルも表示
+      if (wrap) wrap.hidden = false;
     } else {
       b.classList.add('yc-clean'); b.classList.remove('yc-dirty');
       b.hidden = true;   /* 【v1.0380】反映完了後はボタン自体を消す（反映済み表示は残さない） */
       if (cb) cb.hidden = true;
+      if (wrap) wrap.hidden = true;
     }
   });
 }
