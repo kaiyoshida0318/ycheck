@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0421 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0426 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -418,9 +418,10 @@ body {
   border-color: #64748b;
 }
 
-/* 【v231】「ヘッダーを隠す」: ヘッダー＋上段ナビ（【基本】行・【調整】行）を隠し、【状態】を最上部に */
+/* 【v231/v196】「ヘッダーを隠す」: ヘッダー＋上段ナビ＋【ステータス】ブロックを隠し、【状態】を最上部に */
 body.chrome-hidden .header,
 body.chrome-hidden .top-nav:not(.top-nav-3) { display: none; }
+body.chrome-hidden .nav-group-status { display: none; }  /* 【v196】ステータスブロックも隠す（状態ブロックより上を隠す） */
 body.chrome-hidden .top-nav-3 { top: 0; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
@@ -460,9 +461,53 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .state-chip[data-state="status-withdrawn"]:hover, .state-chip[data-state="status-withdrawn"].active { background:#8b5a2b; border-color:#6f4720; }
 
 /* 【v195】状態行: ステータス（上）→状態（下）を縦積み。各グループ内はチップ折り返し。 */
-.top-nav-3 { flex-direction: column; align-items: stretch; gap: 3px; }
+.top-nav-3 { flex-direction: column; align-items: stretch; gap: 6px; }  /* 【v198】ステータス⇔状態の行間を倍に */
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
-.top-nav-3 > #btnToggleChrome { align-self: flex-end; margin-bottom: 1px; }
+/* 【v200】【入札状態】＋【PR状態】を1行に横並び。溢れたら折り返し。 */
+.nav-row-states { display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 4px; width: 100%; }
+.nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
+/* 【v196/v200】ヘッダーを隠すボタンは状態行の右端へ */
+.nav-row-states #btnToggleChrome { margin-left: auto; white-space: nowrap; }
+/* 【v197/v200】チップのグループ区切り（縦線） */
+.top-nav-3 .chip-sep { flex: 0 0 auto; width: 2px; height: 22px; align-self: center; background: #8b94a3; border-radius: 1px; margin: 0 4px; }
+/* 【v200】入札状態⇔PR状態の境目は少し高く濃い区切り */
+.top-nav-3 .chip-sep-block { width: 2px; height: 26px; background: #6b7280; margin: 0 3px; }
+/* 【v200】1行に収めるためチップの左右パディングを少し詰める */
+.top-nav-3 .state-chip { padding: 3px 7px; }
+
+/* 【v196】状態行は白背景。チップは塗りつぶさず（白背景・淡い枠）、文字色だけ各列の色に合わせる。 */
+.top-nav-3 { background: #fff; }
+.top-nav-3 .state-chip[data-state] { background: #fff; border-color: #dfe3e9; color: #334155; }
+.top-nav-3 .state-chip[data-state]:hover { background: #f6f8fb; border-color: #c3cad4; }
+.top-nav-3 .state-chip[data-state].active { background: #fff; border: 1.5px solid currentColor; }
+.top-nav-3 .state-chip[data-state] .chip-label,
+.top-nav-3 .state-chip[data-state]:hover .chip-label,
+.top-nav-3 .state-chip[data-state].active .chip-label { color: inherit; }
+.top-nav-3 .state-chip[data-state] .chip-num,
+.top-nav-3 .state-chip[data-state]:hover .chip-num,
+.top-nav-3 .state-chip[data-state].active .chip-num { color: #94a3b8; }
+/* 各チップの文字色＝その列で使っている色 */
+.top-nav-3 .state-chip[data-state="all-basic"] { color: #0d9488; }
+.top-nav-3 .state-chip[data-state="ad-ok"],
+.top-nav-3 .state-chip[data-state="pro-ok"] { color: #2563eb; }
+.top-nav-3 .state-chip[data-state="ad-ng"],
+.top-nav-3 .state-chip[data-state="pro-ng"] { color: #ea7317; }
+.top-nav-3 .state-chip[data-state="ad-fixed"],
+.top-nav-3 .state-chip[data-state="pro-lower"] { color: #c99700; }
+.top-nav-3 .state-chip[data-state="ad-none"] { color: #9ca3af; }
+.top-nav-3 .state-chip[data-state="pro-pfixed"],
+.top-nav-3 .state-chip[data-state="pro-cfixed"] { color: #12a5c8; }
+.top-nav-3 .state-chip[data-state="unselected-ad"],
+.top-nav-3 .state-chip[data-state="unselected-pro"] { color: #64748b; }
+.top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
+.top-nav-3 .state-chip[data-state="status-kenzen-ad"],
+.top-nav-3 .state-chip[data-state="status-kenzen-noad"] { color: #2563eb; }
+.top-nav-3 .state-chip[data-state="status-churitsu-ad"],
+.top-nav-3 .state-chip[data-state="status-churitsu-noad"] { color: #c99700; }
+.top-nav-3 .state-chip[data-state="pro-wc"] { color: #ea7317; }
+.top-nav-3 .state-chip[data-state="status-withdraw-plan"],
+.top-nav-3 .state-chip[data-state="status-withdraw-out"] { color: #dc2626; }
+.top-nav-3 .state-chip[data-state="status-withdrawn"] { color: #8b5a2b; }
 
 /* 全体の説明ボタン（クリック不可のアイコン風） */
 .state-chip.info-chip {
@@ -2672,6 +2717,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .nav-group-label.g-chosei  { color:#16a34a; }  /* 【調整】 */
 .nav-group-label.g-jotai   { color:#9333ea; }  /* 【状態】 */
 .nav-group-label.g-status  { color:#0d9488; }  /* 【ステータス】 */
+.nav-group-label.g-nyusatsu { color:#b45309; }  /* 【入札状態】 */
+.nav-group-label.g-pr       { color:#7c3aed; }  /* 【PR状態】 */
 /* 【v1.0322】広告あり/無し 絞り込み（商品-基本/月別データ）。検索欄の隣のセグメントボタン */
 .ad-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:6px; vertical-align:middle; }
 .ad-filter .adf-btn { font-size:0.8rem; padding:5px 11px; border:none; border-left:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; font-weight:500; white-space:nowrap; line-height:1.3; }
@@ -2705,7 +2752,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0421</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0426</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2763,36 +2810,55 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 
 <!-- Third row: ステータス（上）＋状態（下） -->
 <nav class="top-nav top-nav-3">
-  <!-- 【v231】ヘッダー＋上段ナビ（【調整】以上）を隠すトグル。右上に固定配置。 -->
-  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="ヘッダーと上段ナビ（【調整】以上）を隠して【ステータス】を最上部にします">🔼 ヘッダーを隠す</button>
-  <!-- 【v195】ステータス（商品ライフサイクル）ブロック。【状態】の上に配置。 -->
+  <!-- 【v195】ステータス（商品ライフサイクル）ブロック。【状態】の上に配置。【v197】縦線でグルーピング。 -->
   <div class="nav-group nav-group-status">
     <span class="nav-group-label g-status">【ステータス】</span>
+    <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
     <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="status-kenzen-ad"><span class="chip-label">健常-広告あり◯</span><span class="chip-num" id="cntStatusKenzenAd">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen-noad"><span class="chip-label">健常-広告なし◯</span><span class="chip-num" id="cntStatusKenzenNoad">(0)</span></button>
+    <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="status-churitsu-ad"><span class="chip-label">中立-広告あり□</span><span class="chip-num" id="cntStatusChuritsuAd">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu-noad"><span class="chip-label">中立-広告なし□</span><span class="chip-num" id="cntStatusChuritsuNoad">(0)</span></button>
+    <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-out"><span class="chip-label">撤退予定-out記入済</span><span class="chip-num" id="cntStatusWithdrawOut">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
   </div>
-  <!-- 【状態】ブロック -->
-  <div class="nav-group nav-group-jotai">
-    <span class="nav-group-label g-jotai">【状態】</span>
-    <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAll">(0)</span></button>
-    <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-    <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
-    <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
-    <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
-    <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
-    <button class="state-chip" data-state="pro-lower"><span class="chip-label">PR△-親-下げ挑戦中</span><span class="chip-num" id="cntProLower">(0)</span></button>
-    <button class="state-chip" data-state="pro-pfixed"><span class="chip-label">PR△-親-飛ぶ手前固定</span><span class="chip-num" id="cntProPfixed">(0)</span></button>
-    <button class="state-chip" data-state="pro-cfixed"><span class="chip-label">PR△-子-7％固定</span><span class="chip-num" id="cntProCfixed">(0)</span></button>
-    <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
-    <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
-    <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+  <!-- 【v200】【入札状態】＋【PR状態】を1行に横並び。 -->
+  <div class="nav-row-states">
+    <!-- 【入札状態】ブロック。【v199】旧【状態】を入札/PRで分割。各先頭に全体。 -->
+    <div class="nav-group nav-group-jotai nav-group-ad">
+      <span class="nav-group-label g-nyusatsu">【入札状態】</span>
+      <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
+      <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+      <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+    </div>
+    <!-- 【PR状態】ブロック。 -->
+    <div class="nav-group nav-group-jotai nav-group-pr">
+      <span class="nav-group-label g-pr">【PR状態】</span>
+      <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="pro-pfixed"><span class="chip-label">PR△-親-飛ぶ手前固定</span><span class="chip-num" id="cntProPfixed">(0)</span></button>
+      <button class="state-chip" data-state="pro-lower"><span class="chip-label">PR△-親-下げ挑戦中</span><span class="chip-num" id="cntProLower">(0)</span></button>
+      <button class="state-chip" data-state="pro-cfixed"><span class="chip-label">PR△-子-7％固定</span><span class="chip-num" id="cntProCfixed">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+    </div>
+    <!-- 【v196】ヘッダーを隠すトグル。状態行の右端に配置。 -->
+    <button class="btn sm ghost" id="btnToggleChrome" type="button" title="ヘッダー＋上段ナビ＋【ステータス】を隠して【入札状態】を最上部にします">🔼 ヘッダーを隠す</button>
   </div>
 </nav>
 
@@ -6174,6 +6240,9 @@ function updateStateCounts() {
   if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
   // 【v229】状態ブロック左端: 全体（=現役商品合計）／新商品
   const cntAll = $('#cntAll'); if (cntAll) cntAll.textContent = `(${activeCount})`;
+  const cntAllS = $('#cntAllStatus'); if (cntAllS) cntAllS.textContent = `(${activeCount})`;  // 【v197】ステータス側の全体
+  const cntAllAd = $('#cntAllAd'); if (cntAllAd) cntAllAd.textContent = `(${activeCount})`;   // 【v199】入札状態側の全体
+  const cntAllPr = $('#cntAllPr'); if (cntAllPr) cntAllPr.textContent = `(${activeCount})`;   // 【v199】PR状態側の全体
   const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
 }
 
