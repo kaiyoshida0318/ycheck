@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0432 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0433 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2762,7 +2762,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0432</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0433</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2845,7 +2845,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <!-- 【入札状態】ブロック。【v199】旧【状態】を入札/PRで分割。各先頭に全体。 -->
     <div class="nav-group nav-group-jotai nav-group-ad">
       <span class="nav-group-label g-nyusatsu">【入札状態】</span>
-      <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+      <button class="state-chip" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
@@ -3343,14 +3343,14 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <ul class="info-list">
         <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">入札◯</b>広告の入札価格が最安値の <b>25円</b> かつ、広告順位が <b>1〜4位</b> のもの。</li>
         <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">入札×-調整中</b><b>「入札25円かつ広告1〜4位」</b> を満たすよう調整中のもの。</li>
-        <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">入札△-飛ぶ手前固定</b>下げると広告が飛ぶ手前の金額で <b>固定完了</b>（これ以上の対応は不要）。</li>
+        <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">入札△-飛ぶ手前固定</b>下げると広告が飛ぶ手前の金額で <b>固定完了</b>。月1チェック用に「未確認」に出ます（入札価格を変えると推移確認へ）。</li>
         <li><b class="info-tag" style="color:#6b7280;background:#f1f3f5;border:1px solid var(--border2)">入札なし</b>広告を打っていないもの。</li>
       </ul>
       <h4 class="info-subheading" style="margin:12px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">PRオプ状態</h4>
       <ul class="info-list">
         <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">PR◯</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>1〜6位</b> のもの。</li>
         <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">PR△-親-下げ挑戦中</b><b>親商品</b>。30%等で上位表示させ子へ送り込むが、料率の <b>下げに挑戦中</b> のもの。</li>
-        <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-親-飛ぶ手前固定</b><b>親商品</b>。下げ挑戦の結果、ギリギリの％で <b>固定完了</b> したもの（対応不要）。</li>
+        <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-親-飛ぶ手前固定</b><b>親商品</b>。下げ挑戦の結果、ギリギリの％で <b>固定完了</b>。月1チェック用に「未確認」に出ます（料率を変えると推移確認へ）。</li>
         <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-子-7％固定</b><b>子商品</b>。PR◯条件は未達でも良し。<b>7%固定</b> で親から送り込むもの（対応不要）。</li>
         <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">PR×</b><b>「PRオプ7％かつSEO1〜6位」</b> を満たしていないもの。</li>
       </ul>
@@ -6206,6 +6206,7 @@ function updateStateCounts() {
   let adOk = 0, adWarn = 0, adNg = 0, adFixed = 0, adNone = 0;
   let proOk = 0, proWarn = 0, proLower = 0, proPfixed = 0, proCfixed = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
+  let bidEnteredCount = 0;  // 【v208】入札価格が記入されている商品数
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
   // 【v195】新ステータス別カウント
@@ -6241,6 +6242,8 @@ function updateStateCounts() {
     else if (st === '撤退予定-out記入済') sWithdrawOut++;
     if (!adS) unselectedAd++;
     if (!proS) unselectedPro++;
+    // 【v208】入札状態の「全体」＝入札価格が記入されている商品数
+    { const _b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; if (_b != null && Number(_b) > 0) bidEnteredCount++; }
   });
   $('#cntAdOk').textContent = `(${adOk})`;
   const cntAdWarn = $('#cntAdWarn'); if (cntAdWarn) cntAdWarn.textContent = `(${adWarn})`;
@@ -6271,7 +6274,7 @@ function updateStateCounts() {
   // 【v229】状態ブロック左端: 全体（=現役商品合計）／新商品
   const cntAll = $('#cntAll'); if (cntAll) cntAll.textContent = `(${activeCount})`;
   const cntAllS = $('#cntAllStatus'); if (cntAllS) cntAllS.textContent = `(${activeCount})`;  // 【v197】ステータス側の全体
-  const cntAllAd = $('#cntAllAd'); if (cntAllAd) cntAllAd.textContent = `(${activeCount})`;   // 【v199】入札状態側の全体
+  const cntAllAd = $('#cntAllAd'); if (cntAllAd) cntAllAd.textContent = `(${bidEnteredCount})`;   // 【v208】入札状態側の全体＝入札価格記入ありの数
   const cntAllPr = $('#cntAllPr'); if (cntAllPr) cntAllPr.textContent = `(${activeCount})`;   // 【v199】PR状態側の全体
   const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
 }
@@ -6621,7 +6624,7 @@ function renderBasic() {
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
     if (f && typeof f.match === 'function') {
-      list = list.filter(r => f.match(state.productMeta[r.code] || {}));
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code));
     }
   }
 
@@ -7593,9 +7596,11 @@ function getTuneGroup(code, kind) {
   //   推移確認・未確認には出さず「全体」のみに表示する。
   const isCircle = (kind === 'ad') ? adStatusIsCircle(meta.adStatus) : proStatusIsCircle(meta.proStatus);
   if (isCircle) return null;
-  // 【v186】△-飛ぶ手前固定 等の「固定＝対応不要」ステータスは推移確認/未確認から除外（全体のみ）。
-  const isSettled = (kind === 'ad') ? adStatusIsSettled(meta.adStatus) : proStatusIsSettled(meta.proStatus);
-  if (isSettled) return null;
+  // 【v208】固定系の扱いを変更。
+  //   ・子商品の固定（PR△-子-7％固定）＝全体のみ（従来どおり対応不要）。
+  //   ・親の固定（入札△-飛ぶ手前固定 / PR△-親-飛ぶ手前固定）＝月1チェック用に「未確認」に出す。
+  //     値を再調整すると対応メモに変更表記が入り「推移確認」に移る（＝下の watch 判定に乗る）。
+  if (kind === 'pro' && meta.proStatus === 'PR△-子-7％固定') return null;   // 子の固定だけ全体のみ
   // 【v1.0397】非F(推移確認/未確認): 「対応済み(adDone/proDone)ゲート」を撤廃し、対応内容メモの中身だけで振り分ける。
   //   ・対応の有無に関わらず、数値変更で自動記入される「￥旧-新（日付）」等の変更表記あり → 推移確認。
   //   ・空欄、または更新日時スタンプのみ → 未確認。
@@ -7722,7 +7727,7 @@ function renderAdAdjust(cfg) {
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'ad-adjust') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
     if (f) {
-      list = list.filter(r => f.match(state.productMeta[r.code] || {}));
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code));
     }
   }
 
@@ -7883,7 +7888,7 @@ function renderProAdjust(cfg) {
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'pro-adjust') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
     if (f) {
-      list = list.filter(r => f.match(state.productMeta[r.code] || {}));
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code));
     }
   }
 
@@ -9327,6 +9332,8 @@ $$('.nav-tab').forEach(item => {
 //   match関数は新ラベルと旧ラベル両方を判定（マイグレーション前のデータ互換）
 const STATE_FILTERS = {
   'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
+  // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
+  'ad-all':        { label: '全体',       targetView: 'ad-adjust',  match: (meta, code) => { const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
   'new-product':      { label: '新商品',           targetView: 'basic', match: (meta) => (meta.status || '新商品') === '新商品' },
   'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告あり◯' },
   'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告なし◯' },
@@ -9504,8 +9511,8 @@ function buildTuneCondHtml(kind) {
     '<tr class="tc-row-all"><td><span class="tc-badge tc-b-all">全体</span></td><td>' + allText + '</td></tr>';
   // 【v193】固定系（△-飛ぶ手前固定 等）は対応不要のため「全体」のみに出る、という説明を追記。
   const fixedText = isAd
-    ? '固定系（<span class="tc-hi">入札△-飛ぶ手前固定</span>）は調整完了・対応不要のため、推移確認・未確認には出さず「全体」のみに表示。'
-    : '固定系（<span class="tc-hi">PR△-親-飛ぶ手前固定</span>・<span class="tc-hi">PR△-子-7％固定</span>）は調整完了・対応不要のため、推移確認・未確認には出さず「全体」のみに表示。';
+    ? '固定系（<span class="tc-hi">入札△-飛ぶ手前固定</span>）は月1チェック用に「未確認」に表示。入札価格を変更すると「推移確認」に移ります。'
+    : '固定系のうち親（<span class="tc-hi">PR△-親-飛ぶ手前固定</span>）は月1チェック用に「未確認」に表示（料率を変更すると推移確認へ）。子（<span class="tc-hi">PR△-子-7％固定</span>）は「全体」のみに表示。';
   const foot =
     '<div class="tc-foot">共通：状態が<span class="tc-ok">○</span>で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
     fixedText + '<br>' +
