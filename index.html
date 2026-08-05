@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0467 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0468 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2788,6 +2788,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .nav-group-label.g-status  { color:#0d9488; }  /* 【ステータス】 */
 .nav-group-label.g-nyusatsu { color:#b45309; }  /* 【入札状態】 */
 .nav-group-label.g-pr       { color:#7c3aed; }  /* 【PR状態】 */
+.nav-group-label.g-taiou    { color:#c2410c; }  /* 【対応検討】 */
 /* 【v1.0322】広告あり/無し 絞り込み（商品-基本/月別データ）。検索欄の隣のセグメントボタン */
 .ad-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:6px; vertical-align:middle; }
 .ad-filter .adf-btn { font-size:0.8rem; padding:5px 11px; border:none; border-left:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; font-weight:500; white-space:nowrap; line-height:1.3; }
@@ -2821,7 +2822,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0467</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0468</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2875,6 +2876,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <span class="nav-group-label g-chosei">【調整】</span>
     <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">入札価格調整</a>
     <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">PRオプ調整</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label g-taiou">【対応検討】</span>
+    <a class="nav-tab nav-tab-link" data-view="review-sales4" href="?view=review-sales4">総売上-直近4ヶ月分</a>
   </div>
 </nav>
 
@@ -3027,6 +3032,24 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         </div>
         <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。「表示」で<b>直近12ヶ月</b>（最新月から）か<b>年度（1〜12月）</b>を切り替え、それ以外の期間は「表示範囲」で選びます。</p>
         <div id="mi-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
+      </div>
+    </div>
+
+    <!-- 【対応検討】View: 総売上-直近4ヶ月分 -->
+    <div class="view" id="view-review-sales4">
+      <div class="card">
+        <h3 class="card-title">対応検討 — 総売上（直近4ヶ月分）</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="reviewSales4Search" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+        </div>
+        <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">直近の<b>満了した4ヶ月</b>の総売上を横に並べて確認します（当月は未満了のため除外）。左＝古い月／右＝新しい月。並び順は最新月の総売上が高い順。</p>
+        <div class="table-wrap">
+          <table id="tableReviewSales4" class="data-grid">
+            <thead><tr id="reviewSales4Head"></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -6917,6 +6940,78 @@ function renderBasic() {
   updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
 }
 
+// ==================== Rendering: 【対応検討】総売上-直近4ヶ月分 ====================
+// 直近の「満了した」4ヶ月（当月＝未満了は除外）の総売上を横並びで確認する。
+// レイアウト: 商品コード / 画像 / 商品名 / メインKW / 総売上1〜4 / ステータス
+function renderReviewSales4() {
+  const head = document.getElementById('reviewSales4Head');
+  const tbody = document.querySelector('#tableReviewSales4 tbody');
+  if (!head || !tbody) return;
+  // 直近の満了した4ヶ月（昇順＝古→新）。当月は未満了なので除外。
+  const monthsAll = getImportedDataMonths();
+  const now = new Date();
+  const curYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const months = monthsAll.filter(m => m < curYM).slice(-4);
+  const newestIdx = months.length - 1;   // 直近（満了）月の列インデックス
+  // ヘッダー（総売上①〜④に対象月を併記。月が無い列は総売上のみ）
+  let h = '<th data-resize-key="codeReviewSales4">商品コード</th>'
+    + '<th class="nosort">画像</th>'
+    + '<th data-resize-key="nameReviewSales4">商品名</th>'
+    + '<th class="nosort" data-resize-key="kwReviewSales4">メインKW</th>';
+  for (let i = 0; i < 4; i++) {
+    const m = months[i] || '';
+    h += '<th class="num col-total">総売上' + (i + 1) + (m ? ('<br>' + m) : '') + '</th>';
+  }
+  h += '<th class="status-col">ステータス</th>';
+  head.innerHTML = h;
+  // 集計（商品×月の総売上＝item由来の rev）
+  const agg = buildFullAggregate();
+  const byKey = {};
+  agg.forEach(r => { byKey[r.code + '|' + r.month] = r; });
+  const codes = new Set();
+  Object.keys(state.master || {}).forEach(c => codes.add(c));
+  (state.item || []).forEach(i => codes.add(i.code));
+  (state.ad || []).forEach(a => codes.add(a.code));
+  let codeList = [...codes].filter(code => !isRetired(code) || _editPinnedCodes.has(code));
+  // 検索
+  const _sEl = document.getElementById('reviewSales4Search');
+  const q = (_sEl ? _sEl.value : '').trim().toLowerCase();
+  if (q) codeList = codeList.filter(code => {
+    const m = getMaster(code);
+    return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
+  });
+  // 各商品の月別総売上（月が無い列は null → 「—」表示）
+  const rows = codeList.map(code => {
+    const sales = [0, 1, 2, 3].map(i => {
+      const m = months[i];
+      if (!m) return null;
+      const r = byKey[code + '|' + m];
+      return r ? (r.rev || 0) : 0;
+    });
+    const total = sales.reduce((s, v) => s + (v || 0), 0);
+    return { code, sales, total };
+  });
+  // 全月0の商品は除外（検索中は残す）。直近月の総売上が高い順、同値は合計で。
+  const shown = (q ? rows : rows.filter(r => r.total > 0))
+    .sort((a, b) => ((b.sales[newestIdx] || 0) - (a.sales[newestIdx] || 0)) || (b.total - a.total));
+  if (!shown.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">' + (monthsAll.length ? '該当する商品がありません' : 'データを読み込んでください') + '</td></tr>';
+    return;
+  }
+  tbody.innerHTML = shown.slice(0, 2000).map(r => {
+    let cells = '';
+    for (let i = 0; i < 4; i++) cells += '<td class="num col-total">' + fmt(r.sales[i]) + '</td>';
+    return '<tr>'
+      + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
+      + '<td>' + imageCellHtml(r.code) + '</td>'
+      + '<td>' + nameCellHtml(r.code) + '</td>'
+      + '<td>' + kwCellHtml(r.code) + '</td>'
+      + cells
+      + '<td class="status-col">' + statusSelectHtml(r.code, 'status') + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
 // ==================== Rendering: 商品-月別データ ====================
 // 【v110】月プルダウンで1ヶ月に絞り込み（基本データと同じ方式）
 let monthlySortKey = 'rev', monthlySortDir = -1;
@@ -9545,6 +9640,7 @@ function renderAll() {
   else if (state.currentView === 'pro-tune') renderProTune();
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
+  else if (state.currentView === 'review-sales4') renderReviewSales4();
   // 【v239】調整サブフィルタバーの表示/件数を更新（毎日の順位更新後も renderAll 経由で自動反映）
   if (typeof updateTuneBar === 'function') updateTuneBar();
   if (typeof _updateReportDueGlow === 'function') _updateReportDueGlow();  // 【v1.0402】月次レポート未追加なら光らせる
