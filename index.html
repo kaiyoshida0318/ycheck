@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0465 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0467 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2821,7 +2821,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0465</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0467</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6808,21 +6808,30 @@ function renderBasic() {
   // master のみの商品（データがなくても全商品表示のため）
   if (targetMonth) {
     const knownCodes = new Set(list.map(r => r.code));
-    Object.keys(state.master).forEach(code => {
-      if (!knownCodes.has(code)) {
-        list.push({ code, month: targetMonth, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null });
-      }
-    });
+    const _addZeroRow = (code) => {
+      if (!code || knownCodes.has(code)) return;
+      knownCodes.add(code);
+      list.push({ code, month: targetMonth, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null });
+    };
+    Object.keys(state.master).forEach(_addZeroRow);
+    // 【fix】ステータス系チップで basic を絞り込み中は、件数バッジ(updateStateCounts=item∪master∪…)と
+    //   一覧の母集団を一致させる。売上データが選択月に無い/master未登録の商品も含め、
+    //   「(1)なのに開くと空」の不整合を解消する。
+    if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
+      (state.item || []).forEach(i => _addZeroRow(i.code));
+      (state.ad || []).forEach(a => _addZeroRow(a.code));
+      Object.keys(state.productMeta || {}).forEach(_addZeroRow);
+    }
   }
 
   // 引退済み商品（商品名なし）を除外
-  list = list.filter(r => !isRetired(r.code));
+  list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
   // 【v229】【状態】チップで basic を対象にした絞り込み（全体／新商品）
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
     if (f && typeof f.match === 'function') {
-      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code));
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code) || _editPinnedCodes.has(r.code));
     }
   }
 
@@ -6841,6 +6850,7 @@ function renderBasic() {
     list = list.filter(r => {
       const a = (state.productMeta[r.code] || {}).adStatus || '';
       const hasAd = adStatusIsCircle(a) || adStatusIsCross(a);
+      if (_editPinnedCodes.has(r.code)) return true;
       return basicAdFilter === 'ad' ? hasAd : !hasAd;
     });
   }
@@ -7703,7 +7713,13 @@ let tuneGroup = 'fix';
 //   サブフィルタ切替 / ビュー切替・リロード / 順位データ取得(rank.json) / 「最新値を更新」取り込み。
 //   null = 未凍結（次のtune描画時に現在の分類で作り直す）。
 let tuneFrozenMembers = null;
-function resetTuneMembers() { tuneFrozenMembers = null; }
+// 【fix】編集直後ピン: いま開いているページで状態などを変更した商品コードを一時的に保持し、
+//   フィルタ（入札なし除外・状態チップ・引退・調整グループ 等）に一致しなくても“その場では消さない”。
+//   ビュー切替・サブフィルタ変更・取り込み・最新値更新など「作り直しの引き金」でクリアする。
+let _editPinnedCodes = new Set();
+function clearEditPins() { _editPinnedCodes.clear(); }
+function pinEditedCode(code) { if (code) _editPinnedCodes.add(code); }
+function resetTuneMembers() { tuneFrozenMembers = null; _editPinnedCodes.clear(); }
 function ensureTuneMembers(kind) {
   if (tuneFrozenMembers) return;  // 既に凍結済みなら作り直さない
   const set = new Set();
@@ -7993,12 +8009,12 @@ function renderAdAdjust(cfg) {
   });
 
   // 引退済み商品（商品名なし）を除外
-  list = list.filter(r => !isRetired(r.code));
+  list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
   // 【v223】入札状態が「入札なし」の商品は入札価格全体に表示しない。
   //   インラインで入札なしに変更しても即時には消えない（変更ハンドラは再描画しないため）。
   //   更新・別ビューへの移動など renderAdAdjust が再実行されたタイミングで除外される。
-  list = list.filter(r => !adStatusIsNone((state.productMeta[r.code] || {}).adStatus));
+  list = list.filter(r => !adStatusIsNone((state.productMeta[r.code] || {}).adStatus) || _editPinnedCodes.has(r.code));
 
   const _adSearchEl = $(searchSel);
   const q = (_adSearchEl ? _adSearchEl.value : '').trim().toLowerCase();
@@ -8011,12 +8027,12 @@ function renderAdAdjust(cfg) {
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'ad-adjust') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
     if (f) {
-      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code));
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code) || _editPinnedCodes.has(r.code));
     }
   }
 
   // 【v239】調整グループ絞り込み（tune用）。groupFilterがあれば該当商品のみ。
-  if (groupFilter) list = list.filter(r => groupFilter(r));
+  if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
 
   const _adEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
   const tbody = $(tableSel + ' tbody');
@@ -8163,7 +8179,7 @@ function renderProAdjust(cfg) {
   });
 
   // 引退済み商品（商品名なし）を除外
-  list = list.filter(r => !isRetired(r.code));
+  list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
   const _proSearchEl = $(searchSel);
   const q = (_proSearchEl ? _proSearchEl.value : '').trim().toLowerCase();
@@ -8176,12 +8192,12 @@ function renderProAdjust(cfg) {
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'pro-adjust') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
     if (f) {
-      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code));
+      list = list.filter(r => f.match(state.productMeta[r.code] || {}, r.code) || _editPinnedCodes.has(r.code));
     }
   }
 
   // 【v239】調整グループ絞り込み（tune用）
-  if (groupFilter) list = list.filter(r => groupFilter(r));
+  if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
 
   const _proEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
   const tbody = $(tableSel + ' tbody');
@@ -9667,6 +9683,7 @@ function switchToView(viewName) {
 function applyStateFilter(filterKey) {
   const def = STATE_FILTERS[filterKey];
   if (!def) return;
+  clearEditPins();  // 【fix】フィルタを掛け替える操作は再絞り込みの引き金 → ピン解除
   resetAllSorts();
   // 【v256】状態チップで全体ビューへ絞り込むとき、最新完了月の値で降順にする。
   //   入札価格関連(ad-adjust)=実績額(adCost2)／PRオプ関連(pro-adjust)=SEO売上(seoRev2)。
@@ -9681,6 +9698,7 @@ function applyStateFilter(filterKey) {
 }
 
 function clearStateFilter() {
+  clearEditPins();  // 【fix】フィルタ解除も再絞り込みの引き金 → ピン解除
   state.activeStateFilter = null;
   updateActiveStateChip();
   updateFilterBanners();
@@ -10232,7 +10250,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Basicビューの操作
-$('#basicMonth').addEventListener('change', renderBasic);
+$('#basicMonth').addEventListener('change', () => { clearEditPins(); renderBasic(); });
 $('#basicSearch').addEventListener('input', renderBasic);
 // 【v1.0322】広告あり/無し 絞り込みボタン（基本/月別）。クリックで on 切替＆再描画。検索中はバイパス。
 function _wireAdFilter(barId, setFilter, rerender) {
@@ -10405,6 +10423,7 @@ document.addEventListener('change', (e) => {
   else if (kind === 'pro') { meta.proStatus = value; meta.proStatusTs = _stTs; }
   else if (kind === 'status') { meta.status = value || '新商品'; meta.statusTs = _stTs; }
   meta._ts = _stTs;  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
+  pinEditedCode(code);  // 【fix】変更した商品は、フィルタに一致しなくなっても“その場では消さない”（次のビュー切替/更新まで残す）
   // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
   if (kind === 'ad' || kind === 'pro') markTuneAction(code, kind);
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
@@ -10525,6 +10544,7 @@ document.addEventListener('blur', (e) => {
   if (newValue !== originalValue) {
     if (kind === 'ad') meta.adNote = newValue;
     else meta.proNote = newValue;
+    pinEditedCode(code);  // 【fix】メモ編集でも“その場では消さない”
     // 【v249】対応内容欄の更新は「対応済み」として日時記録
     markTuneAction(code, (kind === 'ad') ? 'ad' : 'pro');
     saveToStorage();
