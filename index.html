@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0468 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0470 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1520,14 +1520,14 @@ th.col-pro { background-color: #b9dfc6; }                   /* PRオプ料率: �
 th.col-bidonly, td.col-bidonly { background-color: #fbe7ca; } /* 入札価格: 濃いめオレンジ(淡) */
 th.col-bidonly { background-color: #f5cf96; }              /* 入札価格: 濃いめオレンジ(見出し) */
 
-/* 【v187】主要テーブル（商品リスト・順位表）: 商品コード/商品名/メインKW 以外の列を中央揃え。 */
+/* 【v187】主要テーブル（商品リスト・順位表）: 全ヘッダーは中央揃え。
+   セルは 商品コード/商品名/メインKW/対応内容 のみ左寄せ（他は中央）。 */
 .data-grid th, .data-grid td { text-align: center; }
-.data-grid th[data-sort="code"],
-.data-grid th[data-sort="name"],
-.data-grid th[data-resize-key^="kw"],
 .data-grid td.code-cell,
 .data-grid td:has(> .name-cell-wrap),
-.data-grid td:has(> .kw-cell) { text-align: left; }
+.data-grid td:has(> .kw-cell),
+.data-grid td:has(> .note-cell) { text-align: left; }
+.note-cell { text-align: left; }
 
 /* 【v1.0337-1.0339】SEO売上/広告売上セル: メイン数値を行の縦中央に置き、その下に構成比%を配置。
    上下対称のパディングでメイン数値が行の中央に来るようにし（行の高さを確保）、%は下部に絶対配置。 */
@@ -2822,7 +2822,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0468</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0470</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9734,7 +9734,7 @@ const STATE_FILTERS = {
   'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
   // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
   'ad-all':        { label: '全体',       targetView: 'ad-adjust',  match: (meta, code) => { const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
-  'new-product':      { label: '新商品',           targetView: 'basic', match: (meta) => (meta.status || '新商品') === '新商品' },
+  'new-product':      { label: '新商品',           targetView: 'basic', match: (meta) => statusLifeDisplayValue(meta.status || '新商品') === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
   'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告あり◯' },
   'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告なし◯' },
   'status-churitsu-ad':{ label: '中立-広告あり□',   targetView: 'basic', match: (meta) => (meta.status || '') === '中立-広告あり□' },
@@ -10562,10 +10562,23 @@ document.addEventListener('change', (e) => {
 });
 
 // ==================== 対応内容（note）編集 ====================
+// 【fix】contenteditableの改行（<div>/<br>）を \n として保持して取得する。
+//   textContent は改行を落とす（"A<div>B</div>"→"AB"）ため、innerText を使い改行を維持。
+//   これで「2行にしたら、その形で固定」される（.note-cell は white-space:pre-wrap）。
+function _readNoteText(el) {
+  if (!el) return '';
+  let t = (el.innerText != null ? el.innerText : (el.textContent || ''));
+  return t.replace(/\r\n?/g, '\n')     // 改行コード統一
+          .replace(/ /g, ' ')      // &nbsp; → 半角空白
+          .replace(/[ \t]*\n[ \t]*/g, '\n')  // 各行末/行頭の余分な空白を除去（改行は保持）
+          .replace(/\n{3,}/g, '\n\n')   // 3行以上の連続空行は2つまで
+          .replace(/^\n+|\n+$/g, '')    // 先頭・末尾の空行を除去
+          .replace(/[ \t　]+$/gm, '');  // 各行末の空白除去
+}
 document.addEventListener('focus', (e) => {
   if (!e.target.classList || !e.target.classList.contains('note-cell')) return;
   // フォーカス時の初期値を保持（後でempty判定に使用）
-  e.target.dataset.originalValue = e.target.textContent.trim();
+  e.target.dataset.originalValue = _readNoteText(e.target).trim();
 }, true);
 
 document.addEventListener('blur', (e) => {
@@ -10574,7 +10587,7 @@ document.addEventListener('blur', (e) => {
   const code = e.target.dataset.code;
   const kind = e.target.dataset.kind;
   const meta = getMeta(code);
-  const rawValue = e.target.textContent.trim();
+  const rawValue = _readNoteText(e.target).trim();
   const originalValue = e.target.dataset.originalValue || '';
 
   // 【v179】対応内容欄のblur時処理
