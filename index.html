@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0455 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0457 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1129,6 +1129,7 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 /* 【v1.0439】トグルのペアをボックスで囲むセグメント型UI */
 #view-oyako .oy-ctl { display: inline-flex; align-items: center; gap: 5px; }
 #view-oyako .oy-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 18px; width: 100%; }   /* 【v1.0455】ツールバーを2行に分けて中央揃え */
+#view-oyako .oy-row + .oy-row { margin-top: 6px; }   /* 【v1.0456】2行目（売上規模・親比率）を少し下げる */
 #view-oyako .oy-ctl-label { font-size: 0.79rem; font-weight: 700; color: var(--text2); white-space: nowrap; }
 #view-oyako .oy-seg { display: inline-flex; border: 1px solid #cdd5de; border-radius: 8px; overflow: hidden; background: #eef1f4; }
 #view-oyako .oy-btn { font-size: 0.88rem; padding: 4.8px 9.4px; border: 0; border-radius: 0; background: transparent; color: #5b6470; cursor: pointer; font-weight: 700; white-space: nowrap; }  /* 【v1.0447】ボタン群を約10%拡大 */
@@ -1533,7 +1534,8 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
 .status-select.info { background: rgba(37,99,235,0.08); color: var(--accent); border-color: rgba(37,99,235,0.3); }
 
 /* 【v1.0438】子は常に親のステータスに追従。子セルは読み取り専用（クリック不可）で親の値を表示。 */
-.status-facade-child { cursor: default; }
+/* 【v1.0457】子ステータス（親追従）は案6：淡い塗りでメインより控えめに。太さ・寸法は親と同一のまま少しだけトーンダウン。 */
+.status-facade-child { cursor: default; font-weight: 500; opacity: 0.92; }
 
 /* Note cell (対応内容) */
 .note-cell {
@@ -2811,7 +2813,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0455</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0457</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6665,6 +6667,13 @@ const STATUS_LIFE_COLOR = {
 };
 const STATUS_LIFE_OPTIONS = ['新商品', '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
 function statusLifeColor(value) { return STATUS_LIFE_COLOR[value] || '#1a1a1a'; }
+// 【v1.0457】hex色→rgba文字列（子ステータスの淡い塗り／やわらかい枠の生成用）
+function _lifeRgba(hex, a) {
+  let h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const r = parseInt(h.slice(0,2),16)||0, g = parseInt(h.slice(2,4),16)||0, b = parseInt(h.slice(4,6),16)||0;
+  return `rgba(${r},${g},${b},${a})`;
+}
 // 旧値→新値の表示フォールバック（保存データ未移行でもドロップダウンに選択状態を出す）。
 function statusLifeDisplayValue(v) {
   if (v === '撤退■') return '撤退予定';
@@ -6718,9 +6727,11 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   if (_stParent) {
     const pv = statusLifeDisplayValue(((state.productMeta[_stParent]) || {}).status || '新商品');
     const pc = statusLifeColor(pv);
-    const pbd = pv ? pc : '#cbd5e1';
+    // 【v1.0457】案6：子は「メインより控えめ」に。淡い同系色の塗り＋やわらかい枠（幅・文字位置は親と同一）。
+    const childBg = _lifeRgba(pc, 0.10);     // うっすら塗り
+    const childBd = _lifeRgba(pc, 0.42);     // 枠は親よりやわらかく
     return `<span class="status-cell status-cell-life">`
-      + `<span class="status-facade status-facade-life status-facade-child" style="color:${pc};border-color:${pbd}" title="親（${escapeHtml(_stParent)}）のステータスに追従">${statusLifeDisplayLabel(pv)}</span>`
+      + `<span class="status-facade status-facade-life status-facade-child" style="color:${pc};border-color:${childBd};background:${childBg}" title="親（${escapeHtml(_stParent)}）のステータスに追従（子商品）">${statusLifeDisplayLabel(pv)}</span>`
       + `</span>`;
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
