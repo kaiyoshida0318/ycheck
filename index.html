@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0459 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0461 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2821,7 +2821,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0459</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0461</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3243,9 +3243,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="name" data-resize-key="nameAdAdjust">商品名</th>
               <th class="nosort" data-resize-key="kwAdAdjust">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote">対応内容</th>
+              <th class="num col-ad" data-sort="adRevMain" id="hAdAdjustAdRevMain">広告売上</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdAdjustAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdAdjustAdRev1">実績額<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost2" id="hAdAdjustAdRev2">実績額<br>(前月)</th>
@@ -3282,7 +3282,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProAdjust">商品名</th>
               <th class="nosort" data-resize-key="kwProAdjust">メインKW</th>
-              <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th data-sort="proNote">対応内容</th>
@@ -3325,9 +3324,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
+              <th class="num col-ad" data-sort="adRevMain" id="hAdTuneAdRevMain">広告売上</th>
               <th class="num col-ad" data-sort="adCost0" id="hAdTuneAdRev0">実績額<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost1" id="hAdTuneAdRev1">実績額<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adCost2" id="hAdTuneAdRev2">実績額<br>(前月)</th>
@@ -3368,7 +3367,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th data-sort="name" data-resize-key="nameProTune">商品名</th>
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
-              <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
@@ -7889,6 +7887,8 @@ function getTuneGroup(code, kind) {
   // 【v1.0398】「対応内容-全更新処理」でレビュー済みにした商品は全体のみ。値を再調整すると解除されて推移確認/未確認へ戻る。
   const reviewed = (kind === 'ad') ? meta.adReviewed : meta.proReviewed;
   if (reviewed) return null;
+  // 【v1.0460】今日対応済み（＝対応内容に今日の日付＝adActionAtが今日）は推移確認/未確認から外して「全体」のみに。翌日にはまた戻る。
+  if (tuneIsToday(actionAt)) return null;
   if (noteHasChangeContent(note)) return 'watch';  // 変更表記あり=推移確認
   return 'unchecked';                              // 空欄 or 更新日時スタンプのみ=未確認
 }
@@ -7970,6 +7970,8 @@ function renderAdAdjust(cfg) {
     const _rev = $('#'+hPrefix+'AdRev'+i); if (_rev) _rev.innerHTML = `実績額<br>${months[i] || ''}`;
     const _ro  = $('#'+hPrefix+'Roas'+i); if (_ro)  _ro.innerHTML  = `広告ROAS<br>${months[i] || ''}`;
   }
+  // 【v1.0461】広告売上（対象月＝表示中の最新月：今月含む→今月／含まない→満了直近月）の見出しに月を表示
+  { const _arm = $('#'+hPrefix+'AdRevMain'); if (_arm) _arm.innerHTML = `広告売上<br>${months[months.length-1] || ''}`; }
   // 【v279】月列(実績額/広告ROAS)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
   if (typeof installSortButtons === 'function') installSortButtons();
 
@@ -7986,7 +7988,8 @@ function renderAdAdjust(cfg) {
     const adRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adRev : 0);
     const adCosts = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adCost : 0);
     const roass = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].roas : null);
-    return { code, adRevs, adCosts, roass };
+    const seoRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].seoRev : 0);   // 【v1.0461】広告売上の構成比%用
+    return { code, adRevs, adCosts, roass, seoRevs };
   });
 
   // 引退済み商品（商品名なし）を除外
@@ -8028,6 +8031,7 @@ function renderAdAdjust(cfg) {
     if (k === 'code') return r.code || '';
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
+    if (k === 'adRevMain') return r.adRevs[r.adRevs.length - 1] || 0;   // 【v1.0461】広告売上（対象月）でソート
     { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
     { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
@@ -8077,6 +8081,8 @@ function renderAdAdjust(cfg) {
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     const _revCells  = r.adCosts.map(v => `<td class="num col-ad">${fmt(v)}</td>`).join('');
     const _roasCells = r.roass.map(v => `<td class="num col-ad ${roasClass(v)}">${fmtRoas(v)}</td>`).join('');
+    const _ti = r.adRevs.length - 1;   // 【v1.0461】対象月＝表示中の最新月
+    const _adRevMainCell = shareRevCell(r.adRevs[_ti], r.seoRevs[_ti], false, "col-ad");   // 広告売上（対象月）＋構成比%
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -8084,9 +8090,9 @@ function renderAdAdjust(cfg) {
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
+      ${_adRevMainCell}
       ${_revCells}
       ${_roasCells}
       ${statusFirst ? '' : _tdStatus}
@@ -8152,7 +8158,8 @@ function renderProAdjust(cfg) {
 
   let list = [...codes].map(code => {
     const seoRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].seoRev : 0);
-    return { code, seoRevs };
+    const adRevs  = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adRev  : 0);   // 【v1.0461】SEO売上の構成比%用
+    return { code, seoRevs, adRevs };
   });
 
   // 引退済み商品（商品名なし）を除外
@@ -8238,11 +8245,10 @@ function renderProAdjust(cfg) {
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
       <td>${noteCellHtml(r.code, 'pro')}</td>
-      ${r.seoRevs.map(v => `<td class="num col-sales">${fmt(v)}</td>`).join('')}
+      ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
       ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
@@ -10130,7 +10136,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
   const msg = `${label}：今ここに表示されている【${codes.length}件】をすべて「対応済み」にします。\n\n`
     + `・空欄／更新日時のみ … ${stampCount}件 → 本日の更新日時を記入\n`
     + `・メモが入っている行 … ${keepCount}件 → 対応内容はそのまま維持\n\n`
-    + `いずれもこの一覧（修正あり等）からは消えます。\n実行してよろしいですか？`;
+    + `いずれも本日対応済みとなり、この一覧（修正あり・推移確認・未確認）からは消えます。\n実行してよろしいですか？`;
   if (!confirm(msg)) return;
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
@@ -10142,7 +10148,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
     const meta = state.productMeta[code];
     const note = (meta[field] || '').trim();
     if (note === '' || isAutoTimestamp(note)) meta[field] = stamp;  // 空欄/更新日時のみ→本日の更新日時
-    // メモがある行は対応内容を変更しない
+    // 【v1.0461】メモが入っている行は対応内容を変更しない（そのまま維持）
     markTuneAction(code, kind);  // 当日「対応済み」＝修正あり等から外れる
     _setTuneReviewed(code, kind, true);  // 【v1.0398】レビュー済み→推移確認/未確認から外して全体のみに
   });
