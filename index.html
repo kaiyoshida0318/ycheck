@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0458 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0459 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2821,7 +2821,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0458</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0459</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10374,26 +10374,17 @@ function applyUpdateStampToNote(currentNote) {
   if (!trimmed) return dateSuffix;
   // 旧形式「更新日時-YY/MMDD」のみ → 新形式に置換
   if (/^更新日時-\d{2}\/\d{4}$/.test(trimmed)) return dateSuffix;
-  // 末尾が新形式 （YY-MMDD） → 日付だけ更新
-  if (/（\d{2}-\d{2}\d{2}）$/.test(trimmed)) {
-    return trimmed.replace(/（\d{2}-\d{2}\d{2}）$/, dateSuffix);
-  }
-  // 末尾が v177 半角形式 (YY-MMDD) → 新形式（全角）に置換
-  if (/\(\d{2}-\d{2}\d{2}\)$/.test(trimmed)) {
-    return trimmed.replace(/\(\d{2}-\d{2}\d{2}\)$/, dateSuffix);
-  }
-  // 末尾が旧形式 -YY/MMDD → 新形式に置換
-  if (/-\d{2}\/\d{2}\d{2}$/.test(trimmed)) {
-    return trimmed.replace(/-\d{2}\/\d{2}\d{2}$/, dateSuffix);
-  }
-  // 既存に「更新日時-YY/MMDD」が含まれる旧形式 → そのブロックを削除して末尾に新スタンプ
-  if (/更新日時-\d{2}\/\d{4}/.test(trimmed)) {
-    const withoutStamp = trimmed.replace(/\s*\n?\s*更新日時-\d{2}\/\d{4}\s*/g, '').trim();
-    if (!withoutStamp) return dateSuffix;
-    return withoutStamp + dateSuffix;
-  }
-  // メモ書きがある場合 → 末尾に （YY-MMDD） 追加
-  return trimmed + dateSuffix;
+  // 【v1.0459】既存の日付スタンプ（新/半角/旧・位置問わず）と旧「更新日時-YY/MMDD」ブロックをすべて除去し、末尾に1つだけ付ける。
+  //   → 同日に複数回変更しても日付が重複しない。
+  let core = trimmed
+    .replace(/\s*\n?\s*更新日時-\d{2}\/\d{4}\s*/g, ' ')
+    .replace(/（\d{2}-\d{2}\d{2}）/g, ' ')
+    .replace(/\(\d{2}-\d{2}\d{2}\)/g, ' ')
+    .replace(/-\d{2}\/\d{2}\d{2}/g, ' ')
+    .replace(/[ \t　]{2,}/g, ' ')
+    .trim();
+  if (!core) return dateSuffix;
+  return core + dateSuffix;
 }
 
 document.addEventListener('change', (e) => {
@@ -10473,12 +10464,14 @@ document.addEventListener('blur', (e) => {
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   const dateSuffix = `（${yy}-${mm}${dd}）`;
-  // 既存の日付サフィックスを除去するヘルパー（新形式・旧形式の全パターンを末尾から剥がす）
+  // 【v1.0459】既存の日付サフィックスを除去。末尾に限らず“文字列中のどこにあっても”すべて剥がす
+  //   （例：「￥40-38（26-0805）c」に追記した場合、途中に残った日付も除去し、日付は最後に1つだけにする）。
   const stripDateSuffix = (s) => s
-    .replace(/（\d{2}-\d{2}\d{2}）$/, '')     // 新形式（v179）（YY-MMDD）全角
-    .replace(/\(\d{2}-\d{2}\d{2}\)$/, '')     // v177形式 (YY-MMDD) 半角
-    .replace(/-\d{2}\/\d{2}\d{2}$/, '')       // 旧形式 -YY/MMDD
-    .replace(/\s+$/, '');
+    .replace(/（\d{2}-\d{2}\d{2}）/g, ' ')     // 新形式（YY-MMDD）全角：全箇所
+    .replace(/\(\d{2}-\d{2}\d{2}\)/g, ' ')     // v177形式 (YY-MMDD) 半角：全箇所
+    .replace(/-\d{2}\/\d{2}\d{2}/g, ' ')       // 旧形式 -YY/MMDD：全箇所
+    .replace(/[ \t　]{2,}/g, ' ')          // 連続空白（全角空白含む）を1つに
+    .trim();
   // 「更新日時のみ」（旧スタンプ専用）の判定
   const isJustOldStamp = (s) => /^更新日時-\d{2}\/\d{4}$/.test(s);
 
