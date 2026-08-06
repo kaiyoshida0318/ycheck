@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0470 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0471 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2822,7 +2822,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0470</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0471</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6991,9 +6991,26 @@ function renderReviewSales4() {
     const total = sales.reduce((s, v) => s + (v || 0), 0);
     return { code, sales, total };
   });
-  // 全月0の商品は除外（検索中は残す）。直近月の総売上が高い順、同値は合計で。
-  const shown = (q ? rows : rows.filter(r => r.total > 0))
+  // 全月0の商品は除外（検索中は残す）。ただし親子は必ずセットで表示するため、
+  //   家族（同じ代表コード）に1件でも売上があれば、売上0の親・子も残す（子が孤立しない）。
+  const _referenced = getReferencedRepCodes();
+  const famKeyOf = (code) => {
+    const rep = String(((state.productMeta[code] || {}).repCode || '')).trim();
+    if (rep) return rep;                                   // 子（または自己参照の親）
+    if (_referenced.has(String(code))) return String(code); // repCode空でも子から参照される親
+    return '';
+  };
+  const _famHasSales = new Set();
+  rows.forEach(r => { const k = famKeyOf(r.code); if (k && r.total > 0) _famHasSales.add(k); });
+  let shown = (q ? rows.slice() : rows.filter(r => {
+    if (r.total > 0) return true;
+    const k = famKeyOf(r.code);
+    return !!(k && _famHasSales.has(k));   // 家族に売上あり → 売上0でも残す（親子セット維持）
+  }))
     .sort((a, b) => ((b.sales[newestIdx] || 0) - (a.sales[newestIdx] || 0)) || (b.total - a.total));
+  // 【親子まとめ】子を親の直下にくっつける（既存のグルーピング関数を流用）
+  shown = applyRepGrouping(shown);
+  const _pcSets = buildParentChildSets(shown);
   if (!shown.length) {
     tbody.innerHTML = '<tr><td colspan="9" class="empty-state">' + (monthsAll.length ? '該当する商品がありません' : 'データを読み込んでください') + '</td></tr>';
     return;
@@ -7001,7 +7018,8 @@ function renderReviewSales4() {
   tbody.innerHTML = shown.slice(0, 2000).map(r => {
     let cells = '';
     for (let i = 0; i < 4; i++) cells += '<td class="num col-total">' + fmt(r.sales[i]) + '</td>';
-    return '<tr>'
+    const _pcCls = rowParentChildClass(r.code, _pcSets);
+    return '<tr' + (_pcCls ? ' class="' + _pcCls + '"' : '') + '>'
       + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td>' + nameCellHtml(r.code) + '</td>'
