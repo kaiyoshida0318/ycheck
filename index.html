@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0475 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0477 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2828,7 +2828,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0475</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0477</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2980,8 +2980,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <div class="card">
         <h3 class="card-title">商品-基本データ</h3>
         <div class="filters">
-          <span class="filter-label">月</span>
-          <select id="basicMonth"></select>
+          <span id="basicMonthWrap"><span class="filter-label">月</span>
+          <select id="basicMonth"></select></span>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <span class="ad-filter" id="basicAdFilterBar" role="group" aria-label="広告フィルタ" title="入札状態が入札価格○/×の商品で絞り込み（検索中は全件表示）"><button type="button" class="adf-btn on" data-adf="all">全体</button><button type="button" class="adf-btn" data-adf="ad">広告あり商品</button><button type="button" class="adf-btn" data-adf="noad">広告なし商品</button></span>
@@ -3017,6 +3017,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <tbody></tbody>
           </table>
         </div>
+        <div id="basicWcWrap" style="display:none"></div>
       </div>
     </div>
 
@@ -3597,10 +3598,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <div class="pe-row">
         <label class="pe-label" for="peRepCode">代表商品コード（＝送り込み元商品コード）</label>
         <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
-      </div>
-      <div class="pe-row" id="peChildTypeRow" style="display:none">
-        <label class="pe-label" for="peChildType">子商品タイプ（この商品が子＝代表コードを付けたときに選択）</label>
-        <select id="peChildType" class="pe-input"></select>
       </div>
       <div class="pe-row">
         <label class="pe-label" for="peProductUrl">商品ページURL</label>
@@ -6815,7 +6812,77 @@ function kwCellHtml(code) {
 // ==================== Rendering: 商品-基本データ ====================
 let basicSortKey = 'rev', basicSortDir = -1;
 let basicAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み（'all'|'ad'|'noad'）
+
+// ==================== 【撤退検討▲】専用レイアウト（ステータスチップ pro-wc で表示） ====================
+//   列: 商品コード / 画像 / 商品名 / メインKW / 総売上×4（直近満了4ヶ月＝総売上-直近4ヶ月と同じ） / PRオプ料率 / PRオプ状態 / ステータス
+function renderWithdrawConsider() {
+  const wrap = document.getElementById('basicWcWrap');
+  if (!wrap) return;
+  const monthsAll = getImportedDataMonths();
+  const now = new Date();
+  const curYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const months = monthsAll.filter(m => m < curYM).slice(-4);   // 昇順（古→新）
+  const newestIdx = months.length - 1;
+  let h = '<th data-resize-key="codeWc">商品コード</th>'
+    + '<th class="nosort">画像</th>'
+    + '<th data-resize-key="nameWc">商品名</th>'
+    + '<th class="nosort" data-resize-key="kwWc">メインKW</th>';
+  for (let i = 0; i < 4; i++) { const m = months[i] || ''; h += '<th class="num col-total">総売上' + (m ? ('<br>' + m) : '') + '</th>'; }
+  h += '<th class="num col-pro">PRオプ料率<br>(最低7％)</th>'
+    + '<th class="status-col">PRオプ状態</th>'
+    + '<th class="status-col">ステータス</th>';
+  const agg = buildFullAggregate();
+  const byKey = {}; agg.forEach(r => { byKey[r.code + '|' + r.month] = r; });
+  const codes = new Set();
+  Object.keys(state.master || {}).forEach(c => codes.add(c));
+  (state.item || []).forEach(i => codes.add(i.code));
+  (state.ad || []).forEach(a => codes.add(a.code));
+  const f = STATE_FILTERS['pro-wc'];
+  let list = [...codes].filter(code =>
+    (!isRetired(code) || _editPinnedCodes.has(code)) &&
+    (f.match(state.productMeta[code] || {}, code) || _editPinnedCodes.has(code)));
+  const q = ($('#basicSearch') ? $('#basicSearch').value : '').trim().toLowerCase();
+  if (q) list = list.filter(code => { const m = getMaster(code); return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q); });
+  const rows = list.map(code => {
+    const sales = [0,1,2,3].map(i => { const m = months[i]; if (!m) return null; const r = byKey[code + '|' + m]; return r ? (r.rev || 0) : 0; });
+    const total = sales.reduce((s, v) => s + (v || 0), 0);
+    return { code, sales, total };
+  });
+  rows.sort((a, b) => ((b.sales[newestIdx] || 0) - (a.sales[newestIdx] || 0)) || (b.total - a.total));
+  let body;
+  if (!rows.length) {
+    body = '<tr><td colspan="11" class="empty-state">' + (monthsAll.length ? '撤退検討▲の商品はありません' : 'データを読み込んでください') + '</td></tr>';
+  } else {
+    body = rows.slice(0, 2000).map(r => {
+      let cells = ''; for (let i = 0; i < 4; i++) cells += '<td class="num col-total">' + fmt(r.sales[i]) + '</td>';
+      const pr = getProRate(r.code);
+      return '<tr>'
+        + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
+        + '<td>' + imageCellHtml(r.code) + '</td>'
+        + '<td>' + nameCellHtml(r.code) + '</td>'
+        + '<td>' + kwCellHtml(r.code) + '</td>'
+        + cells
+        + '<td class="num col-pro pro-rate-cell" data-code="' + escapeHtml(r.code) + '" title="クリックで編集">' + fmtProRate(pr) + '</td>'
+        + '<td class="status-col">' + statusSelectHtml(r.code, 'pro') + '</td>'
+        + '<td class="status-col">' + statusSelectHtml(r.code, 'status') + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+  wrap.innerHTML = '<div class="table-wrap"><table class="data-grid"><thead><tr>' + h + '</tr></thead><tbody>' + body + '</tbody></table></div>';
+}
+
 function renderBasic() {
+  // 【撤退検討▲】ステータスチップ pro-wc のときは専用レイアウトに切替
+  const _isWc = !!(state.activeStateFilter && state.activeStateFilter.type === 'pro-wc');
+  { const _tbl=document.getElementById('tableBasic'), _wc=document.getElementById('basicWcWrap'),
+        _mw=document.getElementById('basicMonthWrap'), _ad=document.getElementById('basicAdFilterBar');
+    if (_isWc) {
+      if (_tbl) _tbl.style.display='none'; if (_wc) _wc.style.display=''; if (_mw) _mw.style.display='none'; if (_ad) _ad.style.display='none';
+      renderWithdrawConsider(); return;
+    } else {
+      if (_tbl) _tbl.style.display=''; if (_wc) _wc.style.display='none'; if (_mw) _mw.style.display=''; if (_ad) _ad.style.display='';
+    }
+  }
   const months = getAvailableMonths();
   const sel = $('#basicMonth');
   const cur = sel.value;
@@ -7448,7 +7515,7 @@ function renderOyako(){
       const adCostCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.945rem;background:#fdf6ec;border-bottom:${bb};white-space:nowrap">${fmtY(m.adCost)}</td>`;
       const pCell = pctCell(m.parentSEO, m.groupSEO, '#f2fbf5', bb, DIV);   // 親商品：区切り線付き
       const cCell = pctCell(m.childSEO, m.groupSEO, '#fefce8', bb);
-      const cdCell = first ? `<td rowspan="${rs}" style="padding:6px 10px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP};background:#fffdf4">${ (childCodes && childCodes.length) ? childCodes.map(cc=>childDetailSelectHtml(cc, childCodes.length>1)).join('') : '<span style="color:var(--text3)">—</span>' }</td>` : '';
+      const cdCell = first ? `<td rowspan="${rs}" style="padding:6px 10px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP};background:#fffdf4">${ (childCodes && childCodes.length) ? childDetailSelectHtml(key, false) : '<span style="color:var(--text3)">—</span>' }</td>` : '';
       const stCell = first ? `<td rowspan="${rs}" style="padding:8px 12px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP}">${statusSelectHtml(key,'status')}</td>` : '';
       return '<tr>'+prod+monthCell+totCell+seoCell+adCell+adCostCell+pCell+cCell+cdCell+stCell+'</tr>';
     }).join('');
@@ -11311,7 +11378,6 @@ function peRefreshImagePreview() {
   note.textContent = noteText;
 }
 
-function _peToggleChildTypeRow(){ var row=document.getElementById('peChildTypeRow'); if(!row) return; var ri=document.getElementById('peRepCode'); var hasRep=!!(ri && ri.value.trim()); row.style.display = hasRep ? '' : 'none'; }
 function openProductEditModal(code) {
   if (!code) return;
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
@@ -11324,9 +11390,6 @@ function openProductEditModal(code) {
   $('#peProductUrl').value = m.productUrl || defaultYahooProductUrl(code);
   // 【v124】代表商品コード
   $('#peRepCode').value = meta.repCode || '';
-  // 【子商品タイプ】代表コードがある（＝子）ときだけ表示。選択肢生成＋現在値。
-  { const _pcSel = $('#peChildType'); if (_pcSel) { _pcSel.innerHTML = CHILD_DETAIL_OPTIONS.map(function(o){ return '<option value="'+escapeHtml(o)+'">'+(escapeHtml(o)||'（未選択）')+'</option>'; }).join(''); _pcSel.value = meta.childDetail || ''; } }
-  _peToggleChildTypeRow();
   // 画像編集の一時状態を現在のmaster値で初期化
   peImageState = {
     customImage: m.customImage || null,
@@ -11485,17 +11548,6 @@ function saveProductEdit(opts) {
   // 【v124】代表商品コードを保存（空文字なら削除扱い）
   if (newRepCode) state.productMeta[code].repCode = newRepCode;
   else delete state.productMeta[code].repCode;
-  // 【子商品タイプ】代表コードがある（子）ときだけ childDetail を保存。外したら削除。専用Tsで同期保護。
-  if (newRepCode) {
-    const _ct = $('#peChildType') ? $('#peChildType').value : '';
-    if (_ct !== (state.productMeta[code].childDetail || '')) {
-      state.productMeta[code].childDetail = _ct;
-      state.productMeta[code].childDetailTs = Date.now();
-    }
-  } else if (state.productMeta[code].childDetail != null) {
-    delete state.productMeta[code].childDetail;
-    delete state.productMeta[code].childDetailTs;
-  }
   // 【v1.0327】商品編集（代表コード/KW/状態など）の変更時刻を記録。
   //   これが無いと、古いセッション/端末が保存した時のマージ(mergeProductMetaForSave)で
   //   「新しい方」と判定されず、代表コード等が巻き戻り・消失する事故が起きていた（実際に発生）。
@@ -11616,7 +11668,6 @@ function handlePeImageFile(file) {
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
 $('#peSave').addEventListener('click', () => saveProductEdit());
-{ const _rc = $('#peRepCode'); if (_rc) _rc.addEventListener('input', _peToggleChildTypeRow); }
 $('#peSaveClose').addEventListener('click', () => saveProductEdit({ close: true }));
 
 // 【v227】商品コード変更（履歴ごと移行）ボタン
