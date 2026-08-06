@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0479 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0480 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -477,13 +477,15 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .top-nav-3 { background: #fff; }
 .top-nav-3 .state-chip[data-state] { background: #fff; border-color: #dfe3e9; color: #334155; }
 .top-nav-3 .state-chip[data-state]:hover { background: #f6f8fb; border-color: #c3cad4; }
-.top-nav-3 .state-chip[data-state].active { background: #fff; border: 1.5px solid currentColor; }
+.top-nav-3 .state-chip[data-state].active { background: currentColor; border: 1.5px solid currentColor; }
 .top-nav-3 .state-chip[data-state] .chip-label,
 .top-nav-3 .state-chip[data-state]:hover .chip-label,
 .top-nav-3 .state-chip[data-state].active .chip-label { color: inherit; }
 .top-nav-3 .state-chip[data-state] .chip-num,
-.top-nav-3 .state-chip[data-state]:hover .chip-num,
-.top-nav-3 .state-chip[data-state].active .chip-num { color: #94a3b8; }
+.top-nav-3 .state-chip[data-state]:hover .chip-num { color: #94a3b8; }
+/* 押下(アクティブ)は反転：本体＝その色、文字＝白抜き */
+.top-nav-3 .state-chip[data-state].active .chip-label { color: #fff; }
+.top-nav-3 .state-chip[data-state].active .chip-num { color: rgba(255,255,255,0.9); }
 /* 各チップの文字色＝その列で使っている色 */
 .top-nav-3 .state-chip[data-state="all-basic"] { color: #0d9488; }
 .top-nav-3 .state-chip[data-state="ad-ok"],
@@ -2838,7 +2840,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0479</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0480</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6857,7 +6859,7 @@ function renderWithdrawConsider() {
   Object.keys(state.master || {}).forEach(c => codes.add(c));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
-  const f = STATE_FILTERS['pro-wc'];
+  const f = (state.activeStateFilter && STATE_FILTERS[state.activeStateFilter.type]) || STATE_FILTERS['pro-wc'];
   const repKeyOf = (code) => { const r = String((state.productMeta[code] || {}).repCode || '').trim(); return r || code; };
   // 家族化（撤退済みは除外）。親子のどちらかが撤退検討▲なら家族全員をセット表示する。
   const fams = {};
@@ -6879,7 +6881,7 @@ function renderWithdrawConsider() {
   const _pcSets = buildParentChildSets(rows);    // 親/子の行クラス
   let body;
   if (!rows.length) {
-    body = '<tr><td colspan="11" class="empty-state">' + (monthsAll.length ? '撤退検討▲の商品はありません' : 'データを読み込んでください') + '</td></tr>';
+    body = '<tr><td colspan="11" class="empty-state">' + (monthsAll.length ? (((state.activeStateFilter && state.activeStateFilter.label) || '該当') + 'の商品はありません') : 'データを読み込んでください') + '</td></tr>';
   } else {
     body = rows.slice(0, 2000).map(r => {
       let cells = ''; for (let i = 0; i < 4; i++) cells += '<td class="num col-total">' + fmt(r.sales[i]) + '</td>';
@@ -6902,7 +6904,8 @@ function renderWithdrawConsider() {
 
 function renderBasic() {
   // 【撤退検討▲】ステータスチップ pro-wc のときは専用レイアウトに切替
-  const _isWc = !!(state.activeStateFilter && state.activeStateFilter.type === 'pro-wc');
+  const _wcLayoutTypes = ['pro-wc', 'status-kenzen-noad', 'status-churitsu-noad'];
+  const _isWc = !!(state.activeStateFilter && _wcLayoutTypes.indexOf(state.activeStateFilter.type) >= 0);
   { const _tbl=document.getElementById('tableBasic'), _wc=document.getElementById('basicWcWrap'),
         _mw=document.getElementById('basicMonthWrap'), _ad=document.getElementById('basicAdFilterBar');
     if (_isWc) {
