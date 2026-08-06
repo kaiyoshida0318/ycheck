@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0480 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0481 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1573,6 +1573,16 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
 }
 .note-cell:focus { outline: none; border-color: var(--accent); background: var(--bg2); }
 .note-cell:empty::before { content: 'クリックして入力'; color: var(--text3); font-style: italic; }
+/* 【子タイプ未選択】上部バナー */
+.oy-cu-banner{display:flex;align-items:center;gap:12px;background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #d97706;border-radius:9px;padding:10px 14px;margin:0 auto 14px;max-width:100%;text-align:left}
+.oy-cu-ico{font-size:18px;flex:0 0 auto}
+.oy-cu-txt{font-size:13px;color:#7c4a03;font-weight:600}
+.oy-cu-txt b{color:#d97706;font-weight:800}
+.oy-cu-act{margin-left:auto;display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.oy-cu-go{background:#d97706;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-weight:700;font-size:12.5px;cursor:pointer}
+.oy-cu-go:hover{background:#c26a05}
+.oy-cu-x{border:none;background:transparent;color:#b98a4b;font-size:15px;cursor:pointer;padding:2px 6px}
+.oy-cu-x:hover{color:#7c4a03}
 
 /* 【子商品詳細】ドロップダウン（商品-各比率） */
 .child-detail-select { font-size: 0.78rem; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text); cursor: pointer; max-width: 230px; }
@@ -2840,7 +2850,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0480</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0481</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3139,11 +3149,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
                 <button type="button" class="oy-btn" data-scope="group" onclick="_oySetScope('group')" title="親子グループのみ表示">親子のみ</button>
               </span>
             </span>
-            <span class="oy-ctl"><span class="oy-ctl-label">子タイプ</span>
-              <span class="oy-seg" role="group" aria-label="子商品タイプ未選択">
-                <button type="button" class="oy-btn" id="oyChildUnsetBtn" onclick="_oyToggleChildUnset()" title="子商品タイプが未選択の親子グループだけ表示">未選択のみ<span id="oyChildUnsetCnt" style="margin-left:5px;font-weight:700"></span></button>
-              </span>
-            </span>
           </div>
           <div class="oy-row">
             <span class="oy-ctl"><span class="oy-ctl-label">売上規模</span>
@@ -3166,6 +3171,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             </span>
           </div>
         </div>
+        <div id="oyChildUnsetBanner" style="display:none"></div>
         <div id="oy-wrap" style="text-align:center;margin-top:0"></div>
       </div>
     </div>
@@ -7354,7 +7360,9 @@ const OY_BANDS = [[0,25],[25,50],[50,75],[75,100]];   // 【v1.0449】4分割（
 const OY_SALES_TIERS = [[100000, Infinity], [50000, 100000], [10000, 50000], [0, 10000]];   // 【v1.0453】10万〜／5〜10万／1〜5万／〜1万
 function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
 let _oyChildUnsetOnly = false;   // 【子タイプ未選択】絞り込み
-function _oyToggleChildUnset(){ _oyChildUnsetOnly = !_oyChildUnsetOnly; renderOyako(); }
+let _oyChildUnsetDismissed = false;   // 【子タイプ未選択】バナーを×で閉じたか
+function _oyToggleChildUnset(){ _oyChildUnsetOnly = !_oyChildUnsetOnly; _oyChildUnsetDismissed = false; renderOyako(); }
+function _oyDismissChildUnset(){ _oyChildUnsetDismissed = true; renderOyako(); }
 function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
 function _oySetAd(v){ _oyAdFilter = (v === 'ad' || v === 'none') ? v : 'all'; renderOyako(); }
 function _oySetTier(t){ _oySalesTier = (t === 'all' || t == null) ? null : (+t); renderOyako(); }
@@ -7417,9 +7425,34 @@ function renderOyako(){
   const seg=document.getElementById('oyModeSeg'); if(seg) seg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.mode===_oyMode));
   const amtSeg=document.getElementById('oyAmtSeg'); if(amtSeg) amtSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', (b.dataset.amt==='on')===_oyShowAmt));
   const scopeSeg=document.getElementById('oyScopeSeg'); if(scopeSeg) scopeSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.scope===_oyScope));
-  { let _cu=0; Object.keys(families).forEach(k=>{ if(families[k].length>=2 && !childDetailValue(k)) _cu++; });
-    const _b=document.getElementById('oyChildUnsetBtn'); if(_b) _b.classList.toggle('on', _oyChildUnsetOnly);
-    const _c=document.getElementById('oyChildUnsetCnt'); if(_c) _c.textContent = _cu ? ('('+_cu+')') : ''; }
+  // 【子タイプ未選択】上部バナー（未選択が発生した時だけ出るお知らせ）。
+  { let _cu = 0; Object.keys(families).forEach(k => { if (families[k].length >= 2 && !childDetailValue(k)) _cu++; });
+    const _bn = document.getElementById('oyChildUnsetBanner');
+    if (_bn) {
+      const _show = _oyChildUnsetOnly || (_cu > 0 && !_oyChildUnsetDismissed);
+      if (_show) {
+        let _txt;
+        if (_oyChildUnsetOnly) {
+          _txt = (_cu > 0)
+            ? ('子商品タイプ<b>未選択のみ</b>を表示中（<b>' + _cu + '件</b>）')
+            : ('子商品タイプの未選択はありません（すべて選択済み）');
+        } else {
+          _txt = '子商品タイプが未選択の親子グループが <b>' + _cu + '件</b> あります';
+        }
+        _bn.innerHTML =
+          '<div class="oy-cu-banner">'
+          + '<span class="oy-cu-ico">\u26A0\uFE0F</span>'
+          + '<span class="oy-cu-txt">' + _txt + '</span>'
+          + '<span class="oy-cu-act">'
+          + '<button type="button" class="oy-cu-go" onclick="_oyToggleChildUnset()">' + (_oyChildUnsetOnly ? '全て表示' : '未選択のみ表示') + '</button>'
+          + '<button type="button" class="oy-cu-x" onclick="_oyDismissChildUnset()" title="閉じる">\u2715</button>'
+          + '</span></div>';
+        _bn.style.display = '';
+      } else {
+        _bn.innerHTML = ''; _bn.style.display = 'none';
+      }
+    }
+  }
   const bandSeg=document.getElementById('oyBandSeg'); if(bandSeg) bandSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.band==='all')?(_oyParentBand==null):(+b.dataset.band===_oyParentBand); b.classList.toggle('on', on); });
   const salesSeg=document.getElementById('oySalesSeg'); if(salesSeg) salesSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.tier==='all')?(_oySalesTier==null):(+b.dataset.tier===_oySalesTier); b.classList.toggle('on', on); });
   const adSeg=document.getElementById('oyAdSeg'); if(adSeg) adSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.ad===_oyAdFilter));
@@ -9866,6 +9899,7 @@ $$('.nav-tab').forEach(item => {
     $$('.nav-tab').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     const view = item.dataset.view;
+    if (view === 'oyako') _oyChildUnsetDismissed = false;   // 各比率に入り直したらバナー再表示
     state.currentView = view;
     // 【v239】調整ビューに入るたび、絞り込みを「修正あり」に戻す
     if (view === 'ad-tune' || view === 'pro-tune') tuneGroup = 'fix';
