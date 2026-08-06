@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0477 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0479 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1528,6 +1528,16 @@ th.col-bidonly { background-color: #f5cf96; }              /* 入札価格: 濃�
 .data-grid td:has(> .kw-cell),
 .data-grid td:has(> .note-cell) { text-align: left; }
 .note-cell { text-align: left; }
+/* 左寄せセルの列は見出しも左寄せ（商品コード/商品名/メインKW/対応内容など、全テーブル共通） */
+.data-grid th[data-sort="code"],
+.data-grid th[data-resize-key^="code"],
+.data-grid th[data-sort="name"],
+.data-grid th[data-resize-key^="name"],
+.data-grid th[data-resize-key^="kw"],
+.data-grid th[data-sort="adNote"],
+.data-grid th[data-sort="proNote"],
+.data-grid th[data-resize-key="adNote"],
+.data-grid th[data-resize-key="proNote"] { text-align: left; }
 
 /* 【v1.0337-1.0339】SEO売上/広告売上セル: メイン数値を行の縦中央に置き、その下に構成比%を配置。
    上下対称のパディングでメイン数値が行の中央に来るようにし（行の高さを確保）、%は下部に絶対配置。 */
@@ -2828,7 +2838,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0477</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0479</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2858,7 +2868,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     <a class="nav-tab nav-tab-link active" data-view="basic" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
-    <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率</a>
+    <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率<span class="chip-num" id="cntOyChildUnset"></span></a>
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired">撤退済み商品</a>
   </div>
   <div class="nav-group">
@@ -3125,6 +3135,11 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <span id="oyScopeSeg" class="oy-seg" role="group" aria-label="表示対象">
                 <button type="button" class="oy-btn on" data-scope="all" onclick="_oySetScope('all')" title="全ての商品を表示">全体</button>
                 <button type="button" class="oy-btn" data-scope="group" onclick="_oySetScope('group')" title="親子グループのみ表示">親子のみ</button>
+              </span>
+            </span>
+            <span class="oy-ctl"><span class="oy-ctl-label">子タイプ</span>
+              <span class="oy-seg" role="group" aria-label="子商品タイプ未選択">
+                <button type="button" class="oy-btn" id="oyChildUnsetBtn" onclick="_oyToggleChildUnset()" title="子商品タイプが未選択の親子グループだけ表示">未選択のみ<span id="oyChildUnsetCnt" style="margin-left:5px;font-weight:700"></span></button>
               </span>
             </span>
           </div>
@@ -6491,6 +6506,11 @@ function updateStateCounts() {
   const cntAllAd = $('#cntAllAd'); if (cntAllAd) cntAllAd.textContent = `(${bidEnteredCount})`;   // 【v208】入札状態側の全体＝入札価格記入ありの数
   const cntAllPr = $('#cntAllPr'); if (cntAllPr) cntAllPr.textContent = `(${activeCount})`;   // 【v199】PR状態側の全体
   const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
+  // 【子タイプ未選択】各比率タブのバッジ（親子2件以上でchildDetail未選択のグループ数）
+  { const _pm = state.productMeta || {}; const _repKey = (c)=>{ const r=String((_pm[c]||{}).repCode||'').trim(); return r||c; };
+    const _sz = {}; allCodes.forEach(c => { if (typeof isRetired==='function' && isRetired(c)) return; const k=_repKey(c); _sz[k]=(_sz[k]||0)+1; });
+    let _cu = 0; Object.keys(_sz).forEach(k => { if (_sz[k] >= 2 && !((_pm[k]||{}).childDetail||'').trim()) _cu++; });
+    const _el = document.getElementById('cntOyChildUnset'); if (_el) _el.textContent = _cu ? ('('+_cu+')') : ''; }
 }
 
 // 【v125/v130】商品コード表示（代表コード所属なら🔀バッジ付き）
@@ -6838,17 +6858,25 @@ function renderWithdrawConsider() {
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
   const f = STATE_FILTERS['pro-wc'];
-  let list = [...codes].filter(code =>
-    (!isRetired(code) || _editPinnedCodes.has(code)) &&
-    (f.match(state.productMeta[code] || {}, code) || _editPinnedCodes.has(code)));
+  const repKeyOf = (code) => { const r = String((state.productMeta[code] || {}).repCode || '').trim(); return r || code; };
+  // 家族化（撤退済みは除外）。親子のどちらかが撤退検討▲なら家族全員をセット表示する。
+  const fams = {};
+  [...codes].forEach(c => { if (isRetired(c) && !_editPinnedCodes.has(c)) return; const k = repKeyOf(c); (fams[k] || (fams[k] = [])).push(c); });
   const q = ($('#basicSearch') ? $('#basicSearch').value : '').trim().toLowerCase();
-  if (q) list = list.filter(code => { const m = getMaster(code); return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q); });
-  const rows = list.map(code => {
+  let listCodes = [];
+  Object.keys(fams).forEach(k => {
+    const hit = fams[k].some(c => f.match(state.productMeta[c] || {}, c) || _editPinnedCodes.has(c));
+    if (hit) listCodes.push.apply(listCodes, fams[k]);
+  });
+  if (q) listCodes = listCodes.filter(code => { const m = getMaster(code); return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q); });
+  let rows = listCodes.map(code => {
     const sales = [0,1,2,3].map(i => { const m = months[i]; if (!m) return null; const r = byKey[code + '|' + m]; return r ? (r.rev || 0) : 0; });
     const total = sales.reduce((s, v) => s + (v || 0), 0);
     return { code, sales, total };
   });
   rows.sort((a, b) => ((b.sales[newestIdx] || 0) - (a.sales[newestIdx] || 0)) || (b.total - a.total));
+  rows = applyRepGrouping(rows);                 // 子を親の直下にまとめる
+  const _pcSets = buildParentChildSets(rows);    // 親/子の行クラス
   let body;
   if (!rows.length) {
     body = '<tr><td colspan="11" class="empty-state">' + (monthsAll.length ? '撤退検討▲の商品はありません' : 'データを読み込んでください') + '</td></tr>';
@@ -6856,7 +6884,8 @@ function renderWithdrawConsider() {
     body = rows.slice(0, 2000).map(r => {
       let cells = ''; for (let i = 0; i < 4; i++) cells += '<td class="num col-total">' + fmt(r.sales[i]) + '</td>';
       const pr = getProRate(r.code);
-      return '<tr>'
+      const _pcCls = rowParentChildClass(r.code, _pcSets);
+      return '<tr' + (_pcCls ? ' class="' + _pcCls + '"' : '') + '>'
         + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
         + '<td>' + imageCellHtml(r.code) + '</td>'
         + '<td>' + nameCellHtml(r.code) + '</td>'
@@ -7321,6 +7350,8 @@ let _oySalesTier = null;    // 【v1.0453】総売上の層 null（全て）| 0.
 const OY_BANDS = [[0,25],[25,50],[50,75],[75,100]];   // 【v1.0449】4分割（0-25良い→75-100良くない）
 const OY_SALES_TIERS = [[100000, Infinity], [50000, 100000], [10000, 50000], [0, 10000]];   // 【v1.0453】10万〜／5〜10万／1〜5万／〜1万
 function _oySetScope(s){ _oyScope = (s === 'group') ? 'group' : 'all'; renderOyako(); }
+let _oyChildUnsetOnly = false;   // 【子タイプ未選択】絞り込み
+function _oyToggleChildUnset(){ _oyChildUnsetOnly = !_oyChildUnsetOnly; renderOyako(); }
 function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b); renderOyako(); }
 function _oySetAd(v){ _oyAdFilter = (v === 'ad' || v === 'none') ? v : 'all'; renderOyako(); }
 function _oySetTier(t){ _oySalesTier = (t === 'all' || t == null) ? null : (+t); renderOyako(); }
@@ -7383,6 +7414,9 @@ function renderOyako(){
   const seg=document.getElementById('oyModeSeg'); if(seg) seg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.mode===_oyMode));
   const amtSeg=document.getElementById('oyAmtSeg'); if(amtSeg) amtSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', (b.dataset.amt==='on')===_oyShowAmt));
   const scopeSeg=document.getElementById('oyScopeSeg'); if(scopeSeg) scopeSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.scope===_oyScope));
+  { let _cu=0; Object.keys(families).forEach(k=>{ if(families[k].length>=2 && !childDetailValue(k)) _cu++; });
+    const _b=document.getElementById('oyChildUnsetBtn'); if(_b) _b.classList.toggle('on', _oyChildUnsetOnly);
+    const _c=document.getElementById('oyChildUnsetCnt'); if(_c) _c.textContent = _cu ? ('('+_cu+')') : ''; }
   const bandSeg=document.getElementById('oyBandSeg'); if(bandSeg) bandSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.band==='all')?(_oyParentBand==null):(+b.dataset.band===_oyParentBand); b.classList.toggle('on', on); });
   const salesSeg=document.getElementById('oySalesSeg'); if(salesSeg) salesSeg.querySelectorAll('.oy-btn').forEach(b=>{ const on=(b.dataset.tier==='all')?(_oySalesTier==null):(+b.dataset.tier===_oySalesTier); b.classList.toggle('on', on); });
   const adSeg=document.getElementById('oyAdSeg'); if(adSeg) adSeg.querySelectorAll('.oy-btn').forEach(b=>b.classList.toggle('on', b.dataset.ad===_oyAdFilter));
@@ -7461,6 +7495,10 @@ function renderOyako(){
       const p = Math.round(s.parentSEO / s.groupSEO * 100);
       return (_oyParentBand===0 ? p>=lo : p>lo) && p<=hi;
     });
+  }
+  // 【子タイプ未選択】絞り込み：子ありグループで childDetail 未選択のみ
+  if (_oyChildUnsetOnly) {
+    rowsData = rowsData.filter(r => r.childCodes && r.childCodes.length && !childDetailValue(r.key));
   }
   if (rowsData.length===0){ wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">該当する商品がありません</div>'; return; }
 
@@ -11546,8 +11584,16 @@ function saveProductEdit(opts) {
     state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
   }
   // 【v124】代表商品コードを保存（空文字なら削除扱い）
+  const _prevRep = String((state.productMeta[code].repCode)||'').trim();
   if (newRepCode) state.productMeta[code].repCode = newRepCode;
   else delete state.productMeta[code].repCode;
+  // 【親子成立時の通知】代表コードを新しく設定/変更し、その代表の子商品タイプが未選択なら促す
+  if (newRepCode && newRepCode !== _prevRep) {
+    const _gm = state.productMeta[newRepCode] || {};
+    if (!((_gm.childDetail)||'').trim()) {
+      try { showToast('この親子グループは「子商品タイプ」が未選択です。商品-各比率で選択してください。', 'warn'); } catch (e) {}
+    }
+  }
   // 【v1.0327】商品編集（代表コード/KW/状態など）の変更時刻を記録。
   //   これが無いと、古いセッション/端末が保存した時のマージ(mergeProductMetaForSave)で
   //   「新しい方」と判定されず、代表コード等が巻き戻り・消失する事故が起きていた（実際に発生）。
