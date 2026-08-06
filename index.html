@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0481 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0482 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2850,7 +2850,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0481</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0482</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7369,16 +7369,26 @@ function _oySetTier(t){ _oySalesTier = (t === 'all' || t == null) ? null : (+t);
 
 // ==================== 【子商品詳細】商品-各比率に追加する、子商品の内容ドロップダウン ====================
 //   子コードごとに productMeta[childCode].childDetail に保存する（子＝親に対する関係の説明）。
-const CHILD_DETAIL_OPTIONS = ['', '数量増加', '補助用具付属', '関連別商品セット'];
+// 子商品タイプ：値はプレーン文字のまま、表示に番号(①②③)＋色を付けて視認性を上げる。
+const CHILD_TYPE_DEFS = [
+  { v:'', label:'（未選択）', color:'', bg:'' },
+  { v:'数量増加',       label:'①数量増加',       color:'#d97706', bg:'#fff7ed' },  // 橙
+  { v:'補助用具付属',   label:'②補助用具付属',   color:'#2563eb', bg:'#eff4fe' },  // 青
+  { v:'関連別商品セット', label:'③関連別商品セット', color:'#0d9488', bg:'#e9f7f5' },  // 緑
+];
+const CHILD_DETAIL_OPTIONS = CHILD_TYPE_DEFS.map(d => d.v);
+function _childTypeDef(v){ for (let i=0;i<CHILD_TYPE_DEFS.length;i++){ if (CHILD_TYPE_DEFS[i].v === v) return CHILD_TYPE_DEFS[i]; } return CHILD_TYPE_DEFS[0]; }
 function childDetailValue(code){ return (getMeta(code).childDetail || ''); }
 function childDetailSelectHtml(code, showCodeLabel){
   const v = childDetailValue(code);
+  const def = _childTypeDef(v);
   const dis = ghIsEnabled() ? '' : ' disabled';
-  const opts = CHILD_DETAIL_OPTIONS.map(o =>
-    `<option value="${escapeHtml(o)}"${o === v ? ' selected' : ''}>${escapeHtml(o) || '（未選択）'}</option>`).join('');
+  const opts = CHILD_TYPE_DEFS.map(d =>
+    `<option value="${escapeHtml(d.v)}" style="color:${d.color || '#334155'};background:#fff;font-weight:600"${d.v === v ? ' selected' : ''}>${escapeHtml(d.label)}</option>`).join('');
   const codeLab = showCodeLabel
     ? `<div style="font-size:11px;color:var(--text3);font-family:'DM Mono',ui-monospace,monospace;margin-bottom:1px;text-align:left">${escapeHtml(code)}</div>` : '';
-  return `<div class="child-detail-wrap" style="margin:3px 0">${codeLab}<select class="child-detail-select${v ? '' : ' unset'}"${dis} data-code="${escapeHtml(code)}" title="子商品タイプ">${opts}</select></div>`;
+  const sty = v ? `color:${def.color};border-color:${def.color};background:${def.bg};font-weight:700` : '';
+  return `<div class="child-detail-wrap" style="margin:3px 0">${codeLab}<select class="child-detail-select${v ? '' : ' unset'}"${dis} data-code="${escapeHtml(code)}" title="子商品タイプ" style="${sty}">${opts}</select></div>`;
 }
 
 function renderOyako(){
@@ -10764,8 +10774,13 @@ document.addEventListener('change', (e) => {
   meta.childDetail = value;
   meta.childDetailTs = ts;   // マージ保護用の専用タイムスタンプ
   meta._ts = ts;
-  // 未選択スタイルの即時反映（再描画はしない＝その場で動かさない）
+  // 未選択スタイル＋番号色の即時反映（再描画はしない＝その場で動かさない）
   e.target.classList.toggle('unset', !value);
+  { const _d = _childTypeDef(value);
+    e.target.style.color = value ? _d.color : '';
+    e.target.style.borderColor = value ? _d.color : '';
+    e.target.style.background = value ? _d.bg : '';
+    e.target.style.fontWeight = value ? '700' : ''; }
   pinEditedCode(code);
   saveToStorage();
 });
