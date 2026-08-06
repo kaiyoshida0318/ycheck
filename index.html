@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0472 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0475 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1562,6 +1562,12 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
 .note-cell:focus { outline: none; border-color: var(--accent); background: var(--bg2); }
 .note-cell:empty::before { content: 'クリックして入力'; color: var(--text3); font-style: italic; }
 
+/* 【子商品詳細】ドロップダウン（商品-各比率） */
+.child-detail-select { font-size: 0.78rem; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text); cursor: pointer; max-width: 230px; }
+.child-detail-select.unset { color: var(--text3); border-style: dashed; border-color: #cbd5e1; }
+.child-detail-select:focus { outline: none; border-color: var(--accent); }
+.child-detail-select:disabled { cursor: default; opacity: 0.7; }
+
 /* Editable KW */
 .kw-cell {
   color: var(--text2);
@@ -2822,7 +2828,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0472</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0475</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3591,6 +3597,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <div class="pe-row">
         <label class="pe-label" for="peRepCode">代表商品コード（＝送り込み元商品コード）</label>
         <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
+      </div>
+      <div class="pe-row" id="peChildTypeRow" style="display:none">
+        <label class="pe-label" for="peChildType">子商品タイプ（この商品が子＝代表コードを付けたときに選択）</label>
+        <select id="peChildType" class="pe-input"></select>
       </div>
       <div class="pe-row">
         <label class="pe-label" for="peProductUrl">商品ページURL</label>
@@ -4467,6 +4477,10 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const _lsSt = (typeof L.statusTs    === 'number') ? L.statusTs    : 0;
     const _rsSt = (typeof R.statusTs    === 'number') ? R.statusTs    : 0;
     if (_lsSt !== _rsSt) { const s = (_lsSt > _rsSt) ? L : R; w.status    = s.status;    w.statusTs    = s.statusTs;    }
+    // 【子商品詳細】childDetail も専用Ts(childDetailTs)が新しい側で保護（同期で巻き戻らないように）。
+    const _lcd = (typeof L.childDetailTs === 'number') ? L.childDetailTs : 0;
+    const _rcd = (typeof R.childDetailTs === 'number') ? R.childDetailTs : 0;
+    if (_lcd !== _rcd) { const s = (_lcd > _rcd) ? L : R; w.childDetail = s.childDetail; w.childDetailTs = s.childDetailTs; }
     out[c] = w;
   });
   return out;
@@ -6960,7 +6974,7 @@ function renderReviewSales4() {
     + '<th class="nosort" data-resize-key="kwReviewSales4">メインKW</th>';
   for (let i = 0; i < 4; i++) {
     const m = months[i] || '';
-    h += '<th class="num col-total">総売上' + (i + 1) + (m ? ('<br>' + m) : '') + '</th>';
+    h += '<th class="num col-total">総売上' + (m ? ('<br>' + m) : '') + '</th>';
   }
   h += '<th class="status-col">ステータス</th>';
   head.innerHTML = h;
@@ -7244,6 +7258,20 @@ function _oySetBand(b){ _oyParentBand = (b === 'all' || b == null) ? null : (+b)
 function _oySetAd(v){ _oyAdFilter = (v === 'ad' || v === 'none') ? v : 'all'; renderOyako(); }
 function _oySetTier(t){ _oySalesTier = (t === 'all' || t == null) ? null : (+t); renderOyako(); }
 
+// ==================== 【子商品詳細】商品-各比率に追加する、子商品の内容ドロップダウン ====================
+//   子コードごとに productMeta[childCode].childDetail に保存する（子＝親に対する関係の説明）。
+const CHILD_DETAIL_OPTIONS = ['', '数量増加', '補助用具付属', '関連別商品セット'];
+function childDetailValue(code){ return (getMeta(code).childDetail || ''); }
+function childDetailSelectHtml(code, showCodeLabel){
+  const v = childDetailValue(code);
+  const dis = ghIsEnabled() ? '' : ' disabled';
+  const opts = CHILD_DETAIL_OPTIONS.map(o =>
+    `<option value="${escapeHtml(o)}"${o === v ? ' selected' : ''}>${escapeHtml(o) || '（未選択）'}</option>`).join('');
+  const codeLab = showCodeLabel
+    ? `<div style="font-size:11px;color:var(--text3);font-family:'DM Mono',ui-monospace,monospace;margin-bottom:1px;text-align:left">${escapeHtml(code)}</div>` : '';
+  return `<div class="child-detail-wrap" style="margin:3px 0">${codeLab}<select class="child-detail-select${v ? '' : ' unset'}"${dis} data-code="${escapeHtml(code)}" title="子商品タイプ">${opts}</select></div>`;
+}
+
 function renderOyako(){
   const wrap = document.getElementById('oy-wrap');
   if (!wrap) return;
@@ -7322,7 +7350,9 @@ function renderOyako(){
     let _n=name,_prev; do{_prev=_n;_n=_n.replace(/[（(][^（()）]*[0-9０-９][^（()）]*[）)]\s*$/,'').replace(/[0-9０-９]+\s*セット\s*$/,'').trim();}while(_n!==_prev);
     name=_n+((members.length>=2)?'【親】':'');   // 【v1.0439】単独商品には【親】を付けない
     const stats = monthsToShow.map(ym=>_famStat(key, members, ym));
-    return { key, dispCode, name, stats };
+    // 子コード（repCodeが設定され自コードと異なる＝黄色バッジの子）
+    const childCodes = members.filter(c => { const rep=String((_pm[c]||{}).repCode||'').trim(); return rep && rep!==c; });
+    return { key, dispCode, name, stats, childCodes };
   });
   // ソート（SEO％／広告％／親％／子％。直近3ヶ月は最新月[stats[0]]基準）。未指定は総売上順。
   // 【v1.0440】SEO売上・広告売上もソート対象に追加。
@@ -7385,6 +7415,7 @@ function renderOyako(){
   HEAD += th('広告金額','text-align:right;background:#fdf0dd');
   HEAD += thR('親商品'+_arr('parent'),'#e0f2e6','var(--text2)', DIV, `onclick="_oySort('parent')"`);
   HEAD += thR('子商品'+_arr('child'),'#fbf1c9','var(--text2)', '', `onclick="_oySort('child')"`);   // 【v1.0439】個商品→子商品
+  HEAD += th('子商品タイプ','text-align:center;background:#fdf6df');   // 【子商品タイプ】子の内容ドロップダウン
   HEAD += th('ステータス','text-align:center');
 
   const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':'¥'+Math.round(v).toLocaleString();
@@ -7399,7 +7430,7 @@ function renderOyako(){
     return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><div style="font-size:16.8px;font-weight:800;line-height:1.05;color:${pctBandColor(pct)}">${pct}%</div>${amt}</td>`;
   };
 
-  const body = rowsData.map(({key,dispCode,name,stats})=>{
+  const body = rowsData.map(({key,dispCode,name,stats,childCodes})=>{
     const _esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
     const safeFull=_esc(name);
     const src=(typeof getProductImageSrc==='function')?getProductImageSrc(dispCode):'';
@@ -7417,8 +7448,9 @@ function renderOyako(){
       const adCostCell = `<td style="padding:8px 12px;text-align:right;font-family:'DM Mono',ui-monospace,monospace;font-size:0.945rem;background:#fdf6ec;border-bottom:${bb};white-space:nowrap">${fmtY(m.adCost)}</td>`;
       const pCell = pctCell(m.parentSEO, m.groupSEO, '#f2fbf5', bb, DIV);   // 親商品：区切り線付き
       const cCell = pctCell(m.childSEO, m.groupSEO, '#fefce8', bb);
+      const cdCell = first ? `<td rowspan="${rs}" style="padding:6px 10px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP};background:#fffdf4">${ (childCodes && childCodes.length) ? childCodes.map(cc=>childDetailSelectHtml(cc, childCodes.length>1)).join('') : '<span style="color:var(--text3)">—</span>' }</td>` : '';
       const stCell = first ? `<td rowspan="${rs}" style="padding:8px 12px;text-align:center;vertical-align:middle;border-top:${GRPSEP};border-bottom:${GRPSEP}">${statusSelectHtml(key,'status')}</td>` : '';
-      return '<tr>'+prod+monthCell+totCell+seoCell+adCell+adCostCell+pCell+cCell+stCell+'</tr>';
+      return '<tr>'+prod+monthCell+totCell+seoCell+adCell+adCostCell+pCell+cCell+cdCell+stCell+'</tr>';
     }).join('');
   }).join('');
 
@@ -10579,6 +10611,23 @@ document.addEventListener('change', (e) => {
   // 【v276】調整ビューでも状態変更＝対応でその場では動かさない（凍結）。次の更新/ビュー移動で反映。
 });
 
+// ==================== 【子商品詳細】ドロップダウン変更 ====================
+document.addEventListener('change', (e) => {
+  if (!e.target.classList || !e.target.classList.contains('child-detail-select')) return;
+  if (!ghIsEnabled()) return;   // 閲覧専用モードは編集不可
+  const code = e.target.dataset.code;
+  const value = e.target.value;
+  const meta = getMeta(code);
+  const ts = Date.now();
+  meta.childDetail = value;
+  meta.childDetailTs = ts;   // マージ保護用の専用タイムスタンプ
+  meta._ts = ts;
+  // 未選択スタイルの即時反映（再描画はしない＝その場で動かさない）
+  e.target.classList.toggle('unset', !value);
+  pinEditedCode(code);
+  saveToStorage();
+});
+
 // ==================== 対応内容（note）編集 ====================
 // 【fix】contenteditableの改行（<div>/<br>）を \n として保持して取得する。
 //   textContent は改行を落とす（"A<div>B</div>"→"AB"）ため、innerText を使い改行を維持。
@@ -11262,6 +11311,7 @@ function peRefreshImagePreview() {
   note.textContent = noteText;
 }
 
+function _peToggleChildTypeRow(){ var row=document.getElementById('peChildTypeRow'); if(!row) return; var ri=document.getElementById('peRepCode'); var hasRep=!!(ri && ri.value.trim()); row.style.display = hasRep ? '' : 'none'; }
 function openProductEditModal(code) {
   if (!code) return;
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
@@ -11274,6 +11324,9 @@ function openProductEditModal(code) {
   $('#peProductUrl').value = m.productUrl || defaultYahooProductUrl(code);
   // 【v124】代表商品コード
   $('#peRepCode').value = meta.repCode || '';
+  // 【子商品タイプ】代表コードがある（＝子）ときだけ表示。選択肢生成＋現在値。
+  { const _pcSel = $('#peChildType'); if (_pcSel) { _pcSel.innerHTML = CHILD_DETAIL_OPTIONS.map(function(o){ return '<option value="'+escapeHtml(o)+'">'+(escapeHtml(o)||'（未選択）')+'</option>'; }).join(''); _pcSel.value = meta.childDetail || ''; } }
+  _peToggleChildTypeRow();
   // 画像編集の一時状態を現在のmaster値で初期化
   peImageState = {
     customImage: m.customImage || null,
@@ -11432,6 +11485,17 @@ function saveProductEdit(opts) {
   // 【v124】代表商品コードを保存（空文字なら削除扱い）
   if (newRepCode) state.productMeta[code].repCode = newRepCode;
   else delete state.productMeta[code].repCode;
+  // 【子商品タイプ】代表コードがある（子）ときだけ childDetail を保存。外したら削除。専用Tsで同期保護。
+  if (newRepCode) {
+    const _ct = $('#peChildType') ? $('#peChildType').value : '';
+    if (_ct !== (state.productMeta[code].childDetail || '')) {
+      state.productMeta[code].childDetail = _ct;
+      state.productMeta[code].childDetailTs = Date.now();
+    }
+  } else if (state.productMeta[code].childDetail != null) {
+    delete state.productMeta[code].childDetail;
+    delete state.productMeta[code].childDetailTs;
+  }
   // 【v1.0327】商品編集（代表コード/KW/状態など）の変更時刻を記録。
   //   これが無いと、古いセッション/端末が保存した時のマージ(mergeProductMetaForSave)で
   //   「新しい方」と判定されず、代表コード等が巻き戻り・消失する事故が起きていた（実際に発生）。
@@ -11552,6 +11616,7 @@ function handlePeImageFile(file) {
 $('#peCancel').addEventListener('click', closeProductEditModal);
 $('#peClose').addEventListener('click', closeProductEditModal);
 $('#peSave').addEventListener('click', () => saveProductEdit());
+{ const _rc = $('#peRepCode'); if (_rc) _rc.addEventListener('input', _peToggleChildTypeRow); }
 $('#peSaveClose').addEventListener('click', () => saveProductEdit({ close: true }));
 
 // 【v227】商品コード変更（履歴ごと移行）ボタン
