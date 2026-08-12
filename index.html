@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0485 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0486 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2850,7 +2850,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0485</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0486</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9534,7 +9534,7 @@ function renderCompare(){
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
         +'<div style="width:'+S.imgBox+'px;display:flex;justify-content:center">'+im+'</div>'
         +'<div style="'+nameFlex+'padding-left:10px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-width:0">'
-          +'<div onclick="event.stopPropagation()" ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+'" style="font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:text;-webkit-user-select:text;line-height:1.15">'+esc(p.name)+'</div>'
+          +'<div ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+'" style="font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;user-select:text;-webkit-user-select:text;line-height:1.15">'+esc(p.name)+'</div>'
           +'<div onclick="event.stopPropagation()" ondblclick="cmpSelName(this,event)" title="'+esc(p.code)+'" style="font-size:'+Math.max(9,Math.round(S.nameF*0.72))+'px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1;margin-top:1px;cursor:text;user-select:text;-webkit-user-select:text">'+esc(p.code)+'</div>'
         +'</div>'+spacer
         +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+salesCell+'</div>'
