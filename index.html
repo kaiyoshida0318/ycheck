@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0482 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0483 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2850,7 +2850,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0482</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0483</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10148,12 +10148,11 @@ if (tuneCondBtn && tuneCondModal) {
 
 // 【v273】「必要ページ一括オープン」：調整ビューごとに必要な作業ページを新しいタブで一括で開く。
 const TUNE_OPEN_PAGES = {
+  // 【v1.0483】Ycheckの順位ページ(広告順位/SEO順位)は一括オープン対象から除外。外部ページのみ開く。
   'ad-tune': [
-    'https://kaiyoshida0318.github.io/ycheck/?view=ad-rank',   // 【v274】広告順位ページ
     'https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629'
   ],
   'pro-tune': [
-    'https://kaiyoshida0318.github.io/ycheck/?view=seo-rank',  // 【v274】SEO順位ページ
     'https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/'
   ]
 };
