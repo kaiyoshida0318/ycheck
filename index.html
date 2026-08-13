@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0488 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0490 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -492,8 +492,9 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 .top-nav-3 .state-chip[data-state="pro-ok"] { color: #2563eb; }
 .top-nav-3 .state-chip[data-state="ad-ng"],
 .top-nav-3 .state-chip[data-state="pro-ng"] { color: #ea7317; }
-.top-nav-3 .state-chip[data-state="ad-fixed"],
-.top-nav-3 .state-chip[data-state="pro-lower"] { color: #c99700; }
+.top-nav-3 .state-chip[data-state="ad-fixed"] { color: #c99700; }
+.top-nav-3 .state-chip[data-state="pro-lower"] { color: #a67c00; }
+.top-nav-3 .state-chip[data-state="pro-hfixed"] { color: #c99700; }
 .top-nav-3 .state-chip[data-state="ad-none"] { color: #9ca3af; }
 .top-nav-3 .state-chip[data-state="pro-pfixed"],
 .top-nav-3 .state-chip[data-state="pro-cfixed"] { color: #12a5c8; }
@@ -2850,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0488</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0490</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2957,9 +2958,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <button class="state-chip" data-state="pro-lower"><span class="chip-label">PR△-親-下げ挑戦中</span><span class="chip-num" id="cntProLower">(0)</span></button>
       <button class="state-chip" data-state="pro-cfixed"><span class="chip-label">PR△-子-7％固定</span><span class="chip-num" id="cntProCfixed">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="pro-hfixed"><span class="chip-label">PR△-飛ぶ手前固定</span><span class="chip-num" id="cntProHfixed">(0)</span></button>
       <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PRオプ□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+      <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     </div>
   </div>
 </nav>
@@ -6443,7 +6445,7 @@ function updateStateCounts() {
   (state.item || []).forEach(i => allCodes.add(i.code));
   Object.keys(state.master).forEach(c => allCodes.add(c));
   let adOk = 0, adWarn = 0, adNg = 0, adFixed = 0, adNone = 0;
-  let proOk = 0, proWarn = 0, proLower = 0, proPfixed = 0, proCfixed = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
+  let proOk = 0, proWarn = 0, proLower = 0, proPfixed = 0, proCfixed = 0, proHfixed = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let unselectedAd = 0, unselectedPro = 0;
   let bidEnteredCount = 0;  // 【v208】入札価格が記入されている商品数
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
@@ -6468,6 +6470,7 @@ function updateStateCounts() {
     else if (proS === 'PR△-親-下げ挑戦中') proLower++;
     else if (proS === 'PR△-親-飛ぶ手前固定') proPfixed++;
     else if (proS === 'PR△-子-7％固定') proCfixed++;
+    else if (proS === 'PR△-飛ぶ手前固定') proHfixed++;
     else if (proS === 'PR×' || proS === 'PRオプ×' || proS === 'PRO×') proNg++;
     // 【v195】ステータス（商品ライフサイクル）別カウント。旧値(通常商品/現役商品)は新商品扱い。
     const st = meta.status || '';
@@ -6493,6 +6496,7 @@ function updateStateCounts() {
   const cntProLower = $('#cntProLower'); if (cntProLower) cntProLower.textContent = `(${proLower})`;
   const cntProPfixed = $('#cntProPfixed'); if (cntProPfixed) cntProPfixed.textContent = `(${proPfixed})`;
   const cntProCfixed = $('#cntProCfixed'); if (cntProCfixed) cntProCfixed.textContent = `(${proCfixed})`;
+  const cntProHfixed = $('#cntProHfixed'); if (cntProHfixed) cntProHfixed.textContent = `(${proHfixed})`;
   $('#cntProNg').textContent = `(${proNg})`;
   const _setTx = (id, n) => { const el = $(id); if (el) el.textContent = `(${n})`; };
   _setTx('#cntProWithdrawConsider', sWithdrawConsider);
@@ -6547,7 +6551,7 @@ const AD_STATUS_ORDER = {
 // 【v186】PRオプ状態の新ラベル
 const PRO_STATUS_ORDER = {
   '': 0,
-  'PR◯': 1, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR×': 3,
+  'PR◯': 1, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR△-飛ぶ手前固定': 2, 'PR×': 3,
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
 const STATUS_ORDER = { '新商品': 0, '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
@@ -6702,9 +6706,10 @@ const STATUS_TEXT_COLOR = {
   '入札なし': '#9ca3af',            // グレー
   // PRオプ状態
   'PR◯': '#2563eb',                // 青
-  'PR△-親-下げ挑戦中': '#c99700',   // 黄色
+  'PR△-親-下げ挑戦中': '#a67c00',   // 中立-広告あり□と同色（濃い黄）
   'PR△-親-飛ぶ手前固定': '#12a5c8', // 水色
   'PR△-子-7％固定': '#12a5c8',      // 水色
+  'PR△-飛ぶ手前固定': '#c99700',    // 入札△-飛ぶ手前固定と同色（黄）
   'PR×': '#ea7317'                 // オレンジ
 };
 function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; }  // -（未設定）は黒
@@ -6715,6 +6720,7 @@ const STATUS_DISPLAY_LABEL = {
   'PR△-親-下げ挑戦中':   'PR△-親<br>下げ挑戦中',
   'PR△-親-飛ぶ手前固定': 'PRオプ△-親<br>飛ぶ手前固定',
   'PR△-子-7％固定':      'PR△-子<br>7％固定',
+  'PR△-飛ぶ手前固定':    'PR△<br>飛ぶ手前固定',
   '入札△-飛ぶ手前固定':  '入札△<br>飛ぶ手前固定'
 };
 function statusDisplayLabel(value) {
@@ -6771,7 +6777,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   } else if (kind === 'pro') {
     value = meta.proStatus;
     // 【v186】PR◯/PR△-親-下げ挑戦中/PR△-親-飛ぶ手前固定/PR△-子-7％固定/PR×
-    options = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-親-飛ぶ手前固定', 'PR△-子-7％固定', 'PR×'];
+    options = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-親-飛ぶ手前固定', 'PR△-子-7％固定', 'PR△-飛ぶ手前固定', 'PR×'];
   } else if (kind === 'status') {
     value = statusLifeDisplayValue(meta.status || '新商品');  // 【v195】旧値は新値へフォールバック表示
     options = STATUS_LIFE_OPTIONS;
@@ -9965,12 +9971,13 @@ const STATE_FILTERS = {
   'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-親-下げ挑戦中' },
   'pro-pfixed':    { label: 'PR△-親-飛ぶ手前固定', targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-親-飛ぶ手前固定' },
   'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
+  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-飛ぶ手前固定' },
   'pro-ng':        { label: 'PR×',              targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic',   match: (meta) => (meta.status || '') === '撤退検討▲' },
   'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic',   match: (meta) => { const s = meta.status || ''; return s === '撤退予定' || s === '撤退■' || s === '撤退予定-out記入済'; } },
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
   'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
-  'unselected-pro':{ label: '選択前-PRオプ□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
+  'unselected-pro':{ label: '選択前-PR□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
 };
 
 // 【v213】状態カテゴリの説明文（チップで絞り込んだとき、対象ビューのツールバーに表示）
