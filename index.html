@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0490 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0492 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0490</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0492</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3359,9 +3359,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="filter-label">検索</span>
           <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button class="search-rep-badge" id="adTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
-          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
             <span style="display:inline-flex;gap:4px">
@@ -3403,9 +3403,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="filter-label">検索</span>
           <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button class="search-rep-badge" id="proTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
-          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
             <span style="display:inline-flex;gap:4px">
@@ -6821,10 +6821,11 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
 // 対応内容の価格変更（￥旧-新 / p旧-新）から「上げ=赤 / 下げ=青 / それ以外=黒」を判定して色を返す。
 function noteChangeColor(note, kind) {
   const s = String(note || '');
-  const re = (kind === 'ad') ? /￥(\d+)-(\d+)/ : /p(\d+)-(\d+)/;
-  const m = s.match(re);
-  if (!m) return '';
-  const o = Number(m[1]), n = Number(m[2]);
+  const re = (kind === 'ad') ? /￥(\d+)-(\d+)/g : /p(\d+)-(\d+)/g;
+  let m, last = null;
+  while ((m = re.exec(s)) !== null) last = m;   // 最新（末尾）の変更トークンで判定（古い上げが残っていても最新の下げを反映）
+  if (!last) return '';
+  const o = Number(last[1]), n = Number(last[2]);
   if (!isFinite(o) || !isFinite(n)) return '';
   if (n > o) return '#dc2626';   // 上げた → 赤
   if (n < o) return '#2563eb';   // 下げた → 青
