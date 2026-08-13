@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0492 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0493 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0492</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0493</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7840,15 +7840,18 @@ function renderGraphData() {
     + '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const desc = asc.slice().reverse();
   const drows = _zdMode === 'yoy' ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
+  const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   const body = drows.map(r => {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
+    const _unmatured = !!(r.month && curYm && r.month >= curYm);   // 満了していない月（当月・以降）
     const cells = MI_COLS.map(c => {
       const v = r[c.key]; const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
-      const inner = (!v || v === 0) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+      const _noColor = _unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
+      const inner = (!v || v === 0 || _noColor) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
       return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + inner + '</td>';
     }).join('');
     const sv = r.soikomi; const sdisp = fmtY(sv);
-    const sinner = (!sv || sv === 0) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
+    const sinner = (!sv || sv === 0 || _unmatured) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
     const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
     return '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + soiCell + '</tr>';
   }).join('');
