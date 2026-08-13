@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0486 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0488 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2850,7 +2850,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0486</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0488</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6812,10 +6812,23 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
     + `</span>`;
 }
 
+// 対応内容の価格変更（￥旧-新 / p旧-新）から「上げ=赤 / 下げ=青 / それ以外=黒」を判定して色を返す。
+function noteChangeColor(note, kind) {
+  const s = String(note || '');
+  const re = (kind === 'ad') ? /￥(\d+)-(\d+)/ : /p(\d+)-(\d+)/;
+  const m = s.match(re);
+  if (!m) return '';
+  const o = Number(m[1]), n = Number(m[2]);
+  if (!isFinite(o) || !isFinite(n)) return '';
+  if (n > o) return '#dc2626';   // 上げた → 赤
+  if (n < o) return '#2563eb';   // 下げた → 青
+  return '';                     // 変化なし等 → 既定(黒)
+}
 function noteCellHtml(code, kind /* 'ad' | 'pro' */) {
   const meta = getMeta(code);
   const value = kind === 'ad' ? meta.adNote : meta.proNote;
-  return `<div class="note-cell" contenteditable="${ghIsEnabled() ? 'true' : 'false'}" data-code="${escapeHtml(code)}" data-kind="${kind}">${escapeHtml(value || '')}</div>`;
+  const col = noteChangeColor(value, kind);
+  return `<div class="note-cell" contenteditable="${ghIsEnabled() ? 'true' : 'false'}" data-code="${escapeHtml(code)}" data-kind="${kind}"${col ? ` style="color:${col}"` : ''}>${escapeHtml(value || '')}</div>`;
 }
 
 // ==================== KW Cell editable ====================
@@ -10874,6 +10887,8 @@ document.addEventListener('blur', (e) => {
   }
 
   e.target.textContent = newValue;
+  // 価格の上げ/下げで対応内容の文字色を即時反映（上げ=赤/下げ=青/その他=黒）
+  { const _col = noteChangeColor(newValue, kind); e.target.style.color = _col || ''; }
   // 【v1.0395】実際に内容が変わったときだけ保存＝「反映する（未反映）」を出す。
   //   メモ欄にフォーカスして無編集で離脱（例: 検索欄をクリック）した場合は変更なし＝未反映にしない。
   if (newValue !== originalValue) {
