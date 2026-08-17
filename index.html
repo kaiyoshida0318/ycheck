@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0494 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0496 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0494</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0496</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2946,11 +2946,20 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+      <!-- 【v1.0495】入札状態で絞り込んだ表の実績額・広告ROASに当月を含めるか切替（入札価格調整と同じ挙動） -->
+      <span class="chip-sep" aria-hidden="true"></span>
+      <span class="tune-period-seg" role="group" aria-label="表示時期" style="display:inline-flex;align-items:center;gap:6px">
+        <span class="filter-label">表示時期</span>
+        <span style="display:inline-flex;gap:4px">
+          <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。実績額・広告ROASは満了月まで。">今月含まない</button>
+          <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。実績額・広告ROASに当月分を表示。">今月含む</button>
+        </span>
+      </span>
     </div>
     <!-- 【PR状態】ブロック。 -->
     <div class="nav-group nav-group-jotai nav-group-pr">
       <span class="nav-group-label g-pr">【PR状態】</span>
-      <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+      <button class="state-chip" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
@@ -2962,6 +2971,15 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+      <!-- 【v1.0496】PR状態で絞り込んだ表のSEO売上に当月を含めるか切替（PRオプ調整と同じ挙動） -->
+      <span class="chip-sep" aria-hidden="true"></span>
+      <span class="tune-period-seg" role="group" aria-label="表示時期" style="display:inline-flex;align-items:center;gap:6px">
+        <span class="filter-label">表示時期</span>
+        <span style="display:inline-flex;gap:4px">
+          <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。SEO売上は満了月まで。">今月含まない</button>
+          <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。SEO売上に当月分を表示。">今月含む</button>
+        </span>
+      </span>
     </div>
   </div>
 </nav>
@@ -8017,8 +8035,12 @@ function last3MonthsInclCurrent() {
 let _tunePeriodInclCurrent = false;
 function _setTunePeriod(incl) {
   _tunePeriodInclCurrent = !!incl;
-  if (state.currentView === 'ad-tune') renderAdTune();
-  else if (state.currentView === 'pro-tune') renderProTune();
+  _syncTunePeriodSegs();   // 【v1.0495】全ての表示時期トグル（調整ビュー＋【入札状態】ブロック）を同期
+  const v = state.currentView;
+  if (v === 'ad-tune') renderAdTune();
+  else if (v === 'pro-tune') renderProTune();
+  else if (v === 'ad-adjust') renderAdAdjust();   // 【v1.0495】入札状態チップで絞り込んだ表も再描画
+  else if (v === 'pro-adjust') renderProAdjust();
 }
 function _syncTunePeriodSegs() {
   document.querySelectorAll('.tune-period-btn').forEach(b => {
@@ -8301,9 +8323,13 @@ function renderAdAdjust(cfg) {
   const hPrefix   = cfg.hPrefix   || 'hAdAdjust';
   const groupFilter = cfg.groupFilter || null;
   const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
-  const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "ad-adjust");  // 【v256】状態チップ絞り込み中も当月除外
+  const _isChipAd = !!(state.activeStateFilter && state.activeStateFilter.targetView === "ad-adjust");
+  const completedOnly = !!cfg.completedOnly || _isChipAd;  // 【v256】状態チップ絞り込み中も当月除外
+  // 【v1.0495】入札状態チップで絞り込んだ ad-adjust ビューでも【入札状態】ブロックの「表示時期」トグルを反映。
+  //   今月含む → 当月込みの直近3ヶ月（実績額・広告ROASに当月分を表示）＝入札価格調整と同じ挙動。
+  const _chipInclCurrent = _isChipAd && !cfg.incl3Current && !cfg.inclCurrent && _tunePeriodInclCurrent;
   // 【v278/v1.0400】cfg.incl3Current=当月含む直近3ヶ月 / cfg.inclCurrent=完了3ヶ月＋当月(4ヶ月) / それ以外=完了直近3ヶ月。
-  const months = cfg.incl3Current ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
+  const months = (cfg.incl3Current || _chipInclCurrent) ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
   // 動的に見出しを更新（月数ぶんループ。当月列も対応）
   for (let i = 0; i < months.length; i++) {
     const _rev = $('#'+hPrefix+'AdRev'+i); if (_rev) _rev.innerHTML = `実績額<br>${months[i] || ''}`;
@@ -8479,9 +8505,13 @@ function renderProAdjust(cfg) {
   const hPrefix   = cfg.hPrefix   || 'hProAdjust';
   const groupFilter = cfg.groupFilter || null;
   const statusFirst = !!cfg.statusFirst;   // 【v270】ステータス列を入札状態の左へ（調整ビュー用）
-  const completedOnly = !!cfg.completedOnly || !!(state.activeStateFilter && state.activeStateFilter.targetView === "pro-adjust");  // 【v256】状態チップ絞り込み中も当月除外
+  const _isChipPro = !!(state.activeStateFilter && state.activeStateFilter.targetView === "pro-adjust");
+  const completedOnly = !!cfg.completedOnly || _isChipPro;  // 【v256】状態チップ絞り込み中も当月除外
+  // 【v1.0496】PR状態チップで絞り込んだ pro-adjust ビューでも【PR状態】ブロックの「表示時期」トグルを反映。
+  //   今月含む → 当月込みの直近3ヶ月（SEO売上に当月分を表示）＝PRオプ調整と同じ挙動。
+  const _chipInclCurrent = _isChipPro && !cfg.incl3Current && !cfg.inclCurrent && _tunePeriodInclCurrent;
   // 【v278/v1.0400】cfg.incl3Current=当月含む直近3ヶ月 / cfg.inclCurrent=完了3ヶ月＋当月(4ヶ月) / それ以外=完了直近3ヶ月。
-  const months = cfg.incl3Current ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
+  const months = (cfg.incl3Current || _chipInclCurrent) ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
   for (let i = 0; i < months.length; i++) {
     const _s = $('#'+hPrefix+'Seo'+i); if (_s) _s.innerHTML = `SEO売上<br>${months[i] || ''}`;
   }
@@ -9966,6 +9996,8 @@ const STATE_FILTERS = {
   'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
   // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
   'ad-all':        { label: '全体',       targetView: 'ad-adjust',  match: (meta, code) => { const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
+  // 【v1.0496】PR状態の「全体」＝PRオプ調整（pro-adjust）の画面と同じ内容で全商品を表示。
+  'pro-all':       { label: '全体',       targetView: 'pro-adjust', match: () => true },
   'new-product':      { label: '新商品',           targetView: 'basic', match: (meta) => statusLifeDisplayValue(meta.status || '新商品') === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
   'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告あり◯' },
   'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告なし◯' },
