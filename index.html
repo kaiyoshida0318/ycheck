@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0497 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0498 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0497</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0498</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3073,8 +3073,16 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="reviewSales4Search" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <!-- 【v1.0498】表示時期トグル（画面右端）。今月含む→当月を含む直近4ヶ月（3完了＋当月） -->
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（満了した4ヶ月のみ）">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む（完了3ヶ月＋当月）。当月は未満了のため参考値。">今月含む</button>
+            </span>
+          </span>
         </div>
-        <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">直近の<b>満了した4ヶ月</b>の総売上を横に並べて確認します（当月は未満了のため除外）。左＝古い月／右＝新しい月。並び順は最新月の総売上が高い順。</p>
+        <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">直近の総売上を横に並べて確認します。左＝古い月／右＝新しい月。並び順は最新月の総売上が高い順。<span id="reviewSales4PeriodNote">（当月は未満了のため除外＝満了した4ヶ月）</span></p>
         <div class="table-wrap">
           <table id="tableReviewSales4" class="data-grid">
             <thead><tr id="reviewSales4Head"></tr></thead>
@@ -7106,11 +7114,15 @@ function renderReviewSales4() {
   const head = document.getElementById('reviewSales4Head');
   const tbody = document.querySelector('#tableReviewSales4 tbody');
   if (!head || !tbody) return;
-  // 直近の満了した4ヶ月（昇順＝古→新）。当月は未満了なので除外。
+  if (typeof _syncTunePeriodSegs === 'function') _syncTunePeriodSegs();  // 【v1.0498】表示時期トグルを現在の状態に同期
+  // 直近4ヶ月（昇順＝古→新）。既定は満了した4ヶ月。表示時期＝今月含む なら完了3ヶ月＋当月。
   const monthsAll = getImportedDataMonths();
   const now = new Date();
   const curYM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-  const months = monthsAll.filter(m => m < curYM).slice(-4);
+  const months = _tunePeriodInclCurrent ? last4MonthsInclCurrent() : monthsAll.filter(m => m < curYM).slice(-4);
+  // 【v1.0498】説明文の末尾を表示時期に合わせて切替
+  { const _pn = document.getElementById('reviewSales4PeriodNote');
+    if (_pn) _pn.textContent = _tunePeriodInclCurrent ? '（当月を含む＝完了3ヶ月＋当月。当月は未満了のため参考値）' : '（当月は未満了のため除外＝満了した4ヶ月）'; }
   const newestIdx = months.length - 1;   // 直近（満了）月の列インデックス
   // ヘッダー（総売上①〜④に対象月を併記。月が無い列は総売上のみ）
   let h = '<th data-resize-key="codeReviewSales4">商品コード</th>'
@@ -8039,6 +8051,7 @@ function _setTunePeriod(incl) {
   else if (v === 'pro-tune') renderProTune();
   else if (v === 'ad-adjust') renderAdAdjust();   // 【v1.0495】入札状態チップで絞り込んだ表も再描画
   else if (v === 'pro-adjust') renderProAdjust();
+  else if (v === 'review-sales4') renderReviewSales4();   // 【v1.0498】総売上-直近4ヶ月分
 }
 function _syncTunePeriodSegs() {
   document.querySelectorAll('.tune-period-btn').forEach(b => {
