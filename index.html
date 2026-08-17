@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0496 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0497 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0496</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0497</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2946,15 +2946,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
-      <!-- 【v1.0495】入札状態で絞り込んだ表の実績額・広告ROASに当月を含めるか切替（入札価格調整と同じ挙動） -->
-      <span class="chip-sep" aria-hidden="true"></span>
-      <span class="tune-period-seg" role="group" aria-label="表示時期" style="display:inline-flex;align-items:center;gap:6px">
-        <span class="filter-label">表示時期</span>
-        <span style="display:inline-flex;gap:4px">
-          <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。実績額・広告ROASは満了月まで。">今月含まない</button>
-          <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。実績額・広告ROASに当月分を表示。">今月含む</button>
-        </span>
-      </span>
     </div>
     <!-- 【PR状態】ブロック。 -->
     <div class="nav-group nav-group-jotai nav-group-pr">
@@ -2971,15 +2962,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
       <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
-      <!-- 【v1.0496】PR状態で絞り込んだ表のSEO売上に当月を含めるか切替（PRオプ調整と同じ挙動） -->
-      <span class="chip-sep" aria-hidden="true"></span>
-      <span class="tune-period-seg" role="group" aria-label="表示時期" style="display:inline-flex;align-items:center;gap:6px">
-        <span class="filter-label">表示時期</span>
-        <span style="display:inline-flex;gap:4px">
-          <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。SEO売上は満了月まで。">今月含まない</button>
-          <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。SEO売上に当月分を表示。">今月含む</button>
-        </span>
-      </span>
     </div>
   </div>
 </nav>
@@ -3307,6 +3289,14 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteAdNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdNoteAll" title="入札価格全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
           <span class="state-explain" id="adAdjustStateExplain" style="display:none;"></span>
+          <!-- 【v1.0497】表示時期トグル（入札価格調整と同じ右端位置）。実績額・広告ROASに当月を含めるか切替 -->
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。実績額・広告ROASは満了月まで。">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。実績額・広告ROASに当月分を表示。">今月含む</button>
+            </span>
+          </span>
         </div>
         <div class="table-wrap">
           <table id="tableAdAdjust" class="data-grid">
@@ -3344,6 +3334,14 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="btn sm ghost" id="btnDeleteProNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProNoteAll" title="PRオプ全体の対応内容欄をすべて空白に（メモ書きも含めて全削除）">🗑 対応内容-全削除</button>
           <span class="state-explain" id="proAdjustStateExplain" style="display:none;"></span>
+          <!-- 【v1.0497】表示時期トグル（PRオプ調整と同じ右端位置）。SEO売上に当月を含めるか切替 -->
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。SEO売上は満了月まで。">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。SEO売上に当月分を表示。">今月含む</button>
+            </span>
+          </span>
           <!-- 【v1.0343/1.0344】撤退チェック(①): 【状態】撤退■で絞り込んだ時だけ表示。押すとモーダルが開く -->
           <button class="btn sm" id="btnRetireCheck" type="button" style="display:none; border-color: var(--red); color: var(--red); font-weight: 600;"
             data-tooltip="ストクリ（ストアクリエイターPro）の商品リスト(PRオプ料率CSV / data*.csv)を取り込み、そこに載っていない＝Yahooで商品ページが削除された商品を「撤退済み」にします。①Yahooだけ撤退・楽天継続の運用に。">🔍 撤退チェック（ストクリ突き合わせ）</button>
@@ -8317,6 +8315,7 @@ function renderAdAdjust(cfg) {
   // 【v239】cfg で対象テーブル等を差し替え可能に。既定は「入札価格全体」。
   //   tune（入札価格調整）は tableAdTune 等 + groupFilter を渡して同ロジックを再利用する。
   cfg = cfg || {};
+  if (typeof _syncTunePeriodSegs === 'function') _syncTunePeriodSegs();  // 【v1.0497】ツールバーの表示時期トグルを現在の状態に同期
   const tableSel  = cfg.tableSel  || '#tableAdAdjust';
   const searchSel = cfg.searchSel || '#adAdjustSearch';
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntAdAdjustActive';
@@ -8499,6 +8498,7 @@ let proAdjustFrozenOrder = null;
 function renderProAdjust(cfg) {
   // 【v239】cfg で対象テーブル等を差し替え可能に。既定は「PRオプ全体」。
   cfg = cfg || {};
+  if (typeof _syncTunePeriodSegs === 'function') _syncTunePeriodSegs();  // 【v1.0497】ツールバーの表示時期トグルを現在の状態に同期
   const tableSel  = cfg.tableSel  || '#tableProAdjust';
   const searchSel = cfg.searchSel || '#proAdjustSearch';
   const cntSel    = ('cntSel' in cfg) ? cfg.cntSel : '#cntProAdjustActive';
