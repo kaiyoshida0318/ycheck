@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0498 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0499 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0498</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0499</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3817,7 +3817,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → アイテムリーチ → CSV入札・削除 → 商品データのダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629</a></div>
+        <!-- 【v1.0499】未ログイン時にCSVがストクリトップへ飛ぶ問題対策：先にログインする導線を①として明示 -->
+        <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">①</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya" target="_blank" rel="noopener">ストアクリエイターを開く（未ログインなら先にログイン）</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">②</span><a href="https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629</a></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※未ログインだと②は一度ストクリのトップに飛びます。先に①でログインしてから②を押すと、1回目からダウンロードできます。</div>
       </div>
       <div class="file-slot" id="slot-prorate" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge"></span>PRオプ（最新）</div>
