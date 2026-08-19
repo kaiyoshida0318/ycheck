@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0499 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0500 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0499</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0500</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -11112,8 +11112,10 @@ function startBidEdit(cell) {
       delete state.bid[code];
     } else {
       const num = parseInt(raw, 10);
-      if (isNaN(num) || num < 0) {
-        cancel();
+      // 【v1.0500】入札価格は最安25円。25未満は入力不可（値も対応内容も更新しない）。
+      if (isNaN(num) || num < 25) {
+        alert('入札価格は最安25円です。25円未満は入力できません（変更は反映されません）。');
+        cell.innerHTML = originalHtml;   // 元の値へ復元（保存・対応内容更新は行わない）
         return;
       }
       state.bid[code] = num;
@@ -11218,8 +11220,10 @@ function startProRateEdit(cell) {
       delete state.proRate[codeLower];
     } else {
       const num = parseFloat(raw);
-      if (isNaN(num) || num < 0 || num > 100) {
-        cancel();
+      // 【v1.0500】PRオプ料率は最低7％。7未満は入力不可（値も対応内容も更新しない）。
+      if (isNaN(num) || num < 7 || num > 100) {
+        alert('PRオプ料率は最低7％です。7％未満は入力できません（変更は反映されません）。');
+        cell.innerHTML = originalHtml;   // 元の値へ復元（保存・対応内容更新は行わない）
         return;
       }
       state.proRate[codeLower] = num;
@@ -11338,8 +11342,11 @@ function startRankEditCell(cell) {
     let newVal = null;
     if (raw !== '' && raw !== '0') {
       const num = parseInt(raw, 10);  // 【v107】bid/proRate共に整数
-      if (isNaN(num) || num < 0 || (!isBid && num > 100)) {
-        cancel();
+      // 【v1.0500】入札価格は最安25円／PRオプ料率は最低7％。下回る値は入力不可（値も対応内容も更新しない）。
+      const _minVal = isBid ? 25 : 7;
+      if (isNaN(num) || num < _minVal || (!isBid && num > 100)) {
+        alert(isBid ? '入札価格は最安25円です。25円未満は入力できません（変更は反映されません）。' : 'PRオプ料率は最低7％です。7％未満は入力できません（変更は反映されません）。');
+        cell.innerHTML = originalHtml;   // 元の値へ復元（保存・対応内容更新は行わない）
         return;
       }
       newVal = num;
