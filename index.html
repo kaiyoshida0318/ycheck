@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0500 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0502 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0500</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0502</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4575,6 +4575,9 @@ let _ycTabId = 'tab-' + Math.random().toString(36).slice(2);
 let _ycOtherTabSeenTs = 0;
 function _ycMultiTabActive() { return (Date.now() - _ycOtherTabSeenTs) < 15000; }
 function _ycShowMultiTabBanner() {
+  // 【v1.0501】このタブで一度「閉じる」を押したら、ページ移動（ビュー切替＝再読込）を挟んでも再表示しない。
+  //   sessionStorageはタブが開いている間だけ保持され、タブを閉じるとクリアされる → 閉じて再度開いたら再表示OK。
+  try { if (sessionStorage.getItem('ycMultiTabDismissed') === '1') return; } catch (e) {}
   let el = document.getElementById('ycMultiTabBanner');
   if (!el) {
     el = document.createElement('div');
@@ -4582,7 +4585,7 @@ function _ycShowMultiTabBanner() {
     el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99998;background:#b45309;color:#fff;font-size:0.82rem;font-weight:700;text-align:center;padding:7px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.25)';
     el.innerHTML = '⚠ 別のタブ／PCでYcheckが開いています。競合を避けるため<u>1つだけ</u>にするのがおすすめです（このタブは戻るたびに最新へ自動同期します）。<button id="ycMultiTabX" type="button" style="margin-left:10px;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:5px;padding:2px 9px;cursor:pointer;font-weight:700">閉じる</button>';
     document.body.appendChild(el);
-    const x = document.getElementById('ycMultiTabX'); if (x) x.addEventListener('click', () => { el.style.display = 'none'; });
+    const x = document.getElementById('ycMultiTabX'); if (x) x.addEventListener('click', () => { el.style.display = 'none'; try { sessionStorage.setItem('ycMultiTabDismissed', '1'); } catch (e) {} });
   }
   el.style.display = '';
 }
@@ -10226,20 +10229,31 @@ if (tuneCondBtn && tuneCondModal) {
 }
 
 // 【v273】「必要ページ一括オープン」：調整ビューごとに必要な作業ページを新しいタブで一括で開く。
+// 【v1.0502】v1.0483で除外したYcheckの順位ページ(取得データ＝広告順位/SEO順位)を復活。
+//   入札価格調整→広告順位、PRオプ調整→SEO順位のページも一緒に新しいタブで開く。
 const TUNE_OPEN_PAGES = {
-  // 【v1.0483】Ycheckの順位ページ(広告順位/SEO順位)は一括オープン対象から除外。外部ページのみ開く。
-  'ad-tune': [
-    'https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629'
-  ],
-  'pro-tune': [
-    'https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/'
-  ]
+  'ad-tune': {
+    urls: ['https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629'],
+    views: ['ad-rank']    // Ycheckの「広告順位」ページ
+  },
+  'pro-tune': {
+    urls: ['https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/'],
+    views: ['seo-rank']   // Ycheckの「SEO順位」ページ
+  }
 };
 const tuneOpenPagesBtn = $('#tuneOpenPagesBtn');
 if (tuneOpenPagesBtn) {
   tuneOpenPagesBtn.addEventListener('click', () => {
-    const urls = TUNE_OPEN_PAGES[state.currentView] || [];
-    urls.forEach(u => window.open(u, '_blank', 'noopener'));
+    const cfg = TUNE_OPEN_PAGES[state.currentView];
+    if (!cfg) return;
+    // Ycheckの順位ページ（取得データ）を先に開く
+    (cfg.views || []).forEach(v => {
+      const tab = document.querySelector('.nav-tab[data-view="' + v + '"]');
+      const href = tab ? tab.href : (location.pathname + '?view=' + v);
+      window.open(href, '_blank', 'noopener');
+    });
+    // 外部（ストクリ／コマースアドマネージャー）のページを開く
+    (cfg.urls || []).forEach(u => window.open(u, '_blank', 'noopener'));
   });
 }
 
@@ -12938,7 +12952,10 @@ try {
   const others = new Map();       // tabId -> { shopId, ts }
   const EXPIRE_MS = 12000;        // この時間応答が無いタブは閉じたとみなす
   const HEARTBEAT_MS = 4000;
-  let dismissed = false;          // ✕で閉じたら同一競合では再表示しない（リロードで復活）
+  // 【v1.0501】✕で閉じたら、このタブが開いている間は再表示しない（ビュー切替＝再読込を跨いでも保持）。
+  //   sessionStorageはタブを閉じるとクリアされるので、閉じて再度開いたら再表示される。
+  let dismissed = false;
+  try { dismissed = (sessionStorage.getItem('ycTabConflictDismissed') === '1'); } catch (e) {}
 
   const myShop = () => { try { return getCurrentShopId(); } catch (e) { return ''; } };
 
@@ -12980,6 +12997,7 @@ try {
   const closeBtn = document.getElementById('tabConflictClose');
   if (closeBtn) closeBtn.addEventListener('click', () => {
     dismissed = true;
+    try { sessionStorage.setItem('ycTabConflictDismissed', '1'); } catch (e) {}
     const bar = document.getElementById('tabConflictBar');
     if (bar) bar.style.display = 'none';
   });
