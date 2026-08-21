@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0502 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0503 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0502</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0503</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4575,19 +4575,9 @@ let _ycTabId = 'tab-' + Math.random().toString(36).slice(2);
 let _ycOtherTabSeenTs = 0;
 function _ycMultiTabActive() { return (Date.now() - _ycOtherTabSeenTs) < 15000; }
 function _ycShowMultiTabBanner() {
-  // 【v1.0501】このタブで一度「閉じる」を押したら、ページ移動（ビュー切替＝再読込）を挟んでも再表示しない。
-  //   sessionStorageはタブが開いている間だけ保持され、タブを閉じるとクリアされる → 閉じて再度開いたら再表示OK。
-  try { if (sessionStorage.getItem('ycMultiTabDismissed') === '1') return; } catch (e) {}
-  let el = document.getElementById('ycMultiTabBanner');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'ycMultiTabBanner';
-    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99998;background:#b45309;color:#fff;font-size:0.82rem;font-weight:700;text-align:center;padding:7px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.25)';
-    el.innerHTML = '⚠ 別のタブ／PCでYcheckが開いています。競合を避けるため<u>1つだけ</u>にするのがおすすめです（このタブは戻るたびに最新へ自動同期します）。<button id="ycMultiTabX" type="button" style="margin-left:10px;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:5px;padding:2px 9px;cursor:pointer;font-weight:700">閉じる</button>';
-    document.body.appendChild(el);
-    const x = document.getElementById('ycMultiTabX'); if (x) x.addEventListener('click', () => { el.style.display = 'none'; try { sessionStorage.setItem('ycMultiTabDismissed', '1'); } catch (e) {} });
-  }
-  el.style.display = '';
+  // 【v1.0502】別タブ警告は「同じショップ「…」が別のタブでも開かれています」(#tabConflictBar)側に一本化。
+  //   こちらのバナー(ycMultiTabBanner)は文言が二重に出るため表示しない（検知処理は他で未使用のため無効化して問題なし）。
+  return;
 }
 let _ycBc = null;
 try { _ycBc = new BroadcastChannel('ycheck-tabs-' + (typeof getCurrentShopId === 'function' ? getCurrentShopId() : '')); } catch (e) {}
