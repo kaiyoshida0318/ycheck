@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0503 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0504 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0503</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0504</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5671,7 +5671,12 @@ function parseOverall(rows) {
 }
 
 function parseItem(rows) {
-  const agg = {};
+  // 【v1.0504】商品別売上レポートの二重計上を防止。
+  //   Yahoo形式では商品コードごとに「親行(サブコード空欄＝全枝番の合計)」と「枝番(サブコード)行」が両方入る。
+  //   従来は両方を足していたため総売上・注文点数が2倍になっていた（例: si-21-01 総売上12,760が25,520に）。
+  //   → 親行(サブコード空欄)があれば親行のみ採用し、枝番行は加算しない。親行が無ければ枝番行を合計する。
+  //   （サブコード列が無い旧形式CSVでは全行が「親扱い」となり、従来どおり1行=1計上になる。）
+  const buckets = {};   // key(code|month) -> { code, month, parent:{...}, sub:{...} }
   rows.forEach(r => {
     const code = (r['商品コード'] || '').trim();
     if (!code) return;
@@ -5684,13 +5689,18 @@ function parseItem(rows) {
     // 注文点数系のヘッダは除外し、件数系ヘッダのみを対象にする。
     const orders = toNum(r['注文数合計'] || r['注文数'] || r['注文件数'] || r['ご注文件数'] || r['受注件数'] || 0);
     const revenue = toNum(r['売上合計値（税込）'] || r['売上合計値(税込)'] || r['売上合計値'] || r['売上金額'] || r['売上合計'] || r['売上'] || 0);
+    const sub = (r['サブコード'] || r['サブ商品コード'] || '').trim();   // 空欄＝親（商品コード単位の合計行）
     const key = code + '|' + month;
-    if (!agg[key]) agg[key] = { code, month, qty: 0, revenue: 0, orders: 0 };
-    agg[key].qty += qty;
-    agg[key].revenue += revenue;
-    agg[key].orders += orders;
+    if (!buckets[key]) buckets[key] = { code, month, parent: { qty:0, revenue:0, orders:0, n:0 }, sub: { qty:0, revenue:0, orders:0, n:0 } };
+    const b = (sub === '') ? buckets[key].parent : buckets[key].sub;
+    b.qty += qty; b.revenue += revenue; b.orders += orders; b.n++;
   });
-  return Object.values(agg);
+  return Object.values(buckets).map(bk => {
+    // 親行に有効値があれば親行のみ、無ければ枝番合計を採用（＝どちらか一方だけ＝二重計上しない）
+    const useParent = bk.parent.n > 0 && (bk.parent.revenue !== 0 || bk.parent.qty !== 0 || bk.parent.orders !== 0);
+    const src = useParent ? bk.parent : (bk.sub.n > 0 ? bk.sub : bk.parent);
+    return { code: bk.code, month: bk.month, qty: src.qty, revenue: src.revenue, orders: src.orders };
+  });
 }
 
 function parseAd(rows) {
