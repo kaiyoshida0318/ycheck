@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0504 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0506 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0504</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0506</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5798,6 +5798,14 @@ function detectMonthFromRows(rows) {
   }
   return null;
 }
+// 【v1.0505】ファイル名から対象月(YYYY-MM)を推定。商品別売上レポートはCSVに日付列が無いため、
+//   「2025-09.csv」等のファイル名で月を渡せるようにする（zipで複数月を一括取り込みする用途）。
+function monthFromFilename(name) {
+  const s = String(name || '');
+  const m = s.match(/(20\d{2})[-_.\/](0?[1-9]|1[0-2])(?![0-9])/);
+  if (m) return `${m[1]}-${String(m[2]).padStart(2, '0')}`;
+  return null;
+}
 
 function validateBuffer() {
   const buf = state.uploadBuffer;
@@ -5876,14 +5884,29 @@ function validateBuffer() {
     msg.textContent = `❌ 月が一致しません：ショップ売上=${overallMonth} / 広告=${adMonth}（同じ月のファイルにしてください）`;
     btn.disabled = true; return false;
   }
+  // 【v1.0506】商品別売上は単独でも「月が特定できればOK・できなければエラー」にする。
+  //   月の特定順: ファイル名のYYYY-MM → 同バッチのショップ売上/広告の月 → CSV内の日付。どれも無ければ不可。
+  if (hasItem) {
+    const _sharedMonth = overallMonth || adMonth;
+    const _itemFiles = (buf.itemList && buf.itemList.length) ? buf.itemList : (buf.item ? [buf.item] : []);
+    const _unmonthed = _itemFiles.filter(f => !(f.month || _sharedMonth || detectMonthFromRows(f.rows)));
+    if (_unmonthed.length) {
+      box.className = 'validation-box err';
+      msg.textContent = `❌ 商品別売上の対象月が特定できません：${_unmonthed.map(f => f.filename).join('、')}（ファイル名を「2025-01」のように年月がわかる形にするか、同じ月のショップ売上／広告詳細レポートを一緒に入れてください）`;
+      btn.disabled = true; return false;
+    }
+  }
   const present = [];
   if (hasOverall) present.push('ショップ売上');
-  if (hasItem) present.push('商品別売上');
+  // 【v1.0505】商品別売上が複数月ある場合は件数を明示
+  const _itemMs = [...new Set((buf.itemList || []).map(f => f.month).filter(Boolean))].sort();
+  if (hasItem) present.push('商品別売上' + ((buf.itemList && buf.itemList.length > 1) ? `×${buf.itemList.length}` : ''));
   if (hasAd) present.push('広告詳細レポート');
   if (hasMaster) present.push('商品マスタ');
   const _ml = overallMonth || adMonth;
+  const _itemMLabel = _itemMs.length ? (_itemMs.length === 1 ? `${_itemMs[0]}月分` : `${_itemMs.length}ヶ月分：${_itemMs[0]}〜${_itemMs[_itemMs.length - 1]}`) : '';
   box.className = 'validation-box ok';
-  msg.textContent = `✓ ${present.join(' + ')}${_ml ? `（${_ml}月分）` : ''} をアップロード実行できます`;
+  msg.textContent = `✓ ${present.join(' + ')}${_ml ? `（${_ml}月分）` : (_itemMLabel ? `（${_itemMLabel}）` : '')} をアップロード実行できます`;
   btn.disabled = false;
   return true;
 }
@@ -5905,8 +5928,14 @@ async function processFiles(files) {
         state.uploadBuffer.overall = { rows, filename: file.name, month };
         log(`✓ ショップ売上をバッファへ (${rows.length}行, 月=${month || '?'})`, 'ok');
       } else if (kind === 'item') {
-        state.uploadBuffer.item = { rows, filename: file.name };
-        log(`✓ 商品別売上をバッファへ (${rows.length}行)`, 'ok');
+        // 【v1.0505】複数の商品別売上ファイル(zip等)を月ごとに保持。ファイル名から月を推定。
+        const fnMonth = monthFromFilename(file.name);
+        if (!state.uploadBuffer.itemList) state.uploadBuffer.itemList = [];
+        state.uploadBuffer.itemList.push({ rows, filename: file.name, month: fnMonth });
+        state.uploadBuffer.item = { rows, filename: file.name, month: fnMonth };  // 検証UI・従来経路用（最後の1件）
+        log(`✓ 商品別売上をバッファへ (${rows.length}行${fnMonth ? ', 月=' + fnMonth : ', 月=?(ファイル名から不明)'})`, 'ok');
+        // 複数月ある場合はスロット表示をまとめる
+        { const _n = state.uploadBuffer.itemList.length; if (_n > 1) { updateSlot('item', `${_n}ファイル`); continue; } }
       } else if (kind === 'ad') {
         const month = detectMonthFromRows(rows);
         state.uploadBuffer.ad = { rows, filename: file.name, month };
@@ -5947,14 +5976,24 @@ async function commitUpload() {
     state.overall.months.sort((a, b) => a.month.localeCompare(b.month));
     log(`✅ ショップ売上(月次)を反映${targetMonth ? `（${targetMonth}月）` : ''}`, 'ok');
   }
-  if (buf.item) {
-    // 月が特定できればその月に統一（従来挙動）。特定できなければCSVの各行の月をそのまま使う。
-    let itemParsed = parseItem(buf.item.rows);
-    if (targetMonth) itemParsed = itemParsed.map(r => ({ ...r, month: targetMonth }));
+  // 【v1.0505】商品別売上を複数月まとめて取り込み可能に。
+  //   zip等で複数の item_report を入れた場合、各ファイルを個別の月へ取り込む（従来は最後の1件だけ＝上書きで消えていた）。
+  //   月の決定順: ファイル名のYYYY-MM → 同バッチのショップ売上/広告の月(targetMonth) → CSV内の日付。
+  const _itemFiles = (buf.itemList && buf.itemList.length) ? buf.itemList : (buf.item ? [buf.item] : []);
+  if (_itemFiles.length) {
     if (!state.item) state.item = [];
-    const _ims = new Set(itemParsed.map(r => r.month));
-    state.item = state.item.filter(r => !_ims.has(r.month)).concat(itemParsed);
-    log(`✅ 商品別売上(月次)を反映（${itemParsed.length}行）`, 'ok');
+    let _totRows = 0; const _months = [];
+    _itemFiles.forEach(f => {
+      const mth = f.month || targetMonth || detectMonthFromRows(f.rows) || '';
+      // 【v1.0506】対象月が特定できない商品別売上は取り込まない（空欄月への誤取り込み防止）。
+      if (!mth) { log(`⚠ 対象月が特定できないため商品別売上をスキップ: ${f.filename || '(名前不明)'}`, 'err'); return; }
+      const parsed = parseItem(f.rows).map(r => ({ ...r, month: mth }));
+      const _ims = new Set([mth]);
+      state.item = state.item.filter(r => !_ims.has(r.month)).concat(parsed);
+      _totRows += parsed.length; _months.push(mth);
+    });
+    const _uniqM = [...new Set(_months)].sort();
+    log(`✅ 商品別売上(月次)を反映（${_itemFiles.length}ファイル / ${_uniqM.length ? _uniqM.join('・') : '月不明'} / 計${_totRows}行）`, 'ok');
   }
   if (buf.ad) {
     const _am = (buf.ad && buf.ad.month) || targetMonth;
@@ -10315,7 +10354,7 @@ function openUploadModal(mode) {
       if (titleEl) titleEl.textContent = '📂 レポートを追加（月次）';
       if (hintEl) hintEl.textContent = 'ショップ売上・商品別売上・広告詳細レポートを1つ以上アップロードできます（CSVまたはZIP）';
     }
-    state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
+    state.uploadBuffer = { overall: null, item: null, itemList: [], ad: null, bid: null, proRate: null, master: null };
     ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
     const logArea = $('#logArea');
     if (logArea) {
