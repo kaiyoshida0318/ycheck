@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0508 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0510 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0508</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0510</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7946,7 +7946,7 @@ function _zdSeoChgStyle(cur, prev){
   if(pct<=-10) return { col:'#BA7517', tag:'▼'+Math.abs(r)+'%' };
   return { col:'#1a1a1a', tag:(r>=0?'+':'')+r+'%' };
 }
-function _zdSeoImgErr(el){ try{ el.outerHTML='<div style="width:66px;height:66px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)">画像</div>'; }catch(e){} }
+function _zdSeoImgErr(el){ try{ el.outerHTML='<div style="width:96px;height:96px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">画像</div>'; }catch(e){} }
 window._zdSeoImgErr=_zdSeoImgErr;
 function _zdSeoOpenGraph(code){
   try{
@@ -7974,15 +7974,15 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount){
       const m=getMaster(x.code)||{}; const name=m.name||x.code;
       const img=(typeof getProductImageSrc==='function')?(getProductImageSrc(x.code)||''):'';
       const imgEl=img
-        ? '<img loading="lazy" src="'+esc(img)+'" onerror="_zdSeoImgErr(this)" style="width:66px;height:66px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">'
-        : '<div style="width:66px;height:66px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)">画像</div>';
+        ? '<img loading="lazy" src="'+esc(img)+'" onerror="_zdSeoImgErr(this)" style="width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">'
+        : '<div style="width:96px;height:96px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">画像</div>';
       const prevSeo=prevMap[x.code]||0;
       const cs=_zdSeoChgStyle(x.seo, prevSeo);
-      const tagHtml=cs.tag?'<div style="font-size:9px;font-weight:700;color:'+cs.col+';line-height:1;margin-top:1px">'+cs.tag+'</div>':'';
-      return '<div title="'+esc(name)+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:66px;flex:0 0 auto;text-align:center;position:relative">'
-        +'<div style="position:absolute;top:-6px;left:-6px;min-width:18px;height:18px;padding:0 3px;box-sizing:border-box;border-radius:9px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.25)">'+(i+1)+'</div>'
+      const tagHtml=cs.tag?'<div style="font-size:12px;font-weight:700;color:'+cs.col+';line-height:1.05;margin-top:2px">'+cs.tag+'</div>':'';
+      return '<div title="'+esc(name)+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:96px;flex:0 0 auto;text-align:center;position:relative">'
+        +'<div style="position:absolute;top:-6px;left:-6px;min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border-radius:11px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.25)">'+(i+1)+'</div>'
         +imgEl
-        +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:11px;color:'+cs.col+';margin-top:4px;line-height:1.15">'+fY(x.seo)+'</div>'
+        +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:15px;color:'+cs.col+';margin-top:6px;line-height:1.2">'+fY(x.seo)+'</div>'
         +tagHtml
         +'</div>';
     }).join('');
@@ -7992,10 +7992,10 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount){
       +'<span style="color:#1565C0;font-weight:700">+20%↑</span> <span style="color:#2E7D32;font-weight:700">+10%↑</span> '
       +'<span style="color:#1a1a1a;font-weight:700">中間</span> <span style="color:#BA7517;font-weight:700">-10%↓</span> '
       +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）</span></div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">'+items+'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">'+items+'</div>'
       +'</div>';
   }
-  return '<tr class="zd-seo-row" data-ym="'+ym+'"><td colspan="'+colCount+'" style="background:#eef4fb;border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
+  return '<tr class="zd-seo-row" data-ym="'+ym+'"><td colspan="'+colCount+'" style="background:#fff;border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
 }
 function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
