@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0510 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0511 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -422,6 +422,12 @@ body {
 body.chrome-hidden .header,
 body.chrome-hidden .top-nav:not(.top-nav-3) { display: none; }
 body.chrome-hidden .top-nav-3 { top: 0; }
+/* 【v1.0511】ヘッダーを隠したら【ステータス】【入札状態】【PR状態】ブロックのボタンも全部隠し、
+   「ヘッダーを表示」ボタンだけを右端(位置そのまま)に残す。各ページのツールバーは従来どおり表示。 */
+body.chrome-hidden .top-nav-3 .nav-group-status > *:not(#btnToggleChrome) { display: none; }
+body.chrome-hidden .top-nav-3 .nav-row-states { display: none; }
+body.chrome-hidden .top-nav-3 { border-bottom: none; padding-top: 4px; padding-bottom: 4px; }
+body.chrome-hidden .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -2851,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0510</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0511</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7927,7 +7933,10 @@ function _zdSeoByMonth(){
     const ym=r.month; if(!ym) return;
     const seo=Math.max(0,(+r.rev||0)-(+r.adRev||0));
     if(seo<=0) return;
-    (map[ym]||(map[ym]={}))[r.code]=seo;
+    // 【v1.0511】親子商品は代表コード(repCode)へ合算して1商品として集計。
+    const rep=((state.productMeta[r.code]||{}).repCode||'').trim()||r.code;
+    const mm=(map[ym]||(map[ym]={}));
+    mm[rep]=(mm[rep]||0)+seo;
   });
   return map;
 }
