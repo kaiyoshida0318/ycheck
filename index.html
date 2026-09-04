@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0516 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0518 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2857,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0516</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0518</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7054,13 +7054,17 @@ function renderBasic() {
   // 【撤退検討▲】ステータスチップ pro-wc のときは専用レイアウトに切替
   const _wcLayoutTypes = ['pro-wc', 'status-kenzen-noad', 'status-churitsu-noad'];
   const _isWc = !!(state.activeStateFilter && _wcLayoutTypes.indexOf(state.activeStateFilter.type) >= 0);
+  // 【v1.0517】健常/中立の「広告あり◯／広告なし◯□」チップで絞り込み中は、広告フィルタ(全体/広告あり/広告なし)ボタンを隠す。
+  //   これらのチップ自体が既に広告あり/なしを絞っているため、重複するボタンは出さない。
+  const _statusAdTypes = ['status-kenzen-ad', 'status-kenzen-noad', 'status-churitsu-ad', 'status-churitsu-noad'];
+  const _hideAdBar = !!(state.activeStateFilter && _statusAdTypes.indexOf(state.activeStateFilter.type) >= 0);
   { const _tbl=document.getElementById('tableBasic'), _wc=document.getElementById('basicWcWrap'),
         _mw=document.getElementById('basicMonthWrap'), _ad=document.getElementById('basicAdFilterBar');
     if (_isWc) {
       if (_tbl) _tbl.style.display='none'; if (_wc) _wc.style.display=''; if (_mw) _mw.style.display='none'; if (_ad) _ad.style.display='none';
       renderWithdrawConsider(); return;
     } else {
-      if (_tbl) _tbl.style.display=''; if (_wc) _wc.style.display='none'; if (_mw) _mw.style.display=''; if (_ad) _ad.style.display='';
+      if (_tbl) _tbl.style.display=''; if (_wc) _wc.style.display='none'; if (_mw) _mw.style.display=''; if (_ad) _ad.style.display = _hideAdBar ? 'none' : '';
     }
   }
   const months = getAvailableMonths();
@@ -7133,7 +7137,7 @@ function renderBasic() {
   //   広告なし = ステータスが「…広告なし…」（健常-広告なし◯ / 中立-広告なし□）。
   //   ※撤退系・新商品・選択前など、あり/なしが付かないステータスはどちらにも出さない（全体でのみ表示）。
   //   検索中は必ずバイパス（＝検索結果を優先して全件表示）。
-  if (!q && basicAdFilter !== 'all') {
+  if (!q && basicAdFilter !== 'all' && !_hideAdBar) {
     list = list.filter(r => {
       const st = (state.productMeta[r.code] || {}).status || '';
       if (_editPinnedCodes.has(r.code)) return true;
@@ -11019,6 +11023,8 @@ document.addEventListener('change', (e) => {
   saveToStorage();
   // 【v1.0437】親のステータスを変えたら、追従中の子へ伝播して全再描画（子の表示も一緒に更新）
   if (kind === 'status' && statusLinkedChildrenOf(code).length) {
+    // 【v1.0518】連動する子もピンして、再描画でその場から消えないようにする（更新/別ボタンで初めて消える）。
+    statusLinkedChildrenOf(code).forEach(cc => pinEditedCode(cc));
     syncLinkedChildrenStatus();
     saveToStorage();
     renderAll();
