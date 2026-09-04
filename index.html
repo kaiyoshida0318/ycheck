@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0515 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0516 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2857,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0515</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0516</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7128,17 +7128,16 @@ function renderBasic() {
       return hay.includes(q);
     });
   }
-  // 【v1.0322/v1.0323/v1.0515】広告あり商品/なし商品 絞り込み。検索中は必ずバイパス（＝検索結果を優先して全件表示）。
-  //   広告あり = 入札状態が「入札○」「入札×」「入札△-飛ぶ手前固定」のいずれか、または入札価格が入っている（入札なしは除く）。
-  //   広告なし = 入札なし／選択前で入札価格も無い商品。
+  // 【v1.0516】広告あり商品/なし商品 絞り込みは「ステータス」列で判定する。
+  //   広告あり = ステータスが「…広告あり…」（健常-広告あり◯ / 中立-広告あり□）。
+  //   広告なし = ステータスが「…広告なし…」（健常-広告なし◯ / 中立-広告なし□）。
+  //   ※撤退系・新商品・選択前など、あり/なしが付かないステータスはどちらにも出さない（全体でのみ表示）。
+  //   検索中は必ずバイパス（＝検索結果を優先して全件表示）。
   if (!q && basicAdFilter !== 'all') {
     list = list.filter(r => {
-      const a = (state.productMeta[r.code] || {}).adStatus || '';
-      const _bid = state.bid ? (state.bid[r.code] != null ? state.bid[r.code] : state.bid[String(r.code).toLowerCase()]) : null;
-      const _hasBid = _bid != null && Number(_bid) > 0;
-      const hasAd = adStatusIsCircle(a) || adStatusIsCross(a) || adStatusIsSettled(a) || (_hasBid && !adStatusIsNone(a));
+      const st = (state.productMeta[r.code] || {}).status || '';
       if (_editPinnedCodes.has(r.code)) return true;
-      return basicAdFilter === 'ad' ? hasAd : !hasAd;
+      return basicAdFilter === 'ad' ? (st.indexOf('広告あり') !== -1) : (st.indexOf('広告なし') !== -1);
     });
   }
   { const _b = $('#basicAdFilterBar'); if (_b) _b.classList.toggle('search-bypass', !!q); }
