@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0513 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0514 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2857,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0513</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0514</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10847,6 +10847,7 @@ function _wireAdFilter(barId, setFilter, rerender) {
     if (!btn || !bar.contains(btn)) return;
     const v = btn.getAttribute('data-adf') || 'all';
     Array.prototype.forEach.call(bar.querySelectorAll('.adf-btn'), b => b.classList.toggle('on', b === btn));
+    if (typeof clearEditPins === 'function') clearEditPins();   // 【v1.0514】広告フィルタ切替は再絞り込み＝編集ピン解除（編集済みの広告あり商品が広告なしに残る不具合の修正）
     setFilter(v);
     rerender();
   });
