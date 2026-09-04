@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0511 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0512 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 72px;  /* v97: ロゴサイズ拡大に合わせてヘッダーも少し高く */
+  min-height: 72px;  /* 【v1.0512】固定height→min-heightに。拡大時に内容が折り返しても潰れず、重なりを防ぐ（stickyのtopはJSで実高さから再計算） */
 }
 /* 【v103】ロゴとショップセレクタを左端に固定するラッパー */
 .header-left {
@@ -2857,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0511</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0512</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4044,11 +4044,34 @@ const toNum = (v) => {
 const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // ==================== Font Size ====================
+// 【v1.0512】ヘッダー＋各ナビ段のsticky位置を、実際の高さから動的に再計算して重なりを防ぐ。
+//   固定px(top:64px 等)は拡大(font-scale>1)で段の高さと合わず重なるため、JSで積み上げる。
+function _recalcStickyTops() {
+  try {
+    const header = document.querySelector('.header');
+    const n1 = document.querySelector('.top-nav:not(.top-nav-2):not(.top-nav-3)');
+    const n2 = document.querySelector('.top-nav-2');
+    const n3 = document.querySelector('.top-nav-3');
+    const vis = el => !!(el && getComputedStyle(el).display !== 'none' && el.offsetParent !== null);
+    let t = 0;
+    if (vis(header)) t += header.getBoundingClientRect().height;
+    if (n1) { n1.style.top = t + 'px'; if (vis(n1)) t += n1.getBoundingClientRect().height; }
+    if (n2) { n2.style.top = t + 'px'; if (vis(n2)) t += n2.getBoundingClientRect().height; }
+    if (n3) { n3.style.top = t + 'px'; }
+  } catch (e) {}
+}
+window._recalcStickyTops = _recalcStickyTops;
+window.addEventListener('resize', () => _recalcStickyTops());
+window.addEventListener('load', () => { _recalcStickyTops(); setTimeout(_recalcStickyTops, 300); });
+if (document.readyState !== 'loading') requestAnimationFrame(_recalcStickyTops);
+else document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(_recalcStickyTops));
 function setFontScale(scale) {
+  scale = Math.round(scale * 100) / 100;   // 【v1.0512】浮動小数の誤差を丸め（2刻み対応）
   state.fontScale = Math.max(0.7, Math.min(1.5, scale));
   document.documentElement.style.setProperty('--font-scale', state.fontScale);
   $('#fontLabel').textContent = Math.round(state.fontScale * 100) + '%';
   Object.values(state.charts).forEach(c => c && c.resize && c.resize());
+  requestAnimationFrame(_recalcStickyTops);   // レイアウト確定後に段の位置を再計算
 }
 
 // ==================== Logging ====================
@@ -10511,8 +10534,8 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ==================== Events ====================
-$('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.1));
-$('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.1));
+$('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.02));  // 【v1.0512】2%刻み
+$('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.02));    // 【v1.0512】2%刻み
 
 // 【v305/v1.0320】取得元URL(レポート追加・最新値を更新モーダル内)は必ず新しいタブで開き、
 //   現在のYcheckページは絶対に遷移させない。さらに【v1.0320】は「背面タブ」で開き、
@@ -12581,6 +12604,7 @@ if (btnToggleChrome) {
   btnToggleChrome.addEventListener('click', () => {
     const hidden = document.body.classList.toggle('chrome-hidden');
     btnToggleChrome.textContent = hidden ? '🔽 ヘッダーを表示' : '🔼 ヘッダーを隠す';
+    if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
     // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
     if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
   });
