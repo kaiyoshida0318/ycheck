@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0512 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0513 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2857,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0512</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0513</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4059,7 +4059,21 @@ function _recalcStickyTops() {
     if (n2) { n2.style.top = t + 'px'; if (vis(n2)) t += n2.getBoundingClientRect().height; }
     if (n3) { n3.style.top = t + 'px'; }
   } catch (e) {}
+  _zdFitTableHeight();
 }
+// 【v1.0513】全-月別データの表を画面の一番下まで伸ばす（ヘッダー隠し時に下が白く余るのを防ぐ）。
+function _zdFitTableHeight() {
+  try {
+    const wrap = document.getElementById('zdTableWrap');
+    if (!wrap) return;
+    const view = document.getElementById('view-graphdata');
+    if (!view || !view.classList.contains('active')) return;
+    const top = wrap.getBoundingClientRect().top;
+    const h = Math.max(200, Math.floor(window.innerHeight - top - 12));
+    wrap.style.maxHeight = h + 'px';
+  } catch (e) {}
+}
+window._zdFitTableHeight = _zdFitTableHeight;
 window._recalcStickyTops = _recalcStickyTops;
 window.addEventListener('resize', () => _recalcStickyTops());
 window.addEventListener('load', () => { _recalcStickyTops(); setTimeout(_recalcStickyTops, 300); });
@@ -8066,6 +8080,7 @@ function renderGraphData() {
     return _rowHtml;
   }).join('');
   wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+  requestAnimationFrame(_zdFitTableHeight);   // 【v1.0513】描画後に表の高さを画面下端まで合わせる
 }
 
 // ---------- 全-月別グラフ（商品-月別グラフ準拠：月別・指標切替・期間プリセット） ----------
