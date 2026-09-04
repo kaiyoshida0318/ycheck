@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0507 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0508 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0507</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0508</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3250,6 +3250,12 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <span class="filter-label">表示</span>
           <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
           <button type="button" class="ig-preset-btn zd-mode-btn" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
+          <!-- 【v1.0508】各月の直後にSEO売上トップ15のサムネ帯を差し込むトグル -->
+          <span style="margin-left:14px;display:inline-flex;gap:4px;align-items:center">
+            <span class="filter-label">SEO売上トップ15</span>
+            <button type="button" id="zdSeoOn" onclick="_zdSetSeoShow(true)">表示あり</button>
+            <button type="button" id="zdSeoOff" onclick="_zdSetSeoShow(false)">表示なし</button>
+          </span>
           <span style="margin-left:10px;font-size:12px;color:var(--text3)">色分け: <b class="c-g1">上位</b>〜<b class="c-r">下位</b>（最新月は評価対象外）</span>
         </div>
         <div id="zdTableWrap" class="table-wrap" style="overflow:auto;max-height:70vh"></div>
@@ -7902,8 +7908,100 @@ function _zenYoyOrder(rowsDesc) {
 let _zdMode = 'normal';
 function _zdSetMode(m) { _zdMode = m; document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-zdm') === m)); renderGraphData(); }
 window._zdSetMode = _zdSetMode;
+// ==================== 【v1.0508】全-月別データ：SEO売上トップ15パネル ====================
+let _zdSeoShow = false;
+function _zdSetSeoShowUI(){
+  const base='font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;';
+  const on='border:1px solid #1565C0;background:#1565C0;color:#fff;';
+  const off='border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
+  const a=document.getElementById('zdSeoOn'), c=document.getElementById('zdSeoOff');
+  if(a) a.style.cssText=base+(_zdSeoShow?on:off);
+  if(c) c.style.cssText=base+(!_zdSeoShow?on:off);
+}
+function _zdSetSeoShow(b){ _zdSeoShow=!!b; _zdSetSeoShowUI(); renderGraphData(); }
+window._zdSetSeoShow=_zdSetSeoShow;
+// 商品×月のSEO売上（=max(0,総売上−広告売上)）を {ym:{code:seo}} で返す（正の分だけ）
+function _zdSeoByMonth(){
+  const map={};
+  (buildFullAggregate()||[]).forEach(function(r){
+    const ym=r.month; if(!ym) return;
+    const seo=Math.max(0,(+r.rev||0)-(+r.adRev||0));
+    if(seo<=0) return;
+    (map[ym]||(map[ym]={}))[r.code]=seo;
+  });
+  return map;
+}
+function _zdSeoTop(seoByMonth, ym){
+  const m=seoByMonth[ym]||{};
+  return Object.keys(m).map(function(code){return {code:code, seo:m[code]};})
+    .sort(function(a,b){return b.seo-a.seo;}).slice(0,15);
+}
+// 前月比の色・タグ（+20%↑青/+10%↑緑/中間黒/-10%↓茶/-20%↓赤/前月0=新グレー）
+function _zdSeoChgStyle(cur, prev){
+  if(!(prev>0)) return { col:'#64748b', tag:(cur>0)?'新':'' };
+  const pct=(cur-prev)/prev*100, r=Math.round(pct);
+  if(pct>=20)  return { col:'#1565C0', tag:'▲'+r+'%' };
+  if(pct>=10)  return { col:'#2E7D32', tag:'▲'+r+'%' };
+  if(pct<=-20) return { col:'#A32D2D', tag:'▼'+Math.abs(r)+'%' };
+  if(pct<=-10) return { col:'#BA7517', tag:'▼'+Math.abs(r)+'%' };
+  return { col:'#1a1a1a', tag:(r>=0?'+':'')+r+'%' };
+}
+function _zdSeoImgErr(el){ try{ el.outerHTML='<div style="width:66px;height:66px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)">画像</div>'; }catch(e){} }
+window._zdSeoImgErr=_zdSeoImgErr;
+function _zdSeoOpenGraph(code){
+  try{
+    const rep=((state.productMeta[code]||{}).repCode||'').trim()||code;
+    const fam=(typeof _igFamilies==='function')?_igFamilies():{};
+    const key=(fam[rep])?rep:((fam[code])?code:rep);
+    if(typeof switchToView==='function') switchToView('itemgraph');
+    if(typeof _igSelect==='function') _igSelect(key);
+  }catch(e){}
+}
+window._zdSeoOpenGraph=_zdSeoOpenGraph;
+function _zdSeoPanelHtml(seoByMonth, ym, colCount){
+  const top=_zdSeoTop(seoByMonth, ym);
+  const yy=ym.slice(0,4), mm=ym.slice(5,7);
+  let _py=+yy, _pm=+mm-1; if(_pm<1){_pm=12;_py--;}
+  const prevYm=_py+'-'+String(_pm).padStart(2,'0');
+  const prevMap=seoByMonth[prevYm]||{};
+  const esc=function(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
+  const fY=function(v){return '¥'+Math.round(v).toLocaleString('ja-JP');};
+  let inner;
+  if(!top.length){
+    inner='<div style="padding:10px 12px;color:var(--text3);font-size:12px">この月はSEO売上のある商品がありません</div>';
+  } else {
+    const items=top.map(function(x,i){
+      const m=getMaster(x.code)||{}; const name=m.name||x.code;
+      const img=(typeof getProductImageSrc==='function')?(getProductImageSrc(x.code)||''):'';
+      const imgEl=img
+        ? '<img loading="lazy" src="'+esc(img)+'" onerror="_zdSeoImgErr(this)" style="width:66px;height:66px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">'
+        : '<div style="width:66px;height:66px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)">画像</div>';
+      const prevSeo=prevMap[x.code]||0;
+      const cs=_zdSeoChgStyle(x.seo, prevSeo);
+      const tagHtml=cs.tag?'<div style="font-size:9px;font-weight:700;color:'+cs.col+';line-height:1;margin-top:1px">'+cs.tag+'</div>':'';
+      return '<div title="'+esc(name)+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:66px;flex:0 0 auto;text-align:center;position:relative">'
+        +'<div style="position:absolute;top:-6px;left:-6px;min-width:18px;height:18px;padding:0 3px;box-sizing:border-box;border-radius:9px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.25)">'+(i+1)+'</div>'
+        +imgEl
+        +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:11px;color:'+cs.col+';margin-top:4px;line-height:1.15">'+fY(x.seo)+'</div>'
+        +tagHtml
+        +'</div>';
+    }).join('');
+    inner='<div style="padding:10px 12px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:9px">◎ '+yy+'/'+mm+' SEO売上トップ15商品　'
+      +'<span style="font-weight:400;color:var(--text3)">（数字の色＝前月比：'
+      +'<span style="color:#1565C0;font-weight:700">+20%↑</span> <span style="color:#2E7D32;font-weight:700">+10%↑</span> '
+      +'<span style="color:#1a1a1a;font-weight:700">中間</span> <span style="color:#BA7517;font-weight:700">-10%↓</span> '
+      +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）</span></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">'+items+'</div>'
+      +'</div>';
+  }
+  return '<tr class="zd-seo-row" data-ym="'+ym+'"><td colspan="'+colCount+'" style="background:#eef4fb;border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
+}
 function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
+  _zdSetSeoShowUI();
+  const _seoByM = _zdSeoShow ? _zdSeoByMonth() : null;
+  const _zdColCount = 1 + MI_COLS.length + 1;   // 月 + 指標列 + 送り込み売上
   const asc = _zenMonthlyRows();
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
   const pool = {}; MI_COLS.forEach(c => { pool[c.key] = asc.slice(0, -1).map(r => r[c.key]).filter(v => v > 0); });
@@ -7930,7 +8028,10 @@ function renderGraphData() {
     const sv = r.soikomi; const sdisp = fmtY(sv);
     const sinner = (!sv || sv === 0 || _unmatured) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
     const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
-    return '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + soiCell + '</tr>';
+    let _rowHtml = '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + soiCell + '</tr>';
+    // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
+    if (_zdSeoShow && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount);
+    return _rowHtml;
   }).join('');
   wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
