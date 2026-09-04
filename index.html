@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0506 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0507 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2851,7 +2851,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0506</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0507</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9499,6 +9499,15 @@ function cmpSroasCat(v){ if(!(v>0)) return 'n'; if(v>=300) return 'g'; if(v>=100
 const CMP_YOYCOL = { blue:'#2563eb', green:'#16a34a', yellow:'#ca8a04', red:'#dc2626' };
 function cmpYoyCat(cur, prev){ if(cur<=0||prev<=0) return null; if(cur>=prev*1.2) return 'blue'; if(cur>prev) return 'green'; if(cur===prev) return null; if(cur>=prev*0.8) return 'yellow'; return 'red'; }
 function cmpLatestColor(p){ const n=p.v.length; return (n>=2)?cmpYoyCat(p.v[n-1].s, p.v[n-2].s):null; }
+// 【v1.0507】金額の真下に前期比％を中央揃えで併記（青/緑/黄/赤）。最左列・増減なし・比較不能(0以下)は出さない。
+function cmpCellWithPct(numHtml, cat, cur, prev){
+  if(cat && prev>0){
+    const pct=Math.round(cur/prev*100);
+    return '<div style="display:inline-block;text-align:center">'+numHtml
+      +'<div style="font-size:9px;line-height:1.05;margin-top:1px;color:'+CMP_YOYCOL[cat]+';font-weight:700">'+pct+'％</div></div>';
+  }
+  return numHtml;
+}
 function cmpYmAdd(ym, d){ let y=+ym.slice(0,4), m=+ym.slice(4,6)-1+d; y+=Math.floor(m/12); m=((m%12)+12)%12; return String(y)+String(m+1).padStart(2,'0'); }
 // Ycheck の state から 月×商品 に集計（ym は 'YYYYMM'）
 // 【v303】代表商品コード(repCode)がある親子商品は、代表コードに各項目を合算して1行にまとめる。
@@ -9640,10 +9649,10 @@ function renderCompare(){
       const ps=(k>0)?(p.v[k-1].s||0):0;
       let salesCell;
       if(vv.s<=0){ salesCell=fmt(vv.s); }
-      else { const _cat=(k>0)?cmpYoyCat(vv.s, ps):null; salesCell=_cat?('<span style="color:'+CMP_YOYCOL[_cat]+';font-weight:700">'+yen(vv.s)+'</span>'):yen(vv.s); }
+      else { const _cat=(k>0)?cmpYoyCat(vv.s, ps):null; const _num=_cat?('<span style="color:'+CMP_YOYCOL[_cat]+';font-weight:700">'+yen(vv.s)+'</span>'):yen(vv.s); salesCell=cmpCellWithPct(_num, _cat, vv.s, ps); }
       const psSeo=(k>0)?(p.v[k-1].seo||0):0; let seoCell;
       if(vv.seo<=0){ seoCell=fmt(vv.seo); }
-      else { const _c2=(k>0)?cmpYoyCat(vv.seo, psSeo):null; seoCell=_c2?('<span style="color:'+CMP_YOYCOL[_c2]+';font-weight:700">'+yen(vv.seo)+'</span>'):yen(vv.seo); }
+      else { const _c2=(k>0)?cmpYoyCat(vv.seo, psSeo):null; const _num2=_c2?('<span style="color:'+CMP_YOYCOL[_c2]+';font-weight:700">'+yen(vv.seo)+'</span>'):yen(vv.seo); seoCell=cmpCellWithPct(_num2, _c2, vv.seo, psSeo); }
       const im=p.img?'<img src="'+esc(p.img)+'" style="width:'+S.imgSz+'px;height:'+S.imgSz+'px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">':'<div style="width:'+S.imgSz+'px;height:'+S.imgSz+'px;background:var(--surface2);border-radius:4px"></div>';
       const foc=(cmpFocus===p.code);
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
