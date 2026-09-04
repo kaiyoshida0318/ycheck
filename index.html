@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Ycheck v1.0518 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0519 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2857,7 +2857,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
     </div>
   </div>
   <div class="header-tools">
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0518</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0519</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7060,11 +7060,18 @@ function renderBasic() {
   const _hideAdBar = !!(state.activeStateFilter && _statusAdTypes.indexOf(state.activeStateFilter.type) >= 0);
   { const _tbl=document.getElementById('tableBasic'), _wc=document.getElementById('basicWcWrap'),
         _mw=document.getElementById('basicMonthWrap'), _ad=document.getElementById('basicAdFilterBar');
+    const _outerWrap = _tbl ? _tbl.closest('.table-wrap') : null;   // 通常テーブルの外枠(.table-wrap)
     if (_isWc) {
-      if (_tbl) _tbl.style.display='none'; if (_wc) _wc.style.display=''; if (_mw) _mw.style.display='none'; if (_ad) _ad.style.display='none';
+      // 【v1.0519】WCレイアウト時は空の外枠を隠し、WCラッパー自体をflexで高さいっぱいに広げて内部スクロールさせる
+      //   （従来は外枠がflex領域を占有＋WCラッパーが非flexで、表が下までスクロールできなかった）。
+      if (_outerWrap) _outerWrap.style.display='none'; else if (_tbl) _tbl.style.display='none';
+      if (_wc) { _wc.style.display='flex'; _wc.style.flexDirection='column'; _wc.style.flex='1'; _wc.style.minHeight='0'; }
+      if (_mw) _mw.style.display='none'; if (_ad) _ad.style.display='none';
       renderWithdrawConsider(); return;
     } else {
-      if (_tbl) _tbl.style.display=''; if (_wc) _wc.style.display='none'; if (_mw) _mw.style.display=''; if (_ad) _ad.style.display = _hideAdBar ? 'none' : '';
+      if (_outerWrap) _outerWrap.style.display=''; if (_tbl) _tbl.style.display='';
+      if (_wc) _wc.style.display='none';
+      if (_mw) _mw.style.display=''; if (_ad) _ad.style.display = _hideAdBar ? 'none' : '';
     }
   }
   const months = getAvailableMonths();
