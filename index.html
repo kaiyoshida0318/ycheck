@@ -3025,6 +3025,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             </span>
           </span>
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
+          <!-- 【v1.0521】この画面の列を全商品×全月でCSV出力（右端配置） -->
+          <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="ドロップダウンで選択中の月の全商品を、この画面の列（商品コード・商品名・メインKW・総売上・SEO売上・PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス）でCSV出力します">⬇ この月の商品基本データCSV</button>
         </div>
         <div class="table-wrap">
           <table id="tableBasic" class="data-grid">
@@ -10887,6 +10889,7 @@ function _wireAdFilter(barId, setFilter, rerender) {
 _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic);
 _wireAdFilter('monthlyAdFilterBar', (v) => { monthlyAdFilter = v; }, renderMonthly);
 if ($('#btnDownloadBasicCsv')) $('#btnDownloadBasicCsv').addEventListener('click', downloadBasicCsv);
+if ($('#btnDownloadBasicAllCsv')) $('#btnDownloadBasicAllCsv').addEventListener('click', downloadBasicAllCsv);   // 【v1.0521】月別全件CSV
 // 【v168】「📥 商品コード+KW CSV」ボタン: 既存のdownloadBasicCsvと同じCSV(code,keyword)を出力。
 // 機能は完全に同じだが、ユーザーから見て「順位取得用」と「単純なKW一覧」を別UIとして提供したい意図のためボタンを分離。
 /* 【v1.0318】商品コード+KW CSVボタン撤去に伴いリスナーも削除（downloadBasicCsvは順位取得CSVボタンで使用継続） */
@@ -12341,6 +12344,95 @@ function triggerTextDownload(text, filename) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// 【v1.0521】商品-基本データ画面の列を「全商品×全月」でCSV出力する。
+//   検索/広告フィルタ/送り込み絞り込みには依存せず、撤退済み以外の全データを月ごとに出す。
+//   列は画面（tableBasic）と同じ内容：月・商品コード・画像URL・商品名・メインKW・総売上・SEO売上・
+//   PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス。
+//   売上系（総売上/SEO売上/広告売上/実績額/広告ROAS）は月ごとの実数、
+//   料率・各状態・入札価格・ステータスは商品ごとの現在設定（全月で同じ値）を出力する。
+function downloadBasicAllCsv() {
+  try {
+    // 【v1.0521】ドロップダウンで選択中の月だけを出力する（例: 2026-09 なら9月ページの内容を1ファイルで）。
+    const sel = document.getElementById('basicMonth');
+    const targetMonth = sel ? sel.value : '';
+    if (!targetMonth) {
+      if (typeof showToast === 'function') showToast('出力する月が選択されていません。', 'warn');
+      else alert('出力する月が選択されていません。');
+      return;
+    }
+    const agg = (typeof buildFullAggregate === 'function') ? (buildFullAggregate() || []) : [];
+    const pinned = (typeof _editPinnedCodes !== 'undefined' && _editPinnedCodes && _editPinnedCodes.has) ? _editPinnedCodes : null;
+    const isRet = function (code) { return (typeof isRetired === 'function' && isRetired(code) && !(pinned && pinned.has(code))); };
+    // 選択月の集計行をコード→行でまとめる
+    const rowByCode = {};
+    agg.forEach(function (r) {
+      if (!r || r.month !== targetMonth || !r.code) return;
+      if (isRet(r.code)) return;
+      rowByCode[r.code] = r;
+    });
+    // 画面と同じく master 登録商品も網羅（その月にデータが無ければ0行）
+    const codeSet = {};
+    Object.keys(rowByCode).forEach(function (c) { codeSet[c] = 1; });
+    Object.keys(state.master || {}).forEach(function (c) { if (!isRet(c)) codeSet[c] = 1; });
+    const codes = Object.keys(codeSet);
+    if (!codes.length) {
+      if (typeof showToast === 'function') showToast(targetMonth + ' に出力できる商品がありません。', 'warn');
+      else alert(targetMonth + ' に出力できる商品がありません。');
+      return;
+    }
+    const esc = function (v) {
+      let s = (v == null) ? '' : String(v);
+      if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+    const num = function (n) { return (n == null || isNaN(n)) ? '' : String(Math.round(n)); };
+    const statusDisp = function (code) {
+      const p = (typeof statusParentCode === 'function') ? statusParentCode(code) : null;
+      const src = p || code;
+      const meta = (state.productMeta && state.productMeta[src]) || {};
+      const v = meta.status || '新商品';
+      return (typeof statusLifeDisplayValue === 'function') ? statusLifeDisplayValue(v) : v;
+    };
+    const imgUrl = function (code) {
+      const s = (typeof getProductImageSrc === 'function') ? getProductImageSrc(code) : '';
+      if (!s) return '';
+      return (String(s).slice(0, 5) === 'data:') ? '(カスタム画像)' : s;
+    };
+    const header = ['月', '商品コード', '画像URL', '商品名', 'メインKW', '総売上', 'SEO売上', 'PRオプ料率(%)', 'PRオプ状態', '広告売上', '実績額', '広告ROAS(%)', '入札価格', '入札状態', 'ステータス'];
+    const lines = [header.join(',')];
+    // 総売上の高い順（画面の初期並びに合わせる）
+    codes.sort(function (a, b) { return ((rowByCode[b] && rowByCode[b].rev) || 0) - ((rowByCode[a] && rowByCode[a].rev) || 0); });
+    codes.forEach(function (code) {
+      const r = rowByCode[code] || { rev: 0, seoRev: 0, adRev: 0, adCost: 0, roas: null };
+      const m = (typeof getMaster === 'function') ? (getMaster(code) || {}) : {};
+      const meta = (state.productMeta && state.productMeta[code]) || {};
+      const pr = (typeof getProRate === 'function') ? getProRate(code) : null;
+      const bid = (state.bid && state.bid[code]) || null;
+      const roas = (r.roas == null || isNaN(r.roas) || !isFinite(r.roas)) ? '' : String(Math.round(r.roas));
+      const proRate = (pr == null || isNaN(pr)) ? '' : String(Math.floor(pr));
+      const row = [
+        targetMonth, code, imgUrl(code), m.name || '', m.kw || '',
+        num(r.rev), num(r.seoRev), proRate, meta.proStatus || '',
+        num(r.adRev), num(r.adCost), roas,
+        (bid != null && bid > 0) ? String(bid) : '', meta.adStatus || '', statusDisp(code)
+      ];
+      lines.push(row.map(esc).join(','));
+    });
+    const csv = '﻿' + lines.join('\r\n');   // BOM付き＝Excelで文字化けしない
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ycheck_商品基本データ_' + targetMonth + '.csv';   // 例: ycheck_商品基本データ_2026-09.csv
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
+    if (typeof showToast === 'function') showToast(targetMonth + ' の商品基本データCSVを出力しました（' + codes.length + '件）', 'ok');
+  } catch (e) {
+    console.error('[Ycheck] downloadBasicAllCsv error', e);
+    alert('CSV出力でエラーが発生しました: ' + (e && e.message));
+  }
+}
+window.downloadBasicAllCsv = downloadBasicAllCsv;
 
 function downloadBasicCsv() {
   // 【v1.0331】絞り込み（検索／広告あり・なし／送り込み）の状態に関係なく、
