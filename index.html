@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0525 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0526 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1943,9 +1943,77 @@ tr.row-child .code-cell-inner::before {
 .chart-box { position: relative; height: 420px; flex: 1; min-height: 300px; }
 .chart-box-fixed { flex: 0 0 auto; height: 360px; margin-bottom: 12px; }
 
-/* レポート追加モーダル: モードに応じてスロットを表示/非表示 */
-#uploadModal[data-mode="monthly"] .file-slot[data-upload-group="spot"] { display: none; }
-#uploadModal[data-mode="spot"] .file-slot[data-upload-group="monthly"] { display: none; }
+/* 【v1.0526】レポート追加モーダルはボタン統合により常に5スロットすべて表示する（旧モード出し分けは撤去） */
+
+/* ===== 【v1.0526】レポート追加モーダル：3機能のスタイル ===== */
+/* 検証ボックス「警告」（5ファイル未充足。エラーではなく、このまま取り込むことも可能） */
+.validation-box.warn { background:#fff8e6; border-color:#f0c26b; }
+.validation-box.warn .validation-msg { color:#8a5a00; }
+/* 不足スロットの強調 */
+.file-slot.slot-missing { border-color:#e0a000; background:#fffdf5; }
+.slot-missing-tag { display:inline-block; margin:3px 0 2px; font-size:11px; font-weight:700; color:#8a5a00; background:#fff2cc; border:1px solid #f0c26b; border-radius:4px; padding:1px 6px; }
+
+/* ① 対応ファイルの種類（アコーディオン） */
+.rt-acc { border:1px solid var(--border); border-radius:8px; margin:0 0 10px; overflow:hidden; }
+.rt-acc-head { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--bg3); cursor:pointer; font-size:0.86rem; font-weight:600; color:var(--text2); user-select:none; }
+.rt-acc-head:hover { background:var(--border); }
+.rt-acc-arrow { font-size:0.75rem; color:var(--text3); }
+.rt-acc-body { padding:12px; background:var(--bg2); }
+.rt-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:9px; }
+.rt-card { border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:7px; padding:9px 11px; background:var(--bg2); }
+.rt-card.rt-latest { border-left-color:var(--amber); }
+.rt-card-head { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+.rt-badge { font-size:1rem; font-weight:700; color:var(--accent); }
+.rt-card.rt-latest .rt-badge { color:var(--amber); }
+.rt-label { font-size:0.85rem; font-weight:700; }
+.rt-kind { margin-left:auto; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#e8eefb; color:#2563eb; }
+.rt-card.rt-latest .rt-kind { background:#fdf0d9; color:#b45309; }
+.rt-pat code { font-size:11px; background:var(--bg3); padding:2px 5px; border-radius:4px; word-break:break-all; }
+.rt-note { font-size:11.5px; color:var(--text2); margin-top:5px; line-height:1.55; }
+.rt-date { font-size:11px; color:var(--text3); margin-top:4px; line-height:1.5; }
+.rt-foot { margin-top:10px; font-size:11.5px; color:var(--text2); line-height:1.7; background:var(--bg3); border-radius:6px; padding:8px 10px; }
+
+/* ② 不足日 */
+.md-bar { display:flex; align-items:center; gap:8px; margin:0 0 10px; }
+.md-hint { font-size:11.5px; color:var(--text3); }
+.md-panel { border:1px solid var(--border); border-radius:8px; padding:11px; margin:0 0 12px; background:var(--bg2); }
+.md-empty, .md-ok { font-size:12.5px; color:var(--text2); }
+.md-ok { color:#2e7d32; font-weight:600; }
+.md-head { font-size:12.5px; color:var(--text2); margin-bottom:7px; }
+.md-month { display:flex; gap:8px; align-items:flex-start; margin-bottom:5px; }
+.md-month-label { flex:0 0 62px; font-size:11.5px; font-weight:700; color:var(--text2); padding-top:2px; }
+.md-chips { display:flex; flex-wrap:wrap; gap:3px; }
+.md-chip { font-size:11px; font-weight:700; color:#e65100; background:#fff4e5; border:1px solid #ffcc80; border-radius:4px; padding:1px 5px; }
+.md-chip small { font-size:9px; margin-left:2px; opacity:.85; }
+.md-chip.md-chip-all { color:#c62828; background:#fdecec; border-color:#ef9a9a; }
+.md-legend, .mc-legend, .dc-legend { font-size:10.5px; color:var(--text3); margin-top:6px; line-height:1.6; }
+.md-cal { margin-top:10px; border-top:1px solid var(--border); padding-top:9px; }
+.md-cal-head { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:7px; }
+.md-cal-head select { font-size:12px; padding:2px 6px; }
+.mc-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.mc-wk { text-align:center; font-size:10.5px; font-weight:700; }
+.mc-cell { border:1px solid var(--border); border-radius:5px; padding:2px 0; text-align:center; }
+.mc-d { font-size:9.5px; color:var(--text3); line-height:1.3; }
+.mc-m { font-size:13px; font-weight:700; line-height:1.2; }
+.mc-ok   { background:#eafaf0; } .mc-ok   .mc-m { color:#2e7d32; }
+.mc-none { background:#fdecec; } .mc-none .mc-m { color:#c62828; }
+.mc-part { background:#fff4e5; } .mc-part .mc-m { color:#e65100; }
+.mc-out  { background:var(--bg3); } .mc-out .mc-m { color:var(--text3); }
+
+/* ③ ドロップカレンダー */
+.dc-wrap { border:1px solid #b6d4fe; background:#f5f9ff; border-radius:8px; padding:11px; margin:0 0 12px; }
+.dc-head { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:#1e4fbf; margin-bottom:8px; }
+.dc-head select { font-size:12px; padding:2px 6px; margin-left:auto; }
+.dc-table { border-collapse:collapse; width:100%; table-layout:fixed; font-size:11px; }
+.dc-table th, .dc-table td { border:1px solid var(--border); }
+.dc-th-name, .dc-td-name { width:190px; text-align:left; padding:4px 7px; background:var(--bg2); position:sticky; left:0; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dc-th-day { padding:2px 0; text-align:center; font-size:9.5px; color:var(--text3); background:var(--bg3); font-weight:600; }
+.dc-cell { height:24px; text-align:center; background:var(--bg2); }
+.dc-latest-cell { text-align:left; padding-left:8px; }
+.dc-ok { color:#2e7d32; font-size:13px; font-weight:700; }
+.dc-ng { color:#c62828; font-size:11px; font-weight:700; }
+.dc-cell small { color:var(--text3); font-size:10px; margin-left:4px; }
+.dc-today { background:#e8f1fb !important; }
 
 /* 順位取得CSV(GitHub反映)ボタン: 未反映の変動がある場合のアラート表示 */
 #btnDownloadBasicCsv.drift-alert {
@@ -2869,7 +2937,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0525</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0526</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2881,8 +2949,8 @@ th.col-sroas { background-color:#cfe0f7; }
     <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札価格・PRオプションの説明などを表示する"><span class="chip-label">💡 全体の説明</span></button>
     <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み） -->
     <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
-    <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal('monthly')">+ レポート追加(月次)</button>
-    <button class="btn sm" id="btnJumpUploadSpot" type="button" style="background: var(--amber); color: white; border-color: var(--amber);" onclick="window.openUploadModal && window.openUploadModal('spot')">+ 最新値を更新</button>
+    <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
+    <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
     <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
@@ -3830,30 +3898,63 @@ th.col-sroas { background-color:#cfe0f7; }
     </div>
     <input type="file" id="fileInput" multiple accept=".csv,.zip" style="display:none;">
 
+    <!-- 【v1.0526】① 対応ファイルの種類を確認する（アコーディオン） -->
+    <div class="rt-acc">
+      <div class="rt-acc-head" onclick="toggleReportTypesAcc()" role="button" tabindex="0">
+        <span>📋 対応ファイルの種類を確認する</span><span class="rt-acc-arrow" id="reportTypesArrow">▶</span>
+      </div>
+      <div class="rt-acc-body" id="reportTypesBody" style="display:none"></div>
+    </div>
+
+    <!-- 【v1.0526】② 不足日を確認する -->
+    <div class="md-bar">
+      <button class="btn sm ghost" type="button" onclick="checkMissingDays()" title="取り込み済みの最初の日から最後の日までを走査し、揃っていない日を洗い出します">📅 不足日を確認する</button>
+      <span class="md-hint">取り込めていない日がないかチェックします</span>
+    </div>
+    <div class="md-panel" id="missingDayPanel" style="display:none">
+      <div id="missingDayResult"></div>
+      <div class="md-cal">
+        <div class="md-cal-head"><span>月カレンダー</span>
+          <select id="missingCalMonth" onchange="renderMissingCal(this.value)"></select>
+        </div>
+        <div id="missingCalGrid"></div>
+      </div>
+    </div>
+
+    <!-- 【v1.0526】③ ドロップしたファイルのカレンダー（取り込む前の確認） -->
+    <div class="dc-wrap" id="dropCalWrap" style="display:none">
+      <div class="dc-head">
+        <span>🔍 ドロップしたファイル（まだ取り込んでいません）</span>
+        <select id="dropCalMonth" onchange="dropCalRender(this.value)"></select>
+      </div>
+      <div id="dropCalGrid"></div>
+      <div class="dc-legend">◯＝そのファイルあり（マウスを乗せるとファイル名）。内容を確認してから「アップロード実行」を押してください。</div>
+    </div>
+
     <div class="file-slots">
       <div class="file-slot" id="slot-overall" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge"></span>ショップ売上（月次）</div>
+        <div class="file-slot-label"><span class="slot-badge">①</span>ショップ売上（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge"></span>商品別売上(月次)</div>
+        <div class="file-slot-label"><span class="slot-badge">②</span>商品別売上（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 商品分析 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report</a></div>
       </div>
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge"></span>広告詳細レポート(月次)</div>
+        <div class="file-slot-label"><span class="slot-badge">③</span>広告詳細レポート（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/report/adDetail" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/report/adDetail</a></div>
       </div>
       <div class="file-slot" id="slot-bid" data-upload-group="spot">
-        <div class="file-slot-label"><span class="slot-badge"></span>入札価格（最新）</div>
+        <div class="file-slot-label"><span class="slot-badge">④</span>入札価格（最新値）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → アイテムリーチ → CSV入札・削除 → 商品データのダウンロード</div>
@@ -3863,7 +3964,7 @@ th.col-sroas { background-color:#cfe0f7; }
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※未ログインだと②は一度ストクリのトップに飛びます。先に①でログインしてから②を押すと、1回目からダウンロードできます。</div>
       </div>
       <div class="file-slot" id="slot-prorate" data-upload-group="spot">
-        <div class="file-slot-label"><span class="slot-badge"></span>PRオプ（最新）</div>
+        <div class="file-slot-label"><span class="slot-badge">⑤</span>PRオプ料率（最新値）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-filename">data*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>商品登録 → 商品管理 → 商品データ → ダウンロード</div>
@@ -3872,7 +3973,7 @@ th.col-sroas { background-color:#cfe0f7; }
     </div>
 
     <div class="validation-box" id="validationBox">
-      <div class="validation-msg" id="validationMsg">📋 月次データ（ショップ売上／商品別売上／広告詳細）は1つ以上でアップロードできます。入札価格などは「+最新値を更新」側で</div>
+      <div class="validation-msg" id="validationMsg">📋 その日の5ファイル（①ショップ売上・②商品別売上・③広告詳細＝日別／④入札価格・⑤PRオプ料率＝最新値）をまとめてドロップしてください</div>
     </div>
 
     <div class="upload-actions">
@@ -4006,7 +4107,14 @@ const state = {
   // 【v125】代表コード絞り込み: null=全件、'*'=代表コード持ち全商品のみ、'ih-family'=その代表コードのグループのみ
   repFilter: null,
   uploadBuffer: { overall: null, item: null, ad: null, bid: null, proRate: null, master: null },
-  uploadMode: 'monthly'  // 現在のアップロードモーダルのモード: 'monthly' | 'spot'
+  uploadMode: 'monthly',  // 現在のアップロードモーダルのモード: 'monthly' | 'spot'（v1.0526で統合。互換のため残置）
+  // ==================== 【v1.0526】日別データ ====================
+  //   前日分の日別レポートを毎日取り込んでためていく。月次はこの合計から出す（月次CSVの取込も従来どおり可）。
+  //   容量対策のため「キー名を毎レコード書かない」圧縮形式で持つ（素直なオブジェクト配列比 約1/3）。
+  //     overall : { 'YYYY-MM-DD': 総売上 }
+  //     item    : { 'YYYY-MM-DD': { code: [revenue, orders] } }
+  //     ad      : { 'YYYY-MM-DD': { code: [adCost, adRevenue, adClicks, adOrders] } }
+  daily: { overall: {}, item: {}, ad: {} }
 };
 
 // ==================== Utility ====================
@@ -4159,12 +4267,29 @@ function _rankRecentOnly(rank, n) {
     return out;
   } catch (e) { return rank || {}; }
 }
+// 【v1.0526】日別データも rank と同じ考え方で端末キャッシュは直近Nヶ月だけに絞る（GitHubは全期間を保持）。
+//   日別は月あたり約50KB。localStorage(約5MB)を圧迫しないよう、端末では直近6ヶ月分だけ持つ。
+const DAILY_LS_MONTHS = 6;
+function _dailyRecentOnly(daily, n) {
+  try {
+    if (!daily || typeof daily !== 'object') return { overall: {}, item: {}, ad: {} };
+    const months = new Set();
+    ['overall', 'item', 'ad'].forEach(k => Object.keys(daily[k] || {}).forEach(d => { if (/^\d{4}-\d{2}-\d{2}$/.test(d)) months.add(d.slice(0, 7)); }));
+    const keep = new Set([...months].sort().slice(-Math.max(0, n)));
+    const out = { overall: {}, item: {}, ad: {} };
+    ['overall', 'item', 'ad'].forEach(k => {
+      Object.keys(daily[k] || {}).forEach(d => { if (keep.has(String(d).slice(0, 7))) out[k][d] = daily[k][d]; });
+    });
+    return out;
+  } catch (e) { return daily || { overall: {}, item: {}, ad: {} }; }
+}
 function saveToStorage() {
   const data = {
     overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
     proRate: state.proRate,
     master: state.master, productMeta: state.productMeta,
     rank: _rankRecentOnly(state.rank, 2),   // 【v1.0380】端末キャッシュは直近2ヶ月のみ（GitHubは全保持）
+    daily: _dailyRecentOnly(state.daily, DAILY_LS_MONTHS),   // 【v1.0526】日別も端末は直近6ヶ月のみ
     rankEdits: state.rankEdits,
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
@@ -4467,6 +4592,7 @@ function ghBuildDataString() {
     proRate: state.proRate,
     master: state.master, productMeta: state.productMeta,
     rank: state.rank,
+    daily: state.daily,   // 【v1.0526】日別データ（GitHubは全期間を保持＝真実の保存先）
     rankEdits: state.rankEdits,
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
@@ -4928,6 +5054,7 @@ async function ghLoadFromGitHub(opts) {
     if (typeof ensureOldOverall === 'function') ensureOldOverall();   // 【v315】GitHub読込後に旧データを補完
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
+    if (data.daily) { state.daily = data.daily; ensureDaily(); invalidateDailyRollup(); }   // 【v1.0526】日別データ
     // 【v287】bid / proRate は「新しい方」を残してマージ（古い上書きで自分の変更が消えるのを防ぐ）
     state.bid     = (data.bid)     ? (_discardLocal ? data.bid     : mergeMapByPmRecency(_localBid, data.bid,     _localPM, _remotePM, 'ad'))  : (_discardLocal ? {} : _localBid);
     state.proRate = (data.proRate) ? (_discardLocal ? data.proRate : mergeMapByPmRecency(_localPro, data.proRate, _localPM, _remotePM, 'pro')) : (_discardLocal ? {} : _localPro);
@@ -5040,6 +5167,7 @@ async function ghLoadFromPublic() {
     if (typeof ensureOldOverall === 'function') ensureOldOverall();
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
+    if (data.daily) { state.daily = data.daily; ensureDaily(); invalidateDailyRollup(); }   // 【v1.0526】日別データ
     if (data.bid) state.bid = data.bid;
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
@@ -5439,6 +5567,7 @@ function loadFromStorage() {
     if (typeof ensureOldOverall === 'function') ensureOldOverall();   // 【v315】localStorage読込後に旧データを補完
     if (data.item) state.item = data.item;
     if (data.ad) state.ad = data.ad;
+    if (data.daily) { state.daily = data.daily; ensureDaily(); invalidateDailyRollup(); }   // 【v1.0526】日別データ
     if (data.bid) state.bid = data.bid;
     if (data.proRate) state.proRate = data.proRate;
     if (data.master) state.master = data.master;
@@ -5699,6 +5828,297 @@ async function expandFiles(files) {
   return result;
 }
 
+// ============================================================================
+// 【v1.0526】レポート種別の定義（+レポート追加 の土台）
+//   日別3種（①②③）＋ 最新値2種（④⑤）＝ 計5ファイルが1日分のセット。
+//   ★ 判定は「種別が先、日付は後」。data*.csv はファイル名にタイムスタンプ(data202609091833.csv)が
+//     入るため、先に種別を決めてから daily:true のものだけ日付を見ないと 2026-09-09 を誤検出する。
+// ============================================================================
+const REPORT_TYPES = [
+  { key:'overall', badge:'①', slotId:'slot-overall', label:'ショップ売上（日別）', daily:true,
+    sub:'store_overall', pat:'{shop}-store_overall_kpi{YYYYMMDD}.csv',
+    note:'その日のストア全体の売上。総売上は「合算値売上合計値」列（PC＋スマホ＋アプリの合算）を使用。',
+    dateFrom:'CSVの日付列' },
+  { key:'item', badge:'②', slotId:'slot-item', label:'商品別売上（日別）', daily:true,
+    sub:'item_report', pat:'{shop}item_report{YYYYMMDD}.csv',
+    note:'その日の商品別売上。サブコード空欄の親行を優先して集計（枝番行との二重計上を防止）。',
+    dateFrom:'★ファイル名の8桁日付のみ（このCSVには日付列がありません）' },
+  { key:'ad', badge:'③', slotId:'slot-ad', label:'広告詳細レポート（日別）', daily:true,
+    sub:'広告詳細レポート', pat:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別{YYYYMMDD}.csv',
+    note:'その日の商品別の広告実績（利用金額・クリック数・注文数・売上金額）。',
+    dateFrom:'CSVの日付列' },
+  { key:'bid', badge:'④', slotId:'slot-bid', label:'入札価格（最新値）', daily:false,
+    sub:'bid_item', pat:'BID_ITEM*.csv',
+    note:'いま設定されている入札価格。日付は持たず、常に最新値で上書きします。',
+    dateFrom:'不要（最新値）' },
+  { key:'proRate', badge:'⑤', slotId:'slot-prorate', label:'PRオプ料率（最新値）', daily:false,
+    sub:'data', pat:'data*.csv',
+    note:'いま設定されているPRオプ料率。Yahooで公開中の全商品リストとして撤退判定にも使用。',
+    dateFrom:'不要（最新値。ファイル名のタイムスタンプは日付として読みません）' }
+];
+const DAILY_TYPE_KEYS = REPORT_TYPES.filter(t => t.daily).map(t => t.key);      // ['overall','item','ad']
+const LATEST_TYPE_KEYS = REPORT_TYPES.filter(t => !t.daily).map(t => t.key);    // ['bid','proRate']
+function reportTypeOf(key) { return REPORT_TYPES.find(t => t.key === key) || null; }
+
+// ファイル名だけから種別を判定（限定的な名前を先に見る）。判定できなければ null。
+function fileTypeFromName(name) {
+  const raw = String(name || '');
+  const n = raw.toLowerCase();
+  if (n.includes('store_overall') || n.includes('store-overall')) return 'overall';
+  if (n.includes('item_report') || n.includes('item-report')) return 'item';
+  if (n.includes('bid_item') || n.includes('bid-item') || n.startsWith('bid')) return 'bid';
+  if (raw.includes('広告詳細レポート') || n.includes('ad_') || n.includes('advertis')) return 'ad';
+  if (/(^|[^a-z])data\d/i.test(n)) return 'proRate';
+  return null;
+}
+// 【v1.0526】種別を決めたうえで日付を取る。最新値種別(④⑤)は必ず null を返す。
+function reportDateFor(key, filename, rows) {
+  const t = reportTypeOf(key);
+  if (!t || !t.daily) return null;              // ④⑤ はファイル名に数字が入っていても日付として読まない
+  if (key !== 'item' && Array.isArray(rows)) {  // ①③ はCSVの日付列を優先（こちらのほうが確実）
+    for (const r of rows) { const d = normYmd(r && (r['日付'] || r['date'])); if (d) return d; }
+  }
+  return fileDateFromName(filename);            // ② はファイル名だけが頼り
+}
+
+// 【v1.0526】このバッチでドロップされた日別データの一時置き場（「アップロード実行」で state.daily へ反映）。
+//   ステージしただけでは保存されない＝取り込む前にカレンダーで過不足を目視できる。
+let _dailyStage = { overall: {}, item: {}, ad: {}, files: [] };
+function _dailyStageDates() {
+  const s = new Set();
+  DAILY_TYPE_KEYS.forEach(k => Object.keys(_dailyStage[k] || {}).forEach(d => s.add(d)));
+  return [...s].sort();
+}
+// 種別スロットに「何日分ステージしたか」を出す
+function _dailySlotSummary(kind) {
+  const ds = Object.keys(_dailyStage[kind] || {}).sort();
+  if (!ds.length) return;
+  const label = ds.length === 1 ? ds[0] : `${ds.length}日分（${ds[0]}〜${ds[ds.length - 1]}）`;
+  updateSlot(kind, label);
+}
+// 【v1.0526】不足しているスロットに赤枠＋「⚠ 不足」を出す（どれが足りないか一目で分かるように）
+function _renderMissingNotice(chk) {
+  REPORT_TYPES.forEach(t => {
+    const el = document.getElementById(t.slotId);
+    if (!el) return;
+    el.classList.remove('slot-missing');
+    const old = el.querySelector('.slot-missing-tag');
+    if (old) old.remove();
+  });
+  if (!chk) return;
+  const missing = new Set(chk.missingLatest);
+  Object.keys(chk.missingByDate).forEach(d => chk.missingByDate[d].forEach(k => missing.add(k)));
+  missing.forEach(k => {
+    const t = reportTypeOf(k); if (!t) return;
+    const el = document.getElementById(t.slotId); if (!el) return;
+    el.classList.add('slot-missing');
+    const days = Object.keys(chk.missingByDate).filter(d => (chk.missingByDate[d] || []).includes(k)).sort();
+    const tag = document.createElement('div');
+    tag.className = 'slot-missing-tag';
+    tag.textContent = days.length ? `⚠ 不足：${days.join('・')}` : '⚠ 未アップロード';
+    const label = el.querySelector('.file-slot-label');
+    if (label && label.nextSibling) el.insertBefore(tag, label.nextSibling); else el.appendChild(tag);
+  });
+}
+
+// ============================================================================
+// 【v1.0526】レポート追加モーダルの3機能（ADcheckから移植）
+//   ① 対応ファイルの種類を確認する（アコーディオン）
+//   ② 不足日を確認する（取込済みの最初〜最後を走査し、欠けている日をカレンダーで◯×表示）
+//   ③ ドロップしたファイルのカレンダー（行=種別／列=日 の◯グリッド。取り込む前に過不足を目視）
+// ============================================================================
+
+// ---------- ① 対応ファイルの種類を確認する ----------
+function toggleReportTypesAcc() {
+  const body = document.getElementById('reportTypesBody');
+  const arrow = document.getElementById('reportTypesArrow');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▶' : '▼';
+  if (!open) body.innerHTML = _reportTypeCardsHtml();   // ショップ切替に追従するため開くたびに作り直す
+}
+function _reportTypeCardsHtml() {
+  const shop = getCurrentShop().shopCode;
+  return '<div class="rt-cards">' + REPORT_TYPES.map(t => {
+    const pat = String(t.pat).replace('{shop}', shop);
+    return '<div class="rt-card' + (t.daily ? '' : ' rt-latest') + '">'
+      + '<div class="rt-card-head"><span class="rt-badge">' + t.badge + '</span><span class="rt-label">' + escapeHtml(t.label) + '</span>'
+      + '<span class="rt-kind">' + (t.daily ? '日別' : '最新値') + '</span></div>'
+      + '<div class="rt-pat"><code>' + escapeHtml(pat) + '</code></div>'
+      + '<div class="rt-note">' + escapeHtml(t.note) + '</div>'
+      + '<div class="rt-date"><b>日付の判定</b>：' + escapeHtml(t.dateFrom) + '</div>'
+      + '</div>';
+  }).join('') + '</div>'
+  + '<div class="rt-foot">①②③は<b>同じ日付</b>の3ファイルを揃えて入れると、その日の日別データが完成します。'
+  + '④⑤は日付を持たない「いまの設定値」なので、毎回いちばん新しいものを入れてください。<br>'
+  + '月次の数値は、取り込んだ日別データの<b>合計</b>から自動で計算されます（日別が無い過去の月は、これまでどおり月次データを使います）。</div>';
+}
+
+// ---------- ② 不足日を確認する ----------
+let _mcSets = null, _mcFirst = '', _mcLast = '';
+function _missingDayReset() {
+  const p = document.getElementById('missingDayPanel');
+  if (p) p.style.display = 'none';
+  _mcSets = null; _mcFirst = ''; _mcLast = '';
+}
+function checkMissingDays() {
+  const panel = document.getElementById('missingDayPanel');
+  const res = document.getElementById('missingDayResult');
+  if (!panel || !res) return;
+  panel.style.display = 'block';
+  const sets = {};
+  DAILY_TYPE_KEYS.forEach(k => { sets[k] = new Set(dailyDates(k)); });
+  const all = dailyAllDates();
+  if (!all.length) {
+    res.innerHTML = '<div class="md-empty">日別データがまだありません。5ファイルを取り込むと、ここに「取り込めていない日」が出ます。</div>';
+    const sel = document.getElementById('missingCalMonth'); if (sel) sel.innerHTML = '';
+    const grid = document.getElementById('missingCalGrid'); if (grid) grid.innerHTML = '';
+    return;
+  }
+  _mcSets = sets; _mcFirst = all[0]; _mcLast = all[all.length - 1];
+  const pad = n => String(n).padStart(2, '0');
+  const toDate = s => { const a = s.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+  const months = {};
+  let cur = toDate(_mcFirst); const end = toDate(_mcLast);
+  let missCount = 0;
+  while (cur <= end) {
+    const ds = cur.getFullYear() + '-' + pad(cur.getMonth() + 1) + '-' + pad(cur.getDate());
+    const miss = DAILY_TYPE_KEYS.filter(k => !sets[k].has(ds));
+    if (miss.length) { (months[ds.slice(0, 7)] = months[ds.slice(0, 7)] || []).push({ day: cur.getDate(), miss: miss }); missCount++; }
+    cur.setDate(cur.getDate() + 1);
+  }
+  _buildMissingCalMonths(_mcFirst, _mcLast);
+  const yms = Object.keys(months).sort();
+  if (!yms.length) {
+    res.innerHTML = '<div class="md-ok">✅ 欠けている日はありません（' + _mcFirst + ' 〜 ' + _mcLast + '）</div>';
+    return;
+  }
+  res.innerHTML = '<div class="md-head">' + _mcFirst + ' 〜 ' + _mcLast + ' のうち <b>' + missCount + '日</b> に不足があります</div>'
+    + yms.map(function (ym) {
+        const chips = months[ym].map(function (o) {
+          const all3 = o.miss.length === DAILY_TYPE_KEYS.length;
+          const cls = all3 ? 'md-chip md-chip-all' : 'md-chip';
+          const title = o.miss.map(_typeLabel).join('・') + ' が不足';
+          return '<span class="' + cls + '" title="' + escapeHtml(title) + '">' + pad(o.day)
+            + (all3 ? '' : '<small>' + o.miss.map(function (k) { return reportTypeOf(k).badge; }).join('') + '</small>') + '</span>';
+        }).join('');
+        return '<div class="md-month"><div class="md-month-label">' + ym.replace('-', '/') + '</div><div class="md-chips">' + chips + '</div></div>';
+      }).join('')
+    + '<div class="md-legend">赤＝3種すべて不足／橙＝一部不足（丸数字が不足している種別）</div>';
+}
+function _buildMissingCalMonths(first, last) {
+  const sel = document.getElementById('missingCalMonth'); if (!sel) return;
+  const yms = []; let y = +first.slice(0, 4), m = +first.slice(5, 7);
+  const ly = +last.slice(0, 4), lm = +last.slice(5, 7);
+  while (y < ly || (y === ly && m <= lm)) { yms.push(y + '-' + String(m).padStart(2, '0')); m++; if (m > 12) { m = 1; y++; } }
+  sel.innerHTML = yms.map(function (v) { return '<option value="' + v + '">' + v.replace('-', '/') + '</option>'; }).join('');
+  sel.value = yms[yms.length - 1];
+  renderMissingCal(sel.value);
+}
+function renderMissingCal(ym) {
+  const grid = document.getElementById('missingCalGrid');
+  if (!grid || !ym || !_mcSets) return;
+  const pad = n => String(n).padStart(2, '0');
+  const Y = +ym.slice(0, 4), M = +ym.slice(5, 7);
+  const dim = new Date(Y, M, 0).getDate();
+  const firstDow = new Date(Y, M - 1, 1).getDay();
+  const wk = ['日', '月', '火', '水', '木', '金', '土'];
+  let h = '<div class="mc-grid">';
+  wk.forEach(function (w, i) { h += '<div class="mc-wk" style="color:' + (i === 0 ? '#c62828' : i === 6 ? '#1565c0' : '#8a8d94') + '">' + w + '</div>'; });
+  for (let b = 0; b < firstDow; b++) h += '<div></div>';
+  for (let d = 1; d <= dim; d++) {
+    const ds = ym + '-' + pad(d);
+    const inRange = (ds >= _mcFirst && ds <= _mcLast);
+    let mark, cls, title = ds;
+    if (!inRange) { mark = '·'; cls = 'mc-out'; title = ds + '（取込期間外）'; }
+    else {
+      const miss = DAILY_TYPE_KEYS.filter(function (k) { return !_mcSets[k].has(ds); });
+      if (!miss.length) { mark = '◯'; cls = 'mc-ok'; title = ds + '：3種そろっています'; }
+      else if (miss.length === DAILY_TYPE_KEYS.length) { mark = '×'; cls = 'mc-none'; title = ds + '：3種すべて不足'; }
+      else { mark = '×'; cls = 'mc-part'; title = ds + '：' + miss.map(_typeLabel).join('・') + ' が不足'; }
+    }
+    h += '<div class="mc-cell ' + cls + '" title="' + escapeHtml(title) + '"><div class="mc-d">' + d + '</div><div class="mc-m">' + mark + '</div></div>';
+  }
+  h += '</div><div class="mc-legend">◯＝3種そろっている／×赤＝3種すべて不足／×橙＝一部不足／·＝取込期間外</div>';
+  grid.innerHTML = h;
+}
+
+// ---------- ③ ドロップしたファイルのカレンダー（行=種別／列=日） ----------
+let _dropCal = {};   // { 'YYYY-MM': { type: { day: {n, files:[]} } } }
+function _dropCalReset() {
+  _dropCal = {};
+  const wrap = document.getElementById('dropCalWrap');
+  if (wrap) wrap.style.display = 'none';
+  const grid = document.getElementById('dropCalGrid'); if (grid) grid.innerHTML = '';
+  const sel = document.getElementById('dropCalMonth'); if (sel) sel.innerHTML = '';
+}
+function _dropCalBuild() {
+  _dropCal = {};
+  const push = function (type, date, fname) {
+    if (!type || !isYmd(date)) return;
+    const ym = date.slice(0, 7), day = parseInt(date.slice(8, 10), 10);
+    (_dropCal[ym] || (_dropCal[ym] = {}));
+    (_dropCal[ym][type] || (_dropCal[ym][type] = {}));
+    const cell = _dropCal[ym][type][day] || (_dropCal[ym][type][day] = { n: 0, files: [] });
+    cell.n++; if (fname) cell.files.push(fname);
+  };
+  DAILY_TYPE_KEYS.forEach(function (k) {
+    Object.keys(_dailyStage[k] || {}).forEach(function (d) {
+      const f = (_dailyStage.files || []).find(function (x) { return x.kind === k && x.date === d; });
+      push(k, d, f ? f.filename : '');
+    });
+  });
+  return Object.keys(_dropCal).sort();
+}
+function dropCalShow() {
+  const yms = _dropCalBuild();
+  const wrap = document.getElementById('dropCalWrap');
+  const sel = document.getElementById('dropCalMonth');
+  if (!wrap || !sel) return;
+  if (!yms.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  let best = yms[0], bestN = -1;
+  yms.forEach(function (ym) {
+    let n = 0; Object.keys(_dropCal[ym]).forEach(function (t) { n += Object.keys(_dropCal[ym][t]).length; });
+    if (n > bestN) { bestN = n; best = ym; }
+  });
+  sel.innerHTML = yms.map(function (v) { return '<option value="' + v + '">' + v.replace('-', '/') + '</option>'; }).join('');
+  sel.value = best;
+  dropCalRender(best);
+}
+function dropCalRender(ym) {
+  const grid = document.getElementById('dropCalGrid');
+  if (!grid || !ym) return;
+  const days = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+  const data = _dropCal[ym] || {};
+  const now = new Date();
+  const todayYmd = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const todayDay = (todayYmd.slice(0, 7) === ym) ? +todayYmd.slice(8, 10) : -1;
+  let head = '<th class="dc-th-name">ファイル種別</th>';
+  for (let d = 1; d <= days; d++) head += '<th class="dc-th-day' + (d === todayDay ? ' dc-today' : '') + '">' + d + '</th>';
+  let body = '';
+  REPORT_TYPES.filter(function (t) { return t.daily; }).forEach(function (row) {
+    const rd = data[row.key] || {};
+    body += '<tr><td class="dc-td-name"><b>' + row.badge + ' ' + escapeHtml(row.label) + '</b></td>';
+    for (let d = 1; d <= days; d++) {
+      const cell = rd[d];
+      const mark = cell ? '<span class="dc-ok" title="' + escapeHtml((cell.files || []).join(', ')) + '">◯</span>' : '';
+      body += '<td class="dc-cell' + (d === todayDay ? ' dc-today' : '') + '">' + mark + '</td>';
+    }
+    body += '</tr>';
+  });
+  REPORT_TYPES.filter(function (t) { return !t.daily; }).forEach(function (row) {
+    const b = state.uploadBuffer[row.key];
+    body += '<tr class="dc-latest-row"><td class="dc-td-name"><b>' + row.badge + ' ' + escapeHtml(row.label) + '</b></td>'
+      + '<td class="dc-cell dc-latest-cell" colspan="' + days + '">'
+      + (b ? '<span class="dc-ok">◯</span> <small>' + escapeHtml(b.filename || '') + '</small>'
+           : '<span class="dc-ng">未アップロード</span> <small>日付を持たない最新値ファイルです</small>')
+      + '</td></tr>';
+  });
+  grid.innerHTML = '<table class="dc-table"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
+}
+
 // ==================== File classification ====================
 function classifyFile(filename, rows) {
   const name = filename.toLowerCase();
@@ -5803,6 +6223,188 @@ function parseAd(rows) {
   return Object.values(agg);
 }
 
+// ============================================================================
+// 【v1.0526】日別データ層
+//   ここが日別機能すべての土台。表示側は必ずこの層を経由して集計を取り、
+//   「日別があればそれ、無ければ従来の月次」を1本のロジックで解決する（日/月の二重実装をしない）。
+// ============================================================================
+
+// --- 日付ユーティリティ ---
+const _ymd = (s) => String(s || '').trim();
+function isYmd(s) { return /^\d{4}-\d{2}-\d{2}$/.test(_ymd(s)); }
+function ymOf(dateStr) { return _ymd(dateStr).slice(0, 7); }          // 'YYYY-MM-DD' → 'YYYY-MM'
+// 文字列（2026/09/01・2026-09-01・20260901 等）を 'YYYY-MM-DD' に正規化。取れなければ null。
+function normYmd(v) {
+  const s = String(v == null ? '' : v).trim();
+  let m = s.match(/(20\d{2})[-\/年.]\s*(\d{1,2})[-\/月.]\s*(\d{1,2})/);
+  if (m) return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  m = s.match(/(20\d{2})([01]\d)([0-3]\d)/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  return null;
+}
+// 【v1.0526】ファイル名の末尾等にある8桁日付トークン（20260902）を 'YYYY-MM-DD' で返す。
+//   ※ data*.csv はファイル名にタイムスタンプ（data202609091833.csv）が入るため、
+//     日付を見るのは「日別レポート」種別だけに限定すること（呼び出し側で制御）。
+function fileDateFromName(name) {
+  const m = String(name || '').match(/(20\d{2})([01]\d)([0-3]\d)/);
+  if (!m) return null;
+  const d = `${m[1]}-${m[2]}-${m[3]}`;
+  const dd = Number(m[3]);
+  if (dd < 1 || dd > 31) return null;
+  return d;
+}
+
+// --- state.daily への安全なアクセス ---
+function ensureDaily() {
+  if (!state.daily || typeof state.daily !== 'object') state.daily = { overall: {}, item: {}, ad: {} };
+  if (!state.daily.overall) state.daily.overall = {};
+  if (!state.daily.item) state.daily.item = {};
+  if (!state.daily.ad) state.daily.ad = {};
+  return state.daily;
+}
+// 種別ごとの取込済み日付（昇順）
+function dailyDates(kind) { const d = ensureDaily(); return Object.keys(d[kind] || {}).filter(isYmd).sort(); }
+// 3種いずれかにデータがある日付の和集合（昇順）
+function dailyAllDates() {
+  const set = new Set();
+  ['overall', 'item', 'ad'].forEach(k => dailyDates(k).forEach(d => set.add(d)));
+  return [...set].sort();
+}
+// その月(ym='YYYY-MM')にデータがある日付一覧（昇順）
+function daysWithData(ym) { return dailyAllDates().filter(d => ymOf(d) === ym); }
+// 日別データを持っている月の集合
+function dailyMonths() { const s = new Set(); dailyAllDates().forEach(d => s.add(ymOf(d))); return s; }
+function monthHasDaily(ym) { return dailyMonths().has(ym); }
+
+// --- 1日ぶんの取り出し（圧縮形式 → 名前付きオブジェクト） ---
+function dailyItemOf(date) {   // { code: {revenue, orders} }
+  const src = (ensureDaily().item || {})[date] || {};
+  const out = {};
+  Object.keys(src).forEach(c => { const a = src[c] || []; out[c] = { revenue: +a[0] || 0, orders: +a[1] || 0 }; });
+  return out;
+}
+function dailyAdOf(date) {     // { code: {adCost, adRevenue, adClicks, adOrders} }
+  const src = (ensureDaily().ad || {})[date] || {};
+  const out = {};
+  Object.keys(src).forEach(c => { const a = src[c] || []; out[c] = { adCost: +a[0] || 0, adRevenue: +a[1] || 0, adClicks: +a[2] || 0, adOrders: +a[3] || 0 }; });
+  return out;
+}
+function dailyOverallOf(date) { return +((ensureDaily().overall || {})[date]) || 0; }
+
+// 1商品・1日ぶんを、月集計と同じ形（buildFullAggregate の1レコード相当）で返す
+function dayAgg(code, date) {
+  const it = ((ensureDaily().item || {})[date] || {})[code] || [];
+  const ad = ((ensureDaily().ad || {})[date] || {})[code] || [];
+  const rev = +it[0] || 0, orders = +it[1] || 0;
+  const adCost = +ad[0] || 0, adRev = +ad[1] || 0, adClicks = +ad[2] || 0, adOrders = +ad[3] || 0;
+  return {
+    code, date, rev, orders, adCost, adRev, adClicks, adOrders,
+    seoRev: Math.max(0, rev - adRev),
+    roas: adCost > 0 ? (adRev / adCost * 100) : null
+  };
+}
+
+// --- 月次を日別の合計から導出する（★「月次はその合計値で出す」の実体） ---
+//   日別がある月だけを対象にし、既存の月次データ(state.item/state.ad/state.overall)は書き換えない。
+//   表示側で「日別がある月は日別合計を優先、無い月は従来の月次」を選ぶ。過去データを壊さないための設計。
+let _dailyRollupCache = null;   // { ym: {items:{code:{...}}, ads:{code:{...}}, overallRev, days} }
+function invalidateDailyRollup() { _dailyRollupCache = null; }
+function dailyRollup() {
+  if (_dailyRollupCache) return _dailyRollupCache;
+  const d = ensureDaily();
+  const out = {};
+  const touch = (ym) => (out[ym] || (out[ym] = { items: {}, ads: {}, overallRev: 0, days: new Set() }));
+  Object.keys(d.item || {}).forEach(date => {
+    if (!isYmd(date)) return;
+    const g = touch(ymOf(date)); g.days.add(date);
+    const src = d.item[date] || {};
+    Object.keys(src).forEach(c => {
+      const a = src[c] || [];
+      const t = g.items[c] || (g.items[c] = { revenue: 0, orders: 0, qty: 0 });
+      t.revenue += +a[0] || 0; t.orders += +a[1] || 0;
+    });
+  });
+  Object.keys(d.ad || {}).forEach(date => {
+    if (!isYmd(date)) return;
+    const g = touch(ymOf(date)); g.days.add(date);
+    const src = d.ad[date] || {};
+    Object.keys(src).forEach(c => {
+      const a = src[c] || [];
+      const t = g.ads[c] || (g.ads[c] = { adCost: 0, adRevenue: 0, adClicks: 0, adOrders: 0 });
+      t.adCost += +a[0] || 0; t.adRevenue += +a[1] || 0; t.adClicks += +a[2] || 0; t.adOrders += +a[3] || 0;
+    });
+  });
+  Object.keys(d.overall || {}).forEach(date => {
+    if (!isYmd(date)) return;
+    const g = touch(ymOf(date)); g.days.add(date);
+    g.overallRev += +d.overall[date] || 0;
+  });
+  Object.keys(out).forEach(ym => { out[ym].dayCount = out[ym].days.size; });
+  _dailyRollupCache = out;
+  return out;
+}
+// 日別合計から作った「月次の商品別売上」行（state.item と同じ形）
+function dailyItemRowsForMonth(ym) {
+  const g = dailyRollup()[ym]; if (!g) return null;
+  return Object.keys(g.items).map(c => ({ code: c, month: ym, revenue: g.items[c].revenue, orders: g.items[c].orders, qty: 0 }));
+}
+// 日別合計から作った「月次の広告」行（state.ad と同じ形）
+function dailyAdRowsForMonth(ym) {
+  const g = dailyRollup()[ym]; if (!g) return null;
+  return Object.keys(g.ads).map(c => Object.assign({ code: c, month: ym }, g.ads[c]));
+}
+// 日別合計から作った「月次のストア全体売上」
+function dailyOverallRevForMonth(ym) {
+  const g = dailyRollup()[ym]; if (!g || !g.overallRev) return null;
+  return g.overallRev;
+}
+
+// --- 日別レポートのパーサー ---
+// ショップ売上KPI（日別）: 日付列あり。総売上は「合算値売上合計値」（PC+スマホ+アプリの合算＝既に合計）。
+function parseOverallDaily(rows) {
+  const out = {};
+  (rows || []).forEach(r => {
+    const date = normYmd(r['日付'] || r['date'] || '');
+    if (!date) return;
+    const rev = toNum(
+      r['合算値売上合計値'] || r['売上合計値（税込）'] || r['売上合計値(税込)'] ||
+      r['売上合計値'] || r['総売上'] || r['売上金額'] || r['売上合計'] || r['売上'] || 0
+    );
+    out[date] = (out[date] || 0) + rev;
+  });
+  return out;
+}
+// 商品別売上（日別）: このCSVには日付列が無いため、日付は呼び出し側（ファイル名）から渡す。
+//   集計は parseItem をそのまま使う＝親行(サブコード空欄)優先の二重計上防止ロジックを共有する。
+function parseItemDaily(rows) {
+  const out = {};
+  (parseItem(rows) || []).forEach(r => {
+    const rev = +r.revenue || 0, ord = +r.orders || 0;
+    if (rev === 0 && ord === 0) return;   // 売上も注文も無い商品は保存しない（容量削減。1日1,500行→約30行）
+    out[r.code] = [rev, ord];
+  });
+  return out;
+}
+// 広告詳細レポート（日別）: 日付列あり。1ファイルに複数日が入っていても日ごとに分けて返す。
+function parseAdDaily(rows) {
+  const out = {};
+  (rows || []).forEach(r => {
+    const code = (r['商品コード'] || '').trim();
+    if (!code) return;
+    const date = normYmd(r['日付'] || r['date'] || '');
+    if (!date) return;
+    const adCost = toNum(r['利用金額'] || r['広告費'] || r['実績額'] || r['消化金額'] || 0);
+    const adRevenue = toNum(r['売上金額'] || r['売上金額（税込）'] || r['売上金額(税込)'] || r['広告経由売上'] || r['売上'] || 0);
+    const adClicks = toNum(r['クリック数'] || r['クリック'] || 0);
+    const adOrders = toNum(r['注文数'] || 0);
+    if (adCost === 0 && adRevenue === 0 && adClicks === 0 && adOrders === 0) return;   // 全ゼロ行は保存しない
+    const day = out[date] || (out[date] = {});
+    const t = day[code] || (day[code] = [0, 0, 0, 0]);
+    t[0] += adCost; t[1] += adRevenue; t[2] += adClicks; t[3] += adOrders;
+  });
+  return out;
+}
+
 function parseBid(rows) {
   // 商品コード → 入札価格 のマップを返す
   // BID_ITEMファイルには大文字混じりのコード（IH-21-01等）があるが、
@@ -5884,6 +6486,28 @@ function monthFromFilename(name) {
   return null;
 }
 
+// 【v1.0526】5ファイルが揃っているかを判定する。
+//   日別3種は「ステージした日ごと」に、最新値2種は「バッチに1つあるか」で見る。
+//   返り値: { complete, missingLatest:[key], missingByDate:{date:[key]}, dates:[] }
+function checkFiveFileSet() {
+  const buf = state.uploadBuffer;
+  const dates = _dailyStageDates();
+  const missingByDate = {};
+  const d0 = ensureDaily();
+  dates.forEach(d => {
+    // 【v1.0526】今回ドロップした分だけでなく「すでに取り込み済みの分」も充足とみなす。
+    //   例: 昨日③だけ入れ忘れて今日③を単体で追加した場合に、①②を不足と誤警告しないため。
+    const miss = DAILY_TYPE_KEYS.filter(k => !(_dailyStage[k] && _dailyStage[k][d]) && !(d0[k] && d0[k][d]));
+    if (miss.length) missingByDate[d] = miss;
+  });
+  // 最新値2種も、すでに取り込み済み（state側に値がある）なら充足とみなす
+  const _latestHas = { bid: !!(state.bid && Object.keys(state.bid).length), proRate: !!(state.proRate && Object.keys(state.proRate).length) };
+  const missingLatest = LATEST_TYPE_KEYS.filter(k => buf[k] == null && !_latestHas[k]);
+  const complete = dates.length > 0 && Object.keys(missingByDate).length === 0 && missingLatest.length === 0;
+  return { complete, missingLatest, missingByDate, dates };
+}
+function _typeLabel(k) { const t = reportTypeOf(k); return t ? (t.badge + t.label) : k; }
+
 function validateBuffer() {
   const buf = state.uploadBuffer;
   const box = $('#validationBox');
@@ -5897,48 +6521,61 @@ function validateBuffer() {
   const hasProRate = buf.proRate != null;
   const hasMaster = buf.master != null;
   const hasFullMonthly = hasOverall && hasItem && hasAd;
-  const mode = state.uploadMode || 'monthly';
 
-  // ── 都度モード：入札価格 or PRオプ料率のどちらかがあればOK ──
-  if (mode === 'spot') {
-    // monthly系が紛れ込んだ場合はエラー扱い
-    if (hasOverall || hasItem || hasAd) {
-      box.className = 'validation-box err';
-      msg.textContent = '❌ 月次データは「+ レポート追加(月次)」側でアップロードしてください';
-      btn.disabled = true; return false;
+  // ============================================================
+  // 【v1.0526】統合モード：日別ファイルが1つでもステージされていればこちら。
+  //   5種そろっていなくても「不足があるまま取り込む」で実行できる（ボタンは常に押せる）。
+  // ============================================================
+  const _stagedDates = _dailyStageDates();
+  if (_stagedDates.length > 0) {
+    const chk = checkFiveFileSet();
+    const extra = [];
+    if (hasBid) extra.push('④入札価格');
+    if (hasProRate) extra.push('⑤PRオプ料率');
+    if (hasMaster) extra.push('商品マスタ');
+    const range = _stagedDates.length === 1
+      ? _stagedDates[0]
+      : `${_stagedDates[0]}〜${_stagedDates[_stagedDates.length - 1]}（${_stagedDates.length}日分）`;
+    if (chk.complete) {
+      box.className = 'validation-box ok';
+      msg.textContent = `✓ 5種すべて揃っています：${range}　＋　${extra.join(' / ')}　→ アップロード実行できます`;
+      btn.disabled = false;
+      btn.textContent = '⬆ アップロード実行';
+      _renderMissingNotice(chk);
+      return true;
     }
-    if (!hasBid && !hasProRate && !hasMaster) {
-      box.className = 'validation-box info';
-      msg.textContent = '📋 入札価格（BID_ITEM*.csv）またはPRオプ料率（data*.csv）をドロップしてください';
-      btn.disabled = true; return false;
-    }
+    // 不足あり：警告は出すが、実行はできる
+    box.className = 'validation-box warn';
+    const parts = [];
+    Object.keys(chk.missingByDate).sort().forEach(d => {
+      parts.push(`${d} に ${chk.missingByDate[d].map(_typeLabel).join('・')} が不足`);
+    });
+    if (chk.missingLatest.length) parts.push(`${chk.missingLatest.map(_typeLabel).join('・')} が未アップロード`);
+    msg.textContent = `⚠ ファイルが揃っていません（${parts.join(' / ')}）。このまま取り込むこともできます。`;
+    btn.disabled = false;
+    btn.textContent = '⚠ 不足があるまま取り込む';
+    _renderMissingNotice(chk);
+    return true;
+  }
+  if (btn) btn.textContent = '⬆ アップロード実行';
+  _renderMissingNotice(null);
+
+  // ── 以下は従来の月次／最新値ファイル（8桁日付が無いもの）の経路 ──
+  //   【v1.0526】ボタンを統合したので、月次と最新値の混在を弾かない（同時にアップロードできる）。
+  const hasAnyMonthly = hasOverall || hasItem || hasAd;
+  if (!hasAnyMonthly && !hasMaster && !hasBid && !hasProRate) {
+    box.className = 'validation-box info';
+    msg.textContent = '📋 その日の5ファイル（①ショップ売上・②商品別売上・③広告詳細＝日別／④入札価格・⑤PRオプ料率＝最新値）をまとめてドロップしてください';
+    btn.disabled = true;
+    return false;
+  }
+  if (!hasAnyMonthly && (hasMaster || hasBid || hasProRate)) {
     const parts = [];
     if (hasBid) parts.push('入札価格');
     if (hasProRate) parts.push('PRオプ料率');
     if (hasMaster) parts.push('商品マスタ');
     box.className = 'validation-box ok';
     msg.textContent = `✓ ${parts.join(' + ')} をアップロード実行できます`;
-    btn.disabled = false;
-    return true;
-  }
-
-  // ── 月次モード（従来挙動） ──
-  // spot系が紛れ込んだ場合はエラー扱い
-  if (hasBid || hasProRate) {
-    box.className = 'validation-box err';
-    msg.textContent = '❌ 入札価格／PRオプ料率は「+ 最新値を更新」側でアップロードしてください';
-    btn.disabled = true; return false;
-  }
-  const hasAnyMonthly = hasOverall || hasItem || hasAd;
-  if (!hasAnyMonthly && !hasMaster) {
-    box.className = 'validation-box info';
-    msg.textContent = '📋 ショップ売上・商品別売上・広告詳細レポートのいずれか（1つ以上）をドロップしてください';
-    btn.disabled = true;
-    return false;
-  }
-  if (!hasAnyMonthly && hasMaster) {
-    box.className = 'validation-box ok';
-    msg.textContent = '✓ 商品マスタ をアップロード実行できます';
     btn.disabled = false;
     return true;
   }
@@ -5994,12 +6631,41 @@ async function processFiles(files) {
   log(`${files.length}件のファイルを処理開始`);
   const csvFiles = await expandFiles(files);
   if (csvFiles.length === 0) { log('処理するCSVがありません', 'err'); validateBuffer(); return; }
+  _dailyStage = { overall: {}, item: {}, ad: {}, files: [] };   // 【v1.0526】このバッチの日別ステージをリセット
   for (const file of csvFiles) {
     try {
       log(`読み込み中: ${file.name}`);
       const rows = await readCsvFile(file);
       const kind = classifyFile(file.name, rows);
       if (kind === 'unknown') { log(`⚠ 種別判定できず: ${file.name}`, 'err'); continue; }
+
+      // 【v1.0526】まず日別レポートかどうかを判定する。
+      //   日別3種（ショップ売上・商品別売上・広告詳細）で日付が取れたものは、日別として取り込む。
+      //   日付が取れないもの（従来の月次ファイル）は、下の従来ロジックへそのまま流す。
+      const _dt = (kind === 'overall' || kind === 'item' || kind === 'ad') ? reportDateFor(kind, file.name, rows) : null;
+      if (_dt) {
+        let _days = 0, _recs = 0;
+        if (kind === 'overall') {
+          const parsed = parseOverallDaily(rows);
+          const keys = Object.keys(parsed);
+          if (keys.length) { keys.forEach(d => { _dailyStage.overall[d] = parsed[d]; }); _days = keys.length; _recs = keys.length; }
+          else { _dailyStage.overall[_dt] = 0; _days = 1; }
+        } else if (kind === 'item') {
+          const parsed = parseItemDaily(rows);            // このCSVは日付列が無いのでファイル名の日付を使う
+          _dailyStage.item[_dt] = parsed; _days = 1; _recs = Object.keys(parsed).length;
+        } else {
+          const parsed = parseAdDaily(rows);              // 1ファイルに複数日が入っていても日ごとに分ける
+          const keys = Object.keys(parsed);
+          keys.forEach(d => { _dailyStage.ad[d] = parsed[d]; _recs += Object.keys(parsed[d]).length; });
+          _days = keys.length || 1;
+          if (!keys.length) _dailyStage.ad[_dt] = {};
+        }
+        _dailyStage.files.push({ kind, date: _dt, filename: file.name });
+        log(`✓ ${reportTypeOf(kind).badge} ${reportTypeOf(kind).label} を日別バッファへ（${_dt}${_days > 1 ? ` 他${_days - 1}日` : ''} / ${_recs}件）`, 'ok');
+        _dailySlotSummary(kind);
+        continue;
+      }
+
       if (kind === 'overall') {
         const month = detectMonthFromRows(rows);
         state.uploadBuffer.overall = { rows, filename: file.name, month };
@@ -6032,12 +6698,35 @@ async function processFiles(files) {
       log(`✗ エラー: ${file.name} — ${err.message}`, 'err');
     }
   }
+  dropCalShow();   // 【v1.0526】取り込む前に「種別×日」のカレンダーで過不足を目視できるようにする
   validateBuffer();
 }
 
 async function commitUpload() {
   const buf = state.uploadBuffer;
   if (!validateBuffer()) return;
+  // 【v1.0526】日別データを state.daily へ反映（同じ日を再取込したら上書き＝入れ直しが効く）。
+  //   月次は state.item / state.ad を書き換えず、表示時に日別合計から導出する（過去の月次データを壊さない）。
+  {
+    const d = ensureDaily();
+    let _n = 0; const _months = new Set();
+    DAILY_TYPE_KEYS.forEach(k => {
+      Object.keys(_dailyStage[k] || {}).forEach(date => {
+        d[k][date] = _dailyStage[k][date];
+        _n++; _months.add(ymOf(date));
+      });
+    });
+    if (_n > 0) {
+      invalidateDailyRollup();
+      const _ms = [...+_months.size ? _months : []].sort();
+      const _detail = _ms.map(ym => {
+        const g = dailyRollup()[ym];
+        return `${ym.replace('-', '/')}: ${g ? g.dayCount : 0}日分 / 合計 ¥${Math.round((dailyOverallRevForMonth(ym) || 0)).toLocaleString()}`;
+      }).join('　');
+      log(`✅ 日別データを反映（${_dailyStageDates().length}日分 / ${_n}件）`, 'ok');
+      log(`　 月次は日別の合計で表示されます → ${_detail}`, 'ok');
+    }
+  }
   // 【v1.0321】月次は各ファイルを個別に反映（1ファイルからでもOK。従来は overall/item/ad の3点必須だった）。
   //   月の基準: ショップ売上 → 広告 → 商品別売上 の検出月。存在するファイルだけ処理する。
   const targetMonth = (buf.overall && buf.overall.month) || (buf.ad && buf.ad.month)
@@ -6515,6 +7204,7 @@ function getAvailableMonths() {
   if (state.ad) state.ad.forEach(a => a.month && set.add(norm(a.month)));
   if (state.overall) state.overall.months.forEach(m => set.add(norm(m.month)));
   if (state.rank) Object.keys(state.rank).forEach(ym => set.add(norm(ym)));
+  dailyMonths().forEach(ym => set.add(ym));   // 【v1.0526】日別データしか無い月も月セレクタに出す
   // 当月と前月は常にセレクタに含める（データが無くても選べるように）
   set.add(getCurrentYm());
   set.add(getPrevYm());
@@ -6528,6 +7218,7 @@ function getImportedDataMonths() {
   if (state.item) state.item.forEach(i => i.month && set.add(i.month));
   if (state.ad) state.ad.forEach(a => a.month && set.add(a.month));
   if (state.overall && state.overall.months) state.overall.months.forEach(m => set.add(m.month));
+  dailyMonths().forEach(ym => set.add(ym));   // 【v1.0526】日別データを取り込んだ月も「取込済み」とみなす
   return [...set].sort();
 }
 // インポート済みの最新月を返す（無ければ全月一覧の最新月、それも無ければ空）
@@ -6567,16 +7258,36 @@ function getLatestAvailableMonth() {
 // 商品コード x 月 で集計された完全形を返す
 function buildFullAggregate() {
   const agg = {};
+  // 【v1.0526】日別データがある月は「日別の合計」を月次値として使う。
+  //   日別が無い月は従来どおり state.item / state.ad の月次データを使う（過去データは書き換えない）。
+  //   ※ state.item / state.ad 自体には一切触らないので、日別を消せば元の月次表示に戻る。
+  const _dm = dailyMonths();
   (state.item || []).forEach(i => {
+    if (_dm.has(i.month)) return;   // この月は日別合計で作る
     const key = i.code + '|' + i.month;
     if (!agg[key]) agg[key] = { code: i.code, month: i.month, rev: 0, adCost: 0, adRev: 0 };
     agg[key].rev += i.revenue;
   });
   (state.ad || []).forEach(a => {
+    if (_dm.has(a.month)) return;   // この月は日別合計で作る
     const key = a.code + '|' + a.month;
     if (!agg[key]) agg[key] = { code: a.code, month: a.month, rev: 0, adCost: 0, adRev: 0 };
     agg[key].adCost += a.adCost;
     agg[key].adRev += a.adRevenue;
+  });
+  // 日別がある月を、日別の合計から積む
+  _dm.forEach(ym => {
+    (dailyItemRowsForMonth(ym) || []).forEach(i => {
+      const key = i.code + '|' + ym;
+      if (!agg[key]) agg[key] = { code: i.code, month: ym, rev: 0, adCost: 0, adRev: 0 };
+      agg[key].rev += i.revenue;
+    });
+    (dailyAdRowsForMonth(ym) || []).forEach(a => {
+      const key = a.code + '|' + ym;
+      if (!agg[key]) agg[key] = { code: a.code, month: ym, rev: 0, adCost: 0, adRev: 0 };
+      agg[key].adCost += a.adCost;
+      agg[key].adRev += a.adRevenue;
+    });
   });
   Object.values(agg).forEach(r => {
     r.seoRev = Math.max(0, r.rev - r.adRev);
@@ -8029,14 +8740,22 @@ function _zenMonthlyRows() {
   const months = getAvailableMonths();  // 昇順 'YYYY-MM'
   return months.map(m => {
     let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0, soikomi = 0;
-    (state.item || []).filter(i => i.month === m).forEach(i => {
+    // 【v1.0526】日別データがある月は日別合計から作る。無い月は従来どおり月次データから。
+    const _hasDaily = monthHasDaily(m);
+    const _itemRows = _hasDaily ? (dailyItemRowsForMonth(m) || []) : (state.item || []).filter(i => i.month === m);
+    const _adRows   = _hasDaily ? (dailyAdRowsForMonth(m)   || []) : (state.ad   || []).filter(a => a.month === m);
+    _itemRows.forEach(i => {
       rev += i.revenue || 0; orders += i.orders || 0;
       // 【v1.0405】送り込み売上＝子商品（黄色バッジ＝repCodeが設定され自コードと異なる）の売上合計
       const _rep = ((state.productMeta[i.code] || {}).repCode || '').trim();
       if (_rep && _rep !== i.code) soikomi += i.revenue || 0;
     });
-    (state.ad || []).filter(a => a.month === m).forEach(a => { adRev += a.adRevenue || 0; adCost += a.adCost || 0; adClicks += a.adClicks || 0; adOrders += a.adOrders || 0; });
-    if (state.overall && Array.isArray(state.overall.months)) {
+    _adRows.forEach(a => { adRev += a.adRevenue || 0; adCost += a.adCost || 0; adClicks += a.adClicks || 0; adOrders += a.adOrders || 0; });
+    if (_hasDaily) {
+      // 総売上はショップ売上KPI(日別)の合計を権威データとする（商品別の合計と一致することを確認済み）
+      const _dov = dailyOverallRevForMonth(m);
+      if (_dov != null && _dov > 0) rev = _dov;
+    } else if (state.overall && Array.isArray(state.overall.months)) {
       const o = state.overall.months.find(x => x.month === m);
       if (o) { if (o.revenue > 0) rev = o.revenue; if (o.adRevenue != null) adRev = o.adRevenue; if (o.adCost != null) adCost = o.adCost; if (o.adClicks != null) adClicks = o.adClicks; if (o.adOrders != null) adOrders = o.adOrders; }
     }
@@ -8729,7 +9448,7 @@ function updateTuneBar() {
     } else {
       // 【v293】未更新は「アラート帯」（左アクセントバー＋淡塗り・角片側丸め）＝塗りボタンと形で差別化。
       fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;font-weight:700;color:#92400e;background:rgba(217,119,6,0.12);border-left:4px solid var(--amber);border-radius:0 5px 5px 0;padding:5px 12px 5px 10px;white-space:nowrap">⚠ 最新値 本日未更新</span>'
-        + '<button type="button" onclick="openUploadModal(\'spot\')" title="最新の入札価格／PRオプ料率を取り込む" style="font-size:0.76rem;font-weight:700;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">＋ 最新値を更新</button>';
+        + '<button type="button" onclick="openUploadModal()" title="その日の5ファイル（日別3＋最新値2）を取り込む" style="font-size:0.76rem;font-weight:700;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">＋ レポート追加</button>';   /* 【v1.0526】ボタン統合 */
     }
   }
 }
@@ -10778,22 +11497,19 @@ function openUploadModal(mode) {
       alert('エラー: uploadModal要素が見つかりません。ページをリロードしてください。');
       return;
     }
-    // モード設定（デフォルトは monthly）
-    const m = (mode === 'spot') ? 'spot' : 'monthly';
-    state.uploadMode = m;
-    uploadModal.dataset.mode = m;
-    // タイトル・ヒント文言をモードに合わせて切り替え
+    // 【v1.0526】月次/最新値のモード分けを撤廃。常に5スロットすべてを表示する。
+    state.uploadMode = 'all';
+    uploadModal.dataset.mode = 'all';
     const titleEl = uploadModal.querySelector('.modal-title');
     const hintEl = $('#uploadModeHint');
-    if (m === 'spot') {
-      if (titleEl) titleEl.textContent = '📂 最新値を更新';
-      if (hintEl) hintEl.textContent = '入札価格（BID_ITEM*.csv）・PRオプ料率（data*.csv）をアップロードできます（CSVまたはZIP）';
-    } else {
-      if (titleEl) titleEl.textContent = '📂 レポートを追加（月次）';
-      if (hintEl) hintEl.textContent = 'ショップ売上・商品別売上・広告詳細レポートを1つ以上アップロードできます（CSVまたはZIP）';
-    }
+    if (titleEl) titleEl.textContent = '📂 レポート追加';
+    if (hintEl) hintEl.textContent = 'その日の5ファイルをまとめてドロップしてください（CSVまたはZIP）。①②③は日別（ファイル名末尾の8桁日付で日を判定）、④⑤は最新値です。';
     state.uploadBuffer = { overall: null, item: null, itemList: [], ad: null, bid: null, proRate: null, master: null };
+    _dailyStage = { overall: {}, item: {}, ad: {}, files: [] };   // 【v1.0526】日別ステージもリセット
     ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
+    _renderMissingNotice(null);
+    _dropCalReset();            // ドロップカレンダーを初期化
+    _missingDayReset();         // 不足日パネルを閉じる
     const logArea = $('#logArea');
     if (logArea) {
       logArea.innerHTML = '';
@@ -10802,7 +11518,7 @@ function openUploadModal(mode) {
     if (typeof validateBuffer === 'function') validateBuffer();
     uploadModal.classList.add('open');
     document.body.style.overflow = 'hidden';
-    console.log('✅ openUploadModal: モーダルを開きました (mode=' + m + ')');
+    console.log('✅ openUploadModal: モーダルを開きました');
   } catch (err) {
     console.error('openUploadModal エラー:', err);
     alert('レポート追加ボタンでエラーが発生しました:\n' + (err && err.message ? err.message : err) + '\n\nブラウザのコンソール(F12)に詳細があります。');
@@ -10821,7 +11537,7 @@ function closeUploadModal() {
 window.openUploadModal = openUploadModal;
 window.closeUploadModal = closeUploadModal;
 if ($('#btnJumpUploadMonthly')) $('#btnJumpUploadMonthly').addEventListener('click', () => openUploadModal('monthly'));
-if ($('#btnJumpUploadSpot')) $('#btnJumpUploadSpot').addEventListener('click', () => openUploadModal('spot'));
+/* 【v1.0526】「+ 最新値を更新」ボタンは「+ レポート追加」に統合したため配線を撤去 */
 if ($('#modalClose')) $('#modalClose').addEventListener('click', closeUploadModal);
 if ($('#btnCloseBottom')) $('#btnCloseBottom').addEventListener('click', closeUploadModal);
 if (uploadModal) uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) closeUploadModal(); });
