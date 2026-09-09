@@ -3292,6 +3292,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <span><span class="sw" style="background:#16a34a"></span>上昇(2割以内)</span>
             <span><span class="sw" style="background:#ca8a04"></span>減少(2割以内)</span>
             <span><span class="sw" style="background:#dc2626"></span>2割超の減少</span>
+            <span style="border-left:1px solid var(--border);padding-left:12px"><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#16a34a;margin-right:4px;vertical-align:middle"><svg viewBox="0 0 20 20" style="width:10px;height:10px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>親子商品（親＝子の合計）</span>
           </div>
         </div>
         <div class="cmp-area" id="cmpArea"></div>
@@ -8049,7 +8050,7 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       const tagHtml=cs.tag?'<div style="font-size:12px;font-weight:700;color:'+cs.col+';line-height:1.05;margin-top:2px">'+cs.tag+'</div>':'';
       const _isParent=!!(parentSet && parentSet.has(x.code));
       const parentMark=_isParent
-        ? '<div title="親子商品（親商品）" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:4px;background:#2E7D32;border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;z-index:2">親</div>'
+        ? '<div title="親子商品（親商品）" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:6px;background:#16a34a;border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:2"><svg viewBox="0 0 20 20" style="width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></div>'
         : '';
       return '<div title="'+esc(name)+(_isParent?'（親子商品）':'')+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:96px;flex:0 0 auto;text-align:center;position:relative">'
         +'<div style="position:absolute;top:-6px;left:-6px;min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border-radius:11px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.25)">'+(i+1)+'</div>'
@@ -8065,7 +8066,7 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       +'<span style="color:#1565C0;font-weight:700">+20%↑</span> <span style="color:#2E7D32;font-weight:700">+10%↑</span> '
       +'<span style="color:#1a1a1a;font-weight:700">中間</span> <span style="color:#BA7517;font-weight:700">-10%↓</span> '
       +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）'
-      +'<span style="margin-left:10px;display:inline-flex;align-items:center;gap:4px;vertical-align:middle"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#2E7D32;color:#fff;font-size:9px;font-weight:800">親</span>＝親子商品（親商品）</span>'
+      +'<span style="margin-left:10px;display:inline-flex;align-items:center;gap:4px;vertical-align:middle"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:#16a34a"><svg viewBox="0 0 20 20" style="width:11px;height:11px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>＝親子商品（親商品）</span>'
       +'</span></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">'+items+'</div>'
       +'</div>';
@@ -9737,6 +9738,7 @@ function renderCompare(){
   if (!area) return;
   const built = cmpBuildAgg();
   const _agg = built.agg, _yms = built.yms, _meta = built.meta;
+  const _cmpParentSet = _zdSeoParentSet();   // 【v1.0520】親子商品（親＝メンバー2件以上の代表コード）に緑マーカーを付けるため
   if (!_yms.length){ if(sel) sel.innerHTML=''; area.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)">データがありません（レポートを取り込んでください）</div>'; return; }
 
   let periods;
@@ -9836,7 +9838,7 @@ function renderCompare(){
       h+='<div onclick="cmpSetFocus(\''+esc(p.code)+'\')" style="display:flex;height:'+rowH+'px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;'+(foc?'background:#fef9c3;':'')+'">'
         +'<div style="width:'+S.imgBox+'px;display:flex;justify-content:center">'+im+'</div>'
         +'<div style="'+nameFlex+'padding-left:10px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-width:0">'
-          +'<div ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+'" style="font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;user-select:text;-webkit-user-select:text;line-height:1.15">'+esc(p.name)+'</div>'
+          +'<div ondblclick="cmpSelName(this,event)" title="'+esc(p.name)+((_cmpParentSet&&_cmpParentSet.has(p.code))?'（親子商品）':'')+'" style="font-size:'+S.nameF+'px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;user-select:text;-webkit-user-select:text;line-height:1.15">'+((_cmpParentSet&&_cmpParentSet.has(p.code))?'<span title="親子商品（親商品）" style="display:inline-flex;align-items:center;justify-content:center;width:1.15em;height:1.15em;border-radius:3px;background:#16a34a;margin-right:5px;position:relative;top:2px;flex:none"><svg viewBox="0 0 20 20" style="width:0.82em;height:0.82em;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>':'')+esc(p.name)+'</div>'
           +'<div onclick="event.stopPropagation()" ondblclick="cmpSelName(this,event)" title="'+esc(p.code)+'" style="font-size:'+Math.max(9,Math.round(S.nameF*0.72))+'px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1;margin-top:1px;cursor:text;user-select:text;-webkit-user-select:text">'+esc(p.code)+'</div>'
         +'</div>'+spacer
         +'<div style="width:'+S.cSales+'px;text-align:right;padding-right:'+S.padR+'px;font-family:monospace;font-size:'+S.numF+'px">'+salesCell+'</div>'
