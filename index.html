@@ -7220,7 +7220,7 @@ function renderBasic() {
       <td class="num col-ad">${fmt(r.adCost)}</td>
       <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}${adStoppedBadge(r.code)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
@@ -8380,6 +8380,32 @@ function adStatusIsCircle(s) { return s === '入札◯' || s === '入札価格�
 function adStatusIsCross(s)  { return s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }
 function adStatusIsSettled(s){ return s === '入札△-飛ぶ手前固定'; }  // 固定＝対応不要
 function adStatusIsNone(s)   { return s === '入札なし' || s === '入札無し' || s === '広告無'; }  // 【v1.0323】入札なし判定（旧表記も許容）
+// 【v1.0523】以前は広告を出していたが、現在は広告なし＝広告を停止／削除した商品を自動判定する。
+//   条件: (1)現在アクティブな広告運用中でない（入札◯/×調整中/△固定 のいずれでもない）
+//         (2)過去に広告費（実績額）が1度でもあった
+//         (3)最新データ月では広告費が0（＝今は広告を出していない）
+function adStoppedAfterSpend(code) {
+  try {
+    const meta = (state.productMeta && state.productMeta[code]) || {};
+    const s = meta.adStatus || '';
+    if (adStatusIsCircle(s) || adStatusIsCross(s) || adStatusIsSettled(s)) return false;   // 現役で広告運用中は対象外
+    let hadAd = false; const byMonth = {};
+    (state.ad || []).forEach(function (a) {
+      if (a && a.code === code) { const c = +a.adCost || 0; byMonth[a.month] = (byMonth[a.month] || 0) + c; if (c > 0) hadAd = true; }
+    });
+    if (!hadAd) return false;   // そもそも広告を出したことがない
+    const months = (typeof getAvailableMonths === 'function') ? (getAvailableMonths() || []) : [];
+    const latest = months.length ? months[months.length - 1] : null;
+    if (!latest) return false;
+    return (byMonth[latest] || 0) === 0;   // 最新月は広告費0＝今は広告なし
+  } catch (e) { return false; }
+}
+// 「元広告」バッジHTML（該当時のみ）
+function adStoppedBadge(code) {
+  return adStoppedAfterSpend(code)
+    ? '<div title="以前は広告を出していたが、現在は広告なし（成果が出ず停止／削除した可能性）" style="margin-top:2px;display:inline-block;font-size:9px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:4px;padding:0 4px;line-height:1.5;white-space:nowrap">元広告</div>'
+    : '';
+}
 function proStatusIsCircle(s){ return s === 'PR◯' || s === 'PRオプ○' || s === 'PRO○'; }
 function proStatusIsCross(s) { return s === 'PR×' || s === 'PR△-親-下げ挑戦中' || s === 'PRオプ×' || s === 'PRO×'; }
 function proStatusIsSettled(s){ return s === 'PR△-親-飛ぶ手前固定' || s === 'PR△-子-7％固定'; }  // 固定＝対応不要
