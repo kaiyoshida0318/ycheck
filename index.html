@@ -3265,7 +3265,11 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             <button type="button" id="zdSeoOff" onclick="_zdSetSeoShow(false)">表示なし</button>
           </span>
           <span style="margin-left:10px;font-size:12px;color:var(--text3)">色分け: <b class="c-g1">上位</b>〜<b class="c-r">下位</b>（最新月は評価対象外）</span>
+          <!-- 【v1.0521】この表の表示内容をCSV出力（右端配置） -->
+          <button class="btn sm ghost" id="btnDownloadZenMonthlyCsv" type="button" style="margin-left:auto" onclick="downloadZenMonthlyCsv()" data-tooltip="この表の表示内容（月×各指標＋送り込み売上）を、今の並び順（通常／前年同月比）のままCSV出力します">⬇ この表をCSV</button>
         </div>
+        <!-- 【v1.0521】送り込み売上の説明を表の上に表示 -->
+        <p style="margin:2px 0 8px;font-size:12px;color:var(--text2);line-height:1.55"><b style="color:#7c3aed">送り込み売上</b>とは：親子商品のうち<b>子商品（送り込み先）</b>の月次売上合計です。親商品から送り込まれて子商品で発生した売上分を、この列に集計しています。</p>
         <div id="zdTableWrap" class="table-wrap" style="overflow:auto;max-height:70vh"></div>
       </div>
     </div>
@@ -7967,6 +7971,45 @@ function _zenYoyOrder(rowsDesc) {
 let _zdMode = 'normal';
 function _zdSetMode(m) { _zdMode = m; document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-zdm') === m)); renderGraphData(); }
 window._zdSetMode = _zdSetMode;
+// 【v1.0521】全-月別データの表示内容をCSV出力（表示モード＝通常/前年同月比の並び順そのまま）。列は表と同じ：月・総売上・SEO売上・広告売上・実績額・CVR・広告ROAS・送り込み売上。
+function downloadZenMonthlyCsv() {
+  try {
+    const asc = (typeof _zenMonthlyRows === 'function') ? (_zenMonthlyRows() || []) : [];
+    if (!asc.length) {
+      if (typeof showToast === 'function') showToast('出力できるデータがありません。レポートを取り込んでください。', 'warn');
+      else alert('出力できるデータがありません。レポートを取り込んでください。');
+      return;
+    }
+    const desc = asc.slice().reverse();
+    const drows = (_zdMode === 'yoy' && typeof _zenYoyOrder === 'function') ? _zenYoyOrder(desc) : desc;
+    const esc = function (v) { let s = (v == null) ? '' : String(v); if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
+    const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
+    const numP = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v * 10) / 10); };
+    const header = ['月'].concat(MI_COLS.map(function (c) { return c.label; })).concat(['送り込み売上']);
+    const lines = [header.join(',')];
+    drows.forEach(function (r) {
+      const row = [r.month || r.label];
+      MI_COLS.forEach(function (c) { row.push(c.t === 'p' ? numP(r[c.key]) : numY(r[c.key])); });
+      row.push(numY(r.soikomi));
+      lines.push(row.map(esc).join(','));
+    });
+    const csv = '﻿' + lines.join('\r\n');   // BOM付き＝Excelで文字化けしない
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    const modeLabel = (_zdMode === 'yoy') ? '前年同月比' : '通常';
+    a.href = url; a.download = 'ycheck_全月別データ_' + modeLabel + '_' + stamp + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
+    if (typeof showToast === 'function') showToast('全-月別データCSVを出力しました（' + drows.length + '行）', 'ok');
+  } catch (e) {
+    console.error('[Ycheck] downloadZenMonthlyCsv error', e);
+    alert('CSV出力でエラーが発生しました: ' + (e && e.message));
+  }
+}
+window.downloadZenMonthlyCsv = downloadZenMonthlyCsv;
 // ==================== 【v1.0508】全-月別データ：SEO売上トップ15パネル ====================
 let _zdSeoShow = false;
 function _zdSetSeoShowUI(){
@@ -8051,13 +8094,14 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       const cs=_zdSeoChgStyle(x.seo, prevSeo);
       const tagHtml=cs.tag?'<div style="font-size:12px;font-weight:700;color:'+cs.col+';line-height:1.05;margin-top:2px">'+cs.tag+'</div>':'';
       const _isParent=!!(parentSet && parentSet.has(x.code));
+      // 【v1.0521】案A(スクリム)：写真の上端に薄い暗がりを敷き、その上に順位・親アイコンを置いて常にくっきり見せる。高さは不変。
+      const scrim='<div style="position:absolute;top:1px;left:1px;right:1px;height:32px;border-radius:7px 7px 0 0;background:linear-gradient(to bottom,rgba(0,0,0,.48),rgba(0,0,0,0));pointer-events:none;z-index:1"></div>';
+      const rankBadge='<div style="position:absolute;top:4px;left:4px;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 1px 2px rgba(0,0,0,.35);text-shadow:0 1px 2px rgba(0,0,0,.5)">'+(i+1)+'</div>';
       const parentMark=_isParent
-        ? '<div title="親子商品（親商品）" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:6px;background:#16a34a;border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:2"><svg viewBox="0 0 20 20" style="width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></div>'
+        ? '<div title="親子商品（親商品）" style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:5px;background:#16a34a;border:1.5px solid rgba(255,255,255,.92);box-shadow:0 1px 3px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2"><svg viewBox="0 0 20 20" style="width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></div>'
         : '';
       return '<div title="'+esc(name)+(_isParent?'（親子商品）':'')+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:96px;flex:0 0 auto;text-align:center;position:relative">'
-        +'<div style="position:absolute;top:-6px;left:-6px;min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border-radius:11px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.25)">'+(i+1)+'</div>'
-        +parentMark
-        +imgEl
+        +'<div style="position:relative;display:inline-block;vertical-align:top;line-height:0">'+imgEl+scrim+rankBadge+parentMark+'</div>'
         +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:15px;color:'+cs.col+';margin-top:6px;line-height:1.2">'+fY(x.seo)+'</div>'
         +tagHtml
         +'</div>';
