@@ -8017,7 +8017,16 @@ function _zdSeoOpenGraph(code){
   }catch(e){}
 }
 window._zdSeoOpenGraph=_zdSeoOpenGraph;
-function _zdSeoPanelHtml(seoByMonth, ym, colCount){
+// 【v1.0520】親子商品（親＝メンバー2件以上の代表コード）の集合を返す。トップ15に緑の「親」マーカーを出すため。
+function _zdSeoParentSet(){
+  const set=new Set();
+  try{
+    const fam=(typeof _igFamilies==='function')?_igFamilies():{};
+    Object.keys(fam).forEach(function(k){ if((fam[k]||[]).length>1) set.add(k); });
+  }catch(e){}
+  return set;
+}
+function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
   const top=_zdSeoTop(seoByMonth, ym);
   const yy=ym.slice(0,4), mm=ym.slice(5,7);
   let _py=+yy, _pm=+mm-1; if(_pm<1){_pm=12;_py--;}
@@ -8038,8 +8047,13 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount){
       const prevSeo=prevMap[x.code]||0;
       const cs=_zdSeoChgStyle(x.seo, prevSeo);
       const tagHtml=cs.tag?'<div style="font-size:12px;font-weight:700;color:'+cs.col+';line-height:1.05;margin-top:2px">'+cs.tag+'</div>':'';
-      return '<div title="'+esc(name)+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:96px;flex:0 0 auto;text-align:center;position:relative">'
+      const _isParent=!!(parentSet && parentSet.has(x.code));
+      const parentMark=_isParent
+        ? '<div title="親子商品（親商品）" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:4px;background:#2E7D32;border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;z-index:2">親</div>'
+        : '';
+      return '<div title="'+esc(name)+(_isParent?'（親子商品）':'')+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:96px;flex:0 0 auto;text-align:center;position:relative">'
         +'<div style="position:absolute;top:-6px;left:-6px;min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border-radius:11px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.25)">'+(i+1)+'</div>'
+        +parentMark
         +imgEl
         +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:15px;color:'+cs.col+';margin-top:6px;line-height:1.2">'+fY(x.seo)+'</div>'
         +tagHtml
@@ -8050,7 +8064,9 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount){
       +'<span style="font-weight:400;color:var(--text3)">（数字の色＝前月比：'
       +'<span style="color:#1565C0;font-weight:700">+20%↑</span> <span style="color:#2E7D32;font-weight:700">+10%↑</span> '
       +'<span style="color:#1a1a1a;font-weight:700">中間</span> <span style="color:#BA7517;font-weight:700">-10%↓</span> '
-      +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）</span></div>'
+      +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）'
+      +'<span style="margin-left:10px;display:inline-flex;align-items:center;gap:4px;vertical-align:middle"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#2E7D32;color:#fff;font-size:9px;font-weight:800">親</span>＝親子商品（親商品）</span>'
+      +'</span></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">'+items+'</div>'
       +'</div>';
   }
@@ -8060,6 +8076,7 @@ function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
   _zdSetSeoShowUI();
   const _seoByM = _zdSeoShow ? _zdSeoByMonth() : null;
+  const _seoParentSet = _zdSeoShow ? _zdSeoParentSet() : null;   // 【v1.0520】親子商品マーカー用
   const _zdColCount = 1 + MI_COLS.length + 1;   // 月 + 指標列 + 送り込み売上
   const asc = _zenMonthlyRows();
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
@@ -8089,7 +8106,7 @@ function renderGraphData() {
     const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
     let _rowHtml = '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + soiCell + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
-    if (_zdSeoShow && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount);
+    if (_zdSeoShow && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
     return _rowHtml;
   }).join('');
   wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
