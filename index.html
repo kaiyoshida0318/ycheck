@@ -8106,13 +8106,15 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
         +tagHtml
         +'</div>';
     }).join('');
+    // 【v1.0522】凡例に「15位以内の親子商品の件数」を出す
+    const _parentCount=top.filter(function(x){return parentSet && parentSet.has(x.code);}).length;
     inner='<div style="padding:10px 12px">'
       +'<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:9px">◎ '+yy+'/'+mm+' SEO売上トップ15商品　'
       +'<span style="font-weight:400;color:var(--text3)">（数字の色＝前月比：'
       +'<span style="color:#1565C0;font-weight:700">+20%↑</span> <span style="color:#2E7D32;font-weight:700">+10%↑</span> '
       +'<span style="color:#1a1a1a;font-weight:700">中間</span> <span style="color:#BA7517;font-weight:700">-10%↓</span> '
       +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）'
-      +'<span style="margin-left:10px;display:inline-flex;align-items:center;gap:4px;vertical-align:middle"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:#16a34a"><svg viewBox="0 0 20 20" style="width:11px;height:11px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>＝親子商品（親商品）</span>'
+      +'<span style="margin-left:10px;display:inline-flex;align-items:center;gap:4px;vertical-align:middle"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:#16a34a"><svg viewBox="0 0 20 20" style="width:11px;height:11px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>＝親子商品（'+_parentCount+'）</span>'
       +'</span></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">'+items+'</div>'
       +'</div>';
