@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0523 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0524 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2833,6 +2833,16 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .ad-filter .adf-btn.on { background:var(--accent); color:#fff; font-weight:600; }
 .ad-filter.search-bypass { opacity:0.4; }
 .ad-filter.search-bypass .adf-btn { cursor:default; }
+
+/* 【v1.0524】売上ROAS帯フィルタ（商品-基本データ）。各ボタンの色＝その帯の色。 */
+.sroas-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:4px; vertical-align:middle; }
+.sroas-filter .sroasf-btn { font-size:0.78rem; font-weight:700; padding:5px 10px; border:none; border-left:1px solid var(--border); background:var(--bg2); cursor:pointer; white-space:nowrap; line-height:1.3; }
+.sroas-filter .sroasf-btn:first-child { border-left:none; }
+.sroas-filter .sroasf-btn:hover { filter:brightness(0.94); }
+
+/* 【v1.0524】売上ROAS列。総売上系の重要指標なので総売上より少し濃いブルー系の地色にする。 */
+th.col-sroas, td.col-sroas { background-color:#eef4fb; }
+th.col-sroas { background-color:#cfe0f7; }
 </style>
 </head>
 <body>
@@ -2859,7 +2869,7 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0523</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0524</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3018,6 +3028,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <span class="ad-filter" id="basicAdFilterBar" role="group" aria-label="広告フィルタ" title="入札状態が入札価格○/×の商品で絞り込み（検索中は全件表示）"><button type="button" class="adf-btn on" data-adf="all">全体</button><button type="button" class="adf-btn" data-adf="ad">広告あり商品</button><button type="button" class="adf-btn" data-adf="noad">広告なし商品</button></span>
           <button class="search-rep-badge" id="basicRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <!-- 【v1.0524】売上ROASの帯フィルタ。中身は _syncSroasFilterUI() が renderBasic のたびに描き直す（しきい値を変えるとラベルも自動追従） -->
+          <span class="filter-label" style="margin-left:8px">売上ROAS</span>
+          <span class="sroas-filter" id="basicSroasFilterBar" role="group" aria-label="売上ROAS帯フィルタ" title="売上ROASの帯で絞り込み（同じ帯をもう一度押すと解除）"></span>
           <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <span class="gh-reflect-hover" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
@@ -3037,6 +3050,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
               <th class="nosort" data-resize-key="kwBasic">メインKW</th>
+              <!-- 【v1.0524】売上ROAS＝総売上÷実績額×100。総売上の左に配置（広告ROAS＝広告売上÷広告費 とは別物なので注意） -->
+              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 実績額（広告費）× 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上ROAS</th>
               <th class="num col-total" data-sort="rev">総売上</th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
@@ -7167,9 +7182,22 @@ function renderBasic() {
   }
   { const _b = $('#basicAdFilterBar'); if (_b) _b.classList.toggle('search-bypass', !!q); }
 
+  // 【v1.0524】売上ROASの帯フィルタ（800- / 500-800 / 200-500 / -200 / —）。
+  //   広告あり/なしフィルタと違い、検索中もそのまま効かせる（帯は明示的に選んだときだけ立つため）。
+  //   編集中ピン留めの商品は絞り込みで消さない（既存の他フィルタと同じ扱い）。
+  if (basicSroasFilter) {
+    list = list.filter(r => {
+      if (_editPinnedCodes.has(r.code)) return true;
+      const v = salesRoasPct(r.rev, r.adCost, 0);
+      return salesRoasCat(v == null ? 0 : v) === basicSroasFilter;
+    });
+  }
+  _syncSroasFilterUI();
+
   // ソート
   const sortGet = (r, k) => {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    if (k === 'sroas') return salesRoasSortVal(r.rev, r.adCost);   // 【v1.0524】対象外(広告費0)は -1＝最下位
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
@@ -7190,7 +7218,7 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0524】売上ROAS列の追加に合わせて +1
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
     state.basicDisplayedCodes = [];   // 【v1.0522】
@@ -7214,6 +7242,7 @@ function renderBasic() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
+      <td class="num col-sroas">${salesRoasCellHtml(salesRoasPct(r.rev, r.adCost, 0))}</td>
       <td class="num col-total">${fmt(r.rev)}</td>
       ${shareRevCell(r.seoRev, r.adRev, true, "col-sales")}
       <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
@@ -7335,7 +7364,68 @@ let _miParentOnly = false;   // 【v1.0408】親子商品グループ(メンバ�
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
+// ==================== 【v1.0524】売上ROAS（ADcheckからの移植） ====================
+//   売上ROAS(%) = 総売上 ÷ 広告費全体 × 100
+//   一般的なROAS（広告経由売上÷広告費）と違い、分子が「総売上」。
+//   狙い＝「その商品に使っている広告費が、店全体の売上に対して効率的か」を見る。
+//   ycheck には CA調整（別枠の広告費）の概念が無いので caSpend は常に 0。
+//   ※ しきい値・色はここだけ触れば全画面に反映される（商材や広告比率に合わせて調整する前提）。
+const SALES_ROAS_TH = { g: 800, y: 500, o: 200 };   // 緑/茶/橙 の下限（これ未満は赤）
+const SALES_ROAS_COLORS = { g:'#1D9E75', y:'#BA7517', o:'#ED7D31', r:'#A32D2D', n:'#9ca3af' };
+// 売上ROAS(%)を整数で返す。広告費0＝分母0は計算不能なので null（表示は「—」）。
+function salesRoasPct(totSales, adSpend, caSpend) {
+  const den = (adSpend || 0) + (caSpend || 0);
+  if (!(den > 0)) return null;
+  return Math.round((totSales || 0) / den * 100);
+}
+// 値 → 5段階カテゴリ（g:非常に良い / y:良好 / o:平均的 / r:要注意 / n:対象外）
+function salesRoasCat(v) {
+  if (!(v > 0)) return 'n';
+  if (v >= SALES_ROAS_TH.g) return 'g';
+  if (v >= SALES_ROAS_TH.y) return 'y';
+  if (v >= SALES_ROAS_TH.o) return 'o';
+  return 'r';
+}
+// セル中身のHTML（色付き数値 / 対象外は「—」）
+function salesRoasCellHtml(v) {
+  if (v == null || !(v > 0)) return '<span style="color:' + SALES_ROAS_COLORS.n + '">—</span>';
+  return '<span style="color:' + SALES_ROAS_COLORS[salesRoasCat(v)] + ';font-weight:700">' + Math.round(v).toLocaleString() + '%</span>';
+}
+// ソート用の数値（対象外は最下位扱いの -1）
+function salesRoasSortVal(totSales, adSpend) {
+  const v = salesRoasPct(totSales, adSpend, 0);
+  return (v == null) ? -1 : v;
+}
+// 帯フィルタ（商品-基本データ）。しきい値定数からラベルを自動生成するので SALES_ROAS_TH を変えれば表記も追従する。
+function salesRoasCats() {
+  return [
+    ['g', SALES_ROAS_TH.g + '-',                        SALES_ROAS_COLORS.g],
+    ['y', SALES_ROAS_TH.y + '-' + SALES_ROAS_TH.g,      SALES_ROAS_COLORS.y],
+    ['o', SALES_ROAS_TH.o + '-' + SALES_ROAS_TH.y,      SALES_ROAS_COLORS.o],
+    ['r', '-' + SALES_ROAS_TH.o,                        SALES_ROAS_COLORS.r],
+    ['n', '—',                                          SALES_ROAS_COLORS.n]
+  ];
+}
+let basicSroasFilter = null;   // 選択中の帯カテゴリ or null（未選択＝絞り込みなし）
+function setSroasFilter(cat) {
+  basicSroasFilter = (basicSroasFilter === cat) ? null : cat;   // 同じ帯を再クリックで解除
+  if (typeof renderBasic === 'function') renderBasic();
+}
+function clearSroasFilter() { basicSroasFilter = null; if (typeof renderBasic === 'function') renderBasic(); }
+// 帯ボタン群を描画（renderBasic から毎回呼ぶ＝選択状態が常に同期する）
+function _syncSroasFilterUI() {
+  const bar = document.getElementById('basicSroasFilterBar');
+  if (!bar) return;
+  bar.innerHTML = salesRoasCats().map(function (c) {
+    const on = (basicSroasFilter === c[0]);
+    return '<button type="button" class="sroasf-btn' + (on ? ' on' : '') + '" onclick="setSroasFilter(\'' + c[0] + '\')"'
+      + ' style="' + (on ? 'background:' + c[2] + ';color:#fff' : 'color:' + c[2]) + '">' + c[1] + '</button>';
+  }).join('');
+}
+
 const MI_COLS = [
+  // 【v1.0524】売上ROAS＝総売上÷実績額×100。総売上の左に置く（総売上系の重要指標）。t:'sr' は絶対しきい値で色付けする専用タイプ。
+  { key:'salesRoas', label:'売上ROAS', hbg:'#cfe0f7', bg:'#eef4fb', hi:true,  t:'sr' },
   { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' }, // ブルー（Ycheck 総売上）
   { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y' }, // グリーン（Ycheck SEO売上）
   { key:'adSales',  label:'広告売上',  hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'y' }, // オレンジ（Ycheck 広告系）
@@ -7403,7 +7493,9 @@ function renderMonthly() {
     const totSales = rev, seoSales = Math.max(0, totSales - adSales);
     const roas = spend > 0 ? Math.round(adSales / spend * 1000) / 10 : 0;
     const cvr  = cl > 0 ? Math.round(or / cl * 1000) / 10 : 0;
-    return { label: ym.replace('-', '/'), totSales, seoSales, adSales, spend, cvr, roas, soikomi };
+    // 【v1.0524】売上ROAS＝総売上÷実績額×100（広告費0なら null＝「—」）
+    const salesRoas = salesRoasPct(totSales, spend, 0);
+    return { label: ym.replace('-', '/'), salesRoas, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
   };
 
   // 全コード → 家族(代表コード)ごとにメンバーをまとめる（撤退は除外）
@@ -7500,8 +7592,11 @@ function renderMonthly() {
         + '<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace">' + code + '</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + safeFull + '">' + safeFull + '</div></div></div></td>' : '';
       const cells = MI_COLS.map(c => {
         const v = m[c.key];
-        const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
-        const inner = (!v || v === 0) ? disp : '<span class="c-' + _rank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+        // 【v1.0524】売上ROASは月内相対ランクではなく絶対しきい値(800/500/200)で色付けする
+        const inner = (c.t === 'sr')
+          ? salesRoasCellHtml(v)
+          : (() => { const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
+                     return (!v || v === 0) ? disp : '<span class="c-' + _rank5(v, pool[c.key], c.hi) + '">' + disp + '</span>'; })();
         return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;' + bT + ';' + bB + ';background:' + c.bg + ';white-space:nowrap">' + inner + '</td>';
       }).join('');
       // 【v1.0410】右端: 送り込み売上（子商品分）
@@ -7946,6 +8041,7 @@ function _zenMonthlyRows() {
     const seoRev = Math.max(0, rev - adRev);
     return {
       month: m, label: m.replace('-', '/'),
+      salesRoas: salesRoasPct(rev, adCost, 0),   // 【v1.0524】売上ROAS＝総売上÷実績額×100
       totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
       cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
       roas: adCost > 0 ? adRev / adCost * 100 : 0,
@@ -7994,11 +8090,13 @@ function downloadZenMonthlyCsv() {
     const esc = function (v) { let s = (v == null) ? '' : String(v); if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
     const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
     const numP = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v * 10) / 10); };
-    const header = ['月'].concat(MI_COLS.map(function (c) { return c.label; })).concat(['送り込み売上']);
+    // 【v1.0524】売上ROASは画面表示のみ。CSVの列構成は従来どおり据え置く（出力にも入れたくなったらこの filter を外すだけ）。
+    const csvCols = MI_COLS.filter(function (c) { return c.key !== 'salesRoas'; });
+    const header = ['月'].concat(csvCols.map(function (c) { return c.label; })).concat(['送り込み売上']);
     const lines = [header.join(',')];
     drows.forEach(function (r) {
       const row = [r.month || r.label];
-      MI_COLS.forEach(function (c) { row.push(c.t === 'p' ? numP(r[c.key]) : numY(r[c.key])); });
+      csvCols.forEach(function (c) { row.push(c.t === 'p' ? numP(r[c.key]) : numY(r[c.key])); });
       row.push(numY(r.soikomi));
       lines.push(row.map(esc).join(','));
     });
@@ -8154,9 +8252,17 @@ function renderGraphData() {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
     const _unmatured = !!(r.month && curYm && r.month >= curYm);   // 満了していない月（当月・以降）
     const cells = MI_COLS.map(c => {
-      const v = r[c.key]; const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
-      const _noColor = _unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
-      const inner = (!v || v === 0 || _noColor) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+      const v = r[c.key];
+      let inner;
+      if (c.t === 'sr') {
+        // 【v1.0524】売上ROASは月間の相対ランクではなく絶対しきい値(800/500/200)で色付け。
+        //   比率なので満了/未満了に関わらず色を出す（CVR・広告ROASと同じ扱い）。
+        inner = salesRoasCellHtml(v);
+      } else {
+        const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
+        const _noColor = _unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
+        inner = (!v || v === 0 || _noColor) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+      }
       return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + inner + '</td>';
     }).join('');
     const sv = r.soikomi; const sdisp = fmtY(sv);
