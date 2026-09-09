@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0524 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0525 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2869,7 +2869,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0524</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0525</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7008,7 +7008,9 @@ function kwCellHtml(code) {
 }
 
 // ==================== Rendering: 商品-基本データ ====================
-let basicSortKey = 'rev', basicSortDir = -1;
+// 【v1.0525】初期表示は「実績額（広告費）」の降順。広告費を多く使っている商品から並ぶ。
+//   （〜v1.0524 は総売上 'rev' の降順が初期値だった）
+let basicSortKey = 'adCost', basicSortDir = -1;
 let basicAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み（'all'|'ad'|'noad'）
 
 // ==================== 【撤退検討▲】専用レイアウト（ステータスチップ pro-wc で表示） ====================
@@ -10415,7 +10417,7 @@ function renderAll() {
 // ==================== Sort Reset ====================
 // ビュー遷移時にすべてのソート状態を各ビューのデフォルトに戻す
 function resetAllSorts() {
-  basicSortKey = 'rev';        basicSortDir = -1;
+  basicSortKey = 'adCost';     basicSortDir = -1;   // 【v1.0525】並び替えリセット時も実績額の降順に戻す
   monthlySortKey = 'month';    monthlySortDir = -1;
   retiredSortKey = 'code';     retiredSortDir = 1;
   adAdjustSortKey = 'adRev2';  adAdjustSortDir = -1;
