@@ -3025,8 +3025,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
             </span>
           </span>
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
-          <!-- 【v1.0521】この画面の列を全商品×全月でCSV出力（右端配置） -->
-          <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="ドロップダウンで選択中の月の全商品を、この画面の列（商品コード・商品名・メインKW・総売上・SEO売上・PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス）でCSV出力します">⬇ この月の商品基本データCSV</button>
+          <!-- 【v1.0522】いま画面に表示されている商品（ステータス絞り込み等を反映）を、選択月の列内容でCSV出力（右端配置） -->
+          <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（商品コード・商品名・メインKW・総売上・SEO売上・PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス）でCSV出力します">⬇ このページをCSV出力</button>
         </div>
         <div class="table-wrap">
           <table id="tableBasic" class="data-grid">
@@ -3490,6 +3490,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="search-rep-badge" id="adRankRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnRefreshAdRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="adRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
+          <!-- 【v1.0522】このページ（選択月）の表内容をCSV出力（画像列を除く）。右端配置 -->
+          <button class="btn sm ghost" id="btnDownloadAdRankCsv" type="button" style="margin-left:auto" onclick="downloadRankCsv('ad')" data-tooltip="選択中の月の広告順位表を、表示中の商品・日別で（広告順位＋入札価格の2段）CSV出力します。画像列は除きます">⬇ このページをCSV出力</button>
         </div>
         <div class="table-wrap">
           <table id="tableAdRank" class="rank-table data-grid">
@@ -3512,6 +3514,8 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
           <button class="search-rep-badge" id="seoRankRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <button class="btn sm ghost" id="btnRefreshSeoRank" type="button" title="rank.jsonを再取得して表を更新">🔄 順位再取得</button>
           <span class="filter-label" id="seoRankLastUpdated" style="color: var(--text3); font-size: 0.8rem;"></span>
+          <!-- 【v1.0522】このページ（選択月）の表内容をCSV出力（画像列を除く）。右端配置 -->
+          <button class="btn sm ghost" id="btnDownloadSeoRankCsv" type="button" style="margin-left:auto" onclick="downloadRankCsv('seo')" data-tooltip="選択中の月のSEO順位表を、表示中の商品・日別で（SEO順位＋PRオプの2段）CSV出力します。画像列は除きます">⬇ このページをCSV出力</button>
         </div>
         <div class="table-wrap">
           <table id="tableSeoRank" class="rank-table data-grid">
@@ -7033,6 +7037,7 @@ function renderWithdrawConsider() {
   });
   rows.sort((a, b) => ((b.sales[newestIdx] || 0) - (a.sales[newestIdx] || 0)) || (b.total - a.total));
   rows = applyRepGrouping(rows);                 // 子を親の直下にまとめる
+  state.basicDisplayedCodes = rows.map(r => r.code);   // 【v1.0522】CSV出力＝このステータスで表示中の商品に限定
   const _pcSets = buildParentChildSets(rows);    // 親/子の行クラス
   let body;
   if (!rows.length) {
@@ -7186,12 +7191,14 @@ function renderBasic() {
     tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
+    state.basicDisplayedCodes = [];   // 【v1.0522】
     updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
     return;
   }
   // CSVダウンロード用に現在の絞り込み・並び順を保持
   state.basicListCache = list.slice();
   state.basicListMonth = targetMonth;
+  state.basicDisplayedCodes = list.map(r => r.code);   // 【v1.0522】CSV出力＝いま表示中の商品に限定するため
   // 【v134】親子表示のための分類（リスト確定後に1度だけ計算）
   const _pcSets = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
@@ -9715,6 +9722,64 @@ function numericRankToCategory(rank, kind) {
 
 function renderAdRank()  { renderRankTable('ad'); }
 function renderSeoRank() { renderRankTable('seo'); }
+
+// 【v1.0522】広告順位／SEO順位ページを「選択月・表示中の商品」でCSV出力する（画像列は除く）。
+//   表の2段（上段＝順位カテゴリ / 下段＝入札価格 or PRオプ料率）を「種別」列＋日別列で表現。1商品につき2行。
+function downloadRankCsv(kind) {
+  try {
+    const isAd = kind === 'ad';
+    const field = isAd ? 'adRank' : 'seoRank';
+    const editField = isAd ? 'bid' : 'proRate';
+    const sel = document.getElementById(isAd ? 'adRankMonth' : 'seoRankMonth');
+    const searchEl = document.getElementById(isAd ? 'adRankSearch' : 'seoRankSearch');
+    const ymRaw = sel ? sel.value : '';
+    if (!ymRaw) { (typeof showToast === 'function') ? showToast('出力する月がありません。', 'warn') : alert('出力する月がありません。'); return; }
+    const ym = ymRaw.replace(/-/g, '/');
+    const nDays = daysInMonth(ym);
+    // 表示中の商品リスト（renderRankTable と同じ絞り込み・並び）
+    let codes = Object.keys(state.master || {}).filter(function (c) { return !isRetired(c); });
+    if (isAd) codes = codes.filter(function (code) { return !adStatusIsNone((state.productMeta[code] || {}).adStatus || ''); });
+    const q = (searchEl && searchEl.value ? searchEl.value : '').trim().toLowerCase();
+    if (q) codes = codes.filter(function (code) { const m = getMaster(code); return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q); });
+    codes = applyRepFilter(codes.map(function (c) { return { code: c }; })).map(function (x) { return x.code; });
+    codes.sort();
+    codes = applyRepGrouping(codes.map(function (c) { return { code: c }; })).map(function (x) { return x.code; });
+    if (!codes.length) { (typeof showToast === 'function') ? showToast('出力できる商品がありません。', 'warn') : alert('出力できる商品がありません。'); return; }
+    const esc = function (v) { let s = (v == null) ? '' : String(v); s = s.replace(/[\r\n]+/g, ' ').trim(); if (/[",]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
+    const days = []; for (let i = 1; i <= nDays; i++) days.push(String(i));
+    const header = ['月', '商品コード', '商品名', '種別'].concat(days);
+    const lines = [header.join(',')];
+    const rankLabel = isAd ? '広告順位' : 'SEO順位';
+    const editLabel = isAd ? '入札価格' : 'PRオプ料率(%)';
+    codes.forEach(function (code) {
+      const m = getMaster(code) || {};
+      const rankRow = [ymRaw, code, m.name || '', rankLabel];
+      const editRow = [ymRaw, code, m.name || '', editLabel];
+      for (let i = 0; i < nDays; i++) {
+        const eff = getEffectiveRankValue(ym, code, field, i);
+        rankRow.push(eff && eff.value != null ? eff.value : '');
+        let ev = getDisplayRankEditValue(ym, code, editField, i);
+        if (ev == null || ev === '' || isNaN(Number(ev))) ev = '';
+        else ev = (editField === 'proRate') ? String(Math.floor(Number(ev))) : String(Number(ev));
+        editRow.push(ev);
+      }
+      lines.push(rankRow.map(esc).join(','));
+      lines.push(editRow.map(esc).join(','));
+    });
+    const csv = '﻿' + lines.join('\r\n');   // BOM付き＝Excelで文字化けしない
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ycheck_' + (isAd ? '広告順位' : 'SEO順位') + '_' + ymRaw + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
+    if (typeof showToast === 'function') showToast((isAd ? '広告順位' : 'SEO順位') + 'CSVを出力しました（' + codes.length + '商品）', 'ok');
+  } catch (e) {
+    console.error('[Ycheck] downloadRankCsv error', e);
+    alert('CSV出力でエラーが発生しました: ' + (e && e.message));
+  }
+}
+window.downloadRankCsv = downloadRankCsv;
 
 // ==================== 【v290】全-比較（売上ランキング比較 / バンプチャート。ADcheck転用）====================
 // 1レコード=商品×月。buildFullAggregate() から {ym:'YYYYMM', s:売上, sp:広告費, seo:SEO売上} を月×商品に集計。
@@ -12391,20 +12456,24 @@ function triggerTextDownload(text, filename) {
   URL.revokeObjectURL(url);
 }
 
-// 【v1.0521】商品-基本データ画面の列を「全商品×全月」でCSV出力する。
-//   検索/広告フィルタ/送り込み絞り込みには依存せず、撤退済み以外の全データを月ごとに出す。
+// 【v1.0522】商品-基本データ画面を「いま表示中の商品だけ」CSV出力する（このページをCSV出力）。
+//   【ステータス】ブロックの絞り込み・検索・広告あり/なしフィルタを反映（state.basicDisplayedCodes を使用）。
+//   月は選択中の月（WCレイアウト等で非表示のときは直近の選択値／最新月）。表示順を維持。
 //   列は画面（tableBasic）と同じ内容：月・商品コード・画像URL・商品名・メインKW・総売上・SEO売上・
 //   PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス。
 //   売上系（総売上/SEO売上/広告売上/実績額/広告ROAS）は月ごとの実数、
-//   料率・各状態・入札価格・ステータスは商品ごとの現在設定（全月で同じ値）を出力する。
+//   料率・各状態・入札価格・ステータスは商品ごとの現在設定を出力する。
 function downloadBasicAllCsv() {
   try {
-    // 【v1.0521】ドロップダウンで選択中の月だけを出力する（例: 2026-09 なら9月ページの内容を1ファイルで）。
     const sel = document.getElementById('basicMonth');
-    const targetMonth = sel ? sel.value : '';
+    let targetMonth = sel ? sel.value : '';
+    if (!targetMonth) {   // WCレイアウト等で月が非表示・未設定なら最新月にフォールバック
+      const _ms = (typeof getAvailableMonths === 'function') ? (getAvailableMonths() || []) : [];
+      targetMonth = _ms.length ? _ms[_ms.length - 1] : '';
+    }
     if (!targetMonth) {
-      if (typeof showToast === 'function') showToast('出力する月が選択されていません。', 'warn');
-      else alert('出力する月が選択されていません。');
+      if (typeof showToast === 'function') showToast('出力する月がありません。レポートを取り込んでください。', 'warn');
+      else alert('出力する月がありません。レポートを取り込んでください。');
       return;
     }
     const agg = (typeof buildFullAggregate === 'function') ? (buildFullAggregate() || []) : [];
@@ -12417,14 +12486,19 @@ function downloadBasicAllCsv() {
       if (isRet(r.code)) return;
       rowByCode[r.code] = r;
     });
-    // 画面と同じく master 登録商品も網羅（その月にデータが無ければ0行）
-    const codeSet = {};
-    Object.keys(rowByCode).forEach(function (c) { codeSet[c] = 1; });
-    Object.keys(state.master || {}).forEach(function (c) { if (!isRet(c)) codeSet[c] = 1; });
-    const codes = Object.keys(codeSet);
+    // 【v1.0522】いま画面に表示されている商品だけを出力（【ステータス】絞り込み・検索・広告フィルタを反映）。表示順を維持。
+    let codes = Array.isArray(state.basicDisplayedCodes) ? state.basicDisplayedCodes.slice() : null;
+    if (!codes) {
+      // フォールバック（表示リスト未生成時）: 選択月の全商品（撤退除外・総売上降順）
+      const codeSet = {};
+      Object.keys(rowByCode).forEach(function (c) { codeSet[c] = 1; });
+      Object.keys(state.master || {}).forEach(function (c) { if (!isRet(c)) codeSet[c] = 1; });
+      codes = Object.keys(codeSet).sort(function (a, b) { return ((rowByCode[b] && rowByCode[b].rev) || 0) - ((rowByCode[a] && rowByCode[a].rev) || 0); });
+    }
+    codes = codes.filter(function (c) { return c && !isRet(c); });
     if (!codes.length) {
-      if (typeof showToast === 'function') showToast(targetMonth + ' に出力できる商品がありません。', 'warn');
-      else alert(targetMonth + ' に出力できる商品がありません。');
+      if (typeof showToast === 'function') showToast('出力できる商品がありません（表示中の商品が0件です）。', 'warn');
+      else alert('出力できる商品がありません（表示中の商品が0件です）。');
       return;
     }
     const esc = function (v) {
@@ -12447,8 +12521,7 @@ function downloadBasicAllCsv() {
     };
     const header = ['月', '商品コード', '画像URL', '商品名', 'メインKW', '総売上', 'SEO売上', 'PRオプ料率(%)', 'PRオプ状態', '広告売上', '実績額', '広告ROAS(%)', '入札価格', '入札状態', 'ステータス'];
     const lines = [header.join(',')];
-    // 総売上の高い順（画面の初期並びに合わせる）
-    codes.sort(function (a, b) { return ((rowByCode[b] && rowByCode[b].rev) || 0) - ((rowByCode[a] && rowByCode[a].rev) || 0); });
+    // 並び順は画面の表示順のまま
     codes.forEach(function (code) {
       const r = rowByCode[code] || { rev: 0, seoRev: 0, adRev: 0, adCost: 0, roas: null };
       const m = (typeof getMaster === 'function') ? (getMaster(code) || {}) : {};
