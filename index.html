@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0532 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0533 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1957,6 +1957,8 @@ tr.row-child .code-cell-inner::before {
 .dm-seg .dm-btn:hover { background:var(--bg3); }
 .dm-seg .dm-btn.on { background:var(--accent); color:#fff; font-weight:700; }
 .dm-nodata { font-size:11.5px; color:var(--text3); margin-left:8px; }
+/* 【v1.0533】全-日月別データ（日別）の期間情報 */
+.zd-range-info { font-size:0.8rem; color:var(--text3); margin-left:6px; }
 /* 【v1.0530】全-日月別データ：色分けルールの凡例 */
 .zd-color-legend { margin:10px 2px 2px; padding:9px 12px; border:1px solid var(--border); border-radius:7px; background:var(--bg3); font-size:0.8rem; line-height:1.85; color:var(--text2); }
 .zd-color-legend .c-g1, .zd-color-legend .c-g2, .zd-color-legend .c-bk, .zd-color-legend .c-o, .zd-color-legend .c-r { white-space:nowrap; }
@@ -2997,7 +2999,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0532</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0533</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3433,8 +3435,16 @@ th.col-sroas { background-color:#cfe0f7; }
             <button type="button" class="dm-btn on" data-dm="month" onclick="_zdSetGrain('month')" title="月ごとの推移（従来）">月別</button>
             <button type="button" class="dm-btn" data-dm="day" onclick="_zdSetGrain('day')" title="対象月の1日ごとの推移。日別データを取り込んだ日だけ並びます">日別</button>
           </span>
-          <span class="filter-label" id="zdDayYmLabel" style="display:none">対象月</span>
-          <select id="zdDayYmSel" onchange="_zdSetDayYm(this.value)" style="display:none;font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <!-- 【v1.0533】ADcheck準拠：月ドロップダウン（データにある月＋「先月-今月」）＋ 日付範囲。
+               月を選ぶ＝その月の1日〜末日を範囲にセットするだけ。絞り込みは日付範囲に一本化する。 -->
+          <span class="filter-label" id="zdDayYmLabel" style="display:none">月</span>
+          <select id="zdDayMonthSel" onchange="_zdOnMonthSel(this.value)" style="display:none;font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="filter-label" id="zdDayRangeLabel" style="display:none">期間</span>
+          <input type="date" id="zdDayFrom" onchange="_zdOnDayRangeInput()" style="display:none;font-size:0.86rem;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+          <span id="zdDayTilde" style="display:none;color:var(--text3)">〜</span>
+          <input type="date" id="zdDayTo" onchange="_zdOnDayRangeInput()" style="display:none;font-size:0.86rem;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+          <button type="button" class="btn sm ghost" id="zdDayAllBtn" onclick="_zdSetDailyRange('','','all')" style="display:none" title="取り込んだ全期間を表示">全期間</button>
+          <span class="zd-range-info" id="zdDayRangeInfo" style="display:none"></span>
           <span class="dm-nodata" id="zdDayNoData" style="display:none">日別データがまだありません</span>
           <span class="filter-label" id="zdModeLabel">表示</span>
           <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
@@ -9121,12 +9131,85 @@ function _zdSetGrain(g) {
   if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; }
   renderGraphData();
 }
-function _zdSetDayYm(v) { _zdDayYm = v; renderGraphData(); }
+function _zdSetDayYm(v) { _zdDayYm = v; renderGraphData(); }   // 互換のため残置（v1.0533以降は日付範囲で絞る）
+
+// ============================================================================
+// 【v1.0533】全-日月別データ（日別）の絞り込み：月ドロップダウン ＋ 日付範囲
+//   ・絞り込みの実体は「開始日〜終了日」だけ。月ドロップダウンは範囲をセットするショートカット。
+//   ・こうすることで月選択と範囲指定でロジックが二重化しない。
+// ============================================================================
+let _zdDayFrom = '', _zdDayTo = '';
+// 【v1.0533】いまの絞り込みが「どういう意図で決まったか」を持つ。
+//   'auto'  … 先月-今月（新しい日を取り込んだら終了日が自動で伸びる）
+//   'range' … 月選択や日付入力で明示的に決めた範囲（勝手に伸ばさない）
+//   'all'   … 全期間
+let _zdDayRangeMode = 'auto';
+// 既定の範囲＝「先月1日 〜 最新日」（開いてすぐ直近2ヶ月が見える）
+function _zdDailyDefaultRange() {
+  const dates = dailyAllDates();
+  if (!dates.length) return null;
+  const maxDate = dates[dates.length - 1];
+  const my = +maxDate.slice(0, 4), mm = +maxDate.slice(5, 7);
+  const pv = new Date(my, mm - 2, 1);   // 先月の1日
+  const from = pv.getFullYear() + '-' + String(pv.getMonth() + 1).padStart(2, '0') + '-01';
+  return { from: from, to: maxDate };
+}
+// 初期化：モードに応じて範囲を決める。
+//   ※「新しい日が来たら終了日を伸ばす」のは auto のときだけ。
+//     明示的に月や日付を選んだ範囲まで伸ばしてしまうと、選んだ月に絞れなくなるため。
+function _zdInitDailyRange() {
+  const dates = dailyAllDates();
+  if (!dates.length) return;
+  if (_zdDayRangeMode === 'all') { _zdDayFrom = ''; _zdDayTo = ''; return; }
+  if (_zdDayRangeMode === 'auto') {
+    const def = _zdDailyDefaultRange();
+    if (def) { _zdDayFrom = def.from; _zdDayTo = def.to; }
+    return;
+  }
+  // 'range' は触らない（ユーザーが決めた範囲をそのまま保つ）
+}
+function _zdSetDailyRange(from, to, mode) {
+  _zdDayRangeMode = mode || 'range';
+  _zdDayFrom = from || ''; _zdDayTo = to || '';
+  renderGraphData();
+}
+function _zdOnDayRangeInput() {
+  const f = document.getElementById('zdDayFrom'), t = document.getElementById('zdDayTo');
+  _zdSetDailyRange(f ? f.value : '', t ? t.value : '', 'range');
+}
+// 月ドロップダウン：'__lt__'=先月-今月 / '__all__'=全期間 / 'YYYY-MM'=その月の1日〜末日
+function _zdOnMonthSel(v) {
+  if (v === '__all__') { _zdSetDailyRange('', '', 'all'); return; }
+  if (v === '__lt__') { const r = _zdDailyDefaultRange(); if (r) _zdSetDailyRange(r.from, r.to, 'auto'); return; }
+  if (v === '__custom__') return;   // 表示用の見出し。選んでも何もしない
+  if (!/^\d{4}-\d{2}$/.test(v)) return;
+  const y = +v.slice(0, 4), m = +v.slice(5, 7);
+  const lastDay = new Date(y, m, 0).getDate();
+  _zdSetDailyRange(v + '-01', v + '-' + String(lastDay).padStart(2, '0'), 'range');   // 月を選ぶ＝1日〜末日を範囲にセットするだけ
+}
+// いまの範囲がどの選択肢に当たるかを返す（ドロップダウンの選択状態を合わせるため）
+function _zdCurrentMonthSelValue() {
+  if (_zdDayRangeMode === 'all') return '__all__';
+  if (_zdDayRangeMode === 'auto') return '__lt__';
+  if (!_zdDayFrom && !_zdDayTo) return '__all__';
+  if (_zdDayFrom && _zdDayTo && _zdDayFrom.slice(0, 7) === _zdDayTo.slice(0, 7)) {
+    const ym = _zdDayFrom.slice(0, 7);
+    const y = +ym.slice(0, 4), m = +ym.slice(5, 7);
+    const last = ym + '-' + String(new Date(y, m, 0).getDate()).padStart(2, '0');
+    if (_zdDayFrom === ym + '-01' && _zdDayTo === last) return ym;
+  }
+  return '__custom__';
+}
+// 範囲で絞った日付一覧
+function _zdDailyDatesInRange() {
+  return dailyAllDates().filter(d => (!_zdDayFrom || d >= _zdDayFrom) && (!_zdDayTo || d <= _zdDayTo));
+}
 // 日別の行を、_zenMonthlyRows と同じ形（label/totSales/seoSales/... ）で返す。
 //   こうすることで表の描画コードを日/月で分けずに済む。
-function _zenDailyRows(ym) {
-  const days = daysWithData(ym);
-  return days.map(function (d) {
+function _zenDailyRows(ym) { return _zenDailyRowsFor(daysWithData(ym)); }
+// 【v1.0533】日付の配列から日別行を作る（月単位に限らず任意の期間を渡せるようにした）
+function _zenDailyRowsFor(days) {
+  return (days || []).map(function (d) {
     const it = dailyItemOf(d), ad = dailyAdOf(d);
     let rev = 0, orders = 0, soikomi = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0;
     Object.keys(it).forEach(function (c) {
@@ -9320,25 +9403,44 @@ function renderGraphData() {
   }
   if (_zdGrain === 'day' && !_hasAnyDaily) _zdGrain = 'month';
   const _dayMode = (_zdGrain === 'day');
-  ['zdDayYmLabel', 'zdDayYmSel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
+  ['zdDayYmLabel', 'zdDayMonthSel', 'zdDayRangeLabel', 'zdDayFrom', 'zdDayTilde', 'zdDayTo', 'zdDayAllBtn', 'zdDayRangeInfo']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
   // 日別モードでは「前年同月比」とSEO売上トップ15は意味を持たないので隠す
   ['zdModeLabel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
   document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => { b.style.display = _dayMode ? 'none' : ''; });
+  let _rangeDays = null;
   if (_dayMode) {
-    const dms = [...dailyMonths()].sort();
-    if (!dms.includes(_zdDayYm)) _zdDayYm = dms.length ? dms[dms.length - 1] : '';
-    const dsel = document.getElementById('zdDayYmSel');
-    if (dsel) {
-      dsel.innerHTML = dms.slice().reverse().map(v => '<option value="' + v + '">' + v.replace('-', '/') + '（' + daysWithData(v).length + '日分）</option>').join('');
-      dsel.value = _zdDayYm;
+    // 【v1.0533】月ドロップダウン＋日付範囲。絞り込みの実体は日付範囲だけに一本化する。
+    _zdInitDailyRange();
+    const all = dailyAllDates();
+    const minD = all[0], maxD = all[all.length - 1];
+    const yms = [...new Set(all.map(d => d.slice(0, 7)))].sort().reverse();   // データにある月だけ・新しい順
+    const cur = _zdCurrentMonthSelValue();
+    const msel = document.getElementById('zdDayMonthSel');
+    if (msel) {
+      let opts = '';
+      if (cur === '__custom__') opts += '<option value="__custom__">期間を直接指定中</option>';
+      opts += '<option value="__lt__">先月-今月</option>';
+      opts += '<option value="__all__">全期間（' + all.length + '日分）</option>';
+      opts += yms.map(ym => '<option value="' + ym + '">' + ym.replace('-', '/') + '（' + daysWithData(ym).length + '日分）</option>').join('');
+      msel.innerHTML = opts;
+      msel.value = cur;
     }
+    const fEl = document.getElementById('zdDayFrom'), tEl = document.getElementById('zdDayTo');
+    if (fEl) { fEl.value = _zdDayFrom || minD; fEl.min = minD; fEl.max = maxD; }
+    if (tEl) { tEl.value = _zdDayTo || maxD; tEl.min = minD; tEl.max = maxD; }
+    _rangeDays = _zdDailyDatesInRange();
+    const info = document.getElementById('zdDayRangeInfo');
+    if (info) info.textContent = _rangeDays.length
+      ? _rangeDays.length + '日分を表示中（取込済みは ' + minD + '〜' + maxD + ' の' + all.length + '日分）'
+      : 'この期間に取り込んだ日がありません';
   }
   _zdSetSeoShowUI();
   const _seoOn = _zdSeoShow && !_dayMode;   // SEO売上トップ15は月別のときだけ
   const _seoByM = _seoOn ? _zdSeoByMonth() : null;
   const _seoParentSet = _seoOn ? _zdSeoParentSet() : null;   // 【v1.0520】親子商品マーカー用
   const _zdColCount = 1 + MI_COLS.length + 1;   // 月 + 指標列 + 送り込み売上
-  const asc = _dayMode ? _zenDailyRows(_zdDayYm) : _zenMonthlyRows();
+  const asc = _dayMode ? _zenDailyRowsFor(_rangeDays || []) : _zenMonthlyRows();
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
   // 【v1.0530】色分けの母集団。
   //   月別: 当月＝未満了なので最後の1件（＝最新月）を外す（従来どおり）。
@@ -9386,7 +9488,7 @@ function renderGraphData() {
   }).join('');
   // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
   const _legend = '<div class="zd-color-legend">'
-    + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（' + (_dayMode ? 'この月に取り込んだ全日' : '表示中の全月') + 'が母集団）。'
+    + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（' + (_dayMode ? '表示中の期間の全日' : '表示中の全月') + 'が母集団）。'
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
     + '<b>実績額（広告費）だけは小さいほど青</b>（使った額が少ないほど良い、という評価）。'
