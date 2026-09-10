@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0544 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0546 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -210,6 +210,31 @@ body {
   font-weight: 600;
 }
 .font-btn:hover { background: var(--bg2); color: var(--accent); }
+/* 【v1.0545】表示設定（列幅・文字サイズ）。文字サイズの「100%」の右隣に置く＝見た目の調整をここへ集約 */
+.vp-open-btn { border-left: 1px solid var(--border2); margin-left: 2px; padding-left: 9px; color: var(--accent); }
+.vp-open-btn:hover { background: var(--bg2); }
+.vp-lead { margin: 0 0 14px; font-size: 0.86rem; line-height: 1.6; color: var(--text2); background: var(--bg3); border-radius: 8px; padding: 10px 12px; }
+.vp-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vp-font-row { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px; }
+.vp-label { font-size: 0.86rem; font-weight: 700; color: var(--text2); min-width: 86px; }
+.vp-num { font-size: 0.86rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 52px; text-align: right; }
+.vp-collist { max-height: 46vh; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px 0; }
+.vp-cgroup { font-size: 0.76rem; font-weight: 700; color: var(--text3); background: var(--bg3); padding: 5px 12px; position: sticky; top: 0; z-index: 1; }
+.vp-crow { display: flex; align-items: center; gap: 8px; padding: 5px 12px; }
+.vp-crow:hover { background: var(--bg3); }
+.vp-cname { font-size: 0.84rem; flex: 0 0 168px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vp-crow input[type=range] { flex: 1 1 120px; min-width: 90px; accent-color: var(--accent); }
+.vp-numin { width: 72px; font-size: 0.82rem; padding: 3px 6px; border: 1px solid var(--border2); border-radius: 5px; background: var(--bg2); color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+.vp-numin.is-default { color: var(--text3); }
+.vp-unit { font-size: 0.76rem; color: var(--text3); }
+.vp-rst { font-size: 0.74rem; padding: 3px 7px; border: 1px solid var(--border2); border-radius: 5px; background: var(--bg2); color: var(--text2); cursor: pointer; white-space: nowrap; }
+.vp-rst:hover { background: var(--bg3); color: var(--text); }
+.vp-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.vp-updated { font-size: 0.76rem; color: var(--text3); margin-left: auto; }
+.vp-msg { font-size: 0.8rem; margin-top: 8px; min-height: 1.2em; }
+.vp-msg.ok { color: var(--green); }
+.vp-msg.warn { color: #d97706; }
+.vp-msg.err { color: #b91c1c; }
 .font-size-label {
   padding: 4px 8px;
   font-size: 0.75rem;
@@ -3028,11 +3053,13 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0544</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0546</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
       <button class="font-btn" id="fontUp">A+</button>
+      <!-- 【v1.0545】列幅の調整パネル。GitHubに保存して他PCで一発再現する -->
+      <button class="font-btn vp-open-btn" id="btnViewPrefs" type="button" title="表示設定（列幅・文字サイズ）を開く。設定はGitHubに保存され、他のPCで開くと同じ見た目が再現されます">⇔ 幅</button>
     </div>
     <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
@@ -3063,7 +3090,11 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="nav-group">
     <span class="nav-group-label g-zentai">【全体】</span>
-    <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata">全-日月別データ</a>
+    <!-- 【v1.0546】「全-日月別データ」を月別/日別の2タブに分割。
+         ビューの実体は #view-graphdata の1つのまま、data-zdgrain で粒度(_zdGrain)を切り替える。
+         描画コードを日/月で二重化しない方針（仕様書 §11-1）はそのまま維持する。 -->
+    <a class="nav-tab nav-tab-link" data-view="graphdata" data-zdgrain="month" href="?view=graphdata">全-月別データ</a>
+    <a class="nav-tab nav-tab-link" data-view="graphdata" data-zdgrain="day" href="?view=graphdata-day" id="navGraphDataDay">全-日別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-日月別グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
     <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
@@ -3457,13 +3488,11 @@ th.col-sroas { background-color:#cfe0f7; }
     <!-- View: 全-月別データ（縦=月×横=指標のランク色分け表・ADcheck転用） -->
     <div class="view" id="view-graphdata">
       <div class="card">
-        <h3 class="card-title">全-日月別データ</h3>
+        <h3 class="card-title" id="zdCardTitle">全-月別データ</h3>
         <div class="filters" style="align-items:center;gap:8px;flex-wrap:wrap">
-          <!-- 【v1.0527】日別／月別トグル。日別＝対象月の1日ごとを行に並べる（列は月別と同じ指標）。 -->
-          <span class="dm-seg" id="zdDayMonthSeg" role="group" aria-label="日別/月別">
-            <button type="button" class="dm-btn on" data-dm="month" onclick="_zdSetGrain('month')" title="月ごとの推移（従来）">月別</button>
-            <button type="button" class="dm-btn" data-dm="day" onclick="_zdSetGrain('day')" title="対象月の1日ごとの推移。日別データを取り込んだ日だけ並びます">日別</button>
-          </span>
+          <!-- 【v1.0546】画面内の月別/日別トグル(.dm-seg #zdDayMonthSeg)は撤去。
+               粒度の切替はナビの「全-月別データ／全-日別データ」タブが担う。
+               _zdSetGrain() は残置（他所からの呼び出し・URLパラメータ用）。 -->
           <!-- 【v1.0533】ADcheck準拠：月ドロップダウン（データにある月＋「先月-今月」）＋ 日付範囲。
                月を選ぶ＝その月の1日〜末日を範囲にセットするだけ。絞り込みは日付範囲に一本化する。 -->
           <span class="filter-label" id="zdDayYmLabel" style="display:none">月</span>
@@ -3479,7 +3508,7 @@ th.col-sroas { background-color:#cfe0f7; }
           <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
           <button type="button" class="ig-preset-btn zd-mode-btn" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
           <!-- 【v1.0508】各月の直後にSEO売上トップ15のサムネ帯を差し込むトグル -->
-          <span style="margin-left:14px;display:inline-flex;gap:4px;align-items:center">
+          <span id="zdSeoWrap" style="margin-left:14px;display:inline-flex;gap:4px;align-items:center">
             <span class="filter-label">SEO売上トップ15</span>
             <button type="button" id="zdSeoOn" onclick="_zdSetSeoShow(true)">表示あり</button>
             <button type="button" id="zdSeoOff" onclick="_zdSetSeoShow(false)">表示なし</button>
@@ -3805,6 +3834,36 @@ th.col-sroas { background-color:#cfe0f7; }
 </div>
 
 <!-- 【v95】GitHub連携設定モーダル -->
+<!-- 【v1.0545】表示設定（列幅・文字サイズ）モーダル。
+     ・列幅は従来どおりヘッダーのドラッグでも変えられるが、このパネルなら数値で正確に決められる。
+     ・保存先は state.viewPrefs → localStorage ＋ GitHub(ycheck_data_v2.json)。
+       他PCは起動時にGitHubから読むので「いっぱつで再現」される。 -->
+<div class="modal-overlay" id="viewPrefsModal">
+  <div class="modal" style="max-width: 760px;">
+    <div class="modal-header">
+      <h2 class="modal-title">⇔ 表示設定（列幅・文字サイズ）</h2>
+      <button class="modal-close" id="vpClose" type="button">×</button>
+    </div>
+    <p class="vp-lead">ここで決めた幅と文字サイズは <b>GitHub（ycheck_data_v2.json）に保存</b>されます。他のPCで開くと自動で同じ見た目が再現されます。<br>変更するとヘッダーが「未反映」になるので、<b>「⬆ 反映する」</b>か下の<b>「⬆ この設定を保存」</b>で確定してください。</p>
+    <div class="vp-row vp-font-row">
+      <span class="vp-label">文字サイズ</span>
+      <button type="button" class="vp-rst" onclick="_vpFontStep(-0.02)">A−</button>
+      <input type="range" id="vpFontRange" min="70" max="150" step="2" value="100" style="flex:1 1 200px;accent-color:var(--accent)">
+      <button type="button" class="vp-rst" onclick="_vpFontStep(0.02)">A+</button>
+      <span class="vp-num" id="vpFontVal">100%</span>
+      <button type="button" class="vp-rst" onclick="_vpFontApply(1, true)">既定</button>
+    </div>
+    <div id="vpColList" class="vp-collist"></div>
+    <div class="vp-foot">
+      <button type="button" class="vp-rst" id="vpResetAll">すべて既定に戻す</button>
+      <button type="button" class="btn sm ghost" id="vpPull" title="GitHubに保存されている表示設定だけを取り込んで、このPCに適用します（売上などのデータには触りません）">⬇ 他PCの設定を取り込む</button>
+      <button type="button" class="btn sm primary" id="vpPush" title="いまの表示設定をGitHubに保存します。他のPCはこれを読み込みます">⬆ この設定を保存（他PCへ）</button>
+      <span class="vp-updated" id="vpUpdated"></span>
+    </div>
+    <div class="vp-msg" id="vpMsg"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="ghSettingsModal">
   <div class="modal" style="max-width: 620px;">
     <div class="modal-header">
@@ -4262,6 +4321,11 @@ const state = {
   productsCsvSnapshot: null,
   charts: {},
   fontScale: 1,
+  // 【v1.0545】表示設定（列幅・文字サイズ）。GitHub(ycheck_data_v2.json)にも保存し、他PCで開いた瞬間に同じ見た目を再現する。
+  //   colWidths : { data-resize-key: px }  ← 従来 localStorage['ycheck_col_widths_v1'] にあったもの（端末内＝他PCに出ない）
+  //   fontScale : 0.7〜1.5
+  //   ★ state.fontScale =「いま画面に効いている値」／ viewPrefs.fontScale =「保存された値」。起動時に後者を前者へ反映する。
+  viewPrefs: { colWidths: {}, fontScale: 1, updatedAt: '', updatedBy: '' },
   currentView: 'basic',
   activeStateFilter: null,  // {type: 'ad-ok'|'ad-ng'|..., targetView: 'ad-adjust'|'pro-adjust', label: '...'}
   // 【v125】代表コード絞り込み: null=全件、'*'=代表コード持ち全商品のみ、'ih-family'=その代表コードのグループのみ
@@ -4384,8 +4448,70 @@ function setFontScale(scale) {
   state.fontScale = Math.max(0.7, Math.min(1.5, scale));
   document.documentElement.style.setProperty('--font-scale', state.fontScale);
   $('#fontLabel').textContent = Math.round(state.fontScale * 100) + '%';
+  // 【v1.0545】保存対象の viewPrefs にも常に追従させる（保存は _vpCommit / saveColWidth 側で行う）
+  try { if (state.viewPrefs) state.viewPrefs.fontScale = state.fontScale; } catch (e) {}
+  try { if (typeof _vpSyncFontUI === 'function') _vpSyncFontUI(); } catch (e) {}
   Object.values(state.charts).forEach(c => c && c.resize && c.resize());
   requestAnimationFrame(_recalcStickyTops);   // レイアウト確定後に段の位置を再計算
+}
+
+// ==================== 【v1.0545】表示設定（列幅・文字サイズ）の保存 ====================
+//  設計:
+//   ・唯一の保存場所は state.viewPrefs。localStorage(saveToStorage) と GitHub(ghBuildDataString) の
+//     両方に載せるので、他PCは起動時のGitHub読み込みだけで同じ見た目になる（＝いっぱつ再現）。
+//   ・v1.0544以前は列幅が localStorage['ycheck_col_widths_v1'] にしか無く、端末内に閉じていた。
+//     初回起動時に一度だけ viewPrefs へ移し替える（migrateLegacyColWidths）。
+//   ・旧キーへの書き戻しも続ける。古いバージョンのHTMLを開いても幅が失われないようにするため。
+const VP_LEGACY_COL_KEY = 'ycheck_col_widths_v1';   // 【〜v1.0544】旧・端末内保存（互換のため読み書きを継続）
+
+function ensureViewPrefs() {
+  if (!state.viewPrefs || typeof state.viewPrefs !== 'object') state.viewPrefs = {};
+  const vp = state.viewPrefs;
+  if (!vp.colWidths || typeof vp.colWidths !== 'object') vp.colWidths = {};
+  if (!(vp.fontScale > 0)) vp.fontScale = 1;
+  if (typeof vp.updatedAt !== 'string') vp.updatedAt = '';
+  if (typeof vp.updatedBy !== 'string') vp.updatedBy = '';
+  return vp;
+}
+
+let _vpLegacyMigrated = false;
+function migrateLegacyColWidths() {
+  if (_vpLegacyMigrated) return;
+  _vpLegacyMigrated = true;
+  try {
+    const vp = ensureViewPrefs();
+    if (Object.keys(vp.colWidths).length) return;    // 既にGitHub/localStorageから来ている → 旧値は使わない
+    const raw = localStorage.getItem(VP_LEGACY_COL_KEY);
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    if (obj && typeof obj === 'object' && Object.keys(obj).length) {
+      vp.colWidths = obj;
+      vp.updatedAt = new Date().toISOString();
+      vp.updatedBy = 'この端末（旧設定からの移行）';
+      console.log('[Ycheck] v1.0545: 端末内の列幅設定 ' + Object.keys(obj).length + '件 を viewPrefs へ移行しました');
+    }
+  } catch (e) { /* 壊れていたら無視して既定幅 */ }
+}
+
+// 表示設定に変更があったことを記録し、localStorage＋GitHub(未反映フラグ)へ流す。
+function _vpTouch(by) {
+  const vp = ensureViewPrefs();
+  vp.fontScale = state.fontScale;
+  vp.updatedAt = new Date().toISOString();
+  vp.updatedBy = by || vp.updatedBy || '';
+  try { localStorage.setItem(VP_LEGACY_COL_KEY, JSON.stringify(vp.colWidths)); } catch (e) {}
+  if (typeof saveToStorage === 'function') saveToStorage();   // → localStorage保存 ＋ scheduleGitHubSave()（未反映にする）
+  try { if (typeof _vpRenderPanel === 'function') _vpRenderPanel(); } catch (e) {}
+}
+
+// 保存済みの表示設定を画面へ適用する（GitHub/localStorage読み込み直後に呼ぶ）。
+function applyViewPrefs(opts) {
+  const vp = ensureViewPrefs();
+  const o = opts || {};
+  if (o.font !== false && vp.fontScale > 0 && Math.abs(vp.fontScale - state.fontScale) > 0.001) {
+    if (typeof setFontScale === 'function') setFontScale(vp.fontScale);
+  }
+  if (typeof applyColWidths === 'function') { try { applyColWidths(); } catch (e) {} }
 }
 
 // ==================== Logging ====================
@@ -4457,6 +4583,7 @@ function saveToStorage() {
     rankEdits: state.rankEdits,
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
+    viewPrefs: state.viewPrefs,   // 【v1.0545】表示設定（列幅・文字サイズ）
     savedAt: new Date().toISOString()
   };
   // 【v244/v245】localStorage容量オーバー(QuotaExceededError)対策。
@@ -4760,6 +4887,7 @@ function ghBuildDataString() {
     rankEdits: state.rankEdits,
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
+    viewPrefs: state.viewPrefs,   // 【v1.0545】表示設定（列幅・文字サイズ）。他PCはこれを読んで同じ見た目を再現する
     savedAt: new Date().toISOString(),
     shopId: getCurrentShopId(),
     schemaVersion: 1
@@ -5227,6 +5355,8 @@ async function ghLoadFromGitHub(opts) {
     if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) _assignRankMetaKeepSpot(data.rankMeta);  // 【v299】lastSpotUpdateを消さない
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
+    // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
+    if (data.viewPrefs) { state.viewPrefs = data.viewPrefs; ensureViewPrefs(); _vpLegacyMigrated = true; applyViewPrefs(); }
     // 【v287】productMeta も商品ごとに新しい方を残してマージ。ローカルの方が新しい商品が
     //   あれば _ghHealed=true（＝GitHubは古い上書きを受けていた）とし、後で復元を再保存する。
     let _ghHealed = false;
@@ -5339,6 +5469,8 @@ async function ghLoadFromPublic() {
     if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) { if (typeof _assignRankMetaKeepSpot === 'function') _assignRankMetaKeepSpot(data.rankMeta); else state.rankMeta = data.rankMeta; }
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
+    // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
+    if (data.viewPrefs) { state.viewPrefs = data.viewPrefs; ensureViewPrefs(); _vpLegacyMigrated = true; applyViewPrefs(); }
     if (data.productMeta) {
       state.productMeta = data.productMeta;   // 閲覧端末は公開データをそのまま採用（編集しないためマージ不要）
       Object.values(state.productMeta).forEach(m => {
@@ -5739,6 +5871,8 @@ function loadFromStorage() {
     if (data.rankEdits) state.rankEdits = data.rankEdits;
     if (data.rankMeta) _assignRankMetaKeepSpot(data.rankMeta);  // 【v299】lastSpotUpdateを消さない
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
+    // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
+    if (data.viewPrefs) { state.viewPrefs = data.viewPrefs; ensureViewPrefs(); _vpLegacyMigrated = true; applyViewPrefs(); }
     if (data.productMeta) {
       state.productMeta = data.productMeta;
       // 旧「PRO○/×」→「PRオプ○/×」にマイグレーション
@@ -9394,6 +9528,29 @@ function _zdSetGrain(g) {
 }
 function _zdSetDayYm(v) { _zdDayYm = v; renderGraphData(); }   // 互換のため残置（v1.0533以降は日付範囲で絞る）
 
+// 【v1.0546】「全-月別データ」「全-日別データ」の2タブと _zdGrain を同期する。
+//   ・どちらのタブも data-view="graphdata"（ビューの実体は1つ）なので、
+//     ナビ側の .active は data-zdgrain で決める。
+//   ・日別データが1件も無いときは「全-日別データ」タブを押せない見た目にする。
+function _zdSyncNavTabs() {
+  const has = (typeof dailyAllDates === 'function') ? dailyAllDates().length > 0 : false;
+  document.querySelectorAll('.nav-tab[data-view="graphdata"]').forEach(t => {
+    const isDay = t.dataset.zdgrain === 'day';
+    t.classList.toggle('active', (state.currentView === 'graphdata') && (isDay === (_zdGrain === 'day')));
+    if (isDay) {
+      t.style.opacity = has ? '' : '0.45';
+      t.title = has ? '1日ごとの推移。日別データを取り込んだ日だけ並びます' : '日別データがまだありません（「+ レポート追加」で①〜④を取り込むと使えます）';
+    }
+  });
+}
+
+// 【v1.0546】URLの view 名 → 実際のビューIDと粒度。'graphdata-day' は #view-graphdata の日別。
+function _resolveViewName(v) {
+  if (v === 'graphdata-day') return { view: 'graphdata', zdGrain: 'day' };
+  if (v === 'graphdata')     return { view: 'graphdata', zdGrain: 'month' };
+  return { view: v, zdGrain: null };
+}
+
 // ============================================================================
 // 【v1.0533】全-日月別データ（日別）の絞り込み：月ドロップダウン ＋ 日付範囲
 //   ・絞り込みの実体は「開始日〜終了日」だけ。月ドロップダウンは範囲をセットするショートカット。
@@ -9663,6 +9820,7 @@ function renderGraphData() {
   // ============================================================
   const _hasAnyDaily = dailyAllDates().length > 0;
   {
+    // 【v1.0546】画面内トグルは撤去済み。残っている環境でも壊れないよう null ガードのまま残す。
     const seg = document.getElementById('zdDayMonthSeg');
     if (seg) {
       seg.querySelectorAll('.dm-btn').forEach(b => b.classList.toggle('on', b.dataset.dm === _zdGrain));
@@ -9672,6 +9830,13 @@ function renderGraphData() {
   }
   if (_zdGrain === 'day' && !_hasAnyDaily) _zdGrain = 'month';
   const _dayMode = (_zdGrain === 'day');
+  _zdSyncNavTabs();                                          // 【v1.0546】ナビタブの選択状態を粒度に合わせる
+  {
+    const t = document.getElementById('zdCardTitle');
+    if (t) t.textContent = _dayMode ? '全-日別データ' : '全-月別データ';
+  }
+  // 【v1.0546】日別タブでは SEO売上トップ15 のトグル自体を隠す（月別専用の機能。仕様書 §10）
+  { const w = document.getElementById('zdSeoWrap'); if (w) w.style.display = _dayMode ? 'none' : ''; }
   ['zdDayYmLabel', 'zdDayMonthSel', 'zdDayRangeLabel', 'zdDayFrom', 'zdDayTilde', 'zdDayTo', 'zdDayAllBtn', 'zdDayRangeInfo']
     .forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
   // 日別モードでは「前年同月比」とSEO売上トップ15は意味を持たないので隠す
@@ -12113,6 +12278,16 @@ $$('.nav-tab').forEach(item => {
     $$('.nav-tab').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     const view = item.dataset.view;
+    // 【v1.0546】「全-月別データ／全-日別データ」は同じビューの粒度違い。タブ側の data-zdgrain を _zdGrain に反映する。
+    if (item.dataset.zdgrain) {
+      const want = (item.dataset.zdgrain === 'day') ? 'day' : 'month';
+      if (want === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) {
+        _zdGrain = 'month';   // 日別データが無いときは月別のまま（renderGraphData が案内を出す）
+      } else {
+        _zdGrain = want;
+        if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; }
+      }
+    }
     if (view === 'oyako') _oyChildUnsetDismissed = false;   // 各比率に入り直したらバナー再表示
     state.currentView = view;
     // 【v239】調整ビューに入るたび、絞り込みを「修正あり」に戻す
@@ -12174,12 +12349,20 @@ const STATE_EXPLAIN = {
 };
 
 function switchToView(viewName) {
+  // 【v1.0546】'graphdata-day' 等の別名を実ビュー＋粒度に解決する
+  const _rv = (typeof _resolveViewName === 'function') ? _resolveViewName(viewName) : { view: viewName, zdGrain: null };
+  viewName = _rv.view;
+  if (_rv.zdGrain) {
+    if (_rv.zdGrain === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) _zdGrain = 'month';
+    else { _zdGrain = _rv.zdGrain; if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; } }
+  }
   $$('.nav-tab').forEach(i => i.classList.remove('active'));
   const tab = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
   if (tab) tab.classList.add('active');
   state.currentView = viewName;
   $$('.view').forEach(v => v.classList.remove('active'));
   $('#view-' + viewName).classList.add('active');
+  if (viewName === 'graphdata' && typeof _zdSyncNavTabs === 'function') _zdSyncNavTabs();
   // 【v208】プログラム経由のビュー切替でも凍結を解除
   adAdjustFrozenOrder = null;
   proAdjustFrozenOrder = null;
@@ -12476,8 +12659,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ==================== Events ====================
-$('#fontDown').addEventListener('click', () => setFontScale(state.fontScale - 0.02));  // 【v1.0512】2%刻み
-$('#fontUp').addEventListener('click', () => setFontScale(state.fontScale + 0.02));    // 【v1.0512】2%刻み
+// 【v1.0545】文字サイズも表示設定として保存する（_vpFontStep 経由。GitHubにも載る）
+$('#fontDown').addEventListener('click', () => _vpFontStep(-0.02));  // 【v1.0512】2%刻み
+$('#fontUp').addEventListener('click', () => _vpFontStep(0.02));     // 【v1.0512】2%刻み
 
 // 【v305/v1.0320】取得元URL(レポート追加・最新値を更新モーダル内)は必ず新しいタブで開き、
 //   現在のYcheckページは絶対に遷移させない。さらに【v1.0320】は「背面タブ」で開き、
@@ -14762,21 +14946,27 @@ const COL_WIDTHS_STORAGE_KEY = 'ycheck_col_widths_v1';
 const COL_RESIZE_MIN_PX = 8;      // 【v1.0380】メインKW等をギリギリまで縮められるよう最小幅をさらに縮小（16→8）
 const COL_RESIZE_MAX_PX = 800;    // 最大幅（広げすぎ防止）
 
+// 【v1.0545】保存先を localStorage 直書き → state.viewPrefs.colWidths に変更。
+//   これで saveToStorage()（localStorage）と ghBuildDataString()（GitHub）の両方に自動で載り、
+//   他PCは起動時のGitHub読み込みだけで同じ列幅になる。旧キーへの書き戻しも継続（古いHTMLとの互換）。
 function loadColWidths() {
-  try {
-    const raw = localStorage.getItem(COL_WIDTHS_STORAGE_KEY);
-    if (!raw) return {};
-    const obj = JSON.parse(raw);
-    return (obj && typeof obj === 'object') ? obj : {};
-  } catch (e) { return {}; }
+  migrateLegacyColWidths();
+  return ensureViewPrefs().colWidths;
 }
 function saveColWidth(key, px) {
   try {
-    const all = loadColWidths();
-    if (px == null) delete all[key];
-    else all[key] = Math.round(px);
-    localStorage.setItem(COL_WIDTHS_STORAGE_KEY, JSON.stringify(all));
+    const vp = ensureViewPrefs();
+    if (px == null) delete vp.colWidths[key];
+    else vp.colWidths[key] = Math.round(px);
+    _vpTouch('この端末');
   } catch (e) { console.warn('列幅の保存に失敗:', e); }
+}
+// パネルのスライダー用: 保存せず見た目だけ更新する（ドラッグ中に毎回フル保存しないため）
+function _vpPreviewColWidth(key, px) {
+  const vp = ensureViewPrefs();
+  if (px == null) delete vp.colWidths[key];
+  else vp.colWidths[key] = Math.round(px);
+  if (typeof applyColWidths === 'function') { try { applyColWidths(); } catch (e) {} }
 }
 
 // 【v1.0380】data-resize-keyを持つ表を「現在の自然幅をキャプチャ→table-layout:fixed」に一度だけ変換する。
@@ -14931,7 +15121,252 @@ function installColResizeHandles() {
 function initColumnResize() {
   installColResizeHandles();
   applyColWidths();
+  // 【v1.0545】保存済みの文字サイズもここで反映（localStorage/GitHubのどちらから来ていても効く）
+  try { applyViewPrefs(); } catch (e) {}
 }
+
+// ==================== 【v1.0545】表示設定パネル（列幅・文字サイズ） ====================
+// 対象は data-resize-key を持つ列＝従来からドラッグでリサイズできた列のみ。
+// 画面ごとに独立キーなので「基本データの商品名だけ広げる」といった調整ができる（code だけは複数画面で共有）。
+const COL_RESIZE_DEFS = [
+  { group: '共通（複数画面で共有）', items: [
+    { key: 'code', label: '商品コード', note: '基本データ／撤退済み／入札価格調整／PRオプ調整 で共有' }
+  ]},
+  { group: '商品-基本データ', items: [
+    { key: 'nameBasic', label: '商品名' },
+    { key: 'kwBasic',   label: 'メインKW' }
+  ]},
+  { group: '商品-基本データ（撤退検討リスト）', items: [
+    { key: 'codeWc', label: '商品コード' },
+    { key: 'nameWc', label: '商品名' },
+    { key: 'kwWc',   label: 'メインKW' }
+  ]},
+  { group: '商品-日月別データ', items: [
+    { key: 'nameMonthly', label: '商品名' }
+  ]},
+  { group: '撤退済み商品', items: [
+    { key: 'nameRetired', label: '商品名' }
+  ]},
+  { group: '入札価格調整', items: [
+    { key: 'nameAdTune', label: '商品名' },
+    { key: 'kwAdTune',   label: 'メインKW' },
+    { key: 'adNote',     label: '対応内容' }
+  ]},
+  { group: 'PRオプ調整', items: [
+    { key: 'nameProTune', label: '商品名' },
+    { key: 'kwProTune',   label: 'メインKW' },
+    { key: 'proNote',     label: '対応内容' }
+  ]},
+  { group: '総売上-直近4ヶ月分', items: [
+    { key: 'codeReviewSales4', label: '商品コード' },
+    { key: 'nameReviewSales4', label: '商品名' },
+    { key: 'kwReviewSales4',   label: 'メインKW' }
+  ]},
+  { group: '（タブ撤去済み・データ互換のため残置）', items: [
+    { key: 'nameAdAdjust',  label: '商品名（広告調整）' },
+    { key: 'kwAdAdjust',    label: 'メインKW（広告調整）' },
+    { key: 'nameProAdjust', label: '商品名（PRオプ調整）' },
+    { key: 'kwProAdjust',   label: 'メインKW（PRオプ調整）' }
+  ]}
+];
+
+// いま画面に出ている th の実測幅（保存値が無い列で「だいたい何px か」を出すため）
+function _vpNaturalWidth(key) {
+  const th = document.querySelector('th[data-resize-key="' + key + '"]');
+  if (!th) return null;
+  const w = Math.round(th.getBoundingClientRect().width);
+  return w > 0 ? w : null;
+}
+
+function _vpMsg(text, cls) {
+  const el = document.getElementById('vpMsg');
+  if (!el) return;
+  el.className = 'vp-msg ' + (cls || '');
+  el.textContent = text || '';
+}
+
+function _vpSyncFontUI() {
+  const r = document.getElementById('vpFontRange');
+  const v = document.getElementById('vpFontVal');
+  if (r) r.value = Math.round(state.fontScale * 100);
+  if (v) v.textContent = Math.round(state.fontScale * 100) + '%';
+}
+function _vpFontApply(scale, persist) {
+  if (typeof setFontScale === 'function') setFontScale(scale);
+  _vpSyncFontUI();
+  if (persist) { _vpTouch('この端末'); _vpMsg('文字サイズを ' + Math.round(state.fontScale * 100) + '% にしました（未反映）', 'warn'); }
+}
+function _vpFontStep(d) { _vpFontApply(state.fontScale + d, true); }
+
+function _vpRenderPanel() {
+  const wrap = document.getElementById('vpColList');
+  if (!wrap) return;
+  const widths = ensureViewPrefs().colWidths;
+  let h = '';
+  COL_RESIZE_DEFS.forEach(g => {
+    h += '<div class="vp-cgroup">' + escapeHtml(g.group) + '</div>';
+    g.items.forEach(it => {
+      const saved = widths[it.key];
+      const nat = _vpNaturalWidth(it.key);
+      const shown = (saved != null) ? saved : (nat != null ? nat : 160);
+      const isDef = (saved == null);
+      const title = it.note ? (' title="' + escapeHtml(it.note) + '"') : '';
+      h += '<div class="vp-crow" data-vpkey="' + escapeHtml(it.key) + '"' + title + '>'
+        + '<span class="vp-cname">' + escapeHtml(it.label) + (it.note ? ' <span style="color:var(--text3)">*</span>' : '') + '</span>'
+        + '<input type="range" class="vp-range" min="' + COL_RESIZE_MIN_PX + '" max="' + COL_RESIZE_MAX_PX + '" step="2" value="' + shown + '">'
+        + '<input type="number" class="vp-numin' + (isDef ? ' is-default' : '') + '" min="' + COL_RESIZE_MIN_PX + '" max="' + COL_RESIZE_MAX_PX + '" step="1" value="' + shown + '">'
+        + '<span class="vp-unit">px' + (isDef ? '（既定）' : '') + '</span>'
+        + '<button type="button" class="vp-rst" data-vpreset="1">既定</button>'
+        + '</div>';
+    });
+  });
+  wrap.innerHTML = h;
+
+  const vp = ensureViewPrefs();
+  const up = document.getElementById('vpUpdated');
+  if (up) {
+    const n = Object.keys(vp.colWidths).length;
+    let t = '調整中の列: ' + n + '件';
+    if (vp.updatedAt) {
+      const d = new Date(vp.updatedAt);
+      if (!isNaN(d)) t += '　最終更新: ' + d.toLocaleString('ja-JP') + (vp.updatedBy ? '（' + vp.updatedBy + '）' : '');
+    }
+    up.textContent = t;
+  }
+  _vpSyncFontUI();
+}
+
+function openViewPrefsModal() {
+  const m = document.getElementById('viewPrefsModal');
+  if (!m) return;
+  ensureViewPrefs();
+  migrateLegacyColWidths();
+  _vpMsg('');
+  _vpRenderPanel();
+  m.classList.add('open');
+}
+function closeViewPrefsModal() {
+  const m = document.getElementById('viewPrefsModal');
+  if (m) m.classList.remove('open');
+}
+window.openViewPrefsModal = openViewPrefsModal;
+
+// GitHubに保存されている「表示設定だけ」を取り込む。
+//   ★ 売上・productMeta 等には一切触らない（誤って他PCの古いデータで上書きしないため）。
+async function _vpPullFromGitHub() {
+  _vpMsg('GitHubから表示設定を取得中…', '');
+  try {
+    let content = null;
+    if (typeof ghIsEnabled === 'function' && ghIsEnabled() && typeof ghGetFileForLoad === 'function') {
+      const r = await ghGetFileForLoad();
+      content = r && r.content;
+    } else if (typeof ghGetFilePublic === 'function') {
+      const r = await ghGetFilePublic();
+      content = r && r.content;
+    }
+    if (!content) { _vpMsg('GitHubにデータが見つかりませんでした。', 'err'); return; }
+    const data = JSON.parse(content);
+    if (!data || !data.viewPrefs) { _vpMsg('GitHub側にまだ表示設定が保存されていません（保存したPCで「⬆ この設定を保存」を実行してください）。', 'warn'); return; }
+    state.viewPrefs = data.viewPrefs;
+    ensureViewPrefs();
+    _vpLegacyMigrated = true;
+    applyViewPrefs();
+    try { localStorage.setItem(VP_LEGACY_COL_KEY, JSON.stringify(state.viewPrefs.colWidths)); } catch (e) {}
+    if (typeof saveToStorage === 'function') saveToStorage();
+    _vpRenderPanel();
+    _vpMsg('取り込みました（列 ' + Object.keys(state.viewPrefs.colWidths).length + '件／文字サイズ ' + Math.round(state.fontScale * 100) + '%）。', 'ok');
+  } catch (e) {
+    _vpMsg('取得に失敗しました: ' + (e && e.message), 'err');
+  }
+}
+
+// いまの表示設定をGitHubへ保存（通常の「⬆ 反映する」と同じ経路＝全データを1回保存）。
+async function _vpPushToGitHub() {
+  if (!(typeof ghIsEnabled === 'function' && ghIsEnabled())) {
+    _vpMsg('GitHub連携が未設定のため、この端末にのみ保存されます（⚙️ GitHub連携でPATを設定してください）。', 'warn');
+    return;
+  }
+  _vpTouch('この端末');
+  _vpMsg('GitHubへ保存中…', '');
+  try {
+    const r = await ghSaveToGitHub({ allowEmpty: false });
+    if (r && r.success) _vpMsg('保存しました。他のPCで開くと同じ幅・文字サイズになります。', 'ok');
+    else _vpMsg('保存できませんでした: ' + ((r && (r.detail || r.reason)) || '不明'), 'err');
+  } catch (e) {
+    _vpMsg('保存に失敗しました: ' + (e && e.message), 'err');
+  }
+}
+
+(function _vpBindUI() {
+  const openBtn = document.getElementById('btnViewPrefs');
+  if (openBtn) openBtn.addEventListener('click', openViewPrefsModal);
+  const closeBtn = document.getElementById('vpClose');
+  if (closeBtn) closeBtn.addEventListener('click', closeViewPrefsModal);
+  const overlay = document.getElementById('viewPrefsModal');
+  if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeViewPrefsModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const m = document.getElementById('viewPrefsModal');
+      if (m && m.classList.contains('open')) closeViewPrefsModal();
+    }
+  });
+
+  const fr = document.getElementById('vpFontRange');
+  if (fr) {
+    fr.addEventListener('input', () => _vpFontApply(fr.value / 100, false));   // ドラッグ中は見た目だけ
+    fr.addEventListener('change', () => _vpFontApply(fr.value / 100, true));   // 離したら保存
+  }
+
+  const list = document.getElementById('vpColList');
+  if (list) {
+    // スライダー: 動かしている間は見た目だけ、離したら保存
+    list.addEventListener('input', (e) => {
+      const row = e.target.closest('.vp-crow'); if (!row) return;
+      const key = row.dataset.vpkey;
+      if (e.target.classList.contains('vp-range')) {
+        const v = +e.target.value;
+        const num = row.querySelector('.vp-numin');
+        if (num) { num.value = v; num.classList.remove('is-default'); }
+        _vpPreviewColWidth(key, v);
+      }
+    });
+    list.addEventListener('change', (e) => {
+      const row = e.target.closest('.vp-crow'); if (!row) return;
+      const key = row.dataset.vpkey;
+      if (e.target.classList.contains('vp-range') || e.target.classList.contains('vp-numin')) {
+        let v = Math.round(+e.target.value);
+        if (!(v > 0)) { saveColWidth(key, null); applyColWidths(); _vpMsg(key + ' を既定に戻しました（未反映）', 'warn'); return; }
+        v = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, v));
+        saveColWidth(key, v);
+        applyColWidths();
+        _vpMsg('列幅を保存しました（未反映）。「⬆ この設定を保存」でGitHubへ。', 'warn');
+      }
+    });
+    // 「既定」ボタン
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-vpreset]'); if (!btn) return;
+      const row = e.target.closest('.vp-crow'); if (!row) return;
+      saveColWidth(row.dataset.vpkey, null);
+      applyColWidths();
+      _vpMsg('既定に戻しました（未反映）', 'warn');
+    });
+  }
+
+  const rall = document.getElementById('vpResetAll');
+  if (rall) rall.addEventListener('click', () => {
+    if (!confirm('すべての列幅と文字サイズを既定に戻します。よろしいですか？')) return;
+    ensureViewPrefs().colWidths = {};
+    if (typeof setFontScale === 'function') setFontScale(1);
+    applyColWidths();
+    _vpTouch('この端末');
+    _vpMsg('すべて既定に戻しました（未反映）', 'warn');
+  });
+
+  const pull = document.getElementById('vpPull');
+  if (pull) pull.addEventListener('click', () => { _vpPullFromGitHub(); });
+  const push = document.getElementById('vpPush');
+  if (push) push.addEventListener('click', () => { _vpPushToGitHub(); });
+})();
 
 // ==================== ショップ選択UI（マルチショップ v93〜） ====================
 function initShopSelector() {
@@ -15042,10 +15477,19 @@ try {
   // 【v105】URLパラメータ ?view=ad-rank or ?view=seo-rank 等があれば、そのビューに直接移動
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const initialView = urlParams.get('view');
+    const initialViewRaw = urlParams.get('view');
+    // 【v1.0546】?view=graphdata-day は「全-日別データ」＝ #view-graphdata の日別
+    const _rv0 = initialViewRaw ? _resolveViewName(initialViewRaw) : null;
+    const initialView = _rv0 ? _rv0.view : null;
     if (initialView) {
-      const target = document.querySelector(`.nav-tab[data-view="${initialView}"]`);
+      const target = (initialViewRaw === 'graphdata-day')
+        ? document.getElementById('navGraphDataDay')
+        : document.querySelector(`.nav-tab[data-view="${initialView}"]`);
       if (target) {
+        if (_rv0 && _rv0.zdGrain) {
+          if (_rv0.zdGrain === 'day' && !dailyAllDates().length) _zdGrain = 'month';
+          else { _zdGrain = _rv0.zdGrain; if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; } }
+        }
         $$('.nav-tab').forEach(i => i.classList.remove('active'));
         target.classList.add('active');
         state.currentView = initialView;
