@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0538 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0539 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2548,8 +2548,20 @@ table.rank-table td.rank-legend-col-row {
 #uploadModal .file-slot-source { font-size: 0.78rem; line-height: 1.5; padding: 4px 8px; }
 #uploadModal .validation-msg { font-size: 0.92rem; line-height: 1.7; }
 #uploadModal .upload-actions .btn { font-size: 0.95rem; }
-/* スロットは5枠なので、広いときは3列にして縦を短くする */
-@media (min-width: 1100px) { #uploadModal .file-slots { grid-template-columns: repeat(3, 1fr); } }
+/* 【v1.0539】スロットはグループ分けするので .file-slots 自体のグリッドは解除する */
+#uploadModal .file-slots { display: block; }
+/* 日別4つ／最新値2つを、それぞれ2列グリッドで並べる（＝日別は2×2、最新値は横並び） */
+#uploadModal .fs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { #uploadModal .fs-grid { grid-template-columns: 1fr; } }
+/* グループの枠。対応ファイル一覧（.rt-group）と同じ配色にして対応関係を分かりやすくする */
+#uploadModal .fs-group { border: 1px solid var(--border2); border-radius: 9px; padding: 10px 11px 12px; margin-bottom: 11px; }
+#uploadModal .fs-group-daily  { border-left: 4px solid var(--accent); background: #f7f9ff; }
+#uploadModal .fs-group-latest { border-left: 4px solid var(--amber);  background: #fffdf6; }
+#uploadModal .fs-group-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+#uploadModal .fs-group-title { font-size: 0.98rem; font-weight: 700; }
+#uploadModal .fs-group-daily  .fs-group-title { color: #1e4fbf; }
+#uploadModal .fs-group-latest .fs-group-title { color: #b45309; }
+#uploadModal .fs-group-sub { font-size: 0.82rem; color: var(--text3); line-height: 1.5; }
 .modal-close {
   background: transparent; border: none;
   font-size: 1.6rem; color: var(--text3);
@@ -3003,7 +3015,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0538</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0539</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4042,6 +4054,10 @@ th.col-sroas { background-color:#cfe0f7; }
     </div>
 
     <div class="file-slots">
+      <!-- 【v1.0539】対応ファイル一覧（アコーディオン）と同じ配置に統一：日別4つを2×2、最新値2つを横並び -->
+      <div class="fs-group fs-group-daily">
+        <div class="fs-group-head"><span class="fs-group-title">日別レポート</span><span class="fs-group-sub">毎日この4つを同じ日付で揃えます</span></div>
+        <div class="fs-grid">
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge">①</span>広告詳細レポート（日別）</div>
         <div class="file-slot-status">未アップロード</div>
@@ -4075,6 +4091,11 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport</a></div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※このレポートの「売上」はPRオプ経由売上ではないため、Ycheckの総売上・SEO売上・広告売上には反映しません。</div>
       </div>
+        </div>
+      </div>
+      <div class="fs-group fs-group-latest">
+        <div class="fs-group-head"><span class="fs-group-title">最新値ファイル</span><span class="fs-group-sub">日付を持たない「いまの設定値」。毎回いちばん新しいものを入れます</span></div>
+        <div class="fs-grid">
       <div class="file-slot" id="slot-prorate" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge">⑤</span>PRオプ料率（最新値）</div>
         <div class="file-slot-status">未アップロード</div>
@@ -4093,6 +4114,8 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">①</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya" target="_blank" rel="noopener">ストアクリエイターを開く（未ログインなら先にログイン）</a></div>
         <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">②</span><a href="https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629</a></div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※未ログインだと②は一度ストクリのトップに飛びます。先に①でログインしてから②を押すと、1回目からダウンロードできます。</div>
+      </div>
+        </div>
       </div>
     </div>
 
