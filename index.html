@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0526 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0527 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1945,6 +1945,19 @@ tr.row-child .code-cell-inner::before {
 
 /* 【v1.0526】レポート追加モーダルはボタン統合により常に5スロットすべて表示する（旧モード出し分けは撤去） */
 
+/* ===== 【v1.0527】日選択・日別/月別トグル ===== */
+.day-sel { margin-left:5px; }
+.day-sel.on { border-color:var(--accent); background:#eaf0fd; color:var(--accent); font-weight:700; }
+.day-sel:disabled { opacity:.55; }
+.day-banner { margin:8px 0 4px; padding:7px 12px; border-radius:7px; background:#eaf0fd; border:1px solid #b6d4fe; color:#1e4fbf; font-size:0.84rem; line-height:1.6; }
+/* 日別/月別トグル（商品-日月別データ / 全-日月別データ / 各グラフ 共通） */
+.dm-seg { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:6px; vertical-align:middle; }
+.dm-seg .dm-btn { font-size:0.8rem; padding:5px 12px; border:none; border-left:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; font-weight:500; white-space:nowrap; line-height:1.3; }
+.dm-seg .dm-btn:first-child { border-left:none; }
+.dm-seg .dm-btn:hover { background:var(--bg3); }
+.dm-seg .dm-btn.on { background:var(--accent); color:#fff; font-weight:700; }
+.dm-nodata { font-size:11.5px; color:var(--text3); margin-left:8px; }
+
 /* ===== 【v1.0526】レポート追加モーダル：3機能のスタイル ===== */
 /* 検証ボックス「警告」（5ファイル未充足。エラーではなく、このまま取り込むことも可能） */
 .validation-box.warn { background:#fff8e6; border-color:#f0c26b; }
@@ -2937,7 +2950,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0526</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0527</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -2965,15 +2978,15 @@ th.col-sroas { background-color:#cfe0f7; }
   <div class="nav-group">
     <span class="nav-group-label g-basic">【基本】</span>
     <a class="nav-tab nav-tab-link active" data-view="basic" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
-    <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-月別データ</a>
+    <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-日月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率<span class="chip-num" id="cntOyChildUnset"></span></a>
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired">撤退済み商品</a>
   </div>
   <div class="nav-group">
     <span class="nav-group-label g-zentai">【全体】</span>
-    <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata">全-月別データ</a>
-    <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-月別グラフ</a>
+    <a class="nav-tab nav-tab-link" data-view="graphdata" href="?view=graphdata">全-日月別データ</a>
+    <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-日月別グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
     <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
     <span id="cntAdAdjustActive" style="display:none"></span><span id="cntProAdjustActive" style="display:none"></span>
@@ -3091,7 +3104,9 @@ th.col-sroas { background-color:#cfe0f7; }
         <h3 class="card-title">商品-基本データ</h3>
         <div class="filters">
           <span id="basicMonthWrap"><span class="filter-label">月</span>
-          <select id="basicMonth"></select></span>
+          <select id="basicMonth"></select>
+          <!-- 【v1.0527】日選択: 選ぶとその1日だけの数字になる。空（＝「日選択」）に戻すと月合計。日別データがある日だけ並ぶ。 -->
+          <select id="basicDaySel" class="day-sel" onchange="onBasicDaySelChange()" title="日別データを取り込んだ日だけ選べます。選ぶとその1日だけの数字になります（空に戻すと月合計）"></select></span>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <span class="ad-filter" id="basicAdFilterBar" role="group" aria-label="広告フィルタ" title="入札状態が入札価格○/×の商品で絞り込み（検索中は全件表示）"><button type="button" class="adf-btn on" data-adf="all">全体</button><button type="button" class="adf-btn" data-adf="ad">広告あり商品</button><button type="button" class="adf-btn" data-adf="noad">広告なし商品</button></span>
@@ -3111,6 +3126,8 @@ th.col-sroas { background-color:#cfe0f7; }
           <!-- 【v1.0522】いま画面に表示されている商品（ステータス絞り込み等を反映）を、選択月の列内容でCSV出力（右端配置） -->
           <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（商品コード・商品名・メインKW・総売上・SEO売上・PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス）でCSV出力します">⬇ このページをCSV出力</button>
         </div>
+        <!-- 【v1.0527】日選択中であることを明示するバナー -->
+        <div id="basicDayBanner" class="day-banner" style="display:none"></div>
         <div class="table-wrap">
           <table id="tableBasic" class="data-grid">
             <thead><tr>
@@ -3138,15 +3155,23 @@ th.col-sroas { background-color:#cfe0f7; }
       </div>
     </div>
 
-    <!-- View: 商品-月別データ -->
+    <!-- View: 商品-日月別データ 【v1.0527】日別/月別トグルを追加 -->
     <div class="view" id="view-monthly">
       <div class="card">
-        <h3 class="card-title">商品-月別データ</h3>
+        <h3 class="card-title">商品-日月別データ</h3>
         <div class="filters" style="flex-wrap:wrap;gap:8px 10px;align-items:center">
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
-          <span class="filter-label">表示</span>
+          <!-- 【v1.0527】日別／月別トグル。日別＝対象月の1日ごとの推移、月別＝従来どおり月を横並び。 -->
+          <span class="dm-seg" id="miDayMonthSeg" role="group" aria-label="日別/月別">
+            <button type="button" class="dm-btn on" data-dm="month" onclick="_miSetGrain('month')" title="月ごとの推移（従来）">月別</button>
+            <button type="button" class="dm-btn" data-dm="day" onclick="_miSetGrain('day')" title="対象月の1日ごとの推移。日別データを取り込んだ日だけ並びます">日別</button>
+          </span>
+          <span class="filter-label" id="miDayYmLabel" style="display:none">対象月</span>
+          <select id="miDayYmSel" onchange="_miSetDayYm(this.value)" style="display:none;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="dm-nodata" id="miDayNoData" style="display:none">日別データがまだありません（＋レポート追加 から日別レポートを取り込むと使えます）</span>
+          <span class="filter-label" id="miModeLabel">表示</span>
           <span id="miModeSeg" role="group" aria-label="表示モード" style="display:inline-flex;gap:4px">
             <button type="button" class="mi-mode-btn on" data-mode="recent" onclick="_miSetMode('recent')" title="最新月から12ヶ月ずつ表示">直近12ヶ月</button>
             <button type="button" class="mi-mode-btn" data-mode="year" onclick="_miSetMode('year')" title="暦年（1〜12月）ごとに表示">年度（1〜12月）</button>
@@ -3209,9 +3234,17 @@ th.col-sroas { background-color:#cfe0f7; }
             <option value="orders">広告個数</option>
             <option value="avgPrice">平均単価</option>
           </select>
-          <span class="filter-label">期間</span>
+          <!-- 【v1.0527】日別／月別トグル。日別＝x軸が対象月の各日になる（系列の計算式は共通）。 -->
+          <span class="dm-seg" id="igDayMonthSeg" role="group" aria-label="日別/月別">
+            <button type="button" class="dm-btn on" data-dm="month" onclick="_igSetGrain('month')" title="月ごとの推移（従来）">月別</button>
+            <button type="button" class="dm-btn" data-dm="day" onclick="_igSetGrain('day')" title="対象月の1日ごとの推移">日別</button>
+          </span>
+          <span class="filter-label" id="igDayYmLabel" style="display:none">対象月</span>
+          <select id="igDayYmSel" onchange="_igSetDayYm(this.value)" style="display:none;font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="dm-nodata" id="igDayNoData" style="display:none">日別データがまだありません</span>
+          <span class="filter-label" id="igRangeLabel">期間</span>
           <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
-          <span style="color:var(--text3)">〜</span>
+          <span style="color:var(--text3)" id="igRangeTilde">〜</span>
           <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
         </div>
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
@@ -3307,7 +3340,7 @@ th.col-sroas { background-color:#cfe0f7; }
     <!-- View: 全-月別グラフ（折れ線グラフ + 月別表） -->
     <div class="view" id="view-graph">
       <div class="card">
-        <h3 class="card-title">全-月別グラフ</h3>
+        <h3 class="card-title">全-日月別グラフ</h3>
         <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center;position:relative">
           <span class="filter-label">指標</span>
           <select id="zgMetric" onchange="_zgMetricChange(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">
@@ -3318,15 +3351,23 @@ th.col-sroas { background-color:#cfe0f7; }
             <option value="orders">広告個数</option>
             <option value="avgPrice">平均単価</option>
           </select>
+          <!-- 【v1.0527】日別／月別トグル。日別＝x軸が対象月の各日になる。 -->
+          <span class="dm-seg" id="zgDayMonthSeg" role="group" aria-label="日別/月別">
+            <button type="button" class="dm-btn on" data-dm="month" onclick="_zgSetGrain('month')" title="月ごとの推移（従来）">月別</button>
+            <button type="button" class="dm-btn" data-dm="day" onclick="_zgSetGrain('day')" title="対象月の1日ごとの推移">日別</button>
+          </span>
+          <span class="filter-label" id="zgDayYmLabel" style="display:none">対象月</span>
+          <select id="zgDayYmSel" onchange="_zgSetDayYm(this.value)" style="display:none;font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="dm-nodata" id="zgDayNoData" style="display:none">日別データがまだありません</span>
           <!-- 【v1.0409】期間プリセットを期間の左へ移動 -->
-          <span class="ig-presets" role="group" aria-label="期間プリセット">
+          <span class="ig-presets" id="zgPresetsWrap" role="group" aria-label="期間プリセット">
             <button type="button" class="ig-preset-btn" data-zgp="jan" onclick="_zgPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
             <button type="button" class="ig-preset-btn" data-zgp="may" onclick="_zgPreset('may')" title="今年の5月から当月まで">5月始まり</button>
             <button type="button" class="ig-preset-btn" data-zgp="y2" onclick="_zgPreset('y2')" title="前年同月から当月まで（当月が右端）">2年横並び</button>
           </span>
-          <span class="filter-label">期間</span>
+          <span class="filter-label" id="zgRangeLabel">期間</span>
           <select id="zgMonthFrom" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
-          <span style="color:var(--text3)">〜</span>
+          <span style="color:var(--text3)" id="zgRangeTilde">〜</span>
           <select id="zgMonthTo" onchange="_zgClearPreset();renderGraphAll()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
         </div>
         <div id="zgSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
@@ -3338,9 +3379,17 @@ th.col-sroas { background-color:#cfe0f7; }
     <!-- View: 全-月別データ（縦=月×横=指標のランク色分け表・ADcheck転用） -->
     <div class="view" id="view-graphdata">
       <div class="card">
-        <h3 class="card-title">全-月別データ</h3>
+        <h3 class="card-title">全-日月別データ</h3>
         <div class="filters" style="align-items:center;gap:8px;flex-wrap:wrap">
-          <span class="filter-label">表示</span>
+          <!-- 【v1.0527】日別／月別トグル。日別＝対象月の1日ごとを行に並べる（列は月別と同じ指標）。 -->
+          <span class="dm-seg" id="zdDayMonthSeg" role="group" aria-label="日別/月別">
+            <button type="button" class="dm-btn on" data-dm="month" onclick="_zdSetGrain('month')" title="月ごとの推移（従来）">月別</button>
+            <button type="button" class="dm-btn" data-dm="day" onclick="_zdSetGrain('day')" title="対象月の1日ごとの推移。日別データを取り込んだ日だけ並びます">日別</button>
+          </span>
+          <span class="filter-label" id="zdDayYmLabel" style="display:none">対象月</span>
+          <select id="zdDayYmSel" onchange="_zdSetDayYm(this.value)" style="display:none;font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="dm-nodata" id="zdDayNoData" style="display:none">日別データがまだありません</span>
+          <span class="filter-label" id="zdModeLabel">表示</span>
           <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
           <button type="button" class="ig-preset-btn zd-mode-btn" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
           <!-- 【v1.0508】各月の直後にSEO売上トップ15のサムネ帯を差し込むトグル -->
@@ -5607,6 +5656,7 @@ function migrateProStatusToStatus() {
   Object.keys(state.productMeta).forEach(c => allCodes.add(c));
   (state.item || []).forEach(i => allCodes.add(i.code));
   (state.ad || []).forEach(a => allCodes.add(a.code));
+  dailyCodes().forEach(c => allCodes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
 
   let migrated = 0;
@@ -5741,6 +5791,7 @@ function migrateRetiredByMissingName() {
   Object.keys(state.master || {}).forEach(c => allCodes.add(c));
   (state.item || []).forEach(i => allCodes.add(i.code));
   (state.ad || []).forEach(a => allCodes.add(a.code));
+  dailyCodes().forEach(c => allCodes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
   let migrated = 0;
   allCodes.forEach(code => {
@@ -6274,6 +6325,16 @@ function dailyAllDates() {
 function daysWithData(ym) { return dailyAllDates().filter(d => ymOf(d) === ym); }
 // 日別データを持っている月の集合
 function dailyMonths() { const s = new Set(); dailyAllDates().forEach(d => s.add(ymOf(d))); return s; }
+// 【v1.0527】日別データに登場する全商品コード。
+//   日別しか無い月（＝月次CSVを取り込んでいない月）でも商品一覧が空にならないようにするために使う。
+function dailyCodes() {
+  const set = new Set();
+  const d = ensureDaily();
+  ['item', 'ad'].forEach(k => {
+    Object.keys(d[k] || {}).forEach(date => Object.keys(d[k][date] || {}).forEach(c => set.add(c)));
+  });
+  return set;
+}
 function monthHasDaily(ym) { return dailyMonths().has(ym); }
 
 // --- 1日ぶんの取り出し（圧縮形式 → 名前付きオブジェクト） ---
@@ -6352,6 +6413,20 @@ function dailyItemRowsForMonth(ym) {
 function dailyAdRowsForMonth(ym) {
   const g = dailyRollup()[ym]; if (!g) return null;
   return Object.keys(g.ads).map(c => Object.assign({ code: c, month: ym }, g.ads[c]));
+}
+// 【v1.0527】「月次として使うべき行」を返す共通ヘルパー。
+//   日別データがある月は日別の合計、無い月は従来の月次データ。表示側はこれを使えば日/月を意識しなくてよい。
+function effMonthlyItemRows() {
+  const dm = dailyMonths();
+  const out = (state.item || []).filter(r => !dm.has(r.month));
+  dm.forEach(ym => { (dailyItemRowsForMonth(ym) || []).forEach(r => out.push(r)); });
+  return out;
+}
+function effMonthlyAdRows() {
+  const dm = dailyMonths();
+  const out = (state.ad || []).filter(r => !dm.has(r.month));
+  dm.forEach(ym => { (dailyAdRowsForMonth(ym) || []).forEach(r => out.push(r)); });
+  return out;
 }
 // 日別合計から作った「月次のストア全体売上」
 function dailyOverallRevForMonth(ym) {
@@ -7300,6 +7375,7 @@ function buildFullAggregate() {
 function updateStateCounts() {
   const allCodes = new Set();
   (state.item || []).forEach(i => allCodes.add(i.code));
+  dailyCodes().forEach(c => allCodes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   Object.keys(state.master).forEach(c => allCodes.add(c));
   let adOk = 0, adWarn = 0, adNg = 0, adFixed = 0, adNone = 0;
   let proOk = 0, proWarn = 0, proLower = 0, proPfixed = 0, proCfixed = 0, proHfixed = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
@@ -7719,6 +7795,74 @@ function kwCellHtml(code) {
 }
 
 // ==================== Rendering: 商品-基本データ ====================
+// ============================================================================
+// 【v1.0527】商品-基本データの「日選択」
+//   月の横のドロップダウンで1日を選ぶと、その日だけの数字になる。空に戻せば月合計。
+//   日別データを取り込んだ日だけが選択肢に並ぶ（取り込んでいない日は出さない）。
+// ============================================================================
+let basicDayMode = false;      // 日選択中か
+let basicSelectedDay = '';     // 'YYYY-MM-DD'
+
+// 1日ぶんの集計を buildFullAggregate と同じ形（month に日付が入る）で返す。
+//   こうすると表の描画コードを日/月で分けなくて済む。
+function _basicDayAggRows(date) {
+  if (!isYmd(date)) return [];
+  const codes = new Set();
+  Object.keys(dailyItemOf(date)).forEach(c => codes.add(c));
+  Object.keys(dailyAdOf(date)).forEach(c => codes.add(c));
+  return [...codes].map(c => {
+    const a = dayAgg(c, date);
+    return { code: c, month: date, rev: a.rev, adCost: a.adCost, adRev: a.adRev, seoRev: a.seoRev, roas: a.roas };
+  });
+}
+// 対象月の「データがある日」でドロップダウンを作り直す
+function updateBasicDayDropdown(ym) {
+  const sel = document.getElementById('basicDaySel');
+  if (!sel) return;
+  const days = ym ? daysWithData(ym) : [];
+  // 月を跨いだら選択日を解除
+  if (basicSelectedDay && ymOf(basicSelectedDay) !== ym) { basicSelectedDay = ''; basicDayMode = false; }
+  if (basicSelectedDay && !days.includes(basicSelectedDay)) { basicSelectedDay = ''; basicDayMode = false; }
+  if (!days.length) {
+    sel.innerHTML = '<option value="">日別なし</option>';
+    sel.disabled = true;
+    sel.classList.remove('on');
+    sel.title = 'この月の日別データはまだ取り込まれていません';
+    return;
+  }
+  sel.disabled = false;
+  const mo = +String(ym).slice(5, 7);
+  sel.innerHTML = '<option value="">日選択（月合計）</option>'
+    + days.map(d => '<option value="' + d + '">' + mo + '/' + (+d.slice(8, 10)) + '</option>').join('');
+  sel.value = basicSelectedDay || '';
+  sel.classList.toggle('on', !!basicSelectedDay);
+  sel.title = basicSelectedDay
+    ? (basicSelectedDay + ' の1日分を表示中（「日選択（月合計）」に戻すと月合計）')
+    : 'この月で日別データがある日：' + days.length + '日';
+}
+function onBasicDaySelChange() {
+  const sel = document.getElementById('basicDaySel');
+  const v = sel ? sel.value : '';
+  if (v) { basicDayMode = true; basicSelectedDay = v; }
+  else { basicDayMode = false; basicSelectedDay = ''; }
+  if (typeof clearEditPins === 'function') clearEditPins();
+  renderBasic();
+  _updateBasicDayBanner();
+}
+function onBasicMonthChange() { basicDayMode = false; basicSelectedDay = ''; renderBasic(); _updateBasicDayBanner(); }
+// 日選択中であることを表の上に明示する
+function _updateBasicDayBanner() {
+  const el = document.getElementById('basicDayBanner');
+  if (!el) return;
+  if (basicDayMode && basicSelectedDay) {
+    el.style.display = '';
+    el.innerHTML = '📅 <b>' + basicSelectedDay + '</b> の1日分を表示中です（総売上・SEO売上・広告売上・実績額・広告ROAS・売上ROAS はこの日の数字）。'
+      + '<button type="button" class="btn sm ghost" onclick="document.getElementById(\'basicDaySel\').value=\'\';onBasicDaySelChange();" style="margin-left:8px">月合計に戻す</button>';
+  } else {
+    el.style.display = 'none';
+    el.innerHTML = '';
+  }
+}
 // 【v1.0525】初期表示は「実績額（広告費）」の降順。広告費を多く使っている商品から並ぶ。
 //   （〜v1.0524 は総売上 'rev' の降順が初期値だった）
 let basicSortKey = 'adCost', basicSortDir = -1;
@@ -7748,6 +7892,7 @@ function renderWithdrawConsider() {
   Object.keys(state.master || {}).forEach(c => codes.add(c));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
+  dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   const f = (state.activeStateFilter && STATE_FILTERS[state.activeStateFilter.type]) || STATE_FILTERS['pro-wc'];
   const repKeyOf = (code) => { const r = String((state.productMeta[code] || {}).repCode || '').trim(); return r || code; };
   // 家族化（撤退済みは除外）。親子のどちらかが撤退検討▲なら家族全員をセット表示する。
@@ -7838,9 +7983,14 @@ function renderBasic() {
   }
   const targetMonth = sel.value;
 
-  const agg = buildFullAggregate();
-  // 選択月のみ
-  let list = agg.filter(r => r.month === targetMonth);
+  // 【v1.0527】日選択ドロップダウンを対象月の内容で作り直す（月を跨いだ選択日は自動解除）
+  updateBasicDayDropdown(targetMonth);
+
+  // 【v1.0527】日選択中は「その1日」の集計、通常は「その月」の集計。
+  //   ★ 表の描画コードは以下まったく共通。dayMode を立てるだけで日/月が切り替わる（二重実装しない）。
+  const agg = basicDayMode ? _basicDayAggRows(basicSelectedDay) : buildFullAggregate();
+  const _key = basicDayMode ? basicSelectedDay : targetMonth;
+  let list = agg.filter(r => r.month === _key);
 
   // master のみの商品（データがなくても全商品表示のため）
   if (targetMonth) {
@@ -7848,7 +7998,7 @@ function renderBasic() {
     const _addZeroRow = (code) => {
       if (!code || knownCodes.has(code)) return;
       knownCodes.add(code);
-      list.push({ code, month: targetMonth, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null });
+      list.push({ code, month: _key, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null });   /* 【v1.0527】日選択中は日付キー */
     };
     Object.keys(state.master).forEach(_addZeroRow);
     // 【fix】ステータス系チップで basic を絞り込み中は、件数バッジ(updateStateCounts=item∪master∪…)と
@@ -8008,6 +8158,7 @@ function renderReviewSales4() {
   Object.keys(state.master || {}).forEach(c => codes.add(c));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
+  dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   let codeList = [...codes].filter(code => !isRetired(code) || _editPinnedCodes.has(code));
   // 検索
   const _sEl = document.getElementById('reviewSales4Search');
@@ -8077,6 +8228,20 @@ let _miParentOnly = false;   // 【v1.0408】親子商品グループ(メンバ�
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
+// 【v1.0527】商品-日月別データの粒度切替。'month'=従来（月を並べる）／'day'=対象月の1日ごとを並べる。
+let _miGrain = 'month';
+let _miDayYm = '';        // 日別モードで見る対象月 'YYYY-MM'
+function _miSetGrain(g) {
+  const want = (g === 'day') ? 'day' : 'month';
+  if (want === 'day' && !dailyAllDates().length) return;   // 日別データが無いときは切り替えない
+  _miGrain = want;
+  if (_miGrain === 'day' && !_miDayYm) {
+    const ms = [...dailyMonths()].sort();
+    _miDayYm = ms.length ? ms[ms.length - 1] : '';
+  }
+  renderMonthly();
+}
+function _miSetDayYm(v) { _miDayYm = v; renderMonthly(); }
 // ==================== 【v1.0524】売上ROAS（ADcheckからの移植） ====================
 //   売上ROAS(%) = 総売上 ÷ 広告費全体 × 100
 //   一般的なROAS（広告経由売上÷広告費）と違い、分子が「総売上」。
@@ -8187,28 +8352,72 @@ function renderMonthly() {
     }
   }
 
+  // ============================================================
+  // 【v1.0527】日別モード：対象月の「データがある日」を、月の代わりに並べる。
+  //   行データは dayAgg() を各日で計算するだけ。表の描画コードは月別とまったく共通。
+  // ============================================================
+  const _hasAnyDaily = dailyAllDates().length > 0;
+  {
+    const seg = document.getElementById('miDayMonthSeg');
+    if (seg) {
+      seg.querySelectorAll('.dm-btn').forEach(b => b.classList.toggle('on', b.dataset.dm === _miGrain));
+      seg.querySelectorAll('.dm-btn[data-dm="day"]').forEach(b => { b.disabled = !_hasAnyDaily; b.style.opacity = _hasAnyDaily ? '' : '0.45'; });
+    }
+    const noData = document.getElementById('miDayNoData');
+    if (noData) noData.style.display = _hasAnyDaily ? 'none' : '';
+  }
+  if (_miGrain === 'day' && !_hasAnyDaily) _miGrain = 'month';
+  const _dayMode = (_miGrain === 'day');
+  ['miDayYmLabel', 'miDayYmSel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
+  ['miModeLabel', 'miModeSeg'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
+  if (_dayMode) {
+    const dms = [...dailyMonths()].sort();
+    if (!dms.includes(_miDayYm)) _miDayYm = dms.length ? dms[dms.length - 1] : '';
+    const dsel = document.getElementById('miDayYmSel');
+    if (dsel) {
+      dsel.innerHTML = dms.slice().reverse().map(v => '<option value="' + v + '">' + v.replace('-', '/') + '（' + daysWithData(v).length + '日分）</option>').join('');
+      dsel.value = _miDayYm;
+    }
+    const _rs = document.getElementById('miRangeSel'), _rl = document.getElementById('miRangeLabel');
+    if (_rs) _rs.style.display = 'none';
+    if (_rl) _rl.style.display = 'none';
+  }
+  // 日別モードでは「並べる単位」を月ではなく日にする（新しい日が上）
+  const selKeys = _dayMode ? daysWithData(_miDayYm).slice().reverse() : selYms;
+
   const itemMap = {}, adMap = {};
-  (state.item || []).forEach(i => { const k = i.code + '|' + i.month; (itemMap[k] || (itemMap[k] = { rev:0 })); itemMap[k].rev += i.revenue || 0; });
-  (state.ad || []).forEach(a => { const k = a.code + '|' + a.month; (adMap[k] || (adMap[k] = { adCost:0, adRev:0, cl:0, or:0 })); adMap[k].adCost += a.adCost || 0; adMap[k].adRev += a.adRevenue || 0; adMap[k].cl += a.adClicks || 0; adMap[k].or += a.adOrders || 0; });
+  effMonthlyItemRows().forEach(i => { const k = i.code + '|' + i.month; (itemMap[k] || (itemMap[k] = { rev:0 })); itemMap[k].rev += i.revenue || 0; });
+  effMonthlyAdRows().forEach(a => { const k = a.code + '|' + a.month; (adMap[k] || (adMap[k] = { adCost:0, adRev:0, cl:0, or:0 })); adMap[k].adCost += a.adCost || 0; adMap[k].adRev += a.adRevenue || 0; adMap[k].cl += a.adClicks || 0; adMap[k].or += a.adOrders || 0; });
 
   // 【v1.0369】親子商品（代表コード repCode）は一つの家族にまとめて数値を合算する。
   const _pm = state.productMeta || {};
   const repKeyOf = (code) => { const r = String((_pm[code] || {}).repCode || '').trim(); return r || code; };
+  // 【v1.0527】key は月('YYYY-MM')でも日('YYYY-MM-DD')でもよい。日なら dayAgg から、月なら従来の月次マップから取る。
   const _statForFamily = (members, ym) => {
     let rev = 0, spend = 0, adSales = 0, cl = 0, or = 0, soikomi = 0;
+    const _isDay = isYmd(ym);
     members.forEach(code => {
-      const it = itemMap[code + '|' + ym]; if (it) rev += it.rev || 0;
+      let _rev = 0, _cost = 0, _asales = 0, _cl = 0, _or = 0;
+      if (_isDay) {
+        const a = dayAgg(code, ym);
+        _rev = a.rev; _cost = a.adCost; _asales = a.adRev; _cl = a.adClicks; _or = a.adOrders;
+      } else {
+        const it = itemMap[code + '|' + ym]; if (it) _rev = it.rev || 0;
+        const ad = adMap[code + '|' + ym]; if (ad) { _cost = ad.adCost || 0; _asales = ad.adRev || 0; _cl = ad.cl || 0; _or = ad.or || 0; }
+      }
+      rev += _rev;
       // 【v1.0410】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
       const _rep = String((_pm[code] || {}).repCode || '').trim();
-      if (_rep && _rep !== code && it) soikomi += it.rev || 0;
-      const ad = adMap[code + '|' + ym]; if (ad) { spend += ad.adCost || 0; adSales += ad.adRev || 0; cl += ad.cl || 0; or += ad.or || 0; }
+      if (_rep && _rep !== code) soikomi += _rev;
+      spend += _cost; adSales += _asales; cl += _cl; or += _or;
     });
     const totSales = rev, seoSales = Math.max(0, totSales - adSales);
     const roas = spend > 0 ? Math.round(adSales / spend * 1000) / 10 : 0;
     const cvr  = cl > 0 ? Math.round(or / cl * 1000) / 10 : 0;
     // 【v1.0524】売上ROAS＝総売上÷実績額×100（広告費0なら null＝「—」）
     const salesRoas = salesRoasPct(totSales, spend, 0);
-    return { label: ym.replace('-', '/'), salesRoas, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
+    const _label = _isDay ? ((+ym.slice(5, 7)) + '/' + (+ym.slice(8, 10))) : ym.replace('-', '/');   // 【v1.0527】日別は 9/1 表記
+    return { label: _label, salesRoas, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
   };
 
   // 全コード → 家族(代表コード)ごとにメンバーをまとめる（撤退は除外）
@@ -8216,6 +8425,7 @@ function renderMonthly() {
   Object.keys(state.master || {}).forEach(c => codeSet.add(c));
   (state.item || []).forEach(i => codeSet.add(i.code));
   (state.ad || []).forEach(a => codeSet.add(a.code));
+  dailyCodes().forEach(c => codeSet.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   const families = {};
   [...codeSet].forEach(code => {
     if (typeof isRetired === 'function' && isRetired(code)) return;
@@ -8234,7 +8444,7 @@ function renderMonthly() {
       const hit = members.some(c => c.toLowerCase().includes(q) || _mname(c).toLowerCase().includes(q));
       if (!hit) return;
     }
-    const stats = selYms.map(ym => _statForFamily(members, ym));
+    const stats = selKeys.map(ym => _statForFamily(members, ym));   /* 【v1.0527】日別モードでは日、月別モードでは月 */
     if (!q && !_miParentOnly && stats.every(s => s.totSales === 0 && s.spend === 0 && s.adSales === 0)) return;
     const repHasMaster = !!(typeof getMaster === 'function' && getMaster(key));
     const dispCode = repHasMaster ? key : (members.find(c => _mname(c)) || members[0] || key);
@@ -8259,6 +8469,10 @@ function renderMonthly() {
   const limit = _miParentOnly ? rows.length : (q ? 30 : 8);   // 【v1.0408】親子のみは上限なし（全件）
   const shown = rows.slice(0, limit);
   if (shown.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">' + (_miParentOnly ? '親子設定された商品グループがありません' : '該当する商品がありません') + '</div>'; return; }
+  // 【v1.0527】日別モードの見出し（何を並べているかを明示）
+  const _dayNote = _dayMode
+    ? '<div style="padding:7px 12px;font-size:13px;color:#1e4fbf;background:#eaf0fd;border-bottom:1px solid #b6d4fe">📅 <b>' + String(_miDayYm).replace('-', '/') + '</b> の日別推移（' + selKeys.length + '日分・新しい日が上）。日別データを取り込んだ日だけ並びます。</div>'
+    : '';
   const note = _miParentOnly
     ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">親子商品グループ ' + rows.length + '件（親＋子の合計・総売上順）を表示中' + (q ? '（検索で絞り込み）' : '') + '</div>'
     : (rows.length > limit
@@ -8283,7 +8497,7 @@ function renderMonthly() {
   const DW = 160;   // データ各列の幅(px)＝従来比 約2倍
   const MW = 128;   // 月列の幅(px)
   const HEAD = '<th style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>'
-    + '<th style="width:' + MW + 'px;padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;color:var(--text3);background:var(--bg3)">月</th>'
+    + '<th style="width:' + MW + 'px;padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;color:var(--text3);background:var(--bg3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
     + MI_COLS.map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('')
     + '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);border-left:2px solid #c4b5fd;white-space:nowrap;font-size:0.82rem;font-weight:700;color:#7c3aed;background:#ece0fb">送り込み売上</th>';
 
@@ -8320,7 +8534,7 @@ function renderMonthly() {
     }).join('');
   }).join('');
 
-  wrap.innerHTML = note + '<table style="border-collapse:collapse;width:100%;table-layout:fixed"><thead><tr style="position:sticky;top:0;z-index:3">' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+  wrap.innerHTML = _dayNote + note + '<table style="border-collapse:collapse;width:100%;table-layout:fixed"><thead><tr style="position:sticky;top:0;z-index:3">' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 // ==================== 【v203】商品-親子売上比率 ====================
@@ -8378,8 +8592,8 @@ function renderOyako(){
   const wrap = document.getElementById('oy-wrap');
   if (!wrap) return;
   const itemMap = {}, adMap = {};
-  (state.item || []).forEach(i => { const k=i.code+'|'+i.month; (itemMap[k]||(itemMap[k]={rev:0})).rev += i.revenue||0; });
-  (state.ad || []).forEach(a => { const k=a.code+'|'+a.month; const o=(adMap[k]||(adMap[k]={adRev:0,adCost:0})); o.adRev += a.adRevenue||0; o.adCost += a.adCost||0; });
+  effMonthlyItemRows().forEach(i => { const k=i.code+'|'+i.month; (itemMap[k]||(itemMap[k]={rev:0})).rev += i.revenue||0; });
+  effMonthlyAdRows().forEach(a => { const k=a.code+'|'+a.month; const o=(adMap[k]||(adMap[k]={adRev:0,adCost:0})); o.adRev += a.adRevenue||0; o.adCost += a.adCost||0; });
   const _pm = state.productMeta || {};
   const repKeyOf = (code) => { const r = String((_pm[code]||{}).repCode||'').trim(); return r || code; };
   // 家族化（撤退除外）。【v1.0439】対象は「全体（全商品）」か「親子のみ（メンバー2件以上）」を切替。
@@ -8619,6 +8833,7 @@ function renderRetired() {
   Object.keys(state.productMeta).forEach(c => allCodes.add(c));
   (state.item || []).forEach(i => allCodes.add(i.code));
   (state.ad || []).forEach(a => allCodes.add(a.code));
+  dailyCodes().forEach(c => allCodes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   if (state.bid) Object.keys(state.bid).forEach(c => allCodes.add(c));
 
   let list = [...allCodes].filter(code => isRetired(code));
@@ -8796,6 +9011,46 @@ function _zenYoyOrder(rowsDesc) {
 // ---------- 全-月別データ（縦=月×横=指標 のランク色分け表 + サマリー + 通常/前年同月比） ----------
 let _zdMode = 'normal';
 function _zdSetMode(m) { _zdMode = m; document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-zdm') === m)); renderGraphData(); }
+// 【v1.0527】全-日月別データの粒度切替（'month'=従来の月別／'day'=対象月の1日ごと）
+let _zdGrain = 'month';
+let _zdDayYm = '';
+function _zdSetGrain(g) {
+  const want = (g === 'day') ? 'day' : 'month';
+  if (want === 'day' && !dailyAllDates().length) return;
+  _zdGrain = want;
+  if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; }
+  renderGraphData();
+}
+function _zdSetDayYm(v) { _zdDayYm = v; renderGraphData(); }
+// 日別の行を、_zenMonthlyRows と同じ形（label/totSales/seoSales/... ）で返す。
+//   こうすることで表の描画コードを日/月で分けずに済む。
+function _zenDailyRows(ym) {
+  const days = daysWithData(ym);
+  return days.map(function (d) {
+    const it = dailyItemOf(d), ad = dailyAdOf(d);
+    let rev = 0, orders = 0, soikomi = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0;
+    Object.keys(it).forEach(function (c) {
+      rev += it[c].revenue; orders += it[c].orders;
+      const rep = String(((state.productMeta || {})[c] || {}).repCode || '').trim();
+      if (rep && rep !== c) soikomi += it[c].revenue;   // 送り込み売上＝子商品の売上合計
+    });
+    Object.keys(ad).forEach(function (c) { adRev += ad[c].adRevenue; adCost += ad[c].adCost; adClicks += ad[c].adClicks; adOrders += ad[c].adOrders; });
+    const ov = dailyOverallOf(d);
+    if (ov > 0) rev = ov;   // 総売上はショップ売上KPI(日別)を権威データにする
+    const seoRev = Math.max(0, rev - adRev);
+    return {
+      month: d, label: (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)),
+      salesRoas: salesRoasPct(rev, adCost, 0),
+      totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
+      cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
+      roas: adCost > 0 ? adRev / adCost * 100 : 0,
+      orders: adOrders,
+      avgPrice: orders > 0 ? Math.round(rev / orders) : 0,
+      adClicks: adClicks,
+      soikomi: soikomi
+    };
+  });
+}
 window._zdSetMode = _zdSetMode;
 // 【v1.0521】全-月別データの表示内容をCSV出力（表示モード＝通常/前年同月比の並び順そのまま）。列は表と同じ：月・総売上・SEO売上・広告売上・実績額・CVR・広告ROAS・送り込み売上。
 function downloadZenMonthlyCsv() {
@@ -8951,11 +9206,39 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
 }
 function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
+  // ============================================================
+  // 【v1.0527】日別／月別の切替。日別は「行＝その月の各日」になるだけで、列も色分けも月別と共通。
+  // ============================================================
+  const _hasAnyDaily = dailyAllDates().length > 0;
+  {
+    const seg = document.getElementById('zdDayMonthSeg');
+    if (seg) {
+      seg.querySelectorAll('.dm-btn').forEach(b => b.classList.toggle('on', b.dataset.dm === _zdGrain));
+      seg.querySelectorAll('.dm-btn[data-dm="day"]').forEach(b => { b.disabled = !_hasAnyDaily; b.style.opacity = _hasAnyDaily ? '' : '0.45'; });
+    }
+    const nd = document.getElementById('zdDayNoData'); if (nd) nd.style.display = _hasAnyDaily ? 'none' : '';
+  }
+  if (_zdGrain === 'day' && !_hasAnyDaily) _zdGrain = 'month';
+  const _dayMode = (_zdGrain === 'day');
+  ['zdDayYmLabel', 'zdDayYmSel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
+  // 日別モードでは「前年同月比」とSEO売上トップ15は意味を持たないので隠す
+  ['zdModeLabel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
+  document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => { b.style.display = _dayMode ? 'none' : ''; });
+  if (_dayMode) {
+    const dms = [...dailyMonths()].sort();
+    if (!dms.includes(_zdDayYm)) _zdDayYm = dms.length ? dms[dms.length - 1] : '';
+    const dsel = document.getElementById('zdDayYmSel');
+    if (dsel) {
+      dsel.innerHTML = dms.slice().reverse().map(v => '<option value="' + v + '">' + v.replace('-', '/') + '（' + daysWithData(v).length + '日分）</option>').join('');
+      dsel.value = _zdDayYm;
+    }
+  }
   _zdSetSeoShowUI();
-  const _seoByM = _zdSeoShow ? _zdSeoByMonth() : null;
-  const _seoParentSet = _zdSeoShow ? _zdSeoParentSet() : null;   // 【v1.0520】親子商品マーカー用
+  const _seoOn = _zdSeoShow && !_dayMode;   // SEO売上トップ15は月別のときだけ
+  const _seoByM = _seoOn ? _zdSeoByMonth() : null;
+  const _seoParentSet = _seoOn ? _zdSeoParentSet() : null;   // 【v1.0520】親子商品マーカー用
   const _zdColCount = 1 + MI_COLS.length + 1;   // 月 + 指標列 + 送り込み売上
-  const asc = _zenMonthlyRows();
+  const asc = _dayMode ? _zenDailyRows(_zdDayYm) : _zenMonthlyRows();
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
   const pool = {}; MI_COLS.forEach(c => { pool[c.key] = asc.slice(0, -1).map(r => r[c.key]).filter(v => v > 0); });
   // 【v1.0405】送り込み売上列（子商品の月次売上合計）。色は他列と別（紫系）。
@@ -8963,15 +9246,17 @@ function renderGraphData() {
   const soiPool = asc.slice(0, -1).map(r => r.soikomi).filter(v => v > 0);
   const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
   const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
-  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">月</th>'
+  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
     + MI_COLS.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
     + '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const desc = asc.slice().reverse();
-  const drows = _zdMode === 'yoy' ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
+  // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
+  const drows = (!_dayMode && _zdMode === 'yoy') ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   const body = drows.map(r => {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
-    const _unmatured = !!(r.month && curYm && r.month >= curYm);   // 満了していない月（当月・以降）
+    // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
+    const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
     const cells = MI_COLS.map(c => {
       const v = r[c.key];
       let inner;
@@ -8991,7 +9276,7 @@ function renderGraphData() {
     const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
     let _rowHtml = '<tr><td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + r.label + '</td>' + cells + soiCell + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
-    if (_zdSeoShow && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
+    if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
     return _rowHtml;
   }).join('');
   wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
@@ -9068,19 +9353,55 @@ function _zgPreset(kind) {
   selF.value = fromOpt; selT.value = toOpt; _zgSetPresetActive(kind); renderGraphAll();
 }
 window._zgPreset = _zgPreset;
+// 【v1.0527】全-日月別グラフの粒度切替（'month'=従来／'day'=対象月の各日）
+let _zgGrain = 'month';
+let _zgDayYm = '';
+function _zgSetGrain(g) {
+  const want = (g === 'day') ? 'day' : 'month';
+  if (want === 'day' && !dailyAllDates().length) return;
+  _zgGrain = want;
+  if (_zgGrain === 'day' && !_zgDayYm) { const ms = [...dailyMonths()].sort(); _zgDayYm = ms.length ? ms[ms.length - 1] : ''; }
+  renderGraphAll();
+}
+function _zgSetDayYm(v) { _zgDayYm = v; renderGraphAll(); }
 function renderGraphAll() {
   const canvas = document.getElementById('zgCanvas'); const tableWrap = document.getElementById('zgTableWrap');
   if (!canvas || !tableWrap) return;
-  const all = _zenMonthlyRows();
-  const months = all.map(r => r.month);
-  const selF = document.getElementById('zgMonthFrom'), selT = document.getElementById('zgMonthTo');
-  if (selF && selT && selF.dataset.n !== String(months.length)) {
-    const opts = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
-    selF.innerHTML = opts; selT.innerHTML = opts; selF.dataset.n = selT.dataset.n = String(months.length);
-    if (months.length) { selF.value = months[Math.max(0, months.length - 12)]; selT.value = months[months.length - 1]; }
+  const _hasAnyDaily = dailyAllDates().length > 0;
+  {
+    const seg = document.getElementById('zgDayMonthSeg');
+    if (seg) {
+      seg.querySelectorAll('.dm-btn').forEach(b => b.classList.toggle('on', b.dataset.dm === _zgGrain));
+      seg.querySelectorAll('.dm-btn[data-dm="day"]').forEach(b => { b.disabled = !_hasAnyDaily; b.style.opacity = _hasAnyDaily ? '' : '0.45'; });
+    }
+    const nd = document.getElementById('zgDayNoData'); if (nd) nd.style.display = _hasAnyDaily ? 'none' : '';
   }
-  const from = selF ? selF.value : '', to = selT ? selT.value : '';
-  const rows = all.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
+  if (_zgGrain === 'day' && !_hasAnyDaily) _zgGrain = 'month';
+  const _dayMode = (_zgGrain === 'day');
+  ['zgDayYmLabel', 'zgDayYmSel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
+  ['zgPresetsWrap', 'zgRangeLabel', 'zgMonthFrom', 'zgRangeTilde', 'zgMonthTo'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
+  let rows;
+  if (_dayMode) {
+    const dms = [...dailyMonths()].sort();
+    if (!dms.includes(_zgDayYm)) _zgDayYm = dms.length ? dms[dms.length - 1] : '';
+    const dsel = document.getElementById('zgDayYmSel');
+    if (dsel) {
+      dsel.innerHTML = dms.slice().reverse().map(v => '<option value="' + v + '">' + v.replace('-', '/') + '（' + daysWithData(v).length + '日分）</option>').join('');
+      dsel.value = _zgDayYm;
+    }
+    rows = _zenDailyRows(_zgDayYm);   // x軸＝その月の各日（系列の計算式は月別とまったく同じ）
+  } else {
+    const all = _zenMonthlyRows();
+    const months = all.map(r => r.month);
+    const selF = document.getElementById('zgMonthFrom'), selT = document.getElementById('zgMonthTo');
+    if (selF && selT && selF.dataset.n !== String(months.length)) {
+      const opts = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
+      selF.innerHTML = opts; selT.innerHTML = opts; selF.dataset.n = selT.dataset.n = String(months.length);
+      if (months.length) { selF.value = months[Math.max(0, months.length - 12)]; selT.value = months[months.length - 1]; }
+    }
+    const from = selF ? selF.value : '', to = selT ? selT.value : '';
+    rows = all.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
+  }
   const labels = rows.map(r => r.label);
   const isSales = (_zgMetric === 'sales');
   _renderSalesToggles('zgSalesToggles', _zgSalesHidden, '_zgToggleSales', isSales);
@@ -9106,7 +9427,7 @@ function renderGraphAll() {
     });
   }
   const cols = _ZG_TABLE_COLS;
-  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'
+  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">' + (_dayMode ? '日' : '月') + '</th>'
     + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('');
   const body = rows.slice().reverse().map(r => {
     const tds = cols.map(c => {
@@ -9190,6 +9511,7 @@ function ensureTuneMembers(kind) {
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
+  dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   codes.forEach(code => {
     if (isRetired(code)) return;
     if (kind === 'ad' && adStatusIsNone((state.productMeta[code] || {}).adStatus)) return;
@@ -9425,6 +9747,7 @@ function updateTuneBar() {
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
+  dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   let cFix = 0, cWatch = 0, cUnchecked = 0, cAll = 0;
   [...codes].forEach(code => {
     if (isRetired(code)) return;
@@ -9490,6 +9813,7 @@ function renderAdAdjust(cfg) {
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
+  dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
 
   const agg = buildFullAggregate();
   const byKey = {};
@@ -9667,6 +9991,7 @@ function renderProAdjust(cfg) {
 
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
+  dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
 
   const agg = buildFullAggregate();
   const byKey = {};
@@ -10928,6 +11253,7 @@ function _igFamilies() {
   Object.keys(state.master || {}).forEach(c => codeSet.add(c));
   (state.item || []).forEach(i => codeSet.add(i.code));
   (state.ad || []).forEach(a => codeSet.add(a.code));
+  dailyCodes().forEach(c => codeSet.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
   const fam = {};
   [...codeSet].forEach(code => {
     if (typeof isRetired === 'function' && isRetired(code)) return;
@@ -11010,10 +11336,44 @@ function _igPreset(kind) {
 }
 window._igPreset = _igPreset;
 
+// 【v1.0527】商品-グラフの粒度切替（'month'=従来／'day'=対象月の各日）
+let _igGrain = 'month';
+let _igDayYm = '';
+function _igSetGrain(g) {
+  const want = (g === 'day') ? 'day' : 'month';
+  if (want === 'day' && !dailyAllDates().length) return;
+  _igGrain = want;
+  if (_igGrain === 'day' && !_igDayYm) { const ms = [...dailyMonths()].sort(); _igDayYm = ms.length ? ms[ms.length - 1] : ''; }
+  renderItemGraph();
+}
+function _igSetDayYm(v) { _igDayYm = v; renderItemGraph(); }
 function renderItemGraph() {
   const canvas = document.getElementById('igCanvas');
   const tableWrap = document.getElementById('igTableWrap');
   if (!canvas || !tableWrap) return;
+  // 【v1.0527】日別／月別トグルの状態同期
+  const _hasAnyDaily = dailyAllDates().length > 0;
+  {
+    const seg = document.getElementById('igDayMonthSeg');
+    if (seg) {
+      seg.querySelectorAll('.dm-btn').forEach(b => b.classList.toggle('on', b.dataset.dm === _igGrain));
+      seg.querySelectorAll('.dm-btn[data-dm="day"]').forEach(b => { b.disabled = !_hasAnyDaily; b.style.opacity = _hasAnyDaily ? '' : '0.45'; });
+    }
+    const nd = document.getElementById('igDayNoData'); if (nd) nd.style.display = _hasAnyDaily ? 'none' : '';
+  }
+  if (_igGrain === 'day' && !_hasAnyDaily) _igGrain = 'month';
+  const _dayMode = (_igGrain === 'day');
+  ['igDayYmLabel', 'igDayYmSel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
+  ['igRangeLabel', 'igMonthFrom', 'igRangeTilde', 'igMonthTo'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
+  if (_dayMode) {
+    const dms = [...dailyMonths()].sort();
+    if (!dms.includes(_igDayYm)) _igDayYm = dms.length ? dms[dms.length - 1] : '';
+    const dsel = document.getElementById('igDayYmSel');
+    if (dsel) {
+      dsel.innerHTML = dms.slice().reverse().map(v => '<option value="' + v + '">' + v.replace('-', '/') + '（' + daysWithData(v).length + '日分）</option>').join('');
+      dsel.value = _igDayYm;
+    }
+  }
   const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice(); // 昇順
   // 期間セレクトの初期化（月数が変わった時だけ作り直す）
   const selF = document.getElementById('igMonthFrom'), selT = document.getElementById('igMonthTo');
@@ -11032,17 +11392,34 @@ function renderItemGraph() {
   const members = fam[_igSelected];
   const itemMap = {}, adMap = {}, childMap = {};
   const _pmC = state.productMeta || {};
-  (state.item || []).forEach(i => {
-    if (members.indexOf(i.code) < 0) return;
-    const _e = (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0, orders: 0 })); _e.rev += i.revenue || 0; _e.qty += i.qty || 0; _e.orders += i.orders || 0;
-    // 【v1.0406】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
-    const _rep = ((_pmC[i.code] || {}).repCode || '').trim();
-    if (_rep && _rep !== i.code) { (childMap[i.month] || (childMap[i.month] = { rev: 0 })).rev += i.revenue || 0; }
-  });
-  (state.ad || []).forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
-  const from = selF ? selF.value : '', to = selT ? selT.value : '';
-  const range = months.filter(m => (!from || m >= from) && (!to || m <= to));
-  const labels = range.map(m => m.replace('-', '/'));
+  let range, labels;
+  if (_dayMode) {
+    // 【v1.0527】日別：キーを日付にして、その月の各日を dayAgg から積む（以降の描画コードは月別と共通）
+    range = daysWithData(_igDayYm);
+    labels = range.map(d => (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)));
+    range.forEach(d => {
+      members.forEach(code => {
+        const a = dayAgg(code, d);
+        const _e = (itemMap[d] || (itemMap[d] = { rev: 0, qty: 0, orders: 0 })); _e.rev += a.rev; _e.orders += a.orders;
+        const _rep = ((_pmC[code] || {}).repCode || '').trim();
+        if (_rep && _rep !== code) { (childMap[d] || (childMap[d] = { rev: 0 })).rev += a.rev; }
+        const _ad = (adMap[d] || (adMap[d] = { c: 0, r: 0, cl: 0, or: 0 }));
+        _ad.c += a.adCost; _ad.r += a.adRev; _ad.cl += a.adClicks; _ad.or += a.adOrders;
+      });
+    });
+  } else {
+    effMonthlyItemRows().forEach(i => {
+      if (members.indexOf(i.code) < 0) return;
+      const _e = (itemMap[i.month] || (itemMap[i.month] = { rev: 0, qty: 0, orders: 0 })); _e.rev += i.revenue || 0; _e.qty += i.qty || 0; _e.orders += i.orders || 0;
+      // 【v1.0406】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
+      const _rep = ((_pmC[i.code] || {}).repCode || '').trim();
+      if (_rep && _rep !== i.code) { (childMap[i.month] || (childMap[i.month] = { rev: 0 })).rev += i.revenue || 0; }
+    });
+    effMonthlyAdRows().forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
+    const from = selF ? selF.value : '', to = selT ? selT.value : '';
+    range = months.filter(m => (!from || m >= from) && (!to || m <= to));
+    labels = range.map(m => m.replace('-', '/'));
+  }
   // 【v1.0406】売上（複合）指標の月次値: 総売上/SEO/広告/送り込み。
   const _igSalesVal = (m, key) => {
     const it = itemMap[m] || {}, ad = adMap[m] || {};
@@ -11081,7 +11458,7 @@ function renderItemGraph() {
   // 明細テーブル（全指標 × 月／新しい順）＋ 右端に送り込み売上（子商品分）
   const cols = _IG_TABLE_COLS;
   const _SOI_HBG = '#ece0fb', _SOI_BG = '#f7f1fe', _SOI_BD = '2px solid #c4b5fd';
-  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">月</th>'
+  const th = '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3);white-space:nowrap">' + (_dayMode ? '日' : '月') + '</th>'
     + cols.map(c => '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
     + '<th style="padding:9px 12px;text-align:right;position:sticky;top:0;background:' + _SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + _SOI_BD + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const body = range.slice().reverse().map(m => {
@@ -11833,7 +12210,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Basicビューの操作
-$('#basicMonth').addEventListener('change', () => { clearEditPins(); renderBasic(); });
+$('#basicMonth').addEventListener('change', () => { clearEditPins(); onBasicMonthChange(); });   /* 【v1.0527】月を変えたら日選択を解除 */
 $('#basicSearch').addEventListener('input', renderBasic);
 // 【v1.0322】広告あり/無し 絞り込みボタン（基本/月別）。クリックで on 切替＆再描画。検索中はバイパス。
 function _wireAdFilter(barId, setFilter, rerender) {
