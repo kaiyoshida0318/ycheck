@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0530 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0531 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2987,7 +2987,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0530</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0531</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6628,11 +6628,18 @@ function checkFiveFileSet() {
     const miss = DAILY_TYPE_KEYS.filter(k => !(_dailyStage[k] && _dailyStage[k][d]) && !(d0[k] && d0[k][d]));
     if (miss.length) missingByDate[d] = miss;
   });
-  // 最新値2種も、すでに取り込み済み（state側に値がある）なら充足とみなす
-  const _latestHas = { bid: !!(state.bid && Object.keys(state.bid).length), proRate: !!(state.proRate && Object.keys(state.proRate).length) };
-  const missingLatest = LATEST_TYPE_KEYS.filter(k => buf[k] == null && !_latestHas[k]);
+  // 【v1.0531】最新値2種（④⑤）は「いまの設定値」なので、毎回この取り込みに含まれていなければ不足とみなす。
+  //   ※v1.0526では「過去に取り込んだ値が state に残っていれば充足」としていたが、
+  //     それだと①②③だけを入れても「5種すべて揃っています」と出てしまい、入れ忘れを見逃す原因になっていた。
+  //     日別3種（①②③）は「その日付のデータが既にあるか」で見るので、従来どおり取り込み済みも充足扱いのまま。
+  const missingLatest = LATEST_TYPE_KEYS.filter(k => buf[k] == null);
+  // 参考情報: 不足している最新値に、前回取り込んだ値が残っているか（メッセージで「前回の値が残ります」と伝えるため）
+  const latestKept = {
+    bid: !!(state.bid && Object.keys(state.bid).length),
+    proRate: !!(state.proRate && Object.keys(state.proRate).length)
+  };
   const complete = dates.length > 0 && Object.keys(missingByDate).length === 0 && missingLatest.length === 0;
-  return { complete, missingLatest, missingByDate, dates };
+  return { complete, missingLatest, missingByDate, dates, latestKept };
 }
 function _typeLabel(k) { const t = reportTypeOf(k); return t ? (t.badge + t.label) : k; }
 
@@ -6678,7 +6685,13 @@ function validateBuffer() {
     Object.keys(chk.missingByDate).sort().forEach(d => {
       parts.push(`${d} に ${chk.missingByDate[d].map(_typeLabel).join('・')} が不足`);
     });
-    if (chk.missingLatest.length) parts.push(`${chk.missingLatest.map(_typeLabel).join('・')} が未アップロード`);
+    // 【v1.0531】最新値が今回のバッチに無いときは、前回値が残る旨も添える
+    if (chk.missingLatest.length) {
+      const kept = chk.missingLatest.filter(k => chk.latestKept && chk.latestKept[k]);
+      let t = `${chk.missingLatest.map(_typeLabel).join('・')} が未アップロード`;
+      if (kept.length === chk.missingLatest.length) t += '（このまま取り込むと前回の値のままになります）';
+      parts.push(t);
+    }
     msg.textContent = `⚠ ファイルが揃っていません（${parts.join(' / ')}）。このまま取り込むこともできます。`;
     btn.disabled = false;
     btn.textContent = '⚠ 不足があるまま取り込む';
