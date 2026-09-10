@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0533 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0534 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2999,7 +2999,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0533</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0534</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4038,13 +4038,13 @@ th.col-sroas { background-color:#cfe0f7; }
     </div>
 
     <div class="file-slots">
-      <div class="file-slot" id="slot-overall" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge">①</span>ショップ売上（日別）</div>
+      <div class="file-slot" id="slot-ad" data-upload-group="monthly">
+        <div class="file-slot-label"><span class="slot-badge">①</span>広告詳細レポート（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
-        <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
+        <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/report/adDetail" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/report/adDetail</a></div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge">②</span>商品別売上（日別）</div>
@@ -4054,16 +4054,24 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 商品分析 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report</a></div>
       </div>
-      <div class="file-slot" id="slot-ad" data-upload-group="monthly">
-        <div class="file-slot-label"><span class="slot-badge">③</span>広告詳細レポート（日別）</div>
+      <div class="file-slot" id="slot-overall" data-upload-group="monthly">
+        <div class="file-slot-label"><span class="slot-badge">③</span>ショップ売上（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
-        <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/report/adDetail" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/report/adDetail</a></div>
+        <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
+      </div>
+      <div class="file-slot" id="slot-prorate" data-upload-group="spot">
+        <div class="file-slot-label"><span class="slot-badge">④</span>PRオプ料率（最新値）</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
+        <div class="file-slot-filename">data*.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>商品登録 → 商品管理 → 商品データ → ダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/" target="_blank" rel="noopener">https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/</a></div>
       </div>
       <div class="file-slot" id="slot-bid" data-upload-group="spot">
-        <div class="file-slot-label"><span class="slot-badge">④</span>入札価格（最新値）</div>
+        <div class="file-slot-label"><span class="slot-badge">⑤</span>入札価格（最新値）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
@@ -4072,14 +4080,6 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">①</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya" target="_blank" rel="noopener">ストアクリエイターを開く（未ログインなら先にログイン）</a></div>
         <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">②</span><a href="https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629</a></div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※未ログインだと②は一度ストクリのトップに飛びます。先に①でログインしてから②を押すと、1回目からダウンロードできます。</div>
-      </div>
-      <div class="file-slot" id="slot-prorate" data-upload-group="spot">
-        <div class="file-slot-label"><span class="slot-badge">⑤</span>PRオプ料率（最新値）</div>
-        <div class="file-slot-status">未アップロード</div>
-        <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
-        <div class="file-slot-filename">data*.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>商品登録 → 商品管理 → 商品データ → ダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/" target="_blank" rel="noopener">https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/</a></div>
       </div>
     </div>
 
@@ -5948,26 +5948,26 @@ async function expandFiles(files) {
 //     入るため、先に種別を決めてから daily:true のものだけ日付を見ないと 2026-09-09 を誤検出する。
 // ============================================================================
 const REPORT_TYPES = [
-  { key:'overall', badge:'①', slotId:'slot-overall', label:'ショップ売上（日別）', daily:true,
-    sub:'store_overall', pat:'{shop}-store_overall_kpi-{YYYYMMDD}.csv', ex:'{shop}-store_overall_kpi-20260701.csv',
-    note:'その日のストア全体の売上。総売上は「合算値売上合計値」列（PC＋スマホ＋アプリの合算）を使用。',
+  { key:'ad', badge:'①', slotId:'slot-ad', label:'広告詳細レポート（日別）', daily:true,
+    sub:'広告詳細レポート', pat:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別-{YYYYMMDD}.csv', ex:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別-20260701.csv',
+    note:'【拡張機能の「広告詳細」ボタンで取得】その日の商品別の広告実績（利用金額・クリック数・注文数・売上金額）。',
     dateFrom:'CSVの日付列' },
   { key:'item', badge:'②', slotId:'slot-item', label:'商品別売上（日別）', daily:true,
     sub:'item_report', pat:'{shop}-item_report-{YYYYMMDD}.csv', ex:'{shop}-item_report-20260701.csv',
-    note:'その日の商品別売上。サブコード空欄の親行を優先して集計（枝番行との二重計上を防止）。',
+    note:'【拡張機能の「商品分析」ボタンで取得】その日の商品別売上。サブコード空欄の親行を優先して集計（枝番行との二重計上を防止）。',
     dateFrom:'★ファイル名の8桁日付のみ（このCSVには日付列がありません）' },
-  { key:'ad', badge:'③', slotId:'slot-ad', label:'広告詳細レポート（日別）', daily:true,
-    sub:'広告詳細レポート', pat:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別-{YYYYMMDD}.csv', ex:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別-20260701.csv',
-    note:'その日の商品別の広告実績（利用金額・クリック数・注文数・売上金額）。',
+  { key:'overall', badge:'③', slotId:'slot-overall', label:'ショップ売上（日別）', daily:true,
+    sub:'store_overall', pat:'{shop}-store_overall_kpi-{YYYYMMDD}.csv', ex:'{shop}-store_overall_kpi-20260701.csv',
+    note:'【拡張機能の「全体分析」ボタンで取得】その日のストア全体の売上。総売上は「合算値売上合計値」列（PC＋スマホ＋アプリの合算）を使用。',
     dateFrom:'CSVの日付列' },
-  { key:'bid', badge:'④', slotId:'slot-bid', label:'入札価格（最新値）', daily:false,
-    sub:'bid_item', pat:'BID_ITEM*.csv', ex:'BID_ITEM (59).csv',
-    note:'いま設定されている入札価格。日付は持たず、常に最新値で上書きします。',
-    dateFrom:'不要（最新値）' },
-  { key:'proRate', badge:'⑤', slotId:'slot-prorate', label:'PRオプ料率（最新値）', daily:false,
+  { key:'proRate', badge:'④', slotId:'slot-prorate', label:'PRオプ料率（最新値）', daily:false,
     sub:'data', pat:'data*.csv', ex:'data202609091833.csv',
-    note:'いま設定されているPRオプ料率。Yahooで公開中の全商品リストとして撤退判定にも使用。',
-    dateFrom:'不要（最新値。ファイル名のタイムスタンプは日付として読みません）' }
+    note:'【拡張機能の「商品データ」ボタンで取得】いま設定されているPRオプ料率。Yahooで公開中の全商品リストとして撤退判定にも使用。',
+    dateFrom:'不要（最新値。ファイル名のタイムスタンプは日付として読みません）' },
+  { key:'bid', badge:'⑤', slotId:'slot-bid', label:'入札価格（最新値）', daily:false,
+    sub:'bid_item', pat:'BID_ITEM*.csv', ex:'BID_ITEM (59).csv',
+    note:'【拡張機能の「入札商品データ」ボタンで取得】いま設定されている入札価格。日付は持たず、常に最新値で上書きします。',
+    dateFrom:'不要（最新値）' }
 ];
 const DAILY_TYPE_KEYS = REPORT_TYPES.filter(t => t.daily).map(t => t.key);      // ['overall','item','ad']
 const LATEST_TYPE_KEYS = REPORT_TYPES.filter(t => !t.daily).map(t => t.key);    // ['bid','proRate']
