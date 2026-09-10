@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0527 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0528 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1972,7 +1972,19 @@ tr.row-child .code-cell-inner::before {
 .rt-acc-head:hover { background:var(--border); }
 .rt-acc-arrow { font-size:0.75rem; color:var(--text3); }
 .rt-acc-body { padding:12px; background:var(--bg2); }
-.rt-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:9px; }
+/* 【v1.0528】対応ファイル一覧を2グループに分けて枠で囲む。
+   日別グループは2列（①② が1段目・③ が2段目）、最新値グループも2列（④ 左・⑤ 右で横並び）。 */
+.rt-group { border:1px solid var(--border2); border-radius:9px; padding:10px 11px 11px; margin-bottom:11px; background:var(--bg2); }
+.rt-group-daily  { border-left:4px solid var(--accent); background:#f7f9ff; }
+.rt-group-latest { border-left:4px solid var(--amber);  background:#fffdf6; }
+.rt-group-head { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.rt-group-title { font-size:0.86rem; font-weight:700; color:var(--text); }
+.rt-group-daily  .rt-group-title { color:#1e4fbf; }
+.rt-group-latest .rt-group-title { color:#b45309; }
+.rt-group-sub { font-size:11px; color:var(--text3); line-height:1.5; }
+.rt-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.rt-cards-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+@media (max-width:640px) { .rt-cards, .rt-cards-2 { grid-template-columns:1fr; } }
 .rt-card { border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:7px; padding:9px 11px; background:var(--bg2); }
 .rt-card.rt-latest { border-left-color:var(--amber); }
 .rt-card-head { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
@@ -2950,7 +2962,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0527</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0528</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5991,7 +6003,8 @@ function toggleReportTypesAcc() {
 }
 function _reportTypeCardsHtml() {
   const shop = getCurrentShop().shopCode;
-  return '<div class="rt-cards">' + REPORT_TYPES.map(t => {
+  // 1枚のカードを作る
+  const card = (t) => {
     const pat = String(t.pat).replace('{shop}', shop);
     return '<div class="rt-card' + (t.daily ? '' : ' rt-latest') + '">'
       + '<div class="rt-card-head"><span class="rt-badge">' + t.badge + '</span><span class="rt-label">' + escapeHtml(t.label) + '</span>'
@@ -6000,10 +6013,25 @@ function _reportTypeCardsHtml() {
       + '<div class="rt-note">' + escapeHtml(t.note) + '</div>'
       + '<div class="rt-date"><b>日付の判定</b>：' + escapeHtml(t.dateFrom) + '</div>'
       + '</div>';
-  }).join('') + '</div>'
-  + '<div class="rt-foot">①②③は<b>同じ日付</b>の3ファイルを揃えて入れると、その日の日別データが完成します。'
-  + '④⑤は日付を持たない「いまの設定値」なので、毎回いちばん新しいものを入れてください。<br>'
-  + '月次の数値は、取り込んだ日別データの<b>合計</b>から自動で計算されます（日別が無い過去の月は、これまでどおり月次データを使います）。</div>';
+  };
+  // 【v1.0528】2グループに分けて枠で囲む。
+  //   グループ1＝日別3種（①② が1段目、③ が2段目）／グループ2＝最新値2種（④ 左・⑤ 右で横並び）。
+  const daily = REPORT_TYPES.filter(t => t.daily);
+  const latest = REPORT_TYPES.filter(t => !t.daily);
+  return ''
+    + '<div class="rt-group rt-group-daily">'
+    +   '<div class="rt-group-head"><span class="rt-group-title">日別レポート</span>'
+    +     '<span class="rt-group-sub">毎日この3つを同じ日付で揃えます（ファイル名末尾の8桁日付で日を判定）</span></div>'
+    +   '<div class="rt-cards">' + daily.map(card).join('') + '</div>'
+    + '</div>'
+    + '<div class="rt-group rt-group-latest">'
+    +   '<div class="rt-group-head"><span class="rt-group-title">最新値ファイル</span>'
+    +     '<span class="rt-group-sub">日付を持たない「いまの設定値」。毎回いちばん新しいものを入れます</span></div>'
+    +   '<div class="rt-cards rt-cards-2">' + latest.map(card).join('') + '</div>'
+    + '</div>'
+    + '<div class="rt-foot">①②③は<b>同じ日付</b>の3ファイルを揃えて入れると、その日の日別データが完成します。'
+    + '④⑤は日付を持たない「いまの設定値」なので、毎回いちばん新しいものを入れてください。<br>'
+    + '月次の数値は、取り込んだ日別データの<b>合計</b>から自動で計算されます（日別が無い過去の月は、これまでどおり月次データを使います）。</div>';
 }
 
 // ---------- ② 不足日を確認する ----------
