@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0535 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0538 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1959,6 +1959,10 @@ tr.row-child .code-cell-inner::before {
 .dm-nodata { font-size:11.5px; color:var(--text3); margin-left:8px; }
 /* 【v1.0533】全-日月別データ（日別）の期間情報 */
 .zd-range-info { font-size:0.8rem; color:var(--text3); margin-left:6px; }
+/* 【v1.0536】部分取込の月の注意書き */
+.zd-partial-note { margin:0 2px 10px; padding:9px 12px; border:1px solid #f0c26b; border-radius:7px; background:#fff8e6; color:#8a5a00; font-size:0.83rem; line-height:1.8; }
+/* 【v1.0537】PRオプション実績の不足で売上ROASが算出できない旨の警告 */
+.zd-pr-note { margin:0 2px 10px; padding:9px 12px; border:1px solid #b6d4fe; border-radius:7px; background:#f2f7ff; color:#1e4fbf; font-size:0.83rem; line-height:1.8; }
 /* 【v1.0530】全-日月別データ：色分けルールの凡例 */
 .zd-color-legend { margin:10px 2px 2px; padding:9px 12px; border:1px solid var(--border); border-radius:7px; background:var(--bg3); font-size:0.8rem; line-height:1.85; color:var(--text2); }
 .zd-color-legend .c-g1, .zd-color-legend .c-g2, .zd-color-legend .c-bk, .zd-color-legend .c-o, .zd-color-legend .c-r { white-space:nowrap; }
@@ -2999,7 +3003,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0535</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0538</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4062,8 +4066,17 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
       </div>
+      <div class="file-slot" id="slot-pr" data-upload-group="daily">
+        <div class="file-slot-label"><span class="slot-badge">④</span>PRオプション実績（日別）</div>
+        <div class="file-slot-status">未アップロード</div>
+        <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
+        <div class="file-slot-filename">*_total_prreport.csv</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → レポート → PRオプションレポート → CSVファイルダウンロード</div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport</a></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※このレポートの「売上」はPRオプ経由売上ではないため、Ycheckの総売上・SEO売上・広告売上には反映しません。</div>
+      </div>
       <div class="file-slot" id="slot-prorate" data-upload-group="spot">
-        <div class="file-slot-label"><span class="slot-badge">④</span>PRオプ料率（最新値）</div>
+        <div class="file-slot-label"><span class="slot-badge">⑤</span>PRオプ料率（最新値）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">data*.csv</div>
@@ -4071,7 +4084,7 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/" target="_blank" rel="noopener">https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/</a></div>
       </div>
       <div class="file-slot" id="slot-bid" data-upload-group="spot">
-        <div class="file-slot-label"><span class="slot-badge">⑤</span>入札価格（最新値）</div>
+        <div class="file-slot-label"><span class="slot-badge">⑥</span>入札価格（最新値）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">BID_ITEM*.csv</div>
@@ -4084,7 +4097,7 @@ th.col-sroas { background-color:#cfe0f7; }
     </div>
 
     <div class="validation-box" id="validationBox">
-      <div class="validation-msg" id="validationMsg">📋 その日の5ファイル（①ショップ売上・②商品別売上・③広告詳細＝日別／④入札価格・⑤PRオプ料率＝最新値）をまとめてドロップしてください</div>
+      <div class="validation-msg" id="validationMsg">📋 その日の6ファイル（①広告詳細・②商品別売上・③ショップ売上・④PRオプション実績＝日別／⑤PRオプ料率・⑥入札価格＝最新値）をまとめてドロップしてください</div>
     </div>
 
     <div class="upload-actions">
@@ -4225,7 +4238,11 @@ const state = {
   //     overall : { 'YYYY-MM-DD': 総売上 }
   //     item    : { 'YYYY-MM-DD': { code: [revenue, orders] } }
   //     ad      : { 'YYYY-MM-DD': { code: [adCost, adRevenue, adClicks, adOrders] } }
-  daily: { overall: {}, item: {}, ad: {} }
+  //     pr      : { 'YYYY-MM-DD': { cost, sales, ratio, clickAll, imprAll, ...内訳 } }  ← ストア全体・1日1件
+  //   【v1.0537】pr = PRオプション実績（ストア全体・日別）。
+  //     ★ state.proRate（商品ごとの設定PRオプ料率）とは全くの別物。混同しないこと。
+  //        proRate =「設定している料率」／ pr =「実際に発生した実績」
+  daily: { overall: {}, item: {}, ad: {}, pr: {} }
 };
 
 // ==================== Utility ====================
@@ -4383,16 +4400,16 @@ function _rankRecentOnly(rank, n) {
 const DAILY_LS_MONTHS = 6;
 function _dailyRecentOnly(daily, n) {
   try {
-    if (!daily || typeof daily !== 'object') return { overall: {}, item: {}, ad: {} };
+    if (!daily || typeof daily !== 'object') return { overall: {}, item: {}, ad: {}, pr: {} };
     const months = new Set();
-    ['overall', 'item', 'ad'].forEach(k => Object.keys(daily[k] || {}).forEach(d => { if (/^\d{4}-\d{2}-\d{2}$/.test(d)) months.add(d.slice(0, 7)); }));
+    ['overall', 'item', 'ad', 'pr'].forEach(k => Object.keys(daily[k] || {}).forEach(d => { if (/^\d{4}-\d{2}-\d{2}$/.test(d)) months.add(d.slice(0, 7)); }));
     const keep = new Set([...months].sort().slice(-Math.max(0, n)));
-    const out = { overall: {}, item: {}, ad: {} };
-    ['overall', 'item', 'ad'].forEach(k => {
+    const out = { overall: {}, item: {}, ad: {}, pr: {} };
+    ['overall', 'item', 'ad', 'pr'].forEach(k => {
       Object.keys(daily[k] || {}).forEach(d => { if (keep.has(String(d).slice(0, 7))) out[k][d] = daily[k][d]; });
     });
     return out;
-  } catch (e) { return daily || { overall: {}, item: {}, ad: {} }; }
+  } catch (e) { return daily || { overall: {}, item: {}, ad: {}, pr: {} }; }
 }
 function saveToStorage() {
   const data = {
@@ -5960,17 +5977,21 @@ const REPORT_TYPES = [
     sub:'store_overall', pat:'{shop}-store_overall_kpi-{YYYYMMDD}.csv', ex:'{shop}-store_overall_kpi-20260701.csv',
     note:'【拡張機能の「全体分析」ボタンで取得】その日のストア全体の売上。総売上は「合算値売上合計値」列（PC＋スマホ＋アプリの合算）を使用。',
     dateFrom:'CSVの日付列' },
-  { key:'proRate', badge:'④', slotId:'slot-prorate', label:'PRオプ料率（最新値）', daily:false,
+  { key:'pr', badge:'④', slotId:'slot-pr', label:'PRオプション実績（日別）', daily:true,
+    sub:'prreport', pat:'{YYYYMMDD}{YYYYMMDD}_total_prreport.csv', ex:'2026090920260909_total_prreport.csv',
+    note:'【販売管理 → レポート → PRオプションレポート】その日のストア全体のPRオプション実績（広告費・表示回数・クリック数）。※レポートの「売上」はPRオプ経由売上ではないため、Ycheckの売上には反映しません。',
+    dateFrom:'CSVのdate列' },
+  { key:'proRate', badge:'⑤', slotId:'slot-prorate', label:'PRオプ料率（最新値）', daily:false,
     sub:'data', pat:'data*.csv', ex:'data202609091833.csv',
     note:'【拡張機能の「商品データ」ボタンで取得】いま設定されているPRオプ料率。Yahooで公開中の全商品リストとして撤退判定にも使用。',
     dateFrom:'不要（最新値。ファイル名のタイムスタンプは日付として読みません）' },
-  { key:'bid', badge:'⑤', slotId:'slot-bid', label:'入札価格（最新値）', daily:false,
+  { key:'bid', badge:'⑥', slotId:'slot-bid', label:'入札価格（最新値）', daily:false,
     sub:'bid_item', pat:'BID_ITEM*.csv', ex:'BID_ITEM (59).csv',
     note:'【拡張機能の「入札商品データ」ボタンで取得】いま設定されている入札価格。日付は持たず、常に最新値で上書きします。',
     dateFrom:'不要（最新値）' }
 ];
-const DAILY_TYPE_KEYS = REPORT_TYPES.filter(t => t.daily).map(t => t.key);      // ['overall','item','ad']
-const LATEST_TYPE_KEYS = REPORT_TYPES.filter(t => !t.daily).map(t => t.key);    // ['bid','proRate']
+const DAILY_TYPE_KEYS = REPORT_TYPES.filter(t => t.daily).map(t => t.key);      // 【v1.0537】['ad','item','overall','pr']
+const LATEST_TYPE_KEYS = REPORT_TYPES.filter(t => !t.daily).map(t => t.key);    // ['proRate','bid']
 function reportTypeOf(key) { return REPORT_TYPES.find(t => t.key === key) || null; }
 
 // ファイル名だけから種別を判定（限定的な名前を先に見る）。判定できなければ null。
@@ -5979,6 +6000,7 @@ function fileTypeFromName(name) {
   const n = raw.toLowerCase();
   if (n.includes('store_overall') || n.includes('store-overall')) return 'overall';
   if (n.includes('item_report') || n.includes('item-report')) return 'item';
+  if (n.includes('prreport') || n.includes('pr_report') || n.includes('pr-report')) return 'pr';   // 【v1.0537】PRオプション実績
   if (n.includes('bid_item') || n.includes('bid-item') || n.startsWith('bid')) return 'bid';
   if (raw.includes('広告詳細レポート') || n.includes('ad_') || n.includes('advertis')) return 'ad';
   if (/(^|[^a-z])data\d/i.test(n)) return 'proRate';
@@ -5988,7 +6010,7 @@ function fileTypeFromName(name) {
 function reportDateFor(key, filename, rows) {
   const t = reportTypeOf(key);
   if (!t || !t.daily) return null;              // ④⑤ はファイル名に数字が入っていても日付として読まない
-  if (key !== 'item' && Array.isArray(rows)) {  // ①③ はCSVの日付列を優先（こちらのほうが確実）
+  if (key !== 'item' && Array.isArray(rows)) {  // ①③④ はCSVの日付列を優先（こちらのほうが確実）
     for (const r of rows) { const d = normYmd(r && (r['日付'] || r['date'])); if (d) return d; }
   }
   return fileDateFromName(filename);            // ② はファイル名だけが頼り
@@ -5996,7 +6018,7 @@ function reportDateFor(key, filename, rows) {
 
 // 【v1.0526】このバッチでドロップされた日別データの一時置き場（「アップロード実行」で state.daily へ反映）。
 //   ステージしただけでは保存されない＝取り込む前にカレンダーで過不足を目視できる。
-let _dailyStage = { overall: {}, item: {}, ad: {}, files: [] };
+let _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };
 function _dailyStageDates() {
   const s = new Set();
   DAILY_TYPE_KEYS.forEach(k => Object.keys(_dailyStage[k] || {}).forEach(d => s.add(d)));
@@ -6071,7 +6093,7 @@ function _reportTypeCardsHtml() {
   return ''
     + '<div class="rt-group rt-group-daily">'
     +   '<div class="rt-group-head"><span class="rt-group-title">日別レポート</span>'
-    +     '<span class="rt-group-sub">毎日この3つを同じ日付で揃えます（ファイル名末尾の8桁日付で日を判定）</span></div>'
+    +     '<span class="rt-group-sub">毎日この' + daily.length + 'つを同じ日付で揃えます（日付はファイル名の8桁またはCSVの日付列から判定）</span></div>'
     +   '<div class="rt-cards">' + daily.map(card).join('') + '</div>'
     + '</div>'
     + '<div class="rt-group rt-group-latest">'
@@ -6079,8 +6101,8 @@ function _reportTypeCardsHtml() {
     +     '<span class="rt-group-sub">日付を持たない「いまの設定値」。毎回いちばん新しいものを入れます</span></div>'
     +   '<div class="rt-cards rt-cards-2">' + latest.map(card).join('') + '</div>'
     + '</div>'
-    + '<div class="rt-foot">①②③は<b>同じ日付</b>の3ファイルを揃えて入れると、その日の日別データが完成します。'
-    + '④⑤は日付を持たない「いまの設定値」なので、毎回いちばん新しいものを入れてください。<br>'
+    + '<div class="rt-foot">①②③④は<b>同じ日付</b>のファイルを揃えて入れると、その日の日別データが完成します。'
+    + '⑤⑥は日付を持たない「いまの設定値」なので、毎回いちばん新しいものを入れてください。<br>'
     + '月次の数値は、取り込んだ日別データの<b>合計</b>から自動で計算されます（日別が無い過去の月は、これまでどおり月次データを使います）。</div>';
 }
 
@@ -6260,6 +6282,9 @@ function classifyFile(filename, rows) {
     return 'master';
   }
 
+  // 【v1.0537】PRオプション実績レポート。ファイル名（prreport）と、英語ヘッダの特徴列の両方で判定する。
+  if (name.includes('prreport') || name.includes('pr_report') || name.includes('pr-report')) return 'pr';
+  if (keySet.has('cost/sales') && keySet.has('impression_all')) return 'pr';
   if (name.includes('store_overall') || name.includes('store-overall')) return 'overall';
   if (name.includes('item_report') || name.includes('item-report')) return 'item';
   if (name.includes('bid_item') || name.includes('bid-item') || name.startsWith('bid')) return 'bid';
@@ -6385,10 +6410,11 @@ function fileDateFromName(name) {
 
 // --- state.daily への安全なアクセス ---
 function ensureDaily() {
-  if (!state.daily || typeof state.daily !== 'object') state.daily = { overall: {}, item: {}, ad: {} };
+  if (!state.daily || typeof state.daily !== 'object') state.daily = { overall: {}, item: {}, ad: {}, pr: {} };
   if (!state.daily.overall) state.daily.overall = {};
   if (!state.daily.item) state.daily.item = {};
   if (!state.daily.ad) state.daily.ad = {};
+  if (!state.daily.pr) state.daily.pr = {};   // 【v1.0537】古い保存データには無いので必ず補完（後方互換）
   return state.daily;
 }
 // 種別ごとの取込済み日付（昇順）
@@ -6396,7 +6422,7 @@ function dailyDates(kind) { const d = ensureDaily(); return Object.keys(d[kind] 
 // 3種いずれかにデータがある日付の和集合（昇順）
 function dailyAllDates() {
   const set = new Set();
-  ['overall', 'item', 'ad'].forEach(k => dailyDates(k).forEach(d => set.add(d)));
+  ['overall', 'item', 'ad', 'pr'].forEach(k => dailyDates(k).forEach(d => set.add(d)));
   return [...set].sort();
 }
 // その月(ym='YYYY-MM')にデータがある日付一覧（昇順）
@@ -6413,6 +6439,48 @@ function dailyMonthsOf(kind) {
   return s;
 }
 function monthHasDailyOf(ym, kind) { return dailyMonthsOf(kind).has(ym); }
+
+// 【v1.0536】その月の月次データ（従来のCSV取込ぶん）が有るか
+function monthlyHasData(ym, kind) {
+  if (kind === 'item') return (state.item || []).some(r => r.month === ym);
+  if (kind === 'ad') return (state.ad || []).some(r => r.month === ym);
+  if (kind === 'overall') return !!(state.overall && (state.overall.months || []).some(m => m.month === ym && m.revenue > 0));
+  return false;
+}
+function dailyDayCountOf(ym, kind) { return dailyDates(kind).filter(d => ymOf(d) === ym).length; }
+
+// 【v1.0536】★「その月の月次値を日別合計から作ってよいか」の判定。
+//   日別レポートは種別ごとに遡れる期間が違い、月の途中からしか無いことがある
+//   （例: 全体分析は5/22以降、商品分析は5/23以降）。
+//   そのまま日別合計で月次を置き換えると、10日分だけの数字が「5月の総売上」になってしまい、
+//   すでに持っている正しい月次データ（1,500,000）が消える。
+//   そこで、次のいずれかを満たすときだけ日別合計を採用する:
+//     (a) その月の月次データをまだ持っていない（＝日別しか情報が無い）
+//     (b) 日別がその月の全日をカバーしている（月次と一致するはず）
+//     (c) 進行中の月（当月以降）＝月次レポートがまだ出ていないので日別のほうが新しい
+//   部分的にしか日別が無い過去月は、月次データを守る（日別ビューでは取り込んだ日だけ見られる）。
+function monthUsesDaily(ym, kind) {
+  const n = dailyDayCountOf(ym, kind);
+  if (!n) return false;
+  if (!monthlyHasData(ym, kind)) return true;                       // (a)
+  const dim = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+  if (n >= dim) return true;                                        // (b)
+  const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
+  if (curYm && ym >= curYm) return true;                            // (c)
+  return false;
+}
+// 日別合計で月次を作る月の集合（種別ごと）
+function dailyUsableMonths(kind) {
+  const out = new Set();
+  dailyMonthsOf(kind).forEach(ym => { if (monthUsesDaily(ym, kind)) out.add(ym); });
+  return out;
+}
+// 日別はあるが月次を守っている月（＝部分取込の月）。画面で注意書きを出すのに使う。
+function dailyPartialMonths(kind) {
+  const out = [];
+  dailyMonthsOf(kind).forEach(ym => { if (!monthUsesDaily(ym, kind)) out.push(ym); });
+  return out.sort();
+}
 // 【v1.0527】日別データに登場する全商品コード。
 //   日別しか無い月（＝月次CSVを取り込んでいない月）でも商品一覧が空にならないようにするために使う。
 function dailyCodes() {
@@ -6439,6 +6507,70 @@ function dailyAdOf(date) {     // { code: {adCost, adRevenue, adClicks, adOrders
   return out;
 }
 function dailyOverallOf(date) { return +((ensureDaily().overall || {})[date]) || 0; }
+
+// ==================== 【v1.0537】PRオプション実績（ストア全体・日別） ====================
+//   ★ 重要: PRオプションレポートの「売上(sales)」は「PRオプション経由の売上」ではない。
+//      Ycheckの 総売上 / SEO売上 / 広告売上 には一切反映しない。
+//      レポート内の「広告費/売上(＝PRオプ費用率)」を月次で再計算するためだけに保持する。
+//   ★ PRオプROAS・PRオプ売上のような指標は作らない。
+//   ★ 商品別への配賦もしない（これはストア全体の実績）。
+function dailyPrOf(date) {
+  const v = (ensureDaily().pr || {})[date];
+  return (v && typeof v === 'object') ? v : null;   // 未取込は null（「0円」ではない）
+}
+function hasPrOn(date) { return dailyPrOf(date) != null; }
+// PRオプCTR = PRオプCL ÷ PRオプ表示回数 × 100（レポートには無いのでYcheck側で算出）
+function prCtrOf(clicks, impressions) {
+  const im = +impressions || 0;
+  if (!(im > 0)) return null;
+  return (+clicks || 0) / im * 100;
+}
+// PRオプ費用率 = PRオプ実績額 ÷ PRレポート売上 × 100
+//   ※ 設定PRオプ料率(state.proRate)とは別物。Yahoo仕様上、実費は税抜売上基準／レポートの比率は税込売上分母のため一致しない。
+//      よって費用率から実績額を逆算したり、設定料率から実績額を推定したりはしない。
+function prRatioOf(cost, sales) {
+  const sv = +sales || 0;
+  if (!(sv > 0)) return null;
+  return (+cost || 0) / sv * 100;
+}
+// PRオプションレポート（日別）のパース。列は英語ヘッダ（date, sales, cost, cost/sales, click_all, impression_all, ...）。
+function parsePrDaily(rows) {
+  const out = {};
+  (rows || []).forEach(r => {
+    const date = normYmd(r['date'] || r['日付'] || '');
+    if (!date) return;
+    const g = (a, b) => toNum(r[a] != null ? r[a] : r[b]);
+    const cost = g('cost', '広告費');
+    const sales = g('sales', '売上');
+    // 費用率は日別表示用にレポートの「広告費/売上」をそのまま採用。月次は合計から再計算する。
+    let ratio = toNum(r['cost/sales'] != null ? r['cost/sales'] : r['広告費/売上']);
+    if (!(ratio > 0)) { const c = prRatioOf(cost, sales); ratio = (c == null) ? 0 : c; }
+    out[date] = {
+      cost: cost, sales: sales, ratio: ratio,
+      clickAll: g('click_all', '全体クリック数'), imprAll: g('impression_all', '全体表示回数'),
+      // 内訳は現時点で表に出さないが、将来の分析用に保持する
+      clickSearch: g('click_search', '検索クリック数'), imprSearch: g('impression_search', '検索表示回数'),
+      clickStore: g('click_store', 'ストアクリック数'), imprStore: g('impression_store', 'ストア表示回数'),
+      clickTop: g('click_top', 'トップページクリック数'), imprTop: g('impression_top', 'トップページ表示回数'),
+      clickOther: g('click_other', 'その他クリック数'), imprOther: g('impression_other', 'その他表示回数'),
+      clickPromo: g('click_promotion', 'プロモーションパッケージクリック数'), imprPromo: g('impression_promotion', 'プロモーションパッケージ表示回数')
+    };
+  });
+  return out;
+}
+// 月内のPRオプ実績を合計。月次の％は日別％の平均ではなく、合計値から再計算する。
+function prMonthAgg(ym) {
+  const d = ensureDaily().pr || {};
+  const days = Object.keys(d).filter(k => isYmd(k) && ymOf(k) === ym).sort();
+  if (!days.length) return null;
+  let cost = 0, sales = 0, clickAll = 0, imprAll = 0;
+  days.forEach(k => { const v = d[k] || {}; cost += +v.cost || 0; sales += +v.sales || 0; clickAll += +v.clickAll || 0; imprAll += +v.imprAll || 0; });
+  return {
+    days: days, cost: cost, sales: sales, clickAll: clickAll, imprAll: imprAll,
+    ratio: prRatioOf(cost, sales),      // 月間PRオプ実績額 ÷ 月間PRレポート売上 × 100
+    ctr: prCtrOf(clickAll, imprAll)     // 月間PRオプCL ÷ 月間PRオプ表示回数 × 100
+  };
+}
 
 // 1商品・1日ぶんを、月集計と同じ形（buildFullAggregate の1レコード相当）で返す
 function dayAgg(code, date) {
@@ -6505,13 +6637,13 @@ function dailyAdRowsForMonth(ym) {
 // 【v1.0527】「月次として使うべき行」を返す共通ヘルパー。
 //   日別データがある月は日別の合計、無い月は従来の月次データ。表示側はこれを使えば日/月を意識しなくてよい。
 function effMonthlyItemRows() {
-  const dm = dailyMonthsOf('item');   // 【v1.0535】商品分析の日別がある月だけ置き換える
+  const dm = dailyUsableMonths('item');   // 【v1.0536】日別で月次を作ってよい月だけ置き換える
   const out = (state.item || []).filter(r => !dm.has(r.month));
   dm.forEach(ym => { (dailyItemRowsForMonth(ym) || []).forEach(r => out.push(r)); });
   return out;
 }
 function effMonthlyAdRows() {
-  const dm = dailyMonthsOf('ad');     // 【v1.0535】広告詳細の日別がある月だけ置き換える
+  const dm = dailyUsableMonths('ad');     // 【v1.0536】日別で月次を作ってよい月だけ置き換える
   const out = (state.ad || []).filter(r => !dm.has(r.month));
   dm.forEach(ym => { (dailyAdRowsForMonth(ym) || []).forEach(r => out.push(r)); });
   return out;
@@ -6652,7 +6784,7 @@ function monthFromFilename(name) {
 // 【v1.0526】5ファイルが揃っているかを判定する。
 //   日別3種は「ステージした日ごと」に、最新値2種は「バッチに1つあるか」で見る。
 //   返り値: { complete, missingLatest:[key], missingByDate:{date:[key]}, dates:[] }
-function checkFiveFileSet() {
+function checkFiveFileSet() {   // 【v1.0537】6種になったが呼び出し互換のため関数名は据え置き
   const buf = state.uploadBuffer;
   const dates = _dailyStageDates();
   const missingByDate = {};
@@ -6700,15 +6832,15 @@ function validateBuffer() {
   if (_stagedDates.length > 0) {
     const chk = checkFiveFileSet();
     const extra = [];
-    if (hasBid) extra.push('④入札価格');
     if (hasProRate) extra.push('⑤PRオプ料率');
+    if (hasBid) extra.push('⑥入札価格');
     if (hasMaster) extra.push('商品マスタ');
     const range = _stagedDates.length === 1
       ? _stagedDates[0]
       : `${_stagedDates[0]}〜${_stagedDates[_stagedDates.length - 1]}（${_stagedDates.length}日分）`;
     if (chk.complete) {
       box.className = 'validation-box ok';
-      msg.textContent = `✓ 5種すべて揃っています：${range}　＋　${extra.join(' / ')}　→ アップロード実行できます`;
+      msg.textContent = `✓ ${REPORT_TYPES.length}種すべて揃っています：${range}　＋　${extra.join(' / ')}　→ アップロード実行できます`;
       btn.disabled = false;
       btn.textContent = '⬆ アップロード実行';
       _renderMissingNotice(chk);
@@ -6741,7 +6873,7 @@ function validateBuffer() {
   const hasAnyMonthly = hasOverall || hasItem || hasAd;
   if (!hasAnyMonthly && !hasMaster && !hasBid && !hasProRate) {
     box.className = 'validation-box info';
-    msg.textContent = '📋 その日の5ファイル（①ショップ売上・②商品別売上・③広告詳細＝日別／④入札価格・⑤PRオプ料率＝最新値）をまとめてドロップしてください';
+    msg.textContent = '📋 その日の6ファイル（①広告詳細・②商品別売上・③ショップ売上・④PRオプション実績＝日別／⑤PRオプ料率・⑥入札価格＝最新値）をまとめてドロップしてください';
     btn.disabled = true;
     return false;
   }
@@ -6807,7 +6939,7 @@ async function processFiles(files) {
   log(`${files.length}件のファイルを処理開始`);
   const csvFiles = await expandFiles(files);
   if (csvFiles.length === 0) { log('処理するCSVがありません', 'err'); validateBuffer(); return; }
-  _dailyStage = { overall: {}, item: {}, ad: {}, files: [] };   // 【v1.0526】このバッチの日別ステージをリセット
+  _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };   // 【v1.0537】prを追加
   for (const file of csvFiles) {
     try {
       log(`読み込み中: ${file.name}`);
@@ -6818,7 +6950,7 @@ async function processFiles(files) {
       // 【v1.0526】まず日別レポートかどうかを判定する。
       //   日別3種（ショップ売上・商品別売上・広告詳細）で日付が取れたものは、日別として取り込む。
       //   日付が取れないもの（従来の月次ファイル）は、下の従来ロジックへそのまま流す。
-      const _dt = (kind === 'overall' || kind === 'item' || kind === 'ad') ? reportDateFor(kind, file.name, rows) : null;
+      const _dt = (kind === 'overall' || kind === 'item' || kind === 'ad' || kind === 'pr') ? reportDateFor(kind, file.name, rows) : null;
       if (_dt) {
         let _days = 0, _recs = 0;
         if (kind === 'overall') {
@@ -6829,12 +6961,18 @@ async function processFiles(files) {
         } else if (kind === 'item') {
           const parsed = parseItemDaily(rows);            // このCSVは日付列が無いのでファイル名の日付を使う
           _dailyStage.item[_dt] = parsed; _days = 1; _recs = Object.keys(parsed).length;
-        } else {
+        } else if (kind === 'ad') {
           const parsed = parseAdDaily(rows);              // 1ファイルに複数日が入っていても日ごとに分ける
           const keys = Object.keys(parsed);
           keys.forEach(d => { _dailyStage.ad[d] = parsed[d]; _recs += Object.keys(parsed[d]).length; });
           _days = keys.length || 1;
           if (!keys.length) _dailyStage.ad[_dt] = {};
+        } else {
+          // 【v1.0537】PRオプション実績。同じ日を再取込したら上書き（二重加算しない）。
+          const parsed = parsePrDaily(rows);
+          const keys = Object.keys(parsed);
+          keys.forEach(d => { _dailyStage.pr[d] = parsed[d]; _recs++; });
+          _days = keys.length || 1;
         }
         _dailyStage.files.push({ kind, date: _dt, filename: file.name });
         log(`✓ ${reportTypeOf(kind).badge} ${reportTypeOf(kind).label} を日別バッファへ（${_dt}${_days > 1 ? ` 他${_days - 1}日` : ''} / ${_recs}件）`, 'ok');
@@ -6901,6 +7039,13 @@ async function commitUpload() {
       }).join('　');
       log(`✅ 日別データを反映（${_dailyStageDates().length}日分 / ${_n}件）`, 'ok');
       log(`　 月次は日別の合計で表示されます → ${_detail}`, 'ok');
+      // 【v1.0536】部分取込で月次を守った月を明示（数字が変わらない理由が分かるように）
+      ['ad', 'item', 'overall'].forEach(k => {
+        dailyPartialMonths(k).forEach(ym => {
+          const t = reportTypeOf(k);
+          log(`　 ⚠ ${ym.replace('-', '/')} の ${t ? t.badge + t.label : k} は ${dailyDayCountOf(ym, k)}日分だけのため、月次はこれまでの月次レポートの値を使います（日別ビューでは取り込んだ日を確認できます）`, 'warn');
+        });
+      });
     }
   }
   // 【v1.0321】月次は各ファイルを個別に反映（1ファイルからでもOK。従来は overall/item/ad の3点必須だった）。
@@ -7455,8 +7600,8 @@ function buildFullAggregate() {
   // 【v1.0535】種別ごとに「日別があればそれ、無ければ従来の月次」を選ぶ。
   //   商品分析(item)だけ取得できない月に広告詳細(ad)の日別を入れても、
   //   商品別の総売上（月次）が消えないようにするため。
-  const _dmItem = dailyMonthsOf('item');
-  const _dmAd = dailyMonthsOf('ad');
+  const _dmItem = dailyUsableMonths('item');   // 【v1.0536】部分取込の過去月は月次を守る
+  const _dmAd = dailyUsableMonths('ad');
   (state.item || []).forEach(i => {
     if (_dmItem.has(i.month)) return;   // この月の商品別売上は日別合計で作る
     const key = i.code + '|' + i.month;
@@ -8390,6 +8535,19 @@ function salesRoasCellHtml(v) {
   if (v == null || !(v > 0)) return '<span style="color:' + SALES_ROAS_COLORS.n + '">—</span>';
   return '<span style="color:' + SALES_ROAS_COLORS[salesRoasCat(v)] + ';font-weight:700">' + Math.round(v).toLocaleString() + '%</span>';
 }
+// 【v1.0537】★ストア全体の売上ROAS（全-日月別データ専用）
+//   売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100
+//   PRオプ実績が揃っていない期間は「算出不可」として null を返す（＝表示は「—」）。
+//   ★PR未取込を0円とみなして旧定義（広告費のみが分母）で計算してはいけない。
+//     同じ「売上ROAS」という名前で計算式が日によって変わる状態を避けるため。
+//   ※商品別画面は商品別PRオプ実績が存在しないため、従来どおり salesRoasPct() を使う（別途改修対象）。
+function storeSalesRoasPct(totSales, adSpend, prCost, prComplete) {
+  if (!prComplete) return null;                 // PR実績が揃っていない → 算出不可
+  const den = (+adSpend || 0) + (+prCost || 0);
+  if (!(den > 0)) return null;                  // 分母0は既存のROAS系と同じくnull
+  return Math.round((+totSales || 0) / den * 100);
+}
+
 // ソート用の数値（対象外は最下位扱いの -1）
 function salesRoasSortVal(totSales, adSpend) {
   const v = salesRoasPct(totSales, adSpend, 0);
@@ -8422,16 +8580,36 @@ function _syncSroasFilterUI() {
   }).join('');
 }
 
+// ============================================================================
+// 【v1.0537】全-日月別データの列定義。
+//   並び: 全体指標 → SEO → PRオプション → 広告 → （送り込み売上は描画側で右端に付加）
+//   store:true … ストア全体の指標。商品-日月別データ（商品別画面）には出さない。
+//   blockStart:true … ブロックの先頭列。左側に太い境界線を引く。
+//   norank:true … ランク色分けをしない（表示のみ）。
+//   色: SEO＝既存のグリーン／PRオプ＝SEOと同系統だが少し薄い／広告＝別系統(オレンジ)でPRと同程度の薄さ
+// ============================================================================
 const MI_COLS = [
-  // 【v1.0524】売上ROAS＝総売上÷実績額×100。総売上の左に置く（総売上系の重要指標）。t:'sr' は絶対しきい値で色付けする専用タイプ。
+  // --- 全体指標 ---
+  //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
   { key:'salesRoas', label:'売上ROAS', hbg:'#cfe0f7', bg:'#eef4fb', hi:true,  t:'sr' },
-  { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' }, // ブルー（Ycheck 総売上）
-  { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y' }, // グリーン（Ycheck SEO売上）
-  { key:'adSales',  label:'広告売上',  hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'y' }, // オレンジ（Ycheck 広告系）
-  { key:'spend',    label:'実績額',    hbg:'#fae6ce', bg:'#fcf6ec', hi:false, t:'y' },
-  { key:'cvr',      label:'CVR',      hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'p' },
-  { key:'roas',     label:'広告ROAS',  hbg:'#fae6ce', bg:'#fcf6ec', hi:true,  t:'p' },
+  { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' },
+  // --- SEO ---
+  { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y', blockStart:true },
+  // --- PRオプション（ストア全体の実績。SEOと同系統の少し薄い緑） ---
+  //   PRオプ実績額は費用なので hi:false（低い方が良い）。他のPR列は良否を断定できないので norank。
+  { key:'prCost',   label:'PRオプ実績額',   hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'y', store:true, blockStart:true },
+  { key:'prRatio',  label:'PRオプ費用率',   hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'p', store:true, norank:true },
+  { key:'prImpr',   label:'PRオプ表示回数', hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
+  { key:'prClick',  label:'PRオプCL',       hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
+  { key:'prCtr',    label:'PRオプCTR',      hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'p', store:true, norank:true },
+  // --- 広告 ---
+  { key:'adSales',  label:'広告売上',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'y', blockStart:true },
+  { key:'spend',    label:'広告実績額',  hbg:'#fbeeda', bg:'#fdf8f0', hi:false, t:'y' },
+  { key:'cvr',      label:'広告CVR',     hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'p' },
+  { key:'roas',     label:'広告ROAS',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'p' },
 ];
+// 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
+function itemCols() { return MI_COLS.filter(c => !c.store); }
 // 【v1.0358/v1.0362】商品-月別データ：ADcheck「商品-日月別データ」を月別のみで移植（日別・並び替え・項目調整・月選択なし）。
 function renderMonthly() {
   const wrap = document.getElementById('mi-wrap');
@@ -8619,11 +8797,11 @@ function renderMonthly() {
   const MW = 128;   // 月列の幅(px)
   const HEAD = '<th style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>'
     + '<th style="width:' + MW + 'px;padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;color:var(--text3);background:var(--bg3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
-    + MI_COLS.map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('')
+    + itemCols().map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('')   /* 【v1.0537】PR列はストア全体の指標なので商品別には出さない */
     + '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);border-left:2px solid #c4b5fd;white-space:nowrap;font-size:0.82rem;font-weight:700;color:#7c3aed;background:#ece0fb">送り込み売上</th>';
 
   const body = shown.map(({ code, dispCode, name, memberCount, stats }) => {
-    const pool = {}; MI_COLS.forEach(c => { pool[c.key] = stats.map(s => s[c.key]).filter(v => v > 0); });
+    const pool = {}; itemCols().forEach(c => { pool[c.key] = stats.map(s => s[c.key]).filter(v => v > 0); });
     const soiPool = stats.map(s => s.soikomi).filter(v => v > 0);   // 【v1.0410】送り込み売上の色分け母集団
     const _esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     const safeFull = _esc(String(name));
@@ -8638,7 +8816,7 @@ function renderMonthly() {
       const prod = first ? '<td rowspan="' + stats.length + '" style="padding:9px 12px;vertical-align:middle;border-top:2px solid var(--border);border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;justify-content:center;gap:10px">'
         + imgBox
         + '<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace">' + code + '</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + safeFull + '">' + safeFull + '</div></div></div></td>' : '';
-      const cells = MI_COLS.map(c => {
+      const cells = itemCols().map(c => {
         const v = m[c.key];
         // 【v1.0524】売上ROASは月内相対ランクではなく絶対しきい値(800/500/200)で色付けする
         const inner = (c.t === 'sr')
@@ -9078,9 +9256,9 @@ function _zenMonthlyRows() {
     let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0, soikomi = 0;
     // 【v1.0526】日別データがある月は日別合計から作る。無い月は従来どおり月次データから。
     // 【v1.0535】種別ごとに判定（商品分析だけ無い月でも広告の日別を活かせるように）
-    const _hasDailyItem = monthHasDailyOf(m, 'item');
-    const _hasDailyAd   = monthHasDailyOf(m, 'ad');
-    const _hasDailyOv   = monthHasDailyOf(m, 'overall');
+    const _hasDailyItem = monthUsesDaily(m, 'item');
+    const _hasDailyAd   = monthUsesDaily(m, 'ad');
+    const _hasDailyOv   = monthUsesDaily(m, 'overall');
     const _itemRows = _hasDailyItem ? (dailyItemRowsForMonth(m) || []) : (state.item || []).filter(i => i.month === m);
     const _adRows   = _hasDailyAd   ? (dailyAdRowsForMonth(m)   || []) : (state.ad   || []).filter(a => a.month === m);
     _itemRows.forEach(i => {
@@ -9099,9 +9277,34 @@ function _zenMonthlyRows() {
       if (o) { if (o.revenue > 0) rev = o.revenue; if (o.adRevenue != null) adRev = o.adRevenue; if (o.adCost != null) adCost = o.adCost; if (o.adClicks != null) adClicks = o.adClicks; if (o.adOrders != null) adOrders = o.adOrders; }
     }
     const seoRev = Math.max(0, rev - adRev);
+    // ============================================================
+    // 【v1.0537】PRオプション実績（月次）。日別％の単純平均ではなく、月間合計値から再計算する。
+    //   ★売上ROASは「その月の対象日すべてにPR実績が揃っている」ときだけ算出する。
+    //     一部の日しかPRが無い状態で合計すると、PR費が過少になり売上ROASが実際より高く見えるため。
+    // ============================================================
+    const _pa = prMonthAgg(m);
+    let _prComplete = false;
+    if (_pa) {
+      // 売上ROASの算出対象日＝その月で売上または広告のデータがある日
+      const _baseDays = new Set();
+      Object.keys((ensureDaily().overall) || {}).forEach(d => { if (ymOf(d) === m) _baseDays.add(d); });
+      Object.keys((ensureDaily().item) || {}).forEach(d => { if (ymOf(d) === m) _baseDays.add(d); });
+      Object.keys((ensureDaily().ad) || {}).forEach(d => { if (ymOf(d) === m) _baseDays.add(d); });
+      const _prDays = new Set(_pa.days);
+      // 日別が1日も無い月（＝月次レポートだけの月）はPRの網羅を確認できない → 算出不可のまま
+      _prComplete = _baseDays.size > 0 && [..._baseDays].every(d => _prDays.has(d));
+    }
     return {
       month: m, label: m.replace('-', '/'),
-      salesRoas: salesRoasPct(rev, adCost, 0),   // 【v1.0524】売上ROAS＝総売上÷実績額×100
+      salesRoas: storeSalesRoasPct(rev, adCost, _pa ? _pa.cost : 0, _prComplete),
+      prCost:  _pa ? _pa.cost : null,
+      prRatio: _pa ? _pa.ratio : null,     // 月間PRオプ実績額 ÷ 月間PRレポート売上 × 100
+      prImpr:  _pa ? _pa.imprAll : null,
+      prClick: _pa ? _pa.clickAll : null,
+      prCtr:   _pa ? _pa.ctr : null,       // 月間PRオプCL ÷ 月間PRオプ表示回数 × 100
+      prSales: _pa ? _pa.sales : null,
+      _prDayCount: _pa ? _pa.days.length : 0,
+      _prComplete: _prComplete,
       totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
       cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
       roas: adCost > 0 ? adRev / adCost * 100 : 0,
@@ -9239,9 +9442,17 @@ function _zenDailyRowsFor(days) {
     const ov = dailyOverallOf(d);
     if (ov > 0) rev = ov;   // 総売上はショップ売上KPI(日別)を権威データにする
     const seoRev = Math.max(0, rev - adRev);
+    // 【v1.0537】PRオプション実績（ストア全体）。未取込の日は null のまま＝「—」表示。0円扱いにしない。
+    const _pr = dailyPrOf(d);
     return {
       month: d, label: (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)),
-      salesRoas: salesRoasPct(rev, adCost, 0),
+      salesRoas: storeSalesRoasPct(rev, adCost, _pr ? _pr.cost : 0, !!_pr),
+      prCost:  _pr ? _pr.cost : null,
+      prRatio: _pr ? _pr.ratio : null,
+      prImpr:  _pr ? _pr.imprAll : null,
+      prClick: _pr ? _pr.clickAll : null,
+      prCtr:   _pr ? prCtrOf(_pr.clickAll, _pr.imprAll) : null,
+      prSales: _pr ? _pr.sales : null,   // 内部保持（月次の費用率再計算用。表には出さない）
       totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
       cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
       roas: adCost > 0 ? adRev / adCost * 100 : 0,
@@ -9268,7 +9479,7 @@ function downloadZenMonthlyCsv() {
     const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
     const numP = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v * 10) / 10); };
     // 【v1.0524】売上ROASは画面表示のみ。CSVの列構成は従来どおり据え置く（出力にも入れたくなったらこの filter を外すだけ）。
-    const csvCols = MI_COLS.filter(function (c) { return c.key !== 'salesRoas'; });
+    const csvCols = MI_COLS.filter(function (c) { return c.key !== 'salesRoas'; });   // 【v1.0537】PR列は含める（この表はストア全体のため）
     const header = ['月'].concat(csvCols.map(function (c) { return c.label; })).concat(['送り込み売上']);
     const lines = [header.join(',')];
     drows.forEach(function (r) {
@@ -9469,10 +9680,12 @@ function renderGraphData() {
   // 【v1.0405】送り込み売上列（子商品の月次売上合計）。色は他列と別（紫系）。
   const SOI_HBG = '#ece0fb', SOI_BG = '#f7f1fe', SOI_BORDER = '2px solid #c4b5fd';
   const soiPool = _rankPoolRows.map(r => r.soikomi).filter(v => v > 0);   // 【v1.0530】日別は全日を母集団に
-  const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
-  const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
+  const fmtY = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
+  const fmtP = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
+  const fmtN = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   // 【v1.0537】回数系（表示回数・CL）
+  const BLK = '2px solid var(--border2)';   // 【v1.0537】SEO / PRオプ / 広告 のブロック境界線
   const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
-    + MI_COLS.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
+    + MI_COLS.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + 'font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
     + '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const desc = asc.slice().reverse();
   // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
@@ -9486,15 +9699,19 @@ function renderGraphData() {
       const v = r[c.key];
       let inner;
       if (c.t === 'sr') {
-        // 【v1.0524】売上ROASは月間の相対ランクではなく絶対しきい値(800/500/200)で色付け。
-        //   比率なので満了/未満了に関わらず色を出す（CVR・広告ROASと同じ扱い）。
-        inner = salesRoasCellHtml(v);
+        // 【v1.0537】売上ROASは絶対しきい値で色付け。PR実績が揃っていない期間は null（＝算出不可）で「—」。
+        inner = (v == null)
+          ? '<span style="color:var(--text3)" title="PRオプション実績が未取込のため算出できません（総売上÷(広告実績額＋PRオプ実績額)）">—</span>'
+          : salesRoasCellHtml(v);
+      } else if (c.norank) {
+        // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）
+        inner = (c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v));
       } else {
-        const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
+        const disp = c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v);
         const _noColor = _unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
-        inner = (!v || v === 0 || _noColor) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+        inner = (v == null || !v || v === 0 || _noColor) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
       }
-      return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + inner + '</td>';
+      return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;background:' + c.bg + ';border-bottom:1px solid var(--border);' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + 'white-space:nowrap;' + bT + '">' + inner + '</td>';
     }).join('');
     const sv = r.soikomi; const sdisp = fmtY(sv);
     const sinner = (!sv || sv === 0 || _unmatured) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
@@ -9504,17 +9721,55 @@ function renderGraphData() {
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
     return _rowHtml;
   }).join('');
+  // 【v1.0536】部分取込の月がある場合の注意書き（月次の数字がどこから来ているかを明示）
+  let _partialNote = '';
+  if (_dayMode) {
+    const _pm = [];
+    ['ad', 'item', 'overall'].forEach(k => {
+      dailyPartialMonths(k).forEach(ym => {
+        const t = reportTypeOf(k);
+        _pm.push({ ym: ym, label: t ? (t.badge + t.label.replace('（日別）', '')) : k, n: dailyDayCountOf(ym, k) });
+      });
+    });
+    if (_pm.length) {
+      const byYm = {};
+      _pm.forEach(x => { (byYm[x.ym] = byYm[x.ym] || []).push(x.label + ' ' + x.n + '日分'); });
+      _partialNote = '<div class="zd-partial-note">⚠ <b>' + Object.keys(byYm).sort().map(y => y.replace('-', '/')).join('・')
+        + '</b> は日別データが月の一部しかありません（'
+        + Object.keys(byYm).sort().map(y => y.replace('-', '/') + '：' + byYm[y].join('・')).join(' / ')
+        + '）。<b>月次の数字はこれまでどおり月次レポートの値</b>を使っています（部分的な日別合計で月の数字が小さくなるのを防ぐため）。この画面の日別行は、取り込んだ日だけが並びます。</div>';
+    }
+  }
+  // 【v1.0537】PRオプション実績が不足している期間の警告（売上ROASが「—」になる理由を明示）
+  let _prNote = '';
+  {
+    const _miss = drows.filter(r => r.salesRoas == null);
+    if (_miss.length) {
+      const _n = _miss.length;
+      const _tot = drows.length;
+      _prNote = '<div class="zd-pr-note">⚠ <b>' + _n + (_dayMode ? '日' : 'ヶ月') + '</b>'
+        + (_n === _tot ? '（表示中のすべて）' : '')
+        + ' で <b>売上ROASが「—」</b>になっています。<b>PRオプション実績が取り込めていない'
+        + (_dayMode ? '日' : '月（月内に1日でも欠けがあると算出しません）') + '</b>のためです。<br>'
+        + '売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100 なので、PR費が欠けたまま計算すると実際より高く出てしまいます。'
+        + '「＋ レポート追加」から <b>④PRオプション実績</b> を取り込むと算出されます。</div>';
+    }
+  }
   // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
   const _legend = '<div class="zd-color-legend">'
     + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（' + (_dayMode ? '表示中の期間の全日' : '表示中の全月') + 'が母集団）。'
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
-    + '<br>総売上・SEO売上・広告売上・CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
-    + '<b>実績額（広告費）だけは小さいほど青</b>（使った額が少ないほど良い、という評価）。'
+    + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
+    + '<b>広告実績額とPRオプ実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
+    + '<br><b>PRオプ費用率・PRオプ表示回数・PRオプCL・PRオプCTR</b> は高ければ良いとは限らないため、色分けせず<b>表示のみ</b>です。'
     + '<br><b>売上ROAS</b>だけは相対評価ではなく決まったしきい値（' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤）で色が付きます。'
+    + '<br><b>売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100</b>。'
+    + 'PRオプション実績が取り込めていない期間は、費用の一部が欠けて実際より高く出てしまうため <b>「—」（算出不可）</b> にしています。'
+    + '<br>PRオプションレポートの「売上」は<b>PRオプ経由の売上ではない</b>ため、総売上・SEO売上・広告売上には反映していません（月次のPRオプ費用率を再計算するためだけに内部保持）。'
     + (_dayMode ? '' : '<br>当月はまだ月の途中（未満了）なので、金額列は色を付けず黒字で表示します。')
     + '<br>同じ値が複数あるときは同じ順位＝同じ色になります。値が0や未取込の行は黒（—）です。'
     + '</div>';
-  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>' + _legend;
+  wrap.innerHTML = _partialNote + _prNote + '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>' + _legend;
   requestAnimationFrame(_zdFitTableHeight);   // 【v1.0513】描画後に表の高さを画面下端まで合わせる
 }
 
@@ -10006,7 +10261,7 @@ function updateTuneBar() {
     } else {
       // 【v293】未更新は「アラート帯」（左アクセントバー＋淡塗り・角片側丸め）＝塗りボタンと形で差別化。
       fresh.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;font-weight:700;color:#92400e;background:rgba(217,119,6,0.12);border-left:4px solid var(--amber);border-radius:0 5px 5px 0;padding:5px 12px 5px 10px;white-space:nowrap">⚠ 最新値 本日未更新</span>'
-        + '<button type="button" onclick="openUploadModal()" title="その日の5ファイル（日別3＋最新値2）を取り込む" style="font-size:0.76rem;font-weight:700;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">＋ レポート追加</button>';   /* 【v1.0526】ボタン統合 */
+        + '<button type="button" onclick="openUploadModal()" title="その日の6ファイル（日別4＋最新値2）を取り込む" style="font-size:0.76rem;font-weight:700;color:#fff;background:var(--amber);border:1px solid #b45309;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">＋ レポート追加</button>';   /* 【v1.0526】ボタン統合 */
     }
   }
 }
@@ -12115,9 +12370,9 @@ function openUploadModal(mode) {
     const titleEl = uploadModal.querySelector('.modal-title');
     const hintEl = $('#uploadModeHint');
     if (titleEl) titleEl.textContent = '📂 レポート追加';
-    if (hintEl) hintEl.textContent = 'その日の5ファイルをまとめてドロップしてください（CSVまたはZIP）。①②③は日別（ファイル名末尾の8桁日付で日を判定）、④⑤は最新値です。';
+    if (hintEl) hintEl.textContent = 'その日の6ファイルをまとめてドロップしてください（CSVまたはZIP）。①〜④は日別、⑤⑥は日付を持たない最新値です。';
     state.uploadBuffer = { overall: null, item: null, itemList: [], ad: null, bid: null, proRate: null, master: null };
-    _dailyStage = { overall: {}, item: {}, ad: {}, files: [] };   // 【v1.0526】日別ステージもリセット
+    _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };   // 【v1.0537】日別ステージもリセット
     ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
     _renderMissingNotice(null);
     refreshSlotExamples();      // 【v1.0532】ファイル名の例を表示
