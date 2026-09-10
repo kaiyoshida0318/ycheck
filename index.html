@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0528 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0530 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1957,6 +1957,9 @@ tr.row-child .code-cell-inner::before {
 .dm-seg .dm-btn:hover { background:var(--bg3); }
 .dm-seg .dm-btn.on { background:var(--accent); color:#fff; font-weight:700; }
 .dm-nodata { font-size:11.5px; color:var(--text3); margin-left:8px; }
+/* 【v1.0530】全-日月別データ：色分けルールの凡例 */
+.zd-color-legend { margin:10px 2px 2px; padding:9px 12px; border:1px solid var(--border); border-radius:7px; background:var(--bg3); font-size:0.8rem; line-height:1.85; color:var(--text2); }
+.zd-color-legend .c-g1, .zd-color-legend .c-g2, .zd-color-legend .c-bk, .zd-color-legend .c-o, .zd-color-legend .c-r { white-space:nowrap; }
 
 /* ===== 【v1.0526】レポート追加モーダル：3機能のスタイル ===== */
 /* 検証ボックス「警告」（5ファイル未充足。エラーではなく、このまま取り込むことも可能） */
@@ -1964,11 +1967,11 @@ tr.row-child .code-cell-inner::before {
 .validation-box.warn .validation-msg { color:#8a5a00; }
 /* 不足スロットの強調 */
 .file-slot.slot-missing { border-color:#e0a000; background:#fffdf5; }
-.slot-missing-tag { display:inline-block; margin:3px 0 2px; font-size:11px; font-weight:700; color:#8a5a00; background:#fff2cc; border:1px solid #f0c26b; border-radius:4px; padding:1px 6px; }
+.slot-missing-tag { display:inline-block; margin:3px 0 2px; font-size:0.82rem; font-weight:700; color:#8a5a00; background:#fff2cc; border:1px solid #f0c26b; border-radius:4px; padding:1px 6px; }
 
 /* ① 対応ファイルの種類（アコーディオン） */
 .rt-acc { border:1px solid var(--border); border-radius:8px; margin:0 0 10px; overflow:hidden; }
-.rt-acc-head { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--bg3); cursor:pointer; font-size:0.86rem; font-weight:600; color:var(--text2); user-select:none; }
+.rt-acc-head { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--bg3); cursor:pointer; font-size:0.95rem; font-weight:600; color:var(--text2); user-select:none; }
 .rt-acc-head:hover { background:var(--border); }
 .rt-acc-arrow { font-size:0.75rem; color:var(--text3); }
 .rt-acc-body { padding:12px; background:var(--bg2); }
@@ -1978,10 +1981,10 @@ tr.row-child .code-cell-inner::before {
 .rt-group-daily  { border-left:4px solid var(--accent); background:#f7f9ff; }
 .rt-group-latest { border-left:4px solid var(--amber);  background:#fffdf6; }
 .rt-group-head { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
-.rt-group-title { font-size:0.86rem; font-weight:700; color:var(--text); }
+.rt-group-title { font-size:0.98rem; font-weight:700; color:var(--text); }
 .rt-group-daily  .rt-group-title { color:#1e4fbf; }
 .rt-group-latest .rt-group-title { color:#b45309; }
-.rt-group-sub { font-size:11px; color:var(--text3); line-height:1.5; }
+.rt-group-sub { font-size:0.82rem; color:var(--text3); line-height:1.5; }
 .rt-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
 .rt-cards-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
 @media (max-width:640px) { .rt-cards, .rt-cards-2 { grid-template-columns:1fr; } }
@@ -1990,55 +1993,60 @@ tr.row-child .code-cell-inner::before {
 .rt-card-head { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
 .rt-badge { font-size:1rem; font-weight:700; color:var(--accent); }
 .rt-card.rt-latest .rt-badge { color:var(--amber); }
-.rt-label { font-size:0.85rem; font-weight:700; }
+.rt-label { font-size:0.95rem; font-weight:700; }
 .rt-kind { margin-left:auto; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#e8eefb; color:#2563eb; }
 .rt-card.rt-latest .rt-kind { background:#fdf0d9; color:#b45309; }
-.rt-pat code { font-size:11px; background:var(--bg3); padding:2px 5px; border-radius:4px; word-break:break-all; }
-.rt-note { font-size:11.5px; color:var(--text2); margin-top:5px; line-height:1.55; }
-.rt-date { font-size:11px; color:var(--text3); margin-top:4px; line-height:1.5; }
-.rt-foot { margin-top:10px; font-size:11.5px; color:var(--text2); line-height:1.7; background:var(--bg3); border-radius:6px; padding:8px 10px; }
+.rt-pat code { font-size:0.82rem; background:var(--bg3); padding:2px 5px; border-radius:4px; word-break:break-all; }
+.rt-note { font-size:0.85rem; color:var(--text2); margin-top:5px; line-height:1.6; }
+.rt-date { font-size:0.82rem; color:var(--text3); margin-top:4px; line-height:1.55; }
+.rt-foot { margin-top:10px; font-size:0.85rem; color:var(--text2); line-height:1.7; background:var(--bg3); border-radius:6px; padding:8px 10px; }
 
 /* ② 不足日 */
 .md-bar { display:flex; align-items:center; gap:8px; margin:0 0 10px; }
-.md-hint { font-size:11.5px; color:var(--text3); }
+.md-hint { font-size:0.85rem; color:var(--text3); }
 .md-panel { border:1px solid var(--border); border-radius:8px; padding:11px; margin:0 0 12px; background:var(--bg2); }
-.md-empty, .md-ok { font-size:12.5px; color:var(--text2); }
+.md-empty, .md-ok { font-size:0.9rem; color:var(--text2); }
 .md-ok { color:#2e7d32; font-weight:600; }
-.md-head { font-size:12.5px; color:var(--text2); margin-bottom:7px; }
+.md-head { font-size:0.9rem; color:var(--text2); margin-bottom:7px; }
 .md-month { display:flex; gap:8px; align-items:flex-start; margin-bottom:5px; }
 .md-month-label { flex:0 0 62px; font-size:11.5px; font-weight:700; color:var(--text2); padding-top:2px; }
 .md-chips { display:flex; flex-wrap:wrap; gap:3px; }
-.md-chip { font-size:11px; font-weight:700; color:#e65100; background:#fff4e5; border:1px solid #ffcc80; border-radius:4px; padding:1px 5px; }
+.md-chip { font-size:0.82rem; font-weight:700; color:#e65100; background:#fff4e5; border:1px solid #ffcc80; border-radius:4px; padding:1px 5px; }
 .md-chip small { font-size:9px; margin-left:2px; opacity:.85; }
 .md-chip.md-chip-all { color:#c62828; background:#fdecec; border-color:#ef9a9a; }
-.md-legend, .mc-legend, .dc-legend { font-size:10.5px; color:var(--text3); margin-top:6px; line-height:1.6; }
+.md-legend, .mc-legend, .dc-legend { font-size:0.8rem; color:var(--text3); margin-top:6px; line-height:1.6; }
 .md-cal { margin-top:10px; border-top:1px solid var(--border); padding-top:9px; }
 .md-cal-head { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:7px; }
 .md-cal-head select { font-size:12px; padding:2px 6px; }
 .mc-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-.mc-wk { text-align:center; font-size:10.5px; font-weight:700; }
+.mc-wk { text-align:center; font-size:0.82rem; font-weight:700; }
 .mc-cell { border:1px solid var(--border); border-radius:5px; padding:2px 0; text-align:center; }
-.mc-d { font-size:9.5px; color:var(--text3); line-height:1.3; }
-.mc-m { font-size:13px; font-weight:700; line-height:1.2; }
+.mc-d { font-size:0.75rem; color:var(--text3); line-height:1.3; }
+.mc-m { font-size:1.05rem; font-weight:700; line-height:1.2; }
 .mc-ok   { background:#eafaf0; } .mc-ok   .mc-m { color:#2e7d32; }
 .mc-none { background:#fdecec; } .mc-none .mc-m { color:#c62828; }
 .mc-part { background:#fff4e5; } .mc-part .mc-m { color:#e65100; }
 .mc-out  { background:var(--bg3); } .mc-out .mc-m { color:var(--text3); }
 
 /* ③ ドロップカレンダー */
-.dc-wrap { border:1px solid #b6d4fe; background:#f5f9ff; border-radius:8px; padding:11px; margin:0 0 12px; }
-.dc-head { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:#1e4fbf; margin-bottom:8px; }
-.dc-head select { font-size:12px; padding:2px 6px; margin-left:auto; }
-.dc-table { border-collapse:collapse; width:100%; table-layout:fixed; font-size:11px; }
+.dc-wrap { border:1px solid #b6d4fe; background:#f5f9ff; border-radius:8px; padding:13px; margin:0 0 12px; }
+.dc-head { display:flex; align-items:center; gap:8px; font-size:0.95rem; font-weight:700; color:#1e4fbf; margin-bottom:9px; }
+.dc-head select { font-size:0.88rem; padding:3px 8px; margin-left:auto; }
+.dc-table { border-collapse:collapse; width:100%; table-layout:fixed; }
 .dc-table th, .dc-table td { border:1px solid var(--border); }
-.dc-th-name, .dc-td-name { width:190px; text-align:left; padding:4px 7px; background:var(--bg2); position:sticky; left:0; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.dc-th-day { padding:2px 0; text-align:center; font-size:9.5px; color:var(--text3); background:var(--bg3); font-weight:600; }
-.dc-cell { height:24px; text-align:center; background:var(--bg2); }
-.dc-latest-cell { text-align:left; padding-left:8px; }
-.dc-ok { color:#2e7d32; font-size:13px; font-weight:700; }
-.dc-ng { color:#c62828; font-size:11px; font-weight:700; }
-.dc-cell small { color:var(--text3); font-size:10px; margin-left:4px; }
+/* 【v1.0529】日付セルは padding を明示的に 0 にする。
+   アプリ共通の td 既定パディング(7px 10px)が効いていたため、幅の狭い日付セルでは
+   内容が右へ押し出され「ヘッダーの数字と◯がずれる」原因になっていた。 */
+.dc-table th.dc-th-day, .dc-table td.dc-cell { padding:0; }
+.dc-th-name, .dc-td-name { width:230px; text-align:left; padding:6px 9px; background:var(--bg2); position:sticky; left:0; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dc-th-day { text-align:center; font-size:0.72rem; color:var(--text2); background:var(--bg3); font-weight:700; line-height:1.9; }
+.dc-cell { height:30px; text-align:center; background:var(--bg2); vertical-align:middle; }
+.dc-table td.dc-latest-cell { text-align:left; padding:5px 10px; }
+.dc-ok { color:#2e7d32; font-size:1rem; font-weight:700; line-height:1; }
+.dc-ng { color:#c62828; font-size:0.88rem; font-weight:700; }
+.dc-cell small { color:var(--text3); font-size:0.8rem; margin-left:5px; }
 .dc-today { background:#e8f1fb !important; }
+.dc-legend { font-size:0.8rem; }
 
 /* 順位取得CSV(GitHub反映)ボタン: 未反映の変動がある場合のアラート表示 */
 #btnDownloadBasicCsv.drift-alert {
@@ -2519,6 +2527,23 @@ table.rank-table td.rank-legend-col-row {
   border-bottom: 1px solid var(--border);
 }
 .modal-title { font-size: 1.15rem; font-weight: 700; margin: 0; }
+
+/* ===== 【v1.0529】レポート追加モーダルを広く・読みやすく =====
+   カレンダーが31列あるため、他のモーダル(900px)より大幅に広げる。
+   画面が狭い環境でも溢れないよう、ビューポート幅の96%を上限にする。 */
+#uploadModal .modal { max-width: min(1560px, 96vw); padding: 26px 28px; }
+#uploadModal .modal-title { font-size: 1.32rem; }
+#uploadModal .dropzone-hint { font-size: 0.86rem; line-height: 1.7; }
+#uploadModal .dropzone-text { font-size: 1rem; }
+#uploadModal .file-slot { font-size: 0.9rem; padding: 12px 14px; }
+#uploadModal .file-slot-label { font-size: 0.92rem; }
+#uploadModal .file-slot-status { font-size: 0.85rem; }
+#uploadModal .file-slot-filename { font-size: 0.82rem; }
+#uploadModal .file-slot-source { font-size: 0.78rem; line-height: 1.5; padding: 4px 8px; }
+#uploadModal .validation-msg { font-size: 0.92rem; line-height: 1.7; }
+#uploadModal .upload-actions .btn { font-size: 0.95rem; }
+/* スロットは5枠なので、広いときは3列にして縦を短くする */
+@media (min-width: 1100px) { #uploadModal .file-slots { grid-template-columns: repeat(3, 1fr); } }
 .modal-close {
   background: transparent; border: none;
   font-size: 1.6rem; color: var(--text3);
@@ -2962,7 +2987,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0528</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0530</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9019,7 +9044,11 @@ function _zenMonthlyRows() {
 function _zenRank5(val, allVals, hi) {
   if (!val || val === 0 || !allVals.length) return 'bk';
   const s = allVals.slice().sort((a, b) => hi ? b - a : a - b);
-  let idx = s.indexOf(val); if (idx < 0) idx = 0;
+  // 【v1.0530】母集団に無い値が来たとき、従来は idx=0（＝強制的に最上位＝濃青）になっていた。
+  //   全-日月別データの日別で「最新日だけ必ず青くなる」原因がこれ。
+  //   見つからない場合は「その値が入るべき順位」を数えて正しい位置に置く。
+  let idx = s.indexOf(val);
+  if (idx < 0) idx = s.filter(x => hi ? (x > val) : (x < val)).length;
   const n = s.length;
   if (idx < Math.ceil(n * 0.10)) return 'g1';
   if (idx < Math.ceil(n * 0.20)) return 'g2';
@@ -9268,10 +9297,15 @@ function renderGraphData() {
   const _zdColCount = 1 + MI_COLS.length + 1;   // 月 + 指標列 + 送り込み売上
   const asc = _dayMode ? _zenDailyRows(_zdDayYm) : _zenMonthlyRows();
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
-  const pool = {}; MI_COLS.forEach(c => { pool[c.key] = asc.slice(0, -1).map(r => r[c.key]).filter(v => v > 0); });
+  // 【v1.0530】色分けの母集団。
+  //   月別: 当月＝未満了なので最後の1件（＝最新月）を外す（従来どおり）。
+  //   日別: 取り込んだ日はすべて確定済みなので全日を母集団に入れる。
+  //         ここで最後の1日を外していたため、最新日が母集団に無い値となり必ず濃青になっていた。
+  const _rankPoolRows = _dayMode ? asc : asc.slice(0, -1);
+  const pool = {}; MI_COLS.forEach(c => { pool[c.key] = _rankPoolRows.map(r => r[c.key]).filter(v => v > 0); });
   // 【v1.0405】送り込み売上列（子商品の月次売上合計）。色は他列と別（紫系）。
   const SOI_HBG = '#ece0fb', SOI_BG = '#f7f1fe', SOI_BORDER = '2px solid #c4b5fd';
-  const soiPool = asc.slice(0, -1).map(r => r.soikomi).filter(v => v > 0);
+  const soiPool = _rankPoolRows.map(r => r.soikomi).filter(v => v > 0);   // 【v1.0530】日別は全日を母集団に
   const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
   const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
   const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
@@ -9307,7 +9341,17 @@ function renderGraphData() {
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
     return _rowHtml;
   }).join('');
-  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+  // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
+  const _legend = '<div class="zd-color-legend">'
+    + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（' + (_dayMode ? 'この月に取り込んだ全日' : '表示中の全月') + 'が母集団）。'
+    + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
+    + '<br>総売上・SEO売上・広告売上・CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
+    + '<b>実績額（広告費）だけは小さいほど青</b>（使った額が少ないほど良い、という評価）。'
+    + '<br><b>売上ROAS</b>だけは相対評価ではなく決まったしきい値（' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤）で色が付きます。'
+    + (_dayMode ? '' : '<br>当月はまだ月の途中（未満了）なので、金額列は色を付けず黒字で表示します。')
+    + '<br>同じ値が複数あるときは同じ順位＝同じ色になります。値が0や未取込の行は黒（—）です。'
+    + '</div>';
+  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>' + _legend;
   requestAnimationFrame(_zdFitTableHeight);   // 【v1.0513】描画後に表の高さを画面下端まで合わせる
 }
 
