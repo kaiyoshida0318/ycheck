@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0540 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0543 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1961,6 +1961,17 @@ tr.row-child .code-cell-inner::before {
 .zd-range-info { font-size:0.8rem; color:var(--text3); margin-left:6px; }
 /* 【v1.0536】部分取込の月の注意書き */
 .zd-partial-note { margin:0 2px 10px; padding:9px 12px; border:1px solid #f0c26b; border-radius:7px; background:#fff8e6; color:#8a5a00; font-size:0.83rem; line-height:1.8; }
+/* 【v1.0541】PRオプションの列の説明 */
+.zd-pr-legend { margin:10px 2px 0; padding:10px 12px; border:1px solid #cfe6d8; border-radius:7px; background:#f7fcf9; font-size:0.82rem; line-height:1.8; color:var(--text2); }
+.zd-pl-title { font-weight:700; color:#2e7d32; margin-bottom:6px; font-size:0.88rem; }
+.zd-pl-table { border-collapse:collapse; width:100%; }
+.zd-pl-table th { text-align:left; vertical-align:top; white-space:nowrap; padding:4px 12px 4px 0; font-weight:700; color:#2e7d32; width:120px; line-height:1.6; }
+.zd-pl-table td { vertical-align:top; padding:4px 0; }
+.zd-pl-note { display:block; margin-top:3px; color:var(--text3); font-size:0.78rem; }
+/* 【v1.0543】役割分担の枠（PR費用率の具体例は冗長だったため撤去） */
+.zd-pl-exrow { line-height:1.7; }
+.zd-pl-roles { margin-top:8px; padding:7px 10px; background:var(--bg2); border:1px solid #cfe6d8; border-radius:6px; }
+.zd-pl-foot { margin-top:7px; padding-top:7px; border-top:1px solid #cfe6d8; }
 /* 【v1.0537】PRオプション実績の不足で売上ROASが算出できない旨の警告 */
 .zd-pr-note { margin:0 2px 10px; padding:9px 12px; border:1px solid #b6d4fe; border-radius:7px; background:#f2f7ff; color:#1e4fbf; font-size:0.83rem; line-height:1.8; }
 /* 【v1.0530】全-日月別データ：色分けルールの凡例 */
@@ -3017,7 +3028,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0540</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0543</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8622,11 +8633,12 @@ const MI_COLS = [
   { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y', blockStart:true },
   // --- PRオプション（ストア全体の実績。SEOと同系統の少し薄い緑） ---
   //   PRオプ実績額は費用なので hi:false（低い方が良い）。他のPR列は良否を断定できないので norank。
-  { key:'prCost',   label:'PRオプ実績額',   hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'y', store:true, blockStart:true },
-  { key:'prRatio',  label:'PRオプ費用率',   hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'p', store:true, norank:true },
-  { key:'prImpr',   label:'PRオプ表示回数', hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
-  { key:'prClick',  label:'PRオプCL',       hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
-  { key:'prCtr',    label:'PRオプCTR',      hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'p', store:true, norank:true },
+  //   【v1.0541】ラベルは「オプ」を外す。英字が続くものはハイフンを入れて読みやすくする（PR-CTR）。
+  { key:'prCost',   label:'PR実績額',     hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'y', store:true, blockStart:true },
+  { key:'prRatio',  label:'PR費用率',     hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'p', store:true, norank:true },
+  { key:'prImpr',   label:'PR表示回数',   hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
+  { key:'prClick',  label:'PRクリック数', hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
+  { key:'prCtr',    label:'PR-CTR',       hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'p', store:true, norank:true },
   // --- 広告 ---
   { key:'adSales',  label:'広告売上',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'y', blockStart:true },
   { key:'spend',    label:'広告実績額',  hbg:'#fbeeda', bg:'#fdf8f0', hi:false, t:'y' },
@@ -9726,7 +9738,7 @@ function renderGraphData() {
       if (c.t === 'sr') {
         // 【v1.0537】売上ROASは絶対しきい値で色付け。PR実績が揃っていない期間は null（＝算出不可）で「—」。
         inner = (v == null)
-          ? '<span style="color:var(--text3)" title="PRオプション実績が未取込のため算出できません（総売上÷(広告実績額＋PRオプ実績額)）">—</span>'
+          ? '<span style="color:var(--text3)" title="PRオプション実績が未取込のため算出できません（総売上÷(広告実績額＋PR実績額)）">—</span>'
           : salesRoasCellHtml(v);
       } else if (c.norank) {
         // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）
@@ -9776,25 +9788,47 @@ function renderGraphData() {
         + (_n === _tot ? '（表示中のすべて）' : '')
         + ' で <b>売上ROASが「—」</b>になっています。<b>PRオプション実績が取り込めていない'
         + (_dayMode ? '日' : '月（月内に1日でも欠けがあると算出しません）') + '</b>のためです。<br>'
-        + '売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100 なので、PR費が欠けたまま計算すると実際より高く出てしまいます。'
+        + '売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額）× 100 なので、PR費が欠けたまま計算すると実際より高く出てしまいます。'
         + '「＋ レポート追加」から <b>④PRオプション実績</b> を取り込むと算出されます。</div>';
     }
   }
+  // 【v1.0541】PR列（特にPR費用率）の意味を表の下で説明する。
+  //   「設定しているPRオプ料率」と「PR費用率」を取り違えやすいので、違いを明記する。
+  const _prLegend = '<div class="zd-pr-legend">'
+    + '<div class="zd-pl-title">PRオプションの列について</div>'
+    + '<table class="zd-pl-table">'
+    + '<tr><th>PR実績額</th><td>その日（月）に実際に発生したPRオプション費用。PRオプションレポートの「広告費」の実値をそのまま使っています。</td></tr>'
+    + '<tr><th>PR費用率</th><td><b>PR実績額 ÷ PRオプションレポートの「売上」× 100</b>。'
+    +   '売上に対してPR費が<b>どれくらい重かったか</b>。金額だけだと売上規模の大きい月ほど大きくなるので、'
+    +   '規模の違う月どうしを比べられます（PR費が増えたのに売上が比例して伸びていない月を見つけやすい）。<br>'
+    +   '<b>設定している「PRオプ料率」（最低7％）とは一致しません</b>。'
+    +   'このレポートの分母は<b>税込</b>売上、実際のPR費用は<b>税抜</b>売上基準のためです。</td></tr>'
+    + '<tr><th>PR表示回数<br>PRクリック数</th><td>PRオプション枠が表示された回数と、クリックされた回数（レポートの「全体表示回数」「全体クリック数」）。</td></tr>'
+    + '<tr><th>PR-CTR</th><td><b>PRクリック数 ÷ PR表示回数 × 100</b>。表示のうち何％がクリックされたか。レポートには無いのでYcheck側で計算しています。</td></tr>'
+    + '</table>'
+    + '<div class="zd-pl-roles"><b>3つの指標の役割分担</b>'
+    +   '<div class="zd-pl-exrow"><b>PR実績額</b>　… いくら払ったか（絶対額）</div>'
+    +   '<div class="zd-pl-exrow"><b>PR費用率</b>　… 売上に対してどれくらい重かったか（相対額）</div>'
+    +   '<div class="zd-pl-exrow"><b>売上ROAS</b>　… 広告費＋PR費をまとめた全体効率</div>'
+    + '</div>'
+    + '<div class="zd-pl-foot">月別の <b>PR費用率</b> と <b>PR-CTR</b> は、日別の％を平均したものではありません。'
+    + '<b>月間の合計値から計算し直しています</b>（例: 月間PR実績額 ÷ 月間レポート売上 × 100）。日数の少ない日に引っ張られないようにするためです。</div>'
+    + '</div>';
   // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
   const _legend = '<div class="zd-color-legend">'
     + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（' + (_dayMode ? '表示中の期間の全日' : '表示中の全月') + 'が母集団）。'
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
-    + '<b>広告実績額とPRオプ実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
-    + '<br><b>PRオプ費用率・PRオプ表示回数・PRオプCL・PRオプCTR</b> は高ければ良いとは限らないため、色分けせず<b>表示のみ</b>です。'
+    + '<b>広告実績額とPR実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
+    + '<br><b>PR費用率・PR表示回数・PRクリック数・PR-CTR</b> は高ければ良いとは限らないため、色分けせず<b>表示のみ</b>です。'
     + '<br><b>売上ROAS</b>だけは相対評価ではなく決まったしきい値（' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤）で色が付きます。'
-    + '<br><b>売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100</b>。'
+    + '<br><b>売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額）× 100</b>。'
     + 'PRオプション実績が取り込めていない期間は、費用の一部が欠けて実際より高く出てしまうため <b>「—」（算出不可）</b> にしています。'
-    + '<br>PRオプションレポートの「売上」は<b>PRオプ経由の売上ではない</b>ため、総売上・SEO売上・広告売上には反映していません（月次のPRオプ費用率を再計算するためだけに内部保持）。'
+    + '<br>PRオプションレポートの「売上」は<b>PRオプ経由の売上ではない</b>ため、総売上・SEO売上・広告売上には反映していません（月次のPR費用率を再計算するためだけに内部保持）。'
     + (_dayMode ? '' : '<br>当月はまだ月の途中（未満了）なので、金額列は色を付けず黒字で表示します。')
     + '<br>同じ値が複数あるときは同じ順位＝同じ色になります。値が0や未取込の行は黒（—）です。'
     + '</div>';
-  wrap.innerHTML = _partialNote + _prNote + '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>' + _legend;
+  wrap.innerHTML = _partialNote + _prNote + '<table style="border-collapse:collapse;width:100%">\n<thead><tr>' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>' + _prLegend + _legend;
   requestAnimationFrame(_zdFitTableHeight);   // 【v1.0513】描画後に表の高さを画面下端まで合わせる
 }
 
