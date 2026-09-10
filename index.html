@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0534 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0535 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2999,7 +2999,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0534</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0535</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6403,6 +6403,16 @@ function dailyAllDates() {
 function daysWithData(ym) { return dailyAllDates().filter(d => ymOf(d) === ym); }
 // 日別データを持っている月の集合
 function dailyMonths() { const s = new Set(); dailyAllDates().forEach(d => s.add(ymOf(d))); return s; }
+// 【v1.0535】種別ごとの「日別データがある月」。
+//   ①広告詳細・②商品分析・③全体分析は取得できる期間が違う（例: 商品分析は6/2以降しか無い）。
+//   月まるごとで日別/月次を切り替えると、②が無い月に①③だけ入れたときに
+//   「商品別の総売上が0になって商品が一覧から消える」事故が起きるため、種別ごとに判定する。
+function dailyMonthsOf(kind) {
+  const s = new Set();
+  dailyDates(kind).forEach(d => s.add(ymOf(d)));
+  return s;
+}
+function monthHasDailyOf(ym, kind) { return dailyMonthsOf(kind).has(ym); }
 // 【v1.0527】日別データに登場する全商品コード。
 //   日別しか無い月（＝月次CSVを取り込んでいない月）でも商品一覧が空にならないようにするために使う。
 function dailyCodes() {
@@ -6495,13 +6505,13 @@ function dailyAdRowsForMonth(ym) {
 // 【v1.0527】「月次として使うべき行」を返す共通ヘルパー。
 //   日別データがある月は日別の合計、無い月は従来の月次データ。表示側はこれを使えば日/月を意識しなくてよい。
 function effMonthlyItemRows() {
-  const dm = dailyMonths();
+  const dm = dailyMonthsOf('item');   // 【v1.0535】商品分析の日別がある月だけ置き換える
   const out = (state.item || []).filter(r => !dm.has(r.month));
   dm.forEach(ym => { (dailyItemRowsForMonth(ym) || []).forEach(r => out.push(r)); });
   return out;
 }
 function effMonthlyAdRows() {
-  const dm = dailyMonths();
+  const dm = dailyMonthsOf('ad');     // 【v1.0535】広告詳細の日別がある月だけ置き換える
   const out = (state.ad || []).filter(r => !dm.has(r.month));
   dm.forEach(ym => { (dailyAdRowsForMonth(ym) || []).forEach(r => out.push(r)); });
   return out;
@@ -7442,27 +7452,32 @@ function buildFullAggregate() {
   // 【v1.0526】日別データがある月は「日別の合計」を月次値として使う。
   //   日別が無い月は従来どおり state.item / state.ad の月次データを使う（過去データは書き換えない）。
   //   ※ state.item / state.ad 自体には一切触らないので、日別を消せば元の月次表示に戻る。
-  const _dm = dailyMonths();
+  // 【v1.0535】種別ごとに「日別があればそれ、無ければ従来の月次」を選ぶ。
+  //   商品分析(item)だけ取得できない月に広告詳細(ad)の日別を入れても、
+  //   商品別の総売上（月次）が消えないようにするため。
+  const _dmItem = dailyMonthsOf('item');
+  const _dmAd = dailyMonthsOf('ad');
   (state.item || []).forEach(i => {
-    if (_dm.has(i.month)) return;   // この月は日別合計で作る
+    if (_dmItem.has(i.month)) return;   // この月の商品別売上は日別合計で作る
     const key = i.code + '|' + i.month;
     if (!agg[key]) agg[key] = { code: i.code, month: i.month, rev: 0, adCost: 0, adRev: 0 };
     agg[key].rev += i.revenue;
   });
   (state.ad || []).forEach(a => {
-    if (_dm.has(a.month)) return;   // この月は日別合計で作る
+    if (_dmAd.has(a.month)) return;     // この月の広告は日別合計で作る
     const key = a.code + '|' + a.month;
     if (!agg[key]) agg[key] = { code: a.code, month: a.month, rev: 0, adCost: 0, adRev: 0 };
     agg[key].adCost += a.adCost;
     agg[key].adRev += a.adRevenue;
   });
-  // 日別がある月を、日別の合計から積む
-  _dm.forEach(ym => {
+  _dmItem.forEach(ym => {
     (dailyItemRowsForMonth(ym) || []).forEach(i => {
       const key = i.code + '|' + ym;
       if (!agg[key]) agg[key] = { code: i.code, month: ym, rev: 0, adCost: 0, adRev: 0 };
       agg[key].rev += i.revenue;
     });
+  });
+  _dmAd.forEach(ym => {
     (dailyAdRowsForMonth(ym) || []).forEach(a => {
       const key = a.code + '|' + ym;
       if (!agg[key]) agg[key] = { code: a.code, month: ym, rev: 0, adCost: 0, adRev: 0 };
@@ -9062,9 +9077,12 @@ function _zenMonthlyRows() {
   return months.map(m => {
     let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0, soikomi = 0;
     // 【v1.0526】日別データがある月は日別合計から作る。無い月は従来どおり月次データから。
-    const _hasDaily = monthHasDaily(m);
-    const _itemRows = _hasDaily ? (dailyItemRowsForMonth(m) || []) : (state.item || []).filter(i => i.month === m);
-    const _adRows   = _hasDaily ? (dailyAdRowsForMonth(m)   || []) : (state.ad   || []).filter(a => a.month === m);
+    // 【v1.0535】種別ごとに判定（商品分析だけ無い月でも広告の日別を活かせるように）
+    const _hasDailyItem = monthHasDailyOf(m, 'item');
+    const _hasDailyAd   = monthHasDailyOf(m, 'ad');
+    const _hasDailyOv   = monthHasDailyOf(m, 'overall');
+    const _itemRows = _hasDailyItem ? (dailyItemRowsForMonth(m) || []) : (state.item || []).filter(i => i.month === m);
+    const _adRows   = _hasDailyAd   ? (dailyAdRowsForMonth(m)   || []) : (state.ad   || []).filter(a => a.month === m);
     _itemRows.forEach(i => {
       rev += i.revenue || 0; orders += i.orders || 0;
       // 【v1.0405】送り込み売上＝子商品（黄色バッジ＝repCodeが設定され自コードと異なる）の売上合計
@@ -9072,7 +9090,7 @@ function _zenMonthlyRows() {
       if (_rep && _rep !== i.code) soikomi += i.revenue || 0;
     });
     _adRows.forEach(a => { adRev += a.adRevenue || 0; adCost += a.adCost || 0; adClicks += a.adClicks || 0; adOrders += a.adOrders || 0; });
-    if (_hasDaily) {
+    if (_hasDailyOv) {
       // 総売上はショップ売上KPI(日別)の合計を権威データとする（商品別の合計と一致することを確認済み）
       const _dov = dailyOverallRevForMonth(m);
       if (_dov != null && _dov > 0) rev = _dov;
