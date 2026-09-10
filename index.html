@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0543 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0544 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3028,7 +3028,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0543</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0544</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7297,6 +7297,9 @@ function buildSlotMap() {
     overall: { slotId: 'slot-overall', pattern: `${sc}-store_overall*.csv` },
     item:    { slotId: 'slot-item',    pattern: `${sc}-item_report*.csv` },
     ad:      { slotId: 'slot-ad',      pattern: '広告詳細レポート商品別*.csv' },
+    // 【v1.0544】④PRオプションレポートのスロット定義漏れを修正（updateSlot('pr')が
+    //   ここに無いため即returnし、ドロップしても緑の「✓ 読み込み済み」にならなかった）
+    pr:      { slotId: 'slot-pr',      pattern: '*_total_prreport.csv' },
     bid:     { slotId: 'slot-bid',     pattern: 'BID_ITEM*.csv' },
     proRate: { slotId: 'slot-prorate', pattern: 'data*.csv' },
     master:  { slotId: 'slot-master',  pattern: '商品コード / 商品名 / メインKW / 検索URL の4列CSV' }
@@ -12432,7 +12435,7 @@ function openUploadModal(mode) {
     if (hintEl) hintEl.textContent = 'その日の6ファイルをまとめてドロップしてください（CSVまたはZIP）。①〜④は日別、⑤⑥は日付を持たない最新値です。';
     state.uploadBuffer = { overall: null, item: null, itemList: [], ad: null, bid: null, proRate: null, master: null };
     _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };   // 【v1.0537】日別ステージもリセット
-    ['overall', 'item', 'ad', 'bid', 'proRate'].forEach(clearSlot);
+    ['overall', 'item', 'ad', 'pr', 'proRate', 'bid'].forEach(clearSlot);
     _renderMissingNotice(null);
     refreshSlotExamples();      // 【v1.0532】ファイル名の例を表示
     _dropCalReset();            // ドロップカレンダーを初期化
