@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0539 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0540 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2650,6 +2650,8 @@ table.rank-table td.rank-legend-col-row {
   color: var(--accent);
   margin-right: 4px;
 }
+/* 【v1.0540】取得元のうち「どのレポートを開くか」の部分を強調（Yahoo側の画面で探しやすくするため） */
+.file-slot-source .src-key { font-weight: 700; color: var(--text); }
 /* 【v220】取得元ページへのURLリンク */
 .file-slot-link {
   font-size: 0.68rem;
@@ -3015,7 +3017,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0539</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0540</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4063,7 +4065,7 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・広告詳細レポート → 商品別 → CSVファイルダウンロード</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・<b class="src-key">広告詳細レポート</b> → 商品別 → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/report/adDetail" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/report/adDetail</a></div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
@@ -4071,7 +4073,7 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">yukaiya-item_report*.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 商品分析 → CSVファイルダウンロード</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → <b class="src-key">商品分析</b> → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report</a></div>
       </div>
       <div class="file-slot" id="slot-overall" data-upload-group="monthly">
@@ -4079,7 +4081,7 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → 全体分析 → CSVファイルダウンロード</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → <b class="src-key">全体分析</b> → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
       </div>
       <div class="file-slot" id="slot-pr" data-upload-group="daily">
@@ -4087,7 +4089,7 @@ th.col-sroas { background-color:#cfe0f7; }
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">*_total_prreport.csv</div>
-        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → レポート → PRオプションレポート → CSVファイルダウンロード</div>
+        <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → レポート → <b class="src-key">PRオプションレポート</b> → CSVファイルダウンロード</div>
         <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport</a></div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※このレポートの「売上」はPRオプ経由売上ではないため、Ycheckの総売上・SEO売上・広告売上には反映しません。</div>
       </div>
