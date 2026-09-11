@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0577 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0578 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3079,7 +3079,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0577</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0578</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9872,15 +9872,39 @@ function _zenMonthlyRows() {
     // ============================================================
     const _pa = prMonthAgg(m);
     let _prComplete = false;
+    let _prNeedDays = 0, _prHaveDays = 0;   // 【v1.0578】欠け日数の表示用
     if (_pa) {
-      // 売上ROASの算出対象日＝その月で売上または広告のデータがある日
-      const _baseDays = new Set();
-      Object.keys((ensureDaily().overall) || {}).forEach(d => { if (ymOf(d) === m) _baseDays.add(d); });
-      Object.keys((ensureDaily().item) || {}).forEach(d => { if (ymOf(d) === m) _baseDays.add(d); });
-      Object.keys((ensureDaily().ad) || {}).forEach(d => { if (ymOf(d) === m) _baseDays.add(d); });
+      // ============================================================
+      // 【v1.0578】★ PR売上ROAS の分母は「総売上と同じ期間」でなければならない。
+      //
+      //   v1.0577 までは対象日を「日別データがある日」だけで測っていた。
+      //   ところが総売上は _hasDailyOv が false のとき**月次レポート（＝月まるごと）**から来る。
+      //   その結果、日別が数日ぶんしか無い月では
+      //       分子＝月まるごとの総売上 ／ 分母＝数日ぶんのPR費
+      //   という割り算になり、PR売上ROASが実際よりはるかに高く出ていた。
+      //   実例: 2026/05 … 総売上 ¥1,511,108（月次・31日ぶん）に対しPRレポートは10日ぶん。
+      //         表示 632%（前後の月は369〜403%）。逆算するとPRレポート売上は総売上の35%しかない。
+      //
+      //   → 「総売上が何日ぶんの数字なのか」で対象日を決め直し、その全日にPRが無ければ算出不可にする。
+      // ============================================================
+      const _needDays = new Set();
+      if (_hasDailyOv) {
+        // 総売上＝日別合計。対象期間はその日たち（＝従来どおりの判定）
+        Object.keys((ensureDaily().overall) || {}).forEach(d => { if (ymOf(d) === m) _needDays.add(d); });
+        Object.keys((ensureDaily().item) || {}).forEach(d => { if (ymOf(d) === m) _needDays.add(d); });
+        Object.keys((ensureDaily().ad) || {}).forEach(d => { if (ymOf(d) === m) _needDays.add(d); });
+      } else {
+        // 総売上＝月次レポート。対象期間は月まるごと（当月だけは今日まで）
+        const _dim = new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate();
+        const _cur = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
+        const _last = (m === _cur) ? Math.min(_dim, new Date().getDate()) : _dim;
+        for (let i = 1; i <= _last; i++) _needDays.add(m + '-' + String(i).padStart(2, '0'));
+      }
       const _prDays = new Set(_pa.days);
+      _prNeedDays = _needDays.size;
+      _prHaveDays = [..._needDays].filter(d => _prDays.has(d)).length;
       // 日別が1日も無い月（＝月次レポートだけの月）はPRの網羅を確認できない → 算出不可のまま
-      _prComplete = _baseDays.size > 0 && [..._baseDays].every(d => _prDays.has(d));
+      _prComplete = _prNeedDays > 0 && _prHaveDays === _prNeedDays;
     }
     return {
       month: m, label: m.replace('-', '/'),
@@ -9905,6 +9929,9 @@ function _zenMonthlyRows() {
       grp: _zdGroupSplit(_itemRows, _adRows, _pa ? _pa.cost : 0),   // 【v1.0551】料率別（7% / 7%超）の内訳
       _prDayCount: _pa ? _pa.days.length : 0,
       _prComplete: _prComplete,
+      // 【v1.0578】PRレポートが対象期間の一部しか無い月。PR実績額(7%超)は「その日数ぶんの額」なので印を付ける
+      _prPartial: !!(_pa && !_prComplete),
+      _prNeedDays: _prNeedDays, _prHaveDays: _prHaveDays,
       totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
       cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
       roas: adCost > 0 ? adRev / adCost * 100 : 0,
@@ -10423,14 +10450,40 @@ function renderGraphData() {
   // 【v1.0551/v1.0555】1セルの中身。列（合計 / 7% / 7%超）ごとに、その列の母集団で色を付ける。
   // 【v1.0567】数字は中央揃え（見出しの「合計 / 7%超 / 7%」と縦のラインを合わせるため）
   const TDBASE = 'padding:' + ZD_TD_PAD + ';text-align:center;font-size:' + ZD_TD_FS + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
+  // 【v1.0578】ツールチップ用の素の金額表記（fmtY はHTMLを返すので title 属性に入れられない）
+  const _zdYen = (n) => (n == null) ? '—' : ('¥' + Math.round(n).toLocaleString());
   function _zdCellHtml(c, v, o) {
     const opt = o || {};
+    const _r = opt.row;
     let inner;
     if (c.t === 'sr') {
       // 【v1.0537】売上ROASは絶対しきい値で色付け。PR実績が揃っていない期間は null（＝算出不可）で「—」。
       inner = (v == null)
         ? '<span style="color:var(--text3)" title="' + (c.srNote || '広告実績額が0のため算出できません（売上ROAS＝総売上÷広告実績額×100）') + '">—</span>'
         : salesRoasCellHtml(v, c.th);   /* 【v1.0576】列ごとのしきい値（未指定なら SALES_ROAS_TH） */
+      // ============================================================
+      // 【v1.0578】分母の内訳をツールチップに出す。
+      //   ★この表は PR実績額を「7%超ぶん」しか列に出していない（v1.0574）。
+      //     画面の数字だけで PR売上ROAS を検算しようとすると
+      //         総売上 ÷（広告実績額 ＋ PR実績額(7%超)）
+      //     という**分母が小さすぎる式**になり、「表示値のほうが低い＝バグでは」と誤読する。
+      //     （実例 2026/09: 575,406 ÷ (74,435 + 40,480) = 501% ≠ 表示380%。
+      //       正しくは 575,406 ÷ (74,435 + PR実績額の全額 76,988) = 380%）
+      //   → 分母に何を使っているかをセルのホバーで直接見せて、誤読そのものを起こさせない。
+      // ============================================================
+      if (v != null && _r) {
+        const _sp = +_r.spend || 0;
+        const _tip = (c.key === 'prSalesRoas')
+          ? 'PR売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額の全額）× 100\n'
+            + _zdYen(_r.totSales) + ' ÷（' + _zdYen(_sp) + ' ＋ ' + _zdYen(_r.prCost) + '＝' + _zdYen(_sp + (+_r.prCost || 0)) + '）＝ ' + v + '%\n'
+            + '※分母のPR実績額は【全額】です。表に出ている「PR実績額(7%超)」' + _zdYen(_r.prOver)
+            + ' は7%を超える料率にしている上乗せ分だけなので、これを足しても一致しません\n'
+            + '（内訳: 7%相当 ' + _zdYen(_r.prBase) + ' ＋ 7%超 ' + _zdYen(_r.prOver) + ' ＝ ' + _zdYen(_r.prCost) + '）'
+          : '売上ROAS ＝ 総売上 ÷ 広告実績額 × 100\n'
+            + _zdYen(_r.totSales) + ' ÷ ' + _zdYen(_sp) + ' ＝ ' + v + '%\n'
+            + '※分母はPR実績額を含みません（含めたものが右のPR売上ROAS）';
+        inner = '<span title="' + escapeHtml(_tip) + '">' + inner + '</span>';
+      }
     } else if (c.norank) {
       // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）
       inner = (c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v));
@@ -10438,6 +10491,14 @@ function renderGraphData() {
       const disp = c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v);
       const _nc = opt.unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
       inner = (v == null || !v || v === 0 || _nc) ? disp : '<span class="c-' + _zenRank5(v, pool[c.id], c.hi) + '">' + disp + '</span>';
+    }
+    // 【v1.0578】PRレポートが対象期間の一部しか無い月は、PR実績額系の額も「その日数ぶん」にしかならない。
+    //   PR売上ROASは「—」にしてあるが、この列は額として出るので、印が無いと月まるごとの額に見えてしまう。
+    if (_r && _r._prPartial && v != null && v !== 0 && (c.key === 'prOver' || c.key === 'prCost' || c.key === 'prBase')) {
+      inner = '<span style="color:#b45309;font-weight:700" title="'
+        + escapeHtml('PRオプションレポートがこの月の ' + _r._prHaveDays + '/' + _r._prNeedDays + ' 日ぶんしか入っていません。'
+          + 'この額はその日数ぶんの合計で、月全体の額ではありません（同じ理由でPR売上ROASは「—」にしています）')
+        + '">⚠</span> ' + inner;
     }
     // 【v1.0566】比率表記：内訳列（-7%超 / -7%）の金額の下に、合計に対する構成比を1行足す。
     //   分母は同じ指標の「合計」列の値（opt.total）。-7%超 ＋ -7% ＝ 100% になる。
@@ -10456,7 +10517,7 @@ function renderGraphData() {
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
     const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
-    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key] })).join('');
+    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key], row: r })).join('');   /* 【v1.0578】row＝分母の内訳ツールチップ／PR部分取込の⚠に使う */
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
@@ -10494,6 +10555,25 @@ function renderGraphData() {
         + (_n === _tot ? '（表示中のすべて）' : '')
         + ' で <b>売上ROASが「—」</b>です。<b>広告実績額が0</b>（広告を出していない／広告データが未取込）の'
         + (_dayMode ? '日' : '月') + 'は、割り算ができないため算出しません。</div>';
+    }
+  }
+  // ============================================================
+  // 【v1.0578】PRレポートが対象期間の一部しか入っていない月の注意書き。
+  //   総売上は月まるごと／PR費は数日ぶん、という割り算になると PR売上ROAS が実際よりはるかに高く出る。
+  //   v1.0578 でその月は「—」にしたので、なぜ消えているのかをここで説明する。
+  // ============================================================
+  let _prPartialNote = '';
+  {
+    const _pp = drows.filter(r => r && r._prPartial && r._prNeedDays > 0);
+    if (_pp.length) {
+      _prPartialNote = '<div class="zd-partial-note">⚠ <b>' + _pp.map(r => r.label).join('・') + '</b> は'
+        + '<b>PRオプションレポート（④）が期間の一部しか入っていません</b>'
+        + '（' + _pp.map(r => r.label + '：' + r._prHaveDays + '/' + r._prNeedDays + '日').join(' / ') + '）。<br>'
+        + '総売上は月まるごとの数字なのにPR費が数日ぶんしか無いと、'
+        + '<b>PR売上ROASが実際よりはるかに高く出ます</b>（分母だけが小さくなるため）。'
+        + 'そのため該当月の<b>PR売上ROASは「—」</b>にしています【v1.0578】。<br>'
+        + '<b>PR実績額(7%超)</b>はその日数ぶんの合計なので、額の左に <b style="color:#b45309">⚠</b> を付けて区別しています。'
+        + '不足している日は「+ レポート追加」→「不足日を確認する」で確認できます。</div>';
     }
   }
   // 【v1.0547】検算列を出しているときは、表示中の期間の合計で前提が妥当かを1行にまとめる。
@@ -10543,7 +10623,9 @@ function renderGraphData() {
     +   '<div class="zd-pl-exrow"><b>PR実績額</b>　… いくら払ったか（絶対額）</div>'
     +   '<div class="zd-pl-exrow"><b>PR実績額(7%相当) / (7%超)</b>　… そのうち「どうやっても出る分」と「7%超にしている分」</div>'
     +   '<div class="zd-pl-exrow"><b>売上ROAS</b>　… 総売上 ÷ 広告実績額。広告費だけで見た全体効率（総売上の右）</div>'   /* 【v1.0577】v1.0564で定義を変えたのに説明が「広告費＋PR費」のまま残っていたので修正 */
-    +   '<div class="zd-pl-exrow"><b>PR売上ROAS</b>　… 総売上 ÷（広告実績額＋PR実績額）。PR費まで入れた全体効率</div>'
+    +   '<div class="zd-pl-exrow"><b>PR売上ROAS</b>　… 総売上 ÷（広告実績額＋<b>PR実績額の全額</b>）。PR費まで入れた全体効率。'
+    +     '<b style="color:#b45309">分母は全額であって、表に出ている「PR実績額(7%超)」ではありません</b>【v1.0578】。'
+    +     'セルにカーソルを合わせると分母の内訳が出ます</div>'
     + '</div>'
     + '<div class="zd-pl-foot">月別の％系（検算列の実効料率など）は、日別の％を平均したものではありません。'
     + '<b>月間の合計値から計算し直しています</b>（例: 月間PR実績額 ÷ 月間レポート売上 × 100）。日数の少ない日に引っ張られないようにするためです。</div>'
@@ -10563,6 +10645,10 @@ function renderGraphData() {
       + '<b>PR実績額(7%超)</b>は、PRオプション費のうち<b>7%より高い料率にしていることで余分に出ている分</b>だけを出した列です（広告ROASの左）。<br>'   /* 【v1.0577】売上ROASを総売上の右へ移したので位置の表記を修正 */
       + '　実績額 − 売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%（＝全商品に最低料率がかかる「どうやっても出る分」）。'
       + '例) 売上 ¥55,950 / 実績額 ¥9,200 のとき、55,950 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '% = ¥3,560 を引いて <b>¥5,640</b>。<br>'
+      + '　★<b style="color:#b45309">この列は「上乗せ分」だけなので、PR売上ROASの分母には使えません</b>【v1.0578】。'
+      + 'PR売上ROASの分母は <b>広告実績額 ＋ PR実績額の全額</b>（＝7%相当 ＋ 7%超）です。'
+      + 'この列の額を足して検算すると分母が小さくなり、表示値より高い数字が出ます。'
+      + 'PR売上ROASのセルにカーソルを合わせると、実際に使っている分母の内訳が出ます。<br>'
       + '　商品別のPR実績額はYahooから取得できませんが、この列は<b>引き算だけ</b>なので推定が入りません。'
       + '前提（税率・課金対象）が崩れて負になる期間は「—」にしています。<br>'
       + '<b>②商品別売上（item_report）が無い月は、-7%超 / -7% の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
@@ -10596,10 +10682,10 @@ function renderGraphData() {
   // 【v1.0552】説明・注意書きは「❓ 説明」を押したときだけ表の下にまとめて出す。
   //   注意書き（_partialNote / _prNote）も中に入れるので、あるときはボタンを警告色にして気づけるようにする。
   // 【v1.0562】送り込み売上の列を撤去したので、その説明も出さない
-  _zdHelpWarn = !!(_partialNote || _prNote);
+  _zdHelpWarn = !!(_partialNote || _prNote || _prPartialNote);   /* 【v1.0578】PR部分取込も警告対象 */
   _zdSetHelpUI();
   const _helpHtml = _zdHelp
-    ? ('<div class="zd-help-panel">' + _partialNote + _prNote + _prVerifyNote + _splitNote + _prLegend + _legend + '</div>')
+    ? ('<div class="zd-help-panel">' + _partialNote + _prPartialNote + _prNote + _prVerifyNote + _splitNote + _prLegend + _legend + '</div>')
     : '';
   // 【v1.0565】見出しは <thead> ごと固定する。2段が必ずセットで動くので、段ごとの位置計算が要らない。
   //   ★ border-collapse:collapse のままだと、sticky な thead の背景が一部ブラウザで消えることがある。
