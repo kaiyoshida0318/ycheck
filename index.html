@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0552 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0556 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0552</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0556</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8924,12 +8924,11 @@ const MI_COLS = [
   { key:'salesRoas', label:'売上ROAS', hbg:'#cfe0f7', bg:'#eef4fb', hi:true,  t:'sr' },
   { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' },
   // --- SEO ---
-  { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y', blockStart:true },
+  { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y', blockStart:true, split:true },
   // --- PRオプション（ストア全体の実績。SEOと同系統の少し薄い緑） ---
   //   PRオプ実績額は費用なので hi:false（低い方が良い）。他のPR列は良否を断定できないので norank。
   //   【v1.0541】ラベルは「オプ」を外す。英字が続くものはハイフンを入れて読みやすくする（PR-CTR）。
-  { key:'prCost',   label:'PR実績額',     hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'y', store:true, blockStart:true },
-  { key:'prRatio',  label:'PR費用率',     hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'p', store:true, norank:true },
+  { key:'prCost',   label:'PR実績額',     hbg:'#cfe7d8', bg:'#eef8f2', hi:false, t:'y', store:true, blockStart:true, split:true },
   // 【v1.0547】PR実績額の内訳。7％は全商品にかかる下限なので「動かせない分」、その上が「7％超にしている分」。
   //   norank:true＝色分けしない（多い/少ないの良否を断定できないため。判断はPR費用率と売上ROASで行う）
   { key:'prBase',   label:'PR実績額(7%相当)', hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'y', store:true, norank:true },
@@ -8937,14 +8936,14 @@ const MI_COLS = [
   // 【v1.0547】検算列。既定は非表示（ツールバーの「検算列」で表示）。
   { key:'prEffRate', label:'実効料率(税抜)',      hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
   { key:'prSetRate', label:'設定料率(加重平均)',  hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
-  { key:'prImpr',   label:'PR表示回数',   hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
-  { key:'prClick',  label:'PRクリック数', hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'n', store:true, norank:true },
-  { key:'prCtr',    label:'PR-CTR',       hbg:'#e9f5ec', bg:'#f7fcf9', hi:true,  t:'p', store:true, norank:true },
+  // 【v1.0554】PR費用率 / PR表示回数 / PRクリック数 / PR-CTR の4列は撤去。
+  //   ★ データ自体は state.daily.pr と各行（prRatio / prImpr / prClick / prCtr）に残してある。
+  //     戻したくなったら、ここに定義を書き戻すだけでよい（パース・集計側は無変更）。
   // --- 広告 ---
-  { key:'adSales',  label:'広告売上',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'y', blockStart:true },
-  { key:'spend',    label:'広告実績額',  hbg:'#fbeeda', bg:'#fdf8f0', hi:false, t:'y' },
-  { key:'cvr',      label:'広告CVR',     hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'p' },
-  { key:'roas',     label:'広告ROAS',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'p' },
+  { key:'adSales',  label:'広告売上',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'y', blockStart:true, split:true },
+  { key:'spend',    label:'広告実績額',  hbg:'#f6dcc0', bg:'#fdf4e8', hi:false, t:'y', split:true },
+  { key:'cvr',      label:'広告CVR',     hbg:'#fde7cd', bg:'#fdf9f2', hi:true,  t:'p', split:true },
+  { key:'roas',     label:'広告ROAS',    hbg:'#f8e0c6', bg:'#fdf6ec', hi:true,  t:'p', split:true },
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
 function itemCols() { return MI_COLS.filter(c => !c.store); }
@@ -8955,8 +8954,29 @@ let _zdVerify = false;
 // 【v1.0552】既定ON（この表の主目的が「7%と7%超の比較」になったため）。
 let _zdSplit = true;
 const ZD_SPLIT_KEYS = ['seoSales', 'prCost', 'adSales', 'spend', 'cvr', 'roas'];
+// 【v1.0555】料率別の内訳は「3行に分ける」のをやめ、**同じ指標の3つを横並びの列**にする。
+//   1行＝1ヶ月（1日）に戻したほうが月どうしの比較がしやすく、
+//   同じ属性（合計 / 7% / 7%超）が隣り合っていれば差もそのまま読める。
+//   色は指標ごとに同系色で、合計 → 7% → 7%超 の順に薄くしてグループが一目で分かるようにする。
+//   ★【v1.0556】見出しも本体セルも「左が濃く → 中くらい → 薄い」の3段階にする。
+//     濃さの順がそのまま 合計 → -7% → -7%超 の順になるので、どの列がどのグループか色だけで分かる。
+//     hLight＝見出しの薄め具合／bLight＝本体セルの薄め具合（どちらも見出し色を白へ寄せて作る）。
+const ZD_GRP_DEFS = [
+  { grp: null,   suffix: '',      hLight: 0,    bLight: 0.25 },
+  { grp: 'low',  suffix: '-7%',   hLight: 0.24, bLight: 0.55 },
+  { grp: 'high', suffix: '-7%超', hLight: 0.48, bLight: 0.82 }
+];
+// 色を白に寄せる（t=0でそのまま、t=1で白）。同系色の濃淡を作るため。
+function _zdLighten(hex, t) {
+  const h = String(hex || '').replace('#', '');
+  if (h.length !== 6) return hex;
+  const n = parseInt(h, 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  r = Math.round(r + (255 - r) * t); g = Math.round(g + (255 - g) * t); b = Math.round(b + (255 - b) * t);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
 function zdCols() {
-  return MI_COLS.filter(c => {
+  const base = MI_COLS.filter(c => {
     if (c.verify && !_zdVerify) return false;
     // 分割モード中は「PR実績額(7%相当)/(7%超)」を隠す。
     //   あちらは総額分解（全商品にかかる7%分 vs 上乗せ分）、こちらは商品グループ別で、
@@ -8964,6 +8984,30 @@ function zdCols() {
     if (_zdSplit && (c.key === 'prBase' || c.key === 'prOver')) return false;
     return true;
   });
+  if (!_zdSplit) return base.map(c => Object.assign({ id: c.key, grp: null }, c));
+  const out = [];
+  base.forEach(c => {
+    if (!c.split) { out.push(Object.assign({ id: c.key, grp: null }, c)); return; }
+    ZD_GRP_DEFS.forEach((g, gi) => {
+      out.push(Object.assign({}, c, {
+        id: c.key + (g.grp ? '__' + g.grp : ''),
+        grp: g.grp,
+        label: c.label + g.suffix,
+        hbg: g.hLight ? _zdLighten(c.hbg, g.hLight) : c.hbg,
+        bg:  _zdLighten(c.hbg, g.bLight),            // 本体も見出し色から作り、左ほど濃くする
+        blockStart: !!c.blockStart && gi === 0,     // ブロック境界は家族の先頭だけ
+        famStart: gi === 0,                          // 指標のまとまりの先頭（中太の区切り）
+        famLast: gi === ZD_GRP_DEFS.length - 1
+      }));
+    });
+  });
+  return out;
+}
+// 行から列の値を取り出す（grp 付きの列は r.grp[low|high] から）
+function _zdValOf(r, c) {
+  if (!c.grp) return r[c.key];
+  const g = r && r.grp && r.grp[c.grp];
+  return g ? g[c.key] : null;
 }
 function _zdSetSplitUI() {
   const base = 'font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;';
@@ -9916,26 +9960,15 @@ function downloadZenMonthlyCsv() {
     const numP = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v * 10) / 10); };
     // 【v1.0524】売上ROASは画面表示のみ。CSVの列構成は従来どおり据え置く（出力にも入れたくなったらこの filter を外すだけ）。
     // 【v1.0537】PR列は含める（この表はストア全体のため）／【v1.0547】検算列は画面の表示状態に合わせる
-    const csvCols = MI_COLS.filter(function (c) { return c.key !== 'salesRoas' && (!c.verify || _zdVerify); });
-    const header = ['月'].concat(_zdSplit ? ['内訳'] : []).concat(csvCols.map(function (c) { return c.label; })).concat(['送り込み売上']);
+    const csvCols = zdCols().filter(function (c) { return c.key !== 'salesRoas'; });
+    const header = ['月'].concat(csvCols.map(function (c) { return c.label; })).concat(['送り込み売上']);
     const lines = [header.join(',')];
     drows.forEach(function (r) {
-      // 【v1.0551】料率別モードのときは 合計 / 7% / 7%超 の3行で出す
-      const subs = (_zdSplit && r.grp)
-        ? [{ label: '合計', src: r }, { label: '7%', src: r.grp.low }, { label: '7%超', src: r.grp.high }]
-        : [{ label: '', src: r }];
-      subs.forEach(function (sub, si) {
-        const row = [r.month || r.label];
-        if (_zdSplit && r.grp) row.push(sub.label);
-        csvCols.forEach(function (c) {
-          const isSplit = ZD_SPLIT_KEYS.indexOf(c.key) >= 0;
-          const v = (si === 0 || !isSplit) ? r[c.key] : sub.src[c.key];
-          if (si > 0 && !isSplit) { row.push(''); return; }      // 分割しない列は合計行にだけ値を出す
-          row.push(c.t === 'p' ? numP(v) : numY(v));
-        });
-        row.push(si === 0 ? numY(r.soikomi) : '');
-        lines.push(row.map(esc).join(','));
-      });
+      // 【v1.0555】料率別の列も含めて1行で出す（画面と同じ並び）
+      const row = [r.month || r.label];
+      csvCols.forEach(function (c) { const v = _zdValOf(r, c); row.push(c.t === 'p' ? numP(v) : numY(v)); });
+      row.push(numY(r.soikomi));
+      lines.push(row.map(esc).join(','));
     });
     const csv = '﻿' + lines.join('\r\n');   // BOM付き＝Excelで文字化けしない
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -10128,8 +10161,8 @@ function renderGraphData() {
   const _zdCols = zdCols();                     // 【v1.0547】検算列の表示/非表示を反映した列リスト
   _zdSetVerifyUI();
   _zdSetSplitUI();
-  const _splitOn = _zdSplit;                                        // 【v1.0551】合計/7%/7%超 の3行モード
-  const _zdColCount = 1 + (_splitOn ? 1 : 0) + _zdCols.length + 1;  // 月 [+内訳] + 指標列 + 送り込み売上
+  const _splitOn = _zdSplit;                       // 【v1.0555】料率別の列（合計/7%/7%超）を出すか
+  const _zdColCount = 1 + _zdCols.length + 1;      // 月 + 指標列 + 送り込み売上
   const asc = _dayMode ? _zenDailyRowsFor(_rangeDays || []) : _zenMonthlyRows();
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
   // 【v1.0530】色分けの母集団。
@@ -10137,7 +10170,8 @@ function renderGraphData() {
   //   日別: 取り込んだ日はすべて確定済みなので全日を母集団に入れる。
   //         ここで最後の1日を外していたため、最新日が母集団に無い値となり必ず濃青になっていた。
   const _rankPoolRows = _dayMode ? asc : asc.slice(0, -1);
-  const pool = {}; _zdCols.forEach(c => { pool[c.key] = _rankPoolRows.map(r => r[c.key]).filter(v => v > 0); });
+  // 【v1.0555】色分けの母集団は「その列」ごと。合計列・7%列・7%超列はそれぞれ別の母集団で評価する。
+  const pool = {}; _zdCols.forEach(c => { pool[c.id] = _rankPoolRows.map(r => _zdValOf(r, c)).filter(v => v > 0); });
   // 【v1.0405】送り込み売上列（子商品の月次売上合計）。色は他列と別（紫系）。
   const SOI_HBG = '#ece0fb', SOI_BG = '#f7f1fe', SOI_BORDER = '2px solid #c4b5fd';
   const soiPool = _rankPoolRows.map(r => r.soikomi).filter(v => v > 0);   // 【v1.0530】日別は全日を母集団に
@@ -10145,15 +10179,35 @@ function renderGraphData() {
   const fmtP = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
   const fmtN = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   // 【v1.0537】回数系（表示回数・CL）
   const BLK = '2px solid var(--border2)';   // 【v1.0537】SEO / PRオプ / 広告 のブロック境界線
-  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
-    + (_splitOn ? '<th style="position:sticky;top:0;z-index:5;padding:9px 8px;text-align:center;background:var(--bg3);border-bottom:2px solid var(--border);font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">内訳</th>' : '')   /* 【v1.0551】 */
-    + _zdCols.map(c => '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + 'font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + c.label + '</th>').join('')
+  // 【v1.0553】列と列の間にも細い縦罫線を入れる（横罫線だけだと横方向に目がすべるため）。
+  //   ★ 次の列がブロック先頭（border-left が太い BLK）のときは、自分の右罫線を出さない。
+  //     1px + 2px が並んで境界だけ太く見えるのを防ぐ。最終列の右は 送り込み売上 の太い区切りが来るので同様。
+  const VBD = '1px solid var(--border)';
+  const _zdNoRight = (ci) => {
+    const nx = _zdCols[ci + 1];
+    return nx ? !!nx.blockStart : true;   // 最終列の次は「送り込み売上」（太い区切りあり）
+  };
+  const _vb = (ci) => (_zdNoRight(ci) ? '' : 'border-right:' + VBD + ';');
+  // 【v1.0555】指標のまとまり（合計/7%/7%超）の先頭には、列罫線より少し濃い区切りを入れる。
+  //   ブロック境界（SEO/PR/広告）の太線が付く列には重ねない。
+  const FAM = '1px solid #b9c2cf';
+  const _famL = (c) => (c.famStart && !c.blockStart ? 'border-left:' + FAM + ';' : '');
+  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:0.82rem;color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
+    + _zdCols.map((c, ci) => {
+        // 【v1.0555】「-7%」「-7%超」の接尾辞は色を変えて、どの列がどのグループか一目で分かるようにする
+        let lab = escapeHtml(c.label);
+        if (c.grp === 'low')  lab = escapeHtml(c.label.replace('-7%', '')) + '<span style="color:#64748b">-7%</span>';
+        if (c.grp === 'high') lab = escapeHtml(c.label.replace('-7%超', '')) + '<span style="color:#15803d">-7%超</span>';
+        return '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);'
+          + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + _vb(ci)
+          + 'font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + lab + '</th>';
+      }).join('')
     + '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const desc = asc.slice().reverse();
   // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
   const drows = (!_dayMode && _zdMode === 'yoy') ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
-  // 【v1.0551】1セルの中身。色分けは「合計」行だけに付ける（内訳行は母集団が違うので相対色を出さない）。
+  // 【v1.0551/v1.0555】1セルの中身。列（合計 / 7% / 7%超）ごとに、その列の母集団で色を付ける。
   const TDBASE = 'padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
   function _zdCellHtml(c, v, o) {
     const opt = o || {};
@@ -10163,55 +10217,28 @@ function renderGraphData() {
       inner = (v == null)
         ? '<span style="color:var(--text3)" title="PRオプション実績が未取込のため算出できません（総売上÷(広告実績額＋PR実績額)）">—</span>'
         : salesRoasCellHtml(v);
-    } else if (c.norank || opt.noColor) {
-      // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）／【v1.0551】内訳行も同様
+    } else if (c.norank) {
+      // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）
       inner = (c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v));
     } else {
       const disp = c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v);
       const _nc = opt.unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
-      inner = (v == null || !v || v === 0 || _nc) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+      inner = (v == null || !v || v === 0 || _nc) ? disp : '<span class="c-' + _zenRank5(v, pool[c.id], c.hi) + '">' + disp + '</span>';
     }
-    return '<td' + (opt.rowspan ? ' rowspan="' + opt.rowspan + '"' : '') + ' style="' + TDBASE + 'background:' + c.bg + ';border-bottom:1px solid var(--border);'
-      + (c.blockStart ? 'border-left:' + BLK + ';' : '') + 'white-space:nowrap;' + (opt.dim ? 'color:var(--text2);' : '') + (opt.bT || '') + '">' + inner + '</td>';
+    return '<td style="' + TDBASE + 'background:' + c.bg + ';border-bottom:1px solid var(--border);'
+      + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + (opt.vb || '')   /* 【v1.0553】縦罫線 */
+      + 'white-space:nowrap;' + (opt.bT || '') + '">' + inner + '</td>';
   }
   const body = drows.map(r => {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
-    const _ymCell = (rs) => '<td' + (rs ? ' rowspan="' + rs + '"' : '') + ' style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle;' + bT + '">' + r.label + '</td>';
+    const _ymCell = '<td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
     const sv = r.soikomi; const sdisp = fmtY(sv);
     const sinner = (!sv || sv === 0 || _unmatured) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
-    const _soiCell = (rs) => '<td' + (rs ? ' rowspan="' + rs + '"' : '') + ' style="' + TDBASE + 'background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle;' + bT + '">' + sinner + '</td>';
-
-    let _rowHtml;
-    if (!_splitOn || !r.grp) {
-      const cells = _zdCols.map(c => _zdCellHtml(c, r[c.key], { unmatured: _unmatured, bT: bT })).join('');
-      _rowHtml = '<tr>' + _ymCell() + cells + _soiCell() + '</tr>';
-    } else {
-      // 【v1.0551】合計 / 7% / 7%超 の3行。分割しない列は rowspan=3 で月の行をまたぐ。
-      const SUBS = [
-        { key: 'all',  label: '合計',  src: r,          dim: false },
-        { key: 'low',  label: '7%',    src: r.grp.low,  dim: true  },
-        { key: 'high', label: '7%超',  src: r.grp.high, dim: true  }
-      ];
-      _rowHtml = SUBS.map((sub, si) => {
-        const first = si === 0;
-        const sbT = first ? bT : '';
-        const lab = '<td style="padding:4px 8px;text-align:center;font-size:0.76rem;font-weight:700;white-space:nowrap;background:'
-          + (first ? 'var(--bg3)' : '#f8fafc') + ';color:' + (first ? 'var(--text2)' : (sub.key === 'high' ? '#15803d' : '#64748b'))
-          + ';border-bottom:1px solid var(--border);' + sbT + '">' + sub.label + '</td>';
-        const cells = _zdCols.map(c => {
-          const isSplit = ZD_SPLIT_KEYS.indexOf(c.key) >= 0;
-          if (!isSplit) {
-            if (!first) return '';                               // rowspan=3 で1行目だけ出す
-            return _zdCellHtml(c, r[c.key], { unmatured: _unmatured, bT: sbT, rowspan: 3 });
-          }
-          const v = first ? r[c.key] : sub.src[c.key];
-          return _zdCellHtml(c, v, { unmatured: _unmatured, bT: sbT, noColor: !first, dim: !first });
-        }).join('');
-        return '<tr>' + (first ? _ymCell(3) : '') + lab + cells + (first ? _soiCell(3) : '') + '</tr>';
-      }).join('');
-    }
+    const _soiCell = '<td style="' + TDBASE + 'background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
+    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci) })).join('');
+    let _rowHtml = '<tr>' + _ymCell + cells + _soiCell + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
     return _rowHtml;
@@ -10286,13 +10313,6 @@ function renderGraphData() {
     + '<div class="zd-pl-title">PRオプションの列について</div>'
     + '<table class="zd-pl-table">'
     + '<tr><th>PR実績額</th><td>その日（月）に実際に発生したPRオプション費用。PRオプションレポートの「広告費」の実値をそのまま使っています。</td></tr>'
-    + '<tr><th>PR費用率</th><td><b>PR実績額 ÷ PRオプションレポートの「売上」× 100</b>。'
-    +   '売上に対してPR費が<b>どれくらい重かったか</b>。金額だけだと売上規模の大きい月ほど大きくなるので、'
-    +   '規模の違う月どうしを比べられます（PR費が増えたのに売上が比例して伸びていない月を見つけやすい）。<br>'
-    +   '<b>設定している「PRオプ料率」（最低7％）とは一致しません</b>。'
-    +   'このレポートの分母は<b>税込</b>売上、実際のPR費用は<b>税抜</b>売上基準のためです。</td></tr>'
-    + '<tr><th>PR表示回数<br>PRクリック数</th><td>PRオプション枠が表示された回数と、クリックされた回数（レポートの「全体表示回数」「全体クリック数」）。</td></tr>'
-    + '<tr><th>PR-CTR</th><td><b>PRクリック数 ÷ PR表示回数 × 100</b>。表示のうち何％がクリックされたか。レポートには無いのでYcheck側で計算しています。</td></tr>'
     + '<tr><th>PR実績額<br>(7%相当)</th><td><b>PRオプションレポートの売上 ÷ ' + PR_TAX_DIV + '（税抜へ割り戻し）× ' + PR_BASE_RATE_PCT + '%</b>。'
     +   '全商品に最低' + PR_BASE_RATE_PCT + '％がかかるので、<b>どうやっても発生する分</b>です。ここは削れません。</td></tr>'
     + '<tr><th>PR実績額<br>(7%超)</th><td><b>PR実績額 −  PR実績額(7%相当)</b>。'
@@ -10300,28 +10320,29 @@ function renderGraphData() {
     +   '商品別のPR実績額はYahooから取得できませんが、<b>実績額 ＝ ' + PR_BASE_RATE_PCT + '％×税抜売上合計 ＋ Σ(税抜売上×(料率−' + PR_BASE_RATE_PCT + '％))</b> と分解できるので、'
     +   '総額だけでこの2つには分けられます。<b>マイナスになる場合は前提が崩れている</b>ので「—」にしています。</td></tr>'
     + '</table>'
-    + '<div class="zd-pl-roles"><b>3つの指標の役割分担</b>'
+    + '<div class="zd-pl-roles"><b>指標の役割分担</b>'
     +   '<div class="zd-pl-exrow"><b>PR実績額</b>　… いくら払ったか（絶対額）</div>'
-    +   '<div class="zd-pl-exrow"><b>PR費用率</b>　… 売上に対してどれくらい重かったか（相対額）</div>'
+    +   '<div class="zd-pl-exrow"><b>PR実績額(7%相当) / (7%超)</b>　… そのうち「どうやっても出る分」と「7%超にしている分」</div>'
     +   '<div class="zd-pl-exrow"><b>売上ROAS</b>　… 広告費＋PR費をまとめた全体効率</div>'
     + '</div>'
-    + '<div class="zd-pl-foot">月別の <b>PR費用率</b> と <b>PR-CTR</b> は、日別の％を平均したものではありません。'
+    + '<div class="zd-pl-foot">月別の％系（検算列の実効料率など）は、日別の％を平均したものではありません。'
     + '<b>月間の合計値から計算し直しています</b>（例: 月間PR実績額 ÷ 月間レポート売上 × 100）。日数の少ない日に引っ張られないようにするためです。</div>'
     + '</div>';
   // 【v1.0551】料率別モードの説明
   let _splitNote = '';
   if (_splitOn) {
     _splitNote = '<div class="zd-pr-note" style="background:#f1faf4;border-color:#a7d8bb">'
-      + '<b>料率別の内訳（合計 / 7% / 7%超）</b>：⑤ <code>data*.csv</code> の<b>設定PRオプ料率</b>で商品を2グループに分けて集計しています。'
+      + '<b>料率別の内訳（○○ / ○○-7% / ○○-7%超）</b>：⑤ <code>data*.csv</code> の<b>設定PRオプ料率</b>で商品を2グループに分けて集計しています。'
       + '<b>7%</b>＝料率が下限の7%（＋⑤に載っていない商品）／<b>7%超</b>＝7%より高い料率にしている商品。<br>'
-      + '分けている列は <b>SEO売上・PR実績額・広告売上・広告実績額・広告CVR・広告ROAS</b> の6つです。'
-      + '売上ROAS・総売上・PR費用率・PR表示回数・PRクリック数・PR-CTR・送り込み売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
+      + '分けている列は <b>SEO売上・PR実績額・広告売上・広告実績額・広告CVR・広告ROAS</b> の6つで、'
+      + '<b>同じ指標の「合計／-7%／-7%超」を隣り合わせ・同系色</b>で並べています（薄いほど絞り込んだグループ）。'
+      + '売上ROAS・総売上・送り込み売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
       + '<b>PR実績額</b>の内訳は、各商品の「売上×設定料率」の比で<b>実績額（総額）を割り振ったもの</b>です。'
       + '推定で絶対額を作らないよう、2行の合計は必ず実績額と一致します。<br>'
-      + '<b>②商品別売上（item_report）が無い月は、内訳が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計行はストア全体の月次から出せるので値が入ります）。<br>'
+      + '<b>②商品別売上（item_report）が無い月は、-7% / -7%超 の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
       + '<span style="color:var(--text3)">※設定料率は<b>いまの値</b>のスナップショットなので、過去の月に当てると当時の料率とはズレます（参考値）。'
-      + '※内訳行は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」行とわずかに差が出ることがあります。'
-      + '※内訳行は色分けしていません（相対評価の母集団が合計行と違うため）。</span>'
+      + '※-7% / -7%超 は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」列とわずかに差が出ることがあります。'
+      + '※色分けは<b>列ごと</b>です（合計列・7%列・7%超列はそれぞれ自分の列の中で月どうしを比べています）。</span>'
       + '</div>';
   }
   // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
@@ -10330,7 +10351,7 @@ function renderGraphData() {
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
     + '<b>広告実績額とPR実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
-    + '<br><b>PR費用率・PR表示回数・PRクリック数・PR-CTR</b> は高ければ良いとは限らないため、色分けせず<b>表示のみ</b>です。'
+    + '<br><b>PR実績額(7%相当) / (7%超)</b> は高ければ良いとは限らないため、色分けせず<b>表示のみ</b>です。'
     + '<br><b>売上ROAS</b>だけは相対評価ではなく決まったしきい値（' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤）で色が付きます。'
     + '<br><b>売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額）× 100</b>。'
     + 'PRオプション実績が取り込めていない期間は、費用の一部が欠けて実際より高く出てしまうため <b>「—」（算出不可）</b> にしています。'
