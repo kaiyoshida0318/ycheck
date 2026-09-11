@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0564 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0565 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0564</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0565</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9041,7 +9041,10 @@ function _zdValOf(r, c) {
 //       → _recalcStickyTops()（リサイズ・文字サイズ変更で走る）からも呼び、ResizeObserver でも追従させる。
 //     ・小数を丸めると 1px 未満の隙間からデータが透けるので、実測値をそのまま使う。
 let _zdHeadRO = null;
-function _zdFixHeadSticky(wrap) {
+// 【v1.0565】★この関数はもう使わない（thead ごと sticky にしたので段ごとの位置合わせが不要）。
+//   _recalcStickyTops() から呼ばれる口だけ残してあるので、何もせず戻る。
+function _zdFixHeadSticky() { return; }
+function _zdFixHeadStickyLegacy(wrap) {
   try {
     const w = wrap || document.getElementById('zdTableWrap');
     if (!w) return;
@@ -10265,9 +10268,13 @@ function renderGraphData() {
     else { _zdGroups.push({ start: i, len: 1 }); i += 1; }
   }
   const _twoRow = _zdGroups.some(g => g.len > 1);
-  const _thBase = 'position:sticky;z-index:5;padding:' + ZD_TH_PAD + ';border-bottom:2px solid var(--border);font-size:' + ZD_TH_FS + ';font-weight:700;color:var(--text2);white-space:nowrap;';
+  // 【v1.0565】th 個別の sticky はやめ、<thead> ごと固定する（下の wrap.innerHTML を参照）。
+  //   2段見出しを th 個別に固定すると「2段目を1段目の高さぶん下げる」計算が必要になり、
+  //   その高さの測り方でv1.0560〜v1.0564と繰り返し事故った（隙間からデータ行が透ける）。
+  //   thead ごと動かせば2段は必ずくっついたまま動くので、計算そのものが要らなくなる。
+  const _thBase = 'padding:' + ZD_TH_PAD + ';border-bottom:2px solid var(--border);font-size:' + ZD_TH_FS + ';font-weight:700;color:var(--text2);white-space:nowrap;';
 
-  let _h1 = '<th' + (_twoRow ? ' rowspan="2"' : '') + ' style="position:sticky;top:0;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3);vertical-align:middle">' + (_dayMode ? '日' : '月') + '</th>';   /* 【v1.0527】 */
+  let _h1 = '<th' + (_twoRow ? ' rowspan="2"' : '') + ' style="position:sticky;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3);vertical-align:middle">' + (_dayMode ? '日' : '月') + '</th>';   /* 【v1.0527】左固定だけ。上固定は thead 側【v1.0565】 */
   let _h2 = '';
   _zdGroups.forEach(g => {
     const c = _zdCols[g.start];
@@ -10275,12 +10282,12 @@ function renderGraphData() {
     const lastIdx = g.start + g.len - 1;
     const leftBd = (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c));
     if (g.len === 1) {
-      _h1 += '<th' + (_twoRow ? ' rowspan="2"' : '') + ' style="' + _thBase + 'top:0;text-align:right;background:' + c.hbg + ';'
+      _h1 += '<th' + (_twoRow ? ' rowspan="2"' : '') + ' style="' + _thBase + 'text-align:right;background:' + c.hbg + ';'
         + leftBd + _vb(lastIdx) + 'vertical-align:middle">' + escapeHtml(c.label) + '</th>';
       return;
     }
     // 1段目＝指標名をまとめて1セル（色はその指標の一番濃い色）
-    _h1 += '<th colspan="' + g.len + '" style="' + _thBase + 'top:0;text-align:center;background:' + c.hbg + ';'
+    _h1 += '<th colspan="' + g.len + '" style="' + _thBase + 'text-align:center;background:' + c.hbg + ';'
       + leftBd + _vb(lastIdx) + '">' + escapeHtml(c.famLabel || c.label) + '</th>';
     // 2段目＝合計 / 7%超 / 7%
     for (let k = 0; k < g.len; k++) {
@@ -10455,8 +10462,11 @@ function renderGraphData() {
   const _helpHtml = _zdHelp
     ? ('<div class="zd-help-panel">' + _partialNote + _prNote + _prVerifyNote + _splitNote + _prLegend + _legend + '</div>')
     : '';
-  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%">\n<thead>' + HEAD + '</thead><tbody>' + body + '</tbody></table>' + _helpHtml;
-  _zdFixHeadSticky(wrap);   // 【v1.0560】見出し2段目の sticky top を1段目の実高さに合わせる
+  // 【v1.0565】見出しは <thead> ごと固定する。2段が必ずセットで動くので、段ごとの位置計算が要らない。
+  //   ★ border-collapse:collapse のままだと、sticky な thead の背景が一部ブラウザで消えることがある。
+  //     そこで separate + border-spacing:0 にし、罫線は各セルの border だけで描く（見た目は従来どおり）。
+  wrap.innerHTML = '<table style="border-collapse:separate;border-spacing:0;width:100%">\n'
+    + '<thead style="position:sticky;top:0;z-index:5">' + HEAD + '</thead><tbody>' + body + '</tbody></table>' + _helpHtml;
   requestAnimationFrame(_zdFitTableHeight);   // 【v1.0513】描画後に表の高さを画面下端まで合わせる
 }
 
