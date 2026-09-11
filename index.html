@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0572 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0573 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0572</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0573</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9009,10 +9009,16 @@ function _zdLighten(hex, t) {
 //   例) 2026/09/10: 売上 55,950 / 実績額 9,200
 //       7%相当 = 55,950 ÷ 1.1 × 7% = 3,560 ／ 超過分 = 9,200 − 3,560 = 5,640
 //   ★ 変種ごとに参照する行のキーが違う（prCost / prBase / prOver）ので、grp ではなく key を差し替える。
+//   【v1.0573】並び・ラベルを他の指標に合わせる。
+//     位置  : 合計 → 超過分 → 7%相当（他の指標の 合計 → 7%超 → 7% と同じ位置関係）
+//     3段目 : 「7%超」「7%」（他の指標と同じ見出し）
+//     2段目 : 「上げている分」「最低ライン」（PR特有の意味はここで示す）
+//     ★ 3段目の表記は他と同じでも中身は別物（他＝商品グループ別 / PR＝総額の引き算）。
+//       取り違えないよう、CSVに出る label だけは (7%超ぶん) / (7%相当) と書き分けている。
 const PR_SPLIT_DEFS = [
-  { key: 'prCost', suffix: '',         short: '合計',   role: '',           hLight: 0,    bLight: 0.25 },
-  { key: 'prBase', suffix: '(7%相当)', short: '7%相当', role: '最低ライン', hLight: 0.24, bLight: 0.55 },
-  { key: 'prOver', suffix: '(超過分)', short: '超過分', role: '上げている分', hLight: 0.48, bLight: 0.82 }
+  { key: 'prCost', suffix: '',          short: '合計',  role: '',             hLight: 0,    bLight: 0.25 },
+  { key: 'prOver', suffix: '(7%超ぶん)', short: '7%超', role: '上げている分', hLight: 0.24, bLight: 0.55 },
+  { key: 'prBase', suffix: '(7%相当)',   short: '7%',   role: '最低ライン',   hLight: 0.48, bLight: 0.82 }
 ];
 
 function zdCols() {
@@ -10508,8 +10514,8 @@ function renderGraphData() {
       + '<b>比率表記</b>を「あり」にすると、金額の下に<b>合計に対する構成比</b>が出ます（-7%超 ＋ -7% ＝ 100%）。'
       + '広告CVR・広告ROASのような率の列には出しません（構成比に意味が無いため）。<br>'
       + '<b>PR実績額だけは内訳の意味が違います。</b>商品別のPR実績額はYahooから取得できないので、'
-      + 'レポートの売上と実績額から直接出せる <b>7%相当</b>（＝売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%。全商品に最低料率がかかる、どうやっても出る分）と、'
-      + '<b>超過分</b>（＝実績額 − 7%相当。7%より高い料率にしていることで余分に出ている分）に分けています。'
+      + 'レポートの売上と実績額から直接出せる <b>7%（最低ライン）</b>（＝売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%。全商品に最低料率がかかる、どうやっても出る分）と、'
+      + '<b>7%超（上げている分）</b>（＝実績額 − 7%相当。7%より高い料率にしていることで余分に出ている分）に分けています。'
       + 'こちらは按分ではなく<b>引き算だけ</b>なので推定が入りません。<br>'
       + '<b>②商品別売上（item_report）が無い月は、-7%超 / -7% の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
       + '<span style="color:var(--text3)">※設定料率は<b>いまの値</b>のスナップショットなので、過去の月に当てると当時の料率とはズレます（参考値）。'
