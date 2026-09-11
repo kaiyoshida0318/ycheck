@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0549 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0550 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -457,14 +457,11 @@ body.chrome-hidden .top-nav-3 { top: 0; }
    【v1.0549】states-collapsed ＝ ユーザーが「ヘッダー2を隠す」で手動で畳んだ状態（全ビュー共通）。
    ★ #btnToggleChrome / #btnToggleStates だけは必ず残す。
      これらが消えると、隠したヘッダーを元に戻す手段が画面から無くなるため。 */
-body.states-hidden .top-nav-3 .nav-group-status > *:not(#btnToggleChrome):not(#btnToggleStates),
-body.states-collapsed .top-nav-3 .nav-group-status > *:not(#btnToggleChrome):not(#btnToggleStates) { display: none; }
-body.states-hidden .top-nav-3 .nav-row-states,
-body.states-collapsed .top-nav-3 .nav-row-states { display: none; }
+/* 【v1.0550】開閉ボタンを各行の右端（ヘッダー1＝【調整】行／ヘッダー2＝【PR状態】行）へ移したので、
+   畳むときは段ごと消してよくなった（v1.0549までは復帰ボタンを残すため細い帯が残っていた）。
+   隠している間の復帰は、下の #hdrRestoreBar（細い帯）が受け持つ。 */
 body.states-hidden .top-nav-3,
-body.states-collapsed .top-nav-3 { padding-top: 4px; padding-bottom: 4px; }
-body.states-hidden .top-nav-3 .nav-group-status,
-body.states-collapsed .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
+body.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -507,10 +504,20 @@ body.states-collapsed .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
 /* 【v200】【入札状態】＋【PR状態】を1行に横並び。溢れたら折り返し。 */
 .nav-row-states { display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 4px; width: 100%; }
 .nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
-/* 【v202】ヘッダーを隠すボタンは【ステータス】行の右端へ */
-.nav-group-status #btnToggleChrome { margin-left: auto; white-space: nowrap; }
-/* 【v1.0549】ヘッダー2（この行）のトグル。ヘッダー1のボタンの右隣に並べる。 */
-.nav-group-status #btnToggleStates { margin-left: 6px; white-space: nowrap; }
+/* 【v202/v1.0549/v1.0550】ヘッダー開閉ボタンの位置。
+   ヘッダー1 …【調整】【対応検討】の行（.top-nav-2）の右端
+   ヘッダー2 …【PR状態】の行（.nav-states-prrow）の右端 */
+.top-nav-2 > #btnToggleChrome { margin-left: auto; white-space: nowrap; align-self: center; }
+/* 【v1.0550】【PR状態】グループと開閉ボタンを必ず同じ1行（全幅）に置くためのラッパー。
+   .nav-row-states は flex-wrap なので、ラッパー無しだとボタンだけ別行に落ちることがある。 */
+.nav-states-prrow { display: flex; align-items: center; gap: 6px; width: 100%; }
+.nav-states-prrow > #btnToggleStates { margin-left: auto; white-space: nowrap; }
+/* 【v1.0550】ヘッダーを隠している間だけ出る復帰バー（右端に「◯を表示」ボタン） */
+.hdr-restore-bar {
+  position: sticky; top: 0; z-index: 98;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 3px 20px; display: flex; justify-content: flex-end; align-items: center; gap: 6px;
+}
 /* 【v197/v200】チップのグループ区切り（縦線） */
 .top-nav-3 .chip-sep { flex: 0 0 auto; width: 2px; height: 22px; align-self: center; background: #8b94a3; border-radius: 1px; margin: 0 4px; }
 /* 【v200】入札状態⇔PR状態の境目は少し高く濃い区切り */
@@ -3066,7 +3073,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0549</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0550</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3131,6 +3138,9 @@ th.col-sroas { background-color:#cfe0f7; }
     <span class="nav-group-label g-taiou">【対応検討】</span>
     <a class="nav-tab nav-tab-link" data-view="review-sales4" href="?view=review-sales4">総売上-直近4ヶ月分</a>
   </div>
+  <!-- 【v1.0550】ヘッダー1（上部バー＋タブ2段）の開閉。この行の右端に置く。
+       隠している間はこのボタンごと消えるので、復帰は #hdrRestoreBar が受け持つ。 -->
+  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ2段（【基本】【全体】【取得データ】【調整】【対応検討】）を隠します">🔼 ヘッダー1を隠す</button>
 </nav>
 
 <!-- Third row: ステータス（上）＋状態（下） -->
@@ -3150,12 +3160,8 @@ th.col-sroas { background-color:#cfe0f7; }
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
-    <!-- 【v202/v1.0549】ヘッダーの開閉トグル。【ステータス】行の右端に2つ並べる。
-         ヘッダー1 ＝ 上部バー（ロゴ・GitHub連携など）＋タブ2段（【基本】〜【対応検討】）
-         ヘッダー2 ＝ この行（【ステータス】【入札状態】【PR状態】）
-         ★ この2つのボタンだけは、どちらを隠しても消さない（元に戻す手段が無くなるため）。 -->
-    <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ2段（【基本】【全体】【取得データ】【調整】【対応検討】）を隠します">🔼 ヘッダー1を隠す</button>
-    <button class="btn sm ghost" id="btnToggleStates" type="button" title="この行（【ステータス】【入札状態】【PR状態】）を隠します">🔼 ヘッダー2を隠す</button>
+    <!-- 【v1.0550】開閉ボタンはここから移設。
+         ヘッダー1 →【調整】行（.top-nav-2）の右端 ／ ヘッダー2 →【PR状態】行の右端 -->
   </div>
   <!-- 【v200】【入札状態】＋【PR状態】を1行に横並び。 -->
   <div class="nav-row-states">
@@ -3172,7 +3178,8 @@ th.col-sroas { background-color:#cfe0f7; }
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     </div>
-    <!-- 【PR状態】ブロック。 -->
+    <!-- 【PR状態】ブロック。【v1.0550】ヘッダー2の開閉ボタンと同じ行に収めるためラッパーで包む。 -->
+    <div class="nav-states-prrow">
     <div class="nav-group nav-group-jotai nav-group-pr">
       <span class="nav-group-label g-pr">【PR状態】</span>
       <button class="state-chip" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
@@ -3188,8 +3195,19 @@ th.col-sroas { background-color:#cfe0f7; }
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     </div>
+    <!-- 【v1.0550】ヘッダー2（【ステータス】【入札状態】【PR状態】の3行）の開閉。この行の右端に置く。 -->
+    <button class="btn sm ghost" id="btnToggleStates" type="button" title="【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー2を隠す</button>
+    </div>
   </div>
 </nav>
+
+<!-- 【v1.0550】ヘッダーを隠している間だけ出る復帰バー。
+     開閉ボタンを各行の中に置いたため、畳むとボタンごと消える。その復帰口をここで用意する。
+     隠しているものが無いときは display:none で場所を取らない。 -->
+<div class="hdr-restore-bar" id="hdrRestoreBar" style="display:none">
+  <button class="btn sm ghost" id="btnRestoreChrome" type="button" style="display:none">🔽 ヘッダー1を表示</button>
+  <button class="btn sm ghost" id="btnRestoreStates" type="button" style="display:none">🔽 ヘッダー2を表示</button>
+</div>
 
 <!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
 <div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
@@ -4444,7 +4462,9 @@ function _recalcStickyTops() {
     if (vis(header)) t += header.getBoundingClientRect().height;
     if (n1) { n1.style.top = t + 'px'; if (vis(n1)) t += n1.getBoundingClientRect().height; }
     if (n2) { n2.style.top = t + 'px'; if (vis(n2)) t += n2.getBoundingClientRect().height; }
-    if (n3) { n3.style.top = t + 'px'; }
+    if (n3) { n3.style.top = t + 'px'; if (vis(n3)) t += n3.getBoundingClientRect().height; }   // 【v1.0550】復帰バーを下に積むため高さを加算
+    const rb = document.getElementById('hdrRestoreBar');
+    if (rb) { rb.style.top = t + 'px'; }
   } catch (e) {}
   _zdFitTableHeight();
 }
@@ -12508,9 +12528,9 @@ function updateStateBarVisibility() {
   try {
     const show = STATE_BAR_VIEWS.indexOf(state.currentView) >= 0 || !!state.activeStateFilter;
     document.body.classList.toggle('states-hidden', !show);
-    // 【v1.0549】自動非表示のビューでは「ヘッダー2を隠す」ボタンも出さない（押しても変化が無いため）
-    const _b2 = document.getElementById('btnToggleStates');
-    if (_b2) _b2.style.display = show ? '' : 'none';
+    // 【v1.0550】ボタンは段の中に入ったので、段ごと消えれば一緒に消える。
+    //   復帰バーの出し分け（自動非表示中は「ヘッダー2を表示」を出さない）だけ更新する。
+    if (typeof applyHeaderCollapse === 'function') applyHeaderCollapse();
     // 段の高さが変わる＝sticky の top を積み直す必要がある（_recalcStickyTops は実高さから計算する）
     if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);
   } catch (e) {}
@@ -15018,14 +15038,19 @@ function _hdrCollapseSave() {
 function applyHeaderCollapse() {
   document.body.classList.toggle('chrome-hidden', !!_hdrCollapse.h1);
   document.body.classList.toggle('states-collapsed', !!_hdrCollapse.h2);
-  const b1 = document.getElementById('btnToggleChrome');
-  const b2 = document.getElementById('btnToggleStates');
-  if (b1) b1.textContent = _hdrCollapse.h1 ? '🔽 ヘッダー1を表示' : '🔼 ヘッダー1を隠す';
-  if (b2) {
-    b2.textContent = _hdrCollapse.h2 ? '🔽 ヘッダー2を表示' : '🔼 ヘッダー2を隠す';
-    // 【v1.0548】の自動非表示（このビューでは状態チップを使わない）中は、押しても意味が無いのでボタンごと出さない
-    b2.style.display = document.body.classList.contains('states-hidden') ? 'none' : '';
-  }
+  // 【v1.0550】隠している間の復帰口。
+  //   ・ヘッダー1 … 隠していれば常に出す
+  //   ・ヘッダー2 … 「ユーザーが畳んだ」ときだけ出す。§16の自動非表示（このビューでは状態チップを使わない）
+  //     で消えているだけの場合は、出しても押す意味が無いので出さない。
+  const autoHidden = document.body.classList.contains('states-hidden');
+  const r1 = document.getElementById('btnRestoreChrome');
+  const r2 = document.getElementById('btnRestoreStates');
+  const bar = document.getElementById('hdrRestoreBar');
+  const show1 = !!_hdrCollapse.h1;
+  const show2 = !!_hdrCollapse.h2 && !autoHidden;
+  if (r1) r1.style.display = show1 ? '' : 'none';
+  if (r2) r2.style.display = show2 ? '' : 'none';
+  if (bar) bar.style.display = (show1 || show2) ? '' : 'none';
   if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
   // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
   if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
@@ -15033,10 +15058,9 @@ function applyHeaderCollapse() {
 _hdrCollapseLoad();
 applyHeaderCollapse();
 {
-  const b1 = $('#btnToggleChrome');
-  if (b1) b1.addEventListener('click', () => { _hdrCollapse.h1 = !_hdrCollapse.h1; _hdrCollapseSave(); applyHeaderCollapse(); });
-  const b2 = $('#btnToggleStates');
-  if (b2) b2.addEventListener('click', () => { _hdrCollapse.h2 = !_hdrCollapse.h2; _hdrCollapseSave(); applyHeaderCollapse(); });
+  const _toggle = (k) => { _hdrCollapse[k] = !_hdrCollapse[k]; _hdrCollapseSave(); applyHeaderCollapse(); };
+  ['#btnToggleChrome', '#btnRestoreChrome'].forEach(sel => { const e = $(sel); if (e) e.addEventListener('click', () => _toggle('h1')); });
+  ['#btnToggleStates', '#btnRestoreStates'].forEach(sel => { const e = $(sel); if (e) e.addEventListener('click', () => _toggle('h2')); });
 }
 
 // ==================== 【v125/v126】代表コード絞り込み ====================
