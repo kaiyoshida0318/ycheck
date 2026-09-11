@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0548 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0549 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -448,20 +448,23 @@ body {
 body.chrome-hidden .header,
 body.chrome-hidden .top-nav:not(.top-nav-3) { display: none; }
 body.chrome-hidden .top-nav-3 { top: 0; }
-/* 【v1.0511】ヘッダーを隠したら【ステータス】【入札状態】【PR状態】ブロックのボタンも全部隠し、
-   「ヘッダーを表示」ボタンだけを右端(位置そのまま)に残す。各ページのツールバーは従来どおり表示。 */
-body.chrome-hidden .top-nav-3 .nav-group-status > *:not(#btnToggleChrome) { display: none; }
-body.chrome-hidden .top-nav-3 .nav-row-states { display: none; }
-body.chrome-hidden .top-nav-3 { border-bottom: none; padding-top: 4px; padding-bottom: 4px; }
-body.chrome-hidden .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
+/* 【v1.0511】ヘッダーを隠したときは【ステータス】行も一緒に畳んでいた。
+   【v1.0549】ヘッダー1／ヘッダー2を独立させたので、この連動は廃止。
+   ヘッダー1＝上部バー＋タブ2段 だけを隠し、状態チップ行（ヘッダー2）はそのまま残す。
+   両方消したいときは「ヘッダー2を隠す」も押す。 */
 /* 【v1.0548】状態チップ行（【ステータス】【入札状態】【PR状態】）は
-   「商品-基本データ」と【調整】でだけ出す。他のビューでは縦のスペースを空けるために隠す。
-   ★ #btnToggleChrome（🔼 ヘッダーを隠す）だけは必ず残す。
-     chrome-hidden 中にこれが消えると、ヘッダーを元に戻す手段が画面から無くなるため。 */
-body.states-hidden .top-nav-3 .nav-group-status > *:not(#btnToggleChrome) { display: none; }
-body.states-hidden .top-nav-3 .nav-row-states { display: none; }
-body.states-hidden .top-nav-3 { padding-top: 4px; padding-bottom: 4px; }
-body.states-hidden .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
+   「商品-基本データ」と【調整】でだけ出す（自動）。他のビューでは縦のスペースを空けるために隠す。
+   【v1.0549】states-collapsed ＝ ユーザーが「ヘッダー2を隠す」で手動で畳んだ状態（全ビュー共通）。
+   ★ #btnToggleChrome / #btnToggleStates だけは必ず残す。
+     これらが消えると、隠したヘッダーを元に戻す手段が画面から無くなるため。 */
+body.states-hidden .top-nav-3 .nav-group-status > *:not(#btnToggleChrome):not(#btnToggleStates),
+body.states-collapsed .top-nav-3 .nav-group-status > *:not(#btnToggleChrome):not(#btnToggleStates) { display: none; }
+body.states-hidden .top-nav-3 .nav-row-states,
+body.states-collapsed .top-nav-3 .nav-row-states { display: none; }
+body.states-hidden .top-nav-3,
+body.states-collapsed .top-nav-3 { padding-top: 4px; padding-bottom: 4px; }
+body.states-hidden .top-nav-3 .nav-group-status,
+body.states-collapsed .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -506,6 +509,8 @@ body.states-hidden .top-nav-3 .nav-group-status { width: 100%; margin: 0; }
 .nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
 /* 【v202】ヘッダーを隠すボタンは【ステータス】行の右端へ */
 .nav-group-status #btnToggleChrome { margin-left: auto; white-space: nowrap; }
+/* 【v1.0549】ヘッダー2（この行）のトグル。ヘッダー1のボタンの右隣に並べる。 */
+.nav-group-status #btnToggleStates { margin-left: 6px; white-space: nowrap; }
 /* 【v197/v200】チップのグループ区切り（縦線） */
 .top-nav-3 .chip-sep { flex: 0 0 auto; width: 2px; height: 22px; align-self: center; background: #8b94a3; border-radius: 1px; margin: 0 4px; }
 /* 【v200】入札状態⇔PR状態の境目は少し高く濃い区切り */
@@ -3061,7 +3066,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0548</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0549</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3145,8 +3150,12 @@ th.col-sroas { background-color:#cfe0f7; }
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
-    <!-- 【v202】ヘッダーを隠すトグル。【ステータス】行の右端に配置。押すと【ステータス】より上を隠す。 -->
-    <button class="btn sm ghost" id="btnToggleChrome" type="button" title="ヘッダー＋上段ナビを隠して【ステータス】を最上部にします">🔼 ヘッダーを隠す</button>
+    <!-- 【v202/v1.0549】ヘッダーの開閉トグル。【ステータス】行の右端に2つ並べる。
+         ヘッダー1 ＝ 上部バー（ロゴ・GitHub連携など）＋タブ2段（【基本】〜【対応検討】）
+         ヘッダー2 ＝ この行（【ステータス】【入札状態】【PR状態】）
+         ★ この2つのボタンだけは、どちらを隠しても消さない（元に戻す手段が無くなるため）。 -->
+    <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ2段（【基本】【全体】【取得データ】【調整】【対応検討】）を隠します">🔼 ヘッダー1を隠す</button>
+    <button class="btn sm ghost" id="btnToggleStates" type="button" title="この行（【ステータス】【入札状態】【PR状態】）を隠します">🔼 ヘッダー2を隠す</button>
   </div>
   <!-- 【v200】【入札状態】＋【PR状態】を1行に横並び。 -->
   <div class="nav-row-states">
@@ -12499,6 +12508,9 @@ function updateStateBarVisibility() {
   try {
     const show = STATE_BAR_VIEWS.indexOf(state.currentView) >= 0 || !!state.activeStateFilter;
     document.body.classList.toggle('states-hidden', !show);
+    // 【v1.0549】自動非表示のビューでは「ヘッダー2を隠す」ボタンも出さない（押しても変化が無いため）
+    const _b2 = document.getElementById('btnToggleStates');
+    if (_b2) _b2.style.display = show ? '' : 'none';
     // 段の高さが変わる＝sticky の top を積み直す必要がある（_recalcStickyTops は実高さから計算する）
     if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);
   } catch (e) {}
@@ -14987,16 +14999,44 @@ if (codeMigrateModal) {
 }
 $('#btnJumpCodeMigrate').addEventListener('click', openCodeMigrateModal);
 
-// 【v231】「ヘッダーを隠す」トグル: ヘッダー＋上段ナビ（【調整】以上）を隠す／戻す
-const btnToggleChrome = $('#btnToggleChrome');
-if (btnToggleChrome) {
-  btnToggleChrome.addEventListener('click', () => {
-    const hidden = document.body.classList.toggle('chrome-hidden');
-    btnToggleChrome.textContent = hidden ? '🔽 ヘッダーを表示' : '🔼 ヘッダーを隠す';
-    if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
-    // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
-    if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
-  });
+// 【v231/v1.0549】ヘッダーの開閉トグル。上下2つに分けた。
+//   ヘッダー1 (body.chrome-hidden)   … 上部バー ＋ タブ2段（【基本】【全体】【取得データ】/【調整】【対応検討】）
+//   ヘッダー2 (body.states-collapsed) … 【ステータス】【入札状態】【PR状態】の行
+//   ★ どちらを隠しても、2つのトグルボタン自体は必ず画面に残す（元に戻せなくなるため）。
+//   ★ 開閉状態は端末ごと（localStorage）に覚える。画面サイズがPCごとに違うので viewPrefs（GitHub同期）には載せない。
+const HDR_COLLAPSE_KEY = 'ycheck_header_collapse_v1';
+let _hdrCollapse = { h1: false, h2: false };
+function _hdrCollapseLoad() {
+  try {
+    const o = JSON.parse(localStorage.getItem(HDR_COLLAPSE_KEY) || 'null');
+    if (o && typeof o === 'object') _hdrCollapse = { h1: !!o.h1, h2: !!o.h2 };
+  } catch (e) {}
+}
+function _hdrCollapseSave() {
+  try { localStorage.setItem(HDR_COLLAPSE_KEY, JSON.stringify(_hdrCollapse)); } catch (e) {}
+}
+function applyHeaderCollapse() {
+  document.body.classList.toggle('chrome-hidden', !!_hdrCollapse.h1);
+  document.body.classList.toggle('states-collapsed', !!_hdrCollapse.h2);
+  const b1 = document.getElementById('btnToggleChrome');
+  const b2 = document.getElementById('btnToggleStates');
+  if (b1) b1.textContent = _hdrCollapse.h1 ? '🔽 ヘッダー1を表示' : '🔼 ヘッダー1を隠す';
+  if (b2) {
+    b2.textContent = _hdrCollapse.h2 ? '🔽 ヘッダー2を表示' : '🔼 ヘッダー2を隠す';
+    // 【v1.0548】の自動非表示（このビューでは状態チップを使わない）中は、押しても意味が無いのでボタンごと出さない
+    b2.style.display = document.body.classList.contains('states-hidden') ? 'none' : '';
+  }
+  if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
+  // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
+  if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
+}
+_hdrCollapseLoad();
+applyHeaderCollapse();
+{
+  const b1 = $('#btnToggleChrome');
+  if (b1) b1.addEventListener('click', () => { _hdrCollapse.h1 = !_hdrCollapse.h1; _hdrCollapseSave(); applyHeaderCollapse(); });
+  const b2 = $('#btnToggleStates');
+  if (b2) b2.addEventListener('click', () => { _hdrCollapse.h2 = !_hdrCollapse.h2; _hdrCollapseSave(); applyHeaderCollapse(); });
 }
 
 // ==================== 【v125/v126】代表コード絞り込み ====================
