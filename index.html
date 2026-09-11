@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0569 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0570 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0569</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0570</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3566,6 +3566,7 @@ th.col-sroas { background-color:#cfe0f7; }
           <span id="zdColorLegend" style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
             <span class="filter-label" title="同じ列の中で月（日）どうしを比べた相対評価です。詳しくは「❓ 説明」の「色の意味」を参照">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
+            <span id="zdColorScope" style="color:var(--text3)">（直近1年）</span>
           </span>
           <!-- 【v1.0521】この表の表示内容をCSV出力（右端配置） -->
           <!-- 【v1.0552】表の周りの説明文はここを押したときだけ出す（既定は畳む） -->
@@ -10249,6 +10250,8 @@ function renderGraphData() {
   _zdSetVerifyUI();
   _zdSetSplitUI();
   _zdSetRatioUI();
+  // 【v1.0570】配色の母集団を凡例に出す（月別＝直近1年／日別＝表示中の期間）
+  { const _cs = document.getElementById('zdColorScope'); if (_cs) _cs.textContent = _dayMode ? '（表示中の期間）' : '（直近1年）'; }
   const _splitOn = _zdSplit;                       // 【v1.0555】料率別の列（合計/7%/7%超）を出すか
   const _zdColCount = 1 + _zdCols.length;          // 月 + 指標列（【v1.0562】送り込み売上は撤去）
   const asc = _dayMode ? _zenDailyRowsFor(_rangeDays || []) : _zenMonthlyRows();
@@ -10257,7 +10260,11 @@ function renderGraphData() {
   //   月別: 当月＝未満了なので最後の1件（＝最新月）を外す（従来どおり）。
   //   日別: 取り込んだ日はすべて確定済みなので全日を母集団に入れる。
   //         ここで最後の1日を外していたため、最新日が母集団に無い値となり必ず濃青になっていた。
-  const _rankPoolRows = _dayMode ? asc : asc.slice(0, -1);
+  // 【v1.0570】月別の母集団は「直近1年」に限定する。
+  //   2年以上前の月まで母集団に入れると、店の規模が変わっている時期と比べることになり、
+  //   直近の月が実態より良く／悪く見える。当月（未満了）を外したうえで、そこから12ヶ月ぶんを使う。
+  const RANK_MONTHS = 12;
+  const _rankPoolRows = _dayMode ? asc : asc.slice(0, -1).slice(-RANK_MONTHS);
   // 【v1.0555】色分けの母集団は「その列」ごと。合計列・7%列・7%超列はそれぞれ別の母集団で評価する。
   const pool = {}; _zdCols.forEach(c => { pool[c.id] = _rankPoolRows.map(r => _zdValOf(r, c)).filter(v => v > 0); });
   const fmtY = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
@@ -10492,7 +10499,10 @@ function renderGraphData() {
   }
   // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
   const _legend = '<div class="zd-color-legend">'
-    + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（' + (_dayMode ? '表示中の期間の全日' : '表示中の全月') + 'が母集団）。'
+    + '<b>色の意味</b>：同じ列の中での<b>相対評価</b>です（'
+    + (_dayMode ? '表示中の期間の全日' : '<b>直近1年</b>＝当月を除いた満了済みの最大' + RANK_MONTHS + 'ヶ月')
+    + 'が母集団）。'
+    + (_dayMode ? '' : 'それより古い月は表示はされますが、色を決める比較には入れていません（店の規模が違う時期と比べると、直近の月が実態より良く／悪く見えるため）。')
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
     + '<b>広告実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
