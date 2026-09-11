@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0574 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0576 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0574</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0576</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8850,7 +8850,16 @@ function _miSetDayYm(v) { _miDayYm = v; renderMonthly(); }
 //   狙い＝「その商品に使っている広告費が、店全体の売上に対して効率的か」を見る。
 //   ycheck には CA調整（別枠の広告費）の概念が無いので caSpend は常に 0。
 //   ※ しきい値・色はここだけ触れば全画面に反映される（商材や広告比率に合わせて調整する前提）。
-const SALES_ROAS_TH = { g: 800, y: 500, o: 200 };   // 緑/茶/橙 の下限（これ未満は赤）
+// 【v1.0576】実データ（2026/05〜09）に合わせて見直した。
+//   旧: { g:800, y:500, o:200 } … v1.0564で分母からPR費を外して値が約2倍になり、ほぼ全部が緑になっていた。
+//   新: 売上ROAS＝総売上÷広告実績額 なので「広告費の何倍を売り上げたか」。9倍/7.5倍/6倍を境にする。
+//     実測 829 / 897 / 910 / 963 / 978% → 茶・茶・緑・緑・緑 と差が出る。
+const SALES_ROAS_TH = { g: 900, y: 750, o: 600 };   // 緑/茶/橙 の下限（これ未満は赤）
+// 【v1.0576】PR売上ROAS＝総売上÷(広告実績額＋PR実績額) 用。
+//   この店はPR費が広告費と同規模〜やや多いため、分母がおよそ2倍になる。
+//   同じ判断軸で読めるよう、しきい値も売上ROASのちょうど半分にしてある。
+//   実測 369 / 393 / 398 / 403 / 632% → 橙・茶・茶・茶・緑。
+const PR_SALES_ROAS_TH = { g: 450, y: 375, o: 300 };
 const SALES_ROAS_COLORS = { g:'#1D9E75', y:'#BA7517', o:'#ED7D31', r:'#A32D2D', n:'#9ca3af' };
 // 売上ROAS(%)を整数で返す。広告費0＝分母0は計算不能なので null（表示は「—」）。
 function salesRoasPct(totSales, adSpend, caSpend) {
@@ -8861,15 +8870,16 @@ function salesRoasPct(totSales, adSpend, caSpend) {
 // 値 → 5段階カテゴリ（g:非常に良い / y:良好 / o:平均的 / r:要注意 / n:対象外）
 function salesRoasCat(v) {
   if (!(v > 0)) return 'n';
-  if (v >= SALES_ROAS_TH.g) return 'g';
-  if (v >= SALES_ROAS_TH.y) return 'y';
-  if (v >= SALES_ROAS_TH.o) return 'o';
+  const _th = (arguments.length > 1 && arguments[1]) ? arguments[1] : SALES_ROAS_TH;   // 【v1.0576】列ごとに別のしきい値を渡せる
+  if (v >= _th.g) return 'g';
+  if (v >= _th.y) return 'y';
+  if (v >= _th.o) return 'o';
   return 'r';
 }
 // セル中身のHTML（色付き数値 / 対象外は「—」）
-function salesRoasCellHtml(v) {
+function salesRoasCellHtml(v, th) {
   if (v == null || !(v > 0)) return '<span style="color:' + SALES_ROAS_COLORS.n + '">—</span>';
-  return '<span style="color:' + SALES_ROAS_COLORS[salesRoasCat(v)] + ';font-weight:700">' + Math.round(v).toLocaleString() + '%</span>';
+  return '<span style="color:' + SALES_ROAS_COLORS[salesRoasCat(v, th)] + ';font-weight:700">' + Math.round(v).toLocaleString() + '%</span>';
 }
 // 【v1.0537】★ストア全体の売上ROAS（全-日月別データ専用）
 //   売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100
@@ -8957,13 +8967,22 @@ const MI_COLS = [
   { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
   // --- 効率（藍。ROAS系をまとめて右端に） ---
   //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
-  { key:'salesRoas', label:'売上ROAS', hbg:'#c7d7f5', bg:'#edf2fc', hi:true,  t:'sr', blockStart:true },
   // 【v1.0574】PRオプション（青緑）は「7%より高い料率にしていることで余分に出ている分」だけを1列で出す。
   //   合計（実績額そのもの）と 7%相当（最低ライン）の列は撤去。判断に使うのは上乗せ分だけなので。
   //     PR実績額(7%超) ＝ 実績額 − レポート売上 ÷ PR_TAX_DIV × PR_BASE_RATE_PCT%
   //   ★ 合計・7%相当は行の prCost / prBase に残っているので、列に戻したくなればここに足すだけでよい。
   //   費用なので hi:false（小さいほど青）。前提が崩れた期間（超過分が負）は prOver が null ＝「—」。
-  { key:'prOver',    label:'PR実績額(7%超)', hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true },
+  //   【v1.0575】売上ROASの左へ移動。見出しは hLabel で2行にする。
+  { key:'prOver',    label:'PR実績額(7%超)', hLabel:'PR実績額<br>(7%超)', hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true },
+  { key:'salesRoas', label:'売上ROAS', hbg:'#c7d7f5', bg:'#edf2fc', hi:true,  t:'sr' },
+  // 【v1.0575】PR売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額）× 100。
+  //   売上ROAS（＝総売上÷広告実績額）に対して、PRオプ費も費用に入れたときの効率。並べて見ると
+  //   「広告だけなら◯◯%、PR費まで入れると△△%」が一目で分かる。色はどちらも同じ絶対しきい値（t:'sr'）。
+  //   ★ PR実績が揃っていない期間は storeSalesRoasPct が null を返す（§4-B-6）＝「—」。
+  //     費用の一部が欠けたまま計算すると実際より高く出てしまうため、0円扱いにはしない。
+  { key:'prSalesRoas', label:'PR売上ROAS', hbg:'#bcd0ef', bg:'#e8eefb', hi:true, t:'sr',
+    th: PR_SALES_ROAS_TH,   // 【v1.0576】分母が大きいぶん、売上ROASの半分のしきい値で見る
+    srNote:'PRオプション実績が未取込のため算出できません（PR売上ROAS＝総売上÷(広告実績額＋PR実績額)×100）' },
   { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', split:true },
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
@@ -9852,6 +9871,8 @@ function _zenMonthlyRows() {
       //   PR実績額の列を撤去した（v1.0562）ので、商品別画面と同じ定義に統一する。
       //   ★これで「画面によって分母が違う」問題が無くなり、PR未取込でも「—」にならない。
       salesRoas: salesRoasPct(rev, adCost, 0),
+      // 【v1.0575】PR売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100。PR未取込の月は null（＝「—」）。
+      prSalesRoas: storeSalesRoasPct(rev, adCost, _pa ? _pa.cost : 0, _prComplete),
       prCost:  _pa ? _pa.cost : null,
       prRatio: _pa ? _pa.ratio : null,     // 月間PRオプ実績額 ÷ 月間PRレポート売上 × 100
       prImpr:  _pa ? _pa.imprAll : null,
@@ -10031,6 +10052,7 @@ function _zenDailyRowsFor(days) {
     return {
       month: d, label: (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)),
       salesRoas: salesRoasPct(rev, adCost, 0),   // 【v1.0564】総売上 ÷ 広告実績額（§3-1と同じ定義）
+      prSalesRoas: storeSalesRoasPct(rev, adCost, _pr ? _pr.cost : 0, !!_pr),   // 【v1.0575】PR費込みの効率
       prCost:  _pr ? _pr.cost : null,
       prRatio: _pr ? _pr.ratio : null,
       prImpr:  _pr ? _pr.imprAll : null,
@@ -10351,7 +10373,7 @@ function renderGraphData() {
     const leftBd = (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c));
     if (g.len === 1) {
       _h1 += '<th' + _rs + ' style="' + _thBase + 'text-align:center;background:' + c.hbg + ';'
-        + leftBd + _vb(lastIdx) + 'vertical-align:middle">' + escapeHtml(c.label) + '</th>';
+        + leftBd + _vb(lastIdx) + 'vertical-align:middle">' + (c.hLabel || escapeHtml(c.label)) + '</th>';   /* 【v1.0575】hLabel があれば2行見出し */
       return;
     }
     // 1段目＝指標名をまとめて1セル（色はその指標の一番濃い色）
@@ -10389,8 +10411,8 @@ function renderGraphData() {
     if (c.t === 'sr') {
       // 【v1.0537】売上ROASは絶対しきい値で色付け。PR実績が揃っていない期間は null（＝算出不可）で「—」。
       inner = (v == null)
-        ? '<span style="color:var(--text3)" title="広告実績額が0のため算出できません（売上ROAS＝総売上÷広告実績額×100）">—</span>'
-        : salesRoasCellHtml(v);
+        ? '<span style="color:var(--text3)" title="' + (c.srNote || '広告実績額が0のため算出できません（売上ROAS＝総売上÷広告実績額×100）') + '">—</span>'
+        : salesRoasCellHtml(v, c.th);   /* 【v1.0576】列ごとのしきい値（未指定なら SALES_ROAS_TH） */
     } else if (c.norank) {
       // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）
       inner = (c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v));
@@ -10539,7 +10561,13 @@ function renderGraphData() {
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
     + '<b>広告実績額とPR実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
-    + '<br><b>売上ROAS</b>だけは相対評価ではなく決まったしきい値（' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤）で色が付きます。'
+    + '<br><b>売上ROAS と PR売上ROAS</b> だけは相対評価ではなく、決まったしきい値で色が付きます（他の月との比較ではありません）。'
+    + '<br>　<b>売上ROAS</b>：' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤'
+    + '<br>　<b>PR売上ROAS</b>：' + PR_SALES_ROAS_TH.g + '％以上＝緑／' + PR_SALES_ROAS_TH.y + '〜' + PR_SALES_ROAS_TH.g + '＝茶／' + PR_SALES_ROAS_TH.o + '〜' + PR_SALES_ROAS_TH.y + '＝橙／' + PR_SALES_ROAS_TH.o + '％未満＝赤'
+    + '（PR費のぶん分母が大きくなるので、しきい値も売上ROASの半分にしてあります。同じ色なら同じ評価として読めます）'
+    + '<br><b>PR売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額）× 100</b>【v1.0575】。'
+    + '売上ROASの隣に置いてあるので、「広告だけなら◯◯%、PR費まで入れると△△%」が並べて読めます。'
+    + 'PRオプション実績が取り込めていない期間は、費用の一部が欠けて実際より高く出てしまうため <b>「—」</b> にしています。'
     + '<br><b>売上ROAS ＝ 総売上 ÷ 広告実績額 × 100</b>【v1.0564】。'
     + '広告経由に限らない<b>店全体の売上</b>を、その月に使った<b>広告費</b>で割った効率です。商品-基本データ・商品-日月別データと同じ定義です。'
     + '広告実績額が0の期間は割り算ができないため <b>「—」</b> になります。'
