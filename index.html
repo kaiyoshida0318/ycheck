@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0556 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0558 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0556</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0558</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8918,32 +8918,41 @@ function _syncSroasFilterUI() {
 //   norank:true … ランク色分けをしない（表示のみ）。
 //   色: SEO＝既存のグリーン／PRオプ＝SEOと同系統だが少し薄い／広告＝別系統(オレンジ)でPRと同程度の薄さ
 // ============================================================================
+// 【v1.0558】並びと配色を整理。
+//   並び: 総売上 → SEO → PRオプ → 広告(売上/実績額/CVR) → 効率(売上ROAS / 広告ROAS)
+//     ・ROAS系を右端にまとめた。「いくら売れて・いくら使ったか」を左から読み、最後に効率を見る流れ。
+//     ・売上ROAS は広告ROASの隣へ移動（v1.0557までは一番左）。
+//   配色: ブロックごとに色相を決め、その中で指標ごとに濃さを少し変える。
+//     売上=青 / SEO=緑 / PRオプ=青緑 / 広告=橙 / 効率(ROAS)=藍
+//     さらに料率別の3列（合計/-7%/-7%超）は ZD_GRP_DEFS で「濃→中→薄」になる（§4-D）。
 const MI_COLS = [
-  // --- 全体指標 ---
-  //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
-  { key:'salesRoas', label:'売上ROAS', hbg:'#cfe0f7', bg:'#eef4fb', hi:true,  t:'sr' },
+  // --- 売上（青） ---
   { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' },
-  // --- SEO ---
-  { key:'seoSales', label:'SEO売上',  hbg:'#dff0e3', bg:'#f1faf4', hi:true,  t:'y', blockStart:true, split:true },
-  // --- PRオプション（ストア全体の実績。SEOと同系統の少し薄い緑） ---
+  // --- SEO（緑） ---
+  { key:'seoSales', label:'SEO売上',  hbg:'#d3edd9', bg:'#f1faf4', hi:true,  t:'y', blockStart:true, split:true },
+  // --- PRオプション（ストア全体の実績。SEOの隣なので、緑より少し青寄りの緑で区別する） ---
   //   PRオプ実績額は費用なので hi:false（低い方が良い）。他のPR列は良否を断定できないので norank。
   //   【v1.0541】ラベルは「オプ」を外す。英字が続くものはハイフンを入れて読みやすくする（PR-CTR）。
-  { key:'prCost',   label:'PR実績額',     hbg:'#cfe7d8', bg:'#eef8f2', hi:false, t:'y', store:true, blockStart:true, split:true },
+  { key:'prCost',   label:'PR実績額',     hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true, split:true },
   // 【v1.0547】PR実績額の内訳。7％は全商品にかかる下限なので「動かせない分」、その上が「7％超にしている分」。
-  //   norank:true＝色分けしない（多い/少ないの良否を断定できないため。判断はPR費用率と売上ROASで行う）
-  { key:'prBase',   label:'PR実績額(7%相当)', hbg:'#e9f5ec', bg:'#f7fcf9', hi:false, t:'y', store:true, norank:true },
-  { key:'prOver',   label:'PR実績額(7%超)',   hbg:'#dff0e3', bg:'#f1faf4', hi:false, t:'y', store:true, norank:true },
+  //   norank:true＝色分けしない（多い/少ないの良否を断定できないため。判断は売上ROASで行う）
+  //   ※料率別モード（§4-D）のときは zdCols() が隠す
+  { key:'prBase',   label:'PR実績額(7%相当)', hbg:'#d3ebe3', bg:'#f3faf8', hi:false, t:'y', store:true, norank:true },
+  { key:'prOver',   label:'PR実績額(7%超)',   hbg:'#c7e7dc', bg:'#eff9f6', hi:false, t:'y', store:true, norank:true },
   // 【v1.0547】検算列。既定は非表示（ツールバーの「検算列」で表示）。
   { key:'prEffRate', label:'実効料率(税抜)',      hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
   { key:'prSetRate', label:'設定料率(加重平均)',  hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
   // 【v1.0554】PR費用率 / PR表示回数 / PRクリック数 / PR-CTR の4列は撤去。
   //   ★ データ自体は state.daily.pr と各行（prRatio / prImpr / prClick / prCtr）に残してある。
   //     戻したくなったら、ここに定義を書き戻すだけでよい（パース・集計側は無変更）。
-  // --- 広告 ---
-  { key:'adSales',  label:'広告売上',    hbg:'#fbeeda', bg:'#fdf8f0', hi:true,  t:'y', blockStart:true, split:true },
-  { key:'spend',    label:'広告実績額',  hbg:'#f6dcc0', bg:'#fdf4e8', hi:false, t:'y', split:true },
-  { key:'cvr',      label:'広告CVR',     hbg:'#fde7cd', bg:'#fdf9f2', hi:true,  t:'p', split:true },
-  { key:'roas',     label:'広告ROAS',    hbg:'#f8e0c6', bg:'#fdf6ec', hi:true,  t:'p', split:true },
+  // --- 広告（橙。売上→費用→CVR の順に少しずつ濃さを変える） ---
+  { key:'adSales',  label:'広告売上',    hbg:'#fbe3c4', bg:'#fdf6ec', hi:true,  t:'y', blockStart:true, split:true },
+  { key:'spend',    label:'広告実績額',  hbg:'#f2cfa2', bg:'#fdf1e2', hi:false, t:'y', split:true },
+  { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
+  // --- 効率（藍。ROAS系をまとめて右端に） ---
+  //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
+  { key:'salesRoas', label:'売上ROAS', hbg:'#c7d7f5', bg:'#edf2fc', hi:true,  t:'sr', blockStart:true },
+  { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', split:true },
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
 function itemCols() { return MI_COLS.filter(c => !c.store); }
@@ -10179,6 +10188,10 @@ function renderGraphData() {
   const fmtP = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
   const fmtN = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   // 【v1.0537】回数系（表示回数・CL）
   const BLK = '2px solid var(--border2)';   // 【v1.0537】SEO / PRオプ / 広告 のブロック境界線
+  // 【v1.0557】1画面に入る行数を増やすため、この表だけ文字と余白を詰める。
+  //   ここの4つを変えれば密度を調整できる（全体の文字サイズはヘッダーの A− / A+ で別途調整可）。
+  const ZD_TD_PAD = '3px 8px', ZD_TD_FS = '0.8rem';     // 本体セル（旧: 6px 12px / 0.9rem）
+  const ZD_TH_PAD = '5px 8px', ZD_TH_FS = '0.74rem';    // 見出し  （旧: 9px 12px / 0.82rem）
   // 【v1.0553】列と列の間にも細い縦罫線を入れる（横罫線だけだと横方向に目がすべるため）。
   //   ★ 次の列がブロック先頭（border-left が太い BLK）のときは、自分の右罫線を出さない。
   //     1px + 2px が並んで境界だけ太く見えるのを防ぐ。最終列の右は 送り込み売上 の太い区切りが来るので同様。
@@ -10192,23 +10205,23 @@ function renderGraphData() {
   //   ブロック境界（SEO/PR/広告）の太線が付く列には重ねない。
   const FAM = '1px solid #b9c2cf';
   const _famL = (c) => (c.famStart && !c.blockStart ? 'border-left:' + FAM + ';' : '');
-  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:9px 12px;text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:0.82rem;color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
+  const HEAD = '<th style="position:sticky;top:0;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:right;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
     + _zdCols.map((c, ci) => {
         // 【v1.0555】「-7%」「-7%超」の接尾辞は色を変えて、どの列がどのグループか一目で分かるようにする
         let lab = escapeHtml(c.label);
         if (c.grp === 'low')  lab = escapeHtml(c.label.replace('-7%', '')) + '<span style="color:#64748b">-7%</span>';
         if (c.grp === 'high') lab = escapeHtml(c.label.replace('-7%超', '')) + '<span style="color:#15803d">-7%超</span>';
-        return '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);'
+        return '<th style="position:sticky;top:0;z-index:5;padding:' + ZD_TH_PAD + ';text-align:right;background:' + c.hbg + ';border-bottom:2px solid var(--border);'
           + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + _vb(ci)
-          + 'font-size:0.82rem;font-weight:700;color:var(--text2);white-space:nowrap">' + lab + '</th>';
+          + 'font-size:' + ZD_TH_FS + ';font-weight:700;color:var(--text2);white-space:nowrap">' + lab + '</th>';
       }).join('')
-    + '<th style="position:sticky;top:0;z-index:5;padding:9px 12px;text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:0.82rem;font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
+    + '<th style="position:sticky;top:0;z-index:5;padding:' + ZD_TH_PAD + ';text-align:right;background:' + SOI_HBG + ';border-bottom:2px solid var(--border);border-left:' + SOI_BORDER + ';font-size:' + ZD_TH_FS + ';font-weight:700;color:#7c3aed;white-space:nowrap">送り込み売上</th>';
   const desc = asc.slice().reverse();
   // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
   const drows = (!_dayMode && _zdMode === 'yoy') ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   // 【v1.0551/v1.0555】1セルの中身。列（合計 / 7% / 7%超）ごとに、その列の母集団で色を付ける。
-  const TDBASE = 'padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
+  const TDBASE = 'padding:' + ZD_TD_PAD + ';text-align:right;font-size:' + ZD_TD_FS + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
   function _zdCellHtml(c, v, o) {
     const opt = o || {};
     let inner;
@@ -10233,7 +10246,7 @@ function renderGraphData() {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
-    const _ymCell = '<td style="padding:6px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
+    const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:right;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
     const sv = r.soikomi; const sdisp = fmtY(sv);
     const sinner = (!sv || sv === 0 || _unmatured) ? sdisp : '<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + sdisp + '</span>';
     const _soiCell = '<td style="' + TDBASE + 'background:' + SOI_BG + ';border-left:' + SOI_BORDER + ';border-bottom:1px solid var(--border);white-space:nowrap;' + bT + '">' + sinner + '</td>';
