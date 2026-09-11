@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0579 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0580 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1574,6 +1574,33 @@ th.col-pro, td.col-pro { background-color: #d7eede; }       /* PRオプ料率: �
 th.col-pro { background-color: #b9dfc6; }                   /* PRオプ料率: 濃いめグリーン(見出し) */
 th.col-bidonly, td.col-bidonly { background-color: #fbe7ca; } /* 入札価格: 濃いめオレンジ(淡) */
 th.col-bidonly { background-color: #f5cf96; }              /* 入札価格: 濃いめオレンジ(見出し) */
+/* ============================================================
+   【v1.0580】商品-基本データを「全-月別データ相当」にするために追加した列。
+   配色は MI_COLS（全-月別データ）とそろえてある。画面をまたいで同じ指標＝同じ色で読める。
+     広告実績額=ピンク / 広告CVR=淡橙 / PR実績額(7%超)=青緑 / 広告ROAS=藍 / 送り込み売上=紫
+   ============================================================ */
+th.col-spend, td.col-spend { background-color: #fdeff4; }   /* 広告実績額: ピンク(淡) */
+th.col-spend { background-color: #f6c9d7; }
+th.col-cvr,   td.col-cvr   { background-color: #fef8ef; }   /* 広告CVR: 淡橙 */
+th.col-cvr   { background-color: #fdeacd; }
+th.col-prov,  td.col-prov  { background-color: #eef8f5; }   /* PR実績額(7%超・推定): 青緑 */
+th.col-prov  { background-color: #bfe3d8; }
+th.col-aroas, td.col-aroas { background-color: #f1f1fd; }   /* 広告ROAS: 藍 */
+th.col-aroas { background-color: #d8d9f6; }
+th.col-soi,   td.col-soi   { background-color: #f6f0fe; border-left: 2px solid #c4b5fd; }  /* 送り込み売上: 紫 */
+th.col-soi   { background-color: #ece0fb; color: #7c3aed; border-left: 2px solid #c4b5fd; }
+td.col-soi   { color: #7c3aed; font-weight: 600; }
+/* 【v1.0580】推定値の列は数字を少し弱く出して、実測列と見分けられるようにする */
+td.est-val { font-style: italic; }
+th .th-est { font-size: 0.82em; font-weight: 600; color: #b45309; }
+.pr-grp-badge { display:inline-block; margin-left:5px; padding:1px 5px; border-radius:9px; font-size:0.72rem; font-weight:700; line-height:1.5; vertical-align:middle; }
+.pr-grp-badge.over { background:#dcfce7; color:#15803d; }   /* 7%超＝送り込み元 */
+.pr-grp-badge.base { background:#f1f5f9; color:#64748b; }   /* 7%＝利益源 */
+tr.row-child td.col-spend, tr.row-child:hover td.col-spend { background-color: #fdeff4; }
+tr.row-child td.col-cvr,   tr.row-child:hover td.col-cvr   { background-color: #fef8ef; }
+tr.row-child td.col-prov,  tr.row-child:hover td.col-prov  { background-color: #eef8f5; }
+tr.row-child td.col-aroas, tr.row-child:hover td.col-aroas { background-color: #f1f1fd; }
+tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #f6f0fe; }
 
 /* 【v187】主要テーブル（商品リスト・順位表）: 全ヘッダーは中央揃え。
    セルは 商品コード/商品名/メインKW/対応内容 のみ左寄せ（他は中央）。 */
@@ -3079,7 +3106,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0579</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0580</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3274,29 +3301,42 @@ th.col-sroas { background-color:#e7d5f5; }
           </span>
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
           <!-- 【v1.0522】いま画面に表示されている商品（ステータス絞り込み等を反映）を、選択月の列内容でCSV出力（右端配置） -->
-          <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（商品コード・商品名・メインKW・総売上・SEO売上・PRオプ料率・PRオプ状態・広告売上・実績額・広告ROAS・入札価格・入札状態・ステータス）でCSV出力します">⬇ このページをCSV出力</button>
+          <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（総売上・売上ROAS・PR売上ROAS(推定)・SEO売上・広告売上・広告実績額・広告CVR・PR実績額(7%超・推定)・広告ROAS・PRオプ料率・入札価格・送り込み売上＋参考としてメインKW／各状態）でCSV出力します">⬇ このページをCSV出力</button>
         </div>
         <!-- 【v1.0527】日選択中であることを明示するバナー -->
         <div id="basicDayBanner" class="day-banner" style="display:none"></div>
         <div class="table-wrap">
           <table id="tableBasic" class="data-grid">
+            <!-- ============================================================
+                 【v1.0580】商品-基本データを「全-月別データ相当」に作り直した。
+                   並び・配色とも 全-月別データ（MI_COLS）に合わせてある:
+                     総売上 → 売上ROAS → PR売上ROAS → SEO売上 → 広告売上 → 広告実績額
+                     → 広告CVR → PR実績額(7%超) → 広告ROAS
+                   その後ろに商品別だけの列（PRオプ料率・入札価格・送り込み売上）を置く。
+                 撤去: メインKW / PRオプ状態 / 入札状態 / ステータス
+                   ★状態の編集は【調整】画面（入札価格調整・PRオプ調整）で行う。
+                     上部の状態チップ行は絞り込み用に残してあるので、ここから飛べる。
+                   ★列を戻したくなったら、この thead と renderBasic の tr.innerHTML に
+                     kwCellHtml / statusSelectHtml('pro'|'ad'|'status') を書き戻すだけでよい（関数は残置）。
+                 ============================================================ -->
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
-              <th class="nosort" data-resize-key="kwBasic">メインKW</th>
-              <!-- 【v1.0524】売上ROAS＝総売上÷実績額×100。総売上の左に配置（広告ROAS＝広告売上÷広告費 とは別物なので注意） -->
-              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 実績額（広告費）× 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上ROAS</th>
               <th class="num col-total" data-sort="rev">総売上</th>
+              <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。総売上の右（全-月別データと同じ位置） -->
+              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上ROAS</th>
+              <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
+              <th class="num col-sroas" data-sort="prsroas" title="PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR売上ROAS<br><span class="th-est">(推定)</span></th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
-              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
-              <th class="num col-ad" data-sort="adCost">実績額</th>
-              <th class="num col-ad" data-sort="roas">広告ROAS</th>
+              <th class="num col-spend" data-sort="adCost">広告実績額</th>
+              <th class="num col-cvr" data-sort="cvr" title="広告CVR ＝ 広告注文数 ÷ 広告クリック数 × 100&#10;①広告詳細レポート由来。クリックが0の商品は「—」。">広告CVR</th>
+              <th class="num col-prov" data-sort="prOverEst" title="PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR実績額<br><span class="th-est">(7%超・推定)</span></th>
+              <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告ROAS</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
-              <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col" data-sort="status">ステータス</th>
+              <th class="num col-soi" data-sort="soikomi" title="送り込み売上 ＝ この商品を代表コードに指定している子商品の売上合計&#10;親商品は広告売上が総売上を上回ることがあるが、この列を足すと辻褄が合う。">送り込み売上</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -6825,6 +6865,47 @@ function prMonthAgg(ym) {
 //  ★ 仮定が崩れたときは黙って数字を出さない:
 //     ②が負になる＝税率か課金対象の前提が違う → over を null にして画面は「—」。
 //
+// ============================================================================
+// 【v1.0580】★商品別のPRオプ実績「推定」。実測ではない。
+//
+//   ④PRオプションレポートはストア全体の1日1行しか無く、商品別のPR実績額はYahooから取得できない（§1 / §4-B-1）。
+//   一方で商品-基本データでは「この商品の料率を上げ下げすべきか」を1行で判断したい。
+//   そこで⑤の**設定PRオプ料率**と、その商品の売上から推定額を出す。
+//
+//     税抜売上   = 総売上 ÷ PR_TAX_DIV
+//     PR実績額(推定)      = 税抜売上 × 料率%
+//     PR実績額(7%超・推定) = 税抜売上 × max(0, 料率 − 7)%
+//
+//   ★★ これは仕様書 §4-B-4 の「設定料率から実績額を推定してはいけない」に**あえて反している**。
+//      ストア全体の数字（＝④の実測がある場所）では絶対にやらないこと。商品別画面だけの割り切り。
+//      ズレる理由: 料率は「いまの値」のスナップショット（過去月に当てると当時の料率と違う）／
+//                  課金対象がYcheckの総売上と完全には一致しない／実費は税抜基準で端数処理も入る。
+//      → 画面では列名に「(推定)」を付け、数字を斜体にして実測列と区別する。
+//   ★ 料率が取得できない商品は null を返す（0%扱いにしない）。
+// ============================================================================
+function itemPrEstimate(code, rev) {
+  const rate = (typeof getProRate === 'function') ? getProRate(code) : null;
+  if (rate == null || isNaN(rate)) return null;
+  const r = Number(rate);
+  const taxEx = (+rev || 0) / PR_TAX_DIV;
+  if (!(taxEx > 0)) return { rate: r, cost: 0, base: 0, over: 0 };
+  return {
+    rate: r,
+    cost: taxEx * r / 100,
+    base: taxEx * PR_BASE_RATE_PCT / 100,
+    over: taxEx * Math.max(0, r - PR_BASE_RATE_PCT) / 100
+  };
+}
+// 商品別のPR売上ROAS(推定)＝総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。
+//   定義はストア全体版（storeSalesRoasPct・§4-B-6-4）と同じ。分母に入れるのは7%超ぶんだけ。
+//   ★料率が7%ちょうどの商品は上乗せ分が0なので、値は売上ROASと一致する（それが正しい）。
+function itemPrSalesRoasPct(code, rev, adCost) {
+  const e = itemPrEstimate(code, rev);
+  if (!e) return null;
+  const den = (+adCost || 0) + (e.over || 0);
+  if (!(den > 0)) return null;
+  return Math.round((+rev || 0) / den * 100);
+}
 const PR_BASE_RATE_PCT = 7;    // PRオプ料率の下限（％）。仕様変更されたらここだけ直す
 const PR_TAX_DIV       = 1.1;  // PRレポート売上(税込) → 課金対象(税抜) への割り戻し
 
@@ -7941,37 +8022,47 @@ function buildFullAggregate() {
   //   商品別の総売上（月次）が消えないようにするため。
   const _dmItem = dailyUsableMonths('item');   // 【v1.0536】部分取込の過去月は月次を守る
   const _dmAd = dailyUsableMonths('ad');
+  // 【v1.0580】商品-基本データを全-月別データ相当にするため、クリック数・注文数も積む（広告CVR用）
+  const _mk = (code, month) => ({ code: code, month: month, rev: 0, adCost: 0, adRev: 0, adClicks: 0, adOrders: 0, orders: 0 });
   (state.item || []).forEach(i => {
     if (_dmItem.has(i.month)) return;   // この月の商品別売上は日別合計で作る
     const key = i.code + '|' + i.month;
-    if (!agg[key]) agg[key] = { code: i.code, month: i.month, rev: 0, adCost: 0, adRev: 0 };
+    if (!agg[key]) agg[key] = _mk(i.code, i.month);
     agg[key].rev += i.revenue;
+    agg[key].orders += (+i.orders || 0);
   });
   (state.ad || []).forEach(a => {
     if (_dmAd.has(a.month)) return;     // この月の広告は日別合計で作る
     const key = a.code + '|' + a.month;
-    if (!agg[key]) agg[key] = { code: a.code, month: a.month, rev: 0, adCost: 0, adRev: 0 };
+    if (!agg[key]) agg[key] = _mk(a.code, a.month);
     agg[key].adCost += a.adCost;
     agg[key].adRev += a.adRevenue;
+    agg[key].adClicks += (+a.adClicks || 0);
+    agg[key].adOrders += (+a.adOrders || 0);
   });
   _dmItem.forEach(ym => {
     (dailyItemRowsForMonth(ym) || []).forEach(i => {
       const key = i.code + '|' + ym;
-      if (!agg[key]) agg[key] = { code: i.code, month: ym, rev: 0, adCost: 0, adRev: 0 };
+      if (!agg[key]) agg[key] = _mk(i.code, ym);
       agg[key].rev += i.revenue;
+      agg[key].orders += (+i.orders || 0);
     });
   });
   _dmAd.forEach(ym => {
     (dailyAdRowsForMonth(ym) || []).forEach(a => {
       const key = a.code + '|' + ym;
-      if (!agg[key]) agg[key] = { code: a.code, month: ym, rev: 0, adCost: 0, adRev: 0 };
+      if (!agg[key]) agg[key] = _mk(a.code, ym);
       agg[key].adCost += a.adCost;
       agg[key].adRev += a.adRevenue;
+      agg[key].adClicks += (+a.adClicks || 0);
+      agg[key].adOrders += (+a.adOrders || 0);
     });
   });
   Object.values(agg).forEach(r => {
     r.seoRev = Math.max(0, r.rev - r.adRev);
     r.roas = r.adCost > 0 ? (r.adRev / r.adCost) * 100 : null;
+    // 【v1.0580】広告CVR＝広告注文数÷クリック数×100（全-月別データの cvr と同じ定義）
+    r.cvr = r.adClicks > 0 ? (r.adOrders / r.adClicks) * 100 : null;
   });
   return Object.values(agg);
 }
@@ -8417,7 +8508,10 @@ function _basicDayAggRows(date) {
   Object.keys(dailyAdOf(date)).forEach(c => codes.add(c));
   return [...codes].map(c => {
     const a = dayAgg(c, date);
-    return { code: c, month: date, rev: a.rev, adCost: a.adCost, adRev: a.adRev, seoRev: a.seoRev, roas: a.roas };
+    // 【v1.0580】月次側と同じフィールドを揃える（広告CVR・注文数）
+    return { code: c, month: date, rev: a.rev, adCost: a.adCost, adRev: a.adRev, seoRev: a.seoRev, roas: a.roas,
+             adClicks: a.adClicks, adOrders: a.adOrders, orders: a.orders,
+             cvr: a.adClicks > 0 ? (a.adOrders / a.adClicks) * 100 : null };
   });
 }
 // 対象月の「データがある日」でドロップダウンを作り直す
@@ -8596,6 +8690,15 @@ function renderBasic() {
   const agg = basicDayMode ? _basicDayAggRows(basicSelectedDay) : buildFullAggregate();
   const _key = basicDayMode ? basicSelectedDay : targetMonth;
   let list = agg.filter(r => r.month === _key);
+  // 【v1.0580】送り込み売上＝この商品を代表コード(repCode)に指定している子商品の売上合計。
+  //   ★絞り込み後の list ではなく、その月の全商品から作る（子が絞り込みで消えても親の値は変わらない）。
+  //   親が広告で客を取り、子が売れる構成だと「広告売上 > 総売上」に見えるが、この列を足せば辻褄が合う。
+  const _soiByParent = {};
+  agg.forEach(r => {
+    if (r.month !== _key) return;
+    const _rep = String(((state.productMeta || {})[r.code] || {}).repCode || '').trim();
+    if (_rep && _rep !== r.code) _soiByParent[_rep] = (_soiByParent[_rep] || 0) + (+r.rev || 0);
+  });
 
   // master のみの商品（データがなくても全商品表示のため）
   if (targetMonth) {
@@ -8603,7 +8706,7 @@ function renderBasic() {
     const _addZeroRow = (code) => {
       if (!code || knownCodes.has(code)) return;
       knownCodes.add(code);
-      list.push({ code, month: _key, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null });   /* 【v1.0527】日選択中は日付キー */
+      list.push({ code, month: _key, rev: 0, adCost: 0, adRev: 0, seoRev: 0, roas: null, adClicks: 0, adOrders: 0, orders: 0, cvr: null });   /* 【v1.0527】日選択中は日付キー／【v1.0580】CVR用フィールドも揃える */
     };
     Object.keys(state.master).forEach(_addZeroRow);
     // 【fix】ステータス系チップで basic を絞り込み中は、件数バッジ(updateStateCounts=item∪master∪…)と
@@ -8666,6 +8769,11 @@ function renderBasic() {
   const sortGet = (r, k) => {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'sroas') return salesRoasSortVal(r.rev, r.adCost);   // 【v1.0524】対象外(広告費0)は -1＝最下位
+    // 【v1.0580】全-月別データ相当に増やした列のソート。算出できないものは -1＝最下位に寄せる
+    if (k === 'prsroas')  { const v = itemPrSalesRoasPct(r.code, r.rev, r.adCost); return (v == null) ? -1 : v; }
+    if (k === 'prOverEst'){ const e = itemPrEstimate(r.code, r.rev); return e ? e.over : -1; }
+    if (k === 'cvr')      { return (r.cvr == null) ? -1 : r.cvr; }
+    if (k === 'soikomi')  { return _soiByParent[r.code] || 0; }
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
@@ -8686,7 +8794,7 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="16" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0524】売上ROAS列の追加に合わせて +1
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0580】列構成の変更に合わせて 15 に
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
     state.basicDisplayedCodes = [];   // 【v1.0522】
@@ -8705,22 +8813,35 @@ function renderBasic() {
     const tr = document.createElement('tr');
     const _pcCls = rowParentChildClass(r.code, _pcSets);
     if (_pcCls) tr.className = _pcCls;
+    // 【v1.0580】PR系は「推定」。実測が取れない商品別の割り切り（itemPrEstimate のコメント参照）
+    const _pe = itemPrEstimate(r.code, r.rev);
+    const _prsr = itemPrSalesRoasPct(r.code, r.rev, r.adCost);
+    const _soi = _soiByParent[r.code] || 0;
+    const _grpBadge = (pr == null || isNaN(pr)) ? ''
+      : (Number(pr) > PR_BASE_RATE_PCT
+          ? '<span class="pr-grp-badge over" title="設定料率が7%超＝料率を上げて上位表示を取り、子商品へ流す側（全-月別データの「送り込み元」）">送り込み元</span>'
+          : '<span class="pr-grp-badge base" title="設定料率は最低の7%＝実際に利益が落ちる側（全-月別データの「利益源」）">利益源</span>');
+    const _prsrTip = !_pe ? 'PRオプ料率が未取得のため算出できません'
+      : 'PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100\n'
+        + '★商品別のPR実績額はYahooから取得できないため、⑤の設定料率(' + (Math.round(_pe.rate * 10) / 10) + '%)からの推定です\n'
+        + '推定 PR実績額(7%超) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (' + (Math.round(_pe.rate * 10) / 10) + '% − ' + PR_BASE_RATE_PCT + '%)\n'
+        + (Number(_pe.rate) <= PR_BASE_RATE_PCT ? '※この商品は料率7%＝上乗せ分0のため、売上ROASと同じ値になります' : '');
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      <td>${kwCellHtml(r.code)}</td>
-      <td class="num col-sroas">${salesRoasCellHtml(salesRoasPct(r.rev, r.adCost, 0))}</td>
       <td class="num col-total">${fmt(r.rev)}</td>
+      <td class="num col-sroas">${salesRoasCellHtml(salesRoasPct(r.rev, r.adCost, 0))}</td>
+      <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
       ${shareRevCell(r.seoRev, r.adRev, true, "col-sales")}
-      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
       ${shareRevCell(r.adRev, r.seoRev, false, "col-ad")}
-      <td class="num col-ad">${fmt(r.adCost)}</td>
-      <td class="num col-ad ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      <td class="num col-spend">${fmt(r.adCost)}</td>
+      <td class="num col-cvr">${r.cvr == null ? '<span style="color:var(--text3)">—</span>' : fmtCvr(r.cvr)}</td>
+      <td class="num col-prov est-val" title="${escapeHtml(_pe ? 'PR実績額(7%超・推定) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (設定料率 − ' + PR_BASE_RATE_PCT + '%)。⑤の設定料率からの推定で、実測ではありません' : 'PRオプ料率が未取得のため算出できません')}">${(_pe && _pe.over > 0) ? fmt(Math.round(_pe.over)) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="num col-aroas ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}${_grpBadge}</td>
       <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}${adStoppedBadge(r.code)}</td>
-      <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
+      <td class="num col-soi" title="この商品を代表コードに指定している子商品の売上合計">${_soi > 0 ? fmt(_soi) : '<span style="color:var(--text3)">—</span>'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -15235,22 +15356,41 @@ function downloadBasicAllCsv() {
       if (!s) return '';
       return (String(s).slice(0, 5) === 'data:') ? '(カスタム画像)' : s;
     };
-    const header = ['月', '商品コード', '画像URL', '商品名', 'メインKW', '総売上', 'SEO売上', 'PRオプ料率(%)', 'PRオプ状態', '広告売上', '実績額', '広告ROAS(%)', '入札価格', '入札状態', 'ステータス'];
+    // 【v1.0580】画面の列構成（全-月別データ相当）に合わせ直した。
+    //   ★画面から撤去した メインKW / PRオプ状態 / 入札状態 / ステータス は、データとしては残っているので
+    //     CSVの末尾に「参考」としてまとめて出す（画面で見えない＝出力からも消える、にはしない）。
+    const _soiByParentCsv = {};
+    agg.forEach(function (r) {
+      if (!r || r.month !== targetMonth || !r.code) return;
+      const _rep = String(((state.productMeta || {})[r.code] || {}).repCode || '').trim();
+      if (_rep && _rep !== r.code) _soiByParentCsv[_rep] = (_soiByParentCsv[_rep] || 0) + (+r.rev || 0);
+    });
+    const header = ['月', '商品コード', '画像URL', '商品名',
+                    '総売上', '売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告実績額',
+                    '広告CVR(%)', 'PR実績額(7%超・推定)', '広告ROAS(%)', 'PRオプ料率(%)', '入札価格', '送り込み売上',
+                    '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス'];
     const lines = [header.join(',')];
     // 並び順は画面の表示順のまま
     codes.forEach(function (code) {
-      const r = rowByCode[code] || { rev: 0, seoRev: 0, adRev: 0, adCost: 0, roas: null };
+      const r = rowByCode[code] || { rev: 0, seoRev: 0, adRev: 0, adCost: 0, roas: null, cvr: null };
       const m = (typeof getMaster === 'function') ? (getMaster(code) || {}) : {};
       const meta = (state.productMeta && state.productMeta[code]) || {};
       const pr = (typeof getProRate === 'function') ? getProRate(code) : null;
       const bid = (state.bid && state.bid[code]) || null;
       const roas = (r.roas == null || isNaN(r.roas) || !isFinite(r.roas)) ? '' : String(Math.round(r.roas));
       const proRate = (pr == null || isNaN(pr)) ? '' : String(Math.floor(pr));
+      const _sr = salesRoasPct(r.rev, r.adCost, 0);
+      const _prsr = itemPrSalesRoasPct(code, r.rev, r.adCost);
+      const _pe = itemPrEstimate(code, r.rev);
       const row = [
-        targetMonth, code, imgUrl(code), m.name || '', m.kw || '',
-        num(r.rev), num(r.seoRev), proRate, meta.proStatus || '',
-        num(r.adRev), num(r.adCost), roas,
-        (bid != null && bid > 0) ? String(bid) : '', meta.adStatus || '', statusDisp(code)
+        targetMonth, code, imgUrl(code), m.name || '',
+        num(r.rev), (_sr == null ? '' : String(_sr)), (_prsr == null ? '' : String(_prsr)),
+        num(r.seoRev), num(r.adRev), num(r.adCost),
+        (r.cvr == null ? '' : String(Math.round(r.cvr * 10) / 10)),
+        (_pe ? num(_pe.over) : ''), roas, proRate,
+        (bid != null && bid > 0) ? String(bid) : '',
+        num(_soiByParentCsv[code] || 0),
+        m.kw || '', meta.proStatus || '', meta.adStatus || '', statusDisp(code)
       ];
       lines.push(row.map(esc).join(','));
     });
