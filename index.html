@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0562 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0563 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0562</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0563</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10277,9 +10277,14 @@ function renderGraphData() {
     // 2段目＝合計 / 7%超 / 7%
     for (let k = 0; k < g.len; k++) {
       const sc = _zdCols[g.start + k];
-      const col = sc.grp === 'high' ? '#15803d' : (sc.grp === 'low' ? '#64748b' : 'var(--text2)');
+      // 【v1.0563】2段目の文字色は「列の背景色に依存しない中立色」にする。
+      //   7%超を緑(#15803d)にしていたが、広告実績額のピンク等の上では色が喧嘩して読みづらかった。
+      //   グループの区別は背景の濃淡（ZD_GRP_DEFS）が既に担っているので、ここは濃さと太さだけで付ける。
+      const col = (sc.grp === 'low') ? 'var(--text3)' : 'var(--text)';
+      const wgt = (sc.grp === 'high') ? '800' : (sc.grp === 'low' ? '600' : '700');
       _h2 += '<th class="zd-h2" style="' + _thBase + 'text-align:center;background:' + sc.hbg + ';'
-        + (k === 0 ? leftBd : 'border-left:' + VBD + ';') + _vb(g.start + k) + 'color:' + col + '">' + escapeHtml(sc.short || '') + '</th>';
+        + (k === 0 ? leftBd : 'border-left:' + VBD + ';') + _vb(g.start + k)
+        + 'color:' + col + ';font-weight:' + wgt + '">' + escapeHtml(sc.short || '') + '</th>';
     }
   });
   // 【v1.0562】送り込み売上の列は撤去（値は r.soikomi に残してある）
