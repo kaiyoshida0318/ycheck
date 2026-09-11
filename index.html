@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0565 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0566 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0565</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0566</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3556,6 +3556,12 @@ th.col-sroas { background-color:#cfe0f7; }
             <span class="filter-label" title="各月（各日）を「合計 / 7% / 7%超」の3行に分けます。⑤の設定PRオプ料率で商品を2グループに分け、SEO売上・PR実績額・広告の数字をそれぞれ集計します">料率別に分ける</span>
             <button type="button" id="zdSplitOn" onclick="_zdSetSplit(true)">あり</button>
             <button type="button" id="zdSplitOff" onclick="_zdSetSplit(false)">なし</button>
+          </span>
+          <!-- 【v1.0566】内訳列の金額の下に構成比（-7%超 ＋ -7% ＝ 100%）を出すかどうか -->
+          <span id="zdRatioWrap" style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
+            <span class="filter-label" title="-7%超 と -7% の金額の下に、合計に対する構成比を表示します（2つ足すと100%）">比率表記</span>
+            <button type="button" id="zdRatioOn" onclick="_zdSetRatio(true)">あり</button>
+            <button type="button" id="zdRatioOff" onclick="_zdSetRatio(false)">なし</button>
           </span>
           <!-- 【v1.0547】PR実績額の「7％相当/7％超」分解が正しいかを確かめる列の表示切替 -->
           <span id="zdVerifyWrap" style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
@@ -9079,6 +9085,21 @@ function _zdSetSplitUI() {
 function _zdSetSplit(b) { _zdSplit = !!b; _zdSetSplitUI(); renderGraphData(); }
 window._zdSetSplit = _zdSetSplit;
 
+// 【v1.0566】比率表記：内訳列（-7%超 / -7%）の金額の下に「合計に対する構成比」を出す。
+//   -7%超 と -7% の2つを足すと必ず100%になるので、どちらのグループが稼いでいる／使っているかが一目で分かる。
+//   ★ 金額の列（t:'y'）だけが対象。広告CVR・広告ROASのような率の列に構成比を出しても意味がないため。
+let _zdRatio = true;
+function _zdSetRatioUI() {
+  const base = 'font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;';
+  const on = 'border:1px solid #15803d;background:#15803d;color:#fff;';
+  const off = 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
+  const a = document.getElementById('zdRatioOn'), c = document.getElementById('zdRatioOff');
+  if (a) a.style.cssText = base + (_zdRatio ? on : off);
+  if (c) c.style.cssText = base + (!_zdRatio ? on : off);
+}
+function _zdSetRatio(b) { _zdRatio = !!b; _zdSetRatioUI(); renderGraphData(); }
+window._zdSetRatio = _zdSetRatio;
+
 // 【v1.0552】表の周りの説明文（送り込み売上／料率別の内訳／PR列／色の意味／注意書き）は
 //   既定で畳み、「❓ 説明」ボタンを押したときだけ出す。毎回読むものではないため。
 //   ★ ⚠系の注意書き（データが欠けている等）も中に入れるので、
@@ -10223,6 +10244,7 @@ function renderGraphData() {
   const _zdCols = zdCols();                     // 【v1.0547】検算列の表示/非表示を反映した列リスト
   _zdSetVerifyUI();
   _zdSetSplitUI();
+  _zdSetRatioUI();
   const _splitOn = _zdSplit;                       // 【v1.0555】料率別の列（合計/7%/7%超）を出すか
   const _zdColCount = 1 + _zdCols.length;          // 月 + 指標列（【v1.0562】送り込み売上は撤去）
   const asc = _dayMode ? _zenDailyRowsFor(_rangeDays || []) : _zenMonthlyRows();
@@ -10326,6 +10348,14 @@ function renderGraphData() {
       const _nc = opt.unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
       inner = (v == null || !v || v === 0 || _nc) ? disp : '<span class="c-' + _zenRank5(v, pool[c.id], c.hi) + '">' + disp + '</span>';
     }
+    // 【v1.0566】比率表記：内訳列（-7%超 / -7%）の金額の下に、合計に対する構成比を1行足す。
+    //   分母は同じ指標の「合計」列の値（opt.total）。-7%超 ＋ -7% ＝ 100% になる。
+    //   率の列（広告CVR・広告ROAS）は構成比に意味が無いので対象外（c.t === 'y' のみ）。
+    if (_zdRatio && c.grp && c.t === 'y' && v > 0 && opt.total > 0) {
+      const _pc = v / opt.total * 100;
+      inner += '<div style="font-size:0.86em;font-weight:700;line-height:1.2;margin-top:1px;color:'
+        + pctBandColor(_pc) + '">' + (Math.round(_pc * 10) / 10) + '%</div>';
+    }
     return '<td style="' + TDBASE + 'background:' + c.bg + ';border-bottom:1px solid var(--border);'
       + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + (opt.vb || '')   /* 【v1.0553】縦罫線 */
       + 'white-space:nowrap;' + (opt.bT || '') + '">' + inner + '</td>';
@@ -10335,7 +10365,7 @@ function renderGraphData() {
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
     const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:right;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
-    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci) })).join('');
+    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.key] })).join('');
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
@@ -10435,6 +10465,8 @@ function renderGraphData() {
       + '分けている列は <b>SEO売上・広告売上・広告実績額・広告CVR・広告ROAS</b> の5つで、'
       + '<b>同じ指標の「合計／-7%超／-7%」を隣り合わせ・同系色</b>で並べています（左ほど濃く、注目したい -7%超 が合計のすぐ右に来ます）。'
       + '売上ROAS・総売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
+      + '<b>比率表記</b>を「あり」にすると、金額の下に<b>合計に対する構成比</b>が出ます（-7%超 ＋ -7% ＝ 100%）。'
+      + '広告CVR・広告ROASのような率の列には出しません（構成比に意味が無いため）。<br>'
       + '<b>②商品別売上（item_report）が無い月は、-7%超 / -7% の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
       + '<span style="color:var(--text3)">※設定料率は<b>いまの値</b>のスナップショットなので、過去の月に当てると当時の料率とはズレます（参考値）。'
       + '※-7%超 / -7% は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」列とわずかに差が出ることがあります。'
