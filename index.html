@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0573 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0574 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0573</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0574</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8955,12 +8955,15 @@ const MI_COLS = [
   // 【v1.0559】広告実績額はピンク系。広告売上・広告CVRの橙と近すぎて見分けづらかったため。
   { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true },
   { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
-  // --- PRオプション（青緑）【v1.0571】広告CVRの右に復活。7%超 / 7% の内訳つき ---
-  //   費用なので hi:false（小さいほど青）。内訳は「売上×設定料率」の比で実績額(総額)を割り振ったもの（§4-D-2）。
-  { key:'prCost',   label:'PR実績額',    hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true, split:true },
   // --- 効率（藍。ROAS系をまとめて右端に） ---
   //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
   { key:'salesRoas', label:'売上ROAS', hbg:'#c7d7f5', bg:'#edf2fc', hi:true,  t:'sr', blockStart:true },
+  // 【v1.0574】PRオプション（青緑）は「7%より高い料率にしていることで余分に出ている分」だけを1列で出す。
+  //   合計（実績額そのもの）と 7%相当（最低ライン）の列は撤去。判断に使うのは上乗せ分だけなので。
+  //     PR実績額(7%超) ＝ 実績額 − レポート売上 ÷ PR_TAX_DIV × PR_BASE_RATE_PCT%
+  //   ★ 合計・7%相当は行の prCost / prBase に残っているので、列に戻したくなればここに足すだけでよい。
+  //   費用なので hi:false（小さいほど青）。前提が崩れた期間（超過分が負）は prOver が null ＝「—」。
+  { key:'prOver',    label:'PR実績額(7%超)', hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true },
   { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', split:true },
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
@@ -9009,6 +9012,8 @@ function _zdLighten(hex, t) {
 //   例) 2026/09/10: 売上 55,950 / 実績額 9,200
 //       7%相当 = 55,950 ÷ 1.1 × 7% = 3,560 ／ 超過分 = 9,200 − 3,560 = 5,640
 //   ★ 変種ごとに参照する行のキーが違う（prCost / prBase / prOver）ので、grp ではなく key を差し替える。
+//   【v1.0574】★現在は未使用（PR実績額は「7%超」1列だけにしたため）。
+//     合計 / 7%超 / 7% の3列に戻したくなったら、MI_COLS に prCost（split:true）を足してここを使う。
 //   【v1.0573】並び・ラベルを他の指標に合わせる。
 //     位置  : 合計 → 超過分 → 7%相当（他の指標の 合計 → 7%超 → 7% と同じ位置関係）
 //     3段目 : 「7%超」「7%」（他の指標と同じ見出し）
@@ -9024,8 +9029,9 @@ const PR_SPLIT_DEFS = [
 function zdCols() {
   const base = MI_COLS.filter(c => {
     if (c.verify && !_zdVerify) return false;
-    // 【v1.0572】prBase / prOver は PR実績額の内訳として出すので、単独の列としては並べない
-    if (c.key === 'prBase' || c.key === 'prOver') return false;
+    // 【v1.0562】prBase（7%相当）は列として出さない。データは行に残してある。
+    // 【v1.0574】prOver（7%超＝上げている分）は単独の列として出すので、ここでは外さない。
+    if (c.key === 'prBase') return false;
     return true;
   });
   if (!_zdSplit) return base.map(c => Object.assign({ id: c.key, grp: null, famKey: c.key }, c));
@@ -10513,10 +10519,11 @@ function renderGraphData() {
       + '売上ROAS・総売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
       + '<b>比率表記</b>を「あり」にすると、金額の下に<b>合計に対する構成比</b>が出ます（-7%超 ＋ -7% ＝ 100%）。'
       + '広告CVR・広告ROASのような率の列には出しません（構成比に意味が無いため）。<br>'
-      + '<b>PR実績額だけは内訳の意味が違います。</b>商品別のPR実績額はYahooから取得できないので、'
-      + 'レポートの売上と実績額から直接出せる <b>7%（最低ライン）</b>（＝売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%。全商品に最低料率がかかる、どうやっても出る分）と、'
-      + '<b>7%超（上げている分）</b>（＝実績額 − 7%相当。7%より高い料率にしていることで余分に出ている分）に分けています。'
-      + 'こちらは按分ではなく<b>引き算だけ</b>なので推定が入りません。<br>'
+      + '<b>PR実績額(7%超)</b>は、PRオプション費のうち<b>7%より高い料率にしていることで余分に出ている分</b>だけを出した列です（売上ROASの右）。<br>'
+      + '　実績額 − 売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%（＝全商品に最低料率がかかる「どうやっても出る分」）。'
+      + '例) 売上 ¥55,950 / 実績額 ¥9,200 のとき、55,950 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '% = ¥3,560 を引いて <b>¥5,640</b>。<br>'
+      + '　商品別のPR実績額はYahooから取得できませんが、この列は<b>引き算だけ</b>なので推定が入りません。'
+      + '前提（税率・課金対象）が崩れて負になる期間は「—」にしています。<br>'
       + '<b>②商品別売上（item_report）が無い月は、-7%超 / -7% の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
       + '<span style="color:var(--text3)">※設定料率は<b>いまの値</b>のスナップショットなので、過去の月に当てると当時の料率とはズレます（参考値）。'
       + '※-7%超 / -7% は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」列とわずかに差が出ることがあります。'
