@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0558 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0559 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0558</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0559</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8947,7 +8947,8 @@ const MI_COLS = [
   //     戻したくなったら、ここに定義を書き戻すだけでよい（パース・集計側は無変更）。
   // --- 広告（橙。売上→費用→CVR の順に少しずつ濃さを変える） ---
   { key:'adSales',  label:'広告売上',    hbg:'#fbe3c4', bg:'#fdf6ec', hi:true,  t:'y', blockStart:true, split:true },
-  { key:'spend',    label:'広告実績額',  hbg:'#f2cfa2', bg:'#fdf1e2', hi:false, t:'y', split:true },
+  // 【v1.0559】広告実績額はピンク系。広告売上・広告CVRの橙と近すぎて見分けづらかったため。
+  { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true },
   { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
   // --- 効率（藍。ROAS系をまとめて右端に） ---
   //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
@@ -8970,10 +8971,11 @@ const ZD_SPLIT_KEYS = ['seoSales', 'prCost', 'adSales', 'spend', 'cvr', 'roas'];
 //   ★【v1.0556】見出しも本体セルも「左が濃く → 中くらい → 薄い」の3段階にする。
 //     濃さの順がそのまま 合計 → -7% → -7%超 の順になるので、どの列がどのグループか色だけで分かる。
 //     hLight＝見出しの薄め具合／bLight＝本体セルの薄め具合（どちらも見出し色を白へ寄せて作る）。
+// 【v1.0559】並びは 合計 → -7%超 → -7%。注目したい「7%超」を左（＝濃い側）に置く。
 const ZD_GRP_DEFS = [
   { grp: null,   suffix: '',      hLight: 0,    bLight: 0.25 },
-  { grp: 'low',  suffix: '-7%',   hLight: 0.24, bLight: 0.55 },
-  { grp: 'high', suffix: '-7%超', hLight: 0.48, bLight: 0.82 }
+  { grp: 'high', suffix: '-7%超', hLight: 0.24, bLight: 0.55 },
+  { grp: 'low',  suffix: '-7%',   hLight: 0.48, bLight: 0.82 }
 ];
 // 色を白に寄せる（t=0でそのまま、t=1で白）。同系色の濃淡を作るため。
 function _zdLighten(hex, t) {
@@ -10345,17 +10347,17 @@ function renderGraphData() {
   let _splitNote = '';
   if (_splitOn) {
     _splitNote = '<div class="zd-pr-note" style="background:#f1faf4;border-color:#a7d8bb">'
-      + '<b>料率別の内訳（○○ / ○○-7% / ○○-7%超）</b>：⑤ <code>data*.csv</code> の<b>設定PRオプ料率</b>で商品を2グループに分けて集計しています。'
+      + '<b>料率別の内訳（○○ / ○○-7%超 / ○○-7%）</b>：⑤ <code>data*.csv</code> の<b>設定PRオプ料率</b>で商品を2グループに分けて集計しています。'
       + '<b>7%</b>＝料率が下限の7%（＋⑤に載っていない商品）／<b>7%超</b>＝7%より高い料率にしている商品。<br>'
       + '分けている列は <b>SEO売上・PR実績額・広告売上・広告実績額・広告CVR・広告ROAS</b> の6つで、'
-      + '<b>同じ指標の「合計／-7%／-7%超」を隣り合わせ・同系色</b>で並べています（薄いほど絞り込んだグループ）。'
+      + '<b>同じ指標の「合計／-7%超／-7%」を隣り合わせ・同系色</b>で並べています（左ほど濃く、注目したい -7%超 が合計のすぐ右に来ます）。'
       + '売上ROAS・総売上・送り込み売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
       + '<b>PR実績額</b>の内訳は、各商品の「売上×設定料率」の比で<b>実績額（総額）を割り振ったもの</b>です。'
       + '推定で絶対額を作らないよう、2行の合計は必ず実績額と一致します。<br>'
-      + '<b>②商品別売上（item_report）が無い月は、-7% / -7%超 の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
+      + '<b>②商品別売上（item_report）が無い月は、-7%超 / -7% の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
       + '<span style="color:var(--text3)">※設定料率は<b>いまの値</b>のスナップショットなので、過去の月に当てると当時の料率とはズレます（参考値）。'
-      + '※-7% / -7%超 は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」列とわずかに差が出ることがあります。'
-      + '※色分けは<b>列ごと</b>です（合計列・7%列・7%超列はそれぞれ自分の列の中で月どうしを比べています）。</span>'
+      + '※-7%超 / -7% は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」列とわずかに差が出ることがあります。'
+      + '※色分けは<b>列ごと</b>です（合計列・7%超列・7%列はそれぞれ自分の列の中で月どうしを比べています）。</span>'
       + '</div>';
   }
   // 【v1.0530】色分けルールが分かるように凡例を表の下に出す（「なぜこの色？」を毎回説明しなくて済むように）
