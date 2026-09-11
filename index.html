@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0571 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0572 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0571</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0572</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9001,32 +9001,49 @@ function _zdLighten(hex, t) {
   r = Math.round(r + (255 - r) * t); g = Math.round(g + (255 - g) * t); b = Math.round(b + (255 - b) * t);
   return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
 }
+// 【v1.0572】PR実績額だけは内訳の意味が他の指標と違う。
+//   他の指標 … 商品を料率で2グループに分けた「7%超 / 7%」（§4-D。按分による推定）
+//   PR実績額 … レポートの売上と実績額から**直接**出せる「7%相当 / 超過分」（§4-C。推定なし）
+//     7%相当 ＝ レポート売上 ÷ PR_TAX_DIV × PR_BASE_RATE_PCT%   … 全商品に最低7%がかかる、どうやっても出る分
+//     超過分 ＝ 実績額 − 7%相当                                   … 7%より高い料率にしていることで余分に出ている分
+//   例) 2026/09/10: 売上 55,950 / 実績額 9,200
+//       7%相当 = 55,950 ÷ 1.1 × 7% = 3,560 ／ 超過分 = 9,200 − 3,560 = 5,640
+//   ★ 変種ごとに参照する行のキーが違う（prCost / prBase / prOver）ので、grp ではなく key を差し替える。
+const PR_SPLIT_DEFS = [
+  { key: 'prCost', suffix: '',         short: '合計',   role: '',           hLight: 0,    bLight: 0.25 },
+  { key: 'prBase', suffix: '(7%相当)', short: '7%相当', role: '最低ライン', hLight: 0.24, bLight: 0.55 },
+  { key: 'prOver', suffix: '(超過分)', short: '超過分', role: '上げている分', hLight: 0.48, bLight: 0.82 }
+];
+
 function zdCols() {
   const base = MI_COLS.filter(c => {
     if (c.verify && !_zdVerify) return false;
-    // 分割モード中は「PR実績額(7%相当)/(7%超)」を隠す。
-    //   あちらは総額分解（全商品にかかる7%分 vs 上乗せ分）、こちらは商品グループ別で、
-    //   同じ名前なのに定義が違う数字が並ぶと誤読するため。
-    if (_zdSplit && (c.key === 'prBase' || c.key === 'prOver')) return false;
+    // 【v1.0572】prBase / prOver は PR実績額の内訳として出すので、単独の列としては並べない
+    if (c.key === 'prBase' || c.key === 'prOver') return false;
     return true;
   });
-  if (!_zdSplit) return base.map(c => Object.assign({ id: c.key, grp: null }, c));
+  if (!_zdSplit) return base.map(c => Object.assign({ id: c.key, grp: null, famKey: c.key }, c));
   const out = [];
   base.forEach(c => {
-    if (!c.split) { out.push(Object.assign({ id: c.key, grp: null }, c)); return; }
-    ZD_GRP_DEFS.forEach((g, gi) => {
+    if (!c.split) { out.push(Object.assign({ id: c.key, grp: null, famKey: c.key }, c)); return; }
+    // 【v1.0572】PR実績額だけ内訳の定義が違う（7%相当 / 超過分）。他は 7%超 / 7% の商品グループ別。
+    const defs = (c.key === 'prCost') ? PR_SPLIT_DEFS : ZD_GRP_DEFS;
+    defs.forEach((g, gi) => {
       out.push(Object.assign({}, c, {
-        id: c.key + (g.grp ? '__' + g.grp : ''),
-        grp: g.grp,
+        key: g.key || c.key,                         // PRは参照する行のキーごと差し替える
+        id: g.key ? g.key : (c.key + (g.grp ? '__' + g.grp : '')),
+        grp: g.grp || null,
+        famKey: c.key,                               // 構成比の分母に使う「合計」列のキー
         label: c.label + g.suffix,
         hbg: g.hLight ? _zdLighten(c.hbg, g.hLight) : c.hbg,
         bg:  _zdLighten(c.hbg, g.bLight),            // 本体も見出し色から作り、左ほど濃くする
-        short: g.short,                              // 【v1.0560】見出し3段目のラベル（合計 / 7%超 / 7%）
-        role: g.role,                                // 【v1.0568】見出し2段目のラベル（送り込み元 / 利益源）
+        short: g.short,                              // 【v1.0560】見出し3段目のラベル
+        role: g.role,                                // 【v1.0568】見出し2段目のラベル
         famLabel: c.label,                           // 【v1.0560】見出し1段目（指標名）
         blockStart: !!c.blockStart && gi === 0,     // ブロック境界は家族の先頭だけ
         famStart: gi === 0,                          // 指標のまとまりの先頭（中太の区切り）
-        famLast: gi === ZD_GRP_DEFS.length - 1
+        famLast: gi === defs.length - 1,
+        _famLen: defs.length
       }));
     });
   });
@@ -10294,8 +10311,10 @@ function renderGraphData() {
   //   まず「どこからどこまでが1つの指標か」を求める（famStart が立っている列から ZD_GRP_DEFS.length 列ぶん）
   const _zdGroups = [];
   for (let i = 0; i < _zdCols.length; ) {
-    if (_zdCols[i].famStart) { _zdGroups.push({ start: i, len: ZD_GRP_DEFS.length }); i += ZD_GRP_DEFS.length; }
-    else { _zdGroups.push({ start: i, len: 1 }); i += 1; }
+    if (_zdCols[i].famStart) {
+      const n = _zdCols[i]._famLen || ZD_GRP_DEFS.length;   // 【v1.0572】PRは定義が別なので列数も定義から取る
+      _zdGroups.push({ start: i, len: n }); i += n;
+    } else { _zdGroups.push({ start: i, len: 1 }); i += 1; }
   }
   const _twoRow = _zdGroups.some(g => g.len > 1);
   // 【v1.0565】th 個別の sticky はやめ、<thead> ごと固定する（下の wrap.innerHTML を参照）。
@@ -10371,7 +10390,7 @@ function renderGraphData() {
     // 【v1.0566】比率表記：内訳列（-7%超 / -7%）の金額の下に、合計に対する構成比を1行足す。
     //   分母は同じ指標の「合計」列の値（opt.total）。-7%超 ＋ -7% ＝ 100% になる。
     //   率の列（広告CVR・広告ROAS）は構成比に意味が無いので対象外（c.t === 'y' のみ）。
-    if (_zdRatio && c.grp && c.t === 'y' && v > 0 && opt.total > 0) {
+    if (_zdRatio && (c.grp || (c.famKey && c.famKey !== c.key)) && c.t === 'y' && v > 0 && opt.total > 0) {
       const _pc = v / opt.total * 100;
       inner += '<div style="font-size:0.86em;font-weight:700;line-height:1.2;margin-top:1px;color:'
         + pctBandColor(_pc) + '">' + (Math.round(_pc * 10) / 10) + '%</div>';
@@ -10385,7 +10404,7 @@ function renderGraphData() {
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
     const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
-    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.key] })).join('');
+    const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key] })).join('');
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
@@ -10483,11 +10502,15 @@ function renderGraphData() {
       + '<b>料率別の内訳（○○ / ○○-7%超 / ○○-7%）</b>：⑤ <code>data*.csv</code> の<b>設定PRオプ料率</b>で商品を2グループに分けて集計しています。'
       + '<b>7%超（送り込み元）</b>＝7%より高い料率にしている商品。料率を上げて上位表示を取り、子商品へ流している側です。<br>'
       + '<b>7%（利益源）</b>＝最低料率の7%のまま固定している商品（⑤に載っていない商品もここ）。実際に利益が落ちる側です。<br>'
-      + '分けている列は <b>SEO売上・広告売上・広告実績額・広告CVR・PR実績額・広告ROAS</b> の6つで、'
+      + '分けている列は <b>SEO売上・広告売上・広告実績額・広告CVR・広告ROAS</b> の5つで、'
       + '<b>同じ指標の「合計／-7%超／-7%」を隣り合わせ・同系色</b>で並べています（左ほど濃く、注目したい -7%超 が合計のすぐ右に来ます）。'
       + '売上ROAS・総売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
       + '<b>比率表記</b>を「あり」にすると、金額の下に<b>合計に対する構成比</b>が出ます（-7%超 ＋ -7% ＝ 100%）。'
       + '広告CVR・広告ROASのような率の列には出しません（構成比に意味が無いため）。<br>'
+      + '<b>PR実績額だけは内訳の意味が違います。</b>商品別のPR実績額はYahooから取得できないので、'
+      + 'レポートの売上と実績額から直接出せる <b>7%相当</b>（＝売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%。全商品に最低料率がかかる、どうやっても出る分）と、'
+      + '<b>超過分</b>（＝実績額 − 7%相当。7%より高い料率にしていることで余分に出ている分）に分けています。'
+      + 'こちらは按分ではなく<b>引き算だけ</b>なので推定が入りません。<br>'
       + '<b>②商品別売上（item_report）が無い月は、-7%超 / -7% の列が「—」になります</b>（商品ごとの売上が無いとグループに分けられないため。合計列はストア全体の月次から出せるので値が入ります）。<br>'
       + '<span style="color:var(--text3)">※設定料率は<b>いまの値</b>のスナップショットなので、過去の月に当てると当時の料率とはズレます（参考値）。'
       + '※-7%超 / -7% は②商品分析の商品別売上から積み上げるため、③全体分析を使う「合計」列とわずかに差が出ることがあります。'
