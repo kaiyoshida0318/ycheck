@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0568 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0569 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0568</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0569</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3551,25 +3551,22 @@ th.col-sroas { background-color:#cfe0f7; }
             <button type="button" id="zdSeoOn" onclick="_zdSetSeoShow(true)">表示あり</button>
             <button type="button" id="zdSeoOff" onclick="_zdSetSeoShow(false)">表示なし</button>
           </span>
-          <!-- 【v1.0551】設定PRオプ料率で「7% / 7%超」の2グループに分けて内訳を出す -->
-          <span id="zdSplitWrap" style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
-            <span class="filter-label" title="各月（各日）を「合計 / 7% / 7%超」の3行に分けます。⑤の設定PRオプ料率で商品を2グループに分け、SEO売上・PR実績額・広告の数字をそれぞれ集計します">料率別に分ける</span>
-            <button type="button" id="zdSplitOn" onclick="_zdSetSplit(true)">あり</button>
-            <button type="button" id="zdSplitOff" onclick="_zdSetSplit(false)">なし</button>
-          </span>
+          <!-- 【v1.0569】「料率別に分ける」トグルは撤去。料率別（合計 / 7%超 / 7%）がこの表の既定になったため、
+               _zdSplit は常に true。切替を戻したくなったらここにボタンを置き直すだけでよい。 -->
           <!-- 【v1.0566】内訳列の金額の下に構成比（-7%超 ＋ -7% ＝ 100%）を出すかどうか -->
           <span id="zdRatioWrap" style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
             <span class="filter-label" title="-7%超 と -7% の金額の下に、合計に対する構成比を表示します（2つ足すと100%）">比率表記</span>
             <button type="button" id="zdRatioOn" onclick="_zdSetRatio(true)">あり</button>
             <button type="button" id="zdRatioOff" onclick="_zdSetRatio(false)">なし</button>
           </span>
-          <!-- 【v1.0547】PR実績額の「7％相当/7％超」分解が正しいかを確かめる列の表示切替 -->
-          <span id="zdVerifyWrap" style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
-            <span class="filter-label" title="実効料率（実績額から逆算）と、⑤の設定PRオプ料率を売上で加重平均した値を並べます。近い値なら分解の前提が妥当だと確認できます">検算列</span>
-            <button type="button" id="zdVerifyOn" onclick="_zdSetVerify(true)">表示</button>
-            <button type="button" id="zdVerifyOff" onclick="_zdSetVerify(false)">非表示</button>
+          <!-- 【v1.0569】「検算列」トグルは撤去（_zdVerify は常に false ＝ 実効料率/設定料率の列は出さない）。
+               列の定義は MI_COLS に verify:true のまま残してあるので、戻したくなったらここにボタンを置き直す。 -->
+          <!-- 【v1.0569】配色の凡例をツールバーに常時表示（同じ列の中での相対評価）。
+               色は本文セルと同じ c-g1 / c-g2 / c-bk / c-o / c-r を使うので、凡例と実物が必ず一致する。 -->
+          <span id="zdColorLegend" style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
+            <span class="filter-label" title="同じ列の中で月（日）どうしを比べた相対評価です。詳しくは「❓ 説明」の「色の意味」を参照">配色:</span>
+            <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
           </span>
-          <!-- 【v1.0552】ツールバー常時表示の色分けミニ凡例は撤去。「❓ 説明」の中の「色の意味」に統合した。 -->
           <!-- 【v1.0521】この表の表示内容をCSV出力（右端配置） -->
           <!-- 【v1.0552】表の周りの説明文はここを押したときだけ出す（既定は畳む） -->
           <button type="button" id="zdHelpBtn" onclick="_zdSetHelp(!_zdHelp)">❓ 説明</button>
@@ -8971,10 +8968,13 @@ const MI_COLS = [
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
 function itemCols() { return MI_COLS.filter(c => !c.store); }
 // 【v1.0547】全-月別/全-日別データで実際に描く列。検算列は「検算列＝表示」のときだけ入れる。
+// 【v1.0569】検算列のトグルを撤去したので、以後は常に false（実効料率 / 設定料率の列は出さない）。
+//   列の定義は MI_COLS に verify:true のまま残してある。
 let _zdVerify = false;
 // 【v1.0551】料率別に3行（合計 / 7% / 7%超）へ分けるモード。
 //   分ける列＝商品別データから積み上げられるもの。それ以外は3行をまたいで1セル（rowspan）にする。
 // 【v1.0552】既定ON（この表の主目的が「7%と7%超の比較」になったため）。
+// 【v1.0569】ツールバーのトグルを撤去したので、以後は常に true。
 let _zdSplit = true;
 const ZD_SPLIT_KEYS = ['seoSales', 'prCost', 'adSales', 'spend', 'cvr', 'roas'];
 // 【v1.0555】料率別の内訳は「3行に分ける」のをやめ、**同じ指標の3つを横並びの列**にする。
