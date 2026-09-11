@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0570 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0571 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3076,7 +3076,7 @@ th.col-sroas { background-color:#cfe0f7; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0570</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0571</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8940,17 +8940,11 @@ const MI_COLS = [
   { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' },
   // --- SEO（緑） ---
   { key:'seoSales', label:'SEO売上',  hbg:'#d3edd9', bg:'#f1faf4', hi:true,  t:'y', blockStart:true, split:true },
-  // --- PRオプション ---
-  // 【v1.0562】PR実績額 / PR実績額(7%相当) / PR実績額(7%超) の3列は撤去。
-  //   ★ データ・計算は一切消していない（state.daily.pr / prCost / prBase / prOver / r.grp[].prCost）。
-  //     売上ROAS＝総売上÷(広告実績額＋PR実績額) の分母にも従来どおり使われている。
-  //     列として戻したくなったら、ここに定義を書き戻すだけでよい。
+  // 【v1.0562】PR実績額(7%相当) / PR実績額(7%超) の2列は撤去（総額分解 §4-C）。データは残置。
   //   参考（撤去した定義）:
-  //     { key:'prCost', label:'PR実績額',     hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true, split:true },
   //     { key:'prBase', label:'PR実績額(7%相当)', hbg:'#d3ebe3', bg:'#f3faf8', hi:false, t:'y', store:true, norank:true },
   //     { key:'prOver', label:'PR実績額(7%超)',   hbg:'#c7e7dc', bg:'#eff9f6', hi:false, t:'y', store:true, norank:true },
-  // 【v1.0547】検算列。既定は非表示（ツールバーの「検算列」で表示）。
-  //   PR実績額の列は消したが、料率の妥当性はここで確認できるので残してある。
+  // 【v1.0547】検算列。ツールバーのトグルは v1.0569 で撤去したので既定は出ない（定義だけ残置）。
   { key:'prEffRate', label:'実効料率(税抜)',      hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
   { key:'prSetRate', label:'設定料率(加重平均)',  hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
   // 【v1.0554】PR費用率 / PR表示回数 / PRクリック数 / PR-CTR の4列は撤去。
@@ -8961,6 +8955,9 @@ const MI_COLS = [
   // 【v1.0559】広告実績額はピンク系。広告売上・広告CVRの橙と近すぎて見分けづらかったため。
   { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true },
   { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
+  // --- PRオプション（青緑）【v1.0571】広告CVRの右に復活。7%超 / 7% の内訳つき ---
+  //   費用なので hi:false（小さいほど青）。内訳は「売上×設定料率」の比で実績額(総額)を割り振ったもの（§4-D-2）。
+  { key:'prCost',   label:'PR実績額',    hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true, split:true },
   // --- 効率（藍。ROAS系をまとめて右端に） ---
   //   【v1.0537】売上ROAS＝総売上÷(広告実績額＋PRオプ実績額)×100（t:'sr' は絶対しきい値で色付け）
   { key:'salesRoas', label:'売上ROAS', hbg:'#c7d7f5', bg:'#edf2fc', hi:true,  t:'sr', blockStart:true },
@@ -10486,7 +10483,7 @@ function renderGraphData() {
       + '<b>料率別の内訳（○○ / ○○-7%超 / ○○-7%）</b>：⑤ <code>data*.csv</code> の<b>設定PRオプ料率</b>で商品を2グループに分けて集計しています。'
       + '<b>7%超（送り込み元）</b>＝7%より高い料率にしている商品。料率を上げて上位表示を取り、子商品へ流している側です。<br>'
       + '<b>7%（利益源）</b>＝最低料率の7%のまま固定している商品（⑤に載っていない商品もここ）。実際に利益が落ちる側です。<br>'
-      + '分けている列は <b>SEO売上・広告売上・広告実績額・広告CVR・広告ROAS</b> の5つで、'
+      + '分けている列は <b>SEO売上・広告売上・広告実績額・広告CVR・PR実績額・広告ROAS</b> の6つで、'
       + '<b>同じ指標の「合計／-7%超／-7%」を隣り合わせ・同系色</b>で並べています（左ほど濃く、注目したい -7%超 が合計のすぐ右に来ます）。'
       + '売上ROAS・総売上は、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています。<br>'
       + '<b>比率表記</b>を「あり」にすると、金額の下に<b>合計に対する構成比</b>が出ます（-7%超 ＋ -7% ＝ 100%）。'
@@ -10505,7 +10502,7 @@ function renderGraphData() {
     + (_dayMode ? '' : 'それより古い月は表示はされますが、色を決める比較には入れていません（店の規模が違う時期と比べると、直近の月が実態より良く／悪く見えるため）。')
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
-    + '<b>広告実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
+    + '<b>広告実績額とPR実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
     + '<br><b>売上ROAS</b>だけは相対評価ではなく決まったしきい値（' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤）で色が付きます。'
     + '<br><b>売上ROAS ＝ 総売上 ÷ 広告実績額 × 100</b>【v1.0564】。'
     + '広告経由に限らない<b>店全体の売上</b>を、その月に使った<b>広告費</b>で割った効率です。商品-基本データ・商品-日月別データと同じ定義です。'
