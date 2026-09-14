@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0587 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0588 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3166,6 +3166,13 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
   background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.5; cursor:help; }
 /* 合算モードで編集できないセル（料率・入札価格はメンバーごとに違うため） */
 .cell-multi { color:var(--text2); cursor:help; }
+/* 【v1.0588】両表示: セット行（合計）と、その下にぶら下がる内訳行 */
+tr.row-setparent > td { border-top: 2px solid #b9c2cf; font-weight: 600; }      /* セットの切れ目をはっきり */
+tr.row-setmember > td { background-color: #f7f9fe; font-size: 0.94em; }          /* 内訳はひとまわり控えめに */
+tr.row-setmember:hover > td { background-color: #e9eff9; }
+/* 内訳行の行頭マーカー。コードセルの中身は flex なので、span を混ぜず ::before で外から重ねる */
+tr.row-setmember .code-cell { position: relative; padding-left: 18px; }
+tr.row-setmember .code-cell::before { content: '└'; position: absolute; left: 4px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 700; }
 .ad-filter.search-bypass { opacity:0.4; }
 .ad-filter.search-bypass .adf-btn { cursor:default; }
 
@@ -3218,7 +3225,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0587</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0588</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3436,7 +3443,7 @@ th.col-sroas { background-color:#e7d5f5; }
                合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
                      （親が広告費を出して子が売れる構成では、個別の売上ROASが実態とズレるため） -->
           <span class="seg-filter" id="basicRollupBar" role="group" aria-label="個別/合算"
-            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button></span>
+            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <!-- 【v1.0585】ツールバーから撤去した2つ（要素ごと削除。ロジック・関数はすべて残置）
                ① 広告フィルタ #basicAdFilterBar（全体 / 広告あり商品 / 広告なし商品）
                   → クロス絞り込みパネルの「広告 有り／無し」が同じ basicAdFilter を動かすので重複していた（§16-B-1）
@@ -8952,7 +8959,12 @@ function renderBasic() {
   //   セットの合計が欠けた数字になる。まとめてから、以降の絞り込み・並べ替えは
   //   「代表コード（親）の行」に対して効かせる。
   _syncBasicRollupUI();
-  if (basicRollup) list = _basicRollupRows(list);
+  // 【v1.0588】両表示で内訳行を復元するため、まとめる前の「商品1件ずつの行」を控えておく
+  const _preRollupByCode = new Map();
+  if (_basicIsRollup()) {
+    list.forEach(r => { if (r && r.code) _preRollupByCode.set(r.code, r); });
+    list = _basicRollupRows(list);
+  }
 
   // 【v229】【状態】チップで basic を対象にした絞り込み（全体／新商品）
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
@@ -9027,7 +9039,36 @@ function renderBasic() {
   list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化（同じrepCodeの商品を塊で表示）
   // 【v1.0587】合算モードでは1行＝1セットなので、親子の並べ替え・字下げは不要（かけると逆に崩れる）
-  if (!basicRollup) list = applyRepGrouping(list);
+  if (!_basicIsRollup()) list = applyRepGrouping(list);
+
+  // 【v1.0588】両表示: 並べ替え・絞り込みが済んだセット行の【下】に、その内訳（親子1件ずつ）を差し込む。
+  //   ★内訳は「まとめる前の行」をそのまま使う。ここで作り直すと合算と数字がズレる。
+  //   ★セット行の並び順は動かさない。内訳はセット行の直下に固定で付く（＝どのセットの中身かが崩れない）。
+  if (basicRowMode === 'both') {
+    const _out = [];
+    list.forEach(f => {
+      _out.push(f);
+      const mem = (f._members || []).slice();
+      if (mem.length < 2) return;   // 1件だけのセットは内訳を出しても同じ行が2つ並ぶだけ
+      // 親（代表コード＝セットのキー）を先頭に、あとは総売上の多い順
+      mem.sort((a, b) => {
+        if (a === f.code) return -1;
+        if (b === f.code) return 1;
+        const ra = _preRollupByCode.get(a), rb = _preRollupByCode.get(b);
+        return ((rb && +rb.rev) || 0) - ((ra && +ra.rev) || 0);
+      });
+      mem.forEach(c => {
+        const m = _preRollupByCode.get(c);
+        if (!m) return;
+        // 元の行は壊さずコピーに印を付ける（同じ商品が他のセットに出ることは無いが、念のため）
+        const row = Object.assign({}, m);
+        row._setMember = true;
+        row._setKey = f.code;
+        _out.push(row);
+      });
+    });
+    list = _out;
+  }
 
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
@@ -9050,11 +9091,14 @@ function renderBasic() {
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     // 【v1.0587】合算モードは1行＝1セットなので、親子の色分け（row-parent / row-child）はしない
-    const _pcCls = basicRollup ? '' : rowParentChildClass(r.code, _pcSets);
+    const _pcCls = _basicIsRollup() ? '' : rowParentChildClass(r.code, _pcSets);
     if (_pcCls) tr.className = _pcCls;
-    // 【v1.0587】合算行のメンバー（個別モードでは自分1件）
+    // 【v1.0587】合算行のメンバー（個別モード・内訳行では自分1件）
     const _mem = (r._rollup && r._members && r._members.length) ? r._members : [r.code];
-    const _isSet = basicRollup && _mem.length > 1;
+    const _isSet = !!r._rollup && _mem.length > 1;
+    // 【v1.0588】両表示の内訳行。セット行の下にぶら下がる1商品ぶんの行
+    if (r._setMember) tr.className = (tr.className ? tr.className + ' ' : '') + 'row-setmember';
+    if (_isSet && basicRowMode === 'both') tr.className = (tr.className ? tr.className + ' ' : '') + 'row-setparent';
     // 【v1.0580/v1.0587】PR系は「推定」。合算では商品ごとに出した7%超ぶんを足し上げてある（§5-D）
     const _pe = itemPrEstimate(r.code, r.rev);          // 個別モードのツールチップ用（料率を出すため）
     const _prOver = basicPrOverOf(r);
@@ -9333,11 +9377,15 @@ function salesRoasCats() {
 //   ★率（ROAS・CVR）は絶対に平均しない。合計した分子÷合計した分母で計算し直す
 //     （§4-B-5 の「月次は日別％の平均ではなく合計から再計算」と同じ考え方）。
 // ============================================================================
-let basicRollup = false;   // false=個別 / true=合算
-function setBasicRollup(on) {
-  const v = !!on;
-  if (basicRollup === v) return;
-  basicRollup = v;
+// 【v1.0588】3モード。'each'=個別 / 'sum'=合算 / 'both'=両表示（合算の下に内訳をぶら下げる）
+//   ★モードの判定は必ず _basicIsRollup() / basicRowMode === 'both' で書く。
+//     真偽値の basicRollup に戻すと 'both' が表現できない。
+let basicRowMode = 'each';
+function _basicIsRollup() { return basicRowMode !== 'each'; }   // 合算の集計をかけるか
+function setBasicRowMode(mode) {
+  const v = (mode === 'sum' || mode === 'both') ? mode : 'each';
+  if (basicRowMode === v) return;
+  basicRowMode = v;
   if (typeof clearEditPins === 'function') clearEditPins();   // 行の粒度が変わる＝再絞り込み扱い
   _syncBasicRollupUI();
   if (typeof renderBasic === 'function') renderBasic();
@@ -9346,7 +9394,7 @@ function _syncBasicRollupUI() {
   const bar = document.getElementById('basicRollupBar');
   if (!bar) return;
   bar.querySelectorAll('.segf-btn').forEach(b => {
-    b.classList.toggle('on', (b.getAttribute('data-rollup') === 'sum') === basicRollup);
+    b.classList.toggle('on', (b.getAttribute('data-rollup') || 'each') === basicRowMode);
   });
 }
 // 代表コード（repCode。無ければ自分自身）でまとめる。_igFamilies と同じキーの取り方。
@@ -14205,7 +14253,7 @@ _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic
   if (_rb) _rb.addEventListener('click', (e) => {
     const btn = e.target.closest && e.target.closest('.segf-btn');
     if (!btn || !_rb.contains(btn)) return;
-    setBasicRollup(btn.getAttribute('data-rollup') === 'sum');
+    setBasicRowMode(btn.getAttribute('data-rollup') || 'each');
   });
 }
 _wireAdFilter('monthlyAdFilterBar', (v) => { monthlyAdFilter = v; }, renderMonthly);
@@ -15708,13 +15756,6 @@ function downloadBasicAllCsv() {
       if (isRet(r.code)) return;
       rowByCode[r.code] = r;
     });
-    // 【v1.0587】合算モードのときは、画面と同じ「セット合計の行」を出力する。
-    //   ここを外すと、CSVだけ代表商品1件ぶんの数字（＝画面と違う値）になって気づけない。
-    const _rollupOn = (typeof basicRollup !== 'undefined') && basicRollup && Array.isArray(state.basicListCache);
-    if (_rollupOn) {
-      Object.keys(rowByCode).forEach(function (k) { delete rowByCode[k]; });
-      state.basicListCache.forEach(function (r) { if (r && r.code) rowByCode[r.code] = r; });
-    }
     // 【v1.0522】いま画面に表示されている商品だけを出力（【ステータス】絞り込み・検索・広告フィルタを反映）。表示順を維持。
     let codes = Array.isArray(state.basicDisplayedCodes) ? state.basicDisplayedCodes.slice() : null;
     if (!codes) {
@@ -15725,6 +15766,20 @@ function downloadBasicAllCsv() {
       codes = Object.keys(codeSet).sort(function (a, b) { return ((rowByCode[b] && rowByCode[b].rev) || 0) - ((rowByCode[a] && rowByCode[a].rev) || 0); });
     }
     codes = codes.filter(function (c) { return c && !isRet(c); });
+    // 【v1.0587/v1.0588】合算・両表示のときは、画面に出ている行をそのまま出力する。
+    //   ★ここを rowByCode（コード引き）のままにすると、
+    //     ・合算 … CSVだけ代表商品1件ぶんの数字になり、画面と食い違う
+    //     ・両表示 … セット行と親の内訳行が同じ商品コードなので、片方しか出せない
+    const _rowMode = (typeof basicRowMode !== 'undefined') ? basicRowMode : 'each';
+    let displayRows;
+    if (_rowMode !== 'each' && Array.isArray(state.basicListCache) && state.basicListCache.length) {
+      displayRows = state.basicListCache.filter(function (r) { return r && r.code && !isRet(r.code); });
+    } else {
+      displayRows = codes.map(function (c) {
+        const base = rowByCode[c] || { rev: 0, seoRev: 0, adRev: 0, adCost: 0, roas: null, cvr: null };
+        return Object.assign({}, base, { code: c });
+      });
+    }
     if (!codes.length) {
       if (typeof showToast === 'function') showToast('出力できる商品がありません（表示中の商品が0件です）。', 'warn');
       else alert('出力できる商品がありません（表示中の商品が0件です）。');
@@ -15760,11 +15815,12 @@ function downloadBasicAllCsv() {
     const header = ['月', '商品コード', '画像URL', '商品名',
                     '総売上', '売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告実績額',
                     '広告CVR(%)', 'PR実績額(7%超・推定)', '広告ROAS(%)', 'PRオプ料率(%)', '入札価格', '送り込み売上',
-                    '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス'];
+                    '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス',
+                    '参考:行の種別', '参考:セット構成'];   /* 【v1.0588】合算/両表示でどの行なのかが分かるように */
     const lines = [header.join(',')];
     // 並び順は画面の表示順のまま
-    codes.forEach(function (code) {
-      const r = rowByCode[code] || { rev: 0, seoRev: 0, adRev: 0, adCost: 0, roas: null, cvr: null };
+    displayRows.forEach(function (r) {
+      const code = r.code;
       const m = (typeof getMaster === 'function') ? (getMaster(code) || {}) : {};
       const meta = (state.productMeta && state.productMeta[code]) || {};
       const pr = (typeof getProRate === 'function') ? getProRate(code) : null;
@@ -15773,8 +15829,12 @@ function downloadBasicAllCsv() {
       const proRate = (pr == null || isNaN(pr)) ? '' : String(Math.floor(pr));
       const _sr = salesRoasPct(r.rev, r.adCost, 0);
       // 【v1.0587】PR推定の2列は画面と同じ関数を通す（合算のときはメンバー合計になる）
-      const _prsr = basicPrSalesRoasOf(r.code ? r : { code: code, rev: r.rev, adCost: r.adCost });
-      const _prOver = basicPrOverOf(r.code ? r : { code: code, rev: r.rev });
+      const _prsr = basicPrSalesRoasOf(r);
+      const _prOver = basicPrOverOf(r);
+      // 【v1.0588】行の種別。合算セット / セットの内訳 / 個別
+      const _isSetRow = !!(r._rollup && r._members && r._members.length > 1);
+      const _kind = _isSetRow ? '合算セット' : (r._setMember ? 'セット内訳' : '');
+      const _memStr = _isSetRow ? r._members.join(' / ') : (r._setMember ? ('親: ' + (r._setKey || '')) : '');
       const row = [
         targetMonth, code, imgUrl(code), m.name || '',
         num(r.rev), (_sr == null ? '' : String(_sr)), (_prsr == null ? '' : String(_prsr)),
@@ -15783,7 +15843,8 @@ function downloadBasicAllCsv() {
         (_prOver != null ? num(_prOver) : ''), roas, proRate,
         (bid != null && bid > 0) ? String(bid) : '',
         num(_soiByParentCsv[code] || 0),
-        m.kw || '', meta.proStatus || '', meta.adStatus || '', statusDisp(code)
+        m.kw || '', meta.proStatus || '', meta.adStatus || '', statusDisp(code),
+        _kind, _memStr
       ];
       lines.push(row.map(esc).join(','));
     });
@@ -15794,7 +15855,7 @@ function downloadBasicAllCsv() {
     a.href = url; a.download = 'ycheck_商品基本データ_' + targetMonth + '.csv';   // 例: ycheck_商品基本データ_2026-09.csv
     document.body.appendChild(a); a.click();
     setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
-    if (typeof showToast === 'function') showToast(targetMonth + ' の商品基本データCSVを出力しました（' + codes.length + '件）', 'ok');
+    if (typeof showToast === 'function') showToast(targetMonth + ' の商品基本データCSVを出力しました（' + displayRows.length + '行）', 'ok');
   } catch (e) {
     console.error('[Ycheck] downloadBasicAllCsv error', e);
     alert('CSV出力でエラーが発生しました: ' + (e && e.message));
