@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0586 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0587 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3154,11 +3154,18 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .nav-group-label.g-pr       { color:#7c3aed; }  /* 【PR状態】 */
 .nav-group-label.g-taiou    { color:#c2410c; }  /* 【対応検討】 */
 /* 【v1.0322】広告あり/無し 絞り込み（商品-基本/月別データ）。検索欄の隣のセグメントボタン */
-.ad-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:6px; vertical-align:middle; }
-.ad-filter .adf-btn { font-size:0.8rem; padding:5px 11px; border:none; border-left:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; font-weight:500; white-space:nowrap; line-height:1.3; }
-.ad-filter .adf-btn:first-child { border-left:none; }
-.ad-filter .adf-btn:hover { background:var(--bg3); }
-.ad-filter .adf-btn.on { background:var(--accent); color:#fff; font-weight:600; }
+/* 【v1.0587】.seg-filter / .segf-btn は .ad-filter と同じ見た目のセグメントボタン（合算/個別で使用）。
+   同じ宣言を書き写さずに済むよう、セレクタを並べて共有している。 */
+.ad-filter, .seg-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:6px; vertical-align:middle; }
+.ad-filter .adf-btn, .seg-filter .segf-btn { font-size:0.8rem; padding:5px 11px; border:none; border-left:1px solid var(--border); background:var(--bg2); color:var(--text2); cursor:pointer; font-weight:500; white-space:nowrap; line-height:1.3; }
+.ad-filter .adf-btn:first-child, .seg-filter .segf-btn:first-child { border-left:none; }
+.ad-filter .adf-btn:hover, .seg-filter .segf-btn:hover { background:var(--bg3); }
+.ad-filter .adf-btn.on, .seg-filter .segf-btn.on { background:var(--accent); color:#fff; font-weight:600; }
+/* 【v1.0587】合算モードの目印: 商品コード横の「n点」バッジ */
+.fam-count { display:inline-block; margin-left:5px; padding:0 5px; border-radius:999px; font-size:0.64rem; font-weight:700;
+  background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.5; cursor:help; }
+/* 合算モードで編集できないセル（料率・入札価格はメンバーごとに違うため） */
+.cell-multi { color:var(--text2); cursor:help; }
 .ad-filter.search-bypass { opacity:0.4; }
 .ad-filter.search-bypass .adf-btn { cursor:default; }
 
@@ -3211,7 +3218,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0586</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0587</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3424,6 +3431,12 @@ th.col-sroas { background-color:#e7d5f5; }
           <select id="basicDaySel" class="day-sel" onchange="onBasicDaySelChange()" title="日別データを取り込んだ日だけ選べます。選ぶとその1日だけの数字になります（空に戻すと月合計）"></select></span>
           <span class="filter-label">検索</span>
           <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <!-- 【v1.0587】個別 / 合算 の切替（§5-D）。
+               個別＝従来どおり親子を別々の行で表示
+               合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
+                     （親が広告費を出して子が売れる構成では、個別の売上ROASが実態とズレるため） -->
+          <span class="seg-filter" id="basicRollupBar" role="group" aria-label="個別/合算"
+            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button></span>
           <!-- 【v1.0585】ツールバーから撤去した2つ（要素ごと削除。ロジック・関数はすべて残置）
                ① 広告フィルタ #basicAdFilterBar（全体 / 広告あり商品 / 広告なし商品）
                   → クロス絞り込みパネルの「広告 有り／無し」が同じ basicAdFilter を動かすので重複していた（§16-B-1）
@@ -4630,6 +4643,17 @@ const fmtProRate = (n) => {
 function getProRate(code) {
   if (!state.proRate) return null;
   const v = state.proRate[String(code).toLowerCase()];
+  return (v == null || isNaN(v)) ? null : v;
+}
+// 【v1.0587】入札価格の取り出し。state.bid のキーは小文字（§2）なので、
+//   ★getProRate と同じく小文字にフォールバックする。
+//   v1.0586までは state.bid[code] の完全一致だけで、大文字を含むコードの商品は
+//   入札価格の列が「—」になる一方、updateStateCounts の「入札価格が記入されている商品数」は
+//   小文字フォールバック付きで数えていたため、列とチップの件数が食い違っていた。
+function getBid(code) {
+  if (!state.bid) return null;
+  let v = state.bid[code];
+  if (v == null) v = state.bid[String(code).toLowerCase()];
   return (v == null || isNaN(v)) ? null : v;
 }
 
@@ -8923,6 +8947,13 @@ function renderBasic() {
   // 引退済み商品（商品名なし）を除外
   list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
+  // 【v1.0587】合算モード: ★絞り込みより先にまとめる（§5-D）。
+  //   先に絞り込むと、たとえば「広告あり」で子の行が落ちてから足すことになり、
+  //   セットの合計が欠けた数字になる。まとめてから、以降の絞り込み・並べ替えは
+  //   「代表コード（親）の行」に対して効かせる。
+  _syncBasicRollupUI();
+  if (basicRollup) list = _basicRollupRows(list);
+
   // 【v229】【状態】チップで basic を対象にした絞り込み（全体／新商品）
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
     const f = STATE_FILTERS[state.activeStateFilter.type];
@@ -8935,8 +8966,13 @@ function renderBasic() {
   const q = $('#basicSearch').value.trim().toLowerCase();
   if (q) {
     list = list.filter(r => {
-      const m = getMaster(r.code);
-      const hay = [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase();
+      // 【v1.0587】合算モードでは行が代表コードなので、★メンバー全員のコード・商品名も検索対象にする。
+      //   でないと「子の名前で検索したのに1件も出ない」ことになる。
+      const codes = (r._rollup && r._members && r._members.length) ? r._members : [r.code];
+      const hay = codes.reduce((acc, c) => {
+        const m = getMaster(c);
+        return acc + ' ' + c + ' ' + ((m && m.name) || '');
+      }, String(r.code)).toLowerCase();
       return hay.includes(q);
     });
   }
@@ -8990,7 +9026,8 @@ function renderBasic() {
   // 【v125】代表コード絞り込み
   list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化（同じrepCodeの商品を塊で表示）
-  list = applyRepGrouping(list);
+  // 【v1.0587】合算モードでは1行＝1セットなので、親子の並べ替え・字下げは不要（かけると逆に崩れる）
+  if (!basicRollup) list = applyRepGrouping(list);
 
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
@@ -9009,26 +9046,53 @@ function renderBasic() {
   // 【v134】親子表示のための分類（リスト確定後に1度だけ計算）
   const _pcSets = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
-    const bid = state.bid ? state.bid[r.code] : null;
+    const bid = getBid(r.code);   // 【v1.0587】小文字フォールバック付き（renderBasic / renderAdAdjust 共通）
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
-    const _pcCls = rowParentChildClass(r.code, _pcSets);
+    // 【v1.0587】合算モードは1行＝1セットなので、親子の色分け（row-parent / row-child）はしない
+    const _pcCls = basicRollup ? '' : rowParentChildClass(r.code, _pcSets);
     if (_pcCls) tr.className = _pcCls;
-    // 【v1.0580】PR系は「推定」。実測が取れない商品別の割り切り（itemPrEstimate のコメント参照）
-    const _pe = itemPrEstimate(r.code, r.rev);
-    const _prsr = itemPrSalesRoasPct(r.code, r.rev, r.adCost);
+    // 【v1.0587】合算行のメンバー（個別モードでは自分1件）
+    const _mem = (r._rollup && r._members && r._members.length) ? r._members : [r.code];
+    const _isSet = basicRollup && _mem.length > 1;
+    // 【v1.0580/v1.0587】PR系は「推定」。合算では商品ごとに出した7%超ぶんを足し上げてある（§5-D）
+    const _pe = itemPrEstimate(r.code, r.rev);          // 個別モードのツールチップ用（料率を出すため）
+    const _prOver = basicPrOverOf(r);
+    const _prsr   = basicPrSalesRoasOf(r);
     const _soi = _soiByParent[r.code] || 0;
-    const _grpBadge = (pr == null || isNaN(pr)) ? ''
+    // 料率バッジ（送り込み元/利益源）はセットの中で割れるので、合算のセットには出さない
+    const _grpBadge = (_isSet || pr == null || isNaN(pr)) ? ''
       : (Number(pr) > PR_BASE_RATE_PCT
           ? '<span class="pr-grp-badge over" title="設定料率が7%超＝料率を上げて上位表示を取り、子商品へ流す側（全-月別データの「送り込み元」）">送り込み元</span>'
           : '<span class="pr-grp-badge base" title="設定料率は最低の7%＝実際に利益が落ちる側（全-月別データの「利益源」）">利益源</span>');
-    const _prsrTip = !_pe ? 'PRオプ料率が未取得のため算出できません'
-      : 'PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100\n'
-        + '★商品別のPR実績額はYahooから取得できないため、⑤の設定料率(' + (Math.round(_pe.rate * 10) / 10) + '%)からの推定です\n'
-        + '推定 PR実績額(7%超) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (' + (Math.round(_pe.rate * 10) / 10) + '% − ' + PR_BASE_RATE_PCT + '%)\n'
-        + (Number(_pe.rate) <= PR_BASE_RATE_PCT ? '※この商品は料率7%＝上乗せ分0のため、売上ROASと同じ値になります' : '');
+    const _prsrTip = _isSet
+      ? ('PR売上ROAS(推定) ＝ セット合計の総売上 ÷（合計の広告実績額 ＋ 合計のPR実績額(7%超・推定)）× 100\n'
+         + '★7%超ぶんは商品ごとに⑤の設定料率から出してから足し上げています（実測ではありません）\n'
+         + 'メンバー: ' + _mem.join(', '))
+      : (!_pe ? 'PRオプ料率が未取得のため算出できません'
+        : 'PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100\n'
+          + '★商品別のPR実績額はYahooから取得できないため、⑤の設定料率(' + (Math.round(_pe.rate * 10) / 10) + '%)からの推定です\n'
+          + '推定 PR実績額(7%超) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (' + (Math.round(_pe.rate * 10) / 10) + '% − ' + PR_BASE_RATE_PCT + '%)\n'
+          + (Number(_pe.rate) <= PR_BASE_RATE_PCT ? '※この商品は料率7%＝上乗せ分0のため、売上ROASと同じ値になります' : ''));
+    const _prOverTip = _isSet
+      ? ('セット合計。商品ごとに「総売上 ÷ ' + PR_TAX_DIV + ' ×（設定料率 − ' + PR_BASE_RATE_PCT + '%）」を出してから足しています（推定）\nメンバー: ' + _mem.join(', '))
+      : (_pe ? 'PR実績額(7%超・推定) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (設定料率 − ' + PR_BASE_RATE_PCT + '%)。⑤の設定料率からの推定で、実測ではありません'
+             : 'PRオプ料率が未取得のため算出できません');
+    // セット行の「n点」バッジ。ツールチップにメンバーを並べる
+    const _famBadge = _isSet
+      ? `<span class="fam-count" title="${escapeHtml('このセットにまとめた商品（' + _mem.length + '件）:\n' + _mem.join('\n'))}">${_mem.length}点</span>`
+      : '';
+    // 料率・入札価格はメンバーで値が割れるので、セット行では範囲表示＋編集不可にする
+    const _proCell = _isSet
+      ? (() => { const v = _basicMultiVal(_mem, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
+                 return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
+      : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}${_grpBadge}</td>`;
+    const _bidCell = _isSet
+      ? (() => { const v = _basicMultiVal(_mem, c => getBid(c), x => '¥' + x);
+                 return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
+      : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code)}${_famBadge}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td class="num col-total">${fmt(r.rev)}</td>
@@ -9038,11 +9102,11 @@ function renderBasic() {
       ${shareRevCell(r.adRev, r.seoRev, false, "col-ad")}
       <td class="num col-spend">${fmt(r.adCost)}</td>
       <td class="num col-cvr">${r.cvr == null ? '<span style="color:var(--text3)">—</span>' : fmtCvr(r.cvr)}</td>
-      <td class="num col-prov est-val" title="${escapeHtml(_pe ? 'PR実績額(7%超・推定) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (設定料率 − ' + PR_BASE_RATE_PCT + '%)。⑤の設定料率からの推定で、実測ではありません' : 'PRオプ料率が未取得のため算出できません')}">${(_pe && _pe.over > 0) ? fmt(Math.round(_pe.over)) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="num col-aroas ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
-      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}${_grpBadge}</td>
-      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
-      <td class="num col-soi" title="この商品を代表コードに指定している子商品の売上合計">${_soi > 0 ? fmt(_soi) : '<span style="color:var(--text3)">—</span>'}</td>
+      ${_proCell}
+      ${_bidCell}
+      <td class="num col-soi" title="${_isSet ? 'このセットのうち、送り込み先（子商品）の売上合計。セットの総売上に含まれています' : 'この商品を代表コードに指定している子商品の売上合計'}">${_soi > 0 ? fmt(_soi) : '<span style="color:var(--text3)">—</span>'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -9256,6 +9320,101 @@ function salesRoasCats() {
     ['n', '—',                                          SALES_ROAS_COLORS.n]
   ];
 }
+// ============================================================================
+// 【v1.0587】商品-基本データの「個別 / 合算」（§5-D）
+//   個別（既定）… 従来どおり。送り込み元（親）と送り込み先（子）は別々の行
+//   合算         … 同じ代表コード(repCode)の親子を1行にまとめ、
+//                  ★金額を合計してから 売上ROAS / 広告CVR / 広告ROAS を計算し直す
+//
+//   なぜ要るか: 親が広告費を出して上位表示を取り、子が売れる構成だと、
+//   個別の行では「親＝広告費だけで売上が少ない／子＝売上だけで費用ゼロ」に見え、
+//   1商品ずつの売上ROASでは判断できない。セットとしての採算はこちらで見る。
+//
+//   ★率（ROAS・CVR）は絶対に平均しない。合計した分子÷合計した分母で計算し直す
+//     （§4-B-5 の「月次は日別％の平均ではなく合計から再計算」と同じ考え方）。
+// ============================================================================
+let basicRollup = false;   // false=個別 / true=合算
+function setBasicRollup(on) {
+  const v = !!on;
+  if (basicRollup === v) return;
+  basicRollup = v;
+  if (typeof clearEditPins === 'function') clearEditPins();   // 行の粒度が変わる＝再絞り込み扱い
+  _syncBasicRollupUI();
+  if (typeof renderBasic === 'function') renderBasic();
+}
+function _syncBasicRollupUI() {
+  const bar = document.getElementById('basicRollupBar');
+  if (!bar) return;
+  bar.querySelectorAll('.segf-btn').forEach(b => {
+    b.classList.toggle('on', (b.getAttribute('data-rollup') === 'sum') === basicRollup);
+  });
+}
+// 代表コード（repCode。無ければ自分自身）でまとめる。_igFamilies と同じキーの取り方。
+function _basicRepKeyOf(code) {
+  const r = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
+  return r || String(code);
+}
+// buildFullAggregate / _basicDayAggRows と同じ形の行を返す（描画コードを二重化しないため）
+function _basicRollupRows(rows) {
+  const fam = new Map();
+  (rows || []).forEach(r => {
+    if (!r || !r.code) return;
+    const k = _basicRepKeyOf(r.code);
+    let f = fam.get(k);
+    if (!f) {
+      f = { code: k, month: r.month, rev: 0, adCost: 0, adRev: 0, seoRev: 0,
+            adClicks: 0, adOrders: 0, orders: 0, roas: null, cvr: null,
+            _rollup: true, _members: [], _prOverEst: 0, _prRateKnown: false };
+      fam.set(k, f);
+    }
+    f.rev      += (+r.rev      || 0);
+    f.adCost   += (+r.adCost   || 0);
+    f.adRev    += (+r.adRev    || 0);
+    f.adClicks += (+r.adClicks || 0);
+    f.adOrders += (+r.adOrders || 0);
+    f.orders   += (+r.orders   || 0);
+    f._members.push(r.code);
+    // ★PR実績額(7%超・推定)は「商品ごとに料率が違う」ので、必ず商品単位で出してから足す。
+    //   セット合計の売上に代表商品の料率を掛けてはいけない（§5-B の推定の前提が崩れる）。
+    const e = itemPrEstimate(r.code, r.rev);
+    if (e) { f._prRateKnown = true; f._prOverEst += Math.max(0, +e.over || 0); }
+  });
+  const out = [];
+  fam.forEach(f => {
+    f.seoRev = Math.max(0, f.rev - f.adRev);
+    f.roas = f.adCost   > 0 ? (f.adRev / f.adCost) * 100 : null;     // ★合計から再計算
+    f.cvr  = f.adClicks > 0 ? (f.adOrders / f.adClicks) * 100 : null; // ★同上
+    out.push(f);
+  });
+  return out;
+}
+// PR推定の2列は、個別＝その商品の料率 / 合算＝メンバーぶんの合計。画面もCSVもこの2本を通す。
+function basicPrOverOf(r) {
+  if (!r) return null;
+  if (r._rollup) return r._prRateKnown ? r._prOverEst : null;
+  const e = itemPrEstimate(r.code, r.rev);
+  return e ? Math.max(0, +e.over || 0) : null;
+}
+function basicPrSalesRoasOf(r) {
+  if (!r) return null;
+  if (r._rollup) {
+    if (!r._prRateKnown) return null;
+    const den = (+r.adCost || 0) + (+r._prOverEst || 0);
+    return den > 0 ? Math.round((+r.rev || 0) / den * 100) : null;
+  }
+  return itemPrSalesRoasPct(r.code, r.rev, r.adCost);
+}
+// 合算行のメンバーで値が割れる列（PRオプ料率・入札価格）の表示。1種類なら普通に、複数なら範囲で。
+function _basicMultiVal(members, getter, fmtOne) {
+  const vals = [];
+  (members || []).forEach(c => { const v = getter(c); if (v != null && !isNaN(v) && Number(v) > 0) vals.push(Number(v)); });
+  if (!vals.length) return { html: '—', tip: '' };
+  const uniq = [...new Set(vals)].sort((a, b) => a - b);
+  const tip = (members || []).map(c => { const v = getter(c); return c + ': ' + ((v == null || isNaN(v)) ? '—' : fmtOne(v)); }).join('\n');
+  if (uniq.length === 1) return { html: fmtOne(uniq[0]), tip };
+  return { html: fmtOne(uniq[0]) + '〜' + fmtOne(uniq[uniq.length - 1]), tip };
+}
+
 let basicSroasFilter = null;   // 選択中の帯カテゴリ or null（未選択＝絞り込みなし）
 function setSroasFilter(cat) {
   basicSroasFilter = (basicSroasFilter === cat) ? null : cat;   // 同じ帯を再クリックで解除
@@ -11671,7 +11830,7 @@ function renderAdAdjust(cfg) {
   // 【v134】親子表示のための分類
   const _pcSetsAdAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
-    const bid = state.bid ? state.bid[r.code] : null;
+    const bid = getBid(r.code);   // 【v1.0587】小文字フォールバック付き（renderBasic / renderAdAdjust 共通）
     const tr = document.createElement('tr');
     const _pcCls = rowParentChildClass(r.code, _pcSetsAdAdj);
     if (_pcCls) tr.className = _pcCls;
@@ -14040,6 +14199,15 @@ function _wireAdFilter(barId, setFilter, rerender) {
   });
 }
 _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic);
+// 【v1.0587】個別 / 合算 の切替（§5-D）
+{
+  const _rb = document.getElementById('basicRollupBar');
+  if (_rb) _rb.addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.segf-btn');
+    if (!btn || !_rb.contains(btn)) return;
+    setBasicRollup(btn.getAttribute('data-rollup') === 'sum');
+  });
+}
 _wireAdFilter('monthlyAdFilterBar', (v) => { monthlyAdFilter = v; }, renderMonthly);
 if ($('#btnDownloadBasicCsv')) $('#btnDownloadBasicCsv').addEventListener('click', downloadBasicCsv);
 if ($('#btnDownloadBasicAllCsv')) $('#btnDownloadBasicAllCsv').addEventListener('click', downloadBasicAllCsv);   // 【v1.0521】月別全件CSV
@@ -15540,6 +15708,13 @@ function downloadBasicAllCsv() {
       if (isRet(r.code)) return;
       rowByCode[r.code] = r;
     });
+    // 【v1.0587】合算モードのときは、画面と同じ「セット合計の行」を出力する。
+    //   ここを外すと、CSVだけ代表商品1件ぶんの数字（＝画面と違う値）になって気づけない。
+    const _rollupOn = (typeof basicRollup !== 'undefined') && basicRollup && Array.isArray(state.basicListCache);
+    if (_rollupOn) {
+      Object.keys(rowByCode).forEach(function (k) { delete rowByCode[k]; });
+      state.basicListCache.forEach(function (r) { if (r && r.code) rowByCode[r.code] = r; });
+    }
     // 【v1.0522】いま画面に表示されている商品だけを出力（【ステータス】絞り込み・検索・広告フィルタを反映）。表示順を維持。
     let codes = Array.isArray(state.basicDisplayedCodes) ? state.basicDisplayedCodes.slice() : null;
     if (!codes) {
@@ -15597,14 +15772,15 @@ function downloadBasicAllCsv() {
       const roas = (r.roas == null || isNaN(r.roas) || !isFinite(r.roas)) ? '' : String(Math.round(r.roas));
       const proRate = (pr == null || isNaN(pr)) ? '' : String(Math.floor(pr));
       const _sr = salesRoasPct(r.rev, r.adCost, 0);
-      const _prsr = itemPrSalesRoasPct(code, r.rev, r.adCost);
-      const _pe = itemPrEstimate(code, r.rev);
+      // 【v1.0587】PR推定の2列は画面と同じ関数を通す（合算のときはメンバー合計になる）
+      const _prsr = basicPrSalesRoasOf(r.code ? r : { code: code, rev: r.rev, adCost: r.adCost });
+      const _prOver = basicPrOverOf(r.code ? r : { code: code, rev: r.rev });
       const row = [
         targetMonth, code, imgUrl(code), m.name || '',
         num(r.rev), (_sr == null ? '' : String(_sr)), (_prsr == null ? '' : String(_prsr)),
         num(r.seoRev), num(r.adRev), num(r.adCost),
         (r.cvr == null ? '' : String(Math.round(r.cvr * 10) / 10)),
-        (_pe ? num(_pe.over) : ''), roas, proRate,
+        (_prOver != null ? num(_prOver) : ''), roas, proRate,
         (bid != null && bid > 0) ? String(bid) : '',
         num(_soiByParentCsv[code] || 0),
         m.kw || '', meta.proStatus || '', meta.adStatus || '', statusDisp(code)
