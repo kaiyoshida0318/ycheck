@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0588 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0589 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3166,6 +3166,9 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
   background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.5; cursor:help; }
 /* 合算モードで編集できないセル（料率・入札価格はメンバーごとに違うため） */
 .cell-multi { color:var(--text2); cursor:help; }
+/* 【v1.0589】算出不能の「—」（0円ではない）。SEO売上の子商品／はみ出しで使う */
+.na-val { color: var(--text3); cursor: help; }
+.seo-over { display:block; font-size:0.66rem; font-weight:700; color:#b91c1c; line-height:1.2; }
 /* 【v1.0588】両表示: セット行（合計）と、その下にぶら下がる内訳行 */
 tr.row-setparent > td { border-top: 2px solid #b9c2cf; font-weight: 600; }      /* セットの切れ目をはっきり */
 tr.row-setmember > td { background-color: #f7f9fe; font-size: 0.94em; }          /* 内訳はひとまわり控えめに */
@@ -3225,7 +3228,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0588</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0589</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4636,6 +4639,35 @@ function shareRevCell(thisAmt, otherAmt, isSeo, cls){
   // 数値を .amt で内包し、その中に % を入れる。% は .amt(=数値の幅) の中央に絶対配置＝メイン数値の真下中央に来る。
   return '<td class="num ' + cls + ' share-cell"><span class="amt">' + fmt(thisAmt) + pctHtml + '</span></td>';
 }
+// ============================================================================
+// 【v1.0589】★ 送り込みセットでは「商品単位のSEO売上」が成立しない（§5-E）
+//   SEO売上 ＝ 総売上 − 広告売上 は、引く2つが同じ商品に紐づいているときだけ成立する式。
+//   ところが 総売上＝売れた商品 / 広告売上＝クリックされた商品 に付くので、
+//   親の広告で子が売れる構成（§6 送り込み）では帰属先が違い、商品単位の引き算が壊れる。
+//
+//   実データ（2026/09）:
+//     親 wat-sma-01        総売上 ¥19,000 / 広告売上 ¥29,840 → SEO = max(0, −10,840) = 0
+//     子 wat-sma-01-0set   総売上 ¥11,000 / 広告売上 0        → SEO = ¥11,000
+//                                                 個別の合計 = ¥11,000
+//     セット合計           総売上 ¥30,000 / 広告売上 ¥29,840 → SEO = ¥160   ← 足し算が合わない
+//
+//   → 子商品の行では SEO売上を「—」にする（0円ではなく【算出不能】）。
+//     ★ここで按分して埋めないこと。どの注文がどの広告経由かは元データに存在しない
+//       （§4-C-3 / §18-7 の「推定で埋めない・黙って直さない」と同じ方針）。
+//     セットとしてのSEO売上は「合算」「両表示」のセット行で見る。
+// ============================================================================
+function isSoikomiChild(code) {
+  const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
+  return !!rep && rep !== String(code);
+}
+// 親（送り込み元）で 広告売上 > 総売上 になった「はみ出し額」。それ以外は null。
+//   max(0, …) で 0 に丸めた分が、そのままこの額。
+function seoOverflowOf(row) {
+  if (!row) return null;
+  const d = (+row.rev || 0) - (+row.adRev || 0);
+  return d < 0 ? -d : null;
+}
+
 // 【v218】CVRフォーマット: 小数1桁 + 末尾%（広告詳細レポートの表記に合わせる）
 const fmtCvr = (n) => {
   if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
@@ -9126,6 +9158,30 @@ function renderBasic() {
     const _famBadge = _isSet
       ? `<span class="fam-count" title="${escapeHtml('このセットにまとめた商品（' + _mem.length + '件）:\n' + _mem.join('\n'))}">${_mem.length}点</span>`
       : '';
+    // 【v1.0589】SEO売上の出し分け（§5-E）
+    //   ・子商品（送り込み先）… 算出不能なので「—」。構成比%も出さない（SEOが不明なら100%に割れない）
+    //   ・親で広告売上>総売上 … 「—」のままだと 0円 と区別できないので、はみ出し額を添える
+    const _soiChild = !r._rollup && isSoikomiChild(r.code);
+    const _seoOver  = seoOverflowOf(r);
+    let _seoCell, _adRevCell;
+    if (_soiChild) {
+      const _t = '送り込み先（子商品）のSEO売上は算出できません。\n'
+        + 'この商品の売上は代表商品「' + String(((state.productMeta || {})[r.code] || {}).repCode || '') + '」の広告経由で発生している可能性があり、\n'
+        + 'その広告売上は代表商品の行に計上されています。\n'
+        + 'SEO売上＝総売上−広告売上 は、両方が同じ商品に紐づいているときだけ成立する式です。\n'
+        + 'セットとしてのSEO売上は「合算」「両表示」のセット行で見てください。';
+      _seoCell   = `<td class="num col-sales share-cell"><span class="amt na-val" title="${escapeHtml(_t)}">—</span></td>`;
+      _adRevCell = `<td class="num col-ad share-cell"><span class="amt">${fmt(r.adRev)}</span></td>`;   // 構成比%は出さない
+    } else if (_seoOver != null) {
+      const _t = '広告売上が総売上を ¥' + Math.round(_seoOver).toLocaleString('ja-JP') + ' 上回っているため、SEO売上は算出できません。\n'
+        + '広告売上はクリックされた商品に計上されるので、この商品の広告から入った客が別商品（子商品など）で購入すると起きます。\n'
+        + 'セットとしてのSEO売上は「合算」「両表示」のセット行で見てください。';
+      _seoCell   = `<td class="num col-sales share-cell"><span class="amt na-val" title="${escapeHtml(_t)}">—<span class="seo-over">▲¥${Math.round(_seoOver).toLocaleString('ja-JP')}</span></span></td>`;
+      _adRevCell = `<td class="num col-ad share-cell"><span class="amt">${fmt(r.adRev)}</span></td>`;
+    } else {
+      _seoCell   = shareRevCell(r.seoRev, r.adRev, true, "col-sales");
+      _adRevCell = shareRevCell(r.adRev, r.seoRev, false, "col-ad");
+    }
     // 料率・入札価格はメンバーで値が割れるので、セット行では範囲表示＋編集不可にする
     const _proCell = _isSet
       ? (() => { const v = _basicMultiVal(_mem, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
@@ -9142,8 +9198,8 @@ function renderBasic() {
       <td class="num col-total">${fmt(r.rev)}</td>
       <td class="num col-sroas">${salesRoasCellHtml(salesRoasPct(r.rev, r.adCost, 0))}</td>
       <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
-      ${shareRevCell(r.seoRev, r.adRev, true, "col-sales")}
-      ${shareRevCell(r.adRev, r.seoRev, false, "col-ad")}
+      ${_seoCell}
+      ${_adRevCell}
       <td class="num col-spend">${fmt(r.adCost)}</td>
       <td class="num col-cvr">${r.cvr == null ? '<span style="color:var(--text3)">—</span>' : fmtCvr(r.cvr)}</td>
       <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
