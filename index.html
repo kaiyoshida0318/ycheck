@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0582 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0583 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -498,9 +498,74 @@ body.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="status-withdrawn"] { background:#efe4da; border-color:#d9c3ad; }
 .state-chip[data-state="status-withdrawn"]:hover, .state-chip[data-state="status-withdrawn"].active { background:#8b5a2b; border-color:#6f4720; }
 
-/* 【v195】状態行: ステータス（上）→状態（下）を縦積み。各グループ内はチップ折り返し。 */
-.top-nav-3 { flex-direction: column; align-items: stretch; gap: 6px; }  /* 【v198】ステータス⇔状態の行間を倍に */
+/* 【v195】状態行: ステータス（上）→状態（下）を縦積み。各グループ内はチップ折り返し。
+   【v1.0583】その縦積みを .states-stack に移し、.top-nav-3 自体は
+   「左＝クロス絞り込みパネル / 右＝状態チップ群」の横並びにした（§16-B）。 */
+/* ★flex-wrap は nowrap にする。.top-nav の既定（wrap）のままだと、チップ群の
+   min-content 幅がパネルの右に収まらず、状態チップ行がパネルの【下】へ落ちる。
+   nowrap ＋ .states-stack の min-width:0 で、狭いときはチップ側が内部で折り返す。 */
+.top-nav-3 { flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; }
+.states-stack { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 1 1 auto; min-width: 0; }  /* 【v198】ステータス⇔状態の行間を倍に */
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
+
+/* ============================================================================
+   【v1.0583】クロス絞り込みパネル（広告 × 送り込み）
+   ・5列×4行のグリッド。左端の「クリア（全体）」だけ4行ぶちぬき、「広告」は下2行ぶちぬき
+   ・★セルは <button> で、条件は data-xf-ad / data-xf-soi の2属性だけに持たせる
+     （個別idでハンドラを足さない。増やすときもこの2属性で表現する）
+   ・table ではなくグリッドにしてあるのは、アプリ共通の td 既定パディング(7px 10px)に
+     巻き込まれて桁がずれるのを避けるため（仕様書 §18-5 と同じ理由）
+   ============================================================================ */
+.xf-panel {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: auto auto auto minmax(52px, auto) minmax(52px, auto);
+  grid-template-rows: auto auto auto auto;
+  gap: 1px;
+  background: #c7cedb;                 /* 罫線の色。gap を背景で見せる */
+  border: 1px solid #c7cedb;
+  border-radius: 7px;
+  overflow: hidden;
+  align-self: flex-start;
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+.xf-panel > * { background: #fff; display: flex; align-items: center; justify-content: center; text-align: center; }
+/* クリア（全体）: 1列目・4行ぶちぬき */
+.xf-clear { grid-column: 1; grid-row: 1 / span 4; flex-direction: column; gap: 1px; padding: 4px 10px; }
+.xf-clear-main { font-weight: 700; font-size: 0.8rem; }
+.xf-clear-sub  { font-size: 0.64rem; color: var(--text3); }
+/* 見出しの無い左上（広告ラベルの上） */
+.xf-corner { grid-column: 2 / span 2; grid-row: 1 / span 2; background: #f4f6fa; }
+/* 「送り込み」= 4〜5列目の1行目 */
+.xf-head-soi { grid-column: 4 / span 2; grid-row: 1; }
+/* 「広告」= 2列目の3〜4行目 */
+.xf-head-ad  { grid-column: 2; grid-row: 3 / span 2; writing-mode: horizontal-tb; padding: 0 5px; }
+.xf-head { background: #eef2f8; font-weight: 700; color: var(--text2); padding: 3px 8px; white-space: nowrap; }
+/* ★セルの置き場所は data-xf-* から決める（自動配置に任せない。1つ足すとレイアウトが崩れるため） */
+.xf-panel [data-xf-ad="all"][data-xf-soi="yes"]  { grid-column: 4; grid-row: 2; }
+.xf-panel [data-xf-ad="all"][data-xf-soi="no"]   { grid-column: 5; grid-row: 2; }
+.xf-panel [data-xf-ad="ad"][data-xf-soi="all"]   { grid-column: 3; grid-row: 3; }
+.xf-panel [data-xf-ad="noad"][data-xf-soi="all"] { grid-column: 3; grid-row: 4; }
+.xf-panel [data-xf-ad="ad"][data-xf-soi="yes"]   { grid-column: 4; grid-row: 3; }
+.xf-panel [data-xf-ad="ad"][data-xf-soi="no"]    { grid-column: 5; grid-row: 3; }
+.xf-panel [data-xf-ad="noad"][data-xf-soi="yes"] { grid-column: 4; grid-row: 4; }
+.xf-panel [data-xf-ad="noad"][data-xf-soi="no"]  { grid-column: 5; grid-row: 4; }
+/* 押せるセル */
+.xf-cell { border: none; cursor: pointer; font-family: inherit; color: var(--text); padding: 3px 8px; white-space: nowrap; }
+.xf-axis { background: #f7f9fc; color: var(--text2); font-weight: 600; gap: 3px; }
+.xf-cross { font-weight: 700; min-height: 22px; }
+.xf-cell:hover { background: #e4ecf9; }
+.xf-clear:hover { background: #fdeceb; }
+.xf-num { font-size: 0.68rem; color: var(--text3); font-weight: 500; }
+.xf-cross .xf-num { font-size: 0.78rem; color: var(--text); font-weight: 700; }
+/* 選択中。★色は1箇所（--accent 系）だけで決める */
+.xf-cell.active { background: #2563eb; color: #fff; }
+.xf-cell.active .xf-num { color: rgba(255,255,255,0.92); }
+/* 件数0のセルは押しても空になるだけなので薄く（クリックは殺さない＝0件であることの確認に使える） */
+.xf-cross.xf-zero:not(.active) { color: var(--text3); }
+.xf-cross.xf-zero:not(.active) .xf-num { color: var(--text3); font-weight: 500; }
+@media (max-width: 1100px) { .xf-panel { font-size: 0.68rem; } .xf-panel > * { padding-left: 5px; padding-right: 5px; } }
 /* 【v200】【入札状態】＋【PR状態】を1行に横並び。溢れたら折り返し。 */
 .nav-row-states { display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 4px; width: 100%; }
 .nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
@@ -3137,7 +3202,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0582</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0583</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3206,8 +3271,39 @@ th.col-sroas { background-color:#e7d5f5; }
   <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ2段（【基本】【全体】【取得データ】【調整】【対応検討】）を隠します">🔼 ヘッダー1を隠す</button>
 </nav>
 
-<!-- Third row: ステータス（上）＋状態（下） -->
+<!-- Third row: ステータス（上）＋状態（下）
+     【v1.0583】左端に「クロス絞り込み」パネルを新設し、状態チップ群はその右へ寄せた（§16-B）。
+       .top-nav-3 は横並び（左＝パネル固定幅 / 右＝従来の2段を縦積みする .states-stack）。 -->
 <nav class="top-nav top-nav-3">
+
+  <!-- 【v1.0583】クロス絞り込み: 広告(有り/無し) × 送り込み(有り/無し) をワンクリックで。
+       ・data-xf-ad / data-xf-soi の組み合わせがそのまま絞り込み条件（'all'|'ad'|'noad' / 'all'|'yes'|'no'）
+       ・見出しセル（送り込み-有り/無し・広告-有り/無し）も押せる＝その軸だけの絞り込み
+       ・★ボタンを増やすときも必ずこの2属性だけで表現する。個別のidでハンドラを足さないこと -->
+  <div class="xf-panel" id="xfPanel" role="group" aria-label="クロス絞り込み">
+    <button type="button" class="xf-cell xf-clear" id="xfClearBtn"
+      title="すべての絞り込み（ステータス・入札状態・PR状態・広告・送り込み・検索・売上ROAS帯）を解除して全体を表示します">
+      <span class="xf-clear-main">クリア</span><span class="xf-clear-sub">（全体）</span>
+    </button>
+
+    <div class="xf-corner" aria-hidden="true"></div>
+
+    <div class="xf-head xf-head-soi">送り込み</div>
+    <button type="button" class="xf-cell xf-axis" data-xf-ad="all"  data-xf-soi="yes" title="送り込みが有る商品だけを表示（親＝送り込み元 / 子＝代表コードを持つ商品）">有り<span class="xf-num" id="xfNumSoiYes"></span></button>
+    <button type="button" class="xf-cell xf-axis" data-xf-ad="all"  data-xf-soi="no"  title="送り込みが無い商品だけを表示（代表コードを持たず、どこからも参照されていない商品）">無し<span class="xf-num" id="xfNumSoiNo"></span></button>
+
+    <div class="xf-head xf-head-ad">広告</div>
+    <button type="button" class="xf-cell xf-axis" data-xf-ad="ad"   data-xf-soi="all" title="ステータスが「…広告あり…」の商品だけを表示">有り<span class="xf-num" id="xfNumAdYes"></span></button>
+    <button type="button" class="xf-cell xf-cross" data-xf-ad="ad"   data-xf-soi="yes"><span class="xf-num" id="xfNumAdYesSoiYes">0</span></button>
+    <button type="button" class="xf-cell xf-cross" data-xf-ad="ad"   data-xf-soi="no"><span class="xf-num" id="xfNumAdYesSoiNo">0</span></button>
+
+    <button type="button" class="xf-cell xf-axis" data-xf-ad="noad" data-xf-soi="all" title="ステータスが「…広告なし…」の商品だけを表示">無し<span class="xf-num" id="xfNumAdNo"></span></button>
+    <button type="button" class="xf-cell xf-cross" data-xf-ad="noad" data-xf-soi="yes"><span class="xf-num" id="xfNumAdNoSoiYes">0</span></button>
+    <button type="button" class="xf-cell xf-cross" data-xf-ad="noad" data-xf-soi="no"><span class="xf-num" id="xfNumAdNoSoiNo">0</span></button>
+  </div>
+
+  <!-- 【v1.0583】従来の2段（【ステータス】／【入札状態】＋【PR状態】）はここへ縦積み -->
+  <div class="states-stack">
   <!-- 【v195】ステータス（商品ライフサイクル）ブロック。【状態】の上に配置。【v197】縦線でグルーピング。 -->
   <div class="nav-group nav-group-status">
     <span class="nav-group-label g-status">【ステータス】</span>
@@ -3262,6 +3358,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="btn sm ghost" id="btnToggleStates" type="button" title="【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー2を隠す</button>
     </div>
   </div>
+  </div><!-- /.states-stack 【v1.0583】 -->
 </nav>
 
 <!-- 【v1.0550】ヘッダーを隠している間だけ出る復帰バー。
@@ -8124,6 +8221,13 @@ function updateStateCounts() {
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
   // 【v195】新ステータス別カウント
   let sKenzenAd = 0, sKenzenNoad = 0, sChuritsuAd = 0, sChuritsuNoad = 0, sWithdrawConsider = 0, sWithdrawPlan = 0, withdrawnCount = 0;
+  // 【v1.0583】クロス絞り込み（広告 × 送り込み）の件数。
+  //   ★母集団はこのループ＝状態チップとまったく同じ（撤退済み・引退済みは除外）。
+  //   ★軸の合計（xfAdY など）と交差の和は一致しない。ステータスに「広告あり/なし」が
+  //     付かない商品（新商品・撤退検討など）は広告軸のどちらにも入らないため。これは仕様。
+  const _xfRef = getReferencedRepCodes();
+  let xfAdY = 0, xfAdN = 0, xfSoiY = 0, xfSoiN = 0;
+  let xfAdYSoiY = 0, xfAdYSoiN = 0, xfAdNSoiY = 0, xfAdNSoiN = 0;
   allCodes.forEach(code => {
     // 【v195】撤退済みは別集計（isRetiredで以降スキップされるため先に数える）
     if (((state.productMeta[code] || {}).status || '') === '撤退済み') { withdrawnCount++; return; }
@@ -8153,6 +8257,20 @@ function updateStateCounts() {
     else if (st === '中立-広告なし□') sChuritsuNoad++;
     else if (st === '撤退検討▲') sWithdrawConsider++;
     else if (st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済') sWithdrawPlan++;   // 【v1.0445】out記入済は撤退予定へ統合
+    // 【v1.0583】クロス絞り込みの件数。判定は絞り込み本体とまったく同じ式を使う:
+    //   広告     … renderBasic の basicAdFilter（ステータス文字列に「広告あり／広告なし」を含むか。§10）
+    //   送り込み … applyRepFilter の _repHasSoikomi（'*' / '!' と同じ判定）
+    {
+      const _isAd   = st.indexOf('広告あり') !== -1;
+      const _isNoad = st.indexOf('広告なし') !== -1;
+      const _hasSoi = _repHasSoikomi(code, _xfRef);
+      if (_isAd) xfAdY++; else if (_isNoad) xfAdN++;
+      if (_hasSoi) xfSoiY++; else xfSoiN++;
+      if (_isAd   &&  _hasSoi) xfAdYSoiY++;
+      if (_isAd   && !_hasSoi) xfAdYSoiN++;
+      if (_isNoad &&  _hasSoi) xfAdNSoiY++;
+      if (_isNoad && !_hasSoi) xfAdNSoiN++;
+    }
     if (!adS) unselectedAd++;
     if (!proS) unselectedPro++;
     // 【v208】入札状態の「全体」＝入札価格が記入されている商品数
@@ -8171,6 +8289,19 @@ function updateStateCounts() {
   const cntProHfixed = $('#cntProHfixed'); if (cntProHfixed) cntProHfixed.textContent = `(${proHfixed})`;
   $('#cntProNg').textContent = `(${proNg})`;
   const _setTx = (id, n) => { const el = $(id); if (el) el.textContent = `(${n})`; };
+  // 【v1.0583】クロス絞り込みパネルの件数。交差セルは数字だけ、軸セルは (n) 表記
+  {
+    const _xfAxis = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = `(${n})`; };
+    const _xfCross = (id, n) => {
+      const el = document.getElementById(id); if (!el) return;
+      el.textContent = String(n);
+      const cell = el.closest('.xf-cross'); if (cell) cell.classList.toggle('xf-zero', n === 0);
+    };
+    _xfAxis('xfNumSoiYes', xfSoiY); _xfAxis('xfNumSoiNo', xfSoiN);
+    _xfAxis('xfNumAdYes',  xfAdY);  _xfAxis('xfNumAdNo',  xfAdN);
+    _xfCross('xfNumAdYesSoiYes', xfAdYSoiY); _xfCross('xfNumAdYesSoiNo', xfAdYSoiN);
+    _xfCross('xfNumAdNoSoiYes',  xfAdNSoiY); _xfCross('xfNumAdNoSoiNo',  xfAdNSoiN);
+  }
   _setTx('#cntProWithdrawConsider', sWithdrawConsider);
   _setTx('#cntUnselectedAd', unselectedAd);
   _setTx('#cntUnselectedPro', unselectedPro);
@@ -8235,7 +8366,10 @@ function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ?
 // 【v125】代表コード絞り込み
 // repFilter = null     → 全件そのまま
 // repFilter = '*'      → 送り込みがある商品（子＝代表コードを持つ商品 ＋ 親＝他商品から代表コードとして参照される商品）
+// repFilter = '!'      → 【v1.0583】送り込みが無い商品（'*' のちょうど裏返し）
 // repFilter = 'xxx'    → 代表コード == 'xxx' のグループ（子）＋ その親自身（code == 'xxx'）
+// ★ '*' と '!' は必ず同じ判定式（_repHasSoikomi）の表裏にする。別々に書くと、
+//   自己参照の親などの端のケースで「有りにも無しにも出ない商品」ができて件数が合わなくなる。
 // 【v271】送り込み元（親）は自身の repCode が空でも、子から参照されるため対象に含める。
 //   以前は rep.length>0 のみ判定で親が漏れていた。
 function getReferencedRepCodes() {
@@ -8247,6 +8381,13 @@ function getReferencedRepCodes() {
     if (rep) s.add(rep);
   }
   return s;
+}
+// 【v1.0583】「送り込みが有るか」の唯一の判定。repFilter の '*' / '!' と
+//   クロス絞り込みの件数（updateStateCounts）は必ずこの1本を通す。
+function _repHasSoikomi(code, referenced) {
+  const meta = (state.productMeta || {})[code] || {};
+  const rep = (meta.repCode || '').trim();
+  return rep.length > 0 || referenced.has(String(code));
 }
 function applyRepFilter(list) {
   const f = state.repFilter;
@@ -8260,7 +8401,8 @@ function applyRepFilter(list) {
     if (!code) return false;
     const meta = state.productMeta[code] || {};
     const rep = (meta.repCode || '').trim();
-    if (f === '*') return rep.length > 0 || referenced.has(String(code));  // 代表コード有(子/自己参照親) or 参照される親
+    if (f === '*') return _repHasSoikomi(code, referenced);                 // 代表コード有(子/自己参照親) or 参照される親
+    if (f === '!') return !_repHasSoikomi(code, referenced);                // 【v1.0583】送り込みが無い商品
     return rep === f || code === f;                                        // そのグループの子 or 親自身
   });
 }
@@ -8685,8 +8827,7 @@ function renderBasic() {
   const _isWc = !!(state.activeStateFilter && _wcLayoutTypes.indexOf(state.activeStateFilter.type) >= 0);
   // 【v1.0517】健常/中立の「広告あり◯／広告なし◯□」チップで絞り込み中は、広告フィルタ(全体/広告あり/広告なし)ボタンを隠す。
   //   これらのチップ自体が既に広告あり/なしを絞っているため、重複するボタンは出さない。
-  const _statusAdTypes = ['status-kenzen-ad', 'status-kenzen-noad', 'status-churitsu-ad', 'status-churitsu-noad'];
-  const _hideAdBar = !!(state.activeStateFilter && _statusAdTypes.indexOf(state.activeStateFilter.type) >= 0);
+  const _hideAdBar = _xfAdBypassed();
   { const _tbl=document.getElementById('tableBasic'), _wc=document.getElementById('basicWcWrap'),
         _mw=document.getElementById('basicMonthWrap'), _ad=document.getElementById('basicAdFilterBar');
     const _outerWrap = _tbl ? _tbl.closest('.table-wrap') : null;   // 通常テーブルの外枠(.table-wrap)
@@ -13108,6 +13249,8 @@ function renderAll() {
   updateCsvDownloadButtonState();
   // 【v125】代表コード絞り込みUI
   if (typeof updateRepFilterUI === 'function') updateRepFilterUI();
+  // 【v1.0583】クロス絞り込みパネルの選択表示（広告フィルタバーの on もここで揃う）
+  if (typeof updateCrossFilterUI === 'function') updateCrossFilterUI();
   // 【v142】tbody再描画後、新しい td にもリサイズハンドルを設置 + 列幅復元
   if (typeof installColResizeHandles === 'function') {
     try { installColResizeHandles(); applyColWidths(); } catch (e) { /* 初期化前は無視 */ }
@@ -13875,6 +14018,8 @@ function _wireAdFilter(barId, setFilter, rerender) {
     if (typeof clearEditPins === 'function') clearEditPins();   // 【v1.0514】広告フィルタ切替は再絞り込み＝編集ピン解除（編集済みの広告あり商品が広告なしに残る不具合の修正）
     setFilter(v);
     rerender();
+    // 【v1.0583】クロス絞り込みパネルの広告軸もここで追従させる（renderAll を通らない経路のため）
+    if (typeof updateCrossFilterUI === 'function') updateCrossFilterUI();
   });
 }
 _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic);
@@ -15843,6 +15988,8 @@ function updateRepFilterUI() {
   banner.style.display = 'flex';
   if (f === '*') {
     text.textContent = '送り込みがある商品のみ表示中';
+  } else if (f === '!') {
+    text.textContent = '送り込みが無い商品のみ表示中';   // 【v1.0583】
   } else {
     text.textContent = `グループ「${f}」のみ表示中`;
   }
@@ -15888,6 +16035,89 @@ document.addEventListener('click', (e) => {
   e.stopPropagation();
   const rep = badge.dataset.rep;
   if (rep) setRepFilter(rep);
+});
+
+// ==================== 【v1.0583】クロス絞り込み（広告 × 送り込み）====================
+// ★新しい状態変数は作らない。既存の2つをそのまま2軸として使う:
+//     広告軸     … basicAdFilter   ('all' | 'ad' | 'noad')   … #basicAdFilterBar と共有
+//     送り込み軸 … state.repFilter (null | '*' | '!')        … 送り込みバッジと共有
+//   別変数にすると「バッジは緑なのにパネルは未選択」のような食い違いが必ず出る。
+// 【v1.0517/v1.0583】健常/中立の「広告あり◯／広告なし◯□」チップで絞り込み中は、
+//   チップ自体が広告あり/なしを絞っているので広告フィルタはバイパスされる（renderBasic）。
+//   ★この一覧は renderBasic とクロス絞り込みパネルの2箇所で使う。片方だけに書かないこと
+//     （パネルだけが「広告有り」を光らせたまま、実際には効いていない、という嘘になる）。
+//   ※一覧は関数の中に置く。const を外に出すと、先に定義される renderBasic から
+//     初期化前（TDZ）に触れる経路ができるため。
+function _xfAdBypassed() {
+  const types = ['status-kenzen-ad', 'status-kenzen-noad', 'status-churitsu-ad', 'status-churitsu-noad'];
+  return !!(state.activeStateFilter && types.indexOf(state.activeStateFilter.type) >= 0);
+}
+function _xfAdKey()  { return _xfAdBypassed() ? 'all' : (basicAdFilter || 'all'); }
+function _xfSoiKey() {
+  const f = state.repFilter;
+  if (f === '*') return 'yes';
+  if (f === '!') return 'no';
+  return 'all';   // グループ絞り込み('xxx')中は別物なのでパネルは光らせない
+}
+// 絞り込みを適用。同じ組み合わせをもう一度押したら解除（トグル）
+function xfApply(ad, soi) {
+  const same = (_xfAdKey() === ad && _xfSoiKey() === soi);
+  const nAd  = same ? 'all' : (ad  || 'all');
+  const nSoi = same ? 'all' : (soi || 'all');
+  if (typeof clearEditPins === 'function') clearEditPins();   // 再絞り込み＝編集ピン解除（既存の作法に合わせる）
+  // ★ステータスチップとは排他にする。
+  //   チップが立ったままだと広告条件が二重になり、さらに 健常/中立 のチップ中は
+  //   広告フィルタ自体がバイパスされる（renderBasic の _hideAdBar）ので「押しても効かない」に見える。
+  state.activeStateFilter = null;
+  basicAdFilter = nAd;
+  state.repFilter = (nSoi === 'yes') ? '*' : (nSoi === 'no') ? '!' : null;
+  // 広告軸が効くのは商品-基本データ。別ビューから押されたら一覧へ連れて行く（ステータスチップと同じ）
+  if (state.currentView !== 'basic' && (nAd !== 'all' || nSoi !== 'all')) switchToView('basic');
+  if (typeof updateActiveStateChip === 'function') updateActiveStateChip();
+  if (typeof updateFilterBanners === 'function') updateFilterBanners();
+  updateRepFilterUI();
+  renderAll();
+}
+// クリア（全体）: この画面の絞り込みを全部落として素の一覧に戻す
+function xfClearAll() {
+  if (typeof clearEditPins === 'function') clearEditPins();
+  state.activeStateFilter = null;
+  basicAdFilter = 'all';
+  state.repFilter = null;
+  basicSroasFilter = null;                                     // 売上ROASの帯フィルタ（§3-1）
+  const _s = document.getElementById('basicSearch'); if (_s) _s.value = '';
+  if (state.currentView !== 'basic') switchToView('basic');
+  if (typeof updateActiveStateChip === 'function') updateActiveStateChip();
+  if (typeof updateFilterBanners === 'function') updateFilterBanners();
+  updateRepFilterUI();
+  renderAll();
+}
+// パネルの選択表示。★広告フィルタバー(#basicAdFilterBar)の on も必ずここで揃える
+function updateCrossFilterUI() {
+  const panel = document.getElementById('xfPanel');
+  const ad = _xfAdKey(), soi = _xfSoiKey();
+  if (panel) {
+    panel.querySelectorAll('.xf-cell[data-xf-ad]').forEach(b => {
+      const a = b.dataset.xfAd, s = b.dataset.xfSoi;
+      let on;
+      if (b.classList.contains('xf-cross')) on = (a === ad && s === soi);          // 2軸そろって一致
+      else if (s === 'all')                 on = (a === ad && soi === 'all');      // 広告軸だけ
+      else                                  on = (s === soi && ad === 'all');      // 送り込み軸だけ
+      b.classList.toggle('active', !!on);
+    });
+  }
+  const bar = document.getElementById('basicAdFilterBar');
+  if (bar) bar.querySelectorAll('.adf-btn').forEach(b => {
+    b.classList.toggle('on', (b.getAttribute('data-adf') || 'all') === ad);
+  });
+}
+// クリックは委譲1本。条件は data-xf-ad / data-xf-soi の2属性だけから読む
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#xfClearBtn')) { e.preventDefault(); xfClearAll(); return; }
+  const cell = e.target.closest('.xf-panel .xf-cell[data-xf-ad]');
+  if (!cell) return;
+  e.preventDefault();
+  xfApply(cell.dataset.xfAd, cell.dataset.xfSoi);
 });
 $('#npClose').addEventListener('click', closeNewProductModal);
 $('#npCloseBottom').addEventListener('click', closeNewProductModal);
