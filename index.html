@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0580 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0582 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -518,6 +518,9 @@ body.states-collapsed .top-nav-3 { display: none; }
   background: var(--bg2); border-bottom: 1px solid var(--border);
   padding: 3px 20px; display: flex; justify-content: flex-end; align-items: center; gap: 6px;
 }
+/* 【v1.0581】ヘッダー1の復帰バーは画面のいちばん上に貼り付く（隠れたヘッダー1の位置）。
+   他の段より上に積むので z-index も1つ上げる。 */
+.hdr-restore-top { top: 0; z-index: 101; }
 /* 【v197/v200】チップのグループ区切り（縦線） */
 .top-nav-3 .chip-sep { flex: 0 0 auto; width: 2px; height: 22px; align-self: center; background: #8b94a3; border-radius: 1px; margin: 0 4px; }
 /* 【v200】入札状態⇔PR状態の境目は少し高く濃い区切り */
@@ -1363,6 +1366,23 @@ td[data-resize-key] {
   text-overflow: ellipsis;
 }
 
+/* 【v1.0582】画像セルのクリック領域。中身(.product-img / .product-img-placeholder)は48pxのまま。
+   line-height:0 にしないと img(display:block) の下に行間ぶんの隙間が出て枠が縦長になる。 */
+.product-img-wrap {
+  display: inline-block;
+  line-height: 0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.product-img-wrap:hover .product-img,
+.product-img-wrap:hover .product-img-placeholder {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);   /* = var(--accent) の薄いリング */
+}
+.product-img-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .product-img {
   width: 48px; height: 48px;
   object-fit: cover;
@@ -3092,6 +3112,13 @@ th.col-sroas { background-color:#e7d5f5; }
 </div>
 
 <!-- Header -->
+<!-- 【v1.0581】ヘッダー1の復帰バー。★ヘッダー1が元あった位置＝いちばん上に置く。
+     v1.0580までは復帰バーが1つだけで nav の後ろにあったため、
+     「ヘッダー1を隠す」を押すと復帰ボタンがヘッダー2の【下】に出て、上下関係が入れ替わって見えていた。
+     → ヘッダー1用は上、ヘッダー2用は下、と元の位置関係のまま出す。
+     両方隠しているときだけ、細い帯が2本並ぶのを避けてこの上側の帯にまとめる（applyHeaderCollapse）。 -->
+<div class="hdr-restore-bar hdr-restore-top" id="hdrRestoreBarTop" style="display:none"></div>
+
 <div class="header">
   <div class="header-left">
     <a class="logo" id="logoHome" title="クリック: 商品-基本データに戻る / Ctrl(⌘)+クリック・中クリック: 新しいタブで開く" style="cursor:pointer; text-decoration:none;" href="https://kaiyoshida0318.github.io/ycheck/">
@@ -3103,10 +3130,14 @@ th.col-sroas { background-color:#e7d5f5; }
       <span class="shop-selector-icon">🏪</span>
       <select id="shopSelect"></select>
     </div>
+    <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み）
+         【v1.0582】ヘッダー右（.header-tools）から、ショップ選択のすぐ右へ移動。
+         ★ボタンはこの1つだけ。右側に残したまま複製しないこと（openBunseki が2回走る） -->
+    <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0580</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0582</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3118,8 +3149,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
     <!-- 【v206】title属性のラグ（OS標準ツールチップは0.5〜1秒遅延）を回避するため、data-tip属性＋CSSの即時ツールチップに変更。 -->
     <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札価格・PRオプションの説明などを表示する"><span class="chip-label">💡 全体の説明</span></button>
-    <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み） -->
-    <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
+    <!-- 【v1.0582】「分析」ボタンはここから .header-left（ショップ選択の右）へ移動した -->
     <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
@@ -3236,7 +3266,9 @@ th.col-sroas { background-color:#e7d5f5; }
 
 <!-- 【v1.0550】ヘッダーを隠している間だけ出る復帰バー。
      開閉ボタンを各行の中に置いたため、畳むとボタンごと消える。その復帰口をここで用意する。
-     隠しているものが無いときは display:none で場所を取らない。 -->
+     隠しているものが無いときは display:none で場所を取らない。
+     【v1.0581】こちらは「ヘッダー2（状態チップ行）」の復帰口＝ナビの下。
+     ヘッダー1の復帰ボタンは #hdrRestoreBarTop（いちばん上）へ移す。 -->
 <div class="hdr-restore-bar" id="hdrRestoreBar" style="display:none">
   <button class="btn sm ghost" id="btnRestoreChrome" type="button" style="display:none">🔽 ヘッダー1を表示</button>
   <button class="btn sm ghost" id="btnRestoreStates" type="button" style="display:none">🔽 ヘッダー2を表示</button>
@@ -4516,6 +4548,9 @@ function _recalcStickyTops() {
     const n3 = document.querySelector('.top-nav-3');
     const vis = el => !!(el && getComputedStyle(el).display !== 'none' && el.offsetParent !== null);
     let t = 0;
+    // 【v1.0581】ヘッダー1の復帰バーはいちばん上。以降の段はこの高さぶん下げて積む
+    const rbTop = document.getElementById('hdrRestoreBarTop');
+    if (rbTop) { rbTop.style.top = '0px'; if (vis(rbTop)) t += rbTop.getBoundingClientRect().height; }
     if (vis(header)) t += header.getBoundingClientRect().height;
     if (n1) { n1.style.top = t + 'px'; if (vis(n1)) t += n1.getBoundingClientRect().height; }
     if (n2) { n2.style.top = t + 'px'; if (vis(n2)) t += n2.getBoundingClientRect().height; }
@@ -7889,13 +7924,21 @@ function getProductImageSrc(code) {
   return YAHOO_IMG_URL(code);
 }
 
+// 【v1.0582】画像セルをクリックすると商品編集モーダルを開く。
+//   ★ラッパー(.product-img-wrap)に data-code を持たせ、中身の <img> は従来どおりにしてある。
+//     img 自体に data-code を持たせると onerror で outerHTML ごと差し替わったときに消えてしまうため。
+//   クリックは .name-edit-btn と同じ委譲ハンドラ1本で受ける（openProductEditModal）。
+//   imageCellHtml と nameCellHtml は同じ7箇所で呼ばれているので、
+//   「✎ が出ている画面＝画像も押せる画面」で必ず一致する。
 function imageCellHtml(code) {
   const src = getProductImageSrc(code);
-  if (!src) {
-    return `<div class="product-img-placeholder">📦</div>`;
-  }
-  return `<img class="product-img" src="${src}" alt="${escapeHtml(code)}"
-    onerror="this.outerHTML='<div class=&quot;product-img-placeholder&quot;>📦</div>'">`;
+  const c = escapeHtml(code);
+  const inner = src
+    ? `<img class="product-img" src="${src}" alt="${c}"
+        onerror="this.outerHTML='<div class=&quot;product-img-placeholder&quot;>📦</div>'">`
+    : `<div class="product-img-placeholder">📦</div>`;
+  return `<div class="product-img-wrap" data-code="${c}" role="button" tabindex="0"
+    title="クリック: 商品情報を編集（${c}）">${inner}</div>`;
 }
 function nameCellHtml(code) {
   const m = getMaster(code);
@@ -15111,13 +15154,25 @@ $('#peImageReset').addEventListener('click', () => {
 });
 
 // 編集ペンアイコンクリックでモーダルを開く
+// 【v1.0582】商品画像（.product-img-wrap）からも同じモーダルを開く。
+//   ★ハンドラは必ずこの1本にまとめる。画像用に別のリスナーを足すと、
+//     モーダルを開く経路が2つになって挙動がずれる（片方だけ preventDefault が漏れる等）。
+const PRODUCT_EDIT_OPENERS = '.name-edit-btn, .product-img-wrap';
 document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.name-edit-btn');
+  const btn = e.target.closest(PRODUCT_EDIT_OPENERS);
   if (!btn) return;
   e.preventDefault();
   e.stopPropagation();
   const code = btn.dataset.code;
   openProductEditModal(code);
+});
+// 【v1.0582】画像は role="button" / tabindex="0" にしてあるのでキーボードからも開ける
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const wrap = e.target.closest && e.target.closest('.product-img-wrap');
+  if (!wrap) return;
+  e.preventDefault();
+  openProductEditModal(wrap.dataset.code);
 });
 
 // ==================== 新商品追加モーダル ====================
@@ -15741,12 +15796,22 @@ function applyHeaderCollapse() {
   const autoHidden = document.body.classList.contains('states-hidden');
   const r1 = document.getElementById('btnRestoreChrome');
   const r2 = document.getElementById('btnRestoreStates');
-  const bar = document.getElementById('hdrRestoreBar');
+  const bar = document.getElementById('hdrRestoreBar');          // ナビの下（ヘッダー2の位置）
+  const barTop = document.getElementById('hdrRestoreBarTop');    // いちばん上（ヘッダー1の位置）
   const show1 = !!_hdrCollapse.h1;
   const show2 = !!_hdrCollapse.h2 && !autoHidden;
   if (r1) r1.style.display = show1 ? '' : 'none';
   if (r2) r2.style.display = show2 ? '' : 'none';
-  if (bar) bar.style.display = (show1 || show2) ? '' : 'none';
+  // 【v1.0581】★復帰ボタンは「隠したヘッダーが元あった位置」に出す。
+  //   ヘッダー1 → いちばん上（barTop） / ヘッダー2 → ナビの下（bar）
+  //   両方隠しているときだけ、細い帯が2本並ぶのを避けて barTop にまとめる。
+  if (r1 && barTop && r1.parentNode !== barTop) barTop.appendChild(r1);
+  if (r2 && bar && barTop) {
+    const _want = (show1 && show2) ? barTop : bar;
+    if (r2.parentNode !== _want) _want.appendChild(r2);
+  }
+  if (barTop) barTop.style.display = show1 ? '' : 'none';
+  if (bar) bar.style.display = (show2 && !show1) ? '' : 'none';
   if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
   // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
   if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
