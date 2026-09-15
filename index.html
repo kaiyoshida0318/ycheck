@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0620 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0621 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3371,6 +3371,12 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .soi-pc-btn.child .rep-icon { stroke: #92400e; }
 .soi-pc-btn.child:hover { background: #fcd34d; border-color: #d97706; }
 .soi-pc-btn.child.on { background: #fcd34d; border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
+/* 【v1.0621】親＋子の両方＝左半分が緑・右半分が黄色の2色ボタン（state.repFilter === '*'）。
+   アイコンは緑側（左）、件数は黄色側（右）に乗るので、それぞれの背景に合う色にしてある。 */
+.soi-pc-btn.both { background: linear-gradient(90deg, var(--green) 0 50%, #fde68a 50% 100%); border-color: #f59e0b; color: #92400e; }
+.soi-pc-btn.both .rep-icon { stroke: #fff; }
+.soi-pc-btn.both:hover { background: linear-gradient(90deg, #15803d 0 50%, #fcd34d 50% 100%); border-color: #d97706; }
+.soi-pc-btn.both.on { background: linear-gradient(90deg, #15803d 0 50%, #fcd34d 50% 100%); border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
 
 /* 【v1.0620】一括変更バー */
 .bulk-bar {
@@ -3461,7 +3467,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0620</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0621</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3696,9 +3702,11 @@ th.col-sroas { background-color:#e7d5f5; }
                ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
                  '*' '!' と同じ1本の軸なので、クロス絞り込みパネルや検索欄右のバッジとも自動で整合する。 -->
           <span class="soi-pc-seg" id="basicSoiPcBar" role="group" aria-label="親／子で絞り込み">
-            <button type="button" class="soi-pc-btn parent" data-soipc="P"
+            <button type="button" class="soi-pc-btn both" data-repf="*"
+              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiBoth"></span></button>
+            <button type="button" class="soi-pc-btn parent" data-repf="*P"
               title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiParent"></span></button>
-            <button type="button" class="soi-pc-btn child" data-soipc="C"
+            <button type="button" class="soi-pc-btn child" data-repf="*C"
               title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiChild"></span></button>
           </span>
           <!-- 【v1.0585】ツールバーから撤去した2つ（要素ごと削除。ロジック・関数はすべて残置）
@@ -17557,20 +17565,23 @@ function updateRepFilterUI() {
     if (f && b.dataset.rep === f) b.classList.add('active');
     else b.classList.remove('active');
   });
-  // 【v1.0619】親／子ボタンの選択表示と件数（撤退済みは数えない＝一覧の母集団に合わせる）
+  // 【v1.0619/v1.0621】親＋子 / 親 / 子 ボタンの選択表示と件数（撤退済みは数えない＝一覧の母集団に合わせる）
+  //   ★ボタンは data-repf に state.repFilter の値そのもの（'*' / '*P' / '*C'）を持っている。
   document.querySelectorAll('.soi-pc-btn').forEach(b => {
-    b.classList.toggle('on', f === ('*' + b.dataset.soipc));
+    b.classList.toggle('on', !!f && f === b.dataset.repf);
   });
   try {
     const pm = state.productMeta || {};
     const referenced = getReferencedRepCodes();
-    let nP = 0, nC = 0;
+    let nA = 0, nP = 0, nC = 0;
     Object.keys(state.master || {}).forEach(code => {
       if (typeof isRetired === 'function' && isRetired(code)) return;
       const rep = ((pm[code] || {}).repCode || '').trim();
+      if (_repHasSoikomi(code, referenced)) nA++;   // 親＋子（applyRepFilter の '*' と同じ判定式）
       if (_isSoiParent(code, referenced)) nP++;
       if (_isSoiChild(code, rep)) nC++;
     });
+    const eA = document.getElementById('cntSoiBoth');   if (eA) eA.textContent = nA;
     const eP = document.getElementById('cntSoiParent'); if (eP) eP.textContent = nP;
     const eC = document.getElementById('cntSoiChild');  if (eC) eC.textContent = nC;
   } catch (e) {}
@@ -17606,13 +17617,14 @@ document.addEventListener('click', (e) => {
 if ($('#repFilterClear')) {
   $('#repFilterClear').addEventListener('click', clearRepFilter);
 }
-// 【v1.0619】親／子ボタン → 親だけ／子だけに絞り込み（同じボタンをもう一度押すと解除＝setRepFilterのトグル）
+// 【v1.0619/v1.0621】親＋子／親だけ／子だけ に絞り込み（同じボタンをもう一度押すと解除＝setRepFilterのトグル）
+//   ★ボタンの data-repf がそのまま state.repFilter の値。'*'（両方）/ '*P'（親）/ '*C'（子）。
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.soi-pc-btn');
   if (!btn) return;
   e.preventDefault();
   e.stopPropagation();
-  setRepFilter('*' + btn.dataset.soipc);
+  setRepFilter(btn.dataset.repf);
 });
 
 // 🔗バッジ(商品コード横)クリック → そのグループに絞り込み（クリック委譲）
