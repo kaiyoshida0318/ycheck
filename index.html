@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0607 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0609 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1118,11 +1118,16 @@ body.states-collapsed .top-nav-3 { display: none; }
   font-family: 'Noto Sans JP', sans-serif;   /* 【v1.0375】ヘッダーのフォントをADcheckと同じに */
 }
 /* 【v210】タブ行（【基本】〜【調整】）のグループ見出しを、後ろのタブ文言とサイズ・高さを揃える */
-.top-nav:not(.top-nav-3) .nav-group-label {
+/* 【v1.0608】★【調整】はヘッダー2（.top-nav-3）へ移したので、この :not(.top-nav-3) から外れて
+   見出しだけ 0.7rem に痩せていた。1段目と同じ見た目に揃えるため、.nav-group-tune を明示的に含める。 */
+.top-nav:not(.top-nav-3) .nav-group-label,
+.top-nav-3 .nav-group-tune .nav-group-label {
   font-size: 0.85rem;
   padding: 8px 6px 8px 0;
   border-bottom: 2px solid transparent;
 }
+/* タブ本体の配置も1段目と同じ（下端そろえ・折り返さない） */
+.top-nav-3 .nav-group-tune { align-items: flex-end; flex-wrap: nowrap; row-gap: 0; }
 .nav-tab {
   padding: 8px 14px;
   font-size: 0.85rem;
@@ -1656,6 +1661,8 @@ th.col-adunk, td.col-adunk { background-color: #fdf0ee; }
 th.col-adunk { background-color: #f8d9d3; }
 .adunk-val { color: #b91c1c; font-weight: 700; }
 /* 【v1.0592】総売上の下に出す「セット内の売上比率」。送り込み＝紫の系統に合わせる */
+/* 【v1.0609】調整-基本のときだけ出す3列（ステータス/入札状態/PRオプ状態） */
+body:not(.basic-tune) #tableBasic .tune-col { display: none; }
 .fam-pct { color: #7c3aed; font-size: 11px !important; font-weight: 700; }
 /* 【v1.0591】親子セットの合計から引いた値であることの目印 */
 .adunk-set { display:inline-block; margin-left:4px; padding:0 4px; border-radius:3px; font-size:0.6rem; font-weight:700;
@@ -3339,7 +3346,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0607</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0609</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3371,7 +3378,7 @@ th.col-sroas { background-color:#e7d5f5; }
 <nav class="top-nav">
   <div class="nav-group">
     <span class="nav-group-label g-basic">【基本】</span>
-    <a class="nav-tab nav-tab-link active" data-view="basic" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
+    <a class="nav-tab nav-tab-link active" data-view="basic" data-basicmode="plain" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-日月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率<span class="chip-num" id="cntOyChildUnset"></span></a>
@@ -3414,8 +3421,12 @@ th.col-sroas { background-color:#e7d5f5; }
   <!-- 【v1.0607】【調整】をヘッダー2の1行目（＝クロス絞り込みパネルの上）へ移動 -->
   <div class="nav-group nav-group-tune">
     <span class="nav-group-label g-chosei">【調整】</span>
-    <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">入札価格調整</a>
-    <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">PRオプ調整</a>
+    <!-- 【v1.0609】調整-基本＝商品-基本データと同じ表に、右端へ ステータス/入札状態/PRオプ状態 の
+         ドロップダウン3列を足したもの。ビュー実体は #view-basic を共有し、data-basicmode で切り替える
+         （全-月別/全-日別の data-zdgrain と同じ作り。§10 / §18-16）。 -->
+    <a class="nav-tab nav-tab-link" data-view="basic" data-basicmode="tune" href="?view=basic-tune" id="navTuneBasic">調整-基本</a>
+    <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">調整-入札価格</a>
+    <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">調整-PRオプ</a>
   </div>
 
   <div class="xf-row">
@@ -3631,6 +3642,12 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告ROAS</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <!-- 【v1.0609】調整-基本のときだけ出す3列（body.basic-tune で表示）。
+                   ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
+                     片方だけ出し入れすると列がずれる。 -->
+              <th class="status-col tune-col" data-sort="status">ステータス</th>
+              <th class="status-col tune-col" data-sort="adStatus">入札状態</th>
+              <th class="status-col tune-col" data-sort="proStatus">PRオプ状態</th>
               <!-- 【v1.0592】送り込み売上の列は撤去。
                    ★データ（_soiByParent / CSVの列）は残してある。戻すときは、この th と
                      renderBasic の tr.innerHTML に col-soi の td を書き戻すだけ。
@@ -9319,6 +9336,9 @@ function renderWithdrawConsider() {
 }
 
 function renderBasic() {
+  // 【v1.0609】タブ2本（商品-基本データ / 調整-基本）は data-view が同じなので、
+  //   .active の付け外しは必ずここに任せる（§18-16 と同じ理由）
+  if (typeof _basicSyncNavTabs === 'function') _basicSyncNavTabs();
   // 【撤退検討▲】ステータスチップ pro-wc のときは専用レイアウトに切替
   const _wcLayoutTypes = ['pro-wc', 'status-kenzen-noad', 'status-churitsu-noad'];
   const _isWc = !!(state.activeStateFilter && _wcLayoutTypes.indexOf(state.activeStateFilter.type) >= 0);
@@ -9569,7 +9589,7 @@ function renderBasic() {
     } else if (state.activeStateFilter && state.activeStateFilter.label) {
       _emptyMsg = state.activeStateFilter.label + 'の商品はありません';
     }
-    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">' + _emptyMsg + '</td></tr>';   // 【v1.0593】広告CVRの列も撤去したので 14
+    tbody.innerHTML = '<tr><td colspan="17" class="empty-state">' + _emptyMsg + '</td></tr>';   // 【v1.0609】調整-基本の3列を含めて 17
     { const _b = document.getElementById('basicClearFiltersBtn');
       if (_b) _b.addEventListener('click', () => {
         const _kw = $('#basicSearch').value;   // 検索語は残したまま、絞り込みだけ落とす
@@ -9722,6 +9742,9 @@ function renderBasic() {
       <td class="num col-aroas ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       ${_proCell}
       ${_bidCell}
+      <td class="status-col tune-col">${statusSelectHtml(r.code, 'status')}</td>
+      <td class="status-col tune-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col tune-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -9951,6 +9974,18 @@ function salesRoasCats() {
 // 【v1.0588】3モード。'each'=個別 / 'sum'=合算 / 'both'=両表示（合算の下に内訳をぶら下げる）
 //   ★モードの判定は必ず _basicIsRollup() / basicRowMode === 'both' で書く。
 //     真偽値の basicRollup に戻すと 'both' が表現できない。
+// 【v1.0609】商品-基本データの表示モード。
+//   'plain' … 商品-基本データ（従来）
+//   'tune'  … 調整-基本（右端に ステータス/入札状態/PRオプ状態 のドロップダウン3列を足す）
+//   ★ビュー実体（#view-basic）は共有。全-月別/全-日別の _zdGrain と同じ作り（§18-16）。
+let _basicMode = 'plain';
+function _basicSyncNavTabs() {
+  document.body.classList.toggle('basic-tune', _basicMode === 'tune');
+  document.querySelectorAll('.nav-tab[data-view="basic"]').forEach(t => {
+    const isTune = (t.dataset.basicmode === 'tune');
+    t.classList.toggle('active', (state.currentView === 'basic') && (isTune === (_basicMode === 'tune')));
+  });
+}
 let basicRowMode = 'each';
 function _basicIsRollup() { return basicRowMode !== 'each'; }   // 合算の集計をかけるか
 function setBasicRowMode(mode) {
@@ -11126,6 +11161,9 @@ function _zdSyncNavTabs() {
 function _resolveViewName(v) {
   if (v === 'graphdata-day') return { view: 'graphdata', zdGrain: 'day' };
   if (v === 'graphdata')     return { view: 'graphdata', zdGrain: 'month' };
+  // 【v1.0609】?view=basic-tune ＝ 調整-基本（#view-basic の tune モード）
+  if (v === 'basic-tune')    return { view: 'basic', zdGrain: null, basicMode: 'tune' };
+  if (v === 'basic')         return { view: 'basic', zdGrain: null, basicMode: 'plain' };
   return { view: v, zdGrain: null };
 }
 
@@ -14171,6 +14209,8 @@ $$('.nav-tab').forEach(item => {
     item.classList.add('active');
     const view = item.dataset.view;
     // 【v1.0546】「全-月別データ／全-日別データ」は同じビューの粒度違い。タブ側の data-zdgrain を _zdGrain に反映する。
+    // 【v1.0609】「商品-基本データ／調整-基本」は同じビューのモード違い
+    if (item.dataset.basicmode) _basicMode = (item.dataset.basicmode === 'tune') ? 'tune' : 'plain';
     if (item.dataset.zdgrain) {
       const want = (item.dataset.zdgrain === 'day') ? 'day' : 'month';
       if (want === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) {
@@ -14261,6 +14301,7 @@ function switchToView(viewName) {
   // 【v1.0546】'graphdata-day' 等の別名を実ビュー＋粒度に解決する
   const _rv = (typeof _resolveViewName === 'function') ? _resolveViewName(viewName) : { view: viewName, zdGrain: null };
   viewName = _rv.view;
+  if (_rv.basicMode) _basicMode = _rv.basicMode;   // 【v1.0609】
   if (_rv.zdGrain) {
     if (_rv.zdGrain === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) _zdGrain = 'month';
     else { _zdGrain = _rv.zdGrain; if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; } }
@@ -14272,6 +14313,7 @@ function switchToView(viewName) {
   $$('.view').forEach(v => v.classList.remove('active'));
   $('#view-' + viewName).classList.add('active');
   if (viewName === 'graphdata' && typeof _zdSyncNavTabs === 'function') _zdSyncNavTabs();
+  if (viewName === 'basic' && typeof _basicSyncNavTabs === 'function') _basicSyncNavTabs();   // 【v1.0609】
   // 【v208】プログラム経由のビュー切替でも凍結を解除
   adAdjustFrozenOrder = null;
   proAdjustFrozenOrder = null;
@@ -17958,7 +18000,10 @@ try {
     if (initialView) {
       const target = (initialViewRaw === 'graphdata-day')
         ? document.getElementById('navGraphDataDay')
-        : document.querySelector(`.nav-tab[data-view="${initialView}"]`);
+        : (initialViewRaw === 'basic-tune')
+          ? document.getElementById('navTuneBasic')   // 【v1.0609】調整-基本
+          : document.querySelector(`.nav-tab[data-view="${initialView}"]`);
+      if (_rv0 && _rv0.basicMode) _basicMode = _rv0.basicMode;   // 【v1.0609】
       if (target) {
         if (_rv0 && _rv0.zdGrain) {
           if (_rv0.zdGrain === 'day' && !dailyAllDates().length) _zdGrain = 'month';
