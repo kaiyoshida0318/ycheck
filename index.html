@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0617 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0619 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3351,6 +3351,26 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .ad-filter .adf-btn:first-child, .seg-filter .segf-btn:first-child { border-left:none; }
 .ad-filter .adf-btn:hover, .seg-filter .segf-btn:hover { background:var(--bg3); }
 .ad-filter .adf-btn.on, .seg-filter .segf-btn.on { background:var(--accent); color:#fff; font-weight:600; }
+
+/* 【v1.0619】親／子ワンクリック絞り込み。商品コード左の .rep-badge と同じ色・同じアイコン。 */
+.soi-pc-seg { display: inline-flex; align-items: center; gap: 6px; }
+.soi-pc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  height: 27px; padding: 0 7px 0 5px;
+  border: 1px solid var(--green); border-radius: 6px;
+  background: var(--green); color: #fff;
+  cursor: pointer; line-height: 1; font-family: inherit;
+  transition: background .1s, border-color .1s, transform .1s;
+}
+.soi-pc-btn .rep-icon { width: 15px; height: 15px; flex: 0 0 auto; }
+.soi-pc-num { font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.soi-pc-btn:hover { background: #15803d; border-color: #15803d; transform: scale(1.05); }
+.soi-pc-btn.on { background: #15803d; border-color: #15803d; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #15803d; }
+/* 子＝黄色（.rep-badge.child と同じ配色） */
+.soi-pc-btn.child { background: #fde68a; border-color: #f59e0b; color: #92400e; }
+.soi-pc-btn.child .rep-icon { stroke: #92400e; }
+.soi-pc-btn.child:hover { background: #fcd34d; border-color: #d97706; }
+.soi-pc-btn.child.on { background: #fcd34d; border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
 /* 【v1.0587】合算モードの目印: 商品コード横の「n点」バッジ */
 .fam-count { display:inline-block; margin-left:5px; padding:0 5px; border-radius:999px; font-size:0.64rem; font-weight:700;
   background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.5; cursor:help; }
@@ -3425,7 +3445,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0617</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0619</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3655,6 +3675,16 @@ th.col-sroas { background-color:#e7d5f5; }
                      （親が広告費を出して子が売れる構成では、個別の売上ROASが実態とズレるため） -->
           <span class="seg-filter" id="basicRollupBar" role="group" aria-label="個別/合算"
             title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+          <!-- 【v1.0619】送り込み元（親＝緑）／送り込み先（子＝黄）だけを表示するワンクリック絞り込み。
+               マークは商品コード左の .rep-badge とまったく同じ見た目（同じSVG・同じ緑/黄）にしてある。
+               ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
+                 '*' '!' と同じ1本の軸なので、クロス絞り込みパネルや検索欄右のバッジとも自動で整合する。 -->
+          <span class="soi-pc-seg" id="basicSoiPcBar" role="group" aria-label="親／子で絞り込み">
+            <button type="button" class="soi-pc-btn parent" data-soipc="P"
+              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiParent"></span></button>
+            <button type="button" class="soi-pc-btn child" data-soipc="C"
+              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiChild"></span></button>
+          </span>
           <!-- 【v1.0585】ツールバーから撤去した2つ（要素ごと削除。ロジック・関数はすべて残置）
                ① 広告フィルタ #basicAdFilterBar（全体 / 広告あり商品 / 広告なし商品）
                   → クロス絞り込みパネルの「広告 有り／無し」が同じ basicAdFilter を動かすので重複していた（§16-B-1）
@@ -5841,9 +5871,8 @@ function mergeProductMetaForSave(localPM, remotePM) {
     if (_lpSt !== _rpSt) { const s = (_lpSt > _rpSt) ? L : R; w.proStatus = s.proStatus; w.proStatusTs = s.proStatusTs; }
     const _lsSt = (typeof L.statusTs    === 'number') ? L.statusTs    : 0;
     const _rsSt = (typeof R.statusTs    === 'number') ? R.statusTs    : 0;
-    // 【v1.0613】statusManual（子商品を親追従から外したフラグ）は status と必ずセットで動かす。
-    //   whole-entry の勝者からだけ引き継ぐと「status は個別設定側／フラグは追従側」にねじれて、
-    //   次の syncLinkedChildrenStatus() で個別設定が親の値に巻き戻る。
+    // 【v1.0613→v1.0618】statusManual は継承廃止でもう読まれないが、
+    //   ねじれたまま残すと意味不明なので status と一緒に動かす扱いは維持する（実害なし）。
     if (_lsSt !== _rsSt) {
       const s = (_lsSt > _rsSt) ? L : R;
       w.status = s.status; w.statusTs = s.statusTs;
@@ -8573,11 +8602,10 @@ function getMeta(code) {
 }
 
 // ==================== 【v1.0438】親子ステータス継承（子は常に親に追従） ====================
-// 子（repCodeが設定されていて自コードと異なる）のライフサイクル・ステータス(status)は、既定では親に追従する。
-//   ・【v1.0613】子のセルも編集できる。子で親と違う値を選ぶと meta.statusManual = true が立ち、
-//     その子は以後 syncLinkedChildrenStatus() の上書き対象から外れる（＝個別設定）。
-//     親と同じ値を選び直すと statusManual が外れて追従に戻る。
-//   ・入札状態(adStatus)/PRオプ状態(proStatus)は子ごとに固定のまま（継承しない）。
+// 【v1.0618】★継承は廃止。ステータス(status) / 入札状態(adStatus) / PRオプ状態(proStatus) の3つとも、
+//   親子（repCode）に関係なく商品ごとに独立して持つ。親を変えても子は一切変わらない。
+//   下の statusParentCode / isStatusLinkedChild / statusLinkedChildrenOf は
+//   「誰が親か」を引くだけのユーティリティとして残置（継承のためには使っていない）。
 // この code の「親コード」を返す（子でなければ ''）。
 function statusParentCode(code) {
   const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
@@ -8596,27 +8624,14 @@ function statusLinkedChildrenOf(parentCode) {
   });
   return out;
 }
-// 子の status を親の status に同期する（表示・件数・撤退判定などの整合をとる派生処理）。
-//   ・呼び出しは renderAll 先頭とステータス変更時。値が変わったものだけ更新（冪等）。
-function syncLinkedChildrenStatus() {
-  const pm = state.productMeta;
-  if (!pm) return false;
-  let changed = false;
-  Object.keys(pm).forEach(code => {
-    if (!isStatusLinkedChild(code)) return;
-    if (pm[code].statusManual) return;   // 【v1.0613】この子だけ個別設定中＝親の値で上書きしない
-    const p = statusParentCode(code);
-    const parent = pm[p];
-    const pv = statusLifeDisplayValue((parent && parent.status) || '新商品');
-    if (statusLifeDisplayValue(pm[code].status || '新商品') !== pv) {
-      pm[code].status = pv;
-      pm[code].statusTs = (parent && parent.statusTs) ? parent.statusTs : (pm[code].statusTs || Date.now());
-      pm[code]._ts = pm[code].statusTs;
-      changed = true;
-    }
-  });
-  return changed;
-}
+// 【v1.0618】★親子のステータス継承を廃止したので、この関数は何もしない。
+//   v1.0438〜v1.0617 は「子の status を親の status で上書き」していたが、
+//   親を1つ変えると子が全部つられて変わるのが実運用に合わないため廃止。
+//   ★ステータス / 入札状態 / PRオプ状態 の3つとも、商品ごとに完全に独立して持つ。
+//   関数名と呼び出し箇所（renderAll 先頭 / status変更ハンドラ）はそのまま残してある。
+//   もう一度「継承」を入れたくなったら、ここを実装して statusSelectHtml に子用の分岐を戻すこと。
+//   ※過去データに残る productMeta[code].statusManual（v1.0613のフラグ）は、もう読まれない残骸。
+function syncLinkedChildrenStatus() { return false; }
 // 商品画像URLを取得（優先：ユーザーアップロード > 削除フラグならなし > Yahoo!デフォルト）
 function getProductImageSrc(code) {
   const m = state.master[code];
@@ -8972,6 +8987,8 @@ function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ?
 // repFilter = null     → 全件そのまま
 // repFilter = '*'      → 送り込みがある商品（子＝代表コードを持つ商品 ＋ 親＝他商品から代表コードとして参照される商品）
 // repFilter = '!'      → 【v1.0583】送り込みが無い商品（'*' のちょうど裏返し）
+// repFilter = '*P'     → 【v1.0619】送り込み元（親）だけ ＝ 他商品から代表コードとして参照されている商品
+// repFilter = '*C'     → 【v1.0619】送り込み先（子）だけ ＝ 代表コードが自分以外を指している商品
 // repFilter = 'xxx'    → 代表コード == 'xxx' のグループ（子）＋ その親自身（code == 'xxx'）
 // ★ '*' と '!' は必ず同じ判定式（_repHasSoikomi）の表裏にする。別々に書くと、
 //   自己参照の親などの端のケースで「有りにも無しにも出ない商品」ができて件数が合わなくなる。
@@ -8994,6 +9011,15 @@ function _repHasSoikomi(code, referenced) {
   const rep = (meta.repCode || '').trim();
   return rep.length > 0 || referenced.has(String(code));
 }
+// 【v1.0619】親／子の判定。商品コード左のマーク（codeCellHtml の .rep-badge）と揃えてある。
+//   親（緑）= 他の商品から代表コードとして参照されているコード（自己参照の親も含む）。
+//     ★badge は repCode が空だと出ないが、ここでは「子から参照されているだけの親」も拾う。
+//       そうしないと「親だけ表示」で親が漏れる（v1.0324 と同じ落とし穴）。
+//   子（黄）= 代表コードが自分以外を指している商品。
+//   ★中継（親でも子でもある）商品は両方に出る。片方に寄せると件数が合わなくなる。
+function _isSoiParent(code, referenced) { return referenced.has(String(code)); }
+function _isSoiChild(code, rep) { const r = String(rep || '').trim(); return !!r && r !== String(code); }
+
 function applyRepFilter(list) {
   const f = state.repFilter;
   if (!f) return list;
@@ -9008,6 +9034,8 @@ function applyRepFilter(list) {
     const rep = (meta.repCode || '').trim();
     if (f === '*') return _repHasSoikomi(code, referenced);                 // 代表コード有(子/自己参照親) or 参照される親
     if (f === '!') return !_repHasSoikomi(code, referenced);                // 【v1.0583】送り込みが無い商品
+    if (f === '*P') return _isSoiParent(code, referenced);                  // 【v1.0619】親（緑マーク）だけ
+    if (f === '*C') return _isSoiChild(code, rep);                          // 【v1.0619】子（黄マーク）だけ
     return rep === f || code === f;                                        // そのグループの子 or 親自身
   });
 }
@@ -9222,31 +9250,10 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
       + `</span>`;
   }
   // 【v195/v204】ステータスは白背景＋値ごとの文字色。セルの閉じた表示は一部を2行略称にするファサード、上に透明select。
-  // 【v1.0438→v1.0613】子商品のステータス。
-  //   旧(v1.0438): 常に親に追従する読み取り専用セル（＝子は変更できなかった）。
-  //   新(v1.0613): ★子も変更できる。既定は従来どおり親に追従し、子で別の値を選んだ時点で
-  //                その子だけ `meta.statusManual = true` になり、以後 syncLinkedChildrenStatus() の
-  //                上書き対象から外れる（親を動かしても、この子だけは動かない）。
-  //                親と同じ値を選び直すと statusManual が外れて追従に戻る（追従へ戻す専用UIは作らない）。
-  //   見た目: 追従中＝従来どおり淡い塗り＋やわらかい枠（＝控えめ）／個別設定中＝親と同じはっきりした枠。
-  const _stParent = statusParentCode(code);
-  if (_stParent) {
-    const _pv = statusLifeDisplayValue(((state.productMeta[_stParent]) || {}).status || '新商品');
-    const _manual = !!meta.statusManual;
-    const _shown = _manual ? value : _pv;           // 追従中は親の値、個別設定中は自分の値
-    const _c = statusLifeColor(_shown);
-    const _bd = _manual ? _c : _lifeRgba(_c, 0.42);  // 【v1.0457】追従中は枠を親よりやわらかく
-    const _bg = _manual ? '#fff' : _lifeRgba(_c, 0.10);
-    const _dis = ghIsEnabled() ? '' : ' disabled';
-    const _opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _shown ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
-    const _tip = _manual
-      ? `この子商品だけ個別に設定しています（親 ${_stParent} は「${_pv}」）。\n親と同じ値を選び直すと、親への追従に戻ります。`
-      : `親（${_stParent}）のステータスに追従中（子商品）。\nここで別の値を選ぶと、この子商品だけ個別設定になります。`;
-    return `<span class="status-cell status-cell-life">`
-      + `<span class="status-facade status-facade-life ${_manual ? 'status-facade-childmanual' : 'status-facade-child'}" style="color:${_c};border-color:${_bd};background:${_bg}" title="${escapeHtml(_tip)}">${statusLifeDisplayLabel(_shown)}<span class="status-chev">▾</span></span>`
-      + `<select class="status-select status-overlay"${_dis} data-code="${escapeHtml(code)}" data-kind="status">${_opts}</select>`
-      + `</span>`;
-  }
+  // 【v1.0618】★親子のステータス継承は廃止した（§6）。子も親とまったく同じ独立したセルを出す。
+  //   v1.0438〜v1.0617: 子は親に追従（v1.0613 で statusManual による個別設定を追加）
+  //   v1.0618〜        : ステータス / 入札状態 / PRオプ状態 の3つとも商品ごとに完全に独立。
+  //   ここにあった「子専用の読み取り専用/淡色セル」の分岐は丸ごと撤去した。
   const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
@@ -15210,35 +15217,16 @@ document.addEventListener('change', (e) => {
   const _stTs = Date.now();  // 【v1.0350】状態変更専用の時刻。保存時マージで状態を「フィールド単位」で保護するのに使う。
   if (kind === 'ad') { meta.adStatus = value; meta.adStatusTs = _stTs; }
   else if (kind === 'pro') { meta.proStatus = value; meta.proStatusTs = _stTs; }
-  else if (kind === 'status') {
-    meta.status = value || '新商品'; meta.statusTs = _stTs;
-    // 【v1.0613】子商品のステータスを直接変えたとき、「親追従」か「個別設定」かをここで決める。
-    //   親と同じ値 → statusManual を外して追従に戻す／違う値 → この子だけ個別設定にする。
-    const _sp = statusParentCode(code);
-    if (_sp) {
-      const _pv = statusLifeDisplayValue(((state.productMeta[_sp]) || {}).status || '新商品');
-      if (statusLifeDisplayValue(meta.status) === _pv) delete meta.statusManual;
-      else meta.statusManual = true;
-    }
-  }
+  // 【v1.0618】子への伝播も statusManual の判定も無し。変えた商品のステータスだけを書き換える。
+  else if (kind === 'status') { meta.status = value || '新商品'; meta.statusTs = _stTs; }
   meta._ts = _stTs;  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
   pinEditedCode(code);  // 【fix】変更した商品は、フィルタに一致しなくなっても“その場では消さない”（次のビュー切替/更新まで残す）
   // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
   if (kind === 'ad' || kind === 'pro') markTuneAction(code, kind);
   // 【v177】プルダウン変更時は対応内容欄に触らない（記入内容が空ならそのまま空、書いてあればそのまま維持）
   saveToStorage();
-  // 【v1.0437】親のステータスを変えたら、追従中の子へ伝播して全再描画（子の表示も一緒に更新）
-  if (kind === 'status' && statusLinkedChildrenOf(code).length) {
-    // 【v1.0518】連動する子もピンして、再描画でその場から消えないようにする（更新/別ボタンで初めて消える）。
-    statusLinkedChildrenOf(code).forEach(cc => pinEditedCode(cc));
-    syncLinkedChildrenStatus();
-    saveToStorage();
-    renderAll();
-    return;
-  }
-  // 【v1.0613】子商品のステータスを変えたら、ファサードの色・枠・ツールチップ（追従中/個別設定中）を
-  //   作り直す必要があるので、下の「ファサードだけ差し替え」では足りない。全再描画する。
-  if (kind === 'status' && statusParentCode(code)) { renderAll(); return; }
+  // 【v1.0618】親のステータスを子へ伝播する処理（v1.0437）と、子セル専用の再描画（v1.0613）は撤去した。
+  //   どの商品も同じ扱い＝下の「ファサードだけ差し替え」で足りる。
   // 見た目更新
   if (kind === 'ad' || kind === 'pro') {
     // 【v188】ファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
@@ -16754,11 +16742,8 @@ function downloadBasicAllCsv() {
     };
     const num = function (n) { return (n == null || isNaN(n)) ? '' : String(Math.round(n)); };
     const statusDisp = function (code) {
-      // 【v1.0613】個別設定中(statusManual)の子は、親ではなく自分のステータスを出す
-      const _m0 = (state.productMeta && state.productMeta[code]) || {};
-      const p = (!_m0.statusManual && typeof statusParentCode === 'function') ? statusParentCode(code) : null;
-      const src = p || code;
-      const meta = (state.productMeta && state.productMeta[src]) || {};
+      // 【v1.0618】親子のステータス継承を廃止したので、常にその商品自身のステータスを出す
+      const meta = (state.productMeta && state.productMeta[code]) || {};
       const v = meta.status || '新商品';
       return (typeof statusLifeDisplayValue === 'function') ? statusLifeDisplayValue(v) : v;
     };
@@ -17404,6 +17389,8 @@ function updateRepFilterUI() {
     btn.setAttribute('data-tooltip',
       f === '*' ? '送り込みがある商品のみ表示中（クリックで解除）' :
       f === '!' ? '送り込みが無い商品のみ表示中（クリックで解除）' :
+      f === '*P' ? '送り込み元（親）のみ表示中（クリックで解除）' :        /* 【v1.0619】 */
+      f === '*C' ? '送り込み先（子）のみ表示中（クリックで解除）' :        /* 【v1.0619】 */
       f         ? `グループ「${f}」のみ表示中（クリックで解除）` :
                   '送り込みがある商品');
   });
@@ -17412,6 +17399,23 @@ function updateRepFilterUI() {
     if (f && b.dataset.rep === f) b.classList.add('active');
     else b.classList.remove('active');
   });
+  // 【v1.0619】親／子ボタンの選択表示と件数（撤退済みは数えない＝一覧の母集団に合わせる）
+  document.querySelectorAll('.soi-pc-btn').forEach(b => {
+    b.classList.toggle('on', f === ('*' + b.dataset.soipc));
+  });
+  try {
+    const pm = state.productMeta || {};
+    const referenced = getReferencedRepCodes();
+    let nP = 0, nC = 0;
+    Object.keys(state.master || {}).forEach(code => {
+      if (typeof isRetired === 'function' && isRetired(code)) return;
+      const rep = ((pm[code] || {}).repCode || '').trim();
+      if (_isSoiParent(code, referenced)) nP++;
+      if (_isSoiChild(code, rep)) nC++;
+    });
+    const eP = document.getElementById('cntSoiParent'); if (eP) eP.textContent = nP;
+    const eC = document.getElementById('cntSoiChild');  if (eC) eC.textContent = nC;
+  } catch (e) {}
 }
 // 絞り込み解除
 function clearRepFilter() {
@@ -17444,6 +17448,15 @@ document.addEventListener('click', (e) => {
 if ($('#repFilterClear')) {
   $('#repFilterClear').addEventListener('click', clearRepFilter);
 }
+// 【v1.0619】親／子ボタン → 親だけ／子だけに絞り込み（同じボタンをもう一度押すと解除＝setRepFilterのトグル）
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.soi-pc-btn');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  setRepFilter('*' + btn.dataset.soipc);
+});
+
 // 🔗バッジ(商品コード横)クリック → そのグループに絞り込み（クリック委譲）
 document.addEventListener('click', (e) => {
   const badge = e.target.closest('.rep-badge');
@@ -17470,9 +17483,11 @@ function _xfAdBypassed() {
   return !!(state.activeStateFilter && types.indexOf(state.activeStateFilter.type) >= 0);
 }
 function _xfAdKey()  { return _xfAdBypassed() ? 'all' : (basicAdFilter || 'all'); }
+// 【v1.0619】'*P' / '*C'（親のみ／子のみ）は、どちらも「送り込み有り」の部分集合なので 'yes' 扱いにする。
+//   こうしないとパネル側が「全体」に見えてしまい、いま絞り込み中なのが読めない。
 function _xfSoiKey() {
   const f = state.repFilter;
-  if (f === '*') return 'yes';
+  if (f === '*' || f === '*P' || f === '*C') return 'yes';   // 【v1.0619】親のみ/子のみも「送り込み有り」の一部
   if (f === '!') return 'no';
   return 'all';   // グループ絞り込み('xxx')中は別物なのでパネルは光らせない
 }
