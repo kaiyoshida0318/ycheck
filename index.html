@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0612 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0613 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1753,9 +1753,11 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
 .status-select.none { background: var(--bg3); color: var(--text3); }
 .status-select.info { background: rgba(37,99,235,0.08); color: var(--accent); border-color: rgba(37,99,235,0.3); }
 
-/* 【v1.0438】子は常に親のステータスに追従。子セルは読み取り専用（クリック不可）で親の値を表示。 */
-/* 【v1.0457】子ステータス（親追従）は案6：淡い塗りでメインより控えめに。太さ・寸法は親と同一のまま少しだけトーンダウン。 */
-.status-facade-child { cursor: default; font-weight: 500; opacity: 0.92; }
+/* 【v1.0457】子ステータス（親追従中）は案6：淡い塗りでメインより控えめに。太さ・寸法は親と同一のまま少しだけトーンダウン。 */
+/* 【v1.0613】子も編集できるようになったので cursor:default → pointer。
+   追従中(.status-facade-child)＝控えめ ／ 個別設定中(.status-facade-childmanual)＝親と同じはっきりした見た目。 */
+.status-facade-child { cursor: pointer; font-weight: 500; opacity: 0.92; }
+.status-facade-childmanual { cursor: pointer; }
 
 /* Note cell (対応内容) */
 .note-cell {
@@ -3358,7 +3360,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0612</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0613</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5774,7 +5776,14 @@ function mergeProductMetaForSave(localPM, remotePM) {
     if (_lpSt !== _rpSt) { const s = (_lpSt > _rpSt) ? L : R; w.proStatus = s.proStatus; w.proStatusTs = s.proStatusTs; }
     const _lsSt = (typeof L.statusTs    === 'number') ? L.statusTs    : 0;
     const _rsSt = (typeof R.statusTs    === 'number') ? R.statusTs    : 0;
-    if (_lsSt !== _rsSt) { const s = (_lsSt > _rsSt) ? L : R; w.status    = s.status;    w.statusTs    = s.statusTs;    }
+    // 【v1.0613】statusManual（子商品を親追従から外したフラグ）は status と必ずセットで動かす。
+    //   whole-entry の勝者からだけ引き継ぐと「status は個別設定側／フラグは追従側」にねじれて、
+    //   次の syncLinkedChildrenStatus() で個別設定が親の値に巻き戻る。
+    if (_lsSt !== _rsSt) {
+      const s = (_lsSt > _rsSt) ? L : R;
+      w.status = s.status; w.statusTs = s.statusTs;
+      if (s.statusManual) w.statusManual = true; else delete w.statusManual;
+    }
     // 【子商品詳細】childDetail も専用Ts(childDetailTs)が新しい側で保護（同期で巻き戻らないように）。
     const _lcd = (typeof L.childDetailTs === 'number') ? L.childDetailTs : 0;
     const _rcd = (typeof R.childDetailTs === 'number') ? R.childDetailTs : 0;
@@ -8498,8 +8507,10 @@ function getMeta(code) {
 }
 
 // ==================== 【v1.0438】親子ステータス継承（子は常に親に追従） ====================
-// 子（repCodeが設定されていて自コードと異なる）のライフサイクル・ステータス(status)は、常に親に追従する。
-//   ・トグルUIは無し。子のステータスは読み取り専用で親の値をそのまま表示する。
+// 子（repCodeが設定されていて自コードと異なる）のライフサイクル・ステータス(status)は、既定では親に追従する。
+//   ・【v1.0613】子のセルも編集できる。子で親と違う値を選ぶと meta.statusManual = true が立ち、
+//     その子は以後 syncLinkedChildrenStatus() の上書き対象から外れる（＝個別設定）。
+//     親と同じ値を選び直すと statusManual が外れて追従に戻る。
 //   ・入札状態(adStatus)/PRオプ状態(proStatus)は子ごとに固定のまま（継承しない）。
 // この code の「親コード」を返す（子でなければ ''）。
 function statusParentCode(code) {
@@ -8527,6 +8538,7 @@ function syncLinkedChildrenStatus() {
   let changed = false;
   Object.keys(pm).forEach(code => {
     if (!isStatusLinkedChild(code)) return;
+    if (pm[code].statusManual) return;   // 【v1.0613】この子だけ個別設定中＝親の値で上書きしない
     const p = statusParentCode(code);
     const parent = pm[p];
     const pv = statusLifeDisplayValue((parent && parent.status) || '新商品');
@@ -9136,16 +9148,29 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
       + `</span>`;
   }
   // 【v195/v204】ステータスは白背景＋値ごとの文字色。セルの閉じた表示は一部を2行略称にするファサード、上に透明select。
-  // 【v1.0438】子は常に親のステータスに追従。子セルは読み取り専用（トグル無し）で親の値をそのまま表示。
+  // 【v1.0438→v1.0613】子商品のステータス。
+  //   旧(v1.0438): 常に親に追従する読み取り専用セル（＝子は変更できなかった）。
+  //   新(v1.0613): ★子も変更できる。既定は従来どおり親に追従し、子で別の値を選んだ時点で
+  //                その子だけ `meta.statusManual = true` になり、以後 syncLinkedChildrenStatus() の
+  //                上書き対象から外れる（親を動かしても、この子だけは動かない）。
+  //                親と同じ値を選び直すと statusManual が外れて追従に戻る（追従へ戻す専用UIは作らない）。
+  //   見た目: 追従中＝従来どおり淡い塗り＋やわらかい枠（＝控えめ）／個別設定中＝親と同じはっきりした枠。
   const _stParent = statusParentCode(code);
   if (_stParent) {
-    const pv = statusLifeDisplayValue(((state.productMeta[_stParent]) || {}).status || '新商品');
-    const pc = statusLifeColor(pv);
-    // 【v1.0457】案6：子は「メインより控えめ」に。淡い同系色の塗り＋やわらかい枠（幅・文字位置は親と同一）。
-    const childBg = _lifeRgba(pc, 0.10);     // うっすら塗り
-    const childBd = _lifeRgba(pc, 0.42);     // 枠は親よりやわらかく
+    const _pv = statusLifeDisplayValue(((state.productMeta[_stParent]) || {}).status || '新商品');
+    const _manual = !!meta.statusManual;
+    const _shown = _manual ? value : _pv;           // 追従中は親の値、個別設定中は自分の値
+    const _c = statusLifeColor(_shown);
+    const _bd = _manual ? _c : _lifeRgba(_c, 0.42);  // 【v1.0457】追従中は枠を親よりやわらかく
+    const _bg = _manual ? '#fff' : _lifeRgba(_c, 0.10);
+    const _dis = ghIsEnabled() ? '' : ' disabled';
+    const _opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _shown ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
+    const _tip = _manual
+      ? `この子商品だけ個別に設定しています（親 ${_stParent} は「${_pv}」）。\n親と同じ値を選び直すと、親への追従に戻ります。`
+      : `親（${_stParent}）のステータスに追従中（子商品）。\nここで別の値を選ぶと、この子商品だけ個別設定になります。`;
     return `<span class="status-cell status-cell-life">`
-      + `<span class="status-facade status-facade-life status-facade-child" style="color:${pc};border-color:${childBd};background:${childBg}" title="親（${escapeHtml(_stParent)}）のステータスに追従（子商品）">${statusLifeDisplayLabel(pv)}</span>`
+      + `<span class="status-facade status-facade-life ${_manual ? 'status-facade-childmanual' : 'status-facade-child'}" style="color:${_c};border-color:${_bd};background:${_bg}" title="${escapeHtml(_tip)}">${statusLifeDisplayLabel(_shown)}<span class="status-chev">▾</span></span>`
+      + `<select class="status-select status-overlay"${_dis} data-code="${escapeHtml(code)}" data-kind="status">${_opts}</select>`
       + `</span>`;
   }
   const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
@@ -15111,7 +15136,17 @@ document.addEventListener('change', (e) => {
   const _stTs = Date.now();  // 【v1.0350】状態変更専用の時刻。保存時マージで状態を「フィールド単位」で保護するのに使う。
   if (kind === 'ad') { meta.adStatus = value; meta.adStatusTs = _stTs; }
   else if (kind === 'pro') { meta.proStatus = value; meta.proStatusTs = _stTs; }
-  else if (kind === 'status') { meta.status = value || '新商品'; meta.statusTs = _stTs; }
+  else if (kind === 'status') {
+    meta.status = value || '新商品'; meta.statusTs = _stTs;
+    // 【v1.0613】子商品のステータスを直接変えたとき、「親追従」か「個別設定」かをここで決める。
+    //   親と同じ値 → statusManual を外して追従に戻す／違う値 → この子だけ個別設定にする。
+    const _sp = statusParentCode(code);
+    if (_sp) {
+      const _pv = statusLifeDisplayValue(((state.productMeta[_sp]) || {}).status || '新商品');
+      if (statusLifeDisplayValue(meta.status) === _pv) delete meta.statusManual;
+      else meta.statusManual = true;
+    }
+  }
   meta._ts = _stTs;  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
   pinEditedCode(code);  // 【fix】変更した商品は、フィルタに一致しなくなっても“その場では消さない”（次のビュー切替/更新まで残す）
   // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
@@ -15127,6 +15162,9 @@ document.addEventListener('change', (e) => {
     renderAll();
     return;
   }
+  // 【v1.0613】子商品のステータスを変えたら、ファサードの色・枠・ツールチップ（追従中/個別設定中）を
+  //   作り直す必要があるので、下の「ファサードだけ差し替え」では足りない。全再描画する。
+  if (kind === 'status' && statusParentCode(code)) { renderAll(); return; }
   // 見た目更新
   if (kind === 'ad' || kind === 'pro') {
     // 【v188】ファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
@@ -16642,7 +16680,9 @@ function downloadBasicAllCsv() {
     };
     const num = function (n) { return (n == null || isNaN(n)) ? '' : String(Math.round(n)); };
     const statusDisp = function (code) {
-      const p = (typeof statusParentCode === 'function') ? statusParentCode(code) : null;
+      // 【v1.0613】個別設定中(statusManual)の子は、親ではなく自分のステータスを出す
+      const _m0 = (state.productMeta && state.productMeta[code]) || {};
+      const p = (!_m0.statusManual && typeof statusParentCode === 'function') ? statusParentCode(code) : null;
       const src = p || code;
       const meta = (state.productMeta && state.productMeta[src]) || {};
       const v = meta.status || '新商品';
