@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0600 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0601 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3279,7 +3279,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0600</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0601</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3492,7 +3492,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <!-- 【v1.0527】日選択: 選ぶとその1日だけの数字になる。空（＝「日選択」）に戻すと月合計。日別データがある日だけ並ぶ。 -->
           <select id="basicDaySel" class="day-sel" onchange="onBasicDaySelChange()" title="日別データを取り込んだ日だけ選べます。選ぶとその1日だけの数字になります（空に戻すと月合計）"></select></span>
           <span class="filter-label">検索</span>
-          <input type="search" id="basicSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <input type="search" id="basicSearch" placeholder="商品コード・商品名・メインKWで検索..." title="商品コード / 商品名 / メインKW のどれかに含まれていれば出ます" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0587】個別 / 合算 の切替（§5-D）。
                個別＝従来どおり親子を別々の行で表示
                合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
@@ -9218,9 +9218,12 @@ function renderBasic() {
       // 【v1.0587】合算モードでは行が代表コードなので、★メンバー全員のコード・商品名も検索対象にする。
       //   でないと「子の名前で検索したのに1件も出ない」ことになる。
       const codes = (r._rollup && r._members && r._members.length) ? r._members : [r.code];
+      // 【v1.0601】★メインKWも検索対象に入れる。
+      //   v1.0600までは 商品コード と 商品名 だけだったので、商品名が空のまま登録した商品は
+      //   コードでしか引けず、「登録したのに検索で出てこない」に見えていた。
       const hay = codes.reduce((acc, c) => {
         const m = getMaster(c);
-        return acc + ' ' + c + ' ' + ((m && m.name) || '');
+        return acc + ' ' + c + ' ' + ((m && m.name) || '') + ' ' + ((m && m.kw) || '');
       }, String(r.code)).toLowerCase();
       return hay.includes(q);
     });
