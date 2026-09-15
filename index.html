@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0604 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0605 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3302,7 +3302,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0604</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0605</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13761,10 +13761,67 @@ function _igSuggest(q) {
   if (q) items = items.filter(it => it.key.toLowerCase().includes(q) || it.name.toLowerCase().includes(q) || it.members.some(c => c.toLowerCase().includes(q) || _mn(c).toLowerCase().includes(q)));
   items.sort((a, b) => a.name.localeCompare(b.name));
   items = items.slice(0, 50);
-  if (items.length === 0) { box.style.display = 'none'; return; }
   const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s));
-  box.innerHTML = items.map(it => '<div onmousedown="event.preventDefault();_igSelect(\'' + String(it.key).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'"><span style="font-family:\'DM Mono\',ui-monospace,monospace;color:var(--text3);font-size:11px">' + esc(it.key) + '</span>　' + esc(it.name) + '</div>').join('');
+  // 【v1.0605】★候補が0件のとき、理由まで出す（§5-H）。
+  //   商品-グラフの候補は _igFamilies() ＝ master ∪ item ∪ ad ∪ dailyCodes から【撤退済みを除いた】もの。
+  //   撤退済みだと黙って消えるので、「登録したのに出ない」と同じ行き止まりになっていた。
+  if (items.length === 0) {
+    if (!q) { box.style.display = 'none'; return; }
+    const mm = Object.keys(state.master || {}).filter(c => {
+      const m = state.master[c] || {};
+      return (String(c) + ' ' + (m.name || '') + ' ' + (m.kw || '')).toLowerCase().includes(q);
+    });
+    const mmRet = mm.filter(c => (typeof isRetired === 'function') && isRetired(c));
+    let html;
+    if (mmRet.length) {
+      html = '<div style="padding:10px 12px;font-size:12px;line-height:1.7">'
+        + '<b style="color:#b45309">「' + esc(q) + '」は登録されていますが【撤退済み】です。</b><br>'
+        + '商品-グラフの候補には撤退済みの商品は出ません。<br>'
+        + '<span style="color:var(--text3)">該当: ' + esc(mmRet.join(', ')) + '</span><br>'
+        + '<button type="button" class="btn sm" style="margin-top:6px;background:var(--green);color:#fff;border-color:var(--green)"'
+        + ' onmousedown="event.preventDefault();_igUnretire(\'' + esc(q).replace(/'/g, "") + '\')">↩ 撤退済みを解除して候補に出す</button></div>';
+    } else if (mm.length) {
+      html = '<div style="padding:10px 12px;font-size:12px;line-height:1.7">'
+        + '「' + esc(q) + '」は登録されていますが、候補に出せませんでした。<br>'
+        + '<span style="color:var(--text3)">該当: ' + esc(mm.join(', ')) + '</span></div>';
+    } else {
+      html = '<div style="padding:10px 12px;font-size:12px;line-height:1.7">'
+        + '<b>「' + esc(q) + '」は商品マスタに登録されていません。</b><br>'
+        + '<span style="color:var(--text3)">右上の「+ 商品追加・更新・反映」で登録してください。'
+        + '登録したのに出ない場合は「🧾 ログ」で商品件数が減っていないか確認してください</span></div>';
+    }
+    box.innerHTML = html;
+    box.style.display = 'block';
+    return;
+  }
+  box.innerHTML = items.map(it => {
+    // 【v1.0605】検索語がメンバー側に当たったときは「誰を含むから出ているのか」を添える。
+    //   親子は代表コードで1つにまとめるので、子のコードで検索すると【親の行】が出る。
+    //   それを書かないと「検索したコードと違うものが出た＝無い」と誤解する。
+    const hitMember = (q && it.key.toLowerCase().indexOf(q) < 0 && it.name.toLowerCase().indexOf(q) < 0)
+      ? (it.members.find(c => c.toLowerCase().includes(q) || _mn(c).toLowerCase().includes(q)) || '')
+      : '';
+    return '<div onmousedown="event.preventDefault();_igSelect(\'' + String(it.key).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'"><span style="font-family:\'DM Mono\',ui-monospace,monospace;color:var(--text3);font-size:11px">' + esc(it.key) + '</span>　' + esc(it.name)
+      + (hitMember ? '<span style="color:#7c3aed;font-size:11px">　← ' + esc(hitMember) + ' を含むセット</span>' : '')
+      + '</div>';
+  }).join('');
   box.style.display = 'block';
+}
+// 【v1.0605】商品-グラフの候補欄から撤退済みを解除する
+function _igUnretire(q) {
+  q = String(q || '').trim().toLowerCase();
+  if (!q) return;
+  const targets = Object.keys(state.master || {}).filter(c => {
+    const m = state.master[c] || {};
+    return isRetired(c) && (String(c) + ' ' + (m.name || '') + ' ' + (m.kw || '')).toLowerCase().includes(q);
+  });
+  if (!targets.length) return;
+  targets.forEach(c => { const meta = (state.productMeta[c] = state.productMeta[c] || {}); meta.status = '新商品'; });
+  const ok = saveToStorage(); afterSaveOk(ok);
+  if (typeof ycLog === 'function') ycLog('item', '撤退済みを解除: ' + targets.join(', ') + '（商品-グラフから）');
+  try { if (typeof showToast === 'function') showToast('↩ ' + targets.length + '件の「撤退済み」を解除しました（要: ⬆ 反映する）', 'ok'); } catch (e) {}
+  renderAll();
+  _igSuggest(q);
 }
 function _igSelect(key) {
   _igSelected = key;
