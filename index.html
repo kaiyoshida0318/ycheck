@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0596 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0597 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3262,7 +3262,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0596</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0597</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4359,6 +4359,7 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="np-quick-foot">
         <span class="np-quick-status" id="npqStatus">商品コードを入力してください</span>
         <button class="btn sm ghost" id="npqLoad" type="button" style="display:none" title="この商品のいまの商品名・メインKW・検索URLを各欄に入れます">↩ 現在の値を読み込む</button>
+        <button class="btn sm ghost" id="npqUnretire" type="button" style="display:none" title="ステータスを「撤退済み」から「新商品」に戻します。撤退済みの商品は商品-基本データに出ません">↩ 撤退済みを解除</button>
         <button class="btn sm ghost" id="npqReveal" type="button" style="display:none" title="絞り込みと検索を解除して、この商品の行までジャンプします">🔍 一覧で確認</button>
         <button class="btn sm ghost" id="npqClear" type="button">クリア</button>
         <button class="btn primary sm" id="npqApply" type="button" disabled>＋ この内容で登録・更新</button>
@@ -16276,19 +16277,47 @@ function npqSync() {
   if (!e.code) return;
   const code = e.code.value.trim();
   const exists = !!(code && state.master && state.master[code]);
+  // 【v1.0597】★登録済みかどうかの確認は、この欄がそのまま使える（コードを打つだけ）。
+  //   「登録したのに一覧に出ない」の切り分けはここで済ませる:
+  //     「新規に登録します」 → データが無い（保存されていない）
+  //     「既存の…」        → データはある ＝ 表示側（絞り込み・並び順・撤退済み）の問題
+  const retired = !!(exists && typeof isRetired === 'function' && isRetired(code));
+  const rv = $('#npqReveal'), ur = $('#npqUnretire');
   if (e.apply) e.apply.disabled = !code;
   if (e.load) e.load.style.display = exists ? '' : 'none';
+  // 既存なら、登録しなくてもその場で一覧へ飛べる
+  if (rv) { rv.style.display = exists ? '' : 'none'; if (exists) rv.dataset.code = code; }
+  if (ur) { ur.style.display = retired ? '' : 'none'; if (retired) ur.dataset.code = code; }
   if (!e.status) return;
-  e.status.classList.remove('is-new', 'is-upd');
+  e.status.className = 'np-quick-status';
   if (!code) { e.status.textContent = '商品コードを入力してください'; return; }
-  if (exists) {
+  if (retired) {
+    // ★撤退済みは renderBasic が一覧から外すので、登録し直しても商品-基本データには出ない（§9）
+    e.status.textContent = '⚠ この商品は【撤退済み】です。商品-基本データには出ません（「撤退済み商品」タブにあります）';
+    e.status.classList.add('is-upd');
+  } else if (exists) {
     const m = state.master[code] || {};
-    e.status.textContent = '既存の商品を更新します（' + (m.name || '商品名なし') + '）';
+    e.status.textContent = '登録済みの商品です。上書き更新します（' + (m.name || '商品名なし') + '）';
     e.status.classList.add('is-upd');
   } else {
-    e.status.textContent = '新規に登録します';
+    e.status.textContent = '未登録です。新規に登録します';
     e.status.classList.add('is-new');
   }
+}
+// 【v1.0597】撤退済みを解除して一覧に戻す。
+//   ★商品追加・更新・反映が触るのは state.master だけで、ステータス（productMeta.status）は変えない。
+//     そのため「撤退済み」の商品コードを登録し直しても、商品-基本データには出てこない（§9）。
+//     ここだけは例外的にステータスを戻せるようにしてある。
+function npqUnretire(code) {
+  if (!code) return;
+  const meta = (state.productMeta[code] = state.productMeta[code] || {});
+  meta.status = '新商品';
+  const ok = saveToStorage();
+  afterSaveOk(ok);
+  npLog(`↩ ${code} の「撤退済み」を解除しました（ステータス: 新商品）`, 'ok');
+  try { if (typeof showToast === 'function') showToast(`↩ ${code} の撤退済みを解除しました`, 'ok'); } catch (err) {}
+  renderAll();
+  npqSync();
 }
 function npqLoadCurrent() {
   const e = _npqEls();
@@ -16303,6 +16332,7 @@ function npqClear() {
   const e = _npqEls();
   ['code', 'name', 'kw', 'url'].forEach(k => { if (e[k]) e[k].value = ''; });
   const rv = $('#npqReveal'); if (rv) rv.style.display = 'none';
+  const ur = $('#npqUnretire'); if (ur) ur.style.display = 'none';
   npqSync();
   if (e.code) e.code.focus();
 }
@@ -16702,6 +16732,7 @@ if ($('#npqCode')) {
   $('#npqLoad').addEventListener('click', npqLoadCurrent);
   $('#npqClear').addEventListener('click', npqClear);
   $('#npqReveal').addEventListener('click', (ev) => npqReveal(ev.currentTarget.dataset.code || ''));
+  $('#npqUnretire').addEventListener('click', (ev) => npqUnretire(ev.currentTarget.dataset.code || ''));
   $('#npqApply').addEventListener('click', npqApply);
   // どの欄でも Enter で登録できるようにする（1件ずつ続けて入れる使い方が多いため）
   ['#npqCode', '#npqName', '#npqKw', '#npqUrl'].forEach(sel => {
