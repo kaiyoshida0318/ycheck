@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0594 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0596 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3170,6 +3170,10 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .np-quick-status { font-size: 0.76rem; color: var(--text3); margin-right: auto; }
 .np-quick-status.is-new { color: #15803d; font-weight: 700; }
 .np-quick-status.is-upd { color: #b45309; font-weight: 700; }
+.np-quick-status.is-ok  { color: #15803d; font-weight: 700; }
+/* 【v1.0596】登録した商品の行を一瞬光らせる */
+@keyframes npFlash { 0%,100% { background-color: transparent; } 20%,60% { background-color: #fde68a; } }
+tr.np-flash > td { animation: npFlash 2.2s ease; }
 /* 「または CSVでまとめて」の区切り */
 .np-or { display: flex; align-items: center; gap: 10px; margin: 0 0 12px 0; color: var(--text3); font-size: 0.74rem; }
 .np-or::before, .np-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -3258,7 +3262,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0594</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0596</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3275,7 +3279,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
     <!-- 【v1.0594】「+ 商品追加・更新」は「🔁 再登録後のコード移行」の右へ移動（ボタンの実体は1つだけ） -->
     <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
-    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
+    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新・反映</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
       <span class="gh-sync-label">⚙️ GitHub連携</span>
       <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
@@ -4325,7 +4329,7 @@ th.col-sroas { background-color:#e7d5f5; }
 <div class="modal-overlay" id="newProductModal">
   <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title">+ 商品追加・更新</h2>
+      <h2 class="modal-title">+ 商品追加・更新・反映</h2>
       <button class="modal-close" id="npClose" type="button">×</button>
     </div>
     <p class="dropzone-hint" style="margin:0 0 12px 0;">
@@ -4355,6 +4359,7 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="np-quick-foot">
         <span class="np-quick-status" id="npqStatus">商品コードを入力してください</span>
         <button class="btn sm ghost" id="npqLoad" type="button" style="display:none" title="この商品のいまの商品名・メインKW・検索URLを各欄に入れます">↩ 現在の値を読み込む</button>
+        <button class="btn sm ghost" id="npqReveal" type="button" style="display:none" title="絞り込みと検索を解除して、この商品の行までジャンプします">🔍 一覧で確認</button>
         <button class="btn sm ghost" id="npqClear" type="button">クリア</button>
         <button class="btn primary sm" id="npqApply" type="button" disabled>＋ この内容で登録・更新</button>
       </div>
@@ -16150,7 +16155,7 @@ function downloadNewProductTemplate() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = '商品追加・更新テンプレート.csv';
+  a.download = '商品追加・更新・反映テンプレート.csv';   // 【v1.0595】名称変更に追従
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -16297,26 +16302,64 @@ function npqLoadCurrent() {
 function npqClear() {
   const e = _npqEls();
   ['code', 'name', 'kw', 'url'].forEach(k => { if (e[k]) e[k].value = ''; });
+  const rv = $('#npqReveal'); if (rv) rv.style.display = 'none';
   npqSync();
   if (e.code) e.code.focus();
 }
 function npqApply() {
   const e = _npqEls();
   const code = e.code.value.trim();
-  if (!code) { npLog('⚠ 商品コードを入力してください', 'warn'); e.code.focus(); return; }
+  if (!code) {
+    if (e.status) { e.status.textContent = '⚠ 商品コードを入力してください'; e.status.className = 'np-quick-status is-upd'; }
+    e.code.focus();
+    return;
+  }
   // ★CSVとまったく同じ経路を通す（npApplyRows）
-  const { added, updated } = npApplyRows([{
+  const { added } = npApplyRows([{
     '商品コード': code,
     '商品名':     e.name.value.trim(),
     'メインKW':   e.kw.value.trim(),
     '検索URL':    e.url.value.trim()
   }]);
   const ok = saveToStorage();
-  if (!afterSaveOk(ok)) return;
+  const saveOk = afterSaveOk(ok);   // ★false でも state は書き換わっているので、必ず描画まで進める
   npLog(`✅ ${code} を${added ? '新規追加' : '更新'}しました`, 'ok');
   npLog(ok ? `💾 ブラウザに保存しました` : `💾 GitHubへ保存します（端末キャッシュは容量超過のため省略）`, 'ok');
-  npqClear();          // 続けて次の商品を入れられるように空にする
   renderAll();
+  npqClear();   // 続けて次の商品を入れられるように空にする
+
+  // 【v1.0596】★結果は必ず「見える場所」に出す。
+  //   v1.0595 は npLog だけで、ログ欄は既定 display:none。押しても入力欄が消えるだけに見え、
+  //   「登録されていない」と誤解する原因になっていた（実際は state.master に入っていた）。
+  const msg = `✅ ${code} を${added ? '新規追加' : '更新'}しました`
+    + (saveOk ? '' : '（※この端末への保存は失敗。GitHub連携側に保存されます）');
+  if (e.status) { e.status.textContent = msg; e.status.className = 'np-quick-status is-ok'; }
+  const vm = $('#npValidationMsg');
+  if (vm) { vm.textContent = msg + '　一覧に出ない場合は絞り込みが掛かっています（「🔍 一覧で確認」で解除して移動できます）'; }
+  try { if (typeof showToast === 'function') showToast(msg, 'ok'); } catch (err) {}
+  const rv = $('#npqReveal');
+  if (rv) { rv.style.display = ''; rv.dataset.code = code; }
+}
+// 【v1.0596】登録した商品の行まで連れて行く。
+//   ★新規商品は「実績額の降順」の一番下に来るうえ、クロス絞り込みの広告軸が掛かっていると
+//     ステータスが「新商品」＝広告あり/なしのどちらにも入らないので一覧から消える（§16-B-4）。
+//     絞り込みを全部落としてから商品コードで検索する。
+function npqReveal(code) {
+  if (!code) return;
+  closeNewProductModal();
+  try { if (typeof xfClearAll === 'function') xfClearAll(); } catch (e) {}   // 絞り込み・検索・帯を全解除
+  const sb = document.getElementById('basicSearch');
+  if (sb) sb.value = code;
+  try { if (typeof switchToView === 'function') switchToView('basic'); } catch (e) {}
+  if (typeof renderAll === 'function') renderAll();
+  setTimeout(() => {
+    const rows = [...document.querySelectorAll('#tableBasic tbody tr')];
+    const tr = rows.find(t => { const c = t.querySelector('td.code-cell'); return c && c.textContent.indexOf(code) >= 0; });
+    if (!tr) return;
+    try { tr.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    tr.classList.add('np-flash');
+    setTimeout(() => tr.classList.remove('np-flash'), 2400);
+  }, 80);
 }
 
 // すべてクリア
@@ -16658,6 +16701,7 @@ if ($('#npqCode')) {
   $('#npqCode').addEventListener('input', npqSync);
   $('#npqLoad').addEventListener('click', npqLoadCurrent);
   $('#npqClear').addEventListener('click', npqClear);
+  $('#npqReveal').addEventListener('click', (ev) => npqReveal(ev.currentTarget.dataset.code || ''));
   $('#npqApply').addEventListener('click', npqApply);
   // どの欄でも Enter で登録できるようにする（1件ずつ続けて入れる使い方が多いため）
   ['#npqCode', '#npqName', '#npqKw', '#npqUrl'].forEach(sel => {
