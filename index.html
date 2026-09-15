@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0592 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0593 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3238,7 +3238,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0592</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0593</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3515,7 +3515,10 @@ th.col-sroas { background-color:#e7d5f5; }
                    親の広告から入った客が子商品で買うと親の行で溢れる。その額をそのまま出す列。 -->
               <th class="num col-adunk" data-sort="adUnknown" title="広告売上(不明分) ＝ 広告売上 − 総売上（溢れたぶんだけ）&#10;広告売上はクリックされた商品に計上され、総売上は売れた商品に計上されます。&#10;そのため、この商品の広告から入った客が別の商品（子商品など）で購入すると、&#10;この商品の行では広告売上が総売上を上回り、その差額がここに出ます。&#10;★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。&#10;「合算」「両表示」でセットにすると0になるなら、送り込み先で着地しています。">広告売上<br><span class="th-est">(不明分)</span></th>
               <th class="num col-spend" data-sort="adCost">広告実績額</th>
-              <th class="num col-cvr" data-sort="cvr" title="広告CVR ＝ 広告注文数 ÷ 広告クリック数 × 100&#10;①広告詳細レポート由来。クリックが0の商品は「—」。">広告CVR</th>
+              <!-- 【v1.0593】広告CVRの列は撤去。
+                   ★データ（buildFullAggregate / _basicDayAggRows / 合算の r.cvr）は残してある。
+                     CSVには「参考:広告CVR(%)」として残置。戻すときはこの th と
+                     renderBasic の tr.innerHTML に col-cvr の td を書き戻すだけ（colspan も 14→15 に）。 -->
               <th class="num col-prov" data-sort="prOverEst" title="PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR実績額<br><span class="th-est">(7%超・推定)</span></th>
               <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告ROAS</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
@@ -9102,7 +9105,7 @@ function renderBasic() {
     // 【v1.0580】全-月別データ相当に増やした列のソート。算出できないものは -1＝最下位に寄せる
     if (k === 'prsroas')  { const v = itemPrSalesRoasPct(r.code, r.rev, r.adCost); return (v == null) ? -1 : v; }
     if (k === 'prOverEst'){ const e = itemPrEstimate(r.code, r.rev); return e ? e.over : -1; }
-    if (k === 'cvr')      { return (r.cvr == null) ? -1 : r.cvr; }
+    /* 【v1.0593】広告CVRの列は撤去（r.cvr は計算し続けている。CSVで使用） */
     if (k === 'adUnknown'){ const v = adUnknownOf(r, _famMap).val; return v == null ? -1 : v; }   // 【v1.0590/v1.0591】溢れていない行は最下位
     /* 【v1.0592】送り込み売上の列は撤去（データは _soiByParent に残置・CSVで使用） */
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
@@ -9155,7 +9158,7 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0592】送り込み売上の列を撤去したので 15
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0593】広告CVRの列も撤去したので 14
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
     state.basicDisplayedCodes = [];   // 【v1.0522】
@@ -9283,7 +9286,6 @@ function renderBasic() {
       ${_adRevCell}
       <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_adUnk.val != null ? '<span class="adunk-val">' + fmt(Math.round(_adUnk.val)) + '</span>' : '<span style="color:var(--text3)">—</span>'}${(_adUnk.useSet && (+r.adRev || 0) > 0) ? '<span class="adunk-set" title="親子セットの合計から引いた値です">合算</span>' : ''}</td>
       <td class="num col-spend">${fmt(r.adCost)}</td>
-      <td class="num col-cvr">${r.cvr == null ? '<span style="color:var(--text3)">—</span>' : fmtCvr(r.cvr)}</td>
       <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="num col-aroas ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
       ${_proCell}
@@ -10838,7 +10840,9 @@ function downloadZenMonthlyCsv() {
     // 【v1.0537】PR列は含める（この表はストア全体のため）／【v1.0547】検算列は画面の表示状態に合わせる
     const csvCols = zdCols().filter(function (c) { return c.key !== 'salesRoas'; });
     const header = ['月'].concat(csvCols.map(function (c) { return c.label; }));   // 【v1.0562】送り込み売上は撤去
-    const lines = [header.join(',')];
+    // 【v1.0593】★見出し行も必ず esc を通す。列名にカンマを含むもの（例: 'PR売上ROAS(推定,%)'）があると、
+    //   そこで見出しだけ2列に割れ、本文と1列ずれる（v1.0580〜v1.0592 の商品基本データCSVで実際に起きていた）。
+    const lines = [header.map(esc).join(',')];
     drows.forEach(function (r) {
       // 【v1.0555】料率別の列も含めて1行で出す（画面と同じ並び）
       const row = [r.month || r.label];
@@ -13036,7 +13040,9 @@ function downloadRankCsv(kind) {
     const esc = function (v) { let s = (v == null) ? '' : String(v); s = s.replace(/[\r\n]+/g, ' ').trim(); if (/[",]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
     const days = []; for (let i = 1; i <= nDays; i++) days.push(String(i));
     const header = ['月', '商品コード', '商品名', '種別'].concat(days);
-    const lines = [header.join(',')];
+    // 【v1.0593】★見出し行も必ず esc を通す。列名にカンマを含むもの（例: 'PR売上ROAS(推定,%)'）があると、
+    //   そこで見出しだけ2列に割れ、本文と1列ずれる（v1.0580〜v1.0592 の商品基本データCSVで実際に起きていた）。
+    const lines = [header.map(esc).join(',')];
     const rankLabel = isAd ? '広告順位' : 'SEO順位';
     const editLabel = isAd ? '入札価格' : 'PRオプ料率(%)';
     codes.forEach(function (code) {
@@ -15952,10 +15958,12 @@ function downloadBasicAllCsv() {
     });
     const header = ['月', '商品コード', '画像URL', '商品名',
                     '総売上', '売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告売上(不明分)', '広告実績額',
-                    '広告CVR(%)', 'PR実績額(7%超・推定)', '広告ROAS(%)', 'PRオプ料率(%)', '入札価格', 'セット内売上比率(%)',
-                    '参考:送り込み売上', '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス',
+                    'PR実績額(7%超・推定)', '広告ROAS(%)', 'PRオプ料率(%)', '入札価格', 'セット内売上比率(%)',
+                    '参考:広告CVR(%)', '参考:送り込み売上', '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス',
                     '参考:行の種別', '参考:セット構成'];   /* 【v1.0588】合算/両表示でどの行なのかが分かるように */
-    const lines = [header.join(',')];
+    // 【v1.0593】★見出し行も必ず esc を通す。列名にカンマを含むもの（例: 'PR売上ROAS(推定,%)'）があると、
+    //   そこで見出しだけ2列に割れ、本文と1列ずれる（v1.0580〜v1.0592 の商品基本データCSVで実際に起きていた）。
+    const lines = [header.map(esc).join(',')];
     // 並び順は画面の表示順のまま
     displayRows.forEach(function (r) {
       const code = r.code;
@@ -15976,8 +15984,10 @@ function downloadBasicAllCsv() {
       const row = [
         targetMonth, code, imgUrl(code), m.name || '',
         num(r.rev), (_sr == null ? '' : String(_sr)), (_prsr == null ? '' : String(_prsr)),
-        num(r.seoRev), num(r.adRev), (function () { const u = adUnknownOf(r, _famCsv); return u.val == null ? (u.useSet ? '（合算:溢れなし）' : '') : (num(u.val) + (u.useSet ? '（合算）' : '')); })(), num(r.adCost),
-        (r.cvr == null ? '' : String(Math.round(r.cvr * 10) / 10)),
+        (function () {   /* 【v1.0593】画面と同じ扱い（§5-E）。送り込み先の子商品／広告売上が総売上を超える行は空欄＝算出不能 */
+          if (!r._rollup && (isSoikomiChild(code) || seoOverflowOf(r) != null)) return '';
+          return num(r.seoRev);
+        })(), num(r.adRev), (function () { const u = adUnknownOf(r, _famCsv); return u.val == null ? (u.useSet ? '（合算:溢れなし）' : '') : (num(u.val) + (u.useSet ? '（合算）' : '')); })(), num(r.adCost),
         (_prOver != null ? num(_prOver) : ''), roas, proRate,
         (bid != null && bid > 0) ? String(bid) : '',
         (function () {   /* 【v1.0592】セット内売上比率(%)。送り込みセットの商品だけ。メンバー合計=100% */
@@ -15987,6 +15997,7 @@ function downloadBasicAllCsv() {
           if (!k || n2 < 2 || !(tot > 0)) return '';
           return String(Math.round((+r.rev || 0) / tot * 1000) / 10);
         })(),
+        (r.cvr == null ? '' : String(Math.round(r.cvr * 10) / 10)),   /* 【v1.0593】参考:広告CVR(%)。画面からは撤去したがデータは残す */
         num(_soiByParentCsv[code] || 0),
         m.kw || '', meta.proStatus || '', meta.adStatus || '', statusDisp(code),
         _kind, _memStr
