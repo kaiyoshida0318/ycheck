@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0609 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0610 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1826,6 +1826,11 @@ td.share-cell .share-pct { position: absolute; bottom: -15px; left: 0; right: 0;
 .kw-cell .kw-edit-btn:hover { opacity: 1; background: rgba(37,99,235,0.12); color: var(--accent); }
 /* 【v1.0380】列リサイズ：狭めた時にヘッダー/セル内容がはみ出さないようクリップ（既定幅は自然幅のまま＝見た目不変）。メインKW等をギリギリまで縮小可能に。 */
 th[data-resize-key] { overflow: hidden; }
+/* 【v1.0610】全列がリサイズ対象になったことで overflow:hidden が付く td のうち、
+   セルの外へはみ出して描く要素を持つものは例外にする。
+   ・.share-cell … 総売上/SEO売上/広告売上の下に絶対配置する構成比%（bottom:-15px）が切れてしまう
+   これを外すと v1.0592 のセット内比率%が消えるので、列を増やすときも同様の例外が要る。 */
+td[data-resize-key].share-cell { overflow: visible; }
 .kw-cell .kw-edit-btn { flex: 0 1 auto; min-width: 0; overflow: hidden; }
 
 /* 商品名セル（全表示＋右端に編集アイコン） */
@@ -3346,7 +3351,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0609</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0610</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17507,6 +17512,9 @@ function _ensureFixedLayout() {
 }
 // 保存済み列幅を全テーブルに適用（th に width/min-width/max-width を設定）
 function applyColWidths() {
+  // 【v1.0610】installColResizeHandles を経由せず applyColWidths だけが呼ばれる経路
+  //   （_vpPreviewColWidth / applyViewPrefs 等）でも自動キーが揃っているようにする。
+  try { autoAssignResizeKeys(); } catch (e) {}
   _ensureFixedLayout();
   const widths = loadColWidths();
   // data-resize-key を持つ全 th を走査
@@ -17530,10 +17538,47 @@ function applyColWidths() {
   });
 }
 
+// 【v1.0610】全列ドラッグ対応: data-resize-key を持たない th に自動キーを割り当てる。
+//   これまでは商品コード/商品名/メインKW/対応内容など、手で data-resize-key を書いた列しか
+//   ドラッグできなかった（総売上・広告実績額・ステータス等は掴めなかった）。
+//   ここで thead の全 th にキーを配るので、installColResizeHandles / applyColWidths /
+//   保存(state.viewPrefs.colWidths) の既存の仕組みがそのまま全列に効く。
+//   キー形式: auto_<テーブルキー>__<data-sort もしくは c列番号>
+//     ・data-sort を優先するのは、列を1本増やしても既存列のキーがズレないようにするため。
+//     ・テーブルキーを含めるので、画面ごとに独立して幅を持てる（商品コードだけは従来どおり共有キー "code"）。
+//   対象外: 順位表(.rank-table = 日付列が31本＋tbodyにrowspanがあり列番号が一致しない)、
+//           thead が複数行 / colspan・rowspan を持つ表（列番号→td の対応が壊れるため）。
+const RK_AUTO_PREFIX = 'auto_';
+function _rkTableKey(table) {
+  if (table.id) return table.id;
+  if (table.dataset.rkTable) return table.dataset.rkTable;
+  const host = table.closest('[id]');
+  return host && host.id ? ('in_' + host.id) : null;
+}
+function autoAssignResizeKeys() {
+  document.querySelectorAll('table.data-grid').forEach(table => {
+    if (table.classList.contains('rank-table')) return;          // 順位表は対象外（上のコメント参照）
+    const headRows = table.querySelectorAll('thead tr');
+    if (headRows.length !== 1) return;                            // 2段ヘッダーは対象外
+    const ths = Array.from(headRows[0].children);
+    if (!ths.length) return;
+    if (ths.some(th => (th.colSpan || 1) > 1 || (th.rowSpan || 1) > 1)) return;
+    const tkey = _rkTableKey(table);
+    if (!tkey) return;
+    ths.forEach((th, i) => {
+      if (th.dataset.resizeKey) return;                           // 既存の手書きキーは尊重（幅の共有関係を壊さない）
+      const sub = String(th.dataset.sort || '').trim() || ('c' + i);
+      th.dataset.resizeKey = RK_AUTO_PREFIX + tkey + '__' + sub;
+    });
+  });
+}
+
 // 各 th の右端にリサイズハンドル div を差し込む（再呼び出し可、既設置はスキップ）
 // 【v142】th だけでなく、各 tbody tr の同じ列番目の td 右端にもハンドルを設置。
 //        renderAll後に呼べば、再描画されたtdにもハンドルが付く。
 function installColResizeHandles() {
+  // 【v1.0610】まず全列に data-resize-key を配る（冪等）。以降の処理は従来どおり。
+  try { autoAssignResizeKeys(); } catch (e) { console.warn('列キー自動割当エラー:', e); }
   // 共通: ハンドル要素を作って drag/dblclick/click イベントをバインドする
   // baseEl: ハンドルのドラッグ起点となる要素（thまたはtd）。
   //         どちらでも、対応する th の幅を操作する。
@@ -17634,6 +17679,7 @@ function installColResizeHandles() {
 
 // 初期化: ハンドル設置 + 保存幅の復元。renderAll後に呼ぶ。
 function initColumnResize() {
+  try { autoAssignResizeKeys(); } catch (e) {}   // 【v1.0610】
   installColResizeHandles();
   applyColWidths();
   // 【v1.0545】保存済みの文字サイズもここで反映（localStorage/GitHubのどちらから来ていても効く）
@@ -17685,6 +17731,41 @@ const COL_RESIZE_DEFS = [
   ]}
 ];
 
+// 【v1.0610】自動割当キー(auto_*)の列を、表示設定パネル(⇔幅)にも出すためのグループを DOM から作る。
+//   COL_RESIZE_DEFS は「手で定義した列」だけを持つ設計のまま触らない（§18）。
+//   自動列はテーブルごとにまとめ、見出しは下の対応表から引く（未知のテーブルはキーをそのまま表示）。
+const VP_TABLE_LABELS = {
+  tableBasic:        '商品-基本データ／調整-基本',
+  tableReviewSales4: '総売上-直近4ヶ月分',
+  tableRetired:      '撤退済み商品',
+  tableAdTune:       '入札価格調整',
+  tableProTune:      'PRオプ調整',
+  tableAdAdjust:     '（旧）広告調整',
+  tableProAdjust:    '（旧）PRオプ調整',
+  in_basicWcWrap:    '商品-基本データ（撤退検討リスト）'
+};
+function _vpAutoGroups() {
+  const known = new Set();
+  COL_RESIZE_DEFS.forEach(g => g.items.forEach(it => known.add(it.key)));
+  const byTable = new Map();
+  document.querySelectorAll('th[data-resize-key^="' + RK_AUTO_PREFIX + '"]').forEach(th => {
+    const key = th.dataset.resizeKey;
+    if (!key || known.has(key)) return;
+    const tkey = key.slice(RK_AUTO_PREFIX.length).split('__')[0];
+    if (!byTable.has(tkey)) {
+      byTable.set(tkey, { group: (VP_TABLE_LABELS[tkey] || tkey) + '（自動検出）', items: [] });
+    }
+    const g = byTable.get(tkey);
+    if (g.items.some(x => x.key === key)) return;
+    // 見出しテキストからラベルを作る（<br>や(推定)等を1行に潰す）
+    let label = String(th.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!label) label = '（無題）';
+    if (label.length > 20) label = label.slice(0, 20) + '…';
+    g.items.push({ key: key, label: label });
+  });
+  return Array.from(byTable.values());
+}
+
 // いま画面に出ている th の実測幅（保存値が無い列で「だいたい何px か」を出すため）
 function _vpNaturalWidth(key) {
   const th = document.querySelector('th[data-resize-key="' + key + '"]');
@@ -17718,7 +17799,10 @@ function _vpRenderPanel() {
   if (!wrap) return;
   const widths = ensureViewPrefs().colWidths;
   let h = '';
-  COL_RESIZE_DEFS.forEach(g => {
+  // 【v1.0610】手動定義グループ＋自動検出グループ
+  let _vpGroups = COL_RESIZE_DEFS;
+  try { _vpGroups = COL_RESIZE_DEFS.concat(_vpAutoGroups()); } catch (e) {}
+  _vpGroups.forEach(g => {
     h += '<div class="vp-cgroup">' + escapeHtml(g.group) + '</div>';
     g.items.forEach(it => {
       const saved = widths[it.key];
