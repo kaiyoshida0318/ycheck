@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0601 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0602 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3279,7 +3279,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0601</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0602</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9202,6 +9202,9 @@ function renderBasic() {
     list.forEach(r => { if (r && r.code) _preRollupByCode.set(r.code, r); });
     list = _basicRollupRows(list);
   }
+  // 【v1.0602】この時点＝まだ何も絞り込んでいない母集団。
+  //   検索して0件になったとき「絞り込みで隠れているのか / そもそも無いのか」を言い分けるのに使う。
+  const _basicPoolBeforeFilters = list.slice();
 
   // 【v229】【状態】チップで basic を対象にした絞り込み（全体／新商品）
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'basic') {
@@ -9213,21 +9216,19 @@ function renderBasic() {
 
   // 検索
   const q = $('#basicSearch').value.trim().toLowerCase();
-  if (q) {
-    list = list.filter(r => {
-      // 【v1.0587】合算モードでは行が代表コードなので、★メンバー全員のコード・商品名も検索対象にする。
-      //   でないと「子の名前で検索したのに1件も出ない」ことになる。
-      const codes = (r._rollup && r._members && r._members.length) ? r._members : [r.code];
-      // 【v1.0601】★メインKWも検索対象に入れる。
-      //   v1.0600までは 商品コード と 商品名 だけだったので、商品名が空のまま登録した商品は
-      //   コードでしか引けず、「登録したのに検索で出てこない」に見えていた。
-      const hay = codes.reduce((acc, c) => {
-        const m = getMaster(c);
-        return acc + ' ' + c + ' ' + ((m && m.name) || '') + ' ' + ((m && m.kw) || '');
-      }, String(r.code)).toLowerCase();
-      return hay.includes(q);
-    });
-  }
+  // 【v1.0602】検索の一致判定は1か所にまとめる。
+  //   空振りしたとき「絞り込みで隠れているのか / そもそも無いのか」を言い分けるのにも同じ判定を使う。
+  const _basicSearchHit = (r, qq) => {
+    // 【v1.0587】合算モードでは行が代表コードなので、★メンバー全員のコード・商品名も検索対象にする。
+    const codes = (r._rollup && r._members && r._members.length) ? r._members : [r.code];
+    // 【v1.0601】★メインKWも検索対象に入れる。
+    const hay = codes.reduce((acc, c) => {
+      const m = getMaster(c);
+      return acc + ' ' + c + ' ' + ((m && m.name) || '') + ' ' + ((m && m.kw) || '');
+    }, String(r.code)).toLowerCase();
+    return hay.includes(qq);
+  };
+  if (q) list = list.filter(r => _basicSearchHit(r, q));
   // 【v1.0516】広告あり商品/なし商品 絞り込みは「ステータス」列で判定する。
   //   広告あり = ステータスが「…広告あり…」（健常-広告あり◯ / 中立-広告あり□）。
   //   広告なし = ステータスが「…広告なし…」（健常-広告なし◯ / 中立-広告なし□）。
@@ -9277,7 +9278,10 @@ function renderBasic() {
     return basicSortDir * (va - vb);
   });
   // 【v125】代表コード絞り込み
-  list = applyRepFilter(list);
+  // 【v1.0602】★検索中はバイパスする（広告あり/なしフィルタと同じ扱い）。
+  //   v1.0601まではここが効いたままで、送り込み絞り込み中に商品コードで検索しても
+  //   「1件も出ない」状態になっていた（新商品は代表コードを持たないので必ず外れる）。
+  if (!q) list = applyRepFilter(list);
   // 【v124】代表商品コードでグループ化（同じrepCodeの商品を塊で表示）
   // 【v1.0587】合算モードでは1行＝1セットなので、親子の並べ替え・字下げは不要（かけると逆に崩れる）
   if (!_basicIsRollup()) list = applyRepGrouping(list);
@@ -9314,7 +9318,33 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0593】広告CVRの列も撤去したので 14
+    // 【v1.0602】0件のときは理由まで出す。
+    //   検索語に一致する商品が母集団にあるのに0件＝ステータスチップ等の絞り込みで隠れている。
+    let _emptyMsg = 'データを読み込んでください';
+    if (q) {
+      const _kwRaw = $('#basicSearch').value.trim();
+      const _hidden = _basicPoolBeforeFilters.filter(r => _basicSearchHit(r, q)).length;
+      if (_hidden > 0) {
+        _emptyMsg = '「' + escapeHtml(_kwRaw) + '」に一致する商品は <b>' + _hidden + '件</b> ありますが、'
+          + '絞り込み（ステータス・入札状態・PR状態）で隠れています。'
+          + '<button type="button" class="btn sm" id="basicClearFiltersBtn" style="margin-left:10px">絞り込みを解除して表示</button>';
+      } else {
+        _emptyMsg = '「' + escapeHtml(_kwRaw) + '」に一致する商品はありません'
+          + '<br><span style="font-size:0.8rem;color:var(--text3)">'
+          + '検索できるのは 商品コード / 商品名 / メインKW です。'
+          + '登録したはずの商品が出ないときは「+ 商品追加・更新・反映」に商品コードを入れて、登録済みかどうか確認してください</span>';
+      }
+    } else if (state.activeStateFilter && state.activeStateFilter.label) {
+      _emptyMsg = state.activeStateFilter.label + 'の商品はありません';
+    }
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">' + _emptyMsg + '</td></tr>';   // 【v1.0593】広告CVRの列も撤去したので 14
+    { const _b = document.getElementById('basicClearFiltersBtn');
+      if (_b) _b.addEventListener('click', () => {
+        const _kw = $('#basicSearch').value;   // 検索語は残したまま、絞り込みだけ落とす
+        if (typeof xfClearAll === 'function') xfClearAll();
+        $('#basicSearch').value = _kw;
+        renderBasic();
+      }); }
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
     state.basicDisplayedCodes = [];   // 【v1.0522】
