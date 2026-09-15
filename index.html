@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0593 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0594 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3154,6 +3154,26 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 /* 【v314】分析ボタン(ADcheck風・確認メモを開く) */
 .btn-bunseki{font-size:0.78rem;font-weight:600;padding:6px 14px;border-radius:6px;border:none;background:#5C6BC0;color:#fff;cursor:pointer;white-space:nowrap;line-height:1.2;margin-left:2px}
 .btn-bunseki:hover{background:#4d5bb0}
+/* 【v1.0594】商品追加・更新モーダルの「直接入力」ブロック */
+.np-quick { margin-bottom: 12px; padding: 12px 14px; background: #f4fbf6; border: 1px solid #bfe3ca; border-radius: 8px; }
+.np-quick-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.np-quick-title { font-weight: 700; font-size: 0.9rem; }
+.np-quick-note { font-size: 0.74rem; color: var(--text3); }
+.np-quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.np-q-f { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.np-q-f > span { font-size: 0.74rem; color: var(--text2); font-weight: 600; }
+.np-q-f input { width: 100%; box-sizing: border-box; padding: 6px 9px; font-size: 0.84rem; font-family: inherit;
+  border: 1px solid var(--border2); border-radius: 6px; background: #fff; }
+.np-q-f input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,0.18); }
+.np-req { font-size: 0.64rem; color: #fff; background: #dc2626; border-radius: 3px; padding: 0 4px; margin-left: 3px; font-weight: 700; }
+.np-quick-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.np-quick-status { font-size: 0.76rem; color: var(--text3); margin-right: auto; }
+.np-quick-status.is-new { color: #15803d; font-weight: 700; }
+.np-quick-status.is-upd { color: #b45309; font-weight: 700; }
+/* 「または CSVでまとめて」の区切り */
+.np-or { display: flex; align-items: center; gap: 10px; margin: 0 0 12px 0; color: var(--text3); font-size: 0.74rem; }
+.np-or::before, .np-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+@media (max-width: 640px) { .np-quick-grid { grid-template-columns: 1fr; } }
 /* 【v1.0318】メインページの分類ラベルを分類ごとに色分け（分析の確認場所ドロップダウンと同じ配色に統一） */
 .nav-group-label.g-basic   { color:#2563eb; }  /* 【基本】 */
 .nav-group-label.g-zentai  { color:#dc2626; }  /* 【全体】 */
@@ -3238,7 +3258,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0593</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0594</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3253,8 +3273,9 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0582】「分析」ボタンはここから .header-left（ショップ選択の右）へ移動した -->
     <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
-    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
+    <!-- 【v1.0594】「+ 商品追加・更新」は「🔁 再登録後のコード移行」の右へ移動（ボタンの実体は1つだけ） -->
     <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
+    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新</button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
       <span class="gh-sync-label">⚙️ GitHub連携</span>
       <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
@@ -4308,9 +4329,38 @@ th.col-sroas { background-color:#e7d5f5; }
       <button class="modal-close" id="npClose" type="button">×</button>
     </div>
     <p class="dropzone-hint" style="margin:0 0 12px 0;">
-      新商品の登録情報をCSVでまとめてアップロードできます。
-      商品画像はYahoo!ショッピングから自動取得されます。
+      <!-- 【v1.0594】直接入力を足したので文言も両方に -->
+      1件ずつ直接入力するか、CSVでまとめてアップロードできます。
+      どちらも<b>空欄の項目は今の値をそのまま残します</b>。商品画像はYahoo!ショッピングから自動取得されます。
     </p>
+
+    <!-- 【v1.0594】直接入力（1件ずつ）。CSVを作らずにこの場で登録・更新できる経路。
+         ★反映処理は npApplyRows() に集約してあり、CSVアップロードとまったく同じ規則で動く
+           （空欄の項目は既存値を残す／新規はそのまま登録）。ここに別の書き込み処理を足さないこと。 -->
+    <div class="np-quick">
+      <div class="np-quick-head">
+        <span class="np-quick-title">✏️ 直接入力で登録・更新</span>
+        <span class="np-quick-note">CSVと同じ4項目。<b>商品コードだけ必須</b>／空欄の項目は今の値をそのまま残します</span>
+      </div>
+      <div class="np-quick-grid">
+        <label class="np-q-f"><span>商品コード <b class="np-req">必須</b></span>
+          <input type="text" id="npqCode" placeholder="例: wat-sma-01" autocomplete="off" data-lpignore="true"></label>
+        <label class="np-q-f"><span>商品名</span>
+          <input type="text" id="npqName" placeholder="例: スマートウォッチベルト シリコン" autocomplete="off" data-lpignore="true"></label>
+        <label class="np-q-f"><span>メインKW</span>
+          <input type="text" id="npqKw" placeholder="例: スマートウォッチ ベルト" autocomplete="off" data-lpignore="true"></label>
+        <label class="np-q-f"><span>検索URL</span>
+          <input type="text" id="npqUrl" placeholder="https://shopping.yahoo.co.jp/search?p=..." autocomplete="off" data-lpignore="true"></label>
+      </div>
+      <div class="np-quick-foot">
+        <span class="np-quick-status" id="npqStatus">商品コードを入力してください</span>
+        <button class="btn sm ghost" id="npqLoad" type="button" style="display:none" title="この商品のいまの商品名・メインKW・検索URLを各欄に入れます">↩ 現在の値を読み込む</button>
+        <button class="btn sm ghost" id="npqClear" type="button">クリア</button>
+        <button class="btn primary sm" id="npqApply" type="button" disabled>＋ この内容で登録・更新</button>
+      </div>
+    </div>
+
+    <div class="np-or"><span>または CSVでまとめて</span></div>
 
     <div style="margin-bottom: 14px; padding: 10px 14px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border);">
       <div style="display:flex; align-items:center; justify-content:space-between; gap: 10px; flex-wrap: wrap;">
@@ -15715,6 +15765,8 @@ function openNewProductModal() {
   document.body.style.overflow = 'hidden';
   npBuffer = null;
   npRefreshSlot();
+  // 【v1.0594】直接入力欄も毎回まっさらにして、商品コードにフォーカスを置く
+  if (typeof npqClear === 'function') { try { npqClear(); } catch (e) {} }
 }
 
 function closeNewProductModal() {
@@ -16159,10 +16211,12 @@ async function npHandleFile(file) {
 }
 
 // アップロード実行：state.master に新商品を追加
-function npConfirmUpload() {
-  if (!npBuffer) return;
+// 【v1.0594】★CSVアップロードと直接入力の【共通】反映処理。
+//   どちらもここを通す。別々に書くと「空欄は既存値を残す」などの規則がすぐズレる。
+//   行の形は CSVのヘッダ名そのまま（商品コード / 商品名 / メインKW / 検索URL）。
+function npApplyRows(rows) {
   let added = 0, updated = 0;
-  npBuffer.rows.forEach(r => {
+  (rows || []).forEach(r => {
     const code = (r['商品コード'] || '').trim();
     if (!code) return;
     const existing = state.master[code];
@@ -16192,12 +16246,76 @@ function npConfirmUpload() {
       added++;
     }
   });
+  return { added, updated };
+}
+function npConfirmUpload() {
+  if (!npBuffer) return;
+  const { added, updated } = npApplyRows(npBuffer.rows);
   const ok = saveToStorage();
   if (!afterSaveOk(ok)) return;   // 【v313】GitHub連携ありなら続行（GitHubへ保存）
   npLog(`✅ 反映完了：新規追加 ${added}件 / 既存更新 ${updated}件`, 'ok');
   npLog(ok ? `💾 ブラウザに保存しました` : `💾 GitHubへ保存します（端末キャッシュは容量超過のため省略）`, 'ok');
   npBuffer = null;
   npRefreshSlot();
+  renderAll();
+}
+
+// ==================== 【v1.0594】直接入力（1件ずつ） ====================
+function _npqEls() {
+  return { code: $('#npqCode'), name: $('#npqName'), kw: $('#npqKw'), url: $('#npqUrl'),
+           status: $('#npqStatus'), apply: $('#npqApply'), load: $('#npqLoad') };
+}
+// 商品コードの入力に合わせて「新規 / 既存」を出し分ける。既存なら値の読み込みボタンも出す
+function npqSync() {
+  const e = _npqEls();
+  if (!e.code) return;
+  const code = e.code.value.trim();
+  const exists = !!(code && state.master && state.master[code]);
+  if (e.apply) e.apply.disabled = !code;
+  if (e.load) e.load.style.display = exists ? '' : 'none';
+  if (!e.status) return;
+  e.status.classList.remove('is-new', 'is-upd');
+  if (!code) { e.status.textContent = '商品コードを入力してください'; return; }
+  if (exists) {
+    const m = state.master[code] || {};
+    e.status.textContent = '既存の商品を更新します（' + (m.name || '商品名なし') + '）';
+    e.status.classList.add('is-upd');
+  } else {
+    e.status.textContent = '新規に登録します';
+    e.status.classList.add('is-new');
+  }
+}
+function npqLoadCurrent() {
+  const e = _npqEls();
+  const m = (state.master || {})[e.code.value.trim()];
+  if (!m) return;
+  e.name.value = m.name || '';
+  e.kw.value   = m.kw || '';
+  e.url.value  = m.searchUrl || '';
+  npLog('↩ ' + e.code.value.trim() + ' の現在の値を読み込みました');
+}
+function npqClear() {
+  const e = _npqEls();
+  ['code', 'name', 'kw', 'url'].forEach(k => { if (e[k]) e[k].value = ''; });
+  npqSync();
+  if (e.code) e.code.focus();
+}
+function npqApply() {
+  const e = _npqEls();
+  const code = e.code.value.trim();
+  if (!code) { npLog('⚠ 商品コードを入力してください', 'warn'); e.code.focus(); return; }
+  // ★CSVとまったく同じ経路を通す（npApplyRows）
+  const { added, updated } = npApplyRows([{
+    '商品コード': code,
+    '商品名':     e.name.value.trim(),
+    'メインKW':   e.kw.value.trim(),
+    '検索URL':    e.url.value.trim()
+  }]);
+  const ok = saveToStorage();
+  if (!afterSaveOk(ok)) return;
+  npLog(`✅ ${code} を${added ? '新規追加' : '更新'}しました`, 'ok');
+  npLog(ok ? `💾 ブラウザに保存しました` : `💾 GitHubへ保存します（端末キャッシュは容量超過のため省略）`, 'ok');
+  npqClear();          // 続けて次の商品を入れられるように空にする
   renderAll();
 }
 
@@ -16535,6 +16653,18 @@ newProductModal.addEventListener('click', (e) => {
   if (e.target === newProductModal) closeNewProductModal();
 });
 $('#npDownloadTemplate').addEventListener('click', downloadNewProductTemplate);
+// 【v1.0594】直接入力
+if ($('#npqCode')) {
+  $('#npqCode').addEventListener('input', npqSync);
+  $('#npqLoad').addEventListener('click', npqLoadCurrent);
+  $('#npqClear').addEventListener('click', npqClear);
+  $('#npqApply').addEventListener('click', npqApply);
+  // どの欄でも Enter で登録できるようにする（1件ずつ続けて入れる使い方が多いため）
+  ['#npqCode', '#npqName', '#npqKw', '#npqUrl'].forEach(sel => {
+    const el = $(sel); if (!el) return;
+    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); npqApply(); } });
+  });
+}
 $('#npConfirmUpload').addEventListener('click', npConfirmUpload);
 $('#npToggleLog').addEventListener('click', () => {
   const isShown = npLogArea.style.display !== 'none' && npLogArea.style.display !== '';
