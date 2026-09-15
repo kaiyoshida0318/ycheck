@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0614 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0615 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1706,7 +1706,10 @@ th.col-soi   { background-color: #ece0fb; color: #7c3aed; border-left: 2px solid
 td.col-soi   { color: #7c3aed; font-weight: 600; }
 /* 【v1.0580】推定値の列は数字を少し弱く出して、実測列と見分けられるようにする */
 td.est-val { font-style: italic; }
+/* 【v1.0615】(推定)(不明分) などの注記は「その色の ？」1文字だけにした（見出しの幅を食わないように）。
+   意味は th の title（ツールチップ）に全部残してある。色は従来の注記と同じアンバー。 */
 th .th-est { font-size: 0.82em; font-weight: 600; color: #b45309; }
+th .th-est { margin-left: 1px; vertical-align: top; font-size: 0.9em; }
 /* 【v1.0612】PRオプ料率の「送り込み元 / 利益源」バッジを撤去し、★数字そのものの色で区別する。
    バッジは幅を食って料率の数字が詰まっていたため。意味は色とツールチップで残す。
      7%   （最低料率のまま＝実際に利益が落ちる側＝旧「利益源」）  → 青
@@ -3360,7 +3363,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0614</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0615</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3640,19 +3643,19 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。総売上の右（全-月別データと同じ位置） -->
               <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上<br>ROAS</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
-              <th class="num col-sroas" data-sort="prsroas" title="PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR売上ROAS<br><span class="th-est">(推定)</span></th>
+              <th class="num col-sroas" data-sort="prsroas" title="PR売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR売上<br>ROAS<span class="th-est">？</span></th>
               <th class="num col-sales" data-sort="seoRev">SEO<br>売上</th>
               <th class="num col-ad" data-sort="adRev">広告<br>売上</th>
               <!-- 【v1.0590】広告売上(不明分)＝広告売上 − 総売上 の溢れたぶん（§5-E）。
                    広告売上はクリックされた商品に、総売上は売れた商品に計上されるので、
                    親の広告から入った客が子商品で買うと親の行で溢れる。その額をそのまま出す列。 -->
-              <th class="num col-adunk" data-sort="adUnknown" title="広告売上(不明分) ＝ 広告売上 − 総売上（溢れたぶんだけ）&#10;広告売上はクリックされた商品に計上され、総売上は売れた商品に計上されます。&#10;そのため、この商品の広告から入った客が別の商品（子商品など）で購入すると、&#10;この商品の行では広告売上が総売上を上回り、その差額がここに出ます。&#10;★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。&#10;「合算」「両表示」でセットにすると0になるなら、送り込み先で着地しています。">広告売上<br><span class="th-est">(不明分)</span></th>
+              <th class="num col-adunk" data-sort="adUnknown" title="広告売上超過（見出しの ？ ＝ どの商品で売れたか不明、の印）&#10;広告売上(不明分) ＝ 広告売上 − 総売上（溢れたぶんだけ）&#10;広告売上はクリックされた商品に計上され、総売上は売れた商品に計上されます。&#10;そのため、この商品の広告から入った客が別の商品（子商品など）で購入すると、&#10;この商品の行では広告売上が総売上を上回り、その差額がここに出ます。&#10;★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。&#10;「合算」「両表示」でセットにすると0になるなら、送り込み先で着地しています。">広告<br>売上超過<span class="th-est">？</span></th>
               <th class="num col-spend" data-sort="adCost">広告<br>実績額</th>
               <!-- 【v1.0593】広告CVRの列は撤去。
                    ★データ（buildFullAggregate / _basicDayAggRows / 合算の r.cvr）は残してある。
                      CSVには「参考:広告CVR(%)」として残置。戻すときはこの th と
                      renderBasic の tr.innerHTML に col-cvr の td を書き戻すだけ（colspan も 14→15 に）。 -->
-              <th class="num col-prov" data-sort="prOverEst" title="PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR実績額<br><span class="th-est">(7%超・推定)</span></th>
+              <th class="num col-prov" data-sort="prOverEst" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR<br>実績額<span class="th-est">？</span></th>
               <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告<br>ROAS</th>
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
