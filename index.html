@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0610 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0611 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1352,6 +1352,8 @@ th {
   top: 0;
   z-index: 100;                       /* tbody内の何よりも確実に上に */
 }
+/* 【v1.0611】2行見出しが増えたので行間を詰める。1行の見出しの高さは変わらない。 */
+#tableBasic thead th { line-height: 1.25; }
 th:hover { background-color: #d8dadd; }
 th.nosort { cursor: default; }
 th.nosort:hover { background-color: #e8eaed; }
@@ -3351,7 +3353,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0610</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0611</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3627,32 +3629,32 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
-              <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総売上</th>
+              <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総<br>売上</th>
               <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。総売上の右（全-月別データと同じ位置） -->
-              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上ROAS</th>
+              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上<br>ROAS</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
               <th class="num col-sroas" data-sort="prsroas" title="PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR売上ROAS<br><span class="th-est">(推定)</span></th>
-              <th class="num col-sales" data-sort="seoRev">SEO売上</th>
-              <th class="num col-ad" data-sort="adRev">広告売上</th>
+              <th class="num col-sales" data-sort="seoRev">SEO<br>売上</th>
+              <th class="num col-ad" data-sort="adRev">広告<br>売上</th>
               <!-- 【v1.0590】広告売上(不明分)＝広告売上 − 総売上 の溢れたぶん（§5-E）。
                    広告売上はクリックされた商品に、総売上は売れた商品に計上されるので、
                    親の広告から入った客が子商品で買うと親の行で溢れる。その額をそのまま出す列。 -->
               <th class="num col-adunk" data-sort="adUnknown" title="広告売上(不明分) ＝ 広告売上 − 総売上（溢れたぶんだけ）&#10;広告売上はクリックされた商品に計上され、総売上は売れた商品に計上されます。&#10;そのため、この商品の広告から入った客が別の商品（子商品など）で購入すると、&#10;この商品の行では広告売上が総売上を上回り、その差額がここに出ます。&#10;★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。&#10;「合算」「両表示」でセットにすると0になるなら、送り込み先で着地しています。">広告売上<br><span class="th-est">(不明分)</span></th>
-              <th class="num col-spend" data-sort="adCost">広告実績額</th>
+              <th class="num col-spend" data-sort="adCost">広告<br>実績額</th>
               <!-- 【v1.0593】広告CVRの列は撤去。
                    ★データ（buildFullAggregate / _basicDayAggRows / 合算の r.cvr）は残してある。
                      CSVには「参考:広告CVR(%)」として残置。戻すときはこの th と
                      renderBasic の tr.innerHTML に col-cvr の td を書き戻すだけ（colspan も 14→15 に）。 -->
               <th class="num col-prov" data-sort="prOverEst" title="PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR実績額<br><span class="th-est">(7%超・推定)</span></th>
-              <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告ROAS</th>
+              <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告<br>ROAS</th>
               <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <!-- 【v1.0609】調整-基本のときだけ出す3列（body.basic-tune で表示）。
                    ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
                      片方だけ出し入れすると列がずれる。 -->
-              <th class="status-col tune-col" data-sort="status">ステータス</th>
-              <th class="status-col tune-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col tune-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="status-col tune-col" data-sort="status">ステー<br>タス</th>
+              <th class="status-col tune-col" data-sort="adStatus">入札<br>状態</th>
+              <th class="status-col tune-col" data-sort="proStatus">PRオプ<br>状態</th>
               <!-- 【v1.0592】送り込み売上の列は撤去。
                    ★データ（_soiByParent / CSVの列）は残してある。戻すときは、この th と
                      renderBasic の tr.innerHTML に col-soi の td を書き戻すだけ。
@@ -14152,13 +14154,16 @@ function renderAll() {
   if (typeof updateRepFilterUI === 'function') updateRepFilterUI();
   // 【v1.0583】クロス絞り込みパネルの選択表示（広告フィルタバーの on もここで揃う）
   if (typeof updateCrossFilterUI === 'function') updateCrossFilterUI();
+  // 【v1.0611】★順序を入れ替えた。ソート専用ボタン(.th-sort-btn ＝ inline-flex で約23px)は
+  //   見出しの一部として幅を食うので、_ensureFixedLayout() が自然幅をキャプチャする前に
+  //   設置しておかないと、キャプチャ幅がボタンぶん足りず見出しが「…」で切れる。
+  //   v1.0610 で全列に overflow:hidden が付いたことで、これが全列で目に見えるようになった。
+  if (typeof installSortButtons === 'function') {
+    try { installSortButtons(); } catch (e) { /* 初期化前は無視 */ }
+  }
   // 【v142】tbody再描画後、新しい td にもリサイズハンドルを設置 + 列幅復元
   if (typeof installColResizeHandles === 'function') {
     try { installColResizeHandles(); applyColWidths(); } catch (e) { /* 初期化前は無視 */ }
-  }
-  // 【v279】再描画後に専用ソートボタンを再設置（月列th差し替え等でボタンが消えるのを補う）
-  if (typeof installSortButtons === 'function') {
-    try { installSortButtons(); } catch (e) { /* 初期化前は無視 */ }
   }
 }
 
@@ -17503,7 +17508,8 @@ function _ensureFixedLayout() {
     if (!table.getBoundingClientRect().width) return;            // 非表示（幅0）の表は測れないので見送り
     const ths = Array.from(table.querySelectorAll('thead th'));
     if (!ths.length) return;
-    const natural = ths.map(th => Math.round(th.getBoundingClientRect().width));
+    // 【v1.0611】round だと 0.5px 未満を切り捨てて見出しが1px欠けることがあるので ceil にする
+    const natural = ths.map(th => Math.ceil(th.getBoundingClientRect().width));
     if (natural.some(w => !w)) return;                            // 測定不能列があれば見送り
     table.style.tableLayout = 'fixed';
     ths.forEach((th, i) => { if (!th.style.width) th.style.width = natural[i] + 'px'; });  // 自然幅を明示（既存インライン幅は保持）
