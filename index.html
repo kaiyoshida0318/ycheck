@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0615 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0617 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -235,6 +235,68 @@ body {
 .vp-msg.ok { color: var(--green); }
 .vp-msg.warn { color: #d97706; }
 .vp-msg.err { color: #b91c1c; }
+
+/* ============================================================
+   【v1.0616】表示設定（⇔ 幅）を「画面下半分に貼りつくドック」にした。
+   実際の表を見ながら幅を動かしたい、という要望。
+     ・オーバーレイの暗幕をやめて透明 ＋ pointer-events:none
+       → 背後の表がそのまま見え、ホイールでページもスクロールできる
+       ★背景クリックで閉じる挙動は効かなくなる。× と Esc で閉じる
+         （#productEditModal と同じ方針。v176 のコメント参照）
+     ・パネル本体は画面下端に固定、高さ 46vh ＝ 上端が画面の半分より下に来る
+     ・列リストは「1行1列」の縦並びをやめて、横に詰める可変グリッドに
+   ============================================================ */
+#viewPrefsModal {
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+  pointer-events: none;
+}
+#viewPrefsModal .modal {
+  pointer-events: auto;
+  max-width: none !important;
+  width: 100%;
+  height: 46vh;
+  max-height: 46vh;
+  margin: 0;
+  padding: 12px 18px 14px;
+  border-radius: 14px 14px 0 0;
+  border-top: 2px solid var(--border2);
+  box-shadow: 0 -12px 40px rgba(0,0,0,0.22);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;              /* スクロールするのは列リストだけ */
+}
+#viewPrefsModal .modal-header { flex: 0 0 auto; margin-bottom: 6px; }
+#viewPrefsModal .vp-lead      { flex: 0 0 auto; font-size: 0.75rem; line-height: 1.45; padding: 6px 10px; margin-bottom: 8px; }
+#viewPrefsModal .vp-font-row  { flex: 0 0 auto; padding: 6px 10px; margin-bottom: 8px; }
+#viewPrefsModal .vp-foot      { flex: 0 0 auto; margin-top: 8px; }
+#viewPrefsModal .vp-msg       { flex: 0 0 auto; margin-top: 4px; min-height: 0; }
+
+/* 列リスト＝横並び（画面幅に応じて列数が変わる） */
+#viewPrefsModal .vp-collist {
+  flex: 1 1 auto;
+  max-height: none;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(372px, 1fr));
+  gap: 0 16px;
+  align-content: start;
+}
+#viewPrefsModal .vp-cgroup { grid-column: 1 / -1; }   /* グループ見出しは横いっぱい＝グループごとに段が変わる */
+#viewPrefsModal .vp-crow   { padding: 3px 10px; gap: 6px; }
+#viewPrefsModal .vp-cname  { flex: 0 0 108px; font-size: 0.8rem; }
+#viewPrefsModal .vp-crow input[type=range] { flex: 1 1 70px; min-width: 56px; }
+#viewPrefsModal .vp-numin  { width: 56px; font-size: 0.78rem; padding: 2px 5px; }
+#viewPrefsModal .vp-unit   { font-size: 0.7rem; white-space: nowrap; }   /* 「px（既定）」が2行に折れて行が高くなるのを防ぐ */
+#viewPrefsModal .vp-rst    { font-size: 0.7rem; padding: 2px 6px; }
+
+@media (max-width: 760px) {
+  #viewPrefsModal .vp-collist { grid-template-columns: 1fr; }
+  #viewPrefsModal .modal { height: 54vh; max-height: 54vh; }
+}
 .font-size-label {
   padding: 4px 8px;
   font-size: 0.75rem;
@@ -3363,7 +3425,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0615</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0617</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3662,9 +3724,9 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0609】調整-基本のときだけ出す3列（body.basic-tune で表示）。
                    ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
                      片方だけ出し入れすると列がずれる。 -->
-              <th class="status-col tune-col" data-sort="status">ステー<br>タス</th>
-              <th class="status-col tune-col" data-sort="adStatus">入札<br>状態</th>
-              <th class="status-col tune-col" data-sort="proStatus">PRオプ<br>状態</th>
+              <th class="status-col tune-col" data-sort="status">ステータス</th>
+              <th class="status-col tune-col" data-sort="adStatus">入札状態</th>
+              <th class="status-col tune-col" data-sort="proStatus">PRオプ状態</th>
               <!-- 【v1.0592】送り込み売上の列は撤去。
                    ★データ（_soiByParent / CSVの列）は残してある。戻すときは、この th と
                      renderBasic の tr.innerHTML に col-soi の td を書き戻すだけ。
