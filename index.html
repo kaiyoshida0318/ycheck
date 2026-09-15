@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0599 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0600 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3154,6 +3154,15 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 /* 【v314】分析ボタン(ADcheck風・確認メモを開く) */
 .btn-bunseki{font-size:0.78rem;font-weight:600;padding:6px 14px;border-radius:6px;border:none;background:#5C6BC0;color:#fff;cursor:pointer;white-space:nowrap;line-height:1.2;margin-left:2px}
 .btn-bunseki:hover{background:#4d5bb0}
+/* 【v1.0600】別クライアントの上書き検知バー。見逃すとデータが消えるので、いちばん上に赤で固定 */
+.yc-overwrite-bar { position: sticky; top: 0; z-index: 200; display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 16px; background: #7f1d1d; color: #fff; font-size: 0.8rem; line-height: 1.7; }
+.yc-ovw-icon { flex: 0 0 auto; font-size: 1rem; }
+.yc-ovw-text { flex: 1 1 auto; }
+.yc-ovw-text b { color: #fde68a; }
+.yc-ovw-close { flex: 0 0 auto; background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #fff;
+  border-radius: 4px; cursor: pointer; padding: 1px 7px; font-size: 0.8rem; }
+.yc-ovw-close:hover { background: rgba(255,255,255,0.15); }
 /* 【v1.0594】商品追加・更新モーダルの「直接入力」ブロック */
 .np-quick { margin-bottom: 12px; padding: 12px 14px; background: #f4fbf6; border: 1px solid #bfe3ca; border-radius: 8px; }
 .np-quick-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -3236,6 +3245,14 @@ th.col-sroas { background-color:#e7d5f5; }
   <button type="button" class="tab-conflict-close" id="tabConflictClose" title="この警告を閉じる">✕</button>
 </div>
 
+<!-- 【v1.0600】別クライアントによる上書き検知バー（§15-C）。
+     自分の保存の直後に、自分以外が書いた新しいデータを見つけたときだけ出す。 -->
+<div id="ycOverwriteBar" class="yc-overwrite-bar" style="display:none;" role="alert">
+  <span class="yc-ovw-icon">⛔</span>
+  <span class="yc-ovw-text" id="ycOverwriteText"></span>
+  <button type="button" class="yc-ovw-close" id="ycOverwriteClose" title="この警告を閉じる">✕</button>
+</div>
+
 <!-- Header -->
 <!-- 【v1.0581】ヘッダー1の復帰バー。★ヘッダー1が元あった位置＝いちばん上に置く。
      v1.0580までは復帰バーが1つだけで nav の後ろにあったため、
@@ -3262,7 +3279,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0599</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0600</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5298,6 +5315,34 @@ async function ghPutFile(contentString, retryCount = 0) {
 }
 
 // 現在のstateをシリアライズしてJSON文字列に
+// ============================================================================
+// 【v1.0600】★「誰が最後に書いたか」をデータに残す（§15-C）
+//   同じPATを使う別のクライアント（別端末・別ブラウザ・古いタブ）が同じファイルを
+//   上書きしても、従来はこちら側から一切気づけなかった。実際に、8〜10秒おきに
+//   古いスナップショット（master 260件）で上書きし続ける別クライアントがいて、
+//   こちらの登録（261件）が毎回消えていた。
+//   → 保存時に savedBy（このブラウザ固有のID）を書き込み、保存の15秒後に読み直して
+//     「自分以外が、自分より後に書いていないか」を確認する。
+// ============================================================================
+function _ycClientId() {
+  let id = null;
+  try { id = localStorage.getItem('ycheck_client_id'); } catch (e) {}
+  if (!id) {
+    id = 'c_' + Math.random().toString(36).slice(2, 8) + '_' + Date.now().toString(36).slice(-4);
+    try { localStorage.setItem('ycheck_client_id', id); } catch (e) {}
+  }
+  return id;
+}
+function _ycClientLabel() {
+  const ua = navigator.userAgent || '';
+  const os = /Windows/.test(ua) ? 'Windows' : /Macintosh|Mac OS/.test(ua) ? 'Mac'
+           : /Android/.test(ua) ? 'Android' : /iPhone|iPad|iPod/.test(ua) ? 'iOS'
+           : /Linux|X11|CrOS/.test(ua) ? 'Linux' : '不明OS';
+  const br = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Chrome\//.test(ua) ? 'Chrome'
+           : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : '不明ブラウザ';
+  return os + ' / ' + br;
+}
+let _ycLastSavedAt = null;     // 直前に自分が書き込んだ savedAt
 function ghBuildDataString() {
   const data = {
     overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
@@ -5310,10 +5355,57 @@ function ghBuildDataString() {
     productsCsvSnapshot: state.productsCsvSnapshot,
     viewPrefs: state.viewPrefs,   // 【v1.0545】表示設定（列幅・文字サイズ）。他PCはこれを読んで同じ見た目を再現する
     savedAt: new Date().toISOString(),
+    // 【v1.0600】誰が書いたか。savedBy が自分と違う＝別クライアントの上書き（§15-C）
+    savedBy: _ycClientId(),
+    savedByLabel: _ycClientLabel(),
+    savedByVer: (function () { try { return document.querySelector('.logo-sub').textContent; } catch (e) { return ''; } })(),
     shopId: getCurrentShopId(),
     schemaVersion: 1
   };
+  _ycLastSavedAt = data.savedAt;
   return JSON.stringify(data, null, 2);
+}
+
+// 【v1.0600】GitHub上の実ファイルを「読むだけ」で取得する（state は一切書き換えない）
+async function _ycFetchRemoteMeta() {
+  if (!ghIsEnabled()) return null;
+  const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ghFilePath()}?ref=${GH_BRANCH}&t=${Date.now()}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ghGetPat()}`, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, cache: 'no-store' });
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.download_url) return null;
+  const r2 = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
+  if (!r2.ok) return null;
+  const d = await r2.json();
+  return { savedAt: d.savedAt || '', savedBy: d.savedBy || '', savedByLabel: d.savedByLabel || '',
+           savedByVer: d.savedByVer || '', masterCount: Object.keys(d.master || {}).length };
+}
+function _ycShowOverwriteWarning(remote, mySavedAt, myMasterCount) {
+  const bar = document.getElementById('ycOverwriteBar');
+  const tx = document.getElementById('ycOverwriteText');
+  if (!bar || !tx) return;
+  const who = remote.savedByLabel ? `${remote.savedByLabel}（${remote.savedBy}${remote.savedByVer ? ' / ' + remote.savedByVer : ''}）`
+                                  : (remote.savedBy || '不明なクライアント');
+  tx.innerHTML = '<b>別のクライアントがこのショップのデータを上書きしています。いま保存した内容は失われます。</b><br>'
+    + 'あなたの保存: ' + mySavedAt + '（商品 ' + myMasterCount + '件）／'
+    + '上書きした側: ' + remote.savedAt + '（商品 ' + remote.masterCount + '件・' + who + '）<br>'
+    + '他の端末・ブラウザ・タブで開いている Ycheck をすべて閉じてください。'
+    + 'それでも続く場合は、GitHubのトークン（PAT）を再発行すると、古いクライアントは書き込めなくなります。';
+  bar.style.display = 'flex';
+}
+// 保存の15秒後に「自分の書き込みが生き残っているか」を確認する
+function _ycScheduleOverwriteCheck(mySavedAt, myMasterCount) {
+  if (!mySavedAt) return;
+  setTimeout(async () => {
+    try {
+      const m = await _ycFetchRemoteMeta();
+      if (!m || !m.savedAt) return;
+      if (m.savedAt <= mySavedAt) return;                     // 自分のが最新 → 問題なし
+      if (m.savedBy && m.savedBy === _ycClientId()) return;   // 自分の後続保存 → 問題なし
+      // savedBy が無い＝v1.0599以前のクライアントが書いた（それも別クライアント）
+      _ycShowOverwriteWarning(m, mySavedAt, myMasterCount);
+    } catch (e) { /* 確認に失敗しても本体の動作は止めない */ }
+  }, 15000);
 }
 
 // 【v285】productMetaマージ用ヘルパー（純関数）。
@@ -6079,7 +6171,11 @@ async function ycReflect() {
       ycLockUI(true, '保存中… 操作しないでください');
       r = await ghSaveToGitHub({ allowEmpty: false, manual: true, force: true });
     }
-    if (r && r.success) { _ghDirty = false; ghSetSyncStatus('saved'); }
+    if (r && r.success) {
+      _ghDirty = false; ghSetSyncStatus('saved');
+      // 【v1.0600】保存した内容が別クライアントに上書きされていないか、15秒後に確認する
+      try { _ycScheduleOverwriteCheck(_ycLastSavedAt, Object.keys(state.master || {}).length); } catch (e) {}
+    }
     else if (r && r.skipped) { alert('反映をスキップしました（理由: ' + (r.reason || '') + '）。'); }
   } catch (e) {
     ghSetSyncStatus('error', e && e.message);
@@ -17503,6 +17599,12 @@ try {
 // 同じブラウザ内で同一ショップのYcheckを2つ以上のタブで開いたとき、保存競合(409)を防ぐため警告する。
 // BroadcastChannelで同一オリジンの他タブと通信。各タブは自分のshopIdを定期発信し、
 // 同じshopIdの他タブを検知したら警告バーを表示する。（別PC・別ブラウザは検知不可＝引き続き要注意）
+// 【v1.0600】上書き警告バーの✕
+(function () {
+  const b = document.getElementById('ycOverwriteClose');
+  if (b) b.addEventListener('click', () => { const bar = document.getElementById('ycOverwriteBar'); if (bar) bar.style.display = 'none'; });
+})();
+
 (function setupTabConflictGuard() {
   let bc = null;
   try { bc = new BroadcastChannel('ycheck_tabs'); } catch (e) { bc = null; }
