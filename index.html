@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0621 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0622 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -662,6 +662,20 @@ body.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .chip-sep-block { width: 2px; height: 26px; background: #6b7280; margin: 0 3px; }
 /* 【v200】1行に収めるためチップの左右パディングを少し詰める */
 .top-nav-3 .state-chip { padding: 3px 7px; }
+
+/* 【v1.0622】【ステータス】【入札状態】【PR状態】の3行を、
+   「見出し → 全体 → 区切り |」まで縦にそろえる。
+     ・見出し（.nav-group-label）… 3つとも文字数が違う（【ステータス】7字 /【入札状態】6字 /【PR状態】4字+2字）ので固定幅にする
+     ・全体チップ（.chip-all）   … 件数の桁数で幅が変わる（(0) と (128) で数px違う）ので min-width で固定する
+   ★どちらか片方だけだと必ずズレる。幅を変えるときは2つセットで見ること。
+   ★【調整】の見出し（.nav-group-tune）は1段目と同じ扱いなので対象外（v1.0608）。 */
+/* ★幅は「いちばん長い見出し（【ステータス】＝実測95px）」より広くとること。
+   flex-item は min-width:auto ＝ min-content 未満に縮まないので、
+   基準値を content より小さくすると、その行だけ勝手に広がってズレる（86pxで踏んだ）。 */
+.top-nav-3 .states-stack .nav-group-label { flex: 0 0 98px; }
+/* ★行ごとの gap も揃える。.nav-group は 2px、.nav-row-states .nav-group は 3px で、1pxずれていた。 */
+.top-nav-3 .states-stack .nav-group { gap: 3px; }
+.top-nav-3 .states-stack .chip-all { min-width: 74px; justify-content: center; }
 
 /* 【v196】状態行は白背景。チップは塗りつぶさず（白背景・淡い枠）、文字色だけ各列の色に合わせる。 */
 .top-nav-3 { background: #fff; }
@@ -1721,8 +1735,10 @@ th.col-adunk { background-color: #f8d9d3; }
 body:not(.basic-tune) #tableBasic .tune-col { display: none; }
 .fam-pct { color: #7c3aed; font-size: 11px !important; font-weight: 700; }
 /* 【v1.0591】親子セットの合計から引いた値であることの目印 */
-.adunk-set { display:inline-block; margin-left:4px; padding:0 4px; border-radius:3px; font-size:0.6rem; font-weight:700;
-  background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.6; cursor:help; }
+/* 【v1.0591→v1.0622】親子セットの合計から引いたことを示す「合算」バッジは撤去した（数字だけにする）。
+   ★判定（adUnknownOf の useSet）と、その旨を書いたツールチップ（_adUnkTip）は残してある。
+     バッジを戻すなら renderBasic の col-adunk セルに書き戻すだけでよい。 */
+.adunk-set { display: none !important; }
 
 /* 【v1.0458】入札状態の列＝実績額(アンバー)、PRオプ状態の列＝SEO売上(グリーン)と同色に。
    セルは中の select の data-kind で判定（全ビュー共通。行の色より詳細度を高くして子行でも維持）。 */
@@ -3467,7 +3483,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0621</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0622</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3582,7 +3598,9 @@ th.col-sroas { background-color:#e7d5f5; }
   <!-- 【v195】ステータス（商品ライフサイクル）ブロック。【状態】の上に配置。【v197】縦線でグルーピング。 -->
   <div class="nav-group nav-group-status">
     <span class="nav-group-label g-status">【ステータス】</span>
-    <button class="state-chip" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <button class="state-chip chip-all" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <!-- 【v1.0622】3行とも「ラベル → 全体 → 区切り」で始まるように、ここにも区切りを入れた（縦にそろえるため） -->
+    <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="status-kenzen-ad"><span class="chip-label">健常-広告あり◯</span><span class="chip-num" id="cntStatusKenzenAd">(0)</span></button>
@@ -3602,7 +3620,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【入札状態】ブロック。【v199】旧【状態】を入札/PRで分割。各先頭に全体。 -->
     <div class="nav-group nav-group-jotai nav-group-ad">
       <span class="nav-group-label g-nyusatsu">【入札状態】</span>
-      <button class="state-chip" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+      <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
@@ -3616,7 +3634,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <div class="nav-states-prrow">
     <div class="nav-group nav-group-jotai nav-group-pr">
       <span class="nav-group-label g-pr">【PR状態】</span>
-      <button class="state-chip" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+      <button class="state-chip chip-all" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
@@ -9910,7 +9928,7 @@ function renderBasic() {
       <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
       ${_seoCell}
       ${_adRevCell}
-      <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_adUnk.val != null ? '<span class="adunk-val">' + fmt(Math.round(_adUnk.val)) + '</span>' : '<span style="color:var(--text3)">—</span>'}${(_adUnk.useSet && (+r.adRev || 0) > 0) ? '<span class="adunk-set" title="親子セットの合計から引いた値です">合算</span>' : ''}</td>
+      <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_adUnk.val != null ? '<span class="adunk-val">' + fmt(Math.round(_adUnk.val)) + '</span>' : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="num col-spend">${fmt(r.adCost)}</td>
       <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="num col-aroas ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
