@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0590 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0591 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1647,6 +1647,9 @@ th.col-ad {
 th.col-adunk, td.col-adunk { background-color: #fdf0ee; }
 th.col-adunk { background-color: #f8d9d3; }
 .adunk-val { color: #b91c1c; font-weight: 700; }
+/* 【v1.0591】親子セットの合計から引いた値であることの目印 */
+.adunk-set { display:inline-block; margin-left:4px; padding:0 4px; border-radius:3px; font-size:0.6rem; font-weight:700;
+  background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.6; cursor:help; }
 
 /* 【v1.0458】入札状態の列＝実績額(アンバー)、PRオプ状態の列＝SEO売上(グリーン)と同色に。
    セルは中の select の data-kind で判定（全ビュー共通。行の色より詳細度を高くして子行でも維持）。 */
@@ -3233,7 +3236,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0590</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0591</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4675,6 +4678,35 @@ function seoOverflowOf(row) {
   if (!row) return null;
   const d = (+row.rev || 0) - (+row.adRev || 0);
   return d < 0 ? -d : null;
+}
+// 【v1.0591】その月の「代表コード → セット総売上 / メンバー数」。
+//   ★絞り込み後のリストからは作らない。その月の全商品から作る（§18-25 の送り込み売上と同じ理由。
+//     絞り込みで子が消えると親の分母まで変わってしまう）。
+function buildFamilyRevMap(aggRows, monthKey) {
+  const rev = {}, size = {};
+  (aggRows || []).forEach(r => {
+    if (!r || r.month !== monthKey || !r.code) return;
+    const k = _basicRepKeyOf(r.code);
+    rev[k]  = (rev[k]  || 0) + (+r.rev || 0);
+    size[k] = (size[k] || 0) + 1;
+  });
+  return { rev: rev, size: size };
+}
+// 【v1.0590/v1.0591】広告売上(不明分)。
+//   ★親子（同じ代表コードのメンバーが2件以上）があるときは、引く相手を
+//     「その商品の総売上」ではなく【セット総売上】にする。
+//     親の広告から入った客が子で買ったぶんは "説明がついている" ので不明分ではないため。
+//        不明分 ＝ 広告売上 − セット総売上（親子の合計）
+//   合算/両表示のセット行は row.rev が既にセット合計なのでそのまま使う。
+//   戻り値の useSet が true のとき、画面では「合算」バッジを出す（§5-E-1-B）。
+function adUnknownOf(row, fam) {
+  if (!row) return { val: null, useSet: false, base: 0 };
+  const key = row._rollup ? String(row.code) : _basicRepKeyOf(row.code);
+  const useSet = !row._rollup && !!(fam && fam.size && (fam.size[key] || 0) > 1);
+  const base = row._rollup ? (+row.rev || 0)
+             : (useSet ? (+(fam.rev[key]) || 0) : (+row.rev || 0));
+  const d = (+row.adRev || 0) - base;
+  return { val: (d > 0 ? d : null), useSet: useSet, base: base };
 }
 
 // 【v218】CVRフォーマット: 小数1桁 + 末尾%（広告詳細レポートの表記に合わせる）
@@ -8972,6 +9004,8 @@ function renderBasic() {
     const _rep = String(((state.productMeta || {})[r.code] || {}).repCode || '').trim();
     if (_rep && _rep !== r.code) _soiByParent[_rep] = (_soiByParent[_rep] || 0) + (+r.rev || 0);
   });
+  // 【v1.0591】広告売上(不明分)の分母に使うセット総売上。★こちらも その月の全商品から作る
+  const _famMap = buildFamilyRevMap(agg, _key);
 
   // master のみの商品（データがなくても全商品表示のため）
   if (targetMonth) {
@@ -9063,7 +9097,7 @@ function renderBasic() {
     if (k === 'prsroas')  { const v = itemPrSalesRoasPct(r.code, r.rev, r.adCost); return (v == null) ? -1 : v; }
     if (k === 'prOverEst'){ const e = itemPrEstimate(r.code, r.rev); return e ? e.over : -1; }
     if (k === 'cvr')      { return (r.cvr == null) ? -1 : r.cvr; }
-    if (k === 'adUnknown'){ const v = seoOverflowOf(r); return v == null ? -1 : v; }   // 【v1.0590】溢れていない行は最下位
+    if (k === 'adUnknown'){ const v = adUnknownOf(r, _famMap).val; return v == null ? -1 : v; }   // 【v1.0590/v1.0591】溢れていない行は最下位
     if (k === 'soikomi')  { return _soiByParent[r.code] || 0; }
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
@@ -9173,13 +9207,22 @@ function renderBasic() {
     //   ・親で広告売上>総売上 … 「—」のままだと 0円 と区別できないので、はみ出し額を添える
     const _soiChild = !r._rollup && isSoikomiChild(r.code);
     const _seoOver  = seoOverflowOf(r);
-    // 【v1.0590】広告売上(不明分)。溢れていなければ「—」（0円ではなく「溢れていない」の意味）
-    const _adUnkTip = (_seoOver != null)
-      ? ('広告売上が総売上を ¥' + Math.round(_seoOver).toLocaleString('ja-JP') + ' 上回っています。\n'
-         + 'この商品の広告から入った客が、別の商品（子商品など）で購入したぶんです。\n'
-         + '★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。\n'
-         + '「合算」「両表示」でセットにして0になれば、送り込み先で着地しています。')
-      : '広告売上が総売上を上回っていません（溢れなし）';
+    // 【v1.0590/v1.0591】広告売上(不明分)。親子があるときは引く相手をセット総売上にする
+    const _adUnk = adUnknownOf(r, _famMap);
+    const _adUnkTip = (
+      (_adUnk.useSet
+        ? '★親子セットの合計から引いています（合算）。\n'
+          + '  不明分 ＝ 広告売上 ¥' + Math.round(+r.adRev || 0).toLocaleString('ja-JP')
+          + ' − セット総売上 ¥' + Math.round(_adUnk.base).toLocaleString('ja-JP') + '\n'
+          + '  （この商品の総売上 ¥' + Math.round(+r.rev || 0).toLocaleString('ja-JP') + ' ではなく、同じ代表コードの親子の合計）\n'
+          + '  親の広告から入った客が子商品で買ったぶんは説明がつくので、不明分から外しています。'
+        : '  不明分 ＝ 広告売上 − 総売上')
+      + (_adUnk.val != null
+          ? '\n\n広告売上が ¥' + Math.round(_adUnk.val).toLocaleString('ja-JP') + ' 上回っています。\n'
+            + '★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。\n'
+            + '日ズレ・キャンセル・代表コードの紐づけ漏れ・セット外への波及などを疑ってください。'
+          : '\n\n溢れていません（「—」は0円ではなく「溢れなし」の意味です）。')
+    );
     let _seoCell, _adRevCell;
     if (_soiChild) {
       const _t = '送り込み先（子商品）のSEO売上は算出できません。\n'
@@ -9192,7 +9235,7 @@ function renderBasic() {
     } else if (_seoOver != null) {
       const _t = '広告売上が総売上を ¥' + Math.round(_seoOver).toLocaleString('ja-JP') + ' 上回っているため、SEO売上は算出できません。\n'
         + '広告売上はクリックされた商品に計上されるので、この商品の広告から入った客が別商品（子商品など）で購入すると起きます。\n'
-        + '溢れた額は右の「広告売上(不明分)」の列に出しています。\n'
+        + '溢れた額は右の「広告売上(不明分)」の列に出しています（親子があるときはセット合計から引いた値）。\n'
         + 'セットとしてのSEO売上は「合算」「両表示」のセット行で見てください。';
       _seoCell   = `<td class="num col-sales share-cell"><span class="amt na-val" title="${escapeHtml(_t)}">—</span></td>`;   // 【v1.0590】溢れた額は「広告売上(不明分)」の列へ
       _adRevCell = `<td class="num col-ad share-cell"><span class="amt">${fmt(r.adRev)}</span></td>`;
@@ -9218,7 +9261,7 @@ function renderBasic() {
       <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
       ${_seoCell}
       ${_adRevCell}
-      <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_seoOver != null ? '<span class="adunk-val">' + fmt(Math.round(_seoOver)) + '</span>' : '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_adUnk.val != null ? '<span class="adunk-val">' + fmt(Math.round(_adUnk.val)) + '</span>' : '<span style="color:var(--text3)">—</span>'}${(_adUnk.useSet && (+r.adRev || 0) > 0) ? '<span class="adunk-set" title="親子セットの合計から引いた値です">合算</span>' : ''}</td>
       <td class="num col-spend">${fmt(r.adCost)}</td>
       <td class="num col-cvr">${r.cvr == null ? '<span style="color:var(--text3)">—</span>' : fmtCvr(r.cvr)}</td>
       <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
@@ -15881,6 +15924,7 @@ function downloadBasicAllCsv() {
     // 【v1.0580】画面の列構成（全-月別データ相当）に合わせ直した。
     //   ★画面から撤去した メインKW / PRオプ状態 / 入札状態 / ステータス は、データとしては残っているので
     //     CSVの末尾に「参考」としてまとめて出す（画面で見えない＝出力からも消える、にはしない）。
+    const _famCsv = buildFamilyRevMap(agg, targetMonth);   // 【v1.0591】広告売上(不明分)の分母（セット総売上）
     const _soiByParentCsv = {};
     agg.forEach(function (r) {
       if (!r || r.month !== targetMonth || !r.code) return;
@@ -15913,7 +15957,7 @@ function downloadBasicAllCsv() {
       const row = [
         targetMonth, code, imgUrl(code), m.name || '',
         num(r.rev), (_sr == null ? '' : String(_sr)), (_prsr == null ? '' : String(_prsr)),
-        num(r.seoRev), num(r.adRev), (function () { const v = seoOverflowOf(r); return v == null ? '' : num(v); })(), num(r.adCost),
+        num(r.seoRev), num(r.adRev), (function () { const u = adUnknownOf(r, _famCsv); return u.val == null ? (u.useSet ? '（合算:溢れなし）' : '') : (num(u.val) + (u.useSet ? '（合算）' : '')); })(), num(r.adCost),
         (r.cvr == null ? '' : String(Math.round(r.cvr * 10) / 10)),
         (_prOver != null ? num(_prOver) : ''), roas, proRate,
         (bid != null && bid > 0) ? String(bid) : '',
