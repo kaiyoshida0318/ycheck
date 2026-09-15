@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0613 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0614 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3360,7 +3360,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0613</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0614</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6772,6 +6772,7 @@ function migrateStatusResetV195() {
   Object.keys(state.productMeta).forEach(code => {
     const m = state.productMeta[code];
     if (!m) return;
+    if (m.status === '—') return;   // 【v1.0614】明示的に「—（未設定）」にしたものは潰さない
     if (m.status !== '撤退済み' && m.status !== '新商品') { m.status = '新商品'; m.statusTs = ts; m._ts = ts; n++; }
   });
   state.rankMeta = state.rankMeta || {};
@@ -8896,7 +8897,8 @@ const PRO_STATUS_ORDER = {
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
 const STATUS_ORDER = { '新商品': 0, '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
-  '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0 };  // 互換用（旧値。out記入済は撤退予定へ統合）
+  '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0,
+  '—': -1 };  // 互換用（旧値。out記入済は撤退予定へ統合）／【v1.0614】未設定(—)は先頭に寄せて見つけやすくする
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
 function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
@@ -9089,9 +9091,16 @@ const STATUS_LIFE_COLOR = {
   '中立-広告なし□': '#caa61e',      // 少し薄い黄色（可読性は確保）
   '撤退検討▲': '#ea7317',          // オレンジ
   '撤退予定': '#dc2626',           // 赤
-  '撤退済み': '#8b5a2b'            // 茶色
+  '撤退済み': '#8b5a2b',           // 茶色
+  '—': '#94a3b8'                  // 【v1.0614】未設定（—）: グレー
 };
-const STATUS_LIFE_OPTIONS = ['新商品', '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
+// 【v1.0614】ステータスでも「—（未設定）」を明示的に選べるようにした。
+//   入札状態・PRオプ状態は以前から空文字 '' が「—」として選べたが、ステータスだけ選択肢が無かった。
+//   ★ステータスは '' を使えない。あちこちに `meta.status || '新商品'` のフォールバックがあり、
+//     '' で保存すると全部「新商品」に化けてしまうため。そこで truthy な文字 '—' そのものを値にする。
+//     こうすると `||` フォールバック・`if (!meta.status)` 補完のどちらにも引っかからず、そのまま残る。
+const STATUS_LIFE_NONE = '—';
+const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
 function statusLifeColor(value) { return STATUS_LIFE_COLOR[value] || '#1a1a1a'; }
 // 【v1.0457】hex色→rgba文字列（子ステータスの淡い塗り／やわらかい枠の生成用）
 function _lifeRgba(hex, a) {
