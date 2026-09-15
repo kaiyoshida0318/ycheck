@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0619 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0620 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3371,6 +3371,22 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .soi-pc-btn.child .rep-icon { stroke: #92400e; }
 .soi-pc-btn.child:hover { background: #fcd34d; border-color: #d97706; }
 .soi-pc-btn.child.on { background: #fcd34d; border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
+
+/* 【v1.0620】一括変更バー */
+.bulk-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 8px; padding: 8px 12px;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+}
+.bulk-title { font-size: 0.86rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.bulk-count { font-size: 0.82rem; font-weight: 700; color: var(--text2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bulk-sep { width: 1px; height: 20px; background: #bfdbfe; }
+.bulk-fld { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--text2); white-space: nowrap; }
+.bulk-sel { font-size: 0.8rem; padding: 4px 6px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text); cursor: pointer; max-width: 190px; }
+.bulk-note { font-size: 0.76rem; color: #b45309; }
+/* 商品コード左のチェックボックス（一括変更モードのときだけ描画される） */
+.code-cell-inner .bulk-cb { width: 15px; height: 15px; margin: 0; vertical-align: middle; cursor: pointer; accent-color: var(--accent); flex: 0 0 auto; }
+#tableBasic tbody tr.bulk-picked td { background-color: #eff6ff; }
 /* 【v1.0587】合算モードの目印: 商品コード横の「n点」バッジ */
 .fam-count { display:inline-block; margin-left:5px; padding:0 5px; border-radius:999px; font-size:0.64rem; font-weight:700;
   background:#7c3aed; color:#fff; vertical-align:middle; line-height:1.5; cursor:help; }
@@ -3445,7 +3461,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0619</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0620</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3699,6 +3715,8 @@ th.col-sroas { background-color:#e7d5f5; }
                ★パネルが出ない画面（撤退済み商品・順位表など）のバッジは残すこと。
                  あちらはバッジが唯一の操作口（§16-B-5）。 -->
           <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
+          <!-- 【v1.0620】一括変更。押すと選択モードに入り、商品コードの左にチェックボックスが出る。 -->
+          <button class="btn sm ghost" id="btnBasicBulk" type="button" title="複数の商品を選んで、ステータス／入札状態／PRオプ状態をまとめて変更します">☑ 一括変更</button>
           <span class="gh-reflect-hover" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
             <span class="gh-reflect-tooltip" role="tooltip">
@@ -3709,6 +3727,20 @@ th.col-sroas { background-color:#e7d5f5; }
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
           <!-- 【v1.0522】いま画面に表示されている商品（ステータス絞り込み等を反映）を、選択月の列内容でCSV出力（右端配置） -->
           <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（総売上・売上ROAS・PR売上ROAS(推定)・SEO売上・広告売上・広告実績額・広告CVR・PR実績額(7%超・推定)・広告ROAS・PRオプ料率・入札価格＋参考として送り込み売上・メインKW／各状態）でCSV出力します">⬇ このページをCSV出力</button>
+        </div>
+        <!-- 【v1.0620】一括変更バー。#btnBasicBulk で出す。表示中だけ商品コード左にチェックボックスが出る。 -->
+        <div class="bulk-bar" id="basicBulkBar" style="display:none">
+          <span class="bulk-title">☑ 一括変更</span>
+          <button type="button" class="btn sm ghost" id="bulkSelAll" title="いま表示されている商品を全部チェックします（絞り込み・検索を反映）">表示中を全選択</button>
+          <button type="button" class="btn sm ghost" id="bulkSelNone">選択解除</button>
+          <span class="bulk-count" id="bulkCount">0件選択中</span>
+          <span class="bulk-sep"></span>
+          <label class="bulk-fld">ステータス<select id="bulkStatus" class="bulk-sel"></select></label>
+          <label class="bulk-fld">入札状態<select id="bulkAdStatus" class="bulk-sel"></select></label>
+          <label class="bulk-fld">PRオプ状態<select id="bulkProStatus" class="bulk-sel"></select></label>
+          <button type="button" class="btn sm primary" id="bulkApply">選択した商品に適用</button>
+          <span class="bulk-note" id="bulkNote"></span>
+          <button type="button" class="btn sm ghost" id="bulkExit" style="margin-left:auto">✕ 終了</button>
         </div>
         <!-- 【v1.0527】日選択中であることを明示するバナー -->
         <div id="basicDayBanner" class="day-banner" style="display:none"></div>
@@ -8950,14 +8982,18 @@ function updateStateCounts() {
 // 【v125/v130】商品コード表示（代表コード所属なら🔀バッジ付き）
 // v130: バッジをセル右端に固定するため、コード部分とバッジを flex 構造でラップ
 // 【v151】code===rep（親）は緑、code!==rep（子・孤児含む）は黄色バッジ
-function codeCellHtml(code) {
+// 【v1.0620】prefixHtml: .code-cell-inner の先頭に差し込むHTML（一括変更のチェックボックス用）。
+//   ★セル直下（<td>の中）に置くと、.code-cell-inner が display:flex; width:100% のため
+//     チェックボックスだけ上の行に落ちる。必ずこのflexの中に入れること。
+function codeCellHtml(code, prefixHtml) {
   const meta = state.productMeta[code] || {};
   const rep = (meta.repCode || '').trim();
-  if (!rep) return `<span class="code-cell-inner"><span class="code-text">${escapeHtml(code)}</span></span>`;
+  const pre = prefixHtml || '';
+  if (!rep) return `<span class="code-cell-inner">${pre}<span class="code-text">${escapeHtml(code)}</span></span>`;
   const isChild = (rep !== code);
   const cls = isChild ? 'rep-badge child' : 'rep-badge';
   // 【v173】バッジを商品コードの前（左端）に配置。間は詰める。
-  return `<span class="code-cell-inner"><button class="${cls}" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button><span class="code-text">${escapeHtml(code)}</span></span>`;
+  return `<span class="code-cell-inner">${pre}<button class="${cls}" data-rep="${escapeHtml(rep)}" data-tooltip="グループで絞り込み" type="button"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button><span class="code-text">${escapeHtml(code)}</span></span>`;
 }
 
 // ==================== Status select helpers ====================
@@ -9221,17 +9257,21 @@ function statusLifeDisplayLabel(value) {
   return escapeHtml(value) || '—';
 }
 
+// 【v1.0620】入札状態 / PRオプ状態の選択肢を定数に切り出した。
+//   セル（statusSelectHtml）と一括変更バー（#basicBulkBar）が必ず同じ並び・同じ値を使うため。
+//   ★選択肢を足すときはここだけ直す。先頭の '' は「—（未設定）」。
+const AD_STATUS_OPTIONS  = ['', '入札◯', '入札×-調整中', '入札△-飛ぶ手前固定', '入札なし'];
+const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-親-飛ぶ手前固定', 'PR△-子-7％固定', 'PR△-飛ぶ手前固定', 'PR×'];
+
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
   let value, options;
   if (kind === 'ad') {
     value = meta.adStatus;
-    // 【v186】入札◯/入札×-調整中/入札△-飛ぶ手前固定/入札なし
-    options = ['', '入札◯', '入札×-調整中', '入札△-飛ぶ手前固定', '入札なし'];
+    options = AD_STATUS_OPTIONS;    // 【v186/v1.0620】
   } else if (kind === 'pro') {
     value = meta.proStatus;
-    // 【v186】PR◯/PR△-親-下げ挑戦中/PR△-親-飛ぶ手前固定/PR△-子-7％固定/PR×
-    options = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-親-飛ぶ手前固定', 'PR△-子-7％固定', 'PR△-飛ぶ手前固定', 'PR×'];
+    options = PRO_STATUS_OPTIONS;   // 【v186/v1.0620】
   } else if (kind === 'status') {
     value = statusLifeDisplayValue(meta.status || '新商品');  // 【v195】旧値は新値へフォールバック表示
     options = STATUS_LIFE_OPTIONS;
@@ -9854,7 +9894,7 @@ function renderBasic() {
                  return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code)}${_famBadge}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       ${_revCell}
@@ -9875,7 +9915,125 @@ function renderBasic() {
     tbody.appendChild(tr);
   });
   updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
+  _bulkSyncUI();   // 【v1.0620】選択件数・行のハイライトを再描画後に合わせる
 }
+
+// ==================== 【v1.0620】一括変更（ステータス / 入札状態 / PRオプ状態） ====================
+// 商品-基本データの「☑ 一括変更」ボタン → 選択モード。商品コードの左にチェックボックスが出る。
+//   ★列は増やさない。チェックボックスは商品コードのセルの中に入れる。
+//     列を足すと thead/tbody の列数・colspan・_ensureFixedLayout のキャプチャ幅が全部ずれるため（§15）。
+//   ★合算/両表示の「セット行」（_isSet）にはチェックボックスを出さない。
+//     セット行の code は代表キーであって実在の商品ではないので、書き込み先が無い。
+//     両表示の内訳行（_setMember）は実在の商品なので出る。
+//   ★「変更しない」は空文字ではなく専用の番兵 BULK_KEEP。
+//     '' は入札状態/PRオプ状態の「—（未設定）」という正しい値なので、区別が必要（§7-0）。
+//   ★番兵は「HTMLのattributeに素直に書ける印字可能な文字列」にすること。
+//     NUL(\u0000)等の制御文字を value= に入れるとブラウザのHTMLパーサに潰され、
+//     select.value が番兵と一致しなくなって「変更しない」のはずの項目まで書き換わる（実際に踏んだ）。
+const BULK_KEEP = '__KEEP__';
+let _bulkMode = false;
+const _bulkSel = new Set();
+
+function _bulkCbHtml(code, isSet) {
+  if (!_bulkMode || isSet) return '';
+  const c = escapeHtml(code);
+  return '<input type="checkbox" class="bulk-cb" data-code="' + c + '"'
+       + (_bulkSel.has(String(code)) ? ' checked' : '')
+       + ' title="一括変更の対象にする" aria-label="' + c + ' を選択">';
+}
+
+function _bulkFillSelects() {
+  const mk = (sel, opts, labelOf) => {
+    const el = document.getElementById(sel);
+    if (!el) return;
+    el.innerHTML = '<option value="' + BULK_KEEP + '" selected>（変更しない）</option>'
+      + opts.map(o => '<option value="' + escapeHtml(o) + '">' + (escapeHtml(o) || '—') + '</option>').join('');
+  };
+  mk('bulkStatus',    STATUS_LIFE_OPTIONS);
+  mk('bulkAdStatus',  AD_STATUS_OPTIONS);
+  mk('bulkProStatus', PRO_STATUS_OPTIONS);
+}
+
+function _bulkSyncUI() {
+  const bar = document.getElementById('basicBulkBar');
+  if (bar) bar.style.display = _bulkMode ? 'flex' : 'none';
+  const btn = document.getElementById('btnBasicBulk');
+  if (btn) btn.classList.toggle('primary', _bulkMode);
+  const cnt = document.getElementById('bulkCount');
+  if (cnt) cnt.textContent = _bulkSel.size + '件選択中';
+  const note = document.getElementById('bulkNote');
+  if (note) note.textContent = (typeof ghIsEnabled === 'function' && !ghIsEnabled())
+    ? '閲覧専用モードなので変更できません' : '';
+  const ap = document.getElementById('bulkApply');
+  if (ap) ap.disabled = (typeof ghIsEnabled === 'function' && !ghIsEnabled());
+  // 行のハイライト
+  document.querySelectorAll('#tableBasic tbody tr').forEach(tr => {
+    const cb = tr.querySelector('.bulk-cb');
+    tr.classList.toggle('bulk-picked', !!(cb && cb.checked));
+  });
+}
+
+function setBulkMode(on) {
+  _bulkMode = !!on;
+  if (!_bulkMode) _bulkSel.clear();
+  else _bulkFillSelects();
+  renderBasic();          // チェックボックスの出し入れは再描画で行う
+  _bulkSyncUI();
+}
+
+function _bulkApply() {
+  if (typeof ghIsEnabled === 'function' && !ghIsEnabled()) return;
+  const codes = Array.from(_bulkSel);
+  if (!codes.length) { showToast('商品が選択されていません。チェックを付けてください。', 'warn'); return; }
+  const st = (document.getElementById('bulkStatus')    || {}).value;
+  const ad = (document.getElementById('bulkAdStatus')  || {}).value;
+  const pr = (document.getElementById('bulkProStatus') || {}).value;
+  const changes = [];
+  if (st !== BULK_KEEP) changes.push('ステータス=' + (st || '—'));
+  if (ad !== BULK_KEEP) changes.push('入札状態=' + (ad || '—'));
+  if (pr !== BULK_KEEP) changes.push('PRオプ状態=' + (pr || '—'));
+  if (!changes.length) { showToast('変更する項目を選んでください（「（変更しない）」のままです）。', 'warn'); return; }
+  if (!confirm('選択中の ' + codes.length + ' 件に次を適用します。\n\n' + changes.join('\n') + '\n\nよろしいですか？')) return;
+
+  const ts = Date.now();   // 【v1.0350】状態専用Ts。セル編集と同じ扱いにしてマージで保護される。
+  codes.forEach(code => {
+    const meta = getMeta(code);
+    if (st !== BULK_KEEP) { meta.status    = st || '新商品'; meta.statusTs    = ts; }
+    if (ad !== BULK_KEEP) { meta.adStatus  = ad;             meta.adStatusTs  = ts; markTuneAction(code, 'ad'); }
+    if (pr !== BULK_KEEP) { meta.proStatus = pr;             meta.proStatusTs = ts; markTuneAction(code, 'pro'); }
+    meta._ts = ts;
+    if (typeof pinEditedCode === 'function') pinEditedCode(code);   // 絞り込みから外れてもその場では消さない
+  });
+  saveToStorage();
+  try { ycLog('edit', '一括変更: ' + codes.length + '件 / ' + changes.join(' / '), { codes: codes.slice(0, 50) }); } catch (e) {}
+  renderAll();
+  _bulkSyncUI();
+  showToast(codes.length + '件に適用しました（未反映）。「⬆ 反映する」でGitHubへ保存してください。', 'warn');
+}
+
+(function _bulkBindUI() {
+  const on = (id, fn) => { const e = document.getElementById(id); if (e) e.addEventListener('click', fn); };
+  on('btnBasicBulk', () => setBulkMode(!_bulkMode));
+  on('bulkExit',     () => setBulkMode(false));
+  on('bulkSelNone',  () => { _bulkSel.clear(); document.querySelectorAll('#tableBasic .bulk-cb').forEach(c => { c.checked = false; }); _bulkSyncUI(); });
+  on('bulkSelAll',   () => {
+    document.querySelectorAll('#tableBasic .bulk-cb').forEach(c => { c.checked = true; _bulkSel.add(String(c.dataset.code)); });
+    _bulkSyncUI();
+  });
+  on('bulkApply',    _bulkApply);
+  // チェックボックス（再描画で作り直されるのでイベント委譲）
+  document.addEventListener('change', (e) => {
+    const cb = e.target.closest && e.target.closest('.bulk-cb');
+    if (!cb) return;
+    const code = String(cb.dataset.code || '');
+    if (cb.checked) _bulkSel.add(code); else _bulkSel.delete(code);
+    _bulkSyncUI();
+  });
+  // チェックボックスのクリックが行/セルの編集ハンドラへ波及しないように
+  document.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('.bulk-cb')) e.stopPropagation();
+  }, true);
+})();
 
 // ==================== Rendering: 【対応検討】総売上-直近4ヶ月分 ====================
 // 直近の「満了した」4ヶ月（当月＝未満了は除外）の総売上を横並びで確認する。
