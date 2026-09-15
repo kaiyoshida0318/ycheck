@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0603 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0604 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3154,6 +3154,29 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 /* 【v314】分析ボタン(ADcheck風・確認メモを開く) */
 .btn-bunseki{font-size:0.78rem;font-weight:600;padding:6px 14px;border-radius:6px;border:none;background:#5C6BC0;color:#fff;cursor:pointer;white-space:nowrap;line-height:1.2;margin-left:2px}
 .btn-bunseki:hover{background:#4d5bb0}
+/* 【v1.0604】操作ログ */
+.oplog-badge { display:inline-block; margin-left:5px; padding:0 5px; border-radius:999px; font-size:0.62rem; font-weight:700;
+  background:#dc2626; color:#fff; vertical-align:middle; line-height:1.6; }
+.oplog-bar { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.oplog-filter { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
+.oplog-filter .oplogf-btn { font-size:0.78rem; padding:5px 10px; border:none; border-left:1px solid var(--border);
+  background:var(--bg2); color:var(--text2); cursor:pointer; white-space:nowrap; }
+.oplog-filter .oplogf-btn:first-child { border-left:none; }
+.oplog-filter .oplogf-btn.on { background:var(--accent); color:#fff; font-weight:600; }
+.oplog-list { max-height: 56vh; overflow-y:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg2); }
+.oplog-row { display:grid; grid-template-columns: 138px 74px 1fr 92px; gap:8px; align-items:baseline;
+  padding:5px 10px; border-bottom:1px solid var(--border); font-size:0.78rem; line-height:1.6; }
+.oplog-row:last-child { border-bottom:none; }
+.oplog-ts { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size:0.72rem; color:var(--text3); white-space:nowrap; }
+.oplog-tag { font-size:0.66rem; font-weight:700; text-align:center; border-radius:4px; padding:1px 4px; white-space:nowrap; }
+.oplog-tag.item { background:#dcfce7; color:#15803d; }
+.oplog-tag.save { background:#dbeafe; color:#1d4ed8; }
+.oplog-tag.warn { background:#fee2e2; color:#b91c1c; }
+.oplog-tag.info { background:#e5e7eb; color:#4b5563; }
+.oplog-msg { word-break: break-word; }
+.oplog-row.warn .oplog-msg { color:#b91c1c; font-weight:700; }
+.oplog-count { font-family: ui-monospace, Consolas, monospace; font-size:0.72rem; color:var(--text3); text-align:right; white-space:nowrap; }
+.oplog-empty { padding:24px; text-align:center; color:var(--text3); font-size:0.82rem; }
 /* 【v1.0600】別クライアントの上書き検知バー。見逃すとデータが消えるので、いちばん上に赤で固定 */
 .yc-overwrite-bar { position: sticky; top: 0; z-index: 200; display: flex; align-items: flex-start; gap: 8px;
   padding: 8px 16px; background: #7f1d1d; color: #fff; font-size: 0.8rem; line-height: 1.7; }
@@ -3279,7 +3302,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0603</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0604</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3297,6 +3320,9 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0594】「+ 商品追加・更新」は「🔁 再登録後のコード移行」の右へ移動（ボタンの実体は1つだけ） -->
     <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
     <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新・反映</button>
+    <!-- 【v1.0604】操作ログ。商品の追加/更新・GitHubへの反映・別クライアントの上書き・商品件数の増減を記録する。
+         「追加したのに消えた」をその場で見せられるようにするのが目的（§20）。 -->
+    <button class="btn sm ghost" id="btnOpLog" type="button" title="操作ログ（商品の追加・更新 / GitHubへの反映 / 上書き検知 / 商品件数の増減）を表示します">🧾 ログ<span class="oplog-badge" id="opLogBadge" style="display:none">0</span></button>
     <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
       <span class="gh-sync-label">⚙️ GitHub連携</span>
       <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
@@ -4416,6 +4442,38 @@ th.col-sroas { background-color:#e7d5f5; }
 </div>
 
 <!-- Upload Modal -->
+<!-- 【v1.0604】操作ログ モーダル（§20） -->
+<div class="modal-overlay" id="opLogModal">
+  <div class="modal" style="max-width: 1000px;">
+    <div class="modal-header">
+      <h2 class="modal-title">🧾 操作ログ</h2>
+      <button class="modal-close" id="opLogClose" type="button">×</button>
+    </div>
+    <p class="dropzone-hint" style="margin:0 0 10px 0; font-size:0.78rem; line-height:1.7;">
+      商品の追加・更新、GitHubへの反映、別クライアントによる上書き、<b>商品件数の増減</b>を記録しています。
+      この端末のブラウザに保存され、リロードしても残ります（最大300件）。<br>
+      <b>「追加したのに消えた」ときは、件数が減った行（⚠）を探してください。</b>いつ・何件から何件に減ったかが分かります。
+    </p>
+    <div class="oplog-bar">
+      <span class="oplog-filter" id="opLogFilter" role="group">
+        <button type="button" class="oplogf-btn on" data-f="all">すべて</button>
+        <button type="button" class="oplogf-btn" data-f="warn">⚠ 注意のみ</button>
+        <button type="button" class="oplogf-btn" data-f="item">商品の追加・更新</button>
+        <button type="button" class="oplogf-btn" data-f="save">GitHub反映</button>
+      </span>
+      <span style="margin-left:auto; display:flex; gap:6px;">
+        <button class="btn sm ghost" id="opLogCopy" type="button" title="全文をクリップボードにコピーします">📋 コピー</button>
+        <button class="btn sm ghost" id="opLogCsv" type="button">⬇ CSV</button>
+        <button class="btn sm ghost" id="opLogClear" type="button" title="この端末に保存されたログを消します">🗑 クリア</button>
+      </span>
+    </div>
+    <div class="oplog-list" id="opLogList"></div>
+    <div class="upload-actions" style="margin-top:12px;">
+      <button class="btn" id="opLogCloseBottom" style="margin-left:auto;" type="button">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <!-- 【v1.0344】撤退チェック（ストクリ突き合わせ）モーダル -->
 <div class="modal-overlay" id="retireCheckModal">
   <div class="modal" style="max-width: 560px;">
@@ -5324,6 +5382,85 @@ async function ghPutFile(contentString, retryCount = 0) {
 //   → 保存時に savedBy（このブラウザ固有のID）を書き込み、保存の15秒後に読み直して
 //     「自分以外が、自分より後に書いていないか」を確認する。
 // ============================================================================
+// ============================================================================
+// 【v1.0604】操作ログ（§20）
+//   目的: 「商品を追加したのに消えた」を、その場で見せられるようにする。
+//   ★記録の主役は masterCount（商品件数）。件数が減った瞬間に ⚠ を1行残すので、
+//     いつ・何件から何件に減ったかが1クリックで分かる。
+//   保存先は localStorage（ショップ別・最大300件）。GitHubには乗せない
+//   （ログまで同期すると、別クライアントの上書きでログごと消えて意味を失うため）。
+// ============================================================================
+const YC_LOG_MAX = 300;
+function _ycLogKey() { return 'ycheck_oplog_' + ((typeof getCurrentShopId === 'function') ? getCurrentShopId() : 'default'); }
+function ycLogRead() { try { return JSON.parse(localStorage.getItem(_ycLogKey()) || '[]'); } catch (e) { return []; } }
+function ycLogWrite(arr) { try { localStorage.setItem(_ycLogKey(), JSON.stringify(arr.slice(-YC_LOG_MAX))); } catch (e) {} }
+function _ycMasterCount() { try { return Object.keys(state.master || {}).length; } catch (e) { return null; } }
+function ycLog(type, msg, extra) {
+  const ent = Object.assign({
+    ts: new Date().toISOString(),
+    type: (type || 'info'),
+    msg: String(msg || ''),
+    n: _ycMasterCount(),
+    ver: (function () { try { return document.querySelector('.logo-sub').textContent; } catch (e) { return ''; } })()
+  }, extra || {});
+  const arr = ycLogRead(); arr.push(ent); ycLogWrite(arr);
+  _ycLogBadge();
+  return ent;
+}
+// 商品件数が減っていないか見張る。renderAll から毎回呼ぶ（整数の比較だけなので軽い）
+let _ycLastMasterCount = null;
+function ycWatchMasterCount(where) {
+  const n = _ycMasterCount();
+  if (n == null) return;
+  if (_ycLastMasterCount != null && n < _ycLastMasterCount) {
+    ycLog('warn', '⚠ 商品件数が ' + _ycLastMasterCount + '件 → ' + n + '件 に減りました（' + (where || '不明') + '）',
+          { from: _ycLastMasterCount, to: n });
+  }
+  _ycLastMasterCount = n;
+}
+function _ycLogBadge() {
+  const b = document.getElementById('opLogBadge');
+  if (!b) return;
+  const w = ycLogRead().filter(e => e.type === 'warn').length;
+  b.textContent = String(w);
+  b.style.display = w > 0 ? '' : 'none';
+}
+let _ycLogFilter = 'all';
+function _ycLogRender() {
+  const box = document.getElementById('opLogList');
+  if (!box) return;
+  let arr = ycLogRead().slice().reverse();   // 新しい順
+  if (_ycLogFilter === 'warn') arr = arr.filter(e => e.type === 'warn');
+  else if (_ycLogFilter === 'item') arr = arr.filter(e => e.type === 'item');
+  else if (_ycLogFilter === 'save') arr = arr.filter(e => e.type === 'save');
+  if (!arr.length) { box.innerHTML = '<div class="oplog-empty">記録はまだありません</div>'; return; }
+  const jt = (iso) => { try { const d = new Date(iso); return d.toLocaleString('ja-JP', { hour12: false }); } catch (e) { return iso; } };
+  box.innerHTML = arr.map(e =>
+    '<div class="oplog-row ' + escapeHtml(e.type) + '">'
+    + '<span class="oplog-ts">' + escapeHtml(jt(e.ts)) + '</span>'
+    + '<span class="oplog-tag ' + escapeHtml(e.type) + '">' + escapeHtml(
+        e.type === 'item' ? '商品' : e.type === 'save' ? '反映' : e.type === 'warn' ? '注意' : '情報') + '</span>'
+    + '<span class="oplog-msg">' + escapeHtml(e.msg) + '</span>'
+    + '<span class="oplog-count">' + (e.n == null ? '' : e.n + '件') + '</span>'
+    + '</div>').join('');
+}
+function _ycLogText() {
+  return ycLogRead().map(e => [e.ts, e.type, e.msg, (e.n == null ? '' : e.n + '件'), e.ver].join('\t')).join('\n');
+}
+function openOpLogModal() {
+  const m = document.getElementById('opLogModal');
+  if (!m) return;
+  _ycLogRender();
+  m.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOpLogModal() {
+  const m = document.getElementById('opLogModal');
+  if (!m) return;
+  m.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function _ycClientId() {
   let id = null;
   try { id = localStorage.getItem('ycheck_client_id'); } catch (e) {}
@@ -5381,6 +5518,11 @@ async function _ycFetchRemoteMeta() {
            savedByVer: d.savedByVer || '', masterCount: Object.keys(d.master || {}).length };
 }
 function _ycShowOverwriteWarning(remote, mySavedAt, myMasterCount) {
+  // 【v1.0604】ログにも残す（バーは閉じられるが、ログは残る）
+  try {
+    ycLog('warn', '⛔ 別クライアントに上書きされました｜自分: ' + mySavedAt + '（' + myMasterCount + '件）→ 相手: '
+      + remote.savedAt + '（' + remote.masterCount + '件・' + (remote.savedByLabel || remote.savedBy || '不明') + '）');
+  } catch (e) {}
   const bar = document.getElementById('ycOverwriteBar');
   const tx = document.getElementById('ycOverwriteText');
   if (!bar || !tx) return;
@@ -6173,12 +6315,14 @@ async function ycReflect() {
     }
     if (r && r.success) {
       _ghDirty = false; ghSetSyncStatus('saved');
+      ycLog('save', 'GitHubへ反映しました');   // 【v1.0604】
       // 【v1.0600】保存した内容が別クライアントに上書きされていないか、15秒後に確認する
       try { _ycScheduleOverwriteCheck(_ycLastSavedAt, Object.keys(state.master || {}).length); } catch (e) {}
     }
-    else if (r && r.skipped) { alert('反映をスキップしました（理由: ' + (r.reason || '') + '）。'); }
+    else if (r && r.skipped) { ycLog('warn', '⚠ GitHubへの反映をスキップ（理由: ' + (r.reason || '') + '）'); alert('反映をスキップしました（理由: ' + (r.reason || '') + '）。'); }
   } catch (e) {
     ghSetSyncStatus('error', e && e.message);
+    ycLog('warn', '⚠ GitHubへの反映に失敗: ' + (e && e.message ? e.message : e));   // 【v1.0604】
     alert('反映に失敗しました: ' + (e && e.message ? e.message : e));
   } finally {
     ycLockUI(false);
@@ -13810,6 +13954,8 @@ function renderItemGraph() {
 
 function renderAll() {
   if (typeof syncLinkedChildrenStatus === 'function') syncLinkedChildrenStatus();  // 【v1.0437】追従中の子ステータスを親へ同期（表示・件数・撤退判定の整合）
+  // 【v1.0604】★商品件数が減っていないか毎回見張る。減ったらログに⚠を1行残す
+  if (typeof ycWatchMasterCount === 'function') { try { ycWatchMasterCount('画面更新'); } catch (e) {} }
   updateStateCounts();
   if (state.currentView === 'basic') renderBasic();
   else if (state.currentView === 'monthly') renderMonthly();
@@ -16423,6 +16569,7 @@ function npConfirmUpload() {
   const { added, updated } = npApplyRows(npBuffer.rows);
   const ok = saveToStorage();
   if (!afterSaveOk(ok)) return;   // 【v313】GitHub連携ありなら続行（GitHubへ保存）
+  ycLog('item', 'CSV取込: 新規追加 ' + added + '件 / 既存更新 ' + updated + '件');   // 【v1.0604】
   npLog(`✅ 反映完了：新規追加 ${added}件 / 既存更新 ${updated}件`, 'ok');
   npLog(ok ? `💾 ブラウザに保存しました` : `💾 GitHubへ保存します（端末キャッシュは容量超過のため省略）`, 'ok');
   npBuffer = null;
@@ -16522,6 +16669,7 @@ async function npqApply() {
   const saveOk = afterSaveOk(ok);   // ★false でも state は書き換わっているので、必ず描画まで進める
   npLog(`✅ ${code} を${added ? '新規追加' : '更新'}しました`, 'ok');
   npLog(ok ? `💾 ブラウザに保存しました` : `💾 GitHubへ保存します（端末キャッシュは容量超過のため省略）`, 'ok');
+  ycLog('item', (added ? '商品を新規追加: ' : '商品を更新: ') + code + '（直接入力）');   // 【v1.0604】
   renderAll();
   npqClear();   // 続けて次の商品を入れられるように空にする
 
@@ -17664,6 +17812,43 @@ try {
 // 同じブラウザ内で同一ショップのYcheckを2つ以上のタブで開いたとき、保存競合(409)を防ぐため警告する。
 // BroadcastChannelで同一オリジンの他タブと通信。各タブは自分のshopIdを定期発信し、
 // 同じshopIdの他タブを検知したら警告バーを表示する。（別PC・別ブラウザは検知不可＝引き続き要注意）
+// 【v1.0604】操作ログ モーダルの配線
+(function () {
+  const open = document.getElementById('btnOpLog');
+  if (open) open.addEventListener('click', openOpLogModal);
+  const c1 = document.getElementById('opLogClose'); if (c1) c1.addEventListener('click', closeOpLogModal);
+  const c2 = document.getElementById('opLogCloseBottom'); if (c2) c2.addEventListener('click', closeOpLogModal);
+  const f = document.getElementById('opLogFilter');
+  if (f) f.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.oplogf-btn'); if (!b) return;
+    _ycLogFilter = b.getAttribute('data-f') || 'all';
+    f.querySelectorAll('.oplogf-btn').forEach(x => x.classList.toggle('on', x === b));
+    _ycLogRender();
+  });
+  const cp = document.getElementById('opLogCopy');
+  if (cp) cp.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(_ycLogText()); if (typeof showToast === 'function') showToast('ログをコピーしました', 'ok'); }
+    catch (e) { alert('コピーできませんでした。CSVをお使いください。'); }
+  });
+  const cs = document.getElementById('opLogCsv');
+  if (cs) cs.addEventListener('click', () => {
+    const esc = (v) => { let x = (v == null) ? '' : String(v); if (/[",\r\n]/.test(x)) x = '"' + x.replace(/"/g, '""') + '"'; return x; };
+    const lines = [['日時', '種別', '内容', '商品件数', 'バージョン'].map(esc).join(',')]
+      .concat(ycLogRead().map(e => [e.ts, e.type, e.msg, e.n, e.ver].map(esc).join(',')));
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href = url; a.download = 'ycheck_操作ログ_' + (new Date()).toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
+  });
+  const cl = document.getElementById('opLogClear');
+  if (cl) cl.addEventListener('click', () => {
+    if (!confirm('この端末に保存された操作ログを消します。よろしいですか？')) return;
+    ycLogWrite([]); _ycLogBadge(); _ycLogRender();
+  });
+  _ycLogBadge();
+})();
+
 // 【v1.0600】上書き警告バーの✕
 (function () {
   const b = document.getElementById('ycOverwriteClose');
