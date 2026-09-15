@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0589 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0590 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1642,6 +1642,12 @@ th.col-ad, td.col-ad {
 th.col-ad {
   background-color: #fae6ce;
 }
+/* 【v1.0590】広告売上(不明分)。広告売上のすぐ右だが、中身は「総売上に着地していない差分」なので
+   アンバーから赤寄りにずらして、同じブロックの別物だと分かるようにする。 */
+th.col-adunk, td.col-adunk { background-color: #fdf0ee; }
+th.col-adunk { background-color: #f8d9d3; }
+.adunk-val { color: #b91c1c; font-weight: 700; }
+
 /* 【v1.0458】入札状態の列＝実績額(アンバー)、PRオプ状態の列＝SEO売上(グリーン)と同色に。
    セルは中の select の data-kind で判定（全ビュー共通。行の色より詳細度を高くして子行でも維持）。 */
 .data-grid th.status-col[data-sort="adStatus"]  { background-color: #fae6ce; }   /* 実績額 見出し色 */
@@ -3168,7 +3174,6 @@ th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
 .cell-multi { color:var(--text2); cursor:help; }
 /* 【v1.0589】算出不能の「—」（0円ではない）。SEO売上の子商品／はみ出しで使う */
 .na-val { color: var(--text3); cursor: help; }
-.seo-over { display:block; font-size:0.66rem; font-weight:700; color:#b91c1c; line-height:1.2; }
 /* 【v1.0588】両表示: セット行（合計）と、その下にぶら下がる内訳行 */
 tr.row-setparent > td { border-top: 2px solid #b9c2cf; font-weight: 600; }      /* セットの切れ目をはっきり */
 tr.row-setmember > td { background-color: #f7f9fe; font-size: 0.94em; }          /* 内訳はひとまわり控えめに */
@@ -3228,7 +3233,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0589</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0590</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3499,6 +3504,10 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-sroas" data-sort="prsroas" title="PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR売上ROAS<br><span class="th-est">(推定)</span></th>
               <th class="num col-sales" data-sort="seoRev">SEO売上</th>
               <th class="num col-ad" data-sort="adRev">広告売上</th>
+              <!-- 【v1.0590】広告売上(不明分)＝広告売上 − 総売上 の溢れたぶん（§5-E）。
+                   広告売上はクリックされた商品に、総売上は売れた商品に計上されるので、
+                   親の広告から入った客が子商品で買うと親の行で溢れる。その額をそのまま出す列。 -->
+              <th class="num col-adunk" data-sort="adUnknown" title="広告売上(不明分) ＝ 広告売上 − 総売上（溢れたぶんだけ）&#10;広告売上はクリックされた商品に計上され、総売上は売れた商品に計上されます。&#10;そのため、この商品の広告から入った客が別の商品（子商品など）で購入すると、&#10;この商品の行では広告売上が総売上を上回り、その差額がここに出ます。&#10;★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。&#10;「合算」「両表示」でセットにすると0になるなら、送り込み先で着地しています。">広告売上<br><span class="th-est">(不明分)</span></th>
               <th class="num col-spend" data-sort="adCost">広告実績額</th>
               <th class="num col-cvr" data-sort="cvr" title="広告CVR ＝ 広告注文数 ÷ 広告クリック数 × 100&#10;①広告詳細レポート由来。クリックが0の商品は「—」。">広告CVR</th>
               <th class="num col-prov" data-sort="prOverEst" title="PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR実績額<br><span class="th-est">(7%超・推定)</span></th>
@@ -9054,6 +9063,7 @@ function renderBasic() {
     if (k === 'prsroas')  { const v = itemPrSalesRoasPct(r.code, r.rev, r.adCost); return (v == null) ? -1 : v; }
     if (k === 'prOverEst'){ const e = itemPrEstimate(r.code, r.rev); return e ? e.over : -1; }
     if (k === 'cvr')      { return (r.cvr == null) ? -1 : r.cvr; }
+    if (k === 'adUnknown'){ const v = seoOverflowOf(r); return v == null ? -1 : v; }   // 【v1.0590】溢れていない行は最下位
     if (k === 'soikomi')  { return _soiByParent[r.code] || 0; }
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
@@ -9105,7 +9115,7 @@ function renderBasic() {
   const tbody = $('#tableBasic tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0580】列構成の変更に合わせて 15 に
+    tbody.innerHTML = '<tr><td colspan="16" class="empty-state">データを読み込んでください</td></tr>';   // 【v1.0590】列を1つ増やしたので 16
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
     state.basicDisplayedCodes = [];   // 【v1.0522】
@@ -9163,6 +9173,13 @@ function renderBasic() {
     //   ・親で広告売上>総売上 … 「—」のままだと 0円 と区別できないので、はみ出し額を添える
     const _soiChild = !r._rollup && isSoikomiChild(r.code);
     const _seoOver  = seoOverflowOf(r);
+    // 【v1.0590】広告売上(不明分)。溢れていなければ「—」（0円ではなく「溢れていない」の意味）
+    const _adUnkTip = (_seoOver != null)
+      ? ('広告売上が総売上を ¥' + Math.round(_seoOver).toLocaleString('ja-JP') + ' 上回っています。\n'
+         + 'この商品の広告から入った客が、別の商品（子商品など）で購入したぶんです。\n'
+         + '★どの商品で着地したかは元データに無いため「不明分」です（推定はしません）。\n'
+         + '「合算」「両表示」でセットにして0になれば、送り込み先で着地しています。')
+      : '広告売上が総売上を上回っていません（溢れなし）';
     let _seoCell, _adRevCell;
     if (_soiChild) {
       const _t = '送り込み先（子商品）のSEO売上は算出できません。\n'
@@ -9175,8 +9192,9 @@ function renderBasic() {
     } else if (_seoOver != null) {
       const _t = '広告売上が総売上を ¥' + Math.round(_seoOver).toLocaleString('ja-JP') + ' 上回っているため、SEO売上は算出できません。\n'
         + '広告売上はクリックされた商品に計上されるので、この商品の広告から入った客が別商品（子商品など）で購入すると起きます。\n'
+        + '溢れた額は右の「広告売上(不明分)」の列に出しています。\n'
         + 'セットとしてのSEO売上は「合算」「両表示」のセット行で見てください。';
-      _seoCell   = `<td class="num col-sales share-cell"><span class="amt na-val" title="${escapeHtml(_t)}">—<span class="seo-over">▲¥${Math.round(_seoOver).toLocaleString('ja-JP')}</span></span></td>`;
+      _seoCell   = `<td class="num col-sales share-cell"><span class="amt na-val" title="${escapeHtml(_t)}">—</span></td>`;   // 【v1.0590】溢れた額は「広告売上(不明分)」の列へ
       _adRevCell = `<td class="num col-ad share-cell"><span class="amt">${fmt(r.adRev)}</span></td>`;
     } else {
       _seoCell   = shareRevCell(r.seoRev, r.adRev, true, "col-sales");
@@ -9200,6 +9218,7 @@ function renderBasic() {
       <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
       ${_seoCell}
       ${_adRevCell}
+      <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_seoOver != null ? '<span class="adunk-val">' + fmt(Math.round(_seoOver)) + '</span>' : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="num col-spend">${fmt(r.adCost)}</td>
       <td class="num col-cvr">${r.cvr == null ? '<span style="color:var(--text3)">—</span>' : fmtCvr(r.cvr)}</td>
       <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
@@ -15869,7 +15888,7 @@ function downloadBasicAllCsv() {
       if (_rep && _rep !== r.code) _soiByParentCsv[_rep] = (_soiByParentCsv[_rep] || 0) + (+r.rev || 0);
     });
     const header = ['月', '商品コード', '画像URL', '商品名',
-                    '総売上', '売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告実績額',
+                    '総売上', '売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告売上(不明分)', '広告実績額',
                     '広告CVR(%)', 'PR実績額(7%超・推定)', '広告ROAS(%)', 'PRオプ料率(%)', '入札価格', '送り込み売上',
                     '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス',
                     '参考:行の種別', '参考:セット構成'];   /* 【v1.0588】合算/両表示でどの行なのかが分かるように */
@@ -15894,7 +15913,7 @@ function downloadBasicAllCsv() {
       const row = [
         targetMonth, code, imgUrl(code), m.name || '',
         num(r.rev), (_sr == null ? '' : String(_sr)), (_prsr == null ? '' : String(_prsr)),
-        num(r.seoRev), num(r.adRev), num(r.adCost),
+        num(r.seoRev), num(r.adRev), (function () { const v = seoOverflowOf(r); return v == null ? '' : num(v); })(), num(r.adCost),
         (r.cvr == null ? '' : String(Math.round(r.cvr * 10) / 10)),
         (_prOver != null ? num(_prOver) : ''), roas, proRate,
         (bid != null && bid > 0) ? String(bid) : '',
