@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0611 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0612 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1357,16 +1357,8 @@ th {
 th:hover { background-color: #d8dadd; }
 th.nosort { cursor: default; }
 th.nosort:hover { background-color: #e8eaed; }
-/* ソートアイコン: 既定は薄い↕、アクティブ時は向き付き濃色 */
-th[data-sort]::after {
-  content: ' \2195';          /* ↕ */
-  opacity: 0.35;
-  font-size: 0.85em;
-  margin-left: 3px;
-}
-th[data-sort].sort-active::after { opacity: 1; color: var(--blue); }
-th[data-sort].sort-asc::after  { content: ' \25B2'; opacity: 1; color: var(--blue); }  /* ▲ */
-th[data-sort].sort-desc::after { content: ' \25BC'; opacity: 1; color: var(--blue); }  /* ▼ */
+/* 【v1.0612】ソートアイコンの定義は後段（v279ブロックを置き換えたところ）に一本化した。
+   ここで ↕ を出していた旧定義は撤去（未ソートの列にマークを出さない方針）。 */
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* 【v1.0338/1.0339】全ての表の数値セルを少しだけ大きく（元0.85rem→0.90rem＝元と前回0.95remの中間）。ヘッダ(th)は据え置き。 */
 #mi-wrap tbody tr:hover td { box-shadow: none; }  /* 【v1.0369】月別データはホバー枠を出さない */
@@ -1715,9 +1707,15 @@ td.col-soi   { color: #7c3aed; font-weight: 600; }
 /* 【v1.0580】推定値の列は数字を少し弱く出して、実測列と見分けられるようにする */
 td.est-val { font-style: italic; }
 th .th-est { font-size: 0.82em; font-weight: 600; color: #b45309; }
-.pr-grp-badge { display:inline-block; margin-left:5px; padding:1px 5px; border-radius:9px; font-size:0.72rem; font-weight:700; line-height:1.5; vertical-align:middle; }
-.pr-grp-badge.over { background:#dcfce7; color:#15803d; }   /* 7%超＝送り込み元 */
-.pr-grp-badge.base { background:#f1f5f9; color:#64748b; }   /* 7%＝利益源 */
+/* 【v1.0612】PRオプ料率の「送り込み元 / 利益源」バッジを撤去し、★数字そのものの色で区別する。
+   バッジは幅を食って料率の数字が詰まっていたため。意味は色とツールチップで残す。
+     7%   （最低料率のまま＝実際に利益が落ちる側＝旧「利益源」）  → 青
+     7%超 （料率を上げて上位表示を取り子へ流す側＝旧「送り込み元」）→ 緑（旧バッジと同じ色）
+   ★しきい値は PR_BASE_RATE_PCT（=7）だけを見る。ここに数字を直接書かないこと。 */
+.pro-rate-val { font-weight: 700; }
+.pro-rate-val.base { color: #2563eb; }   /* 7%   ＝ 青 */
+.pro-rate-val.over { color: #15803d; }   /* 7%超 ＝ 緑 */
+.pr-grp-badge { display: none !important; }   /* 旧バッジ（残骸が出ても消える） */
 tr.row-child td.col-spend, tr.row-child:hover td.col-spend { background-color: #fdeff4; }
 tr.row-child td.col-cvr,   tr.row-child:hover td.col-cvr   { background-color: #fef8ef; }
 tr.row-child td.col-prov,  tr.row-child:hover td.col-prov  { background-color: #eef8f5; }
@@ -3094,26 +3092,33 @@ table.rank-table td.rank-legend-col-row {
    ※既存CSSを消さず、末尾に上書きブロックとして追加。
    ============================================================ */
 
-/* (1) ソートはヘッダー本体ではなく専用ボタンからのみ発火させる。
-   ・th 本体のクリック誘発（cursor:pointer / hover 反転 / 疑似矢印）を打ち消す。
-   ・並び順の向きは th の sort-asc/sort-desc クラス（updateSortIndicator）でボタンに反映。 */
-th[data-sort] { cursor: default; }
-th[data-sort]:hover { background-color: #e8eaed; }        /* ヘッダーhoverの色変化を無効化 */
-th[data-sort]::after { content: none !important; }         /* 旧: th全体の疑似ソート矢印を廃止 */
-.th-sort-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  vertical-align: middle; margin-left: 5px; padding: 0 3px;
-  height: 17px; min-width: 18px;
-  border: 1px solid var(--border2); border-radius: 4px;
-  background: var(--bg2); color: var(--text3);
-  cursor: pointer; font-size: 0.72rem; line-height: 1;
-  transition: background .12s, color .12s, border-color .12s;
+/* (1) 【v1.0612】ソート専用ボタン(.th-sort-btn)を撤去した。
+   ボタンは inline-flex で見出しの幅を約23px食っていて、商品名などの文字が詰まっていたため。
+   ・ソートは v279 以前と同じ「見出し本体クリック」に戻す（wireSort / installSortButtons 参照）。
+   ・誤ソートの心配は不要: 列幅ドラッグは handle 側で stopPropagation ＋ ドラッグ直後の click を
+     1回だけ握りつぶす仕組み（v278）が installColResizeHandles に入っている。
+   ・★未ソートの列には一切マークを出さない（＝文字を詰めない）。
+     いま並び替えている列だけ ▲/▼ を出すが、これは position:absolute でセルの右下隅に置くので
+     テキストの幅を1pxも食わない（＝_ensureFixedLayout でキャプチャした列幅と食い違わない）。 */
+th[data-sort] { cursor: pointer; }
+th[data-sort]:hover { background-color: #d8dadd; }
+th[data-sort]::after { content: none; }                    /* 既定＝マークなし */
+th[data-sort].sort-asc::after,
+th[data-sort].sort-desc::after {
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+  margin: 0;
+  opacity: 1;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--blue);
+  pointer-events: none;
 }
-.th-sort-btn::after { content: '\2195'; }                  /* ↕（既定） */
-.th-sort-btn:hover { background: var(--bg3); color: var(--accent); border-color: var(--accent); }
-th.sort-active .th-sort-btn { color: var(--blue); border-color: var(--blue); }
-th.sort-asc  .th-sort-btn::after { content: '\25B2'; }     /* ▲ */
-th.sort-desc .th-sort-btn::after { content: '\25BC'; }     /* ▼ */
+th[data-sort].sort-asc::after  { content: '\25B2'; }       /* ▲ 昇順 */
+th[data-sort].sort-desc::after { content: '\25BC'; }       /* ▼ 降順 */
+/* .th-sort-btn は v1.0612 で生成しなくなったが、古い保存HTML等で残っていても消えるようにしておく */
+.th-sort-btn { display: none !important; }
 
 /* 【v280】入札価格調整/PRオプ調整は「満了3ヶ月表示」に戻し、商品名・メインKWの省略(…)を廃止（v278/v279のコンパクト化・クランプを撤去）。
    商品名/メインKWは全体ビューと同じ全表示に戻す。ソート専用ボタン(上記(1))は継続。
@@ -3353,7 +3358,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0611</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0612</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3647,7 +3652,7 @@ th.col-sroas { background-color:#e7d5f5; }
                      renderBasic の tr.innerHTML に col-cvr の td を書き戻すだけ（colspan も 14→15 に）。 -->
               <th class="num col-prov" data-sort="prOverEst" title="PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。">PR実績額<br><span class="th-est">(7%超・推定)</span></th>
               <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告<br>ROAS</th>
-              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <!-- 【v1.0609】調整-基本のときだけ出す3列（body.basic-tune で表示）。
                    ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
@@ -4050,7 +4055,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="name" data-resize-key="nameProAdjust">商品名</th>
               <th class="nosort" data-resize-key="kwProAdjust">メインKW</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th data-sort="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProAdjustSeo1">SEO売上<br>(2ヶ月前)</th>
@@ -4135,7 +4140,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="proStatus">PRオプ状態</th>
-              <th class="num col-pro" data-sort="proRate">PRオプ料率<br>(最低7％)</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
@@ -9288,7 +9293,7 @@ function renderWithdrawConsider() {
     + '<th data-resize-key="nameWc">商品名</th>'
     + '<th class="nosort" data-resize-key="kwWc">メインKW</th>';
   for (let i = 0; i < 4; i++) { const m = months[i] || ''; h += '<th class="num col-total">総売上' + (m ? ('<br>' + m) : '') + '</th>'; }
-  h += '<th class="num col-pro">PRオプ料率<br>(最低7％)</th>'
+  h += '<th class="num col-pro">PRオプ<br>料率</th>'
     + '<th class="status-col">PRオプ状態</th>'
     + '<th class="status-col">ステータス</th>';
   const agg = buildFullAggregate();
@@ -9333,7 +9338,10 @@ function renderWithdrawConsider() {
         + '<td>' + nameCellHtml(r.code) + '</td>'
         + '<td>' + kwCellHtml(r.code) + '</td>'
         + cells
-        + '<td class="num col-pro pro-rate-cell" data-code="' + escapeHtml(r.code) + '" title="クリックで編集">' + fmtProRate(pr) + '</td>'
+        + '<td class="num col-pro pro-rate-cell" data-code="' + escapeHtml(r.code) + '" title="クリックで編集">'
+          + ((pr == null || isNaN(pr)) ? fmtProRate(pr)
+             : '<span class="pro-rate-val ' + (Number(pr) > PR_BASE_RATE_PCT ? 'over' : 'base') + '">' + fmtProRate(pr) + '</span>')   /* 【v1.0612】 */
+          + '</td>'
         + '<td class="status-col">' + statusSelectHtml(r.code, 'pro') + '</td>'
         + '<td class="status-col">' + statusSelectHtml(r.code, 'status') + '</td>'
         + '</tr>';
@@ -9648,11 +9656,16 @@ function renderBasic() {
     const _prOver = basicPrOverOf(r);
     const _prsr   = basicPrSalesRoasOf(r);
     const _soi = _soiByParent[r.code] || 0;
-    // 料率バッジ（送り込み元/利益源）はセットの中で割れるので、合算のセットには出さない
-    const _grpBadge = (_isSet || pr == null || isNaN(pr)) ? ''
+    // 【v1.0612】旧「送り込み元 / 利益源」バッジは撤去。代わりに料率の数字そのものを色分けする。
+    //   青 = 最低料率(7%)のまま＝利益が落ちる側 ／ 緑 = 7%超＝上位表示を取って子へ流す側
+    //   合算のセットはメンバーで割れるので色を付けない（従来バッジを出さなかったのと同じ扱い）。
+    const _prRateHtml = (pr == null || isNaN(pr)) ? fmtProRate(pr)
+      : (_isSet ? fmtProRate(pr)
+         : '<span class="pro-rate-val ' + (Number(pr) > PR_BASE_RATE_PCT ? 'over' : 'base') + '">' + fmtProRate(pr) + '</span>');
+    const _prRateTip = (pr == null || isNaN(pr)) ? 'クリックで編集'
       : (Number(pr) > PR_BASE_RATE_PCT
-          ? '<span class="pr-grp-badge over" title="設定料率が7%超＝料率を上げて上位表示を取り、子商品へ流す側（全-月別データの「送り込み元」）">送り込み元</span>'
-          : '<span class="pr-grp-badge base" title="設定料率は最低の7%＝実際に利益が落ちる側（全-月別データの「利益源」）">利益源</span>');
+          ? '設定料率が' + PR_BASE_RATE_PCT + '%超（緑）＝料率を上げて上位表示を取り、子商品へ流す側（全-月別データの「送り込み元」）\nクリックで編集'
+          : '設定料率は最低の' + PR_BASE_RATE_PCT + '%（青）＝実際に利益が落ちる側（全-月別データの「利益源」）\nクリックで編集');
     const _prsrTip = _isSet
       ? ('PR売上ROAS(推定) ＝ セット合計の総売上 ÷（合計の広告実績額 ＋ 合計のPR実績額(7%超・推定)）× 100\n'
          + '★7%超ぶんは商品ごとに⑤の設定料率から出してから足し上げています（実測ではありません）\n'
@@ -9729,7 +9742,7 @@ function renderBasic() {
     const _proCell = _isSet
       ? (() => { const v = _basicMultiVal(_mem, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
                  return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
-      : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}${_grpBadge}</td>`;
+      : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="${escapeHtml(_prRateTip)}">${_prRateHtml}</td>`;
     const _bidCell = _isSet
       ? (() => { const v = _basicMultiVal(_mem, c => getBid(c), x => '¥' + x);
                  return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
@@ -14956,30 +14969,30 @@ $('#seoRankMonth').addEventListener('change', renderSeoRank);
 $('#seoRankSearch').addEventListener('input', renderSeoRank);
 if ($('#btnRefreshAdRank')) $('#btnRefreshAdRank').addEventListener('click', () => fetchRankJson());
 if ($('#btnRefreshSeoRank')) $('#btnRefreshSeoRank').addEventListener('click', () => fetchRankJson());
-// 【v279】ソートはヘッダー本体クリックではなく、各見出し右の専用ボタン(.th-sort-btn)からのみ発火。
+// 【v1.0612】ソート専用ボタンを撤去し、見出し本体クリックに戻した（v279以前と同じ）。
 //   ・installSortButtons(): 全 th[data-sort] に専用ボタンを設置（冪等）。月列(実績額/ROAS/SEO 当月列)は
 //     再描画で th.innerHTML が差し替わりボタンが消えるため renderAdAdjust/renderProAdjust 末尾でも再設置する。
 //   ・wireSort(): thead へのイベント委任。ボタンが作り直されても配線が生き続ける。ヘッダー本体クリックは無視。
 //   ・列リサイズのドラッグ直後の誤クリックは v278 の swallow 機構で吸収される（両立）。
+// 【v1.0612】旧: 各 th に .th-sort-btn を差し込んでいた → 幅を約23px食って見出しが詰まるので撤去。
+//   関数名と呼び出し箇所（renderAll など）はそのまま残し、中身を「残っているボタンの掃除」に変えた。
+//   ★th の中身を増やす処理をここに足す場合は、必ず applyColWidths() より前に呼ぶこと（§15 v1.0611）。
 function installSortButtons() {
+  document.querySelectorAll('.th-sort-btn').forEach(b => b.remove());
   document.querySelectorAll('th[data-sort]').forEach(th => {
-    if (th.querySelector('.th-sort-btn')) return;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'th-sort-btn';
-    btn.title = 'この列で並び替え';
-    btn.setAttribute('aria-label', '並び替え');
-    th.appendChild(btn);
+    if (!th.title) th.title = 'クリックでこの列を並び替え';
   });
 }
 function wireSort(tableSel, apply) {
   const thead = $(tableSel + ' thead');
   if (!thead) return;
   thead.addEventListener('click', (e) => {
-    const btn = e.target.closest('.th-sort-btn');
-    if (!btn || !thead.contains(btn)) return;
-    const th = btn.closest('th[data-sort]');
-    if (!th) return;
+    // 【v1.0612】見出し本体のクリックで並び替え。
+    //   列幅ハンドルのクリックは handle 側で stopPropagation 済み、
+    //   ドラッグ直後の click も v278 の握りつぶしで届かないので、誤ソートは起きない。
+    if (e.target.closest('.col-resize-handle')) return;
+    const th = e.target.closest('th[data-sort]');
+    if (!th || !thead.contains(th)) return;
     e.stopPropagation();
     apply(th.dataset.sort);
   });
