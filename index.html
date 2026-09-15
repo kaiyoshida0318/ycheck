@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0605 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0606 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2686,6 +2686,35 @@ table.rank-table td.rank-legend-col-row {
    スクロールしないと見えなかった。縦flexにして「ヘッダー固定／本文(pe-grid)だけ
    スクロール／アクションを最下部に固定」に変更。あわせて行間・画像を少し圧縮。
    ※オーバーレイの上下padding(40px×2)を差し引いた高さに収め、ページ全体のスクロールも防ぐ。 */
+/* 【v1.0606】商品モーダルのタブ化（§5-I） */
+#productEditModal .modal.pe-modal-wide { max-width: min(1060px, 96vw) !important; width: min(1060px, 96vw); }
+.pe-tabs { display: flex; align-items: center; gap: 2px; border-bottom: 2px solid var(--border);
+  margin: -20px -24px 0; padding: 0 20px; flex: 0 0 auto; }
+.pe-tab { border: none; background: transparent; font-family: inherit; font-size: 0.92rem; font-weight: 700; color: var(--text3);
+  padding: 13px 16px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.pe-tab:hover { color: var(--text2); }
+.pe-tab.on { color: var(--text); border-bottom-color: var(--accent); }
+.pe-tabs .pe-nav-mini { margin-left: auto; position: static; }
+.pe-tabs-close { position: static !important; margin-left: 8px; }
+.pe-head { display: flex; align-items: center; gap: 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+.pe-head-img img, .pe-head-img .product-img-placeholder { width: 46px; height: 46px; border-radius: 6px; }
+.pe-head-name { font-size: 1.02rem; font-weight: 700; line-height: 1.35; }
+.pe-head-sub { font-size: 0.74rem; color: var(--text3); font-family: ui-monospace, Consolas, monospace; margin-top: 2px; }
+.pe-panel { padding-top: 12px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.pe-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.pe-ctl-note { font-size: 0.74rem; color: var(--text3); margin-left: auto; }
+.pe-chart-wrap { position: relative; height: 300px; }
+.pe-legend { display: flex; gap: 14px; justify-content: center; margin: 8px 0 12px; font-size: 0.74rem; color: var(--text2); }
+.pe-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+.pe-table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.pe-table-wrap table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.78rem; }
+.pe-table-wrap th { background: var(--bg3); font-weight: 700; color: var(--text2);
+  padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+.pe-table-wrap th:first-child, .pe-table-wrap td:first-child { text-align: left; }
+.pe-table-wrap td { padding: 5px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.pe-table-wrap tr:last-child td { border-bottom: none; }
+.pe-empty { padding: 30px; text-align: center; color: var(--text3); font-size: 0.84rem; }
+
 #productEditModal .modal {
   display: flex;
   flex-direction: column;
@@ -3302,7 +3331,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0605</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0606</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4273,16 +4302,45 @@ th.col-sroas { background-color:#e7d5f5; }
 
 <!-- 商品情報編集モーダル -->
 <div class="modal-overlay" id="productEditModal">
-  <div class="modal" style="max-width: 540px;">
-    <!-- 【v134】ヘッダーにミニ前後ナビを追加（縦バー廃止で本体は横幅フル） -->
-    <div class="modal-header pe-modal-header">
-      <h2 class="modal-title">✎ 商品情報を編集</h2>
+  <div class="modal pe-modal-wide">
+    <!-- 【v1.0606】タブ化（§5-I）。開いた直後は「全体情報」＝売上がすぐ見える。
+         「商品情報を編集」は一番右。編集フォームの中身は従来のまま。 -->
+    <div class="pe-tabs" id="peTabs" role="tablist">
+      <button type="button" class="pe-tab on" data-petab="info">全体情報</button>
+      <button type="button" class="pe-tab" data-petab="edit">商品情報を編集</button>
       <div class="pe-nav-mini">
         <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
         <button class="pe-nav-btn-mini" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">∨</button>
       </div>
-      <button class="modal-close" id="peClose" type="button">×</button>
+      <button class="modal-close pe-tabs-close" id="peClose" type="button">×</button>
     </div>
+    <!-- 商品ヘッダー（画像・商品名・コード）。どちらのタブでも出す -->
+    <div class="pe-head">
+      <div class="pe-head-img" id="peHeadImg"></div>
+      <div class="pe-head-txt">
+        <div class="pe-head-name" id="peHeadName">—</div>
+        <div class="pe-head-sub"><span id="peHeadCode">—</span><span class="pe-head-sep" id="peHeadRepWrap" style="display:none">｜代表: <b id="peHeadRep"></b></span></div>
+      </div>
+    </div>
+
+    <!-- ===== タブ1: 全体情報 ===== -->
+    <div class="pe-panel" id="peTabInfo">
+      <div class="pe-ctl">
+        <span class="seg-filter" id="peGrainSeg"><button type="button" class="segf-btn on" data-pegrain="day">日別</button><button type="button" class="segf-btn" data-pegrain="month">月別</button></span>
+        <span class="seg-filter" id="peSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
+        <span class="pe-ctl-note" id="peCtlNote"></span>
+      </div>
+      <div class="pe-chart-wrap"><canvas id="peChart"></canvas></div>
+      <div class="pe-legend">
+        <span><i style="background:#7c3aed"></i>SEO売上</span>
+        <span><i style="background:#f97316"></i>広告売上</span>
+        <span><i style="background:#10b981"></i>売上ROAS</span>
+      </div>
+      <div class="pe-table-wrap" id="peTableWrap"></div>
+    </div>
+
+    <!-- ===== タブ2: 商品情報を編集（従来の中身） ===== -->
+    <div class="pe-panel" id="peTabEdit" style="display:none">
     <div class="pe-grid">
       <div class="pe-row">
         <label class="pe-label">商品コード</label>
@@ -4331,6 +4389,7 @@ th.col-sroas { background-color:#e7d5f5; }
       <button class="btn primary" id="peSave" type="button">保存</button>
       <button class="btn primary" id="peSaveClose" type="button">保存して閉じる</button>
     </div>
+    </div><!-- /#peTabEdit 【v1.0606】 -->
   </div>
 </div>
 
@@ -15742,6 +15801,121 @@ function peRefreshImagePreview() {
   note.textContent = noteText;
 }
 
+// ============================================================================
+// 【v1.0606】商品モーダルの「全体情報」タブ（§5-I）
+//   商品をクリックしたら、まず売上が見えるようにする（編集は右端のタブへ）。
+//   ★集計は既存の関数をそのまま使う（dayAgg / buildFullAggregate / salesRoasPct）。
+//     ここで別の計算式を書くと、一覧の数字と食い違う。
+// ============================================================================
+let _peTab = 'info';          // 'info' | 'edit'
+let _peGrain = 'day';         // 'day' | 'month'
+let _peSpan = 60;             // 日別のとき何日ぶん見るか（0＝全期間）
+let _peChart = null;
+function peSetTab(t) {
+  _peTab = (t === 'edit') ? 'edit' : 'info';
+  const tabs = document.getElementById('peTabs');
+  if (tabs) tabs.querySelectorAll('.pe-tab').forEach(b => b.classList.toggle('on', b.getAttribute('data-petab') === _peTab));
+  const i = document.getElementById('peTabInfo'), e = document.getElementById('peTabEdit');
+  if (i) i.style.display = (_peTab === 'info') ? '' : 'none';
+  if (e) e.style.display = (_peTab === 'edit') ? '' : 'none';
+  if (_peTab === 'info') peRenderInfo();
+}
+// この商品1件ぶんの行を作る（日別 or 月別）。行の形は共通:
+//   { key, rev, seoRev, adRev, adCost, sroas }
+function _peRows(code) {
+  const out = [];
+  if (_peGrain === 'day') {
+    let days = dailyAllDates();
+    if (_peSpan > 0) days = days.slice(-_peSpan);
+    days.forEach(d => {
+      const a = dayAgg(code, d);
+      out.push({ key: d, rev: a.rev, seoRev: a.seoRev, adRev: a.adRev, adCost: a.adCost,
+                 sroas: salesRoasPct(a.rev, a.adCost, 0) });
+    });
+  } else {
+    const agg = (typeof buildFullAggregate === 'function') ? buildFullAggregate() : [];
+    agg.filter(r => r.code === code).sort((a, b) => String(a.month).localeCompare(String(b.month)))
+      .forEach(r => out.push({ key: r.month, rev: r.rev, seoRev: r.seoRev, adRev: r.adRev, adCost: r.adCost,
+                               sroas: salesRoasPct(r.rev, r.adCost, 0) }));
+  }
+  return out;
+}
+function peRenderInfo() {
+  const code = productEditModal && productEditModal.dataset.code;
+  const wrap = document.getElementById('peTableWrap');
+  const cv = document.getElementById('peChart');
+  if (!code || !wrap || !cv) return;
+  // トグルの状態同期
+  const gs = document.getElementById('peGrainSeg');
+  if (gs) gs.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-pegrain') === _peGrain));
+  const ss = document.getElementById('peSpanSeg');
+  if (ss) { ss.style.display = (_peGrain === 'day') ? '' : 'none';
+            ss.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pespan')) === String(_peSpan))); }
+
+  const rows = _peRows(code);
+  const note = document.getElementById('peCtlNote');
+  if (note) note.textContent = rows.length
+    ? (_peGrain === 'day' ? rows.length + '日分（' + rows[0].key + ' 〜 ' + rows[rows.length - 1].key + '）'
+                          : rows.length + 'ヶ月分')
+    : '';
+
+  if (_peChart) { try { _peChart.destroy(); } catch (e) {} _peChart = null; }
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="pe-empty">この商品のデータがありません（レポートを取り込むと出ます）</div>';
+    return;
+  }
+  // ---- グラフ（SEO売上＋広告売上の積み上げ棒／売上ROASの折れ線） ----
+  const labels = rows.map(r => (_peGrain === 'day')
+    ? (+String(r.key).slice(5, 7)) + '/' + (+String(r.key).slice(8, 10))
+    : String(r.key).replace('-', '/'));
+  try {
+    if (typeof Chart !== 'undefined') {
+      _peChart = new Chart(cv.getContext('2d'), {
+        data: {
+          labels,
+          datasets: [
+            { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: '#7c3aed', stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: '広告売上', data: rows.map(r => r.adRev), backgroundColor: '#f97316', stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'line', label: '売上ROAS', data: rows.map(r => r.sroas), borderColor: '#10b981', backgroundColor: '#10b981',
+              borderWidth: 2, pointRadius: 2.5, tension: 0.25, spanGaps: true, yAxisID: 'y1', order: 1 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => {
+              const v = c.parsed.y;
+              if (c.dataset.label === '売上ROAS') return '売上ROAS: ' + (v == null ? '—' : Math.round(v) + '%');
+              return c.dataset.label + ': ¥' + Math.round(v || 0).toLocaleString('ja-JP');
+            } } }
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true } },
+            y: { stacked: true, position: 'left', beginAtZero: true,
+                 ticks: { font: { size: 10 }, callback: (v) => '¥' + Number(v).toLocaleString('ja-JP') } },
+            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false },
+                 ticks: { font: { size: 10 }, callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } }
+          }
+        }
+      });
+    }
+  } catch (e) { console.warn('[Ycheck] 商品モーダルのグラフ描画に失敗', e); }
+
+  // ---- 明細（新しい順） ----
+  const body = rows.slice().reverse().map(r =>
+    '<tr><td>' + escapeHtml(String(r.key)) + '</td>'
+    + '<td>' + (r.sroas == null ? '<span style="color:var(--text3)">—</span>' : Math.round(r.sroas) + '%') + '</td>'
+    + '<td>' + fmt(r.rev) + '</td>'
+    + '<td>' + fmt(r.seoRev) + '</td>'
+    + '<td>' + fmt(r.adRev) + '</td>'
+    + '<td>' + fmt(r.adCost) + '</td></tr>').join('');
+  wrap.innerHTML = '<table><thead><tr><th>' + (_peGrain === 'day' ? '日付' : '月')
+    + '</th><th>売上ROAS</th><th>総売上</th><th>SEO売上</th><th>広告売上</th><th>広告実績額</th></tr></thead><tbody>'
+    + body + '</tbody></table>';
+}
+
 function openProductEditModal(code) {
   if (!code) return;
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
@@ -15761,7 +15935,17 @@ function openProductEditModal(code) {
   };
   productEditModal.dataset.code = code;
   peRefreshImagePreview();
+  // 【v1.0606】商品ヘッダー（画像・商品名・コード・代表コード）
+  { const hi = document.getElementById('peHeadImg'); if (hi) hi.innerHTML = imageCellHtml(code);
+    const hn = document.getElementById('peHeadName'); if (hn) hn.textContent = (m.name || '— 未登録 —');
+    const hc = document.getElementById('peHeadCode'); if (hc) hc.textContent = code;
+    const rep = (meta.repCode || '').trim();
+    const hw = document.getElementById('peHeadRepWrap'), hr = document.getElementById('peHeadRep');
+    if (hw) hw.style.display = (rep && rep !== code) ? '' : 'none';
+    if (hr) hr.textContent = rep; }
   productEditModal.classList.add('open');
+  // 【v1.0606】開いた直後は必ず「全体情報」。売上をまず見せるのがこのモーダルの主目的
+  peSetTab('info');
   // 【v176】背景スクロールを許可するため body.style.overflow='hidden' は付けない
   // 【v127】前後ボタンの有効/無効を更新
   if (typeof updatePrevNextButtons === 'function') updatePrevNextButtons(code);
@@ -15837,6 +16021,8 @@ function navigateToAdjacentProduct(direction /* -1 or +1 */) {
 }
 
 function closeProductEditModal() {
+  // 【v1.0606】グラフを破棄（次に開いたとき作り直す。残すとメモリとイベントが積み上がる）
+  if (_peChart) { try { _peChart.destroy(); } catch (e) {} _peChart = null; }
   productEditModal.classList.remove('open');
   document.body.style.overflow = '';
   delete productEditModal.dataset.code;
@@ -16089,6 +16275,26 @@ $('#peImageDelete').addEventListener('click', () => {
   peImageState.imageDeleted = true;
   peRefreshImagePreview();
 });
+// 【v1.0606】タブ・粒度・期間の切替
+{
+  const _tabs = document.getElementById('peTabs');
+  if (_tabs) _tabs.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.pe-tab'); if (!b) return;
+    peSetTab(b.getAttribute('data-petab'));
+  });
+  const _g = document.getElementById('peGrainSeg');
+  if (_g) _g.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return;
+    _peGrain = (b.getAttribute('data-pegrain') === 'month') ? 'month' : 'day';
+    peRenderInfo();
+  });
+  const _s = document.getElementById('peSpanSeg');
+  if (_s) _s.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return;
+    _peSpan = parseInt(b.getAttribute('data-pespan'), 10) || 0;
+    peRenderInfo();
+  });
+}
 $('#peImageReset').addEventListener('click', () => {
   peImageState.customImage = null;
   peImageState.imageDeleted = false;
