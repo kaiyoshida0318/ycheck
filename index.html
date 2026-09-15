@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0606 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0607 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -314,8 +314,8 @@ body {
   z-index: 99;
 }
 /* 2段目（border-bottomなし、3段目と連続するまではつける） */
-.top-nav:not(.top-nav-2):not(.top-nav-3) { border-bottom: none; }
-.top-nav-2 { border-bottom: 1px solid var(--border); }
+/* 【v1.0607】.top-nav-2 を撤去したので、1段目が区切り線を持つ */
+.top-nav:not(.top-nav-3) { border-bottom: 1px solid var(--border); }
 
 /* 3段目（状態バッジ） */
 .top-nav-3 {
@@ -460,7 +460,11 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 /* 【v1.0550】開閉ボタンを各行の右端（ヘッダー1＝【調整】行／ヘッダー2＝【PR状態】行）へ移したので、
    畳むときは段ごと消してよくなった（v1.0549までは復帰ボタンを残すため細い帯が残っていた）。
    隠している間の復帰は、下の #hdrRestoreBar（細い帯）が受け持つ。 */
-body.states-hidden .top-nav-3,
+/* 【v1.0607】★自動非表示（states-hidden）では【調整】の行だけ残す。
+     v1.0607 で【調整】を .top-nav-3 の1行目へ移したため、段ごと消すと
+     商品-基本データ以外のビューから「入札価格調整 / PRオプ調整」へ行けなくなる。
+     手動の states-collapsed は従来どおり段ごと消す（復帰は #hdrRestoreBar）。 */
+body.states-hidden .top-nav-3 > .xf-row { display: none; }
 body.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
@@ -501,10 +505,14 @@ body.states-collapsed .top-nav-3 { display: none; }
 /* 【v195】状態行: ステータス（上）→状態（下）を縦積み。各グループ内はチップ折り返し。
    【v1.0583】その縦積みを .states-stack に移し、.top-nav-3 自体は
    「左＝クロス絞り込みパネル / 右＝状態チップ群」の横並びにした（§16-B）。 */
-/* ★flex-wrap は nowrap にする。.top-nav の既定（wrap）のままだと、チップ群の
-   min-content 幅がパネルの右に収まらず、状態チップ行がパネルの【下】へ落ちる。
+/* 【v1.0607】.top-nav-3 は縦（1行目＝【調整】／2行目＝クロス絞り込み＋状態チップ）。
+   横並びは .xf-row が持つ。
+   ★.xf-row の flex-wrap は nowrap にする。wrap のままだと、チップ群の min-content 幅が
+   パネルの右に収まらず、状態チップ行がパネルの【下】へ落ちる。
    nowrap ＋ .states-stack の min-width:0 で、狭いときはチップ側が内部で折り返す。 */
-.top-nav-3 { flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; }
+.top-nav-3 { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; }
+.xf-row { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; width: 100%; }
+.nav-group-tune { flex: 0 0 auto; }
 .states-stack { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 1 1 auto; min-width: 0; }  /* 【v198】ステータス⇔状態の行間を倍に */
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
@@ -570,9 +578,9 @@ body.states-collapsed .top-nav-3 { display: none; }
 .nav-row-states { display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 4px; width: 100%; }
 .nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
 /* 【v202/v1.0549/v1.0550】ヘッダー開閉ボタンの位置。
-   ヘッダー1 …【調整】【対応検討】の行（.top-nav-2）の右端
+   ヘッダー1 …【v1.0607】1段目（.top-nav）の右端
    ヘッダー2 …【PR状態】の行（.nav-states-prrow）の右端 */
-.top-nav-2 > #btnToggleChrome { margin-left: auto; white-space: nowrap; align-self: center; }
+.top-nav > #btnToggleChrome { margin-left: auto; white-space: nowrap; align-self: center; }
 /* 【v1.0550】【PR状態】グループと開閉ボタンを必ず同じ1行（全幅）に置くためのラッパー。
    .nav-row-states は flex-wrap なので、ラッパー無しだとボタンだけ別行に落ちることがある。 */
 .nav-states-prrow { display: flex; align-items: center; gap: 6px; width: 100%; }
@@ -3331,7 +3339,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0606</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0607</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3386,29 +3394,31 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank">広告順位</a>
     <a class="nav-tab nav-tab-link" data-view="seo-rank" href="?view=seo-rank">SEO順位</a>
   </div>
+  <!-- 【v1.0550/v1.0607】ヘッダー1（上部バー＋タブ段）の開閉。
+       v1.0606までは .top-nav-2 の右端にあったが、その段ごと撤去したのでこの行の右端へ移した。
+       ★隠している間はこのボタンごと消えるので、復帰は #hdrRestoreBarTop が受け持つ（§18-14）。 -->
+  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ段（【基本】【全体】【取得データ】）を隠します">🔼 ヘッダー1を隠す</button>
 </nav>
 
-<!-- Second row: 調整（【v237】旧【定期チェック】を廃止し【調整】を新設。各ビューの中身は今後実装） -->
-<nav class="top-nav top-nav-2">
-  <div class="nav-group">
-    <span class="nav-group-label g-chosei">【調整】</span>
-    <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">入札価格調整</a>
-    <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">PRオプ調整</a>
-  </div>
-  <div class="nav-group">
-    <span class="nav-group-label g-taiou">【対応検討】</span>
-    <a class="nav-tab nav-tab-link" data-view="review-sales4" href="?view=review-sales4">総売上-直近4ヶ月分</a>
-  </div>
-  <!-- 【v1.0550】ヘッダー1（上部バー＋タブ2段）の開閉。この行の右端に置く。
-       隠している間はこのボタンごと消えるので、復帰は #hdrRestoreBar が受け持つ。 -->
-  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ2段（【基本】【全体】【取得データ】【調整】【対応検討】）を隠します">🔼 ヘッダー1を隠す</button>
-</nav>
+<!-- 【v1.0607】2段目（.top-nav-2）は撤去。
+       ・【調整】（入札価格調整 / PRオプ調整）→ ヘッダー2（.top-nav-3）の1行目へ移動
+       ・【対応検討】（総売上-直近4ヶ月分）→ タブを撤去（ビュー実体 #view-review-sales4 と
+         renderReviewSales4 はデータ互換のため残置。戻すなら nav-tab を書き戻すだけ）
+       ・「🔼 ヘッダー1を隠す」→ 1段目の右端へ -->
 
 <!-- Third row: ステータス（上）＋状態（下）
      【v1.0583】左端に「クロス絞り込み」パネルを新設し、状態チップ群はその右へ寄せた（§16-B）。
        .top-nav-3 は横並び（左＝パネル固定幅 / 右＝従来の2段を縦積みする .states-stack）。 -->
 <nav class="top-nav top-nav-3">
 
+  <!-- 【v1.0607】【調整】をヘッダー2の1行目（＝クロス絞り込みパネルの上）へ移動 -->
+  <div class="nav-group nav-group-tune">
+    <span class="nav-group-label g-chosei">【調整】</span>
+    <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">入札価格調整</a>
+    <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">PRオプ調整</a>
+  </div>
+
+  <div class="xf-row">
   <!-- 【v1.0583】クロス絞り込み: 広告(有り/無し) × 送り込み(有り/無し) をワンクリックで。
        ・data-xf-ad / data-xf-soi の組み合わせがそのまま絞り込み条件（'all'|'ad'|'noad' / 'all'|'yes'|'no'）
        ・見出しセル（送り込み-有り/無し・広告-有り/無し）も押せる＝その軸だけの絞り込み
@@ -3492,6 +3502,7 @@ th.col-sroas { background-color:#e7d5f5; }
     </div>
   </div>
   </div><!-- /.states-stack 【v1.0583】 -->
+  </div><!-- /.xf-row 【v1.0607】 -->
 </nav>
 
 <!-- 【v1.0550】ヘッダーを隠している間だけ出る復帰バー。
