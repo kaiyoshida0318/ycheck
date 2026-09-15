@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0602 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0603 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3279,7 +3279,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0602</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0603</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9329,10 +9329,28 @@ function renderBasic() {
           + '絞り込み（ステータス・入札状態・PR状態）で隠れています。'
           + '<button type="button" class="btn sm" id="basicClearFiltersBtn" style="margin-left:10px">絞り込みを解除して表示</button>';
       } else {
-        _emptyMsg = '「' + escapeHtml(_kwRaw) + '」に一致する商品はありません'
-          + '<br><span style="font-size:0.8rem;color:var(--text3)">'
-          + '検索できるのは 商品コード / 商品名 / メインKW です。'
-          + '登録したはずの商品が出ないときは「+ 商品追加・更新・反映」に商品コードを入れて、登録済みかどうか確認してください</span>';
+        // 【v1.0603】★母集団に無い＝「登録されていない」とは限らない。
+        //   撤退済みの商品は、この母集団を作る前の段階で除外されている（§9）。
+        //   商品追加・更新・反映は state.master しか触らずステータスは変えないので、
+        //   撤退済みのコードを登録し直しても一覧には出てこない。その区別をここで付ける。
+        const _mm = Object.keys(state.master || {}).filter(c => {
+          const m = state.master[c] || {};
+          return (String(c) + ' ' + (m.name || '') + ' ' + (m.kw || '')).toLowerCase().includes(q);
+        });
+        const _mmRetired = _mm.filter(c => isRetired(c));
+        if (_mmRetired.length) {
+          _emptyMsg = '「' + escapeHtml(_kwRaw) + '」は<b>登録されています</b>が、ステータスが<b>【撤退済み】</b>のため一覧に出ません（「撤退済み商品」タブにあります）'
+            + '<br><span style="font-size:0.8rem;color:var(--text3)">該当: ' + escapeHtml(_mmRetired.join(', ')) + '</span>'
+            + '<br><button type="button" class="btn sm" id="basicUnretireBtn" style="margin-top:8px;background:var(--green);color:#fff;border-color:var(--green)">↩ 撤退済みを解除して表示</button>';
+        } else if (_mm.length) {
+          _emptyMsg = '「' + escapeHtml(_kwRaw) + '」は<b>登録されています</b>が、選択中の月の一覧に出ていません'
+            + '<br><span style="font-size:0.8rem;color:var(--text3)">該当: ' + escapeHtml(_mm.join(', ')) + '　月の選択や日選択を見直してください</span>';
+        } else {
+          _emptyMsg = '「' + escapeHtml(_kwRaw) + '」に一致する商品はありません（<b>商品マスタにも登録されていません</b>）'
+            + '<br><span style="font-size:0.8rem;color:var(--text3)">'
+            + '検索できるのは 商品コード / 商品名 / メインKW です。'
+            + '登録したのに出ない場合は、別の端末やタブのYcheckがデータを上書きしている可能性があります（§保存の注意）</span>';
+        }
       }
     } else if (state.activeStateFilter && state.activeStateFilter.label) {
       _emptyMsg = state.activeStateFilter.label + 'の商品はありません';
@@ -9344,6 +9362,20 @@ function renderBasic() {
         if (typeof xfClearAll === 'function') xfClearAll();
         $('#basicSearch').value = _kw;
         renderBasic();
+      }); }
+    // 【v1.0603】撤退済みをその場で解除する（商品追加・更新・反映の npqUnretire と同じ扱い）
+    { const _u = document.getElementById('basicUnretireBtn');
+      if (_u) _u.addEventListener('click', () => {
+        const _qq = $('#basicSearch').value.trim().toLowerCase();
+        const targets = Object.keys(state.master || {}).filter(c => {
+          const m = state.master[c] || {};
+          return isRetired(c) && (String(c) + ' ' + (m.name || '') + ' ' + (m.kw || '')).toLowerCase().includes(_qq);
+        });
+        if (!targets.length) return;
+        targets.forEach(c => { const meta = (state.productMeta[c] = state.productMeta[c] || {}); meta.status = '新商品'; });
+        const _ok = saveToStorage(); afterSaveOk(_ok);
+        try { if (typeof showToast === 'function') showToast('↩ ' + targets.length + '件の「撤退済み」を解除しました（要: ⬆ 反映する）', 'ok'); } catch (e) {}
+        renderAll();
       }); }
     state.basicListCache = [];
     state.basicListMonth = targetMonth;
