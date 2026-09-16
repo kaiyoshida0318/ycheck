@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0636 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0637 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2110,6 +2110,31 @@ td:has(> .name-cell-wrap) {
 .soi-note { font-size: 0.78rem; line-height: 1.6; color: var(--text3); }
 .soi-note b { color: var(--text2); }
 .soi-note .ng { color: #b91c1c; font-weight: 700; }
+
+/* 【v1.0637】変更記録 */
+.cl-dot { flex: 0 0 auto; color: #ea580c; font-size: 0.7rem; line-height: 1; cursor: help; }
+.cl-show-btn { border: 1px solid var(--border2); background: var(--bg2); color: var(--text3); border-radius: 6px;
+  font-family: inherit; font-size: 0.78rem; font-weight: 600; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.cl-show-btn.on { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
+.cl-open-btn { border: 1px solid #fdba74; background: #fff7ed; color: #c2410c; border-radius: 6px;
+  font-family: inherit; font-size: 0.78rem; font-weight: 700; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.cl-open-btn:hover { background: #ffedd5; }
+.cl-list { display: flex; flex-direction: column; gap: 6px; max-height: 44vh; overflow: auto; margin: 10px 0 0; }
+.cl-row { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg2); }
+.cl-bar { flex: 0 0 auto; width: 4px; align-self: stretch; border-radius: 2px; min-height: 22px; }
+.cl-date { flex: 0 0 auto; font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.82rem; color: var(--text2); font-weight: 700; }
+.cl-text { flex: 1 1 auto; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-del { flex: 0 0 auto; border: none; background: transparent; color: var(--text3); font-size: 1rem; cursor: pointer; padding: 2px 6px; border-radius: 5px; }
+.cl-del:hover { background: rgba(220,38,38,.1); color: var(--red); }
+.cl-empty { padding: 14px; text-align: center; color: var(--text3); font-size: 0.86rem; }
+.cl-add { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--bg3); border-radius: 8px; margin-top: 12px; }
+.cl-add label { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; font-weight: 700; color: var(--text2); }
+.cl-add input[type=date] { padding: 6px 8px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text); font-family: inherit; font-size: 0.86rem; }
+.cl-add input[type=text] { padding: 6px 10px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text); font-family: inherit; font-size: 0.86rem; min-width: 240px; }
+.cl-colors { display: inline-flex; gap: 5px; }
+.cl-swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.cl-swatch.on { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg2) inset; }
+.cl-note { font-size: 0.78rem; color: var(--text3); line-height: 1.6; margin-top: 8px; }
 .pe-code-display {
   padding: 8px 12px;
   border-radius: 7px;
@@ -3571,7 +3596,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0636</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0637</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3981,6 +4006,8 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="igSearch" placeholder="商品コード・商品名で検索して選択..." autocomplete="off" data-lpignore="true" data-1p-ignore oninput="_igSuggest(this.value)" onfocus="_igSuggest(this.value)" onblur="setTimeout(function(){var b=document.getElementById('igSuggest');if(b)b.style.display='none';},200)" style="width:260px">
           <div id="igSuggest" style="display:none;position:absolute;top:40px;left:60px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.18);max-height:340px;overflow:auto;min-width:360px"></div>
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
+          <!-- 【v1.0637】変更記録の縦線の出し分け（商品ごとの記録は 商品情報を編集 から登録する） -->
+          <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
           <!-- 【v1.0409】期間プリセットを指標の左へ移動 -->
           <span class="ig-presets" role="group" aria-label="期間プリセット">
             <button type="button" class="ig-preset-btn" data-igp="jan" onclick="_igPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
@@ -4118,6 +4145,9 @@ th.col-sroas { background-color:#e7d5f5; }
             <button type="button" class="dm-btn on" data-dm="month" onclick="_zgSetGrain('month')" title="月ごとの推移（従来）">月別</button>
             <button type="button" class="dm-btn" data-dm="day" onclick="_zgSetGrain('day')" title="対象月の1日ごとの推移">日別</button>
           </span>
+          <!-- 【v1.0637】変更記録 -->
+          <button type="button" class="cl-open-btn" id="btnClShop" title="ショップ全体の変更記録を登録・削除します">📝 変更記録</button>
+          <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
           <span class="filter-label" id="zgDayYmLabel" style="display:none">対象月</span>
           <select id="zgDayYmSel" onchange="_zgSetDayYm(this.value)" style="display:none;font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
           <span class="dm-nodata" id="zgDayNoData" style="display:none">日別データがまだありません</span>
@@ -4495,6 +4525,26 @@ th.col-sroas { background-color:#e7d5f5; }
 <!-- 【v260】表示条件モーダル（入札価格調整／PRオプ調整の各サブフィルタ条件） -->
 <!-- 【v1.0624】クロス絞り込み（送り込み／広告）の判定条件モーダル。
      ★本文は _xfHelpBody() が作る。判定式を書き換えたら必ずここの文面も直すこと。 -->
+<!-- 【v1.0637】全体の変更記録（ショップ全体）。全-日月別グラフのツールバーから開く。 -->
+<div class="modal-overlay" id="clShopModal">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-header">
+      <h2 class="modal-title">📝 変更記録（ショップ全体）</h2>
+      <button class="modal-close" id="clShopClose" type="button">×</button>
+    </div>
+    <p class="cl-note">Yahoo!側の仕様変更や、ショップ全体の運用方針を変えた日を残しておく場所です。
+      ここに登録した日付は <b>全-日月別グラフ</b> に縦線で出ます（商品-グラフ・商品モーダルのグラフにも出ます）。</p>
+    <div class="cl-list" id="clShopList"></div>
+    <div class="cl-add">
+      <label>日付<input type="date" id="clShopDate"></label>
+      <label>内容<input type="text" id="clShopText" placeholder="例: 予算の仕組み変更 / PRオプ料率の一斉見直し" maxlength="60"></label>
+      <label>線の色<span class="cl-colors" id="clShopColors"></span></label>
+      <button type="button" class="btn sm primary" id="clShopAdd">＋ 追加</button>
+    </div>
+    <div class="cl-note" id="clShopMsg"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="xfCondModal">
   <div class="modal" style="max-width: 760px;">
     <div class="modal-header">
@@ -4686,6 +4736,17 @@ th.col-sroas { background-color:#e7d5f5; }
         <label class="pe-label" for="peProductUrl">商品ページURL</label>
         <input type="url" id="peProductUrl" class="pe-input" placeholder="https://store.shopping.yahoo.co.jp/...">
         <div class="pe-image-note" id="peProductUrlNote">商品名クリック時に開くページのURL。空欄にすると自動URL（店舗コード＋商品コード）に戻ります。</div>
+      </div>
+      <!-- 【v1.0637】この商品の変更記録。グラフにオレンジの縦線で出る。 -->
+      <div class="pe-row">
+        <label class="pe-label">変更記録（この商品）</label>
+        <div class="cl-list" id="peClList" style="max-height:26vh"></div>
+        <div class="cl-add">
+          <label>日付<input type="date" id="peClDate"></label>
+          <label>内容<input type="text" id="peClText" placeholder="例: リニューアル / 画像差し替え / 入札単価を上げた" maxlength="60"></label>
+          <button type="button" class="btn sm primary" id="peClAdd">＋ 追加</button>
+        </div>
+        <div class="cl-note">登録すると、この商品のグラフ（商品-グラフ／このモーダルの全体情報）に<b style="color:#ea580c">オレンジの縦線</b>が出ます。一覧の商品名の横にも<b style="color:#ea580c">●</b>が付きます。</div>
       </div>
       <div class="pe-row">
         <label class="pe-label">商品画像</label>
@@ -5123,6 +5184,7 @@ const state = {
   //   fontScale : 0.7〜1.5
   //   ★ state.fontScale =「いま画面に効いている値」／ viewPrefs.fontScale =「保存された値」。起動時に後者を前者へ反映する。
   viewPrefs: { colWidths: {}, fontScale: 1, updatedAt: '', updatedBy: '' },
+  changeLog: { shop: [], items: {} },   // 【v1.0637】変更記録（いつ何を変えたか）。§21
   currentView: 'basic',
   activeStateFilter: null,  // {type: 'ad-ok'|'ad-ng'|..., targetView: 'ad-adjust'|'pro-adjust', label: '...'}
   // 【v125】代表コード絞り込み: null=全件、'*'=代表コード持ち全商品のみ、'ih-family'=その代表コードのグループのみ
@@ -5506,6 +5568,7 @@ function saveToStorage() {
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
     viewPrefs: state.viewPrefs,   // 【v1.0545】表示設定（列幅・文字サイズ）
+    changeLog: state.changeLog,   // 【v1.0637】変更記録
     savedAt: new Date().toISOString()
   };
   // 【v244/v245】localStorage容量オーバー(QuotaExceededError)対策。
@@ -5917,6 +5980,7 @@ function ghBuildDataString() {
     rankMeta: state.rankMeta,
     productsCsvSnapshot: state.productsCsvSnapshot,
     viewPrefs: state.viewPrefs,   // 【v1.0545】表示設定（列幅・文字サイズ）。他PCはこれを読んで同じ見た目を再現する
+    changeLog: state.changeLog,   // 【v1.0637】変更記録（ショップ全体＋商品ごと）。§21
     savedAt: new Date().toISOString(),
     // 【v1.0600】誰が書いたか。savedBy が自分と違う＝別クライアントの上書き（§15-C）
     savedBy: _ycClientId(),
@@ -6444,6 +6508,7 @@ async function ghLoadFromGitHub(opts) {
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
     if (data.viewPrefs) _vpAdoptIncoming(data.viewPrefs);   // 【v1.0623】端末のほうが新しければ端末を勝たせる
+    if (data.changeLog) { state.changeLog = data.changeLog; ensureChangeLog(); }   // 【v1.0637】変更記録
     // 【v287】productMeta も商品ごとに新しい方を残してマージ。ローカルの方が新しい商品が
     //   あれば _ghHealed=true（＝GitHubは古い上書きを受けていた）とし、後で復元を再保存する。
     let _ghHealed = false;
@@ -6560,6 +6625,7 @@ async function ghLoadFromPublic() {
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
     if (data.viewPrefs) _vpAdoptIncoming(data.viewPrefs);   // 【v1.0623】端末のほうが新しければ端末を勝たせる
+    if (data.changeLog) { state.changeLog = data.changeLog; ensureChangeLog(); }   // 【v1.0637】変更記録
     if (data.productMeta) {
       state.productMeta = data.productMeta;   // 閲覧端末は公開データをそのまま採用（編集しないためマージ不要）
       Object.values(state.productMeta).forEach(m => {
@@ -6970,6 +7036,7 @@ function loadFromStorage() {
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
     if (data.viewPrefs) _vpAdoptIncoming(data.viewPrefs);   // 【v1.0623】端末のほうが新しければ端末を勝たせる
+    if (data.changeLog) { state.changeLog = data.changeLog; ensureChangeLog(); }   // 【v1.0637】変更記録
     if (data.productMeta) {
       state.productMeta = data.productMeta;
       // 旧「PRO○/×」→「PRオプ○/×」にマイグレーション
@@ -8973,8 +9040,13 @@ function nameCellHtml(code) {
   } else {
     displayName = '<span class="name-empty">— 未登録 —</span>';
   }
+  // 【v1.0637】変更記録がある商品はオレンジの●を付ける（何件あるかはツールチップ）
+  const _cl = (typeof clItemList === 'function') ? clItemList(code) : [];
+  const _clDot = _cl.length
+    ? `<span class="cl-dot" title="${escapeHtml('変更記録 ' + _cl.length + '件\n' + _cl.slice(-5).map(e => e.date + ' ' + (e.text || '')).join('\n'))}">●</span>`
+    : '';
   return `<div class="name-cell-wrap" title="${escapeHtml(name) || '未登録'}">
-    <span class="name-cell">${displayName}</span>
+    <span class="name-cell">${displayName}</span>${_clDot}
     <button class="name-edit-btn" data-code="${escapeHtml(code)}" title="商品情報を編集" type="button">✎</button>
   </div>`;
 }
@@ -10271,6 +10343,236 @@ function renderBasic() {
   updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
   _bulkSyncUI();   // 【v1.0620】選択件数・行のハイライトを再描画後に合わせる
 }
+
+// ==================== 【v1.0637】変更記録（いつ何を変えたかをグラフに縦線で残す） ====================
+// データ: state.changeLog = { shop: [ {id,date,text,color} ], items: { code: [ {id,date,text} ] } }
+//   ・shop  … ショップ全体の変更（仕組み変更・方針変更など）。色は7色から選ぶ
+//   ・items … 商品ごとの変更（リニューアル・入札変更・画像差し替えなど）。色はオレンジ固定
+//   ・日付は 'YYYY-MM-DD' の1形式だけ。月別グラフでは先頭7文字で月に丸めて合わせる。
+// 保存: state に入れるので saveToStorage()（localStorage）と ghBuildDataString()（GitHub）に自動で載る。
+//   ★新しい保存先を作らないこと。viewPrefs と同じ考え方（§15）。
+const CL_COLORS = [
+  { v: '#dc2626', n: '赤' }, { v: '#ea580c', n: 'オレンジ' }, { v: '#ca8a04', n: '黄' },
+  { v: '#16a34a', n: '緑' }, { v: '#0891b2', n: '水色' }, { v: '#2563eb', n: '青' }, { v: '#7c3aed', n: '紫' }
+];
+const CL_ITEM_COLOR = '#ea580c';           // 商品ごとの記録はオレンジ固定（一覧の●と同じ色）
+const CL_SHOW_KEY = 'ycheck_changelog_show';
+let _clShow = true;                         // 縦線を出すか（端末内の設定。データには入れない）
+try { _clShow = (localStorage.getItem(CL_SHOW_KEY) !== '0'); } catch (e) {}
+
+function ensureChangeLog() {
+  if (!state.changeLog || typeof state.changeLog !== 'object') state.changeLog = {};
+  const cl = state.changeLog;
+  if (!Array.isArray(cl.shop)) cl.shop = [];
+  if (!cl.items || typeof cl.items !== 'object') cl.items = {};
+  return cl;
+}
+function _clNewId() { return 'cl' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function clShopList() { return ensureChangeLog().shop.slice().sort((a, b) => (a.date < b.date ? -1 : 1)); }
+function clItemList(code) {
+  const a = ensureChangeLog().items[String(code)];
+  return Array.isArray(a) ? a.slice().sort((x, y) => (x.date < y.date ? -1 : 1)) : [];
+}
+function clItemHas(code) { return clItemList(code).length > 0; }
+function _clTouch() {
+  ensureChangeLog();
+  if (typeof saveToStorage === 'function') saveToStorage();   // → localStorage ＋ 未反映マーク
+}
+function clAddShop(date, text, color) {
+  ensureChangeLog().shop.push({ id: _clNewId(), date: date, text: text, color: color || CL_COLORS[0].v });
+  _clTouch();
+}
+function clAddItem(code, date, text) {
+  const cl = ensureChangeLog();
+  const k = String(code);
+  if (!Array.isArray(cl.items[k])) cl.items[k] = [];
+  cl.items[k].push({ id: _clNewId(), date: date, text: text });
+  _clTouch();
+}
+function clRemove(scope, id, code) {
+  const cl = ensureChangeLog();
+  if (scope === 'shop') cl.shop = cl.shop.filter(e => e.id !== id);
+  else {
+    const k = String(code);
+    if (Array.isArray(cl.items[k])) {
+      cl.items[k] = cl.items[k].filter(e => e.id !== id);
+      if (!cl.items[k].length) delete cl.items[k];
+    }
+  }
+  _clTouch();
+}
+// 【v1.0637】グラフのx軸キー配列（'YYYY-MM-DD' または 'YYYY-MM'）に、記録を index で対応づける。
+//   ★キー配列はグラフ側が必ず渡すこと。ラベル文字列（'9/1' 等）から日付を逆算すると年をまたいで壊れる。
+//   code を渡すと、その商品の記録も（オレンジで）混ぜる。
+function clMarksForKeys(keys, code) {
+  if (!_clShow || !Array.isArray(keys) || !keys.length) return [];
+  const monthly = (String(keys[0]).length === 7);     // 'YYYY-MM' なら月別グラフ
+  const idxOf = (date) => {
+    const want = monthly ? String(date).slice(0, 7) : String(date);
+    return keys.indexOf(want);
+  };
+  const out = [];
+  clShopList().forEach(e => { const i = idxOf(e.date); if (i >= 0) out.push({ index: i, color: e.color || CL_COLORS[0].v, text: e.text, date: e.date }); });
+  if (code) clItemList(code).forEach(e => { const i = idxOf(e.date); if (i >= 0) out.push({ index: i, color: CL_ITEM_COLOR, text: e.text, date: e.date }); });
+  return out;
+}
+// Chart.js のインラインプラグイン。★グローバル登録はしない（Chartの読み込み順に依存しないため）。
+//   使う側で plugins: [YC_CHANGE_LINES] と options.plugins.ycChangeLines = { marks } を渡す。
+const YC_CHANGE_LINES = {
+  id: 'ycChangeLines',
+  afterDatasetsDraw: function (chart, args, opts) {
+    const marks = opts && opts.marks;
+    if (!marks || !marks.length) return;
+    const xs = chart.scales && chart.scales.x, area = chart.chartArea;
+    if (!xs || !area) return;
+    const ctx = chart.ctx;
+    const used = {};                      // 同じ日に複数あるときラベルを縦にずらす
+    ctx.save();
+    marks.forEach(function (m) {
+      const x = xs.getPixelForValue(m.index);
+      if (!(x >= area.left - 1 && x <= area.right + 1)) return;
+      ctx.beginPath();
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = m.color;
+      ctx.moveTo(x, area.top); ctx.lineTo(x, area.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // ラベル（内容）を上端に小さく
+      const lv = (used[m.index] = (used[m.index] || 0) + 1);
+      const label = String(m.text || '').slice(0, 14);
+      if (!label) return;
+      ctx.font = '600 11px "Noto Sans JP", sans-serif';
+      const w = ctx.measureText(label).width + 8;
+      let lx = x + 3;
+      if (lx + w > area.right) lx = x - w - 3;
+      const ly = area.top + 2 + (lv - 1) * 16;
+      ctx.fillStyle = m.color;
+      ctx.globalAlpha = 0.92;
+      ctx.fillRect(lx, ly, w, 14);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#fff';
+      ctx.fillText(label, lx + 4, ly + 11);
+    });
+    ctx.restore();
+  }
+};
+function clToggleShow() {
+  _clShow = !_clShow;
+  try { localStorage.setItem(CL_SHOW_KEY, _clShow ? '1' : '0'); } catch (e) {}
+  _clSyncToggles();
+  if (typeof renderAll === 'function') renderAll();
+}
+function _clSyncToggles() {
+  document.querySelectorAll('.cl-show-btn').forEach(b => {
+    b.classList.toggle('on', _clShow);
+    b.textContent = _clShow ? '📍 変更記録 表示あり' : '📍 変更記録 表示なし';
+  });
+}
+
+// ---- 【v1.0637】変更記録のUI ----
+let _clPickColor = CL_COLORS[0].v;
+function _clTodayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function _clRowHtml(e, scope, code) {
+  const color = (scope === 'shop') ? (e.color || CL_COLORS[0].v) : CL_ITEM_COLOR;
+  return '<div class="cl-row">'
+    + '<span class="cl-bar" style="background:' + color + '"></span>'
+    + '<span class="cl-date">' + escapeHtml(e.date) + '</span>'
+    + '<span class="cl-text" title="' + escapeHtml(e.text || '') + '">' + escapeHtml(e.text || '（内容なし）') + '</span>'
+    + '<button type="button" class="cl-del" data-clscope="' + scope + '" data-clid="' + escapeHtml(e.id) + '"'
+    + (code ? (' data-clcode="' + escapeHtml(code) + '"') : '') + ' title="削除">🗑</button>'
+    + '</div>';
+}
+function clRenderShopModal() {
+  const box = document.getElementById('clShopList');
+  if (box) {
+    const list = clShopList();
+    box.innerHTML = list.length ? list.map(e => _clRowHtml(e, 'shop')).join('')
+      : '<div class="cl-empty">まだ記録がありません。下の欄から追加してください。</div>';
+  }
+  const cs = document.getElementById('clShopColors');
+  if (cs) cs.innerHTML = CL_COLORS.map(c =>
+    '<button type="button" class="cl-swatch' + (c.v === _clPickColor ? ' on' : '') + '" data-clcolor="' + c.v + '" style="background:' + c.v + '" title="' + c.n + '"></button>').join('');
+  const d = document.getElementById('clShopDate');
+  if (d && !d.value) d.value = _clTodayStr();
+}
+function openClShopModal() {
+  const m = document.getElementById('clShopModal');
+  if (!m) return;
+  ensureChangeLog();
+  const msg = document.getElementById('clShopMsg'); if (msg) msg.textContent = '';
+  clRenderShopModal();
+  m.classList.add('open');
+}
+function closeClShopModal() { const m = document.getElementById('clShopModal'); if (m) m.classList.remove('open'); }
+// 商品モーダル側の一覧
+function clRenderItemList(code) {
+  const box = document.getElementById('peClList');
+  if (!box) return;
+  const list = clItemList(code);
+  box.innerHTML = list.length ? list.map(e => _clRowHtml(e, 'item', code)).join('')
+    : '<div class="cl-empty">まだ記録がありません。下の欄から追加してください。</div>';
+  const d = document.getElementById('peClDate'); if (d && !d.value) d.value = _clTodayStr();
+}
+(function _clBindUI() {
+  const on = (id, fn) => { const e = document.getElementById(id); if (e) e.addEventListener('click', fn); };
+  on('btnClShop', openClShopModal);
+  on('clShopClose', closeClShopModal);
+  const ov = document.getElementById('clShopModal');
+  if (ov) ov.addEventListener('click', (e) => { if (e.target === ov) closeClShopModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { const m = document.getElementById('clShopModal'); if (m && m.classList.contains('open')) closeClShopModal(); }
+  });
+  // 色の選択
+  document.addEventListener('click', (e) => {
+    const sw = e.target.closest && e.target.closest('[data-clcolor]');
+    if (!sw) return;
+    e.preventDefault();
+    _clPickColor = sw.dataset.clcolor;
+    clRenderShopModal();
+  });
+  // 追加（ショップ全体）
+  on('clShopAdd', () => {
+    const d = document.getElementById('clShopDate'), t = document.getElementById('clShopText');
+    const msg = document.getElementById('clShopMsg');
+    const date = (d && d.value) || '', text = ((t && t.value) || '').trim();
+    if (!date) { if (msg) msg.innerHTML = '<b style="color:#b91c1c">日付を入れてください。</b>'; return; }
+    if (!text) { if (msg) msg.innerHTML = '<b style="color:#b91c1c">内容を入れてください。</b>'; return; }
+    clAddShop(date, text, _clPickColor);
+    if (t) t.value = '';
+    clRenderShopModal();
+    if (msg) msg.innerHTML = '追加しました（未反映）。他のPCにも残すには「⬆ 反映する」を押してください。';
+    try { ycLog('edit', '変更記録（全体）を追加: ' + date + ' ' + text); } catch (e) {}
+    if (typeof renderAll === 'function') renderAll();
+  });
+  // 追加（商品ごと）
+  on('peClAdd', () => {
+    const code = (productEditModal && productEditModal.dataset.code) || '';
+    if (!code) return;
+    const d = document.getElementById('peClDate'), t = document.getElementById('peClText');
+    const date = (d && d.value) || '', text = ((t && t.value) || '').trim();
+    if (!date || !text) { try { showToast('日付と内容の両方を入れてください。', 'warn'); } catch (e) {} return; }
+    clAddItem(code, date, text);
+    if (t) t.value = '';
+    clRenderItemList(code);
+    try { ycLog('edit', '変更記録（' + code + '）を追加: ' + date + ' ' + text); } catch (e) {}
+    try { showToast('変更記録を追加しました（未反映）。「⬆ 反映する」でGitHubへ保存してください。', 'warn'); } catch (e) {}
+    if (typeof renderAll === 'function') renderAll();
+  });
+  // 削除（共通）
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-clid]');
+    if (!b) return;
+    e.preventDefault();
+    if (!confirm('この変更記録を削除します。よろしいですか？')) return;
+    const scope = b.dataset.clscope, id = b.dataset.clid, code = b.dataset.clcode || '';
+    clRemove(scope, id, code);
+    if (scope === 'shop') clRenderShopModal(); else clRenderItemList(code);
+    try { ycLog('edit', '変更記録を削除: ' + (scope === 'shop' ? '全体' : code)); } catch (e) {}
+    if (typeof renderAll === 'function') renderAll();
+  });
+  _clSyncToggles();
+})();
 
 // ==================== 【v1.0620】一括変更（ステータス / 入札状態 / PRオプ状態） ====================
 // 商品-基本データの「☑ 一括変更」ボタン → 選択モード。商品コードの左にチェックボックスが出る。
@@ -12636,12 +12938,15 @@ function renderGraphAll() {
       yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
       datasets = [{ label: md.label, data: rows.map(r => r[_zgMetric] || 0), borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }];
     }
+    // 【v1.0637】変更記録の縦線。x軸のキー配列（rows[].month = 'YYYY-MM-DD' or 'YYYY-MM'）を渡す
+    const _clMarks = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.month), null) : [];
     state.charts.chartAll = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: { labels: labels, datasets: datasets },
+      plugins: [YC_CHANGE_LINES],
       options: {
         responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
+        plugins: { ycChangeLines: { marks: _clMarks }, legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
         scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: v => yFmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
@@ -14725,13 +15030,17 @@ function renderItemGraph() {
       yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
       datasets = [{ label: md.label, data: range.map(m => md.calc(itemMap[m] || {}, adMap[m] || {})), borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }];
     }
+    // 【v1.0637】変更記録の縦線。range が x軸のキー配列（日別='YYYY-MM-DD' / 月別='YYYY-MM'）。
+    //   ★選んでいる商品（親子セットなら代表）の記録も混ぜる。
+    const _clMarksIg = (typeof clMarksForKeys === 'function') ? clMarksForKeys(range, _igSelected) : [];
     _igChart = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: { labels, datasets: datasets },
+      plugins: [YC_CHANGE_LINES],
       options: {
         responsive: true, maintainAspectRatio: false, animation: false,
         interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
+        plugins: { ycChangeLines: { marks: _clMarksIg }, legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
         scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: (v) => yFmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
@@ -16582,7 +16891,10 @@ function peRenderInfo() {
     : String(r.key).replace('-', '/'));
   try {
     if (typeof Chart !== 'undefined') {
+      // 【v1.0637】変更記録の縦線（この商品＋ショップ全体）。rows[].key が x軸のキー
+      const _clMarksPe = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.key), code) : [];
       _peChart = new Chart(cv.getContext('2d'), {
+        plugins: [YC_CHANGE_LINES],
         data: {
           labels,
           datasets: [
@@ -16596,6 +16908,7 @@ function peRenderInfo() {
           responsive: true, maintainAspectRatio: false, animation: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
+            ycChangeLines: { marks: _clMarksPe },
             legend: { display: false },
             tooltip: { callbacks: { label: (c) => {
               const v = c.parsed.y;
@@ -16648,6 +16961,10 @@ function openProductEditModal(code) {
   { const _sg = document.getElementById('peSoiSearch'); if (_sg) _sg.value = ''; }
   { const _sb = document.getElementById('peSoiSuggest'); if (_sb) { _sb.style.display = 'none'; _sb.innerHTML = ''; } }
   try { _peSoiSync(); } catch (e) {}
+  // 【v1.0637】この商品の変更記録
+  { const _ct = document.getElementById('peClText'); if (_ct) _ct.value = ''; }
+  { const _cd = document.getElementById('peClDate'); if (_cd) _cd.value = _clTodayStr(); }
+  try { clRenderItemList(code); } catch (e) {}
   // 画像編集の一時状態を現在のmaster値で初期化
   peImageState = {
     customImage: m.customImage || null,
