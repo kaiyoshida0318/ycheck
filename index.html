@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0626 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0627 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -639,6 +639,12 @@ body.states-collapsed .top-nav-3 { display: none; }
 .xf-cross { font-weight: 700; min-height: 22px; }
 .xf-cell:hover { background: #e4ecf9; }
 .xf-clear:hover { background: #fdeceb; }
+/* 【v1.0627】親の数を大きく、子の数を右下に小さく「+N」で添える。
+   .pc-sub は align-self:flex-end で下端に落とす＝「右下」に見える。 */
+.pc-main { font-weight: inherit; }
+.pc-sub  { font-size: 0.78em; font-weight: 700; color: #92400e; margin-left: 1px; align-self: flex-end; line-height: 1.7; }
+.xf-num, .soi-pc-num { display: inline-flex; align-items: baseline; }
+.xf-cell.active .pc-sub, .soi-pc-btn.on .pc-sub { color: rgba(255,255,255,0.95); }
 .xf-num { font-size: 0.68rem; color: var(--text3); font-weight: 500; }
 .xf-cross .xf-num { font-size: 0.78rem; color: var(--text); font-weight: 700; }
 /* 選択中。★色は1箇所（--accent 系）だけで決める */
@@ -3495,7 +3501,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0626</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0627</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9016,6 +9022,10 @@ function updateStateCounts() {
   const _xfRef = getReferencedRepCodes();
   let xfAdY = 0, xfAdN = 0, xfSoiY = 0, xfSoiN = 0;
   let xfAdYSoiY = 0, xfAdYSoiN = 0, xfAdNSoiY = 0, xfAdNSoiN = 0;
+  // 【v1.0627】送り込み有りの内訳（親／子）。「12」だけだと親子の比率が読めないため。
+  //   ★親＝_isSoiParent、子＝「送り込み有りだが親ではない」。こう決めると 親＋子＝合計 が必ず成り立つ。
+  //     （親でも子でもある中継商品は親に寄せる。some/some で数えると合計を超えてしまう）
+  let xfSoiYP = 0, xfSoiYC = 0, xfAdYSoiYP = 0, xfAdYSoiYC = 0, xfAdNSoiYP = 0, xfAdNSoiYC = 0;
   allCodes.forEach(code => {
     // 【v195】撤退済みは別集計（isRetiredで以降スキップされるため先に数える）
     if (((state.productMeta[code] || {}).status || '') === '撤退済み') { withdrawnCount++; return; }
@@ -9054,11 +9064,13 @@ function updateStateCounts() {
       const _isAd   = st.indexOf('広告あり') !== -1;
       const _isNoad = st.indexOf('広告なし') !== -1;
       const _hasSoi = _repHasSoikomi(code, _xfRef);
+      const _isP = _hasSoi && _isSoiParent(code, _xfRef);   // 【v1.0627】親
+      const _isC = _hasSoi && !_isP;                        //            子（＝送り込み有りで親でないもの）
       if (_isAd) xfAdY++; else if (_isNoad) xfAdN++;
-      if (_hasSoi) xfSoiY++; else xfSoiN++;
-      if (_isAd   &&  _hasSoi) xfAdYSoiY++;
+      if (_hasSoi) { xfSoiY++; if (_isP) xfSoiYP++; else xfSoiYC++; } else xfSoiN++;
+      if (_isAd   &&  _hasSoi) { xfAdYSoiY++; if (_isP) xfAdYSoiYP++; else xfAdYSoiYC++; }
       if (_isAd   && !_hasSoi) xfAdYSoiN++;
-      if (_isNoad &&  _hasSoi) xfAdNSoiY++;
+      if (_isNoad &&  _hasSoi) { xfAdNSoiY++; if (_isP) xfAdNSoiYP++; else xfAdNSoiYC++; }
       if (_isNoad && !_hasSoi) xfAdNSoiN++;
     }
     if (!adS) unselectedAd++;
@@ -9087,10 +9099,25 @@ function updateStateCounts() {
       el.textContent = String(n);
       const cell = el.closest('.xf-cross'); if (cell) cell.classList.toggle('xf-zero', n === 0);
     };
-    _xfAxis('xfNumSoiYes', xfSoiY); _xfAxis('xfNumSoiNo', xfSoiN);
+    // 【v1.0627】送り込み有りの数は「親を大きく／子を右下に小さく +N」で出す
+    const _pcHtml = (nP, nC) => '<span class="pc-main">' + nP + '</span>'
+      + (nC > 0 ? '<span class="pc-sub">+' + nC + '</span>' : '');
+    const _pcTip = (nP, nC) => '親（送り込み元）' + nP + '件 ＋ 子（送り込み先）' + nC + '件 ＝ ' + (nP + nC) + '件';
+    const _xfAxisPC = (id, nP, nC) => {
+      const el = document.getElementById(id); if (!el) return;
+      el.innerHTML = '(' + _pcHtml(nP, nC) + ')';
+      const cell = el.closest('.xf-cell'); if (cell) cell.title = _pcTip(nP, nC);
+    };
+    const _xfCrossPC = (id, nP, nC) => {
+      const el = document.getElementById(id); if (!el) return;
+      el.innerHTML = _pcHtml(nP, nC);
+      const cell = el.closest('.xf-cross');
+      if (cell) { cell.classList.toggle('xf-zero', (nP + nC) === 0); cell.title = _pcTip(nP, nC); }
+    };
+    _xfAxisPC('xfNumSoiYes', xfSoiYP, xfSoiYC); _xfAxis('xfNumSoiNo', xfSoiN);
     _xfAxis('xfNumAdYes',  xfAdY);  _xfAxis('xfNumAdNo',  xfAdN);
-    _xfCross('xfNumAdYesSoiYes', xfAdYSoiY); _xfCross('xfNumAdYesSoiNo', xfAdYSoiN);
-    _xfCross('xfNumAdNoSoiYes',  xfAdNSoiY); _xfCross('xfNumAdNoSoiNo',  xfAdNSoiN);
+    _xfCrossPC('xfNumAdYesSoiYes', xfAdYSoiYP, xfAdYSoiYC); _xfCross('xfNumAdYesSoiNo', xfAdYSoiN);
+    _xfCrossPC('xfNumAdNoSoiYes',  xfAdNSoiYP, xfAdNSoiYC); _xfCross('xfNumAdNoSoiNo',  xfAdNSoiN);
   }
   _setTx('#cntProWithdrawConsider', sWithdrawConsider);
   _setTx('#cntUnselectedAd', unselectedAd);
@@ -17762,7 +17789,14 @@ function updateRepFilterUI() {
       if (_isSoiParent(code, referenced)) nP++;
       if (_isSoiChild(code, rep)) nC++;
     });
-    const eA = document.getElementById('cntSoiBoth');   if (eA) eA.textContent = nA;
+    // 【v1.0627】緑黄（親＋子）のボタンも「親を大きく／子を右下に小さく」に揃える
+    const eA = document.getElementById('cntSoiBoth');
+    if (eA) {
+      const _nC = Math.max(0, nA - nP);   // ★クロス絞り込みと同じ数え方（親＋子＝合計）にそろえる
+      eA.innerHTML = '<span class="pc-main">' + nP + '</span>' + (_nC > 0 ? '<span class="pc-sub">+' + _nC + '</span>' : '');
+      const _b = eA.closest('.soi-pc-btn');
+      if (_b) _b.title = '送り込みがある商品を全部表示する（親＋子）。もう一度押すと解除。\n親（送り込み元）' + nP + '件 ＋ 子（送り込み先）' + _nC + '件 ＝ ' + nA + '件';
+    }
     const eP = document.getElementById('cntSoiParent'); if (eP) eP.textContent = nP;
     const eC = document.getElementById('cntSoiChild');  if (eC) eC.textContent = nC;
   } catch (e) {}
