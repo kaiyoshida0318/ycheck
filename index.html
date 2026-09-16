@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0631 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0632 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -522,11 +522,18 @@ body.chrome-hidden .top-nav-3 { top: 0; }
 /* 【v1.0550】開閉ボタンを各行の右端（ヘッダー1＝【調整】行／ヘッダー2＝【PR状態】行）へ移したので、
    畳むときは段ごと消してよくなった（v1.0549までは復帰ボタンを残すため細い帯が残っていた）。
    隠している間の復帰は、下の #hdrRestoreBar（細い帯）が受け持つ。 */
-/* 【v1.0607】★自動非表示（states-hidden）では【調整】の行だけ残す。
+/* 【v1.0607→v1.0632】★自動非表示（states-hidden）ではヘッダー2を段ごと消す。
+     v1.0607 は「【調整】の行だけ残す」にしていたが、商品-日月別データ／商品-グラフ／撤退済み商品／
+     全-月別データ／全-日別データ／全-日月別グラフ／全-比較 など、調整と関係ないビューでも
+     【調整】枠が出続けて邪魔だったため、v1.0632 で段ごと消す方針に戻した。
+     ★調整画面へは 1段目の「商品-基本データ」を経由して入る（そこでは段が出る）。
+     ★出す条件は STATE_BAR_VIEWS（= basic / ad-tune / pro-tune）＋ 状態チップで絞り込み中。
+       ビューを増やしてそこにも調整枠を出したいときは STATE_BAR_VIEWS に足すこと。
+   【旧v1.0607コメント】自動非表示では【調整】の行だけ残す。
      v1.0607 で【調整】を .top-nav-3 の1行目へ移したため、段ごと消すと
      商品-基本データ以外のビューから「入札価格調整 / PRオプ調整」へ行けなくなる。
      手動の states-collapsed は従来どおり段ごと消す（復帰は #hdrRestoreBar）。 */
-body.states-hidden .top-nav-3 > .xf-row { display: none; }
+body.states-hidden .top-nav-3 { display: none; }   /* 【v1.0632】段ごと消す（旧: > .xf-row だけ） */
 body.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
@@ -3562,7 +3569,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0631</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0632</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
