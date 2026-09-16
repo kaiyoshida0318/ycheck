@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0635 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0636 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3571,7 +3571,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0635</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0636</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3713,9 +3713,7 @@ th.col-sroas { background-color:#e7d5f5; }
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="pro-pfixed"><span class="chip-label">PR△-親-飛ぶ手前固定</span><span class="chip-num" id="cntProPfixed">(0)</span></button>
       <button class="state-chip" data-state="pro-lower"><span class="chip-label">PR△-親-下げ挑戦中</span><span class="chip-num" id="cntProLower">(0)</span></button>
-      <button class="state-chip" data-state="pro-cfixed"><span class="chip-label">PR△-子-7％固定</span><span class="chip-num" id="cntProCfixed">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="pro-hfixed"><span class="chip-label">PR△-飛ぶ手前固定</span><span class="chip-num" id="cntProHfixed">(0)</span></button>
       <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
@@ -6486,6 +6484,7 @@ async function ghLoadFromGitHub(opts) {
       migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
       migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
       migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
+      migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
     } catch (eMig) { console.warn('[Ycheck診断-load] マイグレーションで例外（読込は継続）:', eMig && eMig.message); }
     // 【v1.0384】localStorageへ書き戻し。容量超過でも critical(productMeta/bid/proRate) は必ず残るよう、
     //   rank→item→ad の順に段階的に落として最小構成でも書き切る。従来は「フル→rank無し」で失敗すると
@@ -6575,6 +6574,7 @@ async function ghLoadFromPublic() {
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
     migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
+    migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
     ghLog(`閲覧専用: 公開データ取得成功 (${(content.length / 1024).toFixed(1)} KB)`);
     return true;
   } catch (err) {
@@ -6990,6 +6990,7 @@ function loadFromStorage() {
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
     migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
+    migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
 }
@@ -7141,6 +7142,42 @@ function migrateChildStatusV1626() {
   if (n > 0) {
     console.log('Ycheck: 【v1.0626】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」にしました（一度きり）');
     try { ycLog('edit', '【v1.0626】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」に変更（一度きりの移行・元の値は _statusBeforeChild に保存）'); } catch (e) {}
+    saveToStorage();
+  }
+}
+
+// 【v1.0636】PRオプ状態の整理（一度きり）。
+//   ・'PR△-親-飛ぶ手前固定'（15件想定）→ 'PR△-飛ぶ手前固定' に統合
+//   ・'PR△-子-7％固定'（廃止）→ ''（未設定）。選択肢から消したので、残すと
+//     ドロップダウンに無い値が選択済みになって事故のもとになるため。
+//   ★フラグは rankMeta（GitHub同期に乗る）と localStorage の両方。
+//   ★元の値は meta._proStatusBeforeV1636 に控える（戻せるように）。
+function migrateProStatusV1636() {
+  if (!state.productMeta) return;
+  let done = false;
+  try { if (localStorage.getItem('ycheck_proStatusV1636')) done = true; } catch (e) {}
+  if (state.rankMeta && state.rankMeta.proStatusV1636) done = true;
+  if (done) return;
+  const ts = Date.now();
+  let nMerge = 0, nDrop = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const m = state.productMeta[code];
+    if (!m) return;
+    const v = m.proStatus || '';
+    if (v === 'PR△-親-飛ぶ手前固定') {
+      m._proStatusBeforeV1636 = v; m.proStatus = 'PR△-飛ぶ手前固定';
+      m.proStatusTs = ts; m._ts = ts; nMerge++;
+    } else if (v === 'PR△-子-7％固定') {
+      m._proStatusBeforeV1636 = v; m.proStatus = '';
+      m.proStatusTs = ts; m._ts = ts; nDrop++;
+    }
+  });
+  state.rankMeta = state.rankMeta || {};
+  state.rankMeta.proStatusV1636 = true;
+  try { localStorage.setItem('ycheck_proStatusV1636', '1'); } catch (e) {}
+  if (nMerge || nDrop) {
+    console.log('Ycheck: 【v1.0636】PRオプ状態を整理: 親固定→飛ぶ手前固定 ' + nMerge + '件 / 子-7％固定→未設定 ' + nDrop + '件');
+    try { ycLog('edit', '【v1.0636】PRオプ状態を整理: 「PR△-親-飛ぶ手前固定」→「PR△-飛ぶ手前固定」' + nMerge + '件 ／ 「PR△-子-7％固定」→未設定 ' + nDrop + '件（一度きり・元の値は _proStatusBeforeV1636 に保存）'); } catch (e) {}
     saveToStorage();
   }
 }
@@ -9136,9 +9173,10 @@ function updateStateCounts() {
     else if (adStatusIsNone(adS)) adNone++;
     if (proStatusIsCircle(proS)) proOk++;
     else if (proS === 'PR△-親-下げ挑戦中') proLower++;
-    else if (proS === 'PR△-親-飛ぶ手前固定') proPfixed++;
-    else if (proS === 'PR△-子-7％固定') proCfixed++;
-    else if (proS === 'PR△-飛ぶ手前固定') proHfixed++;
+    // 【v1.0636】'PR△-親-飛ぶ手前固定' は 'PR△-飛ぶ手前固定' に統合したので同じカウンタへ入れる
+    //   （移行前・他端末の古い値がまだ残っていても件数が合うように、両方をここで受ける）。
+    //   'PR△-子-7％固定' は廃止。どのチップにも出ない（全体にだけ出る）。
+    else if (proS === 'PR△-飛ぶ手前固定' || proS === 'PR△-親-飛ぶ手前固定') proHfixed++;
     else if (proS === 'PR×' || proS === 'PRオプ×' || proS === 'PRO×') proNg++;
     // 【v195】ステータス（商品ライフサイクル）別カウント。旧値(通常商品/現役商品)は新商品扱い。
     // 【v1.0626】「子（親に追従）」は親のステータスとして数える（＝親とセットで見る）。
@@ -9557,7 +9595,11 @@ function statusLifeDisplayLabel(value) {
 //   セル（statusSelectHtml）と一括変更バー（#basicBulkBar）が必ず同じ並び・同じ値を使うため。
 //   ★選択肢を足すときはここだけ直す。先頭の '' は「—（未設定）」。
 const AD_STATUS_OPTIONS  = ['', '入札◯', '入札×-調整中', '入札△-飛ぶ手前固定', '入札なし'];
-const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-親-飛ぶ手前固定', 'PR△-子-7％固定', 'PR△-飛ぶ手前固定', 'PR×'];
+// 【v1.0636】'PR△-親-飛ぶ手前固定' は 'PR△-飛ぶ手前固定' に統合（migrateProStatusV1636 が一度だけ値を書き換える）。
+//   'PR△-子-7％固定' は廃止。どちらも選択肢から外したが、
+//   ★色（STATUS_TEXT_COLOR）・略称（STATUS_DISPLAY_LABEL）・並び順（PRO_STATUS_ORDER）の
+//     旧キーは残してある。移行前のデータや他端末の古い保存値が来ても表示が崩れないようにするため。
+const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR△-親-下げ挑戦中', 'PR△-飛ぶ手前固定', 'PR×'];
 
 function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
@@ -12738,6 +12780,9 @@ function adStoppedBadge(code) {
 function proStatusIsCircle(s){ return s === 'PR◯' || s === 'PRオプ○' || s === 'PRO○'; }
 function proStatusIsCross(s) { return s === 'PR×' || s === 'PR△-親-下げ挑戦中' || s === 'PRオプ×' || s === 'PRO×'; }
 function proStatusIsSettled(s){ return s === 'PR△-親-飛ぶ手前固定' || s === 'PR△-子-7％固定'; }  // 固定＝対応不要
+// 【v1.0636】「PR△-飛ぶ手前固定」の判定。旧値 'PR△-親-飛ぶ手前固定' もここで一緒に受ける。
+//   ★統合したので、チップ・件数・絞り込みは必ずこの1本を通すこと。
+function _proIsHFixed(s){ return s === 'PR△-飛ぶ手前固定' || s === 'PR△-親-飛ぶ手前固定'; }
 
 // 【v240】最新日の順位「カテゴリ（上位/中位/下位）」を返す。
 //   順位は import 時に numericRankToCategory でカテゴリ文字列（例「4位以内◯」）に変換して
@@ -14872,9 +14917,11 @@ const STATE_FILTERS = {
   'ad-none':       { label: '入札なし',          targetView: 'basic', basicMode: 'tune', match: (meta) => adStatusIsNone(meta.adStatus || '') },
   'pro-ok':        { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta) => proStatusIsCircle(meta.proStatus || '') },
   'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-親-下げ挑戦中' },
-  'pro-pfixed':    { label: 'PR△-親-飛ぶ手前固定', targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-親-飛ぶ手前固定' },
+  // 【v1.0636】チップは撤去したが、保存済みの activeStateFilter が指していても壊れないよう定義は残す。
+  'pro-pfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta) => _proIsHFixed(meta.proStatus || '') },
   'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
-  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-飛ぶ手前固定' },
+  // 【v1.0636】★親固定も拾う（統合したので、移行前の値が残っていても同じチップに出る）
+  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta) => _proIsHFixed(meta.proStatus || '') },
   'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
   'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
