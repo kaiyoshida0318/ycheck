@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0627 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0630 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -639,12 +639,17 @@ body.states-collapsed .top-nav-3 { display: none; }
 .xf-cross { font-weight: 700; min-height: 22px; }
 .xf-cell:hover { background: #e4ecf9; }
 .xf-clear:hover { background: #fdeceb; }
-/* 【v1.0627】親の数を大きく、子の数を右下に小さく「+N」で添える。
-   .pc-sub は align-self:flex-end で下端に落とす＝「右下」に見える。 */
-.pc-main { font-weight: inherit; }
-.pc-sub  { font-size: 0.78em; font-weight: 700; color: #92400e; margin-left: 1px; align-self: flex-end; line-height: 1.7; }
-.xf-num, .soi-pc-num { display: inline-flex; align-items: baseline; }
-.xf-cell.active .pc-sub, .soi-pc-btn.on .pc-sub { color: rgba(255,255,255,0.95); }
+/* 【v1.0627/v1.0628】親の数を大きく、子の数を右下に小さく「+N」で添える。
+   ★v1.0627 は .pc-sub に line-height:1.7 を入れていたせいで、
+     align-self:flex-end で「箱の下端」はそろっても、その高い箱の中で文字が上寄りになり、
+     見た目は右“上”の添え字になっていた。
+     → 両方 line-height:1 にして箱の高さを文字そのものに合わせ、
+       さらに top で少しだけ下へずらす。これで確実に右下に来る。 */
+.pc-main { font-weight: inherit; line-height: 1; }
+.pc-sub  { font-size: 0.78em; font-weight: 700; color: #92400e; margin-left: 1px;
+           align-self: flex-end; line-height: 1; position: relative; top: 0.2em; }
+.xf-num, .soi-pc-num { display: inline-flex; align-items: flex-end; }
+.xf-cell.active .pc-sub, .soi-pc-btn.on:not(.both) .pc-sub { color: rgba(255,255,255,0.95); }   /* 【v1.0629】.both は黄色地なので除外 */
 .xf-num { font-size: 0.68rem; color: var(--text3); font-weight: 500; }
 .xf-cross .xf-num { font-size: 0.78rem; color: var(--text); font-weight: 700; }
 /* 選択中。★色は1箇所（--accent 系）だけで決める */
@@ -3405,12 +3410,28 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .soi-pc-btn.child .rep-icon { stroke: #92400e; }
 .soi-pc-btn.child:hover { background: #fcd34d; border-color: #d97706; }
 .soi-pc-btn.child.on { background: #fcd34d; border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
-/* 【v1.0621】親＋子の両方＝左半分が緑・右半分が黄色の2色ボタン（state.repFilter === '*'）。
-   アイコンは緑側（左）、件数は黄色側（右）に乗るので、それぞれの背景に合う色にしてある。 */
-.soi-pc-btn.both { background: linear-gradient(90deg, var(--green) 0 50%, #fde68a 50% 100%); border-color: #f59e0b; color: #92400e; }
+/* 【v1.0621→v1.0629】親＋子の両方（state.repFilter === '*'）。
+   ★v1.0628 までは背景を linear-gradient で「左半分 緑 / 右半分 黄」に塗っていたが、
+     色の境目（50%）と数字の境目が一致しないので、親の数が緑と黄にまたがって読みにくかった。
+   → 背景は緑1色にして、子の数(.pc-sub)そのものを「黄色の右半分」として実体で置く。
+     こうすると境目が必ず数字と数字の間に来る。
+     緑の部分＝白文字で親の数 ／ 黄色の部分＝茶文字で子の数。 */
+.soi-pc-btn.both { background: var(--green); border-color: #f59e0b; padding: 0 0 0 5px; gap: 3px; overflow: hidden; }
 .soi-pc-btn.both .rep-icon { stroke: #fff; }
-.soi-pc-btn.both:hover { background: linear-gradient(90deg, #15803d 0 50%, #fcd34d 50% 100%); border-color: #d97706; }
-.soi-pc-btn.both.on { background: linear-gradient(90deg, #15803d 0 50%, #fcd34d 50% 100%); border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
+.soi-pc-btn.both:hover { background: #15803d; border-color: #d97706; }
+.soi-pc-btn.both.on { background: #15803d; border-color: #d97706; box-shadow: 0 0 0 1.5px var(--bg2), 0 0 0 3px #d97706; }
+.soi-pc-btn.both .soi-pc-num { align-items: stretch; align-self: stretch; }
+.soi-pc-btn.both .pc-main {
+  display: flex; align-items: center;
+  color: #fff; font-weight: 800; font-size: 0.78rem; padding: 0 4px 0 1px; line-height: 1;
+}
+.soi-pc-btn.both .pc-sub {
+  display: flex; align-items: center;
+  align-self: stretch;   /* ★必須。基底の .pc-sub が align-self:flex-end なので、上書きしないと黄色が下半分にしか出ない */
+  color: #92400e; background: #fde68a; font-weight: 800; font-size: 0.72rem;
+  padding: 0 6px; margin: 0; top: 0; line-height: 1;   /* ★top:0 に戻す（ここは上下中央でよい） */
+}
+.soi-pc-btn.both:hover .pc-sub, .soi-pc-btn.both.on .pc-sub { background: #fcd34d; color: #92400e; }
 
 /* 【v1.0620】一括変更バー */
 .bulk-bar {
@@ -3501,7 +3522,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0627</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0630</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3739,7 +3760,7 @@ th.col-sroas { background-color:#e7d5f5; }
                ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
                  '*' '!' と同じ1本の軸なので、クロス絞り込みパネルや検索欄右のバッジとも自動で整合する。 -->
           <span class="soi-pc-seg" id="basicSoiPcBar" role="group" aria-label="親／子で絞り込み">
-            <button type="button" class="soi-pc-btn both" data-repf="*"
+            <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiBoth"></span></button>
             <button type="button" class="soi-pc-btn parent" data-repf="*P"
               title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" id="cntSoiParent"></span></button>
@@ -9189,6 +9210,10 @@ function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ?
 // repFilter = null     → 全件そのまま
 // repFilter = '*'      → 送り込みがある商品（子＝代表コードを持つ商品 ＋ 親＝他商品から代表コードとして参照される商品）
 // repFilter = '!'      → 【v1.0583】送り込みが無い商品（'*' のちょうど裏返し）
+// repFilter = '*A'     → 【v1.0630】'*' と中身は同じ（送り込みがある商品ぜんぶ）。
+//                        違いは「クロス絞り込みパネルの『送り込み 有り』を光らせない」こと。
+//                        ★パネルが光るのは、パネル自身で絞り込んだとき（'*' / '!'）だけにする、という切り分け。
+//                          個別/合算/両表示の右の緑黄ボタンはこちらを使う。
 // repFilter = '*P'     → 【v1.0619】送り込み元（親）だけ ＝ 他商品から代表コードとして参照されている商品
 // repFilter = '*C'     → 【v1.0619】送り込み先（子）だけ ＝ 代表コードが自分以外を指している商品
 // repFilter = 'xxx'    → 代表コード == 'xxx' のグループ（子）＋ その親自身（code == 'xxx'）
@@ -9241,7 +9266,7 @@ function applyRepFilter(list) {
   return list.filter(item => {
     if (!item || !item.code) return false;
     const mem = _rfMembersOf(item);                                         // 【v1.0625】合算行はメンバー全員で判定
-    if (f === '*') return mem.some(c => _repHasSoikomi(c, referenced));      // 代表コード有(子/自己参照親) or 参照される親
+    if (f === '*' || f === '*A') return mem.some(c => _repHasSoikomi(c, referenced));   // 代表コード有(子/自己参照親) or 参照される親（'*A'=【v1.0630】緑黄ボタン用の同義値）
     if (f === '!') return mem.every(c => !_repHasSoikomi(c, referenced));    // 【v1.0583】送り込みが無い商品
     if (f === '*P') return mem.some(c => _isSoiParent(c, referenced));       // 【v1.0619】親（緑マーク）だけ／合算なら「親を含むセット」
     if (f === '*C') return mem.some(c => _isSoiChild(c, _repOf(c)));         // 【v1.0619】子（黄マーク）だけ／合算なら「子を含むセット」
@@ -17763,6 +17788,7 @@ function updateRepFilterUI() {
     btn.setAttribute('data-tooltip',
       f === '*' ? '送り込みがある商品のみ表示中（クリックで解除）' :
       f === '!' ? '送り込みが無い商品のみ表示中（クリックで解除）' :
+      f === '*A' ? '送り込みがある商品のみ表示中（親＋子・クリックで解除）' :  /* 【v1.0630】 */
       f === '*P' ? '送り込み元（親）のみ表示中（クリックで解除）' :        /* 【v1.0619】 */
       f === '*C' ? '送り込み先（子）のみ表示中（クリックで解除）' :        /* 【v1.0619】 */
       f         ? `グループ「${f}」のみ表示中（クリックで解除）` :
@@ -17946,13 +17972,15 @@ function _xfAdBypassed() {
   return !!(state.activeStateFilter && types.indexOf(state.activeStateFilter.type) >= 0);
 }
 function _xfAdKey()  { return _xfAdBypassed() ? 'all' : (basicAdFilter || 'all'); }
-// 【v1.0619】'*P' / '*C'（親のみ／子のみ）は、どちらも「送り込み有り」の部分集合なので 'yes' 扱いにする。
-//   こうしないとパネル側が「全体」に見えてしまい、いま絞り込み中なのが読めない。
+// 【v1.0619→v1.0630】★パネルが光るのは「パネル自身で絞り込んだとき」（'*' / '!'）だけにする。
+//   v1.0619 では '*P' / '*C' も 'yes' 扱いにしていたが、緑黄／緑／黄のボタンを押しただけで
+//   パネルの「送り込み 有り」まで選択状態になるのは分かりにくい、という指摘で戻した。
+//   緑黄ボタンが '*' ではなく '*A'（同義の別値）を使っているのも同じ理由。
 function _xfSoiKey() {
   const f = state.repFilter;
-  if (f === '*' || f === '*P' || f === '*C') return 'yes';   // 【v1.0619】親のみ/子のみも「送り込み有り」の一部
+  if (f === '*') return 'yes';
   if (f === '!') return 'no';
-  return 'all';   // グループ絞り込み('xxx')中は別物なのでパネルは光らせない
+  return 'all';   // '*A'/'*P'/'*C'（親子ボタン）とグループ絞り込み('xxx')中はパネルを光らせない
 }
 // 絞り込みを適用。同じ組み合わせをもう一度押したら解除（トグル）
 function xfApply(ad, soi) {
