@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0638 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0639 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3465,6 +3465,23 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .ad-filter .adf-btn:hover, .seg-filter .segf-btn:hover { background:var(--bg3); }
 .ad-filter .adf-btn.on, .seg-filter .segf-btn.on { background:var(--accent); color:#fff; font-weight:600; }
 
+/* 【v1.0639】商品モーダルの集計範囲（合算/個別/親商品/子商品）はアプリ内の色の意味に合わせる。
+     合算   … 紫（送り込みセットの色。.fam-pct / col-soi と同系）
+     個別   … 青（既定の accent）
+     親商品 … 緑（商品コード左の親バッジ .rep-badge と同じ）
+     子商品 … 黄（同 .rep-badge.child と同じ）
+   ★OFFのときも薄く色を残す。全部グレーだと「どれが何色か」が押すまで分からないため。 */
+#peScopeSeg .segf-btn { font-weight: 700; }
+#peScopeSeg .segf-btn[data-pescope="set"]    { color:#7c3aed; background:#f6f0fe; }
+#peScopeSeg .segf-btn[data-pescope="self"]   { color:#2563eb; background:#eff6ff; }
+#peScopeSeg .segf-btn[data-pescope="parent"] { color:#15803d; background:#e9f8ee; }
+#peScopeSeg .segf-btn[data-pescope="child"]  { color:#92400e; background:#fffbeb; }
+#peScopeSeg .segf-btn[data-pescope="set"].on    { background:#7c3aed; color:#fff; }
+#peScopeSeg .segf-btn[data-pescope="self"].on   { background:#2563eb; color:#fff; }
+#peScopeSeg .segf-btn[data-pescope="parent"].on { background:#16a34a; color:#fff; }
+#peScopeSeg .segf-btn[data-pescope="child"].on  { background:#fcd34d; color:#7c2d12; }
+#peScopeSeg .segf-btn:disabled { background: var(--bg3) !important; color: var(--text3) !important; }
+
 /* 【v1.0619】親／子ワンクリック絞り込み。商品コード左の .rep-badge と同じ色・同じアイコン。 */
 .soi-pc-seg { display: inline-flex; align-items: center; gap: 6px; }
 .soi-pc-btn {
@@ -3596,7 +3613,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0638</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0639</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4680,7 +4697,8 @@ th.col-sroas { background-color:#e7d5f5; }
         <span class="pe-ctl-note" id="peCtlNote"></span>
       </div>
       <div class="pe-chart-wrap"><canvas id="peChart"></canvas></div>
-      <div class="pe-legend">
+      <!-- 【v1.0639】合算のときは4系列に割るので、凡例は peRenderInfo() で描き替える -->
+      <div class="pe-legend" id="peLegend">
         <span><i style="background:#7c3aed"></i>SEO売上</span>
         <span><i style="background:#f97316"></i>広告売上</span>
         <span><i style="background:#10b981"></i>売上ROAS</span>
@@ -16877,26 +16895,38 @@ function _peRows(code) {
   const out = [];
   const codes = _peScopeCodes(code);
   if (!codes.length) return out;
+  const _famKey = _peFamily(code).key;   // 【v1.0639】どれが親か（4系列の割り振りに使う）
   if (_peGrain === 'day') {
     let days = dailyAllDates();
     if (_peSpan > 0) days = days.slice(-_peSpan);
     days.forEach(d => {
-      let rev = 0, seoRev = 0, adRev = 0, adCost = 0;
-      codes.forEach(c => { const a = dayAgg(c, d); rev += a.rev || 0; seoRev += a.seoRev || 0; adRev += a.adRev || 0; adCost += a.adCost || 0; });
+      let rev = 0, seoRev = 0, adRev = 0, adCost = 0, seoP = 0, seoC = 0, adP = 0, adC = 0;
+      codes.forEach(c => {
+        const a = dayAgg(c, d);
+        rev += a.rev || 0; seoRev += a.seoRev || 0; adRev += a.adRev || 0; adCost += a.adCost || 0;
+        // 【v1.0639】合算グラフを「SEO×親子 / 広告×親子」の4系列に割るための内訳
+        if (c === _famKey) { seoP += a.seoRev || 0; adP += a.adRev || 0; }
+        else               { seoC += a.seoRev || 0; adC += a.adRev || 0; }
+      });
       // ★ROASは足し算してはいけない。合計から計算し直す（§5-D の合算と同じ考え方）
-      out.push({ key: d, rev: rev, seoRev: seoRev, adRev: adRev, adCost: adCost, sroas: salesRoasPct(rev, adCost, 0) });
+      out.push({ key: d, rev: rev, seoRev: seoRev, adRev: adRev, adCost: adCost, sroas: salesRoasPct(rev, adCost, 0),
+                 seoP: seoP, seoC: seoC, adP: adP, adC: adC });
     });
   } else {
     const agg = (typeof buildFullAggregate === 'function') ? buildFullAggregate() : [];
     const byMonth = {};
     agg.forEach(r => {
       if (codes.indexOf(r.code) < 0) return;
-      const e = (byMonth[r.month] || (byMonth[r.month] = { rev: 0, seoRev: 0, adRev: 0, adCost: 0 }));
+      const e = (byMonth[r.month] || (byMonth[r.month] = { rev: 0, seoRev: 0, adRev: 0, adCost: 0, seoP: 0, seoC: 0, adP: 0, adC: 0 }));
       e.rev += r.rev || 0; e.seoRev += r.seoRev || 0; e.adRev += r.adRev || 0; e.adCost += r.adCost || 0;
+      // 【v1.0639】4系列用の内訳（親＝代表キーの商品／子＝それ以外）
+      if (r.code === _famKey) { e.seoP += r.seoRev || 0; e.adP += r.adRev || 0; }
+      else                    { e.seoC += r.seoRev || 0; e.adC += r.adRev || 0; }
     });
     Object.keys(byMonth).sort().forEach(m => {
       const e = byMonth[m];
-      out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0) });
+      out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0),
+                 seoP: e.seoP, seoC: e.seoC, adP: e.adP, adC: e.adC });
     });
   }
   return out;
@@ -16957,13 +16987,35 @@ function peRenderInfo() {
     if (typeof Chart !== 'undefined') {
       // 【v1.0637】変更記録の縦線（この商品＋ショップ全体）。rows[].key が x軸のキー
       const _clMarksPe = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.key), code) : [];
+      // 【v1.0639】合算のときは「SEO×親子 / 広告×親子」の4系列に割る。
+      //   色の決め方: SEO=紫 / 広告=オレンジ（従来どおり）、親=濃い / 子=淡い。
+      //   ★積む順は 親→子 で、SEOのあと広告。積み上げの見た目が毎回同じになるようにする。
+      const _peSplit = (_peScope === 'set');
+      // 【v1.0639】凡例も系列に合わせて描き替える（4系列のとき「親＝濃い／子＝淡い」が分かるように）
+      {
+        const _lg = document.getElementById('peLegend');
+        if (_lg) _lg.innerHTML = (_peSplit
+          ? [['#6d28d9','SEO売上-親'],['#c4b5fd','SEO売上-子'],['#ea580c','広告売上-親'],['#fdba74','広告売上-子'],['#10b981','売上ROAS']]
+          : [['#7c3aed','SEO売上'],['#f97316','広告売上'],['#10b981','売上ROAS']]
+        ).map(x => '<span><i style="background:' + x[0] + '"></i>' + x[1] + '</span>').join('');
+      }
+      const _peBars = _peSplit
+        ? [
+            { type: 'bar', label: 'SEO売上-親',  data: rows.map(r => r.seoP || 0), backgroundColor: '#6d28d9', stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: 'SEO売上-子',  data: rows.map(r => r.seoC || 0), backgroundColor: '#c4b5fd', stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: '広告売上-親', data: rows.map(r => r.adP  || 0), backgroundColor: '#ea580c', stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: '広告売上-子', data: rows.map(r => r.adC  || 0), backgroundColor: '#fdba74', stack: 's', yAxisID: 'y', order: 2 }
+          ]
+        : [
+            { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: '#7c3aed', stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: '広告売上', data: rows.map(r => r.adRev), backgroundColor: '#f97316', stack: 's', yAxisID: 'y', order: 2 }
+          ];
       _peChart = new Chart(cv.getContext('2d'), {
         plugins: [YC_CHANGE_LINES],
         data: {
           labels,
           datasets: [
-            { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: '#7c3aed', stack: 's', yAxisID: 'y', order: 2 },
-            { type: 'bar', label: '広告売上', data: rows.map(r => r.adRev), backgroundColor: '#f97316', stack: 's', yAxisID: 'y', order: 2 },
+            ..._peBars,
             { type: 'line', label: '売上ROAS', data: rows.map(r => r.sroas), borderColor: '#10b981', backgroundColor: '#10b981',
               borderWidth: 2, pointRadius: 2.5, tension: 0.25, spanGaps: true, yAxisID: 'y1', order: 1 }
           ]
@@ -16973,6 +17025,7 @@ function peRenderInfo() {
           interaction: { mode: 'index', intersect: false },
           plugins: {
             ycChangeLines: { marks: _clMarksPe },
+            // 【v1.0639】凡例はグラフ下の .pe-legend（#peLegend）側で出すので、Chart.js のものは使わない
             legend: { display: false },
             tooltip: { callbacks: { label: (c) => {
               const v = c.parsed.y;
