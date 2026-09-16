@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0624 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0625 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3495,7 +3495,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0624</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0625</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9156,6 +9156,14 @@ function _repHasSoikomi(code, referenced) {
 function _isSoiParent(code, referenced) { return referenced.has(String(code)); }
 function _isSoiChild(code, rep) { const r = String(rep || '').trim(); return !!r && r !== String(code); }
 
+// 【v1.0625】合算/両表示の「セット行」は code が代表キーなので、その1件だけで判定すると
+//   セットまるごと落ちる（親が条件を満たさないだけで子ごと消える）。
+//   → 判定対象を「その行が代表している商品たち」に広げる。
+//   個別モードの行や他画面の {code} 配列は _members を持たないので、従来どおり自分1件で判定される。
+function _rfMembersOf(item) {
+  if (item && item._rollup && Array.isArray(item._members) && item._members.length) return item._members;
+  return [item && item.code];
+}
 function applyRepFilter(list) {
   const f = state.repFilter;
   if (!f) return list;
@@ -9163,16 +9171,15 @@ function applyRepFilter(list) {
   //   送り込みフィルタに表示する。※子（変種）が親の下に並ばないのは、その子側に代表コードが
   //   設定されていないため（データ側の紐づけ不足）で、フィルタの不具合ではない。
   const referenced = getReferencedRepCodes();
+  const _repOf = (c) => ((state.productMeta[c] || {}).repCode || '').trim();
   return list.filter(item => {
-    const code = item && item.code;
-    if (!code) return false;
-    const meta = state.productMeta[code] || {};
-    const rep = (meta.repCode || '').trim();
-    if (f === '*') return _repHasSoikomi(code, referenced);                 // 代表コード有(子/自己参照親) or 参照される親
-    if (f === '!') return !_repHasSoikomi(code, referenced);                // 【v1.0583】送り込みが無い商品
-    if (f === '*P') return _isSoiParent(code, referenced);                  // 【v1.0619】親（緑マーク）だけ
-    if (f === '*C') return _isSoiChild(code, rep);                          // 【v1.0619】子（黄マーク）だけ
-    return rep === f || code === f;                                        // そのグループの子 or 親自身
+    if (!item || !item.code) return false;
+    const mem = _rfMembersOf(item);                                         // 【v1.0625】合算行はメンバー全員で判定
+    if (f === '*') return mem.some(c => _repHasSoikomi(c, referenced));      // 代表コード有(子/自己参照親) or 参照される親
+    if (f === '!') return mem.every(c => !_repHasSoikomi(c, referenced));    // 【v1.0583】送り込みが無い商品
+    if (f === '*P') return mem.some(c => _isSoiParent(c, referenced));       // 【v1.0619】親（緑マーク）だけ／合算なら「親を含むセット」
+    if (f === '*C') return mem.some(c => _isSoiChild(c, _repOf(c)));         // 【v1.0619】子（黄マーク）だけ／合算なら「子を含むセット」
+    return mem.some(c => _repOf(c) === f || c === f);                        // そのグループの子 or 親自身
   });
 }
 
@@ -9729,11 +9736,17 @@ function renderBasic() {
   //   広告なし = ステータスが「…広告なし…」（健常-広告なし◯ / 中立-広告なし□）。
   //   ※撤退系・新商品・選択前など、あり/なしが付かないステータスはどちらにも出さない（全体でのみ表示）。
   //   検索中は必ずバイパス（＝検索結果を優先して全件表示）。
+  //   【v1.0625】★合算/両表示のセット行は、代表（親）のステータスだけで判定しない。
+  //     セット行の code は代表キーなので、親が「広告なし」なだけで、広告を出している子ごと
+  //     セットが丸ごと消えていた（＝「合算にすると出てこない」の原因）。
+  //     → メンバーの誰か1人でも当てはまればセットを残す。
   if (!q && basicAdFilter !== 'all' && !_hideAdBar) {
+    const _needle = (basicAdFilter === 'ad') ? '広告あり' : '広告なし';
+    const _hit = (c) => (((state.productMeta[c] || {}).status) || '').indexOf(_needle) !== -1;
     list = list.filter(r => {
-      const st = (state.productMeta[r.code] || {}).status || '';
       if (_editPinnedCodes.has(r.code)) return true;
-      return basicAdFilter === 'ad' ? (st.indexOf('広告あり') !== -1) : (st.indexOf('広告なし') !== -1);
+      const mem = (r._rollup && Array.isArray(r._members) && r._members.length) ? r._members : [r.code];
+      return mem.some(_hit);
     });
   }
   { const _b = $('#basicAdFilterBar'); if (_b) _b.classList.toggle('search-bypass', !!q); }
