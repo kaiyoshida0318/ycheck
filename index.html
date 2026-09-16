@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0640 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0641 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3613,7 +3613,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0640</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0641</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4694,6 +4694,8 @@ th.col-sroas { background-color:#e7d5f5; }
         <span class="seg-filter" id="peScopeSeg"><button type="button" class="segf-btn" data-pescope="set">合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button><button type="button" class="segf-btn" data-pescope="parent">親商品</button><button type="button" class="segf-btn" data-pescope="child">子商品</button></span>
         <span class="seg-filter" id="peGrainSeg"><button type="button" class="segf-btn on" data-pegrain="day">日別</button><button type="button" class="segf-btn" data-pegrain="month">月別</button></span>
         <span class="seg-filter" id="peSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
+        <!-- 【v1.0641】月別のときの期間。may＝直近の5月から / 12＝直近1年 / 24＝直近2年 -->
+        <span class="seg-filter" id="peMSpanSeg" style="display:none"><button type="button" class="segf-btn on" data-pemspan="may">5月始まり</button><button type="button" class="segf-btn" data-pemspan="12">1年</button><button type="button" class="segf-btn" data-pemspan="24">2年</button></span>
         <span class="pe-ctl-note" id="peCtlNote"></span>
       </div>
       <div class="pe-chart-wrap"><canvas id="peChart"></canvas></div>
@@ -16851,6 +16853,7 @@ function peRefreshImagePreview() {
 let _peTab = 'info';          // 'info' | 'edit'
 let _peGrain = 'day';         // 'day' | 'month'
 let _peSpan = 60;             // 日別のとき何日ぶん見るか（0＝全期間）
+let _peMSpan = 'may';         // 【v1.0641】月別のときの期間: 'may'(直近の5月から) | '12'(1年) | '24'(2年)
 let _peChart = null;
 // 【v1.0638】全体情報タブの集計範囲: 'set'(合算) | 'self'(個別) | 'parent'(親商品) | 'child'(子商品)
 //   【v1.0640】セットがある商品＝set/parent/child のみ（既定 set）。セットが無い商品＝self のみ。
@@ -16928,6 +16931,19 @@ function _peRows(code) {
       out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0),
                  seoP: e.seoP, seoC: e.seoC, adP: e.adP, adC: e.adC });
     });
+    // 【v1.0641】月別の期間しぼり。★基準は「データの最終月」（今日の日付ではない）
+    //   may＝最終月以前でいちばん近い5月から（例: 最終月 2027-03 → 2026-05〜）
+    //   12/24＝最終月を含めて直近12/24ヶ月
+    if (out.length) {
+      const last = String(out[out.length - 1].key);
+      const ly = parseInt(last.slice(0, 4), 10), lm = parseInt(last.slice(5, 7), 10);
+      let fy, fm;
+      if (_peMSpan === 'may') { fy = (lm >= 5) ? ly : ly - 1; fm = 5; }
+      else { const n = parseInt(_peMSpan, 10) || 12; const t = ly * 12 + (lm - 1) - (n - 1); fy = Math.floor(t / 12); fm = t % 12 + 1; }
+      const from = fy * 100 + fm;
+      const kept = out.filter(r => { const k = String(r.key); return parseInt(k.slice(0, 4), 10) * 100 + parseInt(k.slice(5, 7), 10) >= from; });
+      out.length = 0; kept.forEach(r => out.push(r));
+    }
   }
   return out;
 }
@@ -16966,6 +16982,10 @@ function peRenderInfo() {
   const ss = document.getElementById('peSpanSeg');
   if (ss) { ss.style.display = (_peGrain === 'day') ? '' : 'none';
             ss.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pespan')) === String(_peSpan))); }
+  // 【v1.0641】月別の期間（日別の 30日/60日/全期間 と入れ替わりで出す）
+  const ms = document.getElementById('peMSpanSeg');
+  if (ms) { ms.style.display = (_peGrain === 'month') ? '' : 'none';
+            ms.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pemspan')) === String(_peMSpan))); }
 
   const rows = _peRows(code);
   const note = document.getElementById('peCtlNote');
@@ -16975,7 +16995,7 @@ function peRenderInfo() {
   const _scNote = (_peScope === 'self') ? '' : ('【' + _scNames[_peScope] + '】' + _scCodes.join(' / ') + '　');
   if (note) note.textContent = rows.length
     ? (_scNote + (_peGrain === 'day' ? rows.length + '日分（' + rows[0].key + ' 〜 ' + rows[rows.length - 1].key + '）'
-                                     : rows.length + 'ヶ月分'))
+                                     : rows.length + 'ヶ月分（' + rows[0].key + ' 〜 ' + rows[rows.length - 1].key + '）'))
     : '';
 
   if (_peChart) { try { _peChart.destroy(); } catch (e) {} _peChart = null; }
@@ -17611,6 +17631,13 @@ $('#peImageDelete').addEventListener('click', () => {
   if (_s) _s.addEventListener('click', (e) => {
     const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return;
     _peSpan = parseInt(b.getAttribute('data-pespan'), 10) || 0;
+    peRenderInfo();
+  });
+  // 【v1.0641】月別の期間（5月始まり / 1年 / 2年）
+  const _ms = document.getElementById('peMSpanSeg');
+  if (_ms) _ms.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return;
+    _peMSpan = b.getAttribute('data-pemspan') || 'may';
     peRenderInfo();
   });
 }
