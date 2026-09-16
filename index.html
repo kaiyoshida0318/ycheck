@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0632 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0635 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -671,12 +671,14 @@ body.states-collapsed .top-nav-3 { display: none; }
 .nav-row-states .nav-group { flex: 0 1 auto; gap: 3px; }
 /* 【v202/v1.0549/v1.0550】ヘッダー開閉ボタンの位置。
    ヘッダー1 …【v1.0607】1段目（.top-nav）の右端
-   ヘッダー2 …【PR状態】の行（.nav-states-prrow）の右端 */
+   ヘッダー2 … いちばん下の行（.nav-states-lastrow）の右端【v1.0634】 */
 .top-nav > #btnToggleChrome { margin-left: auto; white-space: nowrap; align-self: center; }
-/* 【v1.0550】【PR状態】グループと開閉ボタンを必ず同じ1行（全幅）に置くためのラッパー。
-   .nav-row-states は flex-wrap なので、ラッパー無しだとボタンだけ別行に落ちることがある。 */
-.nav-states-prrow { display: flex; align-items: center; gap: 6px; width: 100%; }
-.nav-states-prrow > #btnToggleStates { margin-left: auto; white-space: nowrap; }
+/* 【v1.0550/v1.0634】いちばん下の行のグループと開閉ボタンを必ず同じ1行（全幅）に置くためのラッパー。
+   .nav-row-states は flex-wrap なので、ラッパー無しだとボタンだけ別行に落ちることがある。
+   ★v1.0634 で並びを ステータス→PR状態→入札状態 に変えたので、中身は【入札状態】になった
+     （クラス名も .nav-states-prrow → .nav-states-lastrow に改名）。 */
+.nav-states-lastrow { display: flex; align-items: center; gap: 6px; width: 100%; }
+.nav-states-lastrow > #btnToggleStates { margin-left: auto; white-space: nowrap; }
 /* 【v1.0550】ヘッダーを隠している間だけ出る復帰バー（右端に「◯を表示」ボタン） */
 .hdr-restore-bar {
   position: sticky; top: 0; z-index: 98;
@@ -3569,7 +3571,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0632</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0635</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3644,7 +3646,7 @@ th.col-sroas { background-color:#e7d5f5; }
   <!-- 【v1.0607】【調整】をヘッダー2の1行目（＝クロス絞り込みパネルの上）へ移動 -->
   <div class="nav-group nav-group-tune">
     <span class="nav-group-label g-chosei">【調整】</span>
-    <!-- 【v1.0609】調整-基本＝商品-基本データと同じ表に、右端へ ステータス/入札状態/PRオプ状態 の
+    <!-- 【v1.0609/v1.0634】調整-基本＝商品-基本データと同じ表に、右端へ ステータス/PR状態/入札状態 の
          ドロップダウン3列を足したもの。ビュー実体は #view-basic を共有し、data-basicmode で切り替える
          （全-月別/全-日別の data-zdgrain と同じ作り。§10 / §18-16）。 -->
     <a class="nav-tab nav-tab-link" data-view="basic" data-basicmode="tune" href="?view=basic-tune" id="navTuneBasic">調整-基本</a>
@@ -3704,21 +3706,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <!-- 【v200】【入札状態】＋【PR状態】を1行に横並び。 -->
   <div class="nav-row-states">
-    <!-- 【入札状態】ブロック。【v199】旧【状態】を入札/PRで分割。各先頭に全体。 -->
-    <div class="nav-group nav-group-jotai nav-group-ad">
-      <span class="nav-group-label g-nyusatsu">【入札状態】</span>
-      <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
-      <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
-      <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
-    </div>
-    <!-- 【PR状態】ブロック。【v1.0550】ヘッダー2の開閉ボタンと同じ行に収めるためラッパーで包む。 -->
-    <div class="nav-states-prrow">
+    <!-- 【v1.0634】並びを ステータス → PR状態 → 入札状態 に変更（要望）。 -->
     <div class="nav-group nav-group-jotai nav-group-pr">
       <span class="nav-group-label g-pr">【PR状態】</span>
       <button class="state-chip chip-all" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
@@ -3734,8 +3722,25 @@ th.col-sroas { background-color:#e7d5f5; }
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     </div>
-    <!-- 【v1.0550】ヘッダー2（【ステータス】【入札状態】【PR状態】の3行）の開閉。この行の右端に置く。 -->
-    <button class="btn sm ghost" id="btnToggleStates" type="button" title="【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー2を隠す</button>
+    <!-- 【入札状態】ブロック。【v199】旧【状態】を入札/PRで分割。各先頭に全体。
+         【v1.0550/v1.0634】ヘッダー2の開閉ボタンは「いちばん下の行」の右端に置く決まりなので、
+         並び替え（v1.0634）でここが最終行になったのに合わせてラッパー(.nav-states-lastrow)ごと移動した。
+         ★行を増減するときは、このラッパーを必ず最終行に付け替えること。 -->
+    <div class="nav-states-lastrow">
+    <div class="nav-group nav-group-jotai nav-group-ad">
+      <span class="nav-group-label g-nyusatsu">【入札状態】</span>
+      <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
+      <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+      <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+    </div>
+    <!-- 【v1.0550】ヘッダー2（【ステータス】【PR状態】【入札状態】の3行）の開閉。この行の右端に置く。 -->
+    <button class="btn sm ghost" id="btnToggleStates" type="button" title="【ステータス】【PR状態】【入札状態】の行を隠します">🔼 ヘッダー2を隠す</button>
     </div>
   </div>
   </div><!-- /.states-stack 【v1.0583】 -->
@@ -3829,7 +3834,7 @@ th.col-sroas { background-color:#e7d5f5; }
                  あちらはバッジが唯一の操作口（§16-B-5）。 -->
           <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <!-- 【v1.0620】一括変更。押すと選択モードに入り、商品コードの左にチェックボックスが出る。 -->
-          <button class="btn sm ghost" id="btnBasicBulk" type="button" title="複数の商品を選んで、ステータス／入札状態／PRオプ状態をまとめて変更します">☑ 一括変更</button>
+          <button class="btn sm ghost" id="btnBasicBulk" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <span class="gh-reflect-hover" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
             <span class="gh-reflect-tooltip" role="tooltip">
@@ -3849,8 +3854,8 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="bulk-count" id="bulkCount">0件選択中</span>
           <span class="bulk-sep"></span>
           <label class="bulk-fld">ステータス<select id="bulkStatus" class="bulk-sel"></select></label>
+          <label class="bulk-fld">PR状態<select id="bulkProStatus" class="bulk-sel"></select></label>
           <label class="bulk-fld">入札状態<select id="bulkAdStatus" class="bulk-sel"></select></label>
-          <label class="bulk-fld">PRオプ状態<select id="bulkProStatus" class="bulk-sel"></select></label>
           <button type="button" class="btn sm primary" id="bulkApply">選択した商品に適用</button>
           <span class="bulk-note" id="bulkNote"></span>
           <button type="button" class="btn sm ghost" id="bulkExit" style="margin-left:auto">✕ 終了</button>
@@ -3865,7 +3870,7 @@ th.col-sroas { background-color:#e7d5f5; }
                      総売上 → 売上ROAS → PR売上ROAS → SEO売上 → 広告売上 → 広告実績額
                      → 広告CVR → PR実績額(7%超) → 広告ROAS
                    その後ろに商品別だけの列（PRオプ料率・入札価格）を置く。【v1.0592】送り込み売上は撤去。
-                 撤去: メインKW / PRオプ状態 / 入札状態 / ステータス
+                 撤去: メインKW / PR状態 / 入札状態 / ステータス
                    ★状態の編集は【調整】画面（入札価格調整・PRオプ調整）で行う。
                      上部の状態チップ行は絞り込み用に残してあるので、ここから飛べる。
                    ★列を戻したくなったら、この thead と renderBasic の tr.innerHTML に
@@ -3880,7 +3885,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。総売上の右（全-月別データと同じ位置） -->
               <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上<br>ROAS</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
-              <th class="num col-sroas" data-sort="prsroas" title="PR売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR売上<br>ROAS<span class="th-est">？</span></th>
+              <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span></th>
               <th class="num col-sales" data-sort="seoRev">SEO<br>売上</th>
               <th class="num col-ad" data-sort="adRev">広告<br>売上</th>
               <!-- 【v1.0590】広告売上(不明分)＝広告売上 − 総売上 の溢れたぶん（§5-E）。
@@ -3900,8 +3905,8 @@ th.col-sroas { background-color:#e7d5f5; }
                    ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
                      片方だけ出し入れすると列がずれる。 -->
               <th class="status-col tune-col" data-sort="status">ステータス</th>
+              <th class="status-col tune-col" data-sort="proStatus">PR状態</th>
               <th class="status-col tune-col" data-sort="adStatus">入札状態</th>
-              <th class="status-col tune-col" data-sort="proStatus">PRオプ状態</th>
               <!-- 【v1.0592】送り込み売上の列は撤去。
                    ★データ（_soiByParent / CSVの列）は残してある。戻すときは、この th と
                      renderBasic の tr.innerHTML に col-soi の td を書き戻すだけ。
@@ -4296,7 +4301,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProAdjust">商品名</th>
               <th class="nosort" data-resize-key="kwProAdjust">メインKW</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="status-col" data-sort="proStatus">PR状態</th>
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th data-sort="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProAdjustSeo0">SEO売上<br>(3ヶ月前)</th>
@@ -4381,7 +4386,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="name" data-resize-key="nameProTune">商品名</th>
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
-              <th class="status-col" data-sort="proStatus">PRオプ状態</th>
+              <th class="status-col" data-sort="proStatus">PR状態</th>
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
@@ -9740,7 +9745,7 @@ function renderWithdrawConsider() {
     + '<th class="nosort" data-resize-key="kwWc">メインKW</th>';
   for (let i = 0; i < 4; i++) { const m = months[i] || ''; h += '<th class="num col-total">総売上' + (m ? ('<br>' + m) : '') + '</th>'; }
   h += '<th class="num col-pro">PRオプ<br>料率</th>'
-    + '<th class="status-col">PRオプ状態</th>'
+    + '<th class="status-col">PR状態</th>'
     + '<th class="status-col">ステータス</th>';
   const agg = buildFullAggregate();
   const byKey = {}; agg.forEach(r => { byKey[r.code + '|' + r.month] = r; });
@@ -10216,8 +10221,8 @@ function renderBasic() {
       ${_proCell}
       ${_bidCell}
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'status')}</td>
-      <td class="status-col tune-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col tune-col">${statusSelectHtml(r.code, 'ad')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -10297,8 +10302,8 @@ function _bulkApply() {
   const pr = (document.getElementById('bulkProStatus') || {}).value;
   const changes = [];
   if (st !== BULK_KEEP) changes.push('ステータス=' + (st || '—'));
+  if (pr !== BULK_KEEP) changes.push('PR状態=' + (pr || '—'));
   if (ad !== BULK_KEEP) changes.push('入札状態=' + (ad || '—'));
-  if (pr !== BULK_KEEP) changes.push('PRオプ状態=' + (pr || '—'));
   if (!changes.length) { showToast('変更する項目を選んでください（「（変更しない）」のままです）。', 'warn'); return; }
   if (!confirm('選択中の ' + codes.length + ' 件に次を適用します。\n\n' + changes.join('\n') + '\n\nよろしいですか？')) return;
 
@@ -14837,34 +14842,45 @@ $$('.nav-tab').forEach(item => {
 // フィルタ条件の定義
 // 【v185】広告○→入札価格○、広告×→入札価格✕、広告無→入札なし に改称、入札価格△・PRオプ△を新設
 //   match関数は新ラベルと旧ラベル両方を判定（マイグレーション前のデータ互換）
+// 【v1.0635】★チップの行き先を全部「調整-基本」（basic の tune モード）に統一した。
+//   旧: 入札系は ad-adjust、PR系は pro-adjust という「タブの無い別ビュー」へ飛んでいたため、
+//       押すたびにツールバー（月／日選択／検索／個別合算両表示／CSV／一括変更…）の位置が変わっていた。
+//   新: どのチップを押しても 調整-基本 に来る＝ツールバーは常に同じ場所。
+//       調整-基本には ステータス / PR状態 / 入札状態 の3ドロップダウンが揃っているので、
+//       絞り込んだその場で直せる。
+//   ★例外は 'status-withdrawn'（撤退済み）だけ。撤退済みは basic の母集団から外れているので
+//     専用の「撤退済み商品」ビューへ行く必要がある。
+//   ★renderBasic 側は targetView === 'basic' のチップを f.match(meta, code) で総当たりするだけなので、
+//     ここを変えるだけで絞り込みは効く（renderBasic は無変更）。
+//   ★ad-adjust / pro-adjust のビューと、その中の targetView 判定は残置（データ互換・戻せるように）。
 const STATE_FILTERS = {
-  'all-basic':     { label: '全体',       targetView: 'basic',      match: () => true },
+  'all-basic':     { label: '全体',       targetView: 'basic', basicMode: 'tune', match: () => true },
   // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
-  'ad-all':        { label: '全体',       targetView: 'ad-adjust',  match: (meta, code) => { const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
+  'ad-all':        { label: '全体',       targetView: 'basic', basicMode: 'tune',  match: (meta, code) => { const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
   // 【v1.0496】PR状態の「全体」＝PRオプ調整（pro-adjust）の画面と同じ内容で全商品を表示。
-  'pro-all':       { label: '全体',       targetView: 'pro-adjust', match: () => true },
+  'pro-all':       { label: '全体',       targetView: 'basic', basicMode: 'tune', match: () => true },
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
-  'new-product':      { label: '新商品',           targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
-  'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '健常-広告あり◯' },
-  'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '健常-広告なし◯' },
-  'status-churitsu-ad':{ label: '中立-広告あり□',   targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '中立-広告あり□' },
-  'status-churitsu-noad':{ label: '中立-広告なし□', targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '中立-広告なし□' },
-  'ad-ok':         { label: '入札◯',            targetView: 'ad-adjust',  match: (meta) => adStatusIsCircle(meta.adStatus || '') },
-  'ad-ng':         { label: '入札×-調整中',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCross(meta.adStatus || '') },
-  'ad-fixed':      { label: '入札△-飛ぶ手前固定', targetView: 'ad-adjust',  match: (meta) => adStatusIsSettled(meta.adStatus || '') },
-  'ad-none':       { label: '入札なし',          targetView: 'pro-adjust', match: (meta) => adStatusIsNone(meta.adStatus || '') },
-  'pro-ok':        { label: 'PR◯',              targetView: 'pro-adjust', match: (meta) => proStatusIsCircle(meta.proStatus || '') },
-  'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-親-下げ挑戦中' },
-  'pro-pfixed':    { label: 'PR△-親-飛ぶ手前固定', targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-親-飛ぶ手前固定' },
-  'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
-  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-飛ぶ手前固定' },
-  'pro-ng':        { label: 'PR×',              targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
-  'pro-wc':        { label: '撤退検討▲',        targetView: 'basic',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
-  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
+  'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
+  'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '健常-広告あり◯' },
+  'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '健常-広告なし◯' },
+  'status-churitsu-ad':{ label: '中立-広告あり□',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '中立-広告あり□' },
+  'status-churitsu-noad':{ label: '中立-広告なし□', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '中立-広告なし□' },
+  'ad-ok':         { label: '入札◯',            targetView: 'basic', basicMode: 'tune',  match: (meta) => adStatusIsCircle(meta.adStatus || '') },
+  'ad-ng':         { label: '入札×-調整中',      targetView: 'basic', basicMode: 'tune',  match: (meta) => adStatusIsCross(meta.adStatus || '') },
+  'ad-fixed':      { label: '入札△-飛ぶ手前固定', targetView: 'basic', basicMode: 'tune',  match: (meta) => adStatusIsSettled(meta.adStatus || '') },
+  'ad-none':       { label: '入札なし',          targetView: 'basic', basicMode: 'tune', match: (meta) => adStatusIsNone(meta.adStatus || '') },
+  'pro-ok':        { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta) => proStatusIsCircle(meta.proStatus || '') },
+  'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-親-下げ挑戦中' },
+  'pro-pfixed':    { label: 'PR△-親-飛ぶ手前固定', targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-親-飛ぶ手前固定' },
+  'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
+  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-飛ぶ手前固定' },
+  'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
+  'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
+  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
-  'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
-  'unselected-pro':{ label: '選択前-PR□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
+  'unselected-ad': { label: '選択前-入札□', targetView: 'basic', basicMode: 'tune',  match: (meta) => !(meta.adStatus || '') },
+  'unselected-pro':{ label: '選択前-PR□', targetView: 'basic', basicMode: 'tune', match: (meta) => !(meta.proStatus || '') }
 };
 
 // 【v213】状態カテゴリの説明文（チップで絞り込んだとき、対象ビューのツールバーに表示）
@@ -14926,7 +14942,13 @@ function applyStateFilter(filterKey) {
   if (def.targetView === 'ad-adjust') { adAdjustSortKey = 'adCost2'; adAdjustSortDir = -1; }
   else if (def.targetView === 'pro-adjust') { proAdjustSortKey = 'seoRev2'; proAdjustSortDir = -1; }
   state.activeStateFilter = { type: filterKey, targetView: def.targetView, label: def.label };
-  switchToView(def.targetView);
+  // 【v1.0635】チップは「調整」枠のものなので、basic へ行くときは 調整-基本（tune）で開く。
+  //   ★ここで _basicMode に直接代入してはいけない。switchToView('basic') は
+  //     _resolveViewName('basic') が返す basicMode:'plain' で必ず上書きしてしまう（実際に踏んだ）。
+  //     tune で開きたいときは別名 'basic-tune' を渡す（v1.0609 の仕組みにそのまま乗る）。
+  //   ★state.activeStateFilter.targetView は 'basic' のまま（renderBasic がこれを見て絞り込む）。
+  const _tv = (def.targetView === 'basic' && def.basicMode === 'tune') ? 'basic-tune' : def.targetView;
+  switchToView(_tv);
   updateActiveStateChip();
   updateFilterBanners();
   renderAll();
