@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0637 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0638 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3596,7 +3596,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0637</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0638</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4673,6 +4673,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- ===== タブ1: 全体情報 ===== -->
     <div class="pe-panel" id="peTabInfo">
       <div class="pe-ctl">
+        <!-- 【v1.0638】どの範囲を見るか。送り込みセット（親子）がある商品でだけ意味がある。 -->
+        <span class="seg-filter" id="peScopeSeg"><button type="button" class="segf-btn" data-pescope="set">合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button><button type="button" class="segf-btn" data-pescope="parent">親商品</button><button type="button" class="segf-btn" data-pescope="child">子商品</button></span>
         <span class="seg-filter" id="peGrainSeg"><button type="button" class="segf-btn on" data-pegrain="day">日別</button><button type="button" class="segf-btn" data-pegrain="month">月別</button></span>
         <span class="seg-filter" id="peSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
         <span class="pe-ctl-note" id="peCtlNote"></span>
@@ -16832,6 +16834,9 @@ let _peTab = 'info';          // 'info' | 'edit'
 let _peGrain = 'day';         // 'day' | 'month'
 let _peSpan = 60;             // 日別のとき何日ぶん見るか（0＝全期間）
 let _peChart = null;
+// 【v1.0638】全体情報タブの集計範囲: 'set'(合算) | 'self'(個別) | 'parent'(親商品) | 'child'(子商品)
+//   ★既定は 'self'＝従来どおりこの商品だけ。送り込みセットが無い商品では self 以外を押せなくする。
+let _peScope = 'self';
 function peSetTab(t) {
   _peTab = (t === 'edit') ? 'edit' : 'info';
   const tabs = document.getElementById('peTabs');
@@ -16843,21 +16848,56 @@ function peSetTab(t) {
 }
 // この商品1件ぶんの行を作る（日別 or 月別）。行の形は共通:
 //   { key, rev, seoRev, adRev, adCost, sroas }
+// 【v1.0638】この商品が属する送り込みセットのメンバー一覧（親を先頭）。
+//   ★親の判定は §6 と同じ: repCode が空でも子から参照されていれば親。
+//   セットが無い（自分だけ）の場合は members=[code] を返す。
+function _peFamily(code) {
+  const pm = state.productMeta || {};
+  const rep = String((pm[code] || {}).repCode || '').trim();
+  const key = (rep && rep !== code) ? rep : code;     // セットの代表キー
+  const mem = [];
+  Object.keys(state.master || {}).forEach(c => {
+    const r = String((pm[c] || {}).repCode || '').trim();
+    if (c === key || r === key) mem.push(c);
+  });
+  if (mem.indexOf(key) < 0 && (state.master || {})[key]) mem.unshift(key);
+  mem.sort((a, b) => (a === key ? -1 : b === key ? 1 : (a < b ? -1 : 1)));   // 親を先頭へ
+  return { key: key, members: mem.length ? mem : [code] };
+}
+// いまのスコープで集計する商品コードの配列。
+//   set=セット全員 ／ self=この商品だけ ／ parent=代表（親）だけ ／ child=子だけ
+function _peScopeCodes(code) {
+  const f = _peFamily(code);
+  if (_peScope === 'self' || f.members.length < 2) return [code];
+  if (_peScope === 'parent') return [f.key];
+  if (_peScope === 'child')  return f.members.filter(c => c !== f.key);
+  return f.members;   // 'set'
+}
 function _peRows(code) {
   const out = [];
+  const codes = _peScopeCodes(code);
+  if (!codes.length) return out;
   if (_peGrain === 'day') {
     let days = dailyAllDates();
     if (_peSpan > 0) days = days.slice(-_peSpan);
     days.forEach(d => {
-      const a = dayAgg(code, d);
-      out.push({ key: d, rev: a.rev, seoRev: a.seoRev, adRev: a.adRev, adCost: a.adCost,
-                 sroas: salesRoasPct(a.rev, a.adCost, 0) });
+      let rev = 0, seoRev = 0, adRev = 0, adCost = 0;
+      codes.forEach(c => { const a = dayAgg(c, d); rev += a.rev || 0; seoRev += a.seoRev || 0; adRev += a.adRev || 0; adCost += a.adCost || 0; });
+      // ★ROASは足し算してはいけない。合計から計算し直す（§5-D の合算と同じ考え方）
+      out.push({ key: d, rev: rev, seoRev: seoRev, adRev: adRev, adCost: adCost, sroas: salesRoasPct(rev, adCost, 0) });
     });
   } else {
     const agg = (typeof buildFullAggregate === 'function') ? buildFullAggregate() : [];
-    agg.filter(r => r.code === code).sort((a, b) => String(a.month).localeCompare(String(b.month)))
-      .forEach(r => out.push({ key: r.month, rev: r.rev, seoRev: r.seoRev, adRev: r.adRev, adCost: r.adCost,
-                               sroas: salesRoasPct(r.rev, r.adCost, 0) }));
+    const byMonth = {};
+    agg.forEach(r => {
+      if (codes.indexOf(r.code) < 0) return;
+      const e = (byMonth[r.month] || (byMonth[r.month] = { rev: 0, seoRev: 0, adRev: 0, adCost: 0 }));
+      e.rev += r.rev || 0; e.seoRev += r.seoRev || 0; e.adRev += r.adRev || 0; e.adCost += r.adCost || 0;
+    });
+    Object.keys(byMonth).sort().forEach(m => {
+      const e = byMonth[m];
+      out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0) });
+    });
   }
   return out;
 }
@@ -16866,6 +16906,26 @@ function peRenderInfo() {
   const wrap = document.getElementById('peTableWrap');
   const cv = document.getElementById('peChart');
   if (!code || !wrap || !cv) return;
+  // 【v1.0638】集計範囲トグルの状態同期。セットが無い商品では self 以外を無効にする。
+  {
+    const fam = _peFamily(code);
+    const hasSet = fam.members.length >= 2;
+    if (!hasSet) _peScope = 'self';
+    const sc = document.getElementById('peScopeSeg');
+    if (sc) sc.querySelectorAll('.segf-btn').forEach(b => {
+      const v = b.getAttribute('data-pescope');
+      b.classList.toggle('on', v === _peScope);
+      const dis = (!hasSet && v !== 'self');
+      b.disabled = dis;
+      b.style.opacity = dis ? '0.4' : '';
+      b.style.cursor = dis ? 'default' : '';
+      b.title = dis ? 'この商品には送り込みセット（親子）がありません'
+        : (v === 'set' ? 'セット全員（親＋子）を合計して見る（' + fam.members.length + '件）'
+         : v === 'self' ? 'この商品だけを見る'
+         : v === 'parent' ? '送り込み元（親）だけを見る: ' + fam.key
+         : '送り込み先（子）だけを合計して見る（' + Math.max(0, fam.members.length - 1) + '件）');
+    });
+  }
   // トグルの状態同期
   const gs = document.getElementById('peGrainSeg');
   if (gs) gs.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-pegrain') === _peGrain));
@@ -16875,9 +16935,13 @@ function peRenderInfo() {
 
   const rows = _peRows(code);
   const note = document.getElementById('peCtlNote');
+  // 【v1.0638】いま何を合計しているかを注記に出す（合算・親・子のとき）
+  const _scNames = { set: '合算', self: '個別', parent: '親商品', child: '子商品' };
+  const _scCodes = _peScopeCodes(code);
+  const _scNote = (_peScope === 'self') ? '' : ('【' + _scNames[_peScope] + '】' + _scCodes.join(' / ') + '　');
   if (note) note.textContent = rows.length
-    ? (_peGrain === 'day' ? rows.length + '日分（' + rows[0].key + ' 〜 ' + rows[rows.length - 1].key + '）'
-                          : rows.length + 'ヶ月分')
+    ? (_scNote + (_peGrain === 'day' ? rows.length + '日分（' + rows[0].key + ' 〜 ' + rows[rows.length - 1].key + '）'
+                                     : rows.length + 'ヶ月分'))
     : '';
 
   if (_peChart) { try { _peChart.destroy(); } catch (e) {} _peChart = null; }
@@ -16961,6 +17025,7 @@ function openProductEditModal(code) {
   { const _sg = document.getElementById('peSoiSearch'); if (_sg) _sg.value = ''; }
   { const _sb = document.getElementById('peSoiSuggest'); if (_sb) { _sb.style.display = 'none'; _sb.innerHTML = ''; } }
   try { _peSoiSync(); } catch (e) {}
+  _peScope = 'self';   // 【v1.0638】開くたびに「個別」に戻す（前に開いた商品の設定を引きずらない）
   // 【v1.0637】この商品の変更記録
   { const _ct = document.getElementById('peClText'); if (_ct) _ct.value = ''; }
   { const _cd = document.getElementById('peClDate'); if (_cd) _cd.value = _clTodayStr(); }
@@ -17471,6 +17536,13 @@ $('#peImageDelete').addEventListener('click', () => {
   if (_tabs) _tabs.addEventListener('click', (e) => {
     const b = e.target.closest && e.target.closest('.pe-tab'); if (!b) return;
     peSetTab(b.getAttribute('data-petab'));
+  });
+  // 【v1.0638】集計範囲（合算/個別/親商品/子商品）
+  const _sc = document.getElementById('peScopeSeg');
+  if (_sc) _sc.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.segf-btn'); if (!b || b.disabled) return;
+    _peScope = b.getAttribute('data-pescope') || 'self';
+    peRenderInfo();
   });
   const _g = document.getElementById('peGrainSeg');
   if (_g) _g.addEventListener('click', (e) => {
