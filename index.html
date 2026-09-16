@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0643 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0644 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3614,7 +3614,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0643</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0644</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9945,7 +9945,11 @@ function renderBasic() {
   //   .active の付け外しは必ずここに任せる（§18-16 と同じ理由）
   if (typeof _basicSyncNavTabs === 'function') _basicSyncNavTabs();
   // 【撤退検討▲】ステータスチップ pro-wc のときは専用レイアウトに切替
-  const _wcLayoutTypes = ['pro-wc', 'status-kenzen-noad', 'status-churitsu-noad'];
+  // 【v1.0644】★専用レイアウトは使わない。どのチップを押しても「ステータス 全体」と同じ表（調整-基本）で出す。
+  //   v1.0643 までは 撤退検討▲ / 健常-広告なし◯ / 中立-広告なし□ の3チップだけ、
+  //   列の違う専用表（総売上×4ヶ月＋PRオプ料率＋PR状態＋ステータス）に切り替わっていた。
+  //   ★renderWithdrawConsider() と #basicWcWrap は残置。戻すときはこの配列に3つを書き戻すだけ。
+  const _wcLayoutTypes = [];   // 旧: ['pro-wc', 'status-kenzen-noad', 'status-churitsu-noad']
   const _isWc = !!(state.activeStateFilter && _wcLayoutTypes.indexOf(state.activeStateFilter.type) >= 0);
   // 【v1.0517】健常/中立の「広告あり◯／広告なし◯□」チップで絞り込み中は、広告フィルタ(全体/広告あり/広告なし)ボタンを隠す。
   //   これらのチップ自体が既に広告あり/なしを絞っているため、重複するボタンは出さない。
