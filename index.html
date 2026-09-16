@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0622 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0624 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -612,6 +612,18 @@ body.states-collapsed .top-nav-3 { display: none; }
 /* 「広告」= 2列目の3〜4行目 */
 .xf-head-ad  { grid-column: 2; grid-row: 3 / span 2; writing-mode: horizontal-tb; padding: 0 5px; }
 .xf-head { background: #eef2f8; font-weight: 700; color: var(--text2); padding: 3px 8px; white-space: nowrap; }
+/* 【v1.0624】見出しの中の ? ボタン。送り込み＝文字の右、広告＝文字の下（見出しの形に合わせる）。 */
+.xf-head-soi { flex-direction: row; gap: 4px; }
+.xf-head-ad  { flex-direction: column; gap: 2px; }
+.xf-help {
+  flex: 0 0 auto; width: 15px; height: 15px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #9ec0fa; border-radius: 50%;
+  background: #dbeafe; color: #1d4ed8;
+  font-family: inherit; font-size: 10px; font-weight: 800; line-height: 1;
+  cursor: pointer; transition: background .12s, border-color .12s;
+}
+.xf-help:hover { background: #bfdbfe; border-color: #2563eb; }
 /* ★セルの置き場所は data-xf-* から決める（自動配置に任せない。1つ足すとレイアウトが崩れるため） */
 .xf-panel [data-xf-ad="all"][data-xf-soi="yes"]  { grid-column: 4; grid-row: 2; }
 .xf-panel [data-xf-ad="all"][data-xf-soi="no"]   { grid-column: 5; grid-row: 2; }
@@ -3483,7 +3495,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0622</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0624</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3579,11 +3591,12 @@ th.col-sroas { background-color:#e7d5f5; }
 
     <div class="xf-corner" aria-hidden="true"></div>
 
-    <div class="xf-head xf-head-soi">送り込み</div>
+    <!-- 【v1.0624】見出しの横／下に ? を置き、その軸の判定条件をモーダルで出す -->
+    <div class="xf-head xf-head-soi">送り込み<button type="button" class="xf-help" data-xfhelp="soi" title="「有り／無し」がどう決まっているかを見る" aria-label="送り込みの条件">?</button></div>
     <button type="button" class="xf-cell xf-axis" data-xf-ad="all"  data-xf-soi="yes" title="送り込みが有る商品だけを表示（親＝送り込み元 / 子＝代表コードを持つ商品）">有り<span class="xf-num" id="xfNumSoiYes"></span></button>
     <button type="button" class="xf-cell xf-axis" data-xf-ad="all"  data-xf-soi="no"  title="送り込みが無い商品だけを表示（代表コードを持たず、どこからも参照されていない商品）">無し<span class="xf-num" id="xfNumSoiNo"></span></button>
 
-    <div class="xf-head xf-head-ad">広告</div>
+    <div class="xf-head xf-head-ad">広告<button type="button" class="xf-help" data-xfhelp="ad" title="「有り／無し」がどう決まっているかを見る" aria-label="広告の条件">?</button></div>
     <button type="button" class="xf-cell xf-axis" data-xf-ad="ad"   data-xf-soi="all" title="ステータスが「…広告あり…」の商品だけを表示">有り<span class="xf-num" id="xfNumAdYes"></span></button>
     <button type="button" class="xf-cell xf-cross" data-xf-ad="ad"   data-xf-soi="yes"><span class="xf-num" id="xfNumAdYesSoiYes">0</span></button>
     <button type="button" class="xf-cell xf-cross" data-xf-ad="ad"   data-xf-soi="no"><span class="xf-num" id="xfNumAdYesSoiNo">0</span></button>
@@ -4403,6 +4416,18 @@ th.col-sroas { background-color:#e7d5f5; }
 </div>
 
 <!-- 【v260】表示条件モーダル（入札価格調整／PRオプ調整の各サブフィルタ条件） -->
+<!-- 【v1.0624】クロス絞り込み（送り込み／広告）の判定条件モーダル。
+     ★本文は _xfHelpBody() が作る。判定式を書き換えたら必ずここの文面も直すこと。 -->
+<div class="modal-overlay" id="xfCondModal">
+  <div class="modal" style="max-width: 760px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="xfCondTitle">表示条件</h2>
+      <button class="modal-close" id="xfCondClose" type="button">×</button>
+    </div>
+    <div id="xfCondBody" class="tune-cond-body"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="tuneCondModal">
   <div class="modal" style="max-width: 760px;">
     <div class="modal-header">
@@ -5213,6 +5238,53 @@ function setFontScale(scale) {
 //     初回起動時に一度だけ viewPrefs へ移し替える（migrateLegacyColWidths）。
 //   ・旧キーへの書き戻しも続ける。古いバージョンのHTMLを開いても幅が失われないようにするため。
 const VP_LEGACY_COL_KEY = 'ycheck_col_widths_v1';   // 【〜v1.0544】旧・端末内保存（互換のため読み書きを継続）
+// 【v1.0623】★列幅が保存されない（＝いじっても元に戻る）問題の対策。
+//   原因: 3つの読み込み経路（ghLoadFromGitHub / ghLoadFromPublic / loadFromStorage）が
+//         data.viewPrefs を「無条件で」state.viewPrefs へ代入していた。
+//         v1.0354 で自動保存を廃止したので、ドラッグしただけでは GitHub に上がらない。
+//         その状態でリロードすると、GitHub 側の古い viewPrefs で端末の調整が毎回消える。
+//         （別クライアントが古いスナップショットで上書きしている場合も同じことが起きる）
+//   対策: 端末に「いつ調整したか」つきのバックアップを必ず残し、読み込んだデータより
+//         端末のほうが新しければ端末側を勝たせる。あわせて未反映マークを立てて気づけるようにする。
+const VP_DEVICE_KEY = 'ycheck_viewprefs_device_v1';
+let _vpKeptLocal = null;   // 端末側を勝たせたときの情報（パネルの注記用）
+function _vpReadDeviceBackup() {
+  try { const o = JSON.parse(localStorage.getItem(VP_DEVICE_KEY) || 'null');
+        return (o && typeof o === 'object' && o.colWidths) ? o : null; } catch (e) { return null; }
+}
+function _vpWriteDeviceBackup() {
+  try {
+    const vp = ensureViewPrefs();
+    localStorage.setItem(VP_DEVICE_KEY, JSON.stringify({
+      colWidths: vp.colWidths, fontScale: vp.fontScale,
+      updatedAt: vp.updatedAt || new Date().toISOString(), updatedBy: vp.updatedBy || 'この端末'
+    }));
+  } catch (e) {}
+}
+// 読み込んだ viewPrefs を採用する唯一の入口。★3つの読み込み経路は必ずこれを通すこと。
+function _vpAdoptIncoming(incoming) {
+  const bk = _vpReadDeviceBackup();
+  const inTs = Date.parse((incoming && incoming.updatedAt) || '') || 0;
+  const bkTs = Date.parse((bk && bk.updatedAt) || '') || 0;
+  if (bk && bkTs > inTs) {
+    // 端末のほうが新しい＝まだ反映していない（or 誰かに古いデータで上書きされた）
+    state.viewPrefs = {
+      colWidths: Object.assign({}, bk.colWidths || {}),
+      fontScale: (bk.fontScale > 0 ? bk.fontScale : 1),
+      updatedAt: bk.updatedAt, updatedBy: bk.updatedBy || 'この端末'
+    };
+    ensureViewPrefs(); _vpLegacyMigrated = true;
+    try { applyViewPrefs(); } catch (e) {}
+    _vpKeptLocal = { inTs: inTs, bkTs: bkTs, n: Object.keys(state.viewPrefs.colWidths).length };
+    try { ycLog('warn', '表示設定: 読み込んだデータより この端末のほうが新しかったので端末側を維持しました（列' + _vpKeptLocal.n + '件・未反映）'); } catch (e) {}
+    // 未反映マークを立てて「⬆ 反映する」に気づけるようにする（起動直後は _ycAutoSaveArmed で無視されるので少し遅らせる）
+    setTimeout(function () { try { if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave(); } catch (e) {} }, 3000);
+    return;
+  }
+  state.viewPrefs = incoming; ensureViewPrefs(); _vpLegacyMigrated = true;
+  try { applyViewPrefs(); } catch (e) {}
+  _vpWriteDeviceBackup();   // 採用したものを端末バックアップにも書いて、次回の比較基準にする
+}
 
 function ensureViewPrefs() {
   if (!state.viewPrefs || typeof state.viewPrefs !== 'object') state.viewPrefs = {};
@@ -5250,6 +5322,8 @@ function _vpTouch(by) {
   vp.updatedAt = new Date().toISOString();
   vp.updatedBy = by || vp.updatedBy || '';
   try { localStorage.setItem(VP_LEGACY_COL_KEY, JSON.stringify(vp.colWidths)); } catch (e) {}
+  _vpWriteDeviceBackup();   // 【v1.0623】★これが読み込み時の「どっちが新しいか」の判定材料になる
+  _vpKeptLocal = null;
   if (typeof saveToStorage === 'function') saveToStorage();   // → localStorage保存 ＋ scheduleGitHubSave()（未反映にする）
   try { if (typeof _vpRenderPanel === 'function') _vpRenderPanel(); } catch (e) {}
 }
@@ -6271,7 +6345,7 @@ async function ghLoadFromGitHub(opts) {
     if (data.rankMeta) _assignRankMetaKeepSpot(data.rankMeta);  // 【v299】lastSpotUpdateを消さない
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
-    if (data.viewPrefs) { state.viewPrefs = data.viewPrefs; ensureViewPrefs(); _vpLegacyMigrated = true; applyViewPrefs(); }
+    if (data.viewPrefs) _vpAdoptIncoming(data.viewPrefs);   // 【v1.0623】端末のほうが新しければ端末を勝たせる
     // 【v287】productMeta も商品ごとに新しい方を残してマージ。ローカルの方が新しい商品が
     //   あれば _ghHealed=true（＝GitHubは古い上書きを受けていた）とし、後で復元を再保存する。
     let _ghHealed = false;
@@ -6385,7 +6459,7 @@ async function ghLoadFromPublic() {
     if (data.rankMeta) { if (typeof _assignRankMetaKeepSpot === 'function') _assignRankMetaKeepSpot(data.rankMeta); else state.rankMeta = data.rankMeta; }
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
-    if (data.viewPrefs) { state.viewPrefs = data.viewPrefs; ensureViewPrefs(); _vpLegacyMigrated = true; applyViewPrefs(); }
+    if (data.viewPrefs) _vpAdoptIncoming(data.viewPrefs);   // 【v1.0623】端末のほうが新しければ端末を勝たせる
     if (data.productMeta) {
       state.productMeta = data.productMeta;   // 閲覧端末は公開データをそのまま採用（編集しないためマージ不要）
       Object.values(state.productMeta).forEach(m => {
@@ -6793,7 +6867,7 @@ function loadFromStorage() {
     if (data.rankMeta) _assignRankMetaKeepSpot(data.rankMeta);  // 【v299】lastSpotUpdateを消さない
     if (data.productsCsvSnapshot) state.productsCsvSnapshot = data.productsCsvSnapshot;
     // 【v1.0545】表示設定（列幅・文字サイズ）。無い場合は端末の設定をそのまま使う（初回移行のため上書きしない）
-    if (data.viewPrefs) { state.viewPrefs = data.viewPrefs; ensureViewPrefs(); _vpLegacyMigrated = true; applyViewPrefs(); }
+    if (data.viewPrefs) _vpAdoptIncoming(data.viewPrefs);   // 【v1.0623】端末のほうが新しければ端末を勝たせる
     if (data.productMeta) {
       state.productMeta = data.productMeta;
       // 旧「PRO○/×」→「PRオプ○/×」にマイグレーション
@@ -17655,6 +17729,79 @@ document.addEventListener('click', (e) => {
   if (rep) setRepFilter(rep);
 });
 
+// ==================== 【v1.0624】クロス絞り込みの「?」＝判定条件モーダル ====================
+// ★ここの文面は「実際の判定式の言い換え」。式を変えたら必ずこの文面も直すこと。
+//   送り込み … _repHasSoikomi()（applyRepFilter の '*' / '!' と 件数 updateStateCounts が共有する唯一の判定）
+//   広告     … renderBasic の basicAdFilter（ステータス文字列に「広告あり」「広告なし」を含むか）
+function _xfHelpBody(kind) {
+  if (kind === 'soi') {
+    return ''
+      + '<div class="tc-sub">「送り込み」は<b>代表商品コード（repCode）の設定だけ</b>で決まります。'
+      + '売上や広告費はいっさい見ていません。</div>'
+      + '<table class="tc-table"><tbody>'
+      + '<tr><td style="width:110px"><span class="tc-hi">有り</span></td><td>'
+      +   '次のどちらかに当てはまる商品<br>'
+      +   '① <b>代表商品コードが設定されている</b>商品（＝送り込み先の子。自分自身を指している親も含む）<br>'
+      +   '② <b>他の商品から代表商品コードとして指されている</b>商品（＝送り込み元の親。自分の repCode が空でも該当）'
+      + '</td></tr>'
+      + '<tr><td><span class="tc-hi">無し</span></td><td>'
+      +   '上の<b>ちょうど裏返し</b>。代表商品コードを持たず、どこからも指されていない商品。'
+      + '</td></tr>'
+      + '</tbody></table>'
+      + '<div class="tc-sub" style="background:#f1f5f9;border-color:#cbd5e1;border-left-color:#64748b">'
+      +   '★「有り」と「無し」は同じ1本の判定式の表裏なので、<b>2つ足すと必ず全体になります</b>。<br>'
+      +   '★商品コードの左のマーク（緑＝親／黄＝子）、検索欄の右の送り込みバッジ、'
+      +   '個別/合算/両表示の右の緑黄マークも、すべてこの同じ判定を使っています。'
+      + '</div>';
+  }
+  return ''
+    + '<div class="tc-sub">「広告」は<b>手で設定したステータスの文字列</b>で決まります。'
+    + '実際に広告費が出ているかどうかは見ていません。</div>'
+    + '<table class="tc-table"><tbody>'
+    + '<tr><td style="width:110px"><span class="tc-hi">有り</span></td><td>'
+    +   'ステータスに「<b>広告あり</b>」を含む商品<br>'
+    +   '→ <b>健常-広告あり◯</b> ／ <b>中立-広告あり□</b>'
+    + '</td></tr>'
+    + '<tr><td><span class="tc-hi">無し</span></td><td>'
+    +   'ステータスに「<b>広告なし</b>」を含む商品<br>'
+    +   '→ <b>健常-広告なし◯</b> ／ <b>中立-広告なし□</b>'
+    + '</td></tr>'
+    + '<tr><td style="color:var(--text3)">どちらにも<br>出ない</td><td>'
+    +   'ステータスに「広告あり」「広告なし」のどちらも入っていない商品<br>'
+    +   '→ <b>新商品</b> ／ <b>—（未設定）</b> ／ <b>撤退検討▲</b> ／ <b>撤退予定</b> ／ <b>撤退済み</b>'
+    + '</td></tr>'
+    + '</tbody></table>'
+    + '<div class="tc-sub" style="background:#fff7ed;border-color:#fed7aa;border-left-color:#ea580c">'
+    +   '★このため<b>「有り」＋「無し」は全体より少なくなります</b>（送り込みとは違って表裏の関係ではありません）。'
+    +   '数が合わないときは、上の【ステータス】行で 新商品 や 撤退系 の件数を見てください。<br>'
+    +   '★広告の出稿状況を正しく反映させるには、その商品の<b>ステータスを「…広告あり◯」「…広告なし◯」に直す</b>必要があります。'
+    + '</div>';
+}
+function openXfCondModal(kind) {
+  const m = document.getElementById('xfCondModal');
+  if (!m) return;
+  const t = document.getElementById('xfCondTitle');
+  const b = document.getElementById('xfCondBody');
+  if (t) t.textContent = (kind === 'soi') ? '「送り込み」有り／無し の条件' : '「広告」有り／無し の条件';
+  if (b) b.innerHTML = _xfHelpBody(kind);
+  m.classList.add('open');
+}
+function closeXfCondModal() { const m = document.getElementById('xfCondModal'); if (m) m.classList.remove('open'); }
+(function _xfCondBind() {
+  // ? は絞り込みセルの中にあるので、必ず stopPropagation して絞り込みを発火させない
+  document.addEventListener('click', (e) => {
+    const h = e.target.closest && e.target.closest('.xf-help');
+    if (h) { e.preventDefault(); e.stopPropagation(); openXfCondModal(h.dataset.xfhelp); return; }
+  }, true);
+  const c = document.getElementById('xfCondClose');
+  if (c) c.addEventListener('click', closeXfCondModal);
+  const m = document.getElementById('xfCondModal');
+  if (m) m.addEventListener('click', (e) => { if (e.target === m) closeXfCondModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { const mm = document.getElementById('xfCondModal'); if (mm && mm.classList.contains('open')) closeXfCondModal(); }
+  });
+})();
+
 // ==================== 【v1.0583】クロス絞り込み（広告 × 送り込み）====================
 // ★新しい状態変数は作らない。既存の2つをそのまま2軸として使う:
 //     広告軸     … basicAdFilter   ('all' | 'ad' | 'noad')   … #basicAdFilterBar と共有
@@ -17816,6 +17963,20 @@ function saveColWidth(key, px) {
     _vpTouch('この端末');
   } catch (e) { console.warn('列幅の保存に失敗:', e); }
 }
+// 【v1.0623】列幅をドラッグで変えた直後の通知。連続操作でうるさくならないよう間引く。
+let _vpNotifyTimer = null;
+function _vpNotifySaved() {
+  if (_vpNotifyTimer) clearTimeout(_vpNotifyTimer);
+  _vpNotifyTimer = setTimeout(function () {
+    _vpNotifyTimer = null;
+    const ghOn = (typeof ghIsEnabled === 'function') && ghIsEnabled();
+    const msg = ghOn
+      ? '列幅を保存しました（この端末）。他のPCにも残すには「⬆ 反映する」を押してください。'
+      : '列幅を保存しました（この端末のみ。GitHub連携が未設定です）。';
+    try { showToast(msg, 'warn'); } catch (e) {}
+  }, 700);
+}
+
 // パネルのスライダー用: 保存せず見た目だけ更新する（ドラッグ中に毎回フル保存しないため）
 function _vpPreviewColWidth(key, px) {
   const vp = ensureViewPrefs();
@@ -17950,6 +18111,10 @@ function installColResizeHandles() {
         const finalW = parseFloat(ownerTh.style.width) || COL_RESIZE_MIN_PX;
         saveColWidth(key, finalW);
         applyColWidths();
+        // 【v1.0623】★今までドラッグしても画面に何も出ず、「保存されていない」ように見えていた。
+        //   実際は端末には保存されているが、GitHubへは「⬆ 反映する」を押すまで上がらない（v1.0354で自動保存廃止）。
+        //   それが分かるように一度だけ知らせる（連続ドラッグでは出しっぱなしにしない）。
+        if (moved) _vpNotifySaved();
         // 【v278】列幅ドラッグの直後に発火する spurious click を1回だけ握りつぶし、
         //   ヘッダーのソートが誤発動しないようにする（全テーブル共通）。
         if (moved) {
@@ -18162,6 +18327,8 @@ function _vpRenderPanel() {
   if (up) {
     const n = Object.keys(vp.colWidths).length;
     let t = '調整中の列: ' + n + '件';
+    // 【v1.0623】読み込んだデータより端末が新しくて端末側を維持したときは、その旨と出口を出す
+    if (_vpKeptLocal) t = '⚠ この端末の設定のほうが新しいので維持しています（未反映）。「⬆ この設定を保存」で他PCにも残せます　／　' + t;
     if (vp.updatedAt) {
       const d = new Date(vp.updatedAt);
       if (!isNaN(d)) t += '　最終更新: ' + d.toLocaleString('ja-JP') + (vp.updatedBy ? '（' + vp.updatedBy + '）' : '');
@@ -18204,8 +18371,13 @@ async function _vpPullFromGitHub() {
     if (!data || !data.viewPrefs) { _vpMsg('GitHub側にまだ表示設定が保存されていません（保存したPCで「⬆ この設定を保存」を実行してください）。', 'warn'); return; }
     state.viewPrefs = data.viewPrefs;
     ensureViewPrefs();
+    // 【v1.0623】これは「取り込む」ボタン＝意図的な上書きなので、端末バックアップも取り込んだ側に更新する。
+    //   そうしないと次回の読み込みで「端末のほうが新しい」と判定され、取り込んだ設定がすぐ戻ってしまう。
+    if (!state.viewPrefs.updatedAt) state.viewPrefs.updatedAt = new Date().toISOString();
     _vpLegacyMigrated = true;
+    _vpKeptLocal = null;
     applyViewPrefs();
+    _vpWriteDeviceBackup();
     try { localStorage.setItem(VP_LEGACY_COL_KEY, JSON.stringify(state.viewPrefs.colWidths)); } catch (e) {}
     if (typeof saveToStorage === 'function') saveToStorage();
     _vpRenderPanel();
