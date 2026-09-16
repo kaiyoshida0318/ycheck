@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0639 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0640 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3613,7 +3613,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0639</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0640</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -16853,7 +16853,7 @@ let _peGrain = 'day';         // 'day' | 'month'
 let _peSpan = 60;             // 日別のとき何日ぶん見るか（0＝全期間）
 let _peChart = null;
 // 【v1.0638】全体情報タブの集計範囲: 'set'(合算) | 'self'(個別) | 'parent'(親商品) | 'child'(子商品)
-//   ★既定は 'self'＝従来どおりこの商品だけ。送り込みセットが無い商品では self 以外を押せなくする。
+//   【v1.0640】セットがある商品＝set/parent/child のみ（既定 set）。セットが無い商品＝self のみ。
 let _peScope = 'self';
 function peSetTab(t) {
   _peTab = (t === 'edit') ? 'edit' : 'info';
@@ -16936,22 +16936,26 @@ function peRenderInfo() {
   const wrap = document.getElementById('peTableWrap');
   const cv = document.getElementById('peChart');
   if (!code || !wrap || !cv) return;
-  // 【v1.0638】集計範囲トグルの状態同期。セットが無い商品では self 以外を無効にする。
+  // 【v1.0638】集計範囲トグルの状態同期。
+  // 【v1.0640】★出し分けに変更: セットがある商品＝合算/親商品/子商品（個別は出さない）
+  //                            セットが無い商品＝個別だけ（他の3つは出さない）
+  //   セットがある商品で 'self' のまま来たら（開いた直後など）'set' に寄せる。
   {
     const fam = _peFamily(code);
     const hasSet = fam.members.length >= 2;
     if (!hasSet) _peScope = 'self';
+    else if (_peScope === 'self') _peScope = 'set';
     const sc = document.getElementById('peScopeSeg');
     if (sc) sc.querySelectorAll('.segf-btn').forEach(b => {
       const v = b.getAttribute('data-pescope');
+      const show = hasSet ? (v !== 'self') : (v === 'self');
+      b.style.display = show ? '' : 'none';
+      b.disabled = !show;
+      // 先頭に見えるボタンは左の区切り線を消す（:first-child は非表示のボタンを数えてしまうため）
+      b.style.borderLeft = (show && (hasSet ? v === 'set' : v === 'self')) ? 'none' : '';
       b.classList.toggle('on', v === _peScope);
-      const dis = (!hasSet && v !== 'self');
-      b.disabled = dis;
-      b.style.opacity = dis ? '0.4' : '';
-      b.style.cursor = dis ? 'default' : '';
-      b.title = dis ? 'この商品には送り込みセット（親子）がありません'
-        : (v === 'set' ? 'セット全員（親＋子）を合計して見る（' + fam.members.length + '件）'
-         : v === 'self' ? 'この商品だけを見る'
+      b.title = (v === 'set' ? 'セット全員（親＋子）を合計して見る（' + fam.members.length + '件）'
+         : v === 'self' ? 'この商品だけを見る（送り込みセットはありません）'
          : v === 'parent' ? '送り込み元（親）だけを見る: ' + fam.key
          : '送り込み先（子）だけを合計して見る（' + Math.max(0, fam.members.length - 1) + '件）');
     });
@@ -17078,7 +17082,7 @@ function openProductEditModal(code) {
   { const _sg = document.getElementById('peSoiSearch'); if (_sg) _sg.value = ''; }
   { const _sb = document.getElementById('peSoiSuggest'); if (_sb) { _sb.style.display = 'none'; _sb.innerHTML = ''; } }
   try { _peSoiSync(); } catch (e) {}
-  _peScope = 'self';   // 【v1.0638】開くたびに「個別」に戻す（前に開いた商品の設定を引きずらない）
+  _peScope = 'self';   // 【v1.0638】開くたびにリセット（前に開いた商品の設定を引きずらない）。【v1.0640】セットがある商品では peRenderInfo が 'set'（合算）に寄せる
   // 【v1.0637】この商品の変更記録
   { const _ct = document.getElementById('peClText'); if (_ct) _ct.value = ''; }
   { const _cd = document.getElementById('peClDate'); if (_cd) _cd.value = _clTodayStr(); }
