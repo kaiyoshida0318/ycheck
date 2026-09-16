@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0625 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0626 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3495,7 +3495,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0625</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0626</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6385,6 +6385,7 @@ async function ghLoadFromGitHub(opts) {
       migrateAdStatusLabels();  // 【v185】広告○等→入札価格○等
       migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
       migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
+      migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
     } catch (eMig) { console.warn('[Ycheck診断-load] マイグレーションで例外（読込は継続）:', eMig && eMig.message); }
     // 【v1.0384】localStorageへ書き戻し。容量超過でも critical(productMeta/bid/proRate) は必ず残るよう、
     //   rank→item→ad の順に段階的に落として最小構成でも書き切る。従来は「フル→rank無し」で失敗すると
@@ -6473,6 +6474,7 @@ async function ghLoadFromPublic() {
     migrateAdStatusLabels();
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
+    migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
     ghLog(`閲覧専用: 公開データ取得成功 (${(content.length / 1024).toFixed(1)} KB)`);
     return true;
   } catch (err) {
@@ -6887,6 +6889,7 @@ function loadFromStorage() {
     // 【マイグレーション v212】入札価格△/PRオプ△を廃止し ✕ へ移行
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
+    migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
 }
@@ -7006,6 +7009,40 @@ function migrateStatusResetV195() {
   try { localStorage.setItem('ycheck_statusResetV195', '1'); } catch (e) {}
   console.log(`Ycheck: 【v195】既存ステータス ${n}件を「新商品」にリセット（一度きり・撤退済みは維持）`);
   saveToStorage();
+}
+
+// 【v1.0626】いま「子」になっている商品（代表商品コードが自分以外を指している）を、
+//   一度だけステータス「子（親に追従）」に変える。
+//   ★一度きり。フラグは rankMeta（GitHub同期に乗る）と localStorage の両方に置く。
+//   ★元の値は meta._statusBeforeChild に残す。戻したくなったらそこから復元できる。
+//   ★撤退済みの子は触らない（撤退の扱いは商品ごとに持つ方針＝effectiveStatusOf のコメント参照）。
+function migrateChildStatusV1626() {
+  if (!state.productMeta) return;
+  let done = false;
+  try { if (localStorage.getItem('ycheck_childStatusV1626')) done = true; } catch (e) {}
+  if (state.rankMeta && state.rankMeta.childStatusV1626) done = true;
+  if (done) return;
+  const ts = Date.now();
+  let n = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const m = state.productMeta[code];
+    if (!m) return;
+    if (!statusParentCode(code)) return;                 // 子でない
+    if (m.status === STATUS_LIFE_CHILD) return;          // すでに子ステータス
+    if (m.status === '撤退済み') return;                  // 撤退済みは触らない
+    m._statusBeforeChild = m.status || '';               // 戻せるように控える
+    m.status = STATUS_LIFE_CHILD;
+    m.statusTs = ts; m._ts = ts;
+    n++;
+  });
+  state.rankMeta = state.rankMeta || {};
+  state.rankMeta.childStatusV1626 = true;
+  try { localStorage.setItem('ycheck_childStatusV1626', '1'); } catch (e) {}
+  if (n > 0) {
+    console.log('Ycheck: 【v1.0626】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」にしました（一度きり）');
+    try { ycLog('edit', '【v1.0626】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」に変更（一度きりの移行・元の値は _statusBeforeChild に保存）'); } catch (e) {}
+    saveToStorage();
+  }
 }
 
 // 既存の state.bid に大文字混じりキーがある場合、小文字統一に変換
@@ -9000,7 +9037,9 @@ function updateStateCounts() {
     else if (proS === 'PR△-飛ぶ手前固定') proHfixed++;
     else if (proS === 'PR×' || proS === 'PRオプ×' || proS === 'PRO×') proNg++;
     // 【v195】ステータス（商品ライフサイクル）別カウント。旧値(通常商品/現役商品)は新商品扱い。
-    const st = meta.status || '';
+    // 【v1.0626】「子（親に追従）」は親のステータスとして数える（＝親とセットで見る）。
+    //   下のクロス絞り込みの件数も同じ st を使うので、ここを直せば両方そろう。
+    const st = effectiveStatusOf(code);
     if ((st || '新商品') === '新商品' || st === '通常商品' || st === '現役商品') newProductCount++;
     else if (st === '健常-広告あり◯') sKenzenAd++;
     else if (st === '健常-広告なし◯') sKenzenNoad++;
@@ -9114,7 +9153,7 @@ const PRO_STATUS_ORDER = {
 };
 const STATUS_ORDER = { '新商品': 0, '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
   '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0,
-  '—': -1 };  // 互換用（旧値。out記入済は撤退予定へ統合）／【v1.0614】未設定(—)は先頭に寄せて見つけやすくする
+  '—': -1, '子（親に追従）': 0.5 };  // 互換用（旧値。out記入済は撤退予定へ統合）／【v1.0614】未設定(—)は先頭／【v1.0626】子は新商品の直後
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
 function proStatusOrder(v) { const k = v || ''; return PRO_STATUS_ORDER[k] != null ? PRO_STATUS_ORDER[k] : 99; }
 function statusOrder(v)    { const k = v || ''; return STATUS_ORDER[k] != null ? STATUS_ORDER[k] : 99; }
@@ -9328,7 +9367,8 @@ const STATUS_LIFE_COLOR = {
   '撤退検討▲': '#ea7317',          // オレンジ
   '撤退予定': '#dc2626',           // 赤
   '撤退済み': '#8b5a2b',           // 茶色
-  '—': '#94a3b8'                  // 【v1.0614】未設定（—）: グレー
+  '—': '#94a3b8',                 // 【v1.0614】未設定（—）: グレー
+  '子（親に追従）': '#92400e'       // 【v1.0626】子: 商品コード左の黄色バッジ(.rep-badge.child)と同じ色
 };
 // 【v1.0614】ステータスでも「—（未設定）」を明示的に選べるようにした。
 //   入札状態・PRオプ状態は以前から空文字 '' が「—」として選べたが、ステータスだけ選択肢が無かった。
@@ -9336,8 +9376,31 @@ const STATUS_LIFE_COLOR = {
 //     '' で保存すると全部「新商品」に化けてしまうため。そこで truthy な文字 '—' そのものを値にする。
 //     こうすると `||` フォールバック・`if (!meta.status)` 補完のどちらにも引っかからず、そのまま残る。
 const STATUS_LIFE_NONE = '—';
-const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
+// 【v1.0626】子商品用のステータス。「この商品のステータスは親に合わせて読む」という意思表示。
+//   ★状態の継承（v1.0438〜v1.0617）とは別物。あちらは値を書き換えていたが、これは値はこのまま置いて
+//     絞り込み・件数のときだけ親の値として扱う（＝親を変えても子の保存値はいじらない）。
+//   ★解決は effectiveStatusOf() 1本に集約。ステータスを読んで絞り込む処理は必ずそれを通すこと。
+const STATUS_LIFE_CHILD = '子（親に追従）';
+const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', STATUS_LIFE_CHILD, '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
 function statusLifeColor(value) { return STATUS_LIFE_COLOR[value] || '#1a1a1a'; }
+// 【v1.0626】★絞り込み・件数で使う「実効ステータス」。
+//   ステータスが「子（親に追従）」の商品は、親（代表商品コードの先）のステータスとして扱う。
+//   ・保存値（productMeta[code].status）は書き換えない。読むときだけ親に置き換える。
+//   ・親も「子（親に追従）」（多段）のときは、そこで打ち切って子のまま返す（無限ループ防止）。
+//   ・★撤退判定（isRetired）はこれを通さない。親が撤退済みでも子が勝手に消えるのは事故のもとなので、
+//     撤退はあくまで商品ごとに持つ。
+//   ★ステータスを読んで絞り込む／数える処理は、必ずこの関数を通すこと。
+//     meta.status を直接見ると「親とセットで考える」が効かない。
+function effectiveStatusOf(code) {
+  const pm = state.productMeta || {};
+  const m = pm[code] || {};
+  const v = statusLifeDisplayValue(m.status || '新商品');
+  if (v !== STATUS_LIFE_CHILD) return v;
+  const p = (typeof statusParentCode === 'function') ? statusParentCode(code) : '';
+  if (!p) return v;                                   // 親がいないのに子ステータス → そのまま
+  const pv = statusLifeDisplayValue((pm[p] || {}).status || '新商品');
+  return (pv === STATUS_LIFE_CHILD) ? v : pv;         // 多段は打ち切り
+}
 // 【v1.0457】hex色→rgba文字列（子ステータスの淡い塗り／やわらかい枠の生成用）
 function _lifeRgba(hex, a) {
   let h = String(hex || '').replace('#', '');
@@ -9357,7 +9420,8 @@ const STATUS_LIFE_DISPLAY_LABEL = {
   '健常-広告あり◯': '健常<br>広告あり◯',
   '健常-広告なし◯': '健常<br>広告なし◯',
   '中立-広告あり□': '中立<br>広告あり□',
-  '中立-広告なし□': '中立<br>広告なし□'
+  '中立-広告なし□': '中立<br>広告なし□',
+  '子（親に追従）': '子<br>(親に追従)'   // 【v1.0626】
 };
 function statusLifeDisplayLabel(value) {
   if (STATUS_LIFE_DISPLAY_LABEL[value]) return STATUS_LIFE_DISPLAY_LABEL[value];  // 固定略称（静的HTML・安全）
@@ -9405,8 +9469,17 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
   const dis = ghIsEnabled() ? '' : ' disabled';
+  // 【v1.0626】「子（親に追従）」のときは、いま実際に何として集計されているかをツールチップに出す
+  let _tipLife = '';
+  if (value === STATUS_LIFE_CHILD) {
+    const _p = statusParentCode(code);
+    const _eff = effectiveStatusOf(code);
+    _tipLife = _p
+      ? ` title="${escapeHtml('親（' + _p + '）のステータス「' + _eff + '」として絞り込み・件数に出ます。\nこの商品自身の保存値は「' + STATUS_LIFE_CHILD + '」のままです。')}"`
+      : ` title="${escapeHtml('代表商品コードが設定されていないため、追従する親がいません。\n商品情報を編集から代表商品コードを設定してください。')}"`;
+  }
   return `<span class="status-cell status-cell-life">`
-    + `<span class="status-facade status-facade-life" style="color:${c};border-color:${bd}">${statusLifeDisplayLabel(value)}<span class="status-chev">▾</span></span>`
+    + `<span class="status-facade status-facade-life" style="color:${c};border-color:${bd}"${_tipLife}>${statusLifeDisplayLabel(value)}<span class="status-chev">▾</span></span>`
     + `<select class="status-select status-overlay"${dis} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`
     + `</span>`;
 }
@@ -9742,7 +9815,8 @@ function renderBasic() {
   //     → メンバーの誰か1人でも当てはまればセットを残す。
   if (!q && basicAdFilter !== 'all' && !_hideAdBar) {
     const _needle = (basicAdFilter === 'ad') ? '広告あり' : '広告なし';
-    const _hit = (c) => (((state.productMeta[c] || {}).status) || '').indexOf(_needle) !== -1;
+    // 【v1.0626】「子（親に追従）」は親のステータスで判定する（effectiveStatusOf）
+    const _hit = (c) => String(effectiveStatusOf(c) || '').indexOf(_needle) !== -1;
     list = list.filter(r => {
       if (_editPinnedCodes.has(r.code)) return true;
       const mem = (r._rollup && Array.isArray(r._members) && r._members.length) ? r._members : [r.code];
@@ -14649,11 +14723,13 @@ const STATE_FILTERS = {
   'ad-all':        { label: '全体',       targetView: 'ad-adjust',  match: (meta, code) => { const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
   // 【v1.0496】PR状態の「全体」＝PRオプ調整（pro-adjust）の画面と同じ内容で全商品を表示。
   'pro-all':       { label: '全体',       targetView: 'pro-adjust', match: () => true },
-  'new-product':      { label: '新商品',           targetView: 'basic', match: (meta) => statusLifeDisplayValue(meta.status || '新商品') === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
-  'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告あり◯' },
-  'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', match: (meta) => (meta.status || '') === '健常-広告なし◯' },
-  'status-churitsu-ad':{ label: '中立-広告あり□',   targetView: 'basic', match: (meta) => (meta.status || '') === '中立-広告あり□' },
-  'status-churitsu-noad':{ label: '中立-広告なし□', targetView: 'basic', match: (meta) => (meta.status || '') === '中立-広告なし□' },
+  // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
+  //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
+  'new-product':      { label: '新商品',           targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
+  'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '健常-広告あり◯' },
+  'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '健常-広告なし◯' },
+  'status-churitsu-ad':{ label: '中立-広告あり□',   targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '中立-広告あり□' },
+  'status-churitsu-noad':{ label: '中立-広告なし□', targetView: 'basic', match: (meta, code) => effectiveStatusOf(code) === '中立-広告なし□' },
   'ad-ok':         { label: '入札◯',            targetView: 'ad-adjust',  match: (meta) => adStatusIsCircle(meta.adStatus || '') },
   'ad-ng':         { label: '入札×-調整中',      targetView: 'ad-adjust',  match: (meta) => adStatusIsCross(meta.adStatus || '') },
   'ad-fixed':      { label: '入札△-飛ぶ手前固定', targetView: 'ad-adjust',  match: (meta) => adStatusIsSettled(meta.adStatus || '') },
@@ -14664,8 +14740,8 @@ const STATE_FILTERS = {
   'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
   'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'pro-adjust', match: (meta) => (meta.proStatus || '') === 'PR△-飛ぶ手前固定' },
   'pro-ng':        { label: 'PR×',              targetView: 'pro-adjust', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
-  'pro-wc':        { label: '撤退検討▲',        targetView: 'basic',   match: (meta) => (meta.status || '') === '撤退検討▲' },
-  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic',   match: (meta) => { const s = meta.status || ''; return s === '撤退予定' || s === '撤退■' || s === '撤退予定-out記入済'; } },
+  'pro-wc':        { label: '撤退検討▲',        targetView: 'basic',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
+  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
   'unselected-ad': { label: '選択前-入札□', targetView: 'ad-adjust',  match: (meta) => !(meta.adStatus || '') },
   'unselected-pro':{ label: '選択前-PR□', targetView: 'pro-adjust', match: (meta) => !(meta.proStatus || '') }
@@ -17782,6 +17858,11 @@ function _xfHelpBody(kind) {
     + '<tr><td style="color:var(--text3)">どちらにも<br>出ない</td><td>'
     +   'ステータスに「広告あり」「広告なし」のどちらも入っていない商品<br>'
     +   '→ <b>新商品</b> ／ <b>—（未設定）</b> ／ <b>撤退検討▲</b> ／ <b>撤退予定</b> ／ <b>撤退済み</b>'
+    + '</td></tr>'
+    + '<tr><td><span class="tc-hi">子（親に追従）</span></td><td>'
+    +   'ステータスが <b>子（親に追従）</b> の商品は、<b>親（代表商品コードの先）のステータス</b>で判定します。<br>'
+    +   '親が「健常-広告あり◯」なら、その子も<b>「有り」に出ます</b>（＝親とセットで見られます）。<br>'
+    +   '<span style="color:var(--text3)">※ステータス欄の表示は「子（親に追従）」のままで、保存値も書き換わりません。</span>'
     + '</td></tr>'
     + '</tbody></table>'
     + '<div class="tc-sub" style="background:#fff7ed;border-color:#fed7aa;border-left-color:#ea580c">'
