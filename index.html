@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0630 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0631 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2061,6 +2061,46 @@ td:has(> .name-cell-wrap) {
   width: 100%;
 }
 .pe-input:focus { outline: none; border-color: var(--accent); }
+/* 【v1.0631】商品情報を編集の「送り込み（親子）」 */
+.soi-edit { display: flex; flex-direction: column; gap: 8px; }
+.soi-seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; align-self: flex-start; }
+.soi-seg-btn {
+  font-size: 0.84rem; font-weight: 600; font-family: inherit;
+  padding: 7px 14px; border: none; border-left: 1px solid var(--border2);
+  background: var(--bg2); color: var(--text2); cursor: pointer; white-space: nowrap;
+}
+.soi-seg-btn:first-child { border-left: none; }
+.soi-seg-btn:hover { background: var(--bg3); }
+.soi-seg-btn.on { background: var(--accent); color: #fff; }
+.soi-seg-btn.is-parent.on { background: var(--green); }
+.soi-seg-btn.is-child.on  { background: #fde68a; color: #92400e; }
+.soi-pick { display: flex; flex-direction: column; gap: 7px; }
+.soi-search-wrap { position: relative; }
+.soi-search { width: 100%; box-sizing: border-box; }
+.soi-suggest {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 320;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.16); max-height: 260px; overflow: auto;
+}
+.soi-sg-item { display: flex; align-items: center; gap: 9px; padding: 7px 11px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.soi-sg-item:last-child { border-bottom: none; }
+.soi-sg-item:hover, .soi-sg-item.act { background: #eef4ff; }
+.soi-sg-code { font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.78rem; color: var(--text3); flex: 0 0 auto; }
+.soi-sg-name { font-size: 0.86rem; font-weight: 600; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.soi-sg-tag { flex: 0 0 auto; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #dcfce7; color: #15803d; }
+.soi-sg-tag.warn { background: #fef3c7; color: #92400e; }
+.soi-sg-empty { padding: 10px 12px; font-size: 0.82rem; color: var(--text3); }
+.soi-picked {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 6px 8px 6px 11px;
+}
+.soi-picked-code { font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.8rem; color: #92400e; font-weight: 700; }
+.soi-picked-name { font-size: 0.86rem; font-weight: 600; color: var(--text); max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.soi-picked-clear { border: none; background: transparent; color: var(--text3); font-size: 1rem; line-height: 1; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+.soi-picked-clear:hover { background: rgba(0,0,0,.06); color: var(--red); }
+.soi-note { font-size: 0.78rem; line-height: 1.6; color: var(--text3); }
+.soi-note b { color: var(--text2); }
+.soi-note .ng { color: #b91c1c; font-weight: 700; }
 .pe-code-display {
   padding: 8px 12px;
   border-radius: 7px;
@@ -3522,7 +3562,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0630</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0631</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4594,6 +4634,31 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="pe-code-display" id="peCode">—</div>
         <button class="btn sm ghost" id="peChangeCodeBtn" type="button" title="商品コードを別コードに変更し、データを丸ごと移行します（広告順位・SEO順位はリセット）">🔁 コード変更（履歴ごと移行）</button>
       </div>
+      <!-- 【v1.0631】送り込み（親子）。商品コードの真下。
+           ★保存は従来どおり #peRepCode（hidden）を読むだけ。saveProductEdit は無変更。
+             役割ボタンと検索は、その hidden の値を作るための入口にすぎない。
+             なし → ''／親 → 自分の商品コード（自己参照＝この表の親の印）／子 → 選んだ親の商品コード -->
+      <div class="pe-row">
+        <label class="pe-label">送り込み（親子）</label>
+        <input type="hidden" id="peRepCode">
+        <div class="soi-edit">
+          <div class="soi-seg" id="peSoiSeg" role="group" aria-label="送り込みの役割">
+            <button type="button" class="soi-seg-btn" data-soirole="none">なし</button>
+            <button type="button" class="soi-seg-btn is-parent" data-soirole="parent">親（送り込み元）</button>
+            <button type="button" class="soi-seg-btn is-child"  data-soirole="child">子（送り込み先）</button>
+          </div>
+          <!-- 子のとき: 送り込み元（親）を検索して選ぶ -->
+          <div class="soi-pick" id="peSoiPick" style="display:none">
+            <div id="peSoiPicked"></div>
+            <div class="soi-search-wrap">
+              <input type="search" id="peSoiSearch" class="pe-input soi-search" placeholder="送り込み元（親）を商品コード・商品名で検索..."
+                autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+              <div class="soi-suggest" id="peSoiSuggest" style="display:none"></div>
+            </div>
+          </div>
+          <div class="soi-note" id="peSoiNote"></div>
+        </div>
+      </div>
       <div class="pe-row">
         <label class="pe-label" for="peName">商品名</label>
         <input type="text" id="peName" class="pe-input" placeholder="商品名を入力...">
@@ -4606,10 +4671,6 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="pe-row" style="display:none">
         <label class="pe-label" for="peSearchUrl">検索URL</label>
         <input type="url" id="peSearchUrl" class="pe-input" placeholder="https://...">
-      </div>
-      <div class="pe-row">
-        <label class="pe-label" for="peRepCode">代表商品コード（＝送り込み元商品コード）</label>
-        <input type="text" id="peRepCode" class="pe-input" placeholder="同じグループの代表コード（空欄可）">
       </div>
       <div class="pe-row">
         <label class="pe-label" for="peProductUrl">商品ページURL</label>
@@ -16503,6 +16564,14 @@ function openProductEditModal(code) {
   $('#peProductUrl').value = m.productUrl || defaultYahooProductUrl(code);
   // 【v124】代表商品コード
   $('#peRepCode').value = meta.repCode || '';
+  // 【v1.0631】送り込み（親子）UIを現在値に合わせる。
+  //   ★_peSoiSync は「いま開いている商品コード」を productEditModal.dataset.code から読む。
+  //     この行より後で dataset.code を入れていると、前に開いた商品のコードで判定してしまい、
+  //     親（自己参照）が「子」に見える等の取り違えが起きる（実際に踏んだ）。→ ここで先に確定させる。
+  productEditModal.dataset.code = code;
+  { const _sg = document.getElementById('peSoiSearch'); if (_sg) _sg.value = ''; }
+  { const _sb = document.getElementById('peSoiSuggest'); if (_sb) { _sb.style.display = 'none'; _sb.innerHTML = ''; } }
+  try { _peSoiSync(); } catch (e) {}
   // 画像編集の一時状態を現在のmaster値で初期化
   peImageState = {
     customImage: m.customImage || null,
@@ -16636,6 +16705,159 @@ function showToast(msg, type) {
   el.addEventListener('click', _dismiss);
   _toastTimer = setTimeout(_dismiss, _dur);
 }
+
+// ==================== 【v1.0631】商品情報を編集: 送り込み（親子）の設定UI ====================
+// ★保存は従来どおり #peRepCode（hidden）の値を saveProductEdit が読むだけ。ここはその値を作る入口。
+//   なし → ''／親 → 自分の商品コード（自己参照。v1.0326の「自己参照の親」と同じ）／子 → 選んだ親のコード
+// ★役割は repCode から機械的に決める（別の状態変数を持たない）。
+//   '' → なし ／ 自分と同じ → 親 ／ それ以外 → 子
+function _peSoiRoleOf(code, rep) {
+  const r = String(rep || '').trim();
+  if (!r) return 'none';
+  return (r === String(code)) ? 'parent' : 'child';
+}
+function _peSoiSetRep(v) {
+  const el = document.getElementById('peRepCode');
+  if (el) el.value = String(v || '');
+  _peSoiSync();
+}
+// 画面をいまの #peRepCode に合わせて描き直す（役割ボタン・選択中の親・注記）
+function _peSoiSync() {
+  const code = (productEditModal && productEditModal.dataset.code) || '';
+  const repEl = document.getElementById('peRepCode');
+  const rep = repEl ? String(repEl.value || '').trim() : '';
+  const role = _peSoiRoleOf(code, rep);
+  document.querySelectorAll('#peSoiSeg .soi-seg-btn').forEach(b => b.classList.toggle('on', b.dataset.soirole === role));
+  const pick = document.getElementById('peSoiPick');
+  if (pick) pick.style.display = (role === 'child') ? 'flex' : 'none';
+
+  // 選択中の親（子のときだけ）
+  const picked = document.getElementById('peSoiPicked');
+  if (picked) {
+    if (role === 'child') {
+      const pm = (state.master || {})[rep];
+      picked.innerHTML = '<span class="soi-picked">'
+        + '<span class="soi-picked-code">' + escapeHtml(rep) + '</span>'
+        + '<span class="soi-picked-name">' + escapeHtml((pm && pm.name) || '（商品マスタに無いコード）') + '</span>'
+        + '<button type="button" class="soi-picked-clear" id="peSoiClear" title="選び直す">×</button>'
+        + '</span>';
+    } else picked.innerHTML = '';
+  }
+
+  // 注記
+  const note = document.getElementById('peSoiNote');
+  if (!note) return;
+  const pmAll = state.productMeta || {};
+  const kids = Object.keys(pmAll).filter(c => String((pmAll[c] || {}).repCode || '').trim() === String(code) && c !== String(code));
+  let h = '';
+  if (role === 'none') {
+    h = '親子の関係を設定しません。'
+      + (kids.length ? ' <b class="ng">ただし、他の ' + kids.length + ' 商品がこの商品を送り込み元に指定しています</b>（' + escapeHtml(kids.slice(0,6).join(', ')) + (kids.length>6?' …':'') + '）。実質は親です。' : '');
+  } else if (role === 'parent') {
+    h = 'この商品を<b>送り込み元（親）</b>にします。代表商品コードには自分の商品コードが入ります。<br>'
+      + (kids.length ? 'いまこの商品を指している子: <b>' + kids.length + '件</b>（' + escapeHtml(kids.slice(0,8).join(', ')) + (kids.length>8?' …':'') + '）'
+                     : 'まだ子はいません。子側の商品を開いて「子（送り込み先）」からこの商品を選んでください。');
+  } else {
+    const prep = String((pmAll[rep] || {}).repCode || '').trim();
+    if (!rep) h = '<b class="ng">送り込み元（親）を選んでください。</b>';
+    else if (rep === String(code)) h = '<b class="ng">自分自身は選べません。</b>';
+    else if (!(state.master || {})[rep]) h = '<b class="ng">選んだコードが商品マスタにありません。</b>';
+    else if (prep && prep !== rep) h = '<b class="ng">選んだ商品は、さらに別の商品（' + escapeHtml(prep) + '）の子です。</b>親子は1段だけにしてください。';
+    else h = 'この商品の売上は、<b>' + escapeHtml(rep) + '</b> の送り込み先として扱われます。合算・両表示ではこのセットで計算されます。';
+  }
+  note.innerHTML = h;
+}
+// 親の候補を検索して出す
+function _peSoiSuggest(q) {
+  const box = document.getElementById('peSoiSuggest');
+  if (!box) return;
+  const code = (productEditModal && productEditModal.dataset.code) || '';
+  const kw = String(q || '').trim().toLowerCase();
+  if (!kw) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const pmAll = state.productMeta || {};
+  const referenced = (typeof getReferencedRepCodes === 'function') ? getReferencedRepCodes() : new Set();
+  const hits = [];
+  Object.keys(state.master || {}).forEach(c => {
+    if (c === code) return;                                     // 自分は出さない
+    const m = state.master[c] || {};
+    const hay = (c + ' ' + (m.name || '')).toLowerCase();
+    if (hay.indexOf(kw) === -1) return;
+    const rep = String((pmAll[c] || {}).repCode || '').trim();
+    const isChild = !!rep && rep !== c;                          // その商品自身が子＝1段を超えるので注意表示
+    const isParent = referenced.has(c);
+    hits.push({ code: c, name: m.name || '', isChild: isChild, isParent: isParent,
+                retired: (typeof isRetired === 'function') ? isRetired(c) : false });
+  });
+  // 既に親になっている商品を先頭へ（つなぎ先はたいてい既存の親）
+  hits.sort((a, b) => (b.isParent ? 1 : 0) - (a.isParent ? 1 : 0) || (a.code < b.code ? -1 : 1));
+  const top = hits.slice(0, 30);
+  if (!top.length) { box.innerHTML = '<div class="soi-sg-empty">一致する商品がありません</div>'; box.style.display = 'block'; return; }
+  box.innerHTML = top.map(h => {
+    let tag = '';
+    if (h.isChild)       tag = '<span class="soi-sg-tag warn">他の子</span>';
+    else if (h.isParent) tag = '<span class="soi-sg-tag">親</span>';
+    if (h.retired)       tag += '<span class="soi-sg-tag warn">撤退済み</span>';
+    return '<div class="soi-sg-item" data-soipick="' + escapeHtml(h.code) + '">'
+      + '<span class="soi-sg-code">' + escapeHtml(h.code) + '</span>'
+      + '<span class="soi-sg-name">' + escapeHtml(h.name || '（商品名なし）') + '</span>' + tag + '</div>';
+  }).join('');
+  box.style.display = 'block';
+}
+(function _peSoiBind() {
+  document.addEventListener('click', (e) => {
+    // 役割ボタン
+    const seg = e.target.closest && e.target.closest('#peSoiSeg .soi-seg-btn');
+    if (seg) {
+      e.preventDefault();
+      const code = (productEditModal && productEditModal.dataset.code) || '';
+      const r = seg.dataset.soirole;
+      if (r === 'none') _peSoiSetRep('');
+      else if (r === 'parent') _peSoiSetRep(code);
+      else {
+        // 子: いまのが子ならそのまま、そうでなければ空にして検索へ
+        const cur = String((document.getElementById('peRepCode') || {}).value || '').trim();
+        _peSoiSetRep((cur && cur !== code) ? cur : '');
+        const box = document.getElementById('peSoiPick'); if (box) box.style.display = 'flex';
+        _peSoiSync();
+        setTimeout(() => { const i = document.getElementById('peSoiSearch'); if (i) { i.value = ''; i.focus(); } }, 0);
+      }
+      return;
+    }
+    // 候補クリック
+    const it = e.target.closest && e.target.closest('.soi-sg-item[data-soipick]');
+    if (it) {
+      e.preventDefault();
+      _peSoiSetRep(it.dataset.soipick);
+      const box = document.getElementById('peSoiSuggest'); if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+      const i = document.getElementById('peSoiSearch'); if (i) i.value = '';
+      return;
+    }
+    // 選択中の親の × （選び直す）
+    if (e.target.closest && e.target.closest('#peSoiClear')) {
+      e.preventDefault();
+      _peSoiSetRep('');
+      const box = document.getElementById('peSoiPick'); if (box) box.style.display = 'flex';
+      setTimeout(() => { const i = document.getElementById('peSoiSearch'); if (i) i.focus(); }, 0);
+      return;
+    }
+    // 外side クリックで候補を閉じる
+    if (!(e.target.closest && e.target.closest('.soi-search-wrap'))) {
+      const box = document.getElementById('peSoiSuggest'); if (box) box.style.display = 'none';
+    }
+  });
+  const inp = document.getElementById('peSoiSearch');
+  if (inp) {
+    inp.addEventListener('input', () => _peSoiSuggest(inp.value));
+    inp.addEventListener('focus', () => _peSoiSuggest(inp.value));
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { const box = document.getElementById('peSoiSuggest'); if (box) box.style.display = 'none'; }
+      if (e.key === 'Enter') {
+        const first = document.querySelector('#peSoiSuggest .soi-sg-item[data-soipick]');
+        if (first) { e.preventDefault(); first.click(); }
+      }
+    });
+  }
+})();
 
 function saveProductEdit(opts) {
   opts = opts || {};
