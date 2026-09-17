@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0644 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0645 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -714,6 +714,10 @@ body.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state] { background: #fff; border-color: #dfe3e9; color: #334155; }
 .top-nav-3 .state-chip[data-state]:hover { background: #f6f8fb; border-color: #c3cad4; }
 .top-nav-3 .state-chip[data-state].active { background: currentColor; border: 1.5px solid currentColor; }
+/* 【v1.0645】調整-入札価格タブ: そのチップで絞ると入札価格の表に1件以上出る（＝広告を出している商品がある）ものは枠を太く濃く。
+   padding を1px詰めて、枠が太くなってもチップの大きさ（＝行の並び）が変わらないようにしている。 */
+.top-nav-3 .state-chip[data-state].chip-adlive { border: 2px solid #1f2937; padding: 2px 6px; }
+.top-nav-3 .state-chip[data-state].chip-adlive.active { border-color: #1f2937; }
 .top-nav-3 .state-chip[data-state] .chip-label,
 .top-nav-3 .state-chip[data-state]:hover .chip-label,
 .top-nav-3 .state-chip[data-state].active .chip-label { color: inherit; }
@@ -3614,7 +3618,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0644</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0645</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9230,7 +9234,32 @@ function buildFullAggregate() {
 }
 
 // ==================== Status counts ====================
+// 【v1.0645】★状態を変えても、その瞬間には件数を動かさない（v77 の「その場では動かさない」方針を維持）。
+//   変更したら _stateCountsStale を立てておき、次のどれかで件数（状態チップの( )・クロス絞り込み表の数字・
+//   調整-入札価格の太枠・修正あり等の件数）をまとめて数え直す:
+//     ・何かボタン類を押したとき（「⬆ 反映する」・タブ・チップ・クロス絞り込み・並べ替え・トグル…）
+//     ・renderAll() が走ったとき（ビュー切替など。renderAll は元から updateStateCounts を呼ぶ）
+//     ・ページの更新（再読み込み）
+//   ★表そのものは描き直さない（編集した行は pinEditedCode でその場に残す＝従来どおり）。数字とボタンの枠だけ。
+let _stateCountsStale = false;
+function ycRefreshStaleStateCounts() {
+  if (!_stateCountsStale) return;
+  _stateCountsStale = false;
+  try { updateStateCounts(); } catch (e) { console.warn('[Ycheck] 件数の再集計に失敗', e); }
+  try { if (typeof updateTuneChipEmphasis === 'function') updateTuneChipEmphasis(); } catch (e) {}
+  try { if (typeof updateTuneBar === 'function') updateTuneBar(); } catch (e) {}
+}
+// ボタン類を押したら数え直す。★押したボタン自身の処理（renderAll 等）が済んでから数えるため setTimeout で後ろへ回す。
+//   <select>（状態のドロップダウン）を開く操作は対象外＝変更した瞬間には動かない。
+document.addEventListener('click', (e) => {
+  if (!_stateCountsStale) return;
+  const t = e.target && e.target.closest && e.target.closest('button, a.nav-tab, .state-chip, .xf-cell, .tune-chip, .segf-btn, .tune-period-btn, th[data-sort]');
+  if (!t) return;
+  setTimeout(ycRefreshStaleStateCounts, 0);
+}, true);
+
 function updateStateCounts() {
+  _stateCountsStale = false;   // 【v1.0645】数え直したので未反映フラグを下ろす
   const allCodes = new Set();
   (state.item || []).forEach(i => allCodes.add(i.code));
   dailyCodes().forEach(c => allCodes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
@@ -13409,6 +13438,8 @@ function renderAdAdjust(cfg) {
 
   // 【v239】調整グループ絞り込み（tune用）。groupFilterがあれば該当商品のみ。
   if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
+  // 【v1.0645】調整-入札価格: クロス絞り込みの広告軸（検索中はバイパス＝renderBasic と同じ）
+  if (groupFilter && !q) list = _tuneApplyAdAxis(list);
 
   const _adEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
   const tbody = $(tableSel + ' tbody');
@@ -13580,6 +13611,8 @@ function renderProAdjust(cfg) {
 
   // 【v239】調整グループ絞り込み（tune用）
   if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
+  // 【v1.0645】調整-PRオプ: クロス絞り込みの広告軸（検索中はバイパス）
+  if (groupFilter && !q) list = _tuneApplyAdAxis(list);
 
   const _proEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
   const tbody = $(tableSel + ' tbody');
@@ -15118,6 +15151,7 @@ function renderAll() {
   else if (state.currentView === 'review-sales4') renderReviewSales4();
   // 【v239】調整サブフィルタバーの表示/件数を更新（毎日の順位更新後も renderAll 経由で自動反映）
   if (typeof updateTuneBar === 'function') updateTuneBar();
+  if (typeof updateTuneChipEmphasis === 'function') updateTuneChipEmphasis();   // 【v1.0645】
   // 【v1.0548】状態チップ行の表示/非表示（商品-基本データ と【調整】のみ）
   if (typeof updateStateBarVisibility === 'function') updateStateBarVisibility();
   if (typeof _updateReportDueGlow === 'function') _updateReportDueGlow();  // 【v1.0402】月次レポート未追加なら光らせる
@@ -15321,6 +15355,24 @@ function applyStateFilter(filterKey) {
   if (!def) return;
   clearEditPins();  // 【fix】フィルタを掛け替える操作は再絞り込みの引き金 → ピン解除
   resetAllSorts();
+  // 【v1.0645】★いま 調整-入札価格 / 調整-PRオプ を開いているときは、そのタブの表のまま絞り込む（調整-基本へ飛ばない）。
+  //   絞り込み本体は renderAdAdjust / renderProAdjust に昔からある「targetView が ad-adjust / pro-adjust のとき」の分岐を
+  //   そのまま使う（ad-tune / pro-tune も同じ関数で描いているので効く）。★新しい絞り込みロジックは足していない。
+  //   ・調整グループ（修正あり/推移確認/未確認/全体）は「全体」に切り替える。チップ×修正あり の二重絞りで空になるのを避けるため
+  //   ・撤退済み（retired へ行く）だけは従来どおり
+  const _tuneTarget = _tuneStateTargetOf(state.currentView);
+  if (_tuneTarget && def.targetView !== 'retired') {
+    state.activeStateFilter = { type: filterKey, targetView: _tuneTarget, label: def.label, inTune: state.currentView };
+    if (_tuneTarget === 'ad-adjust') { adAdjustSortKey = 'adCost2'; adAdjustSortDir = -1; }
+    else { proAdjustSortKey = 'seoRev2'; proAdjustSortDir = -1; }
+    tuneGroup = 'all';
+    adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;
+    if (typeof resetTuneMembers === 'function') resetTuneMembers();
+    updateActiveStateChip();
+    updateFilterBanners();
+    renderAll();
+    return;
+  }
   // 【v256】状態チップで全体ビューへ絞り込むとき、最新完了月の値で降順にする。
   //   入札価格関連(ad-adjust)=実績額(adCost2)／PRオプ関連(pro-adjust)=SEO売上(seoRev2)。
   //   ※ resetAllSorts が ad を 'adRev2'（比較器に無い無効キー）にしていたのを、ここで実績額キーに上書き。
@@ -15337,6 +15389,44 @@ function applyStateFilter(filterKey) {
   updateActiveStateChip();
   updateFilterBanners();
   renderAll();
+}
+
+// 【v1.0645】調整タブ → 状態チップの絞り込み先（renderAdAdjust / renderProAdjust が見る targetView）
+function _tuneStateTargetOf(view) {
+  return view === 'ad-tune' ? 'ad-adjust' : view === 'pro-tune' ? 'pro-adjust' : null;
+}
+// 【v1.0645】調整タブの表にもクロス絞り込みの「広告 有り／無し」を効かせる。
+//   判定は renderBasic の basicAdFilter とまったく同じ（ステータス文字列に 広告あり／広告なし を含むか。effectiveStatusOf 経由）。
+//   ★送り込み軸は applyRepFilter が元から両方の表に入っているので、ここでは広告軸だけ。
+function _tuneApplyAdAxis(list) {
+  if (!basicAdFilter || basicAdFilter === 'all' || _xfAdBypassed()) return list;
+  const _needle = (basicAdFilter === 'ad') ? '広告あり' : '広告なし';
+  return list.filter(r => _editPinnedCodes.has(r.code) || String(effectiveStatusOf(r.code) || '').indexOf(_needle) !== -1);
+}
+// 【v1.0645】調整-入札価格タブのときだけ、チップを「太く濃く」するかを決める。
+//   条件: そのチップで絞ったとき、入札価格の表（撤退・引退を除き、入札なしを除いた母集団＝調整グループ「全体」）に1件以上出る。
+//   ★母集団は ensureTuneMembers('ad') の tuneGroup==='all' と同じ式。STATE_FILTERS[…].match をそのまま使う。
+//   調整-基本 / 調整-PRオプ では何もしない（クラスを外すだけ）。
+function updateTuneChipEmphasis() {
+  const chips = document.querySelectorAll('.top-nav-3 .state-chip[data-state]');
+  const onAd = (state.currentView === 'ad-tune');
+  if (!onAd) { chips.forEach(c => c.classList.remove('chip-adlive')); return; }
+  const codes = new Set(Object.keys(state.master || {}));
+  (state.item || []).forEach(i => codes.add(i.code));
+  (state.ad || []).forEach(a => codes.add(a.code));
+  dailyCodes().forEach(c => codes.add(c));
+  const pool = [];
+  codes.forEach(code => {
+    if (isRetired(code)) return;
+    const meta = state.productMeta[code] || {};
+    if (adStatusIsNone(meta.adStatus || '')) return;
+    pool.push([code, meta]);
+  });
+  chips.forEach(chip => {
+    const f = STATE_FILTERS[chip.dataset.state];
+    const live = !!(f && f.targetView !== 'retired' && typeof f.match === 'function' && pool.some(x => f.match(x[1], x[0])));
+    chip.classList.toggle('chip-adlive', live);
+  });
 }
 
 function clearStateFilter() {
@@ -16129,6 +16219,8 @@ document.addEventListener('change', (e) => {
   // 以前: updateStateCounts() と renderAll() を即時実行していたが、
   // 編集中のスクロール位置や操作感を保つため、遅延反映に変更。
   // 【v276】調整ビューでも状態変更＝対応でその場では動かさない（凍結）。次の更新/ビュー移動で反映。
+  // 【v1.0645】件数は「次にボタンを押したとき／反映する／更新」で数え直す（ycRefreshStaleStateCounts）
+  _stateCountsStale = true;
 });
 
 // ==================== 【子商品詳細】ドロップダウン変更 ====================
@@ -18782,7 +18874,11 @@ function xfApply(ad, soi) {
   basicAdFilter = nAd;
   state.repFilter = (nSoi === 'yes') ? '*' : (nSoi === 'no') ? '!' : null;
   // 広告軸が効くのは商品-基本データ。別ビューから押されたら一覧へ連れて行く（ステータスチップと同じ）
-  if (state.currentView !== 'basic' && (nAd !== 'all' || nSoi !== 'all')) switchToView('basic');
+  // 【v1.0645】★調整-入札価格 / 調整-PRオプ にいるときは、そのタブの表のまま絞る（調整グループは「全体」へ）
+  if (_tuneStateTargetOf(state.currentView)) {
+    tuneGroup = 'all'; adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;
+    if (typeof resetTuneMembers === 'function') resetTuneMembers();
+  } else if (state.currentView !== 'basic' && (nAd !== 'all' || nSoi !== 'all')) switchToView('basic');
   if (typeof updateActiveStateChip === 'function') updateActiveStateChip();
   if (typeof updateFilterBanners === 'function') updateFilterBanners();
   updateRepFilterUI();
@@ -18796,7 +18892,11 @@ function xfClearAll() {
   state.repFilter = null;
   basicSroasFilter = null;                                     // 売上ROASの帯フィルタ（§3-1）
   const _s = document.getElementById('basicSearch'); if (_s) _s.value = '';
-  if (state.currentView !== 'basic') switchToView('basic');
+  // 【v1.0645】調整-入札価格 / 調整-PRオプ ではタブを離れない（そのタブの検索欄も空にする）
+  if (_tuneStateTargetOf(state.currentView)) {
+    ['adTuneSearch', 'proTuneSearch'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;
+  } else if (state.currentView !== 'basic') switchToView('basic');
   if (typeof updateActiveStateChip === 'function') updateActiveStateChip();
   if (typeof updateFilterBanners === 'function') updateFilterBanners();
   updateRepFilterUI();
