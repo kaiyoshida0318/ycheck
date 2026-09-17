@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0647 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0649 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -533,7 +533,7 @@ body.chrome-hidden .top-nav-3 { top: 0; }
      v1.0607 で【調整】を .top-nav-3 の1行目へ移したため、段ごと消すと
      商品-基本データ以外のビューから「入札価格調整 / PRオプ調整」へ行けなくなる。
      手動の states-collapsed は従来どおり段ごと消す（復帰は #hdrRestoreBar）。 */
-body.states-hidden .top-nav-3 { display: none; }   /* 【v1.0632】段ごと消す（旧: > .xf-row だけ） */
+body.states-hidden .top-nav-3 { display: none; }   /* 【v1.0632】段ごと消す（旧: > .xf-row だけ）。【v1.0649】【取得データ】はヘッダー1に戻したのでこのままでよい */
 body.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
@@ -582,6 +582,9 @@ body.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; }
 .xf-row { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; width: 100%; }
 .nav-group-tune { flex: 0 0 auto; }
+.top-nav > .nav-break { flex-basis: 100%; height: 0; }
+.top-nav:not(.top-nav-3) { row-gap: 0; }   /* 改行要素の上下に行間が2回入って間延びするので、行間は0にする */   /* 【v1.0649】ヘッダー1の改行（【基本】【全体】の行 / 【取得データ】の行） */
+
 .states-stack { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 1 1 auto; min-width: 0; }  /* 【v198】ステータス⇔状態の行間を倍に */
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
@@ -3618,7 +3621,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0647</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0649</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3651,6 +3654,10 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="nav-group">
     <span class="nav-group-label g-basic">【基本】</span>
     <a class="nav-tab nav-tab-link active" data-view="basic" data-basicmode="plain" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
+    <!-- 【v1.0649】商品-広告データ／商品-PRデータ。中身は 調整-入札価格／調整-PRオプ と同じ母集団・絞り込み（renderAdAdjust / renderProAdjust を layout:'data' で再利用）。
+         列の並びだけ違う（対応内容・状態の列なし）。§34 -->
+    <a class="nav-tab nav-tab-link" data-view="ad-data" href="?view=ad-data">商品-広告データ</a>
+    <a class="nav-tab nav-tab-link" data-view="pr-data" href="?view=pr-data">商品-PRデータ</a>
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-日月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率<span class="chip-num" id="cntOyChildUnset"></span></a>
@@ -3668,7 +3675,10 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
     <span id="cntAdAdjustActive" style="display:none"></span><span id="cntProAdjustActive" style="display:none"></span>
   </div>
-  <div class="nav-group">
+  <!-- 【v1.0649】ヘッダー1は2行: 1行目＝【基本】【全体】 ／ 2行目＝【取得データ】＋右端「ヘッダー1を隠す」。
+       .nav-break（幅100%・高さ0）で強制的に改行している。★タブを足しても2行目の並びは崩れない -->
+  <div class="nav-break" aria-hidden="true"></div>
+  <div class="nav-group nav-group-shutoku">
     <span class="nav-group-label g-shutoku">【取得データ】</span>
     <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank">広告順位</a>
     <a class="nav-tab nav-tab-link" data-view="seo-rank" href="?view=seo-rank">SEO順位</a>
@@ -4306,12 +4316,13 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adRevMain" id="hAdAdjustAdRevMain">広告売上</th>
-              <th class="num col-spend" data-sort="adCost0" id="hAdAdjustAdRev0">広告実績額<br>(3ヶ月前)</th>
-              <th class="num col-spend" data-sort="adCost1" id="hAdAdjustAdRev1">広告実績額<br>(2ヶ月前)</th>
-              <th class="num col-spend" data-sort="adCost2" id="hAdAdjustAdRev2">広告実績額<br>(前月)</th>
+              <!-- 【v1.0648】広告ROAS×3 を 広告実績額×3 の左へ（td 側と必ずセットで） -->
               <th class="num col-aroas" data-sort="roas0" id="hAdAdjustRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-aroas" data-sort="roas1" id="hAdAdjustRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-aroas" data-sort="roas2" id="hAdAdjustRoas2">広告ROAS<br>(前月)</th>
+              <th class="num col-spend" data-sort="adCost0" id="hAdAdjustAdRev0">広告実績額<br>(3ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost1" id="hAdAdjustAdRev1">広告実績額<br>(2ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost2" id="hAdAdjustAdRev2">広告実績額<br>(前月)</th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -4399,12 +4410,13 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <th class="num col-ad" data-sort="adRevMain" id="hAdTuneAdRevMain">広告売上</th>
-              <th class="num col-spend" data-sort="adCost0" id="hAdTuneAdRev0">広告実績額<br>(3ヶ月前)</th>
-              <th class="num col-spend" data-sort="adCost1" id="hAdTuneAdRev1">広告実績額<br>(2ヶ月前)</th>
-              <th class="num col-spend" data-sort="adCost2" id="hAdTuneAdRev2">広告実績額<br>(前月)</th>
+              <!-- 【v1.0648】広告ROAS×3 を 広告実績額×3 の左へ（td 側と必ずセットで） -->
               <th class="num col-aroas" data-sort="roas0" id="hAdTuneRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-aroas" data-sort="roas1" id="hAdTuneRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-aroas" data-sort="roas2" id="hAdTuneRoas2">広告ROAS<br>(前月)</th>
+              <th class="num col-spend" data-sort="adCost0" id="hAdTuneAdRev0">広告実績額<br>(3ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost1" id="hAdTuneAdRev1">広告実績額<br>(2ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost2" id="hAdTuneAdRev2">広告実績額<br>(前月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -4449,6 +4461,83 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProTuneSeo2">SEO売上<br>(前月)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 【v1.0649】View: 商品-広告データ（調整-入札価格と同じ母集団・絞り込み。列の並びだけ違う。§34） -->
+    <div class="view" id="view-ad-data">
+      <div class="card">
+        <h3 class="card-title">商品-広告データ</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="adDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月">今月含む</button>
+            </span>
+          </span>
+        </div>
+        <div class="table-wrap">
+          <table id="tableAdData" class="data-grid">
+            <thead><tr>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name" data-resize-key="nameAdData">商品名</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-ad" data-sort="adRev0" id="hAdDataAdSales0">広告売上<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="adRev1" id="hAdDataAdSales1">広告売上<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="adRev2" id="hAdDataAdSales2">広告売上<br>(前月)</th>
+              <th class="num col-aroas" data-sort="roas0" id="hAdDataRoas0">広告ROAS<br>(3ヶ月前)</th>
+              <th class="num col-aroas" data-sort="roas1" id="hAdDataRoas1">広告ROAS<br>(2ヶ月前)</th>
+              <th class="num col-aroas" data-sort="roas2" id="hAdDataRoas2">広告ROAS<br>(前月)</th>
+              <th class="num col-spend" data-sort="adCost0" id="hAdDataAdRev0">広告実績額<br>(3ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost1" id="hAdDataAdRev1">広告実績額<br>(2ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost2" id="hAdDataAdRev2">広告実績額<br>(前月)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 【v1.0649】View: 商品-PRデータ（調整-PRオプと同じ母集団・絞り込み。列の並びだけ違う。§34） -->
+    <div class="view" id="view-pr-data">
+      <div class="card">
+        <h3 class="card-title">商品-PRデータ</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="prDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月">今月含む</button>
+            </span>
+          </span>
+        </div>
+        <div class="table-wrap">
+          <table id="tablePrData" class="data-grid">
+            <thead><tr>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name" data-resize-key="namePrData">商品名</th>
+              <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
+              <th class="num col-sales" data-sort="seoRev0" id="hPrDataSeo0">SEO売上<br>(3ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev1" id="hPrDataSeo1">SEO売上<br>(2ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev2" id="hPrDataSeo2">SEO売上<br>(前月)</th>
+              <th class="num col-sroas" data-sort="prsr0" id="hPrDataPrsr0" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。">PR広告<br>売上ROAS<span class="th-est">？</span><br>(3ヶ月前)</th>
+              <th class="num col-sroas" data-sort="prsr1" id="hPrDataPrsr1" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。">PR広告<br>売上ROAS<span class="th-est">？</span><br>(2ヶ月前)</th>
+              <th class="num col-sroas" data-sort="prsr2" id="hPrDataPrsr2" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。">PR広告<br>売上ROAS<span class="th-est">？</span><br>(前月)</th>
+              <th class="num col-prov" data-sort="prov0" id="hPrDataProv0" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(3ヶ月前)</th>
+              <th class="num col-prov" data-sort="prov1" id="hPrDataProv1" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(2ヶ月前)</th>
+              <th class="num col-prov" data-sort="prov2" id="hPrDataProv2" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(前月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -13066,6 +13155,8 @@ function _setTunePeriod(incl) {
   const v = state.currentView;
   if (v === 'ad-tune') renderAdTune();
   else if (v === 'pro-tune') renderProTune();
+  else if (v === 'ad-data') renderAdData();   // 【v1.0649】
+  else if (v === 'pr-data') renderPrData();
   else if (v === 'ad-adjust') renderAdAdjust();   // 【v1.0495】入札状態チップで絞り込んだ表も再描画
   else if (v === 'pro-adjust') renderProAdjust();
   else if (v === 'review-sales4') renderReviewSales4();   // 【v1.0498】総売上-直近4ヶ月分
@@ -13395,6 +13486,8 @@ function renderAdAdjust(cfg) {
     const _rev = $('#'+hPrefix+'AdRev'+i); if (_rev) _rev.innerHTML = `広告実績額<br>${months[i] || ''}`;   /* 【v1.0647】表記を商品-基本データに合わせた */
     const _ro  = $('#'+hPrefix+'Roas'+i); if (_ro)  _ro.innerHTML  = `広告ROAS<br>${months[i] || ''}`;
   }
+  // 【v1.0649】商品-広告データ（layout:'data'）の 広告売上×3ヶ月 の見出し
+  for (let i = 0; i < months.length; i++) { const _as = $('#'+hPrefix+'AdSales'+i); if (_as) _as.innerHTML = `広告売上<br>${months[i] || ''}`; }
   // 【v1.0461】広告売上（対象月＝表示中の最新月：今月含む→今月／含まない→満了直近月）の見出しに月を表示
   { const _arm = $('#'+hPrefix+'AdRevMain'); if (_arm) _arm.innerHTML = `広告売上<br>${months[months.length-1] || ''}`; }
   // 【v279】月列(実績額/広告ROAS)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
@@ -13444,13 +13537,14 @@ function renderAdAdjust(cfg) {
   // 【v239】調整グループ絞り込み（tune用）。groupFilterがあれば該当商品のみ。
   if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
   // 【v1.0645】調整-入札価格: クロス絞り込みの広告軸（検索中はバイパス＝renderBasic と同じ）
-  if (groupFilter && !q) list = _tuneApplyAdAxis(list);
+  // 【v1.0649】商品-広告データ（cfg.xfAxis）にも効かせる
+  if ((groupFilter || cfg.xfAxis) && !q) list = _tuneApplyAdAxis(list);
 
   const _adEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
   const tbody = $(tableSel + ' tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">' + _adEmptyMsg + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + (cfg.colspan || 15) + '" class="empty-state">' + _adEmptyMsg + '</td></tr>';
     updateSortIndicator(tableSel, adAdjustSortKey, adAdjustSortDir);
     return;
   }
@@ -13460,6 +13554,7 @@ function renderAdAdjust(cfg) {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'adRevMain') return r.adRevs[r.adRevs.length - 1] || 0;   // 【v1.0461】広告売上（対象月）でソート
+    { const mm = /^adRev(\d+)$/.exec(k); if (mm) return r.adRevs[+mm[1]] || 0; }   // 【v1.0649】商品-広告データの広告売上×3
     { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
     { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
@@ -13512,6 +13607,20 @@ function renderAdAdjust(cfg) {
     const _roasCells = r.roass.map(v => `<td class="num col-aroas ${roasClass(v)}">${fmtRoas(v)}</td>`).join('');
     const _ti = r.adRevs.length - 1;   // 【v1.0461】対象月＝表示中の最新月
     const _adRevMainCell = shareRevCell(r.adRevs[_ti], r.seoRevs[_ti], false, "col-ad");   // 広告売上（対象月）＋構成比%
+    // 【v1.0649】商品-広告データ: 商品コード / 画像 / 商品名 / 入札価格 / 広告売上×3 / 広告ROAS×3 / 広告実績額×3
+    if (cfg.layout === 'data') {
+      tr.innerHTML = `
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      ${r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('')}
+      ${_roasCells}
+      ${_revCells}
+    `;
+      tbody.appendChild(tr);
+      return;
+    }
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -13522,8 +13631,8 @@ function renderAdAdjust(cfg) {
       <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
-      ${_revCells}
       ${_roasCells}
+      ${_revCells}
       ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
@@ -13556,6 +13665,26 @@ function renderAdTune() {
   });
 }
 
+// 【v1.0649】商品-広告データ: 調整-入札価格と同じ母集団（入札なし・撤退を除く全体）と絞り込み（状態チップ／クロス絞り込み／検索／送り込み）。
+//   ★修正あり等の調整グループは使わない（groupFilter なし）。列の並びだけ layout:'data' で変える。
+function renderAdData() {
+  _syncTunePeriodSegs();
+  renderAdAdjust({
+    tableSel: '#tableAdData', completedOnly: true, incl3Current: _tunePeriodInclCurrent,
+    searchSel: '#adDataSearch', cntSel: null, hPrefix: 'hAdData',
+    emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 13
+  });
+}
+// 【v1.0649】商品-PRデータ: 調整-PRオプと同じ母集団・絞り込み。列の並びだけ layout:'data'。
+function renderPrData() {
+  _syncTunePeriodSegs();
+  renderProAdjust({
+    tableSel: '#tablePrData', completedOnly: true, incl3Current: _tunePeriodInclCurrent,
+    searchSel: '#prDataSearch', cntSel: null, hPrefix: 'hPrData',
+    emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 13
+  });
+}
+
 // ==================== Rendering: PRO調整 ====================
 let proAdjustSortKey = 'seoRev2', proAdjustSortDir = -1;  // デフォルト: 前月のSEO売上降順
 // 【v208】並び順凍結（renderAdAdjustと同じ仕組み）
@@ -13579,7 +13708,8 @@ function renderProAdjust(cfg) {
   const months = (cfg.incl3Current || _chipInclCurrent) ? last3MonthsInclCurrent() : cfg.inclCurrent ? last4MonthsInclCurrent() : last3Months(completedOnly);
   for (let i = 0; i < months.length; i++) {
     const _s = $('#'+hPrefix+'Seo'+i); if (_s) _s.innerHTML = `SEO売上<br>${months[i] || ''}`;
-    const _p = $('#'+hPrefix+'Prsr'+i); if (_p) _p.innerHTML = `PR広告<br>売上ROAS<span class="th-est">？</span><br>${months[i] || ''}`;   // 【v1.0647】この3列だけ見出し3行（PR広告／売上ROAS？／月）
+    const _p = $('#'+hPrefix+'Prsr'+i); if (_p) _p.innerHTML = `PR広告<br>売上ROAS<span class="th-est">？</span><br>${months[i] || ''}`;
+    const _v = $('#'+hPrefix+'Prov'+i); if (_v) _v.innerHTML = `PR<br>実績額<span class="th-est">？</span><br>${months[i] || ''}`;   // 【v1.0649】商品-PRデータ   // 【v1.0647】この3列だけ見出し3行（PR広告／売上ROAS？／月）
   }
   // 【v279】月列(SEO売上)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
   if (typeof installSortButtons === 'function') installSortButtons();
@@ -13598,7 +13728,9 @@ function renderProAdjust(cfg) {
     // 【v1.0647】PR広告売上ROAS(推定)。★商品-基本データと同じ itemPrSalesRoasPct（総売上÷(広告実績額＋PR実績額7%超・推定)）
     //   データが無い月は null＝「—」（0%扱いにしない）
     const prsrs = months.map(m => { const x = byKey[code + '|' + m]; return x ? itemPrSalesRoasPct(code, x.rev, x.adCost) : null; });
-    return { code, seoRevs, adRevs, prsrs };
+    // 【v1.0649】PR実績額(7%超・推定)。★商品-基本データの basicPrOverOf と同じ itemPrEstimate(code, rev).over
+    const provs = months.map(m => { const x = byKey[code + '|' + m]; if (!x) return null; const e = itemPrEstimate(code, x.rev); return e ? Math.max(0, +e.over || 0) : null; });
+    return { code, seoRevs, adRevs, prsrs, provs };
   });
 
   // 引退済み商品（商品名なし）を除外
@@ -13621,14 +13753,14 @@ function renderProAdjust(cfg) {
 
   // 【v239】調整グループ絞り込み（tune用）
   if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
-  // 【v1.0645】調整-PRオプ: クロス絞り込みの広告軸（検索中はバイパス）
-  if (groupFilter && !q) list = _tuneApplyAdAxis(list);
+  // 【v1.0645】調整-PRオプ: クロス絞り込みの広告軸（検索中はバイパス）／【v1.0649】商品-PRデータ（cfg.xfAxis）にも
+  if ((groupFilter || cfg.xfAxis) && !q) list = _tuneApplyAdAxis(list);
 
   const _proEmptyMsg = cfg.emptyMsg || 'データを読み込んでください';
   const tbody = $(tableSel + ' tbody');
   tbody.innerHTML = '';
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">' + _proEmptyMsg + '</td></tr>';   /* 【v1.0647】PR広告売上ROAS×3 を足したので 12→15 */
+    tbody.innerHTML = '<tr><td colspan="' + (cfg.colspan || 15) + '" class="empty-state">' + _proEmptyMsg + '</td></tr>';   /* 【v1.0647】PR広告売上ROAS×3 を足したので 12→15 */
     updateSortIndicator(tableSel, proAdjustSortKey, proAdjustSortDir);
     return;
   }
@@ -13638,6 +13770,7 @@ function renderProAdjust(cfg) {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     { const mm = /^seoRev(\d+)$/.exec(k); if (mm) return r.seoRevs[+mm[1]] || 0; }   // 【v278】当月列(seoRev3)も対応
     { const mm = /^prsr(\d+)$/.exec(k); if (mm) { const v = r.prsrs[+mm[1]]; return v == null ? -1 : v; } }   // 【v1.0647】
+    { const mm = /^prov(\d+)$/.exec(k); if (mm) { const v = r.provs[+mm[1]]; return v == null ? -1 : v; } }   // 【v1.0649】
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
     if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
@@ -13681,6 +13814,21 @@ function renderProAdjust(cfg) {
     if (_pcCls) tr.className = _pcCls;
     // 【v270】調整ビュー(statusFirst)は「ステータス」列を入札状態の左に置く。全体ビューは従来どおり末尾。
     const _tdStatus = `<td class="status-col">${statusSelectHtml(r.code, 'status')}</td>`;
+    // 【v1.0649】商品-PRデータ: 商品コード / 画像 / 商品名 / PRオプ料率 / SEO売上×3 / PR広告売上ROAS×3 / PR実績額(7%超・推定)×3
+    if (cfg.layout === 'data') {
+      const _dash = '<span style="color:var(--text3)">—</span>';
+      tr.innerHTML = `
+      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
+      ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
+      ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? _dash : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
+      ${r.provs.map(v => '<td class="num col-prov est-val">' + ((v != null && v > 0) ? fmt(Math.round(v)) : _dash) + '</td>').join('')}
+    `;
+      tbody.appendChild(tr);
+      return;
+    }
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code)}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -15158,6 +15306,8 @@ function renderAll() {
   else if (state.currentView === 'pro-adjust') renderProAdjust();
   else if (state.currentView === 'ad-tune') renderAdTune();
   else if (state.currentView === 'pro-tune') renderProTune();
+  else if (state.currentView === 'ad-data') renderAdData();   // 【v1.0649】
+  else if (state.currentView === 'pr-data') renderPrData();   // 【v1.0649】
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
   else if (state.currentView === 'review-sales4') renderReviewSales4();
@@ -15327,7 +15477,7 @@ const STATE_EXPLAIN = {
 //   「商品-基本データ」と【調整】（入札価格調整／PRオプ調整）だけ。全体・グラフ・順位などでは不要。
 //   ★ 例外: 状態チップで絞り込み中は、その飛び先ビュー（ad-adjust / pro-adjust / retired）でも出す。
 //     ここで隠すと「いまどの状態で絞っているか」も「解除」も画面から消えてしまうため。
-const STATE_BAR_VIEWS = ['basic', 'ad-tune', 'pro-tune'];
+const STATE_BAR_VIEWS = ['basic', 'ad-tune', 'pro-tune', 'ad-data', 'pr-data'];   // 【v1.0649】商品-広告データ／商品-PRデータにも出す
 function updateStateBarVisibility() {
   try {
     const show = STATE_BAR_VIEWS.indexOf(state.currentView) >= 0 || !!state.activeStateFilter;
@@ -15405,7 +15555,8 @@ function applyStateFilter(filterKey) {
 
 // 【v1.0645】調整タブ → 状態チップの絞り込み先（renderAdAdjust / renderProAdjust が見る targetView）
 function _tuneStateTargetOf(view) {
-  return view === 'ad-tune' ? 'ad-adjust' : view === 'pro-tune' ? 'pro-adjust' : null;
+  // 【v1.0649】商品-広告データ／商品-PRデータも、そのビューの表のまま絞る
+  return (view === 'ad-tune' || view === 'ad-data') ? 'ad-adjust' : (view === 'pro-tune' || view === 'pr-data') ? 'pro-adjust' : null;
 }
 // 【v1.0645】調整タブの表にもクロス絞り込みの「広告 有り／無し」を効かせる。
 //   判定は renderBasic の basicAdFilter とまったく同じ（ステータス文字列に 広告あり／広告なし を含むか。effectiveStatusOf 経由）。
@@ -15421,7 +15572,7 @@ function _tuneApplyAdAxis(list) {
 //   調整-基本 / 調整-PRオプ では何もしない（クラスを外すだけ）。
 function updateTuneChipEmphasis() {
   const chips = document.querySelectorAll('.top-nav-3 .state-chip[data-state]');
-  const onAd = (state.currentView === 'ad-tune');
+  const onAd = (state.currentView === 'ad-tune' || state.currentView === 'ad-data');   // 【v1.0649】商品-広告データも太枠
   if (!onAd) { chips.forEach(c => c.classList.remove('chip-adlive')); return; }
   const codes = new Set(Object.keys(state.master || {}));
   (state.item || []).forEach(i => codes.add(i.code));
@@ -16119,6 +16270,17 @@ wireSort('#tableProAdjust', (k) => {
   renderProAdjust();
 });
 
+// 【v1.0649】商品-広告データ／商品-PRデータの検索・ソート配線（並べ替え状態は調整タブと共有＝adAdjustSortKey / proAdjustSortKey）
+if ($('#adDataSearch')) $('#adDataSearch').addEventListener('input', renderAdData);
+if ($('#prDataSearch')) $('#prDataSearch').addEventListener('input', renderPrData);
+wireSort('#tableAdData', (k) => {
+  if (adAdjustSortKey === k) adAdjustSortDir *= -1; else { adAdjustSortKey = k; adAdjustSortDir = -1; }
+  adAdjustFrozenOrder = null; renderAdData();
+});
+wireSort('#tablePrData', (k) => {
+  if (proAdjustSortKey === k) proAdjustSortDir *= -1; else { proAdjustSortKey = k; proAdjustSortDir = -1; }
+  proAdjustFrozenOrder = null; renderPrData();
+});
 // 【v239】調整（tune）ビューの検索・ソート・サブフィルタ配線
 if ($('#adTuneSearch'))  $('#adTuneSearch').addEventListener('input', renderAdTune);
 if ($('#proTuneSearch')) $('#proTuneSearch').addEventListener('input', renderProTune);
@@ -17265,6 +17427,8 @@ function getCurrentViewCodesInOrder() {
     'pro-adjust': '#tableProAdjust',
     'ad-tune':    '#tableAdTune',
     'pro-tune':   '#tableProTune',
+    'ad-data':    '#tableAdData',   // 【v1.0649】
+    'pr-data':    '#tablePrData',
     'ad-rank':    '#tableAdRank',
     'seo-rank':   '#tableSeoRank'
   };
