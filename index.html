@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0651 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0652 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3622,7 +3622,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0651</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0652</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4505,7 +4505,6 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdData">商品名</th>
-              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdDataAdSales0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdDataAdSales1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdDataAdSales2">広告売上<br>(前月)</th>
@@ -4515,6 +4514,8 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-spend" data-sort="adCost0" id="hAdDataAdRev0">広告実績額<br>(3ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost1" id="hAdDataAdRev1">広告実績額<br>(2ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost2" id="hAdDataAdRev2">広告実績額<br>(前月)</th>
+              <!-- 【v1.0652】入札価格は一番右へ -->
+<th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -4556,7 +4557,6 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="namePrData">商品名</th>
-              <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th class="num col-sales" data-sort="seoRev0" id="hPrDataSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hPrDataSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hPrDataSeo2">SEO売上<br>(前月)</th>
@@ -4566,6 +4566,8 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-prov" data-sort="prov0" id="hPrDataProv0" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(3ヶ月前)</th>
               <th class="num col-prov" data-sort="prov1" id="hPrDataProv1" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(2ヶ月前)</th>
               <th class="num col-prov" data-sort="prov2" id="hPrDataProv2" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(前月)</th>
+              <!-- 【v1.0652】PRオプ料率は一番右へ -->
+<th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -13720,10 +13722,10 @@ function renderAdAdjust(cfg) {
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      ${_bidCellD}
       ${r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('')}
       ${_roasCells}
       ${_revCells}
+      ${_bidCellD}
     `;
       tbody.appendChild(tr);
       return;
@@ -13950,10 +13952,10 @@ function renderProAdjust(cfg) {
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      ${_proCellD}
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? _dash : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${r.provs.map(v => '<td class="num col-prov est-val">' + ((v != null && v > 0) ? fmt(Math.round(v)) : _dash) + '</td>').join('')}
+      ${_proCellD}
     `;
       tbody.appendChild(tr);
       return;
