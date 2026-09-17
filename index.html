@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0649 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0651 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1772,6 +1772,7 @@ th.col-adunk { background-color: #f8d9d3; }
 /* 【v1.0592】総売上の下に出す「セット内の売上比率」。送り込み＝紫の系統に合わせる */
 /* 【v1.0609】調整-基本のときだけ出す3列（ステータス/入札状態/PRオプ状態） */
 body:not(.basic-tune) #tableBasic .tune-col { display: none; }
+body:not(.basic-tune) #view-basic .tune-only { display: none !important; }   /* 【v1.0651】順位取得CSV・反映場所を確認 は調整-基本だけ */
 .fam-pct { color: #7c3aed; font-size: 11px !important; font-weight: 700; }
 /* 【v1.0591】親子セットの合計から引いた値であることの目印 */
 /* 【v1.0591→v1.0622】親子セットの合計から引いたことを示す「合算」バッジは撤去した（数字だけにする）。
@@ -3621,7 +3622,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0649</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0651</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3857,7 +3858,7 @@ th.col-sroas { background-color:#e7d5f5; }
                個別＝従来どおり親子を別々の行で表示
                合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
                      （親が広告費を出して子が売れる構成では、個別の売上ROASが実態とズレるため） -->
-          <span class="seg-filter" id="basicRollupBar" role="group" aria-label="個別/合算"
+          <span class="seg-filter js-rowmode-bar" id="basicRollupBar" role="group" aria-label="個別/合算"
             title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <!-- 【v1.0619】送り込み元（親＝緑）／送り込み先（子＝黄）だけを表示するワンクリック絞り込み。
                マークは商品コード左の .rep-badge とまったく同じ見た目（同じSVG・同じ緑/黄）にしてある。
@@ -3884,10 +3885,11 @@ th.col-sroas { background-color:#e7d5f5; }
                  ・'xxx'（🔗バッジで入ったグループ絞り込み）… 同じ🔗をもう一度押す or 「クリア（全体）」
                ★パネルが出ない画面（撤退済み商品・順位表など）のバッジは残すこと。
                  あちらはバッジが唯一の操作口（§16-B-5）。 -->
-          <button class="btn sm ghost" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <!-- 【v1.0620】一括変更。押すと選択モードに入り、商品コードの左にチェックボックスが出る。 -->
-          <button class="btn sm ghost" id="btnBasicBulk" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <span class="gh-reflect-hover" id="btnShowGhReflectGuide" tabindex="0">
+          <button class="btn sm ghost js-bulk-btn" id="btnBasicBulk" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
+          <!-- 【v1.0651】一括変更を 順位取得CSV の左へ。順位取得CSV と 反映場所を確認 は 商品-基本データ では出さない（.tune-only＝調整-基本だけに出す） -->
+          <button class="btn sm ghost tune-only" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
+          <span class="gh-reflect-hover tune-only" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
             <span class="gh-reflect-tooltip" role="tooltip">
               <img src="reflect-guide.png" alt="GitHub反映場所の手順" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='block';">
@@ -4476,6 +4478,19 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <!-- 【v1.0650】商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み（親＋子／親／子）。状態は共有（basicRowMode / state.repFilter） -->
+          <span class="seg-filter js-rowmode-bar" id="adDataRollupBar" role="group" aria-label="個別/合算"
+            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+          <span class="soi-pc-seg" id="adDataSoiPcBar" role="group" aria-label="親／子で絞り込み">
+            <button type="button" class="soi-pc-btn both" data-repf="*A"
+              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
+            <button type="button" class="soi-pc-btn parent" data-repf="*P"
+              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="parent"></span></button>
+            <button type="button" class="soi-pc-btn child" data-repf="*C"
+              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
+          </span>
+          <!-- 【v1.0651】一括変更（商品-基本データと同じ。バー #basicBulkBar はいま開いている画面へ移して使う） -->
+          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
             <span style="display:inline-flex;gap:4px">
@@ -4514,6 +4529,19 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="prDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <!-- 【v1.0650】商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み（親＋子／親／子）。状態は共有（basicRowMode / state.repFilter） -->
+          <span class="seg-filter js-rowmode-bar" id="prDataRollupBar" role="group" aria-label="個別/合算"
+            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+          <span class="soi-pc-seg" id="prDataSoiPcBar" role="group" aria-label="親／子で絞り込み">
+            <button type="button" class="soi-pc-btn both" data-repf="*A"
+              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
+            <button type="button" class="soi-pc-btn parent" data-repf="*P"
+              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="parent"></span></button>
+            <button type="button" class="soi-pc-btn child" data-repf="*C"
+              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
+          </span>
+          <!-- 【v1.0651】一括変更（商品-基本データと同じ。バー #basicBulkBar はいま開いている画面へ移して使う） -->
+          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
             <span style="display:inline-flex;gap:4px">
@@ -10493,7 +10521,7 @@ function renderBasic() {
     tbody.appendChild(tr);
   });
   updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
-  _bulkSyncUI();   // 【v1.0620】選択件数・行のハイライトを再描画後に合わせる
+  _bulkSyncUI();   // 【v1.0620】選択件数・行のハイライトを再描画後に合わせる（【v1.0651】バーも商品-基本データへ戻る）
 }
 
 // ==================== 【v1.0637】変更記録（いつ何を変えたかをグラフに縦線で残す） ====================
@@ -10762,11 +10790,22 @@ function _bulkFillSelects() {
   mk('bulkProStatus', PRO_STATUS_OPTIONS);
 }
 
+// 【v1.0651】一括変更は 商品-基本データ／調整-基本／商品-広告データ／商品-PRデータ で使う。
+//   ★バー（#basicBulkBar）は1本だけ。いま開いている画面のツールバー（.filters）の直後へ DOM ごと移して使う（id を複製しない）。
+const BULK_TABLE_OF = { 'basic': '#tableBasic', 'ad-data': '#tableAdData', 'pr-data': '#tablePrData' };
+function _bulkTableSel() { return BULK_TABLE_OF[state.currentView] || '#tableBasic'; }
+function _bulkPlaceBar() {
+  const bar = document.getElementById('basicBulkBar');
+  const view = document.getElementById('view-' + state.currentView);
+  if (!bar || !view || !BULK_TABLE_OF[state.currentView]) return;
+  const f = view.querySelector('.card > .filters');
+  if (f && f.nextElementSibling !== bar) f.insertAdjacentElement('afterend', bar);
+}
 function _bulkSyncUI() {
+  _bulkPlaceBar();
   const bar = document.getElementById('basicBulkBar');
   if (bar) bar.style.display = _bulkMode ? 'flex' : 'none';
-  const btn = document.getElementById('btnBasicBulk');
-  if (btn) btn.classList.toggle('primary', _bulkMode);
+  document.querySelectorAll('.js-bulk-btn').forEach(btn => btn.classList.toggle('primary', _bulkMode));
   const cnt = document.getElementById('bulkCount');
   if (cnt) cnt.textContent = _bulkSel.size + '件選択中';
   const note = document.getElementById('bulkNote');
@@ -10775,7 +10814,7 @@ function _bulkSyncUI() {
   const ap = document.getElementById('bulkApply');
   if (ap) ap.disabled = (typeof ghIsEnabled === 'function' && !ghIsEnabled());
   // 行のハイライト
-  document.querySelectorAll('#tableBasic tbody tr').forEach(tr => {
+  document.querySelectorAll(_bulkTableSel() + ' tbody tr').forEach(tr => {
     const cb = tr.querySelector('.bulk-cb');
     tr.classList.toggle('bulk-picked', !!(cb && cb.checked));
   });
@@ -10785,7 +10824,7 @@ function setBulkMode(on) {
   _bulkMode = !!on;
   if (!_bulkMode) _bulkSel.clear();
   else _bulkFillSelects();
-  renderBasic();          // チェックボックスの出し入れは再描画で行う
+  renderAll();            // チェックボックスの出し入れは再描画で行う（【v1.0651】いまの画面を描き直す）
   _bulkSyncUI();
 }
 
@@ -10821,11 +10860,12 @@ function _bulkApply() {
 
 (function _bulkBindUI() {
   const on = (id, fn) => { const e = document.getElementById(id); if (e) e.addEventListener('click', fn); };
-  on('btnBasicBulk', () => setBulkMode(!_bulkMode));
+  // 【v1.0651】一括変更ボタンは3画面ぶん（.js-bulk-btn）
+  document.querySelectorAll('.js-bulk-btn').forEach(b => b.addEventListener('click', () => setBulkMode(!_bulkMode)));
   on('bulkExit',     () => setBulkMode(false));
-  on('bulkSelNone',  () => { _bulkSel.clear(); document.querySelectorAll('#tableBasic .bulk-cb').forEach(c => { c.checked = false; }); _bulkSyncUI(); });
+  on('bulkSelNone',  () => { _bulkSel.clear(); document.querySelectorAll(_bulkTableSel() + ' .bulk-cb').forEach(c => { c.checked = false; }); _bulkSyncUI(); });
   on('bulkSelAll',   () => {
-    document.querySelectorAll('#tableBasic .bulk-cb').forEach(c => { c.checked = true; _bulkSel.add(String(c.dataset.code)); });
+    document.querySelectorAll(_bulkTableSel() + ' .bulk-cb').forEach(c => { c.checked = true; _bulkSel.add(String(c.dataset.code)); });
     _bulkSyncUI();
   });
   on('bulkApply',    _bulkApply);
@@ -11086,14 +11126,15 @@ function setBasicRowMode(mode) {
   basicRowMode = v;
   if (typeof clearEditPins === 'function') clearEditPins();   // 行の粒度が変わる＝再絞り込み扱い
   _syncBasicRollupUI();
-  if (typeof renderBasic === 'function') renderBasic();
+  // 【v1.0650】商品-広告データ／商品-PRデータも同じ切替を使うので、いまのビューを描き直す（並び順の凍結も解く）
+  try { adAdjustFrozenOrder = null; proAdjustFrozenOrder = null; } catch (e) {}
+  if (typeof renderAll === 'function') renderAll(); else if (typeof renderBasic === 'function') renderBasic();
 }
 function _syncBasicRollupUI() {
-  const bar = document.getElementById('basicRollupBar');
-  if (!bar) return;
-  bar.querySelectorAll('.segf-btn').forEach(b => {
+  // 【v1.0650】バーは3つ（商品-基本データ／商品-広告データ／商品-PRデータ）。.js-rowmode-bar を全部そろえる
+  document.querySelectorAll('.js-rowmode-bar').forEach(bar => bar.querySelectorAll('.segf-btn').forEach(b => {
     b.classList.toggle('on', (b.getAttribute('data-rollup') || 'each') === basicRowMode);
-  });
+  }));
 }
 // 代表コード（repCode。無ければ自分自身）でまとめる。_igFamilies と同じキーの取り方。
 function _basicRepKeyOf(code) {
@@ -11134,6 +11175,57 @@ function _basicRollupRows(rows) {
   });
   return out;
 }
+// 【v1.0650】商品-広告データ／商品-PRデータの合算。行は「月ごとの配列」を持つ形（renderAdAdjust / renderProAdjust の list）。
+//   ★考え方は _basicRollupRows と同じ: 金額は足す／率（広告ROAS・PR広告売上ROAS）は合計から計算し直す／
+//     PR実績額(7%超・推定)は商品ごとに出してから足す（セット合計の売上に代表の料率を掛けない）。
+function _dataRollupRows(rows) {
+  const fam = new Map();
+  (rows || []).forEach(r => {
+    if (!r || !r.code) return;
+    const k = _basicRepKeyOf(r.code);
+    let f = fam.get(k);
+    const n = (r.adRevs || r.seoRevs || []).length;
+    if (!f) {
+      const z = () => new Array(n).fill(0);
+      f = { code: k, _rollup: true, _members: [], adRevs: z(), adCosts: z(), seoRevs: z(), revs: z(), provs: new Array(n).fill(null), _rateKnown: new Array(n).fill(false) };
+      fam.set(k, f);
+    }
+    f._members.push(r.code);
+    for (let i = 0; i < n; i++) {
+      f.adRevs[i]  += +((r.adRevs  || [])[i]) || 0;
+      f.adCosts[i] += +((r.adCosts || [])[i]) || 0;
+      f.seoRevs[i] += +((r.seoRevs || [])[i]) || 0;
+      f.revs[i]    += +((r.revs    || [])[i]) || 0;
+      const pv = (r.provs || [])[i];
+      if (pv != null) { f._rateKnown[i] = true; f.provs[i] = (f.provs[i] || 0) + (+pv || 0); }
+    }
+  });
+  const out = [];
+  fam.forEach(f => {
+    f.roass = f.adCosts.map((c, i) => c > 0 ? (f.adRevs[i] / c) * 100 : null);   // ★合計から再計算
+    f.prsrs = f.revs.map((rv, i) => {
+      if (!f._rateKnown[i]) return null;
+      const den = (f.adCosts[i] || 0) + (f.provs[i] || 0);
+      return den > 0 ? Math.round(rv / den * 100) : null;                         // ★合計から再計算
+    });
+    out.push(f);
+  });
+  return out;
+}
+// 【v1.0650】両表示: セット行の直下に内訳（親を先頭、あとは売上の多い順）を差し込む。★内訳は「まとめる前の行」をそのまま使う
+function _dataExpandBoth(list, preByCode) {
+  const out = [];
+  list.forEach(f => {
+    out.push(f);
+    const mem = (f._members || []).slice();
+    if (!f._rollup || mem.length < 2) return;
+    const tot = (c) => { const m = preByCode.get(c); if (!m) return 0; const a = m.seoRevs || [], b = m.adRevs || []; return (+a[a.length - 1] || 0) + (+b[b.length - 1] || 0); };
+    mem.sort((a, b) => a === f.code ? -1 : b === f.code ? 1 : tot(b) - tot(a));
+    mem.forEach(c => { const m = preByCode.get(c); if (!m) return; const row = Object.assign({}, m); row._setMember = true; row._setKey = f.code; out.push(row); });
+  });
+  return out;
+}
+
 // PR推定の2列は、個別＝その商品の料率 / 合算＝メンバーぶんの合計。画面もCSVもこの2本を通す。
 function basicPrOverOf(r) {
   if (!r) return null;
@@ -13514,17 +13606,22 @@ function renderAdAdjust(cfg) {
   // 引退済み商品（商品名なし）を除外
   list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
+  // 【v1.0650】商品-広告データの 合算/両表示。★絞り込みより先にまとめる（§5-D-2）。入札なしの除外もセット単位（メンバーの誰かが入札中なら残す）
+  const _dataRoll = (cfg.layout === 'data') && _basicIsRollup();
+  const _preByCode = new Map();
+  if (_dataRoll) { list.forEach(r => _preByCode.set(r.code, r)); list = _dataRollupRows(list); }
+
   // 【v223】入札状態が「入札なし」の商品は入札価格全体に表示しない。
   //   インラインで入札なしに変更しても即時には消えない（変更ハンドラは再描画しないため）。
   //   更新・別ビューへの移動など renderAdAdjust が再実行されたタイミングで除外される。
-  list = list.filter(r => !adStatusIsNone((state.productMeta[r.code] || {}).adStatus) || _editPinnedCodes.has(r.code));
+  list = list.filter(r => _rfMembersOf(r).some(c => !adStatusIsNone((state.productMeta[c] || {}).adStatus)) || _editPinnedCodes.has(r.code));
 
   const _adSearchEl = $(searchSel);
   const q = (_adSearchEl ? _adSearchEl.value : '').trim().toLowerCase();
-  if (q) list = list.filter(r => {
-    const m = getMaster(r.code);
-    return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
-  });
+  if (q) list = list.filter(r => _rfMembersOf(r).some(c => {   // 【v1.0650】合算行はメンバーのどれかに一致すれば残す
+    const m = getMaster(c);
+    return [c, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
+  }));
 
   // 【状態】バッジによるフィルタ適用
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'ad-adjust') {
@@ -13590,8 +13687,9 @@ function renderAdAdjust(cfg) {
   }
   // 【v125】代表コード絞り込み
   list = applyRepFilter(list);
-  // 【v124】代表商品コードでグループ化
-  list = applyRepGrouping(list);
+  // 【v124】代表商品コードでグループ化（【v1.0650】合算では1行＝1セットなので不要）
+  if (!_dataRoll) list = applyRepGrouping(list);
+  if (_dataRoll && basicRowMode === 'both') list = _dataExpandBoth(list, _preByCode);   // 【v1.0650】
   // 【v134】親子表示のための分類
   const _pcSetsAdAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
@@ -13609,11 +13707,20 @@ function renderAdAdjust(cfg) {
     const _adRevMainCell = shareRevCell(r.adRevs[_ti], r.seoRevs[_ti], false, "col-ad");   // 広告売上（対象月）＋構成比%
     // 【v1.0649】商品-広告データ: 商品コード / 画像 / 商品名 / 入札価格 / 広告売上×3 / 広告ROAS×3 / 広告実績額×3
     if (cfg.layout === 'data') {
+      // 【v1.0650】合算のセット行／両表示の内訳行（商品-基本データと同じクラス・同じ入札価格の出し方）
+      const _isSetD = !!r._rollup && (r._members || []).length > 1;
+      if (_dataRoll) tr.className = '';
+      if (r._setMember) tr.className = 'row-setmember';
+      if (_isSetD && basicRowMode === 'both') tr.className = 'row-setparent';
+      const _bidCellD = _isSetD
+        ? (() => { const v = _basicMultiVal(r._members, c => getBid(c), x => '¥' + x);
+                   return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
+        : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
       tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      ${_bidCellD}
       ${r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('')}
       ${_roasCells}
       ${_revCells}
@@ -13669,20 +13776,24 @@ function renderAdTune() {
 //   ★修正あり等の調整グループは使わない（groupFilter なし）。列の並びだけ layout:'data' で変える。
 function renderAdData() {
   _syncTunePeriodSegs();
+  if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();   // 【v1.0651】
   renderAdAdjust({
     tableSel: '#tableAdData', completedOnly: true, incl3Current: _tunePeriodInclCurrent,
     searchSel: '#adDataSearch', cntSel: null, hPrefix: 'hAdData',
     emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 13
   });
+  if (typeof _bulkSyncUI === 'function') _bulkSyncUI();   // 【v1.0651】
 }
 // 【v1.0649】商品-PRデータ: 調整-PRオプと同じ母集団・絞り込み。列の並びだけ layout:'data'。
 function renderPrData() {
   _syncTunePeriodSegs();
+  if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();   // 【v1.0651】
   renderProAdjust({
     tableSel: '#tablePrData', completedOnly: true, incl3Current: _tunePeriodInclCurrent,
     searchSel: '#prDataSearch', cntSel: null, hPrefix: 'hPrData',
     emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 13
   });
+  if (typeof _bulkSyncUI === 'function') _bulkSyncUI();   // 【v1.0651】
 }
 
 // ==================== Rendering: PRO調整 ====================
@@ -13730,18 +13841,26 @@ function renderProAdjust(cfg) {
     const prsrs = months.map(m => { const x = byKey[code + '|' + m]; return x ? itemPrSalesRoasPct(code, x.rev, x.adCost) : null; });
     // 【v1.0649】PR実績額(7%超・推定)。★商品-基本データの basicPrOverOf と同じ itemPrEstimate(code, rev).over
     const provs = months.map(m => { const x = byKey[code + '|' + m]; if (!x) return null; const e = itemPrEstimate(code, x.rev); return e ? Math.max(0, +e.over || 0) : null; });
-    return { code, seoRevs, adRevs, prsrs, provs };
+    // 【v1.0650】合算で PR広告売上ROAS を合計から計算し直すための素材
+    const revs    = months.map(m => byKey[code + '|' + m] ? (+byKey[code + '|' + m].rev    || 0) : 0);
+    const adCosts = months.map(m => byKey[code + '|' + m] ? (+byKey[code + '|' + m].adCost || 0) : 0);
+    return { code, seoRevs, adRevs, prsrs, provs, revs, adCosts };
   });
 
   // 引退済み商品（商品名なし）を除外
   list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
+  // 【v1.0650】商品-PRデータの 合算/両表示。★絞り込みより先にまとめる（§5-D-2）
+  const _dataRoll = (cfg.layout === 'data') && _basicIsRollup();
+  const _preByCode = new Map();
+  if (_dataRoll) { list.forEach(r => _preByCode.set(r.code, r)); list = _dataRollupRows(list); }
+
   const _proSearchEl = $(searchSel);
   const q = (_proSearchEl ? _proSearchEl.value : '').trim().toLowerCase();
-  if (q) list = list.filter(r => {
-    const m = getMaster(r.code);
-    return [r.code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
-  });
+  if (q) list = list.filter(r => _rfMembersOf(r).some(c => {   // 【v1.0650】合算行はメンバーのどれかに一致すれば残す
+    const m = getMaster(c);
+    return [c, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
+  }));
 
   // 【状態】バッジによるフィルタ適用
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'pro-adjust') {
@@ -13803,8 +13922,9 @@ function renderProAdjust(cfg) {
   }
   // 【v125】代表コード絞り込み
   list = applyRepFilter(list);
-  // 【v124】代表商品コードでグループ化
-  list = applyRepGrouping(list);
+  // 【v124】代表商品コードでグループ化（【v1.0650】合算では不要）
+  if (!_dataRoll) list = applyRepGrouping(list);
+  if (_dataRoll && basicRowMode === 'both') list = _dataExpandBoth(list, _preByCode);   // 【v1.0650】
   // 【v134】親子表示のための分類
   const _pcSetsProAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
@@ -13817,11 +13937,20 @@ function renderProAdjust(cfg) {
     // 【v1.0649】商品-PRデータ: 商品コード / 画像 / 商品名 / PRオプ料率 / SEO売上×3 / PR広告売上ROAS×3 / PR実績額(7%超・推定)×3
     if (cfg.layout === 'data') {
       const _dash = '<span style="color:var(--text3)">—</span>';
+      // 【v1.0650】合算のセット行／両表示の内訳行（料率はメンバーで割れるので範囲表示＋編集不可）
+      const _isSetD = !!r._rollup && (r._members || []).length > 1;
+      if (_dataRoll) tr.className = '';
+      if (r._setMember) tr.className = 'row-setmember';
+      if (_isSetD && basicRowMode === 'both') tr.className = 'row-setparent';
+      const _proCellD = _isSetD
+        ? (() => { const v = _basicMultiVal(r._members, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
+                   return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
+        : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
       tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
+      ${_proCellD}
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? _dash : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${r.provs.map(v => '<td class="num col-prov est-val">' + ((v != null && v > 0) ? fmt(Math.round(v)) : _dash) + '</td>').join('')}
@@ -15564,7 +15693,8 @@ function _tuneStateTargetOf(view) {
 function _tuneApplyAdAxis(list) {
   if (!basicAdFilter || basicAdFilter === 'all' || _xfAdBypassed()) return list;
   const _needle = (basicAdFilter === 'ad') ? '広告あり' : '広告なし';
-  return list.filter(r => _editPinnedCodes.has(r.code) || String(effectiveStatusOf(r.code) || '').indexOf(_needle) !== -1);
+  // 【v1.0650】合算行はメンバーの誰か1人でも当てはまれば残す（renderBasic §16 v1.0625 と同じ）
+  return list.filter(r => _editPinnedCodes.has(r.code) || _rfMembersOf(r).some(c => String(effectiveStatusOf(c) || '').indexOf(_needle) !== -1));
 }
 // 【v1.0645】調整-入札価格タブのときだけ、チップを「太く濃く」するかを決める。
 //   条件: そのチップで絞ったとき、入札価格の表（撤退・引退を除き、入札なしを除いた母集団＝調整グループ「全体」）に1件以上出る。
@@ -16181,12 +16311,12 @@ function _wireAdFilter(barId, setFilter, rerender) {
 _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic);
 // 【v1.0587】個別 / 合算 の切替（§5-D）
 {
-  const _rb = document.getElementById('basicRollupBar');
-  if (_rb) _rb.addEventListener('click', (e) => {
+  // 【v1.0650】3つのバー（.js-rowmode-bar）すべてに配線
+  document.querySelectorAll('.js-rowmode-bar').forEach(_rb => _rb.addEventListener('click', (e) => {
     const btn = e.target.closest && e.target.closest('.segf-btn');
     if (!btn || !_rb.contains(btn)) return;
     setBasicRowMode(btn.getAttribute('data-rollup') || 'each');
-  });
+  }));
 }
 _wireAdFilter('monthlyAdFilterBar', (v) => { monthlyAdFilter = v; }, renderMonthly);
 if ($('#btnDownloadBasicCsv')) $('#btnDownloadBasicCsv').addEventListener('click', downloadBasicCsv);
@@ -18871,15 +19001,15 @@ function updateRepFilterUI() {
       if (_isSoiChild(code, rep)) nC++;
     });
     // 【v1.0627】緑黄（親＋子）のボタンも「親を大きく／子を右下に小さく」に揃える
-    const eA = document.getElementById('cntSoiBoth');
-    if (eA) {
+    // 【v1.0650】ボタンは3か所にある（商品-基本データは id、商品-広告データ／商品-PRデータは data-soicnt）
+    document.querySelectorAll('#cntSoiBoth, [data-soicnt="both"]').forEach(eA => {
       const _nC = Math.max(0, nA - nP);   // ★クロス絞り込みと同じ数え方（親＋子＝合計）にそろえる
       eA.innerHTML = '<span class="pc-main">' + nP + '</span>' + (_nC > 0 ? '<span class="pc-sub">+' + _nC + '</span>' : '');
       const _b = eA.closest('.soi-pc-btn');
       if (_b) _b.title = '送り込みがある商品を全部表示する（親＋子）。もう一度押すと解除。\n親（送り込み元）' + nP + '件 ＋ 子（送り込み先）' + _nC + '件 ＝ ' + nA + '件';
-    }
-    const eP = document.getElementById('cntSoiParent'); if (eP) eP.textContent = nP;
-    const eC = document.getElementById('cntSoiChild');  if (eC) eC.textContent = nC;
+    });
+    document.querySelectorAll('#cntSoiParent, [data-soicnt="parent"]').forEach(e => { e.textContent = nP; });
+    document.querySelectorAll('#cntSoiChild, [data-soicnt="child"]').forEach(e => { e.textContent = nC; });
   } catch (e) {}
 }
 // 絞り込み解除
