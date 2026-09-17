@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0652 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0653 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3622,7 +3622,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0652</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0653</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17515,6 +17515,7 @@ function openProductEditModal(code) {
   productEditModal.dataset.code = code;
   { const _sg = document.getElementById('peSoiSearch'); if (_sg) _sg.value = ''; }
   { const _sb = document.getElementById('peSoiSuggest'); if (_sb) { _sb.style.display = 'none'; _sb.innerHTML = ''; } }
+  _peSoiWantChild = false;   // 【v1.0653】前に開いた商品の「子を選ぶ途中」を引きずらない
   try { _peSoiSync(); } catch (e) {}
   _peScope = 'self';   // 【v1.0638】開くたびにリセット（前に開いた商品の設定を引きずらない）。【v1.0640】セットがある商品では peRenderInfo が 'set'（合算）に寄せる
   // 【v1.0637】この商品の変更記録
@@ -17662,6 +17663,11 @@ function showToast(msg, type) {
 //   なし → ''／親 → 自分の商品コード（自己参照。v1.0326の「自己参照の親」と同じ）／子 → 選んだ親のコード
 // ★役割は repCode から機械的に決める（別の状態変数を持たない）。
 //   '' → なし ／ 自分と同じ → 親 ／ それ以外 → 子
+// 【v1.0653】★「子」を押した直後（親をまだ選んでいない＝repCode が空）でも「子」の画面を保つための一時フラグ。
+//   v1.0631〜v1.0652 は、子を押す → repCode を '' にする → 役割は '' から機械的に「なし」に戻る → 検索欄が閉じる、
+//   となって、なし の商品を子にできなかった（すでに子の商品だけ選び直せた）。
+//   ★保存値ではない（hidden の #peRepCode は '' のまま＝親を選ばずに保存すれば「なし」で保存される）。画面の出し分けだけに使う。
+let _peSoiWantChild = false;
 function _peSoiRoleOf(code, rep) {
   const r = String(rep || '').trim();
   if (!r) return 'none';
@@ -17677,7 +17683,9 @@ function _peSoiSync() {
   const code = (productEditModal && productEditModal.dataset.code) || '';
   const repEl = document.getElementById('peRepCode');
   const rep = repEl ? String(repEl.value || '').trim() : '';
-  const role = _peSoiRoleOf(code, rep);
+  let role = _peSoiRoleOf(code, rep);
+  if (role === 'none' && _peSoiWantChild) role = 'child';   // 【v1.0653】子を押して親を選ぶ途中
+  if (rep) _peSoiWantChild = false;                         // 親が決まったら（または親・なしにしたら）一時フラグは不要
   document.querySelectorAll('#peSoiSeg .soi-seg-btn').forEach(b => b.classList.toggle('on', b.dataset.soirole === role));
   const pick = document.getElementById('peSoiPick');
   if (pick) pick.style.display = (role === 'child') ? 'flex' : 'none';
@@ -17762,11 +17770,12 @@ function _peSoiSuggest(q) {
       e.preventDefault();
       const code = (productEditModal && productEditModal.dataset.code) || '';
       const r = seg.dataset.soirole;
-      if (r === 'none') _peSoiSetRep('');
-      else if (r === 'parent') _peSoiSetRep(code);
+      if (r === 'none') { _peSoiWantChild = false; _peSoiSetRep(''); }
+      else if (r === 'parent') { _peSoiWantChild = false; _peSoiSetRep(code); }
       else {
         // 子: いまのが子ならそのまま、そうでなければ空にして検索へ
         const cur = String((document.getElementById('peRepCode') || {}).value || '').trim();
+        _peSoiWantChild = true;   // 【v1.0653】親を選ぶまで「子」の画面を保つ
         _peSoiSetRep((cur && cur !== code) ? cur : '');
         const box = document.getElementById('peSoiPick'); if (box) box.style.display = 'flex';
         _peSoiSync();
@@ -17786,6 +17795,7 @@ function _peSoiSuggest(q) {
     // 選択中の親の × （選び直す）
     if (e.target.closest && e.target.closest('#peSoiClear')) {
       e.preventDefault();
+      _peSoiWantChild = true;   // 【v1.0653】選び直す＝子のまま検索欄を出しておく
       _peSoiSetRep('');
       const box = document.getElementById('peSoiPick'); if (box) box.style.display = 'flex';
       setTimeout(() => { const i = document.getElementById('peSoiSearch'); if (i) i.focus(); }, 0);
