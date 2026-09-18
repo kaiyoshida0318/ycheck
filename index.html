@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0654 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0656 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -533,8 +533,14 @@ body.chrome-hidden .top-nav-3 { top: 0; }
      v1.0607 で【調整】を .top-nav-3 の1行目へ移したため、段ごと消すと
      商品-基本データ以外のビューから「入札価格調整 / PRオプ調整」へ行けなくなる。
      手動の states-collapsed は従来どおり段ごと消す（復帰は #hdrRestoreBar）。 */
-body.states-hidden .top-nav-3 { display: none; }   /* 【v1.0632】段ごと消す（旧: > .xf-row だけ）。【v1.0649】【取得データ】はヘッダー1に戻したのでこのままでよい */
-body.states-collapsed .top-nav-3 { display: none; }
+/* 【v1.0656】★【調整】の行（.nav-row-tune）は、どのビューでも・ヘッダー2を隠していても必ず出す。
+   隠すのはチップ段（.xf-row ＝ クロス絞り込み＋ステータス/入札状態/PR状態）だけ。
+     ・states-hidden   … 調整と関係ないビュー（自動）
+     ・states-collapsed … ユーザーが「🔼 ヘッダー2を隠す」を押した（手動）
+   ★「ヘッダー2を隠す」ボタン（#btnToggleStates）はチップ段の中にあるので一緒に消える。
+     戻す口は従来どおり #hdrRestoreBar（手動で畳んだときだけ出る。applyHeaderCollapse の show2）。 */
+body.states-hidden .top-nav-3 .xf-row { display: none; }
+body.states-collapsed .top-nav-3 .xf-row { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -3622,7 +3628,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0654</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0656</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4511,6 +4517,10 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdData">商品名</th>
+              <!-- 【v1.0655】売上ROAS(総売上÷広告実績額)×3ヶ月。商品-基本データと同じ計算・同じ紫 -->
+              <th class="num col-sroas" data-sort="sroas0" id="hAdDataSroas0" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">売上ROAS<br>(3ヶ月前)</th>
+              <th class="num col-sroas" data-sort="sroas1" id="hAdDataSroas1" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">売上ROAS<br>(2ヶ月前)</th>
+              <th class="num col-sroas" data-sort="sroas2" id="hAdDataSroas2" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">売上ROAS<br>(前月)</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdDataAdSales0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdDataAdSales1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdDataAdSales2">広告売上<br>(前月)</th>
@@ -11211,6 +11221,7 @@ function _dataRollupRows(rows) {
   const out = [];
   fam.forEach(f => {
     f.roass = f.adCosts.map((c, i) => c > 0 ? (f.adRevs[i] / c) * 100 : null);   // ★合計から再計算
+    f.sroass = f.revs.map((rv, i) => salesRoasPct(rv, f.adCosts[i], 0));         // 【v1.0655】売上ROASも合計から再計算
     f.prsrs = f.revs.map((rv, i) => {
       if (!f._rateKnown[i]) return null;
       const den = (f.adCosts[i] || 0) + (f.provs[i] || 0);
@@ -13587,7 +13598,10 @@ function renderAdAdjust(cfg) {
     const _ro  = $('#'+hPrefix+'Roas'+i); if (_ro)  _ro.innerHTML  = `広告ROAS<br>${months[i] || ''}`;
   }
   // 【v1.0649】商品-広告データ（layout:'data'）の 広告売上×3ヶ月 の見出し
-  for (let i = 0; i < months.length; i++) { const _as = $('#'+hPrefix+'AdSales'+i); if (_as) _as.innerHTML = `広告売上<br>${months[i] || ''}`; }
+  for (let i = 0; i < months.length; i++) {
+    const _as = $('#'+hPrefix+'AdSales'+i); if (_as) _as.innerHTML = `広告売上<br>${months[i] || ''}`;
+    const _sr = $('#'+hPrefix+'Sroas'+i);   if (_sr) _sr.innerHTML = `売上ROAS<br>${months[i] || ''}`;   // 【v1.0655】
+  }
   // 【v1.0461】広告売上（対象月＝表示中の最新月：今月含む→今月／含まない→満了直近月）の見出しに月を表示
   { const _arm = $('#'+hPrefix+'AdRevMain'); if (_arm) _arm.innerHTML = `広告売上<br>${months[months.length-1] || ''}`; }   // 【v1.0654】1列版は残置（いまはどの表も3列）
   // 【v279】月列(実績額/広告ROAS)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
@@ -13608,7 +13622,10 @@ function renderAdAdjust(cfg) {
     const adCosts = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adCost : 0);
     const roass = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].roas : null);
     const seoRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].seoRev : 0);   // 【v1.0461】広告売上の構成比%用
-    return { code, adRevs, adCosts, roass, seoRevs };
+    // 【v1.0655】売上ROAS＝総売上÷広告実績額×100（商品-広告データの列。合算でも合計から計算し直せるよう revs も持つ）
+    const revs = months.map(m => byKey[code + '|' + m] ? (+byKey[code + '|' + m].rev || 0) : 0);
+    const sroass = revs.map((rv, i) => salesRoasPct(rv, adCosts[i], 0));
+    return { code, adRevs, adCosts, roass, seoRevs, revs, sroass };
   });
 
   // 引退済み商品（商品名なし）を除外
@@ -13660,6 +13677,7 @@ function renderAdAdjust(cfg) {
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'adRevMain') return r.adRevs[r.adRevs.length - 1] || 0;   // 【v1.0461】広告売上（対象月）でソート
     { const mm = /^adRev(\d+)$/.exec(k); if (mm) return r.adRevs[+mm[1]] || 0; }   // 【v1.0649】商品-広告データの広告売上×3
+    { const mm = /^sroas(\d+)$/.exec(k); if (mm) { const v = (r.sroass || [])[+mm[1]]; return v == null ? -1 : v; } }   // 【v1.0655】
     { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
     { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { const m = state.productMeta[r.code] || {}; return adStatusOrder(m.adStatus); }
@@ -13728,6 +13746,7 @@ function renderAdAdjust(cfg) {
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
+      ${(r.sroass || []).map(v => '<td class="num col-sroas">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v)) + '</td>').join('')}
       ${r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('')}
       ${_roasCells}
       ${_revCells}
@@ -13788,7 +13807,7 @@ function renderAdData() {
   renderAdAdjust({
     tableSel: '#tableAdData', completedOnly: true, incl3Current: _tunePeriodInclCurrent,
     searchSel: '#adDataSearch', cntSel: null, hPrefix: 'hAdData',
-    emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 13
+    emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 16   /* 【v1.0655】売上ROAS×3を足したので 13→16 */
   });
   if (typeof _bulkSyncUI === 'function') _bulkSyncUI();   // 【v1.0651】
 }
