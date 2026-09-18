@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0670 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0671 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -538,7 +538,10 @@ body.chrome-hidden .top-nav-3 { top: 0; }
    消すのはチップ段（.xf-row ＝ クロス絞り込み＋ステータス/PR状態/入札状態）だけ。
    ★「🔼 ヘッダー2を隠す」（#btnToggleStates）はチップ段の中にあるので一緒に消える。復帰は #hdrRestoreBar（applyHeaderCollapse の show2）。 */
 body.states-hidden .top-nav-3 .xf-row { display: none; }
-body.states-collapsed .top-nav-3 .xf-row { display: none; }
+/* 【v1.0671】★手動で「🔼 ヘッダー2を隠す」を押したときは、【一覧】【調整】のタブ行ごと段まるごと隠す。
+   （表を画面いっぱいで見るため。自動非表示＝states-hidden はタブ行を残す＝そこからしか戻れないので別扱い）
+   戻す口は #hdrRestoreBar（applyHeaderCollapse の show2 ＝ 手動で畳んだときだけ出る）。 */
+body.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -3675,7 +3678,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0670</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0671</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
