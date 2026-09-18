@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0669 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0670 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1367,6 +1367,30 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   flex-wrap: wrap;
   align-items: center;
   flex-shrink: 0;
+}
+/* 【v1.0670】★「✕ キャンセル / ⬆ 反映する（未反映）」が出ても操作行を1行に保つ。
+   ・折り返し禁止（nowrap）にして、足りない幅は 検索欄 → 反映ボタン → 対応内容ボタンの順に詰める
+   ・それでも入りきらないときだけ横スクロール（行は増えない＝表が下へずれない）
+   ★調整-入札価格／調整-PRオプ／商品-広告データ／商品-PRデータ／商品-基本データ の操作行が対象。 */
+#view-ad-tune .filters, #view-pro-tune .filters,
+#view-ad-data .filters, #view-pr-data .filters,
+#view-basic .filters {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+#view-ad-tune .filters > *, #view-pro-tune .filters > *,
+#view-ad-data .filters > *, #view-pr-data .filters > *,
+#view-basic .filters > * { flex-shrink: 0; }
+#view-ad-tune .filters input[type="search"], #view-pro-tune .filters input[type="search"],
+#view-ad-data .filters input[type="search"], #view-pr-data .filters input[type="search"],
+#view-basic .filters input[type="search"] { flex: 0 1 auto; min-width: 110px; }
+#view-ad-tune .filters .yc-reflect-wrap, #view-pro-tune .filters .yc-reflect-wrap,
+#view-ad-data .filters .yc-reflect-wrap, #view-pr-data .filters .yc-reflect-wrap,
+#view-basic .filters .yc-reflect-wrap { flex: 1 1 auto; min-width: 150px; }
+#view-ad-tune .filters .btn, #view-pro-tune .filters .btn {
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap;   /* ★これが無いと、詰まったときにボタンの文字が2行になって行の高さが増える */
 }
 .filters input, .filters select {
   padding: 6px 10px;
@@ -3651,7 +3675,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0669</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0670</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
