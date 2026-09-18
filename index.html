@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0660 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0661 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -533,10 +533,12 @@ body.chrome-hidden .top-nav-3 { top: 0; }
      v1.0607 で【調整】を .top-nav-3 の1行目へ移したため、段ごと消すと
      商品-基本データ以外のビューから「入札価格調整 / PRオプ調整」へ行けなくなる。
      手動の states-collapsed は従来どおり段ごと消す（復帰は #hdrRestoreBar）。 */
-/* 【v1.0657】v1.0656（【調整】の行を常に出す）は撤回し、v1.0632 の「段ごと消す」に戻した。
-   ★戻したいときは、この2行を .top-nav-3 .xf-row 指定に変えるだけでよい（他に変更は要らない）。 */
-body.states-hidden .top-nav-3 { display: none; }   /* 【v1.0632】段ごと消す（旧: > .xf-row だけ） */
-body.states-collapsed .top-nav-3 { display: none; }
+/* 【v1.0661】★タブの行（.nav-row-tabs ＝【一覧】＋【調整】）は、どのビューでも・ヘッダー2を隠していても必ず出す。
+   商品-基本データ／商品-広告データ／商品-PRデータ への入口がこの行にしか無いため、段ごと消すと戻れなくなる。
+   消すのはチップ段（.xf-row ＝ クロス絞り込み＋ステータス/PR状態/入札状態）だけ。
+   ★「🔼 ヘッダー2を隠す」（#btnToggleStates）はチップ段の中にあるので一緒に消える。復帰は #hdrRestoreBar（applyHeaderCollapse の show2）。 */
+body.states-hidden .top-nav-3 .xf-row { display: none; }
+body.states-collapsed .top-nav-3 .xf-row { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -584,6 +586,7 @@ body.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; }
 .xf-row { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; width: 100%; }
 .nav-group-tune { flex: 0 0 auto; }
+.nav-row-tabs { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 26px; row-gap: 2px; }   /* 【v1.0661】【一覧】＋【調整】 */
 .top-nav > .nav-break { flex-basis: 100%; height: 0; }
 .top-nav:not(.top-nav-3) { row-gap: 0; }   /* 改行要素の上下に行間が2回入って間延びするので、行間は0にする */   /* 【v1.0649】ヘッダー1の改行（【基本】【全体】の行 / 【取得データ】の行） */
 
@@ -3469,6 +3472,7 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .nav-group-label.g-zentai  { color:#dc2626; }  /* 【全体】 */
 .nav-group-label.g-shutoku { color:#0891b2; }  /* 【取得データ】 */
 .nav-group-label.g-chosei  { color:#16a34a; }  /* 【調整】 */
+.nav-group-label.g-ichiran { color:#7c3aed; }  /* 【一覧】【v1.0661】 */
 .nav-group-label.g-jotai   { color:#9333ea; }  /* 【状態】 */
 .nav-group-label.g-status  { color:#0d9488; }  /* 【ステータス】 */
 .nav-group-label.g-nyusatsu { color:#b45309; }  /* 【入札状態】 */
@@ -3631,7 +3635,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0660</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0661</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3663,11 +3667,7 @@ th.col-sroas { background-color:#e7d5f5; }
 <nav class="top-nav">
   <div class="nav-group">
     <span class="nav-group-label g-basic">【基本】</span>
-    <a class="nav-tab nav-tab-link active" data-view="basic" data-basicmode="plain" href="?view=basic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
-    <!-- 【v1.0649】商品-広告データ／商品-PRデータ。中身は 調整-入札価格／調整-PRオプ と同じ母集団・絞り込み（renderAdAdjust / renderProAdjust を layout:'data' で再利用）。
-         列の並びだけ違う（対応内容・状態の列なし）。§34 -->
-    <a class="nav-tab nav-tab-link" data-view="ad-data" href="?view=ad-data">商品-広告データ</a>
-    <a class="nav-tab nav-tab-link" data-view="pr-data" href="?view=pr-data">商品-PRデータ</a>
+    <!-- 【v1.0661】商品-基本データ／商品-広告データ／商品-PRデータ の3つは【一覧】ブロックへ移動（ヘッダー2の左端）。§47 -->
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-日月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
     <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率<span class="chip-num" id="cntOyChildUnset"></span></a>
@@ -3685,9 +3685,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
     <span id="cntAdAdjustActive" style="display:none"></span><span id="cntProAdjustActive" style="display:none"></span>
   </div>
-  <!-- 【v1.0649】ヘッダー1は2行: 1行目＝【基本】【全体】 ／ 2行目＝【取得データ】＋右端「ヘッダー1を隠す」。
-       .nav-break（幅100%・高さ0）で強制的に改行している。★タブを足しても2行目の並びは崩れない -->
-  <div class="nav-break" aria-hidden="true"></div>
+  <!-- 【v1.0661】ヘッダー1は1行に戻した（【基本】から3タブを【一覧】へ移したぶん余裕ができたため）。
+       並びは 【基本】→【全体】→【取得データ】、右端に「ヘッダー1を隠す」。 -->
   <div class="nav-group nav-group-shutoku">
     <span class="nav-group-label g-shutoku">【取得データ】</span>
     <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank">広告順位</a>
@@ -3710,6 +3709,16 @@ th.col-sroas { background-color:#e7d5f5; }
        .top-nav-3 は横並び（左＝パネル固定幅 / 右＝従来の2段を縦積みする .states-stack）。 -->
 <nav class="top-nav top-nav-3">
 
+  <!-- 【v1.0661】ヘッダー2の1行目＝【一覧】（ざっと全体を見る）＋【調整】（そのページで直す）。
+       ★この行はどのビューでも出す（自動非表示・手動の「ヘッダー2を隠す」で消えるのは下の .xf-row だけ）。
+         ここを段ごと消すと、商品-基本データへ戻る口が画面から無くなるため（§47）。 -->
+  <div class="nav-row-tabs">
+  <div class="nav-group nav-group-tune nav-group-ichiran">
+    <span class="nav-group-label g-ichiran">【一覧】</span>
+    <a class="nav-tab nav-tab-link active" data-view="basic" data-basicmode="plain" href="?view=basic" id="navIchiranBasic">商品-基本データ<span class="chip-num" id="cntBasicActive"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="ad-data" href="?view=ad-data">商品-広告データ</a>
+    <a class="nav-tab nav-tab-link" data-view="pr-data" href="?view=pr-data">商品-PRデータ</a>
+  </div>
   <!-- 【v1.0607】【調整】をヘッダー2の1行目（＝クロス絞り込みパネルの上）へ移動 -->
   <div class="nav-group nav-group-tune">
     <span class="nav-group-label g-chosei">【調整】</span>
@@ -3720,6 +3729,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">調整-入札価格</a>
     <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">調整-PRオプ</a>
   </div>
+  </div><!-- /.nav-row-tabs 【v1.0661】 -->
 
   <div class="xf-row">
   <!-- 【v1.0583】クロス絞り込み: 広告(有り/無し) × 送り込み(有り/無し) をワンクリックで。
