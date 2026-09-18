@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0659 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0660 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3631,7 +3631,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0659</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0660</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9438,7 +9438,7 @@ function updateStateCounts() {
     activeCount++;
     const meta = state.productMeta[code] || {};
     const adS = effectiveAdStatusOf(code);   // 【v1.0658】子（親に追従）は「入札なし」として数える
-    const proS = meta.proStatus || '';
+    const proS = effectiveProStatusOf(code);   // 【v1.0660】子商品は「PR◯-子-7％固定」として数える
     // 【v186】新ラベル＋旧ラベル両方判定（分類ヘルパー経由でマイグレーション前のデータも互換）
     if (adStatusIsCircle(adS)) adOk++;
     else if (adStatusIsCross(adS)) adNg++;
@@ -9906,10 +9906,15 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   //   ドロップダウン(選択肢)は正式名のまま。selectのchangeでファサードを更新する。
   // 【v1.0658】ステータスが「子（親に追従）」の商品の入札状態は「入札なし」で固定表示（保存値は触らない）。
   //   ★ここで value を差し替えるだけ。change ハンドラ・保存・マージは無変更。
-  if (kind === 'ad' && (meta.status || '') === STATUS_LIFE_CHILD) {
-    const cAd = statusTextColor('入札なし');
-    return `<span class="status-cell" title="ステータスが「${escapeHtml(STATUS_LIFE_CHILD)}」の商品は、広告を出さない前提なので入札状態は「入札なし」で固定です（保存値は変えていません）。">`
-      + `<span class="status-facade" style="color:${cAd};border-color:${cAd};opacity:.85">${statusDisplayLabel('入札なし')}</span>`
+  // 【v1.0660】子商品（ステータス＝子（親に追従）／送り込み先）は、入札状態＝入札なし・PR状態＝PR◯-子-7％固定 の固定表示にする。
+  if ((kind === 'ad' || kind === 'pro') && _isSoiChildProduct(code)) {
+    const fixedVal = (kind === 'ad') ? '入札なし' : 'PR◯-子-7％固定';
+    const cFix = statusTextColor(fixedVal);
+    const why = (kind === 'ad')
+      ? '送り込み先（子商品）は広告を出さない前提なので、入札状態は「入札なし」で固定です。'
+      : '送り込み先（子商品）はPRオプ料率が最低の7％から動かせないので、PR状態は「PR◯-子-7％固定」で固定です。';
+    return `<span class="status-cell" title="${escapeHtml(why + '（保存値は変えていません。親子の設定を外すと元の値に戻ります）')}">`
+      + `<span class="status-facade" style="color:${cFix};border-color:${cFix};opacity:.85">${statusDisplayLabel(fixedVal)}</span>`
       + `</span>`;
   }
   if (kind === 'ad' || kind === 'pro') {
@@ -10316,7 +10321,7 @@ function renderBasic() {
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     if (k === 'adStatus')  { return adStatusOrder(effectiveAdStatusOf(r.code)); }   /* 【v1.0658】 */
-    if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
+    if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     return r[k] || 0;
   };
@@ -13350,13 +13355,29 @@ function adStatusIsCircle(s) { return s === '入札◯' || s === '入札価格�
 function adStatusIsCross(s)  { return s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }
 function adStatusIsSettled(s){ return s === '入札△-飛ぶ手前固定'; }  // 固定＝対応不要
 function adStatusIsNone(s)   { return s === '入札なし' || s === '入札無し' || s === '広告無'; }
-// 【v1.0658】ステータスが「子（親に追従）」の商品の入札状態は、いつでも「入札なし」として扱う。
+// 【v1.0660】「子商品」の判定。次のどちらかなら子。
+//   ・ステータスが「子（親に追従）」
+//   ・送り込みの代表コード（repCode）が自分以外を指している＝送り込み先
+//   ★親の自己参照（repCode === 自分のコード）は親なので子にしない。
+function _isSoiChildProduct(code) {
+  const meta = (state.productMeta || {})[code] || {};
+  if ((meta.status || '') === STATUS_LIFE_CHILD) return true;
+  const rep = String(meta.repCode || '').trim();
+  return !!rep && rep !== String(code);
+}
+// 【v1.0660】子商品のPR状態は、いつでも「PR◯-子-7％固定」として扱う（子は最低料率7％から動かせないため）。
+//   ★入札状態と同じで、保存値（meta.proStatus）は書き換えない＝読むときだけ差し替える。
+//   ★PR状態を読んで 絞り込む／数える／仕分ける 処理は、必ずこの関数を通すこと。
+function effectiveProStatusOf(code) {
+  if (_isSoiChildProduct(code)) return 'PR◯-子-7％固定';
+  return ((state.productMeta || {})[code] || {}).proStatus || '';
+}
+// 【v1.0658/v1.0660】子商品の入札状態は、いつでも「入札なし」として扱う。
 //   ★保存値（productMeta[code].adStatus）は書き換えない（v1.0618 の方針。読むときだけ差し替える＝effectiveStatusOf と同じ作り）。
 //   ★入札状態を読んで 絞り込む／数える／調整の母集団を決める 処理は、必ずこの関数を通すこと。
 function effectiveAdStatusOf(code) {
-  const meta = (state.productMeta || {})[code] || {};
-  if ((meta.status || '') === STATUS_LIFE_CHILD) return '入札なし';
-  return meta.adStatus || '';
+  if (_isSoiChildProduct(code)) return '入札なし';
+  return ((state.productMeta || {})[code] || {}).adStatus || '';
 }  // 【v1.0323】入札なし判定（旧表記も許容）
 // 【v1.0523】以前は広告を出していたが、現在は広告なし＝広告を停止／削除した商品を自動判定する。
 //   条件: (1)現在アクティブな広告運用中でない（入札◯/×調整中/△固定 のいずれでもない）
@@ -13468,8 +13489,8 @@ function isTuneFix(code, kind) {
     return false;
   } else {
     const bucket = getLatestRankBucket(code, 'seo');
-    if (proStatusIsCircle(meta.proStatus)) return bucket !== 'top';
-    if (proStatusIsCross(meta.proStatus))  return bucket === 'top';
+    if (proStatusIsCircle(effectiveProStatusOf(code))) return bucket !== 'top';   // 【v1.0660】
+    if (proStatusIsCross(effectiveProStatusOf(code)))  return bucket === 'top';
     return false;
   }
 }
@@ -13535,7 +13556,7 @@ function getTuneGroup(code, kind) {
   }
   // 【v252】非該当（修正あり条件に該当しない）で、状態が○のもの（＝○かつ順位も上位＝直す必要なし）は
   //   推移確認・未確認には出さず「全体」のみに表示する。
-  const isCircle = (kind === 'ad') ? adStatusIsCircle(effectiveAdStatusOf(code)) : proStatusIsCircle(meta.proStatus);   // 【v1.0658】
+  const isCircle = (kind === 'ad') ? adStatusIsCircle(effectiveAdStatusOf(code)) : proStatusIsCircle(effectiveProStatusOf(code));   // 【v1.0658/v1.0660】
   if (isCircle) return null;
   // 【v208】固定系の扱いを変更。
   //   ・子商品の固定（PR△-子-7％固定）＝全体のみ（従来どおり対応不要）。
@@ -13722,7 +13743,7 @@ function renderAdAdjust(cfg) {
     { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
     { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { return adStatusOrder(effectiveAdStatusOf(r.code)); }   /* 【v1.0658】 */
-    if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
+    if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     if (k === 'adNote')    { const m = state.productMeta[r.code] || {}; return (m.adNote || '').trim(); }  // 【v114】対応内容のソート
     return 0;
@@ -13960,7 +13981,7 @@ function renderProAdjust(cfg) {
     { const mm = /^prov(\d+)$/.exec(k); if (mm) { const v = r.provs[+mm[1]]; return v == null ? -1 : v; } }   // 【v1.0649】
     if (k === 'proRate') { const p = getProRate(r.code); return (p == null || isNaN(p)) ? -1 : Number(p); }
     if (k === 'adStatus')  { return adStatusOrder(effectiveAdStatusOf(r.code)); }   /* 【v1.0658】 */
-    if (k === 'proStatus') { const m = state.productMeta[r.code] || {}; return proStatusOrder(m.proStatus); }
+    if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     if (k === 'proNote')   { const m = state.productMeta[r.code] || {}; return (m.proNote || '').trim(); }  // 【v114】対応内容のソート
     return 0;
@@ -15649,21 +15670,22 @@ const STATE_FILTERS = {
   'ad-fixed':      { label: '入札△-飛ぶ手前固定', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => adStatusIsSettled(effectiveAdStatusOf(code)) },
   'ad-none':       { label: '入札なし',          targetView: 'basic', basicMode: 'tune', match: (meta, code) => adStatusIsNone(effectiveAdStatusOf(code)) },
   // 【v1.0658】PR◯ は「素のPR◯」だけ（親-30％固定 / 子-7％固定 はそれぞれ専用チップ）。★件数の分け方と同じ
-  'pro-ok':        { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta) => { const p = meta.proStatus || ''; return proStatusIsCircle(p) && !_proIsP30(p) && !_proIsC7(p); } },
-  'pro-p30':       { label: 'PR◯-親-30％固定',   targetView: 'basic', basicMode: 'tune', match: (meta) => _proIsP30(meta.proStatus || '') },
-  'pro-c7':        { label: 'PR◯-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta) => _proIsC7(meta.proStatus || '') },
-  'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-親-下げ挑戦中' },
+  // 【v1.0660】PR状態は effectiveProStatusOf（子商品＝PR◯-子-7％固定）で判定。★件数（updateStateCounts）と同じ式にすること
+  'pro-ok':        { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return proStatusIsCircle(p) && !_proIsP30(p) && !_proIsC7(p); } },
+  'pro-p30':       { label: 'PR◯-親-30％固定',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsP30(effectiveProStatusOf(code)) },
+  'pro-c7':        { label: 'PR◯-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsC7(effectiveProStatusOf(code)) },
+  'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveProStatusOf(code) === 'PR△-親-下げ挑戦中' },
   // 【v1.0636】チップは撤去したが、保存済みの activeStateFilter が指していても壊れないよう定義は残す。
-  'pro-pfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta) => _proIsHFixed(meta.proStatus || '') },
+  'pro-pfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
   'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
   // 【v1.0636】★親固定も拾う（統合したので、移行前の値が残っていても同じチップに出る）
-  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta) => _proIsHFixed(meta.proStatus || '') },
-  'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta) => { const p = meta.proStatus || ''; return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
+  'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
+  'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
   'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
   'unselected-ad': { label: '選択前-入札□', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => !effectiveAdStatusOf(code) },
-  'unselected-pro':{ label: '選択前-PR□', targetView: 'basic', basicMode: 'tune', match: (meta) => !(meta.proStatus || '') }
+  'unselected-pro':{ label: '選択前-PR□', targetView: 'basic', basicMode: 'tune', match: (meta, code) => !effectiveProStatusOf(code) }
 };
 
 // 【v213】状態カテゴリの説明文（チップで絞り込んだとき、対象ビューのツールバーに表示）
