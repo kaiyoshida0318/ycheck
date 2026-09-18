@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0671 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0672 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1820,6 +1820,7 @@ th.col-adunk { background-color: #f8d9d3; }
 /* 【v1.0609】調整-基本のときだけ出す3列（ステータス/入札状態/PRオプ状態） */
 body:not(.basic-tune) #tableBasic .tune-col { display: none; }
 body:not(.basic-tune) #view-basic .tune-only { display: none !important; }   /* 【v1.0651】順位取得CSV・反映場所を確認 は調整-基本だけ */
+body.basic-tune #view-basic .plain-only { display: none !important; }        /* 【v1.0672】このページをCSV出力 は商品-基本データだけ（調整-基本では出さない） */
 .fam-pct { color: #7c3aed; font-size: 11px !important; font-weight: 700; }
 /* 【v1.0591】親子セットの合計から引いた値であることの目印 */
 /* 【v1.0591→v1.0622】親子セットの合計から引いたことを示す「合算」バッジは撤去した（数字だけにする）。
@@ -3678,7 +3679,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0671</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0672</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3964,7 +3965,7 @@ th.col-sroas { background-color:#e7d5f5; }
           </span>
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
           <!-- 【v1.0522】いま画面に表示されている商品（ステータス絞り込み等を反映）を、選択月の列内容でCSV出力（右端配置） -->
-          <button class="btn sm ghost" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（総売上・売上ROAS・PR売上ROAS(推定)・SEO売上・広告売上・広告ROAS・広告売上(不明分)・広告実績額・PR実績額(7%超・推定)・PRオプ料率・入札価格＋参考として送り込み売上・メインKW／各状態）でCSV出力します">⬇ このページをCSV出力</button>
+          <button class="btn sm ghost plain-only" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（総売上・売上ROAS・PR売上ROAS(推定)・SEO売上・広告売上・広告ROAS・広告売上(不明分)・広告実績額・PR実績額(7%超・推定)・PRオプ料率・入札価格＋参考として送り込み売上・メインKW／各状態）でCSV出力します">⬇ このページをCSV出力</button>
         </div>
         <!-- 【v1.0620】一括変更バー。#btnBasicBulk で出す。表示中だけ商品コード左にチェックボックスが出る。 -->
         <div class="bulk-bar" id="basicBulkBar" style="display:none">
