@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0672 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0673 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3679,7 +3679,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0672</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0673</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13689,10 +13689,35 @@ function updateTuneBar() {
   (state.item || []).forEach(i => codes.add(i.code));
   (state.ad || []).forEach(a => codes.add(a.code));
   dailyCodes().forEach(c => codes.add(c));   // 【v1.0527】日別しか無い月でも商品を列挙する
+  // 【v1.0673】★いま効いている絞り込み（クロス絞り込み・状態チップ・検索）を通したあとの件数にする。
+  //   ＝分類表のマスを押したら、その条件に該当する商品での内訳が 全体/修正あり/推移確認/未確認 に出る。
+  //   ★判定式は表の描画（renderAdAdjust / renderProAdjust）と同じ関数を使い回す。二重に書かない。
+  const _tgt = (kind === 'ad') ? 'ad-adjust' : 'pro-adjust';
+  const _chip = (state.activeStateFilter && state.activeStateFilter.targetView === _tgt)
+    ? STATE_FILTERS[state.activeStateFilter.type] : null;
+  const _searchEl = document.getElementById(kind === 'ad' ? 'adTuneSearch' : 'proTuneSearch');
+  const _q = (_searchEl ? _searchEl.value : '').trim().toLowerCase();
+  const _wantAd = (basicAdFilter === 'ad');
+  const _adAxisOn = (basicAdFilter && basicAdFilter !== 'all' && !_xfAdBypassed());
+  // 送り込み軸は applyRepFilter / _xfScopeFilter をそのまま通す（'*' '!' '*P' '*C' '*A' とグループ絞り込みの全部に対応）
+  const _repOk = (() => {
+    if (!state.repFilter) return null;
+    const kept = new Set(_xfScopeFilter(applyRepFilter([...codes].map(c => ({ code: c })))).map(x => x.code));
+    return (c) => kept.has(c);
+  })();
   let cFix = 0, cWatch = 0, cUnchecked = 0, cAll = 0;
   [...codes].forEach(code => {
     if (isRetired(code)) return;
     if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return;   // 【v1.0658】子は入札なし扱い
+    // 【v1.0673】いまの絞り込みを反映
+    if (_q) {
+      const m = getMaster(code);
+      if (![code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(_q)) return;
+    } else {
+      if (_repOk && !_repOk(code)) return;                                    // 送り込み軸（検索中はバイパス＝表と同じ）
+      if (_adAxisOn && !(_xfInScope(code) && _xfHasAd(code) === _wantAd)) return;   // 広告軸
+    }
+    if (_chip && typeof _chip.match === 'function' && !_chip.match(state.productMeta[code] || {}, code)) return;   // 状態チップ
     cAll++;  // この調整タブの対象商品（全体ボタンの対象）
     const g = getTuneGroup(code, kind);
     if (g === 'fix') cFix++;
