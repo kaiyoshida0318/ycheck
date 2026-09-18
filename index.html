@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0662 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0665 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3635,7 +3635,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0662</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0665</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3750,11 +3750,11 @@ th.col-sroas { background-color:#e7d5f5; }
     <button type="button" class="xf-cell xf-axis" data-xf-ad="all"  data-xf-soi="no"  title="送り込みが無い商品だけを表示（代表コードを持たず、どこからも参照されていない商品）">無し<span class="xf-num" id="xfNumSoiNo"></span></button>
 
     <div class="xf-head xf-head-ad">広告<button type="button" class="xf-help" data-xfhelp="ad" title="「有り／無し」がどう決まっているかを見る" aria-label="広告の条件">?</button></div>
-    <button type="button" class="xf-cell xf-axis" data-xf-ad="ad"   data-xf-soi="all" title="ステータスが「…広告あり…」の商品だけを表示">有り<span class="xf-num" id="xfNumAdYes"></span></button>
+    <button type="button" class="xf-cell xf-axis" data-xf-ad="ad"   data-xf-soi="all" title="入札状態が「入札なし」以外の商品だけを表示（子商品は親の入札状態で判定）">有り<span class="xf-num" id="xfNumAdYes"></span></button>
     <button type="button" class="xf-cell xf-cross" data-xf-ad="ad"   data-xf-soi="yes"><span class="xf-num" id="xfNumAdYesSoiYes">0</span></button>
     <button type="button" class="xf-cell xf-cross" data-xf-ad="ad"   data-xf-soi="no"><span class="xf-num" id="xfNumAdYesSoiNo">0</span></button>
 
-    <button type="button" class="xf-cell xf-axis" data-xf-ad="noad" data-xf-soi="all" title="ステータスが「…広告なし…」の商品だけを表示">無し<span class="xf-num" id="xfNumAdNo"></span></button>
+    <button type="button" class="xf-cell xf-axis" data-xf-ad="noad" data-xf-soi="all" title="入札状態が「入札なし」の商品だけを表示（子商品は親の入札状態で判定）">無し<span class="xf-num" id="xfNumAdNo"></span></button>
     <button type="button" class="xf-cell xf-cross" data-xf-ad="noad" data-xf-soi="yes"><span class="xf-num" id="xfNumAdNoSoiYes">0</span></button>
     <button type="button" class="xf-cell xf-cross" data-xf-ad="noad" data-xf-soi="no"><span class="xf-num" id="xfNumAdNoSoiNo">0</span></button>
   </div>
@@ -9500,9 +9500,9 @@ function updateStateCounts() {
     // 【v1.0583】クロス絞り込みの件数。判定は絞り込み本体とまったく同じ式を使う:
     //   広告     … renderBasic の basicAdFilter（ステータス文字列に「広告あり／広告なし」を含むか。§10）
     //   送り込み … applyRepFilter の _repHasSoikomi（'*' / '!' と同じ判定）
-    {
-      const _isAd   = st.indexOf('広告あり') !== -1;
-      const _isNoad = st.indexOf('広告なし') !== -1;
+    if (_xfInScope(code)) {                  // 【v1.0664】未設定・撤退予定・撤退済みは分類表に出さない
+      const _isAd   = _xfHasAd(code);        // 【v1.0663】入札状態ベース（子は親に追従）
+      const _isNoad = !_isAd;
       const _hasSoi = _repHasSoikomi(code, _xfRef);
       const _isP = _hasSoi && _isSoiParent(code, _xfRef);   // 【v1.0627】親
       const _isC = _hasSoi && !_isP;                        //            子（＝送り込み有りで親でないもの）
@@ -10317,9 +10317,10 @@ function renderBasic() {
   //     セットが丸ごと消えていた（＝「合算にすると出てこない」の原因）。
   //     → メンバーの誰か1人でも当てはまればセットを残す。
   if (!q && basicAdFilter !== 'all' && !_hideAdBar) {
-    const _needle = (basicAdFilter === 'ad') ? '広告あり' : '広告なし';
-    // 【v1.0626】「子（親に追従）」は親のステータスで判定する（effectiveStatusOf）
-    const _hit = (c) => String(effectiveStatusOf(c) || '').indexOf(_needle) !== -1;
+    // 【v1.0663】判定は _xfHasAd（入札状態ベース。子は親に追従）。★件数・説明と同じ式
+    const _wantAd = (basicAdFilter === 'ad');
+    // 【v1.0664】分類表の対象外（未設定・撤退予定・撤退済み）は広告軸で絞ったときも出さない＝件数と一致させる
+    const _hit = (c) => _xfInScope(c) && (_xfHasAd(c) === _wantAd);
     list = list.filter(r => {
       if (_editPinnedCodes.has(r.code)) return true;
       const mem = (r._rollup && Array.isArray(r._members) && r._members.length) ? r._members : [r.code];
@@ -10366,7 +10367,7 @@ function renderBasic() {
   // 【v1.0602】★検索中はバイパスする（広告あり/なしフィルタと同じ扱い）。
   //   v1.0601まではここが効いたままで、送り込み絞り込み中に商品コードで検索しても
   //   「1件も出ない」状態になっていた（新商品は代表コードを持たないので必ず外れる）。
-  if (!q) list = applyRepFilter(list);
+  if (!q) list = _xfScopeFilter(applyRepFilter(list));   // 【v1.0665】送り込み軸だけで絞ったときも分類表と同じ母集団に
   // 【v124】代表商品コードでグループ化（同じrepCodeの商品を塊で表示）
   // 【v1.0587】合算モードでは1行＝1セットなので、親子の並べ替え・字下げは不要（かけると逆に崩れる）
   if (!_basicIsRollup()) list = applyRepGrouping(list);
@@ -13808,7 +13809,7 @@ function renderAdAdjust(cfg) {
     adAdjustFrozenOrder = list.map(r => r.code);
   }
   // 【v125】代表コード絞り込み
-  list = applyRepFilter(list);
+  list = _xfScopeFilter(applyRepFilter(list));   // 【v1.0665】
   // 【v124】代表商品コードでグループ化（【v1.0650】合算では1行＝1セットなので不要）
   if (!_dataRoll) list = applyRepGrouping(list);
   if (_dataRoll && basicRowMode === 'both') list = _dataExpandBoth(list, _preByCode);   // 【v1.0650】
@@ -14057,7 +14058,7 @@ function renderProAdjust(cfg) {
     proAdjustFrozenOrder = list.map(r => r.code);
   }
   // 【v125】代表コード絞り込み
-  list = applyRepFilter(list);
+  list = _xfScopeFilter(applyRepFilter(list));   // 【v1.0665】
   // 【v124】代表商品コードでグループ化（【v1.0650】合算では不要）
   if (!_dataRoll) list = applyRepGrouping(list);
   if (_dataRoll && basicRowMode === 'both') list = _dataExpandBoth(list, _preByCode);   // 【v1.0650】
@@ -15846,9 +15847,9 @@ function _tuneStateTargetOf(view) {
 //   ★送り込み軸は applyRepFilter が元から両方の表に入っているので、ここでは広告軸だけ。
 function _tuneApplyAdAxis(list) {
   if (!basicAdFilter || basicAdFilter === 'all' || _xfAdBypassed()) return list;
-  const _needle = (basicAdFilter === 'ad') ? '広告あり' : '広告なし';
+  const _wantAd = (basicAdFilter === 'ad');   // 【v1.0663】入札状態ベース（子は親に追従）
   // 【v1.0650】合算行はメンバーの誰か1人でも当てはまれば残す（renderBasic §16 v1.0625 と同じ）
-  return list.filter(r => _editPinnedCodes.has(r.code) || _rfMembersOf(r).some(c => String(effectiveStatusOf(c) || '').indexOf(_needle) !== -1));
+  return list.filter(r => _editPinnedCodes.has(r.code) || _rfMembersOf(r).some(c => _xfInScope(c) && _xfHasAd(c) === _wantAd));   // 【v1.0664】
 }
 // 【v1.0645】調整-入札価格タブのときだけ、チップを「太く濃く」するかを決める。
 //   条件: そのチップで絞ったとき、入札価格の表（撤退・引退を除き、入札なしを除いた母集団＝調整グループ「全体」）に1件以上出る。
@@ -19253,31 +19254,29 @@ function _xfHelpBody(kind) {
       + '</div>';
   }
   return ''
-    + '<div class="tc-sub">「広告」は<b>手で設定したステータスの文字列</b>で決まります。'
+    + '<div class="tc-sub">「広告」は<b>入札状態</b>で決まります（【v1.0663】。それ以前はステータスの文字で判定していました）。'
     + '実際に広告費が出ているかどうかは見ていません。</div>'
     + '<table class="tc-table"><tbody>'
     + '<tr><td style="width:110px"><span class="tc-hi">有り</span></td><td>'
-    +   'ステータスに「<b>広告あり</b>」を含む商品<br>'
-    +   '→ <b>健常-広告あり◯</b> ／ <b>中立-広告あり□</b>'
+    +   '入札状態が「<b>入札なし</b>」以外の商品<br>'
+    +   '→ <b>入札◯</b> ／ <b>入札×-調整中</b> ／ <b>入札△-飛ぶ手前固定</b> ／ <b>—（未設定）</b>'
     + '</td></tr>'
     + '<tr><td><span class="tc-hi">無し</span></td><td>'
-    +   'ステータスに「<b>広告なし</b>」を含む商品<br>'
-    +   '→ <b>健常-広告なし◯</b> ／ <b>中立-広告なし□</b>'
+    +   '入札状態が「<b>入札なし</b>」の商品'
     + '</td></tr>'
-    + '<tr><td style="color:var(--text3)">どちらにも<br>出ない</td><td>'
-    +   'ステータスに「広告あり」「広告なし」のどちらも入っていない商品<br>'
-    +   '→ <b>新商品</b> ／ <b>—（未設定）</b> ／ <b>撤退検討▲</b> ／ <b>撤退予定</b> ／ <b>撤退済み</b>'
-    + '</td></tr>'
-    + '<tr><td><span class="tc-hi">子（親に追従）</span></td><td>'
-    +   'ステータスが <b>子（親に追従）</b> の商品は、<b>親（代表商品コードの先）のステータス</b>で判定します。<br>'
-    +   '親が「健常-広告あり◯」なら、その子も<b>「有り」に出ます</b>（＝親とセットで見られます）。<br>'
-    +   '<span style="color:var(--text3)">※ステータス欄の表示は「子（親に追従）」のままで、保存値も書き換わりません。</span>'
+    + '<tr><td><span class="tc-hi">子商品</span></td><td>'
+    +   '代表商品コードが自分以外を指している商品（＝送り込み先の子）は、<b>親の入札状態</b>で判定します。<br>'
+    +   '親が「有り」なら子も<b>「有り」に出ます</b>（＝親の下に並んで見られます）。<br>'
+    +   '<span style="color:var(--text3)">※子の入札状態の表示は「入札なし」で固定のままです（v1.0660）。</span>'
     + '</td></tr>'
     + '</tbody></table>'
-    + '<div class="tc-sub" style="background:#fff7ed;border-color:#fed7aa;border-left-color:#ea580c">'
-    +   '★このため<b>「有り」＋「無し」は全体より少なくなります</b>（送り込みとは違って表裏の関係ではありません）。'
-    +   '数が合わないときは、上の【ステータス】行で 新商品 や 撤退系 の件数を見てください。<br>'
-    +   '★広告の出稿状況を正しく反映させるには、その商品の<b>ステータスを「…広告あり◯」「…広告なし◯」に直す</b>必要があります。'
+    + '<div class="tc-sub" style="background:#f1f5f9;border-color:#cbd5e1;border-left-color:#64748b">'
+    +   '★「有り」と「無し」は同じ判定の表裏なので、<b>2つ足すと必ず全体になります</b>。<br>'
+    +   '★ステータスの「健常-広告あり◯」などの文言とは<b>別の判定</b>です。入札状態と食い違うと、'
+    +   'ステータス名と分類表の側が合わないことがあります。<br>'
+    +   '★【v1.0664】<b>—（未設定）・撤退予定・撤退済み</b>の商品は、分類表の件数にも絞り込みにも出ません。'
+    +   '新商品は出ます（「新商品」だけ見たいときは【ステータス】の新商品チップと重ねて使えます）。<br>'
+    +   '★【v1.0665】送り込みの「有り／無し」だけで絞ったときも同じ母集団です（数字と表の行数が一致します）。'
     + '</div>';
 }
 function openXfCondModal(kind) {
@@ -19316,6 +19315,41 @@ function closeXfCondModal() { const m = document.getElementById('xfCondModal'); 
 //     （パネルだけが「広告有り」を光らせたまま、実際には効いていない、という嘘になる）。
 //   ※一覧は関数の中に置く。const を外に出すと、先に定義される renderBasic から
 //     初期化前（TDZ）に触れる経路ができるため。
+// 【v1.0664】★クロス絞り込み（分類表）に出す商品の範囲。
+//   出す  … 新商品 / 子（親に追従） / 健常-広告あり◯ / 健常-広告なし◯ / 中立-広告あり□ / 中立-広告なし□ / 撤退検討▲
+//   出さない … —（未設定） / 撤退予定（旧値の 撤退■・撤退予定-out記入済 も） / 撤退済み
+//   ★件数（updateStateCounts）と広告軸の絞り込み（renderBasic / _tuneApplyAdAxis）で同じ関数を使うこと。
+//   ★新商品は外さない。入札状態は入っていることが多く、「広告を出しているのに手つかず」を見つける場所だから。
+//     新商品だけ見たいときは【ステータス】の「新商品」チップ（分類表と重ねて効く）。
+function _xfInScope(code) {
+  const st = String((typeof effectiveStatusOf === 'function' ? effectiveStatusOf(code) : '') || '');
+  if (!st || st === STATUS_LIFE_NONE) return false;                                   // —（未設定）
+  if (st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済') return false;   // 撤退予定（旧値も）
+  if (st === '撤退済み') return false;                                                 // 撤退済みは isRetired でも落ちる
+  return true;
+}
+// 【v1.0665】パネルの「送り込み 有り／無し」だけで絞ったときも、分類表の母集団（_xfInScope）に合わせる。
+//   ★パネルが動かす値（'*' / '!'）のときだけ効かせる。'*A'（緑黄ボタン）・'*P'・'*C'・グループ絞り込み（コード指定）は対象外。
+//     検索欄の送り込みバッジも '*' を使うので、同じ画面では同じ結果になる（パネルと食い違わせない方を優先）。
+//   ★撤退済み商品ビューなど、パネルが出ない画面の applyRepFilter には手を入れていない。
+function _xfScopeFilter(list) {
+  const f = state.repFilter;
+  if (f !== '*' && f !== '!') return list;
+  return list.filter(r => _editPinnedCodes.has(r.code) || _rfMembersOf(r).some(c => _xfInScope(c)));
+}
+// 【v1.0663】★クロス絞り込みの「広告」軸の判定はここ1本にまとめる。
+//   有り ＝ 入札状態が「入札なし」以外（＝いま広告を出している／調整中）
+//   無し ＝ 入札状態が「入札なし」
+//   ★例外: 子商品（代表コードが自分以外を指す）は【親の入札状態】で判定する＝親と同じ側に出て、親の下に並ぶ。
+//     （子自身の入札状態は v1.0660 で常に「入札なし」なので、そのままだと親と離れてしまう）
+//   ★v1.0662 まではステータスの文字（広告あり／広告なし）で判定していたので、
+//     新商品・撤退検討▲・撤退予定・—（未設定）はどちらにも出なかった。v1.0663 からは必ずどちらかに入る。
+//   ★件数（updateStateCounts）・絞り込み（renderBasic / _tuneApplyAdAxis）・「?」の説明は必ずこの関数を通すこと。
+function _xfHasAd(code) {
+  const p = (typeof statusParentCode === 'function') ? statusParentCode(code) : '';
+  const base = (p && (state.master || {})[p]) ? p : String(code);   // 子は親の値で判定（親がマスタに無ければ自分）
+  return !adStatusIsNone(effectiveAdStatusOf(base));
+}
 function _xfAdBypassed() {
   const types = ['status-kenzen-ad', 'status-kenzen-noad', 'status-churitsu-ad', 'status-churitsu-noad'];
   return !!(state.activeStateFilter && types.indexOf(state.activeStateFilter.type) >= 0);
