@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0665 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0666 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3635,7 +3635,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0665</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0666</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3835,10 +3835,11 @@ th.col-sroas { background-color:#e7d5f5; }
 <!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
 <div class="tune-filter-bar" id="tuneFilterBar" style="display:none;">
   <div id="tuneFreshChip" style="display:none;align-items:center;gap:8px;margin-right:6px;"></div>
-  <button class="tune-chip active" data-tune="fix">修正あり<span class="chip-num" id="cntTuneFix"></span></button>
+  <!-- 【v1.0666】「全体」を左端へ。開いた直後も「全体」（既定を fix → all に変更） -->
+  <button class="tune-chip active" data-tune="all">全体<span class="chip-num" id="cntTuneAll"></span></button>
+  <button class="tune-chip" data-tune="fix">修正あり<span class="chip-num" id="cntTuneFix"></span></button>
   <button class="tune-chip" data-tune="watch">推移確認<span class="chip-num" id="cntTuneWatch"></span></button>
   <button class="tune-chip" data-tune="unchecked">未確認<span class="chip-num" id="cntTuneUnchecked"></span></button>
-  <button class="tune-chip" data-tune="all">全体<span class="chip-num" id="cntTuneAll"></span></button>
   <button class="tune-cond-btn" id="tuneCondBtn" type="button" title="各ボタンに表示される商品の条件を見る">❓ 各ボタンの条件</button>
   <button class="tune-openpages-btn" id="tuneOpenPagesBtn" type="button" title="このビューで必要なページを新しいタブで一括オープン">必要ページ一括オープン</button>
 </div>
@@ -13349,7 +13350,7 @@ function _syncTunePeriodSegs() {
 // ==================== 【v239】調整（3グループ絞り込み）ヘルパー ====================
 // tuneGroup: 現在選択中のサブグループ。'fix'=修正あり / 'watch'=推移確認 / 'unchecked'=未確認。
 // ビューに入るたび 'fix'（修正あり）にリセットする。
-let tuneGroup = 'fix';
+let tuneGroup = 'all';   // 【v1.0666】既定は「全体」（旧: 'fix'＝修正あり）
 
 // 【v253】調整ビューの「表示メンバー凍結」。対応（値変更・状態変更・メモ）で renderAll が走っても、
 //   凍結中は同じ行を表示し続け、その場から動かさない。再分類（凍結の作り直し）の引き金は:
@@ -15678,8 +15679,8 @@ $$('.nav-tab').forEach(item => {
     }
     if (view === 'oyako') _oyChildUnsetDismissed = false;   // 各比率に入り直したらバナー再表示
     state.currentView = view;
-    // 【v239】調整ビューに入るたび、絞り込みを「修正あり」に戻す
-    if (view === 'ad-tune' || view === 'pro-tune') tuneGroup = 'fix';
+    // 【v239/v1.0666】調整ビューに入るたび、絞り込みを「全体」に戻す（旧: 修正あり）
+    if (view === 'ad-tune' || view === 'pro-tune') tuneGroup = 'all';
     resetTuneMembers();  // 【v253】ビュー切替は再分類の引き金
     $$('.view').forEach(v => v.classList.remove('active'));
     $('#view-' + view).classList.add('active');
@@ -20151,7 +20152,7 @@ try {
         $$('.nav-tab').forEach(i => i.classList.remove('active'));
         target.classList.add('active');
         state.currentView = initialView;
-        if (initialView === 'ad-tune' || initialView === 'pro-tune') tuneGroup = 'fix';
+        if (initialView === 'ad-tune' || initialView === 'pro-tune') tuneGroup = 'all';   // 【v1.0666】
         resetTuneMembers();  // 【v253】
         $$('.view').forEach(v => v.classList.remove('active'));
         const viewEl = document.getElementById('view-' + initialView);
