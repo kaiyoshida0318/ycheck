@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0668 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0669 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1659,21 +1659,28 @@ td[data-resize-key] {
 /* 【v1.0354】「反映する」ボタン + 保存中フルロック */
 .yc-reflect-btn {
   appearance: none; border: 1px solid var(--green); background: var(--green); color: #fff;
-  font-weight: 800; font-size: 0.86rem; padding: 6px 16px; border-radius: 8px; cursor: pointer;
-  white-space: nowrap; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 7px; cursor: pointer;   /* 【v1.0669】操作行を1行に収めるため少し小さめに */
+  white-space: nowrap; margin-right: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
 .yc-reflect-btn:hover { filter: brightness(1.05); }
 .yc-reflect-btn.yc-dirty { background: #d97706; border-color: #d97706; animation: ycReflectPulse 1.1s ease-in-out infinite; }
 .yc-reflect-btn.yc-clean { background: var(--bg3); border-color: var(--border); color: var(--text3); cursor: default; box-shadow: none; }
 .yc-reflect-btn[hidden] { display: none !important; }
-/* 【v1.0452】キャンセル＋反映のペアをまとめて操作行の右端へ */
-.filters .yc-reflect-wrap { margin-left: auto; display: inline-flex; align-items: center; }
+/* 【v1.0452】キャンセル＋反映のペア。
+   【v1.0669】★右端（margin-left:auto）に置くと、右端の「表示時期」や「このページをCSV出力」の後ろに回り、
+   操作行が1行ぶん下へ伸びていた。★いまは _ycInjectReflectButtons が
+   「右寄せ要素（margin-left:auto を持つ最初の要素）の直前」へ差し込むので、ここでは右寄せしない。 */
+/* 【v1.0669】左どなり（対応内容-全削除など）と右端の要素（表示時期 / このページをCSV出力）の【あいだを埋める】。
+   ★ボタンを小さくして隙間を作らない。空いた幅は「⬆ 反映する」が伸びて埋める。 */
+.filters .yc-reflect-wrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; margin: 0 8px; }
+.filters .yc-reflect-wrap .yc-cancel-btn  { flex: 1 1 auto; margin-right: 0; min-width: 0; }
+.filters .yc-reflect-wrap .yc-reflect-btn { flex: 2 1 auto; margin-right: 0; min-width: 0; }   /* 2つの大きさの比は 1 : 2 のまま広がる */
 .yc-reflect-wrap .yc-reflect-btn { margin-left: 0; }
 /* 【v1.0452】「反映する」の左に出るキャンセル（未反映の変更を破棄して保存済みへ戻す） */
 .yc-cancel-btn {
   appearance: none; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2);
-  font-weight: 700; font-size: 0.86rem; padding: 6px 14px; border-radius: 8px; cursor: pointer;
-  white-space: nowrap; margin-right: 8px;
+  font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 7px; cursor: pointer;   /* 【v1.0669】 */
+  white-space: nowrap; margin-right: 4px;
 }
 .yc-cancel-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--red); }
 .yc-cancel-btn[hidden] { display: none !important; }
@@ -3644,7 +3651,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0668</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0669</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6972,7 +6979,14 @@ function _ycInjectReflectButtons() {
     b.title = '変更をGitHubに反映（保存）します。押すまでは書き込みません。保存中は操作できません。';
     b.addEventListener('click', ycReflect);
     wrap.appendChild(b);
-    f.appendChild(wrap);
+    // 【v1.0669】右端に寄っている要素（表示時期トグル / このページをCSV出力 など）の【手前】へ入れる。
+    //   こうすると折り返さず、操作行の高さが変わらない（行が1行ぶん下がらない）。
+    const _anchor = Array.from(f.children).find(el => {
+      if (el === wrap) return false;
+      try { if (getComputedStyle(el).marginLeft === 'auto') return true; } catch (e) {}
+      return /margin-left:\s*auto/.test(el.getAttribute('style') || '');
+    });
+    if (_anchor) f.insertBefore(wrap, _anchor); else f.appendChild(wrap);
   });
   _ycUpdateReflectBtn();
 }
