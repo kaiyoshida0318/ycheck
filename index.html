@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0661 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0662 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3635,7 +3635,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0661</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0662</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4413,7 +4413,18 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-          <button class="search-rep-badge" id="adTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
+          <span class="seg-filter js-rowmode-bar" id="adTuneRollupBar" role="group" aria-label="個別/合算"
+            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+          <span class="soi-pc-seg" id="adTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
+            <button type="button" class="soi-pc-btn both" data-repf="*A"
+              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
+            <button type="button" class="soi-pc-btn parent" data-repf="*P"
+              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="parent"></span></button>
+            <button type="button" class="soi-pc-btn child" data-repf="*C"
+              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
+          </span>
+          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
@@ -4461,7 +4472,18 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="filters">
           <span class="filter-label">検索</span>
           <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-          <button class="search-rep-badge" id="proTuneRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
+          <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
+          <span class="seg-filter js-rowmode-bar" id="proTuneRollupBar" role="group" aria-label="個別/合算"
+            title="個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+          <span class="soi-pc-seg" id="proTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
+            <button type="button" class="soi-pc-btn both" data-repf="*A"
+              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
+            <button type="button" class="soi-pc-btn parent" data-repf="*P"
+              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="parent"></span></button>
+            <button type="button" class="soi-pc-btn child" data-repf="*C"
+              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
+          </span>
+          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
@@ -10854,7 +10876,8 @@ function _bulkFillSelects() {
 
 // 【v1.0651】一括変更は 商品-基本データ／調整-基本／商品-広告データ／商品-PRデータ で使う。
 //   ★バー（#basicBulkBar）は1本だけ。いま開いている画面のツールバー（.filters）の直後へ DOM ごと移して使う（id を複製しない）。
-const BULK_TABLE_OF = { 'basic': '#tableBasic', 'ad-data': '#tableAdData', 'pr-data': '#tablePrData' };
+const BULK_TABLE_OF = { 'basic': '#tableBasic', 'ad-data': '#tableAdData', 'pr-data': '#tablePrData',
+  'ad-tune': '#tableAdTune', 'pro-tune': '#tableProTune' };   // 【v1.0662】調整-入札価格／調整-PRオプでも一括変更
 function _bulkTableSel() { return BULK_TABLE_OF[state.currentView] || '#tableBasic'; }
 function _bulkPlaceBar() {
   const bar = document.getElementById('basicBulkBar');
@@ -13704,7 +13727,7 @@ function renderAdAdjust(cfg) {
   list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
   // 【v1.0650】商品-広告データの 合算/両表示。★絞り込みより先にまとめる（§5-D-2）。入札なしの除外もセット単位（メンバーの誰かが入札中なら残す）
-  const _dataRoll = (cfg.layout === 'data') && _basicIsRollup();
+  const _dataRoll = (cfg.layout === 'data' || cfg.rollup) && _basicIsRollup();   /* 【v1.0662】調整-入札価格／調整-PRオプでも効かせる */
   const _preByCode = new Map();
   if (_dataRoll) { list.forEach(r => _preByCode.set(r.code, r)); list = _dataRollupRows(list); }
 
@@ -13729,7 +13752,8 @@ function renderAdAdjust(cfg) {
   }
 
   // 【v239】調整グループ絞り込み（tune用）。groupFilterがあれば該当商品のみ。
-  if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
+  // 【v1.0662】合算のセット行は「メンバーの誰かがそのグループなら残す」
+  if (groupFilter) list = list.filter(r => _rfMembersOf(r).some(c => groupFilter({ code: c })) || _editPinnedCodes.has(r.code));
   // 【v1.0645】調整-入札価格: クロス絞り込みの広告軸（検索中はバイパス＝renderBasic と同じ）
   // 【v1.0649】商品-広告データ（cfg.xfAxis）にも効かせる
   if ((groupFilter || cfg.xfAxis) && !q) list = _tuneApplyAdAxis(list);
@@ -13797,6 +13821,15 @@ function renderAdAdjust(cfg) {
     if (_pcCls) tr.className = _pcCls;
     // 【v270】調整ビュー(statusFirst)は「ステータス」列を入札状態の左に置く。全体ビューは従来どおり末尾。
     const _tdStatus = `<td class="status-col">${statusSelectHtml(r.code, 'status')}</td>`;
+    // 【v1.0662】合算のセット行／両表示の内訳行（商品-基本データと同じ）。セット行にはチェックボックスを出さない（実在の商品ではないため）
+    const _isSetT = !!r._rollup && (r._members || []).length > 1;
+    if (_dataRoll) tr.className = '';
+    if (r._setMember) tr.className = 'row-setmember';
+    if (_isSetT && basicRowMode === 'both') tr.className = 'row-setparent';
+    const _bidCellT = _isSetT
+      ? (() => { const v = _basicMultiVal(r._members, c => getBid(c), x => '¥' + x);
+                 return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
+      : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     // 【v1.0647】色を商品-基本データに合わせた: 広告実績額＝ピンク(col-spend) / 広告ROAS＝藍(col-aroas)。広告売上はアンバー(col-ad)のまま
     const _revCells  = r.adCosts.map(v => `<td class="num col-spend">${fmt(v)}</td>`).join('');
@@ -13828,13 +13861,13 @@ function renderAdAdjust(cfg) {
       return;
     }
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
-      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>
+      ${_bidCellT}
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
       ${_roasCells}
@@ -13858,6 +13891,7 @@ function renderAdAdjust(cfg) {
 function renderAdTune() {
   ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   _syncTunePeriodSegs();    // 【v1.0400】表示時期トグルの選択状態を反映
+  if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();   // 【v1.0662】
   renderAdAdjust({
     tableSel: '#tableAdTune',
     completedOnly: true,   // 【v280】満了(完了)済みの直近3ヶ月表示に戻す（v278の当月列を廃止）
@@ -13867,8 +13901,10 @@ function renderAdTune() {
     hPrefix: 'hAdTune',
     emptyMsg: 'このグループに該当する商品はありません',
     statusFirst: true,   // 【v270】ステータス列を入札状態の左へ
+    rollup: true,        // 【v1.0662】個別/合算/両表示を効かせる
     groupFilter: (r) => tuneFrozenMembers.has(r.code)
   });
+  if (typeof _bulkSyncUI === 'function') _bulkSyncUI();   // 【v1.0662】一括変更バーの位置・件数・ハイライト
 }
 
 // 【v1.0649】商品-広告データ: 調整-入札価格と同じ母集団（入札なし・撤退を除く全体）と絞り込み（状態チップ／クロス絞り込み／検索／送り込み）。
@@ -13950,7 +13986,7 @@ function renderProAdjust(cfg) {
   list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
   // 【v1.0650】商品-PRデータの 合算/両表示。★絞り込みより先にまとめる（§5-D-2）
-  const _dataRoll = (cfg.layout === 'data') && _basicIsRollup();
+  const _dataRoll = (cfg.layout === 'data' || cfg.rollup) && _basicIsRollup();   /* 【v1.0662】調整-入札価格／調整-PRオプでも効かせる */
   const _preByCode = new Map();
   if (_dataRoll) { list.forEach(r => _preByCode.set(r.code, r)); list = _dataRollupRows(list); }
 
@@ -13970,7 +14006,8 @@ function renderProAdjust(cfg) {
   }
 
   // 【v239】調整グループ絞り込み（tune用）
-  if (groupFilter) list = list.filter(r => groupFilter(r) || _editPinnedCodes.has(r.code));
+  // 【v1.0662】合算のセット行は「メンバーの誰かがそのグループなら残す」
+  if (groupFilter) list = list.filter(r => _rfMembersOf(r).some(c => groupFilter({ code: c })) || _editPinnedCodes.has(r.code));
   // 【v1.0645】調整-PRオプ: クロス絞り込みの広告軸（検索中はバイパス）／【v1.0649】商品-PRデータ（cfg.xfAxis）にも
   if ((groupFilter || cfg.xfAxis) && !q) list = _tuneApplyAdAxis(list);
 
@@ -14057,14 +14094,23 @@ function renderProAdjust(cfg) {
       tbody.appendChild(tr);
       return;
     }
+    // 【v1.0662】合算のセット行／両表示の内訳行
+    const _isSetT = !!r._rollup && (r._members || []).length > 1;
+    if (_dataRoll) tr.className = '';
+    if (r._setMember) tr.className = 'row-setmember';
+    if (_isSetT && basicRowMode === 'both') tr.className = 'row-setparent';
+    const _proCellT = _isSetT
+      ? (() => { const v = _basicMultiVal(r._members, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
+                 return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
+      : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code)}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
-      <td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>
+      ${_proCellT}
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
@@ -14087,6 +14133,7 @@ function renderProAdjust(cfg) {
 function renderProTune() {
   ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   _syncTunePeriodSegs();     // 【v1.0400】表示時期トグルの選択状態を反映
+  if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();   // 【v1.0662】
   renderProAdjust({
     tableSel: '#tableProTune',
     completedOnly: true,   // 【v280】満了(完了)済みの直近3ヶ月表示に戻す（v278の当月列を廃止）
@@ -14096,8 +14143,10 @@ function renderProTune() {
     hPrefix: 'hProTune',
     emptyMsg: 'このグループに該当する商品はありません',
     statusFirst: true,   // 【v270】ステータス列を入札状態の左へ
+    rollup: true,        // 【v1.0662】個別/合算/両表示を効かせる
     groupFilter: (r) => tuneFrozenMembers.has(r.code)
   });
+  if (typeof _bulkSyncUI === 'function') _bulkSyncUI();   // 【v1.0662】一括変更バーの位置・件数・ハイライト
 }
 
 // ==================== Rendering: 広告順位 / SEO順位 ====================
