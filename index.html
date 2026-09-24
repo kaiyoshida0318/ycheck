@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0687 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0689 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3568,12 +3568,12 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
      子商品 … 黄（同 .rep-badge.child と同じ）
    ★OFFのときも薄く色を残す。全部グレーだと「どれが何色か」が押すまで分からないため。 */
 #peScopeSeg .segf-btn { font-weight: 700; }
-#peScopeSeg .segf-btn[data-pescope="set"]    { color:#7c3aed; background:#f6f0fe; }
-#peScopeSeg .segf-btn[data-pescope="self"]   { color:#2563eb; background:#eff6ff; }
+#peScopeSeg .segf-btn[data-pescope="set"], #peTrendScopeSeg .segf-btn[data-pescope="set"]    { color:#7c3aed; background:#f6f0fe; }
+#peScopeSeg .segf-btn[data-pescope="self"], #peTrendScopeSeg .segf-btn[data-pescope="self"]   { color:#2563eb; background:#eff6ff; }
 #peScopeSeg .segf-btn[data-pescope="parent"] { color:#15803d; background:#e9f8ee; }
 #peScopeSeg .segf-btn[data-pescope="child"]  { color:#92400e; background:#fffbeb; }
-#peScopeSeg .segf-btn[data-pescope="set"].on    { background:#7c3aed; color:#fff; }
-#peScopeSeg .segf-btn[data-pescope="self"].on   { background:#2563eb; color:#fff; }
+#peScopeSeg .segf-btn[data-pescope="set"].on, #peTrendScopeSeg .segf-btn[data-pescope="set"].on    { background:#7c3aed; color:#fff; }
+#peScopeSeg .segf-btn[data-pescope="self"].on, #peTrendScopeSeg .segf-btn[data-pescope="self"].on   { background:#2563eb; color:#fff; }
 #peScopeSeg .segf-btn[data-pescope="parent"].on { background:#16a34a; color:#fff; }
 #peScopeSeg .segf-btn[data-pescope="child"].on  { background:#fcd34d; color:#7c2d12; }
 #peScopeSeg .segf-btn:disabled { background: var(--bg3) !important; color: var(--text3) !important; }
@@ -3715,7 +3715,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0687</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0689</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4966,7 +4966,9 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0606】タブ化（§5-I）。開いた直後は「全体情報」＝売上がすぐ見える。
          「商品情報を編集」は一番右。編集フォームの中身は従来のまま。 -->
     <div class="pe-tabs" id="peTabs" role="tablist">
-      <button type="button" class="pe-tab on" data-petab="info">全体情報</button>
+      <!-- 【v1.0689】全体情報 → 商品-日別 に改称。その右に 商品-推移（累積×日別）を追加 -->
+      <button type="button" class="pe-tab on" data-petab="info">商品-日別</button>
+      <button type="button" class="pe-tab" data-petab="trend">商品-推移</button>
       <button type="button" class="pe-tab" data-petab="edit">商品情報を編集</button>
       <div class="pe-nav-mini">
         <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
@@ -4987,7 +4989,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <div class="pe-panel" id="peTabInfo">
       <div class="pe-ctl">
         <!-- 【v1.0638】どの範囲を見るか。送り込みセット（親子）がある商品でだけ意味がある。 -->
-        <span class="seg-filter" id="peScopeSeg"><button type="button" class="segf-btn" data-pescope="set">合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button><button type="button" class="segf-btn" data-pescope="parent">親商品</button><button type="button" class="segf-btn" data-pescope="child">子商品</button></span>
+        <!-- 【v1.0688】親商品／子商品を撤去。セットがある商品は「親子合算」だけ、無い商品は「個別」だけを出す -->
+        <span class="seg-filter" id="peScopeSeg"><button type="button" class="segf-btn" data-pescope="set">親子合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button></span>
         <span class="seg-filter" id="peGrainSeg"><button type="button" class="segf-btn on" data-pegrain="day">日別</button><button type="button" class="segf-btn" data-pegrain="month">月別</button></span>
         <span class="seg-filter" id="peSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
         <!-- 【v1.0641】月別のときの期間。may＝直近の5月から / 12＝直近1年 / 24＝直近2年 -->
@@ -5004,7 +5007,21 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="pe-table-wrap" id="peTableWrap"></div>
     </div>
 
-    <!-- ===== タブ2: 商品情報を編集（従来の中身） ===== -->
+    <!-- ===== タブ2: 商品-推移（1か月を「累積×日別」で見る。ROAS3種類） ===== -->
+    <div class="pe-panel" id="peTabTrend" style="display:none">
+      <div class="pe-ctl">
+        <span class="seg-filter" id="peTrendScopeSeg"><button type="button" class="segf-btn" data-pescope="set">親子合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button></span>
+        <span class="pe-ctl-label" style="font-size:0.78rem;color:var(--text3);font-weight:700">対象月</span>
+        <select id="peTrendYm" onchange="_peTrendSetYm(this.value)" style="font-size:0.84rem;padding:5px 9px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:700"></select>
+        <span class="pe-ctl-note" id="peTrendNote"></span>
+      </div>
+      <div class="pe-chart-wrap" id="peTrendWrap"><canvas id="peTrendCanvas"></canvas></div>
+      <div id="peTrendEmpty" style="display:none;padding:32px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
+      <div class="pe-table-wrap" id="peTrendTable"></div>
+      <p class="note" id="peTrendFoot" style="margin:10px 2px 0;font-size:0.72rem;line-height:1.7;color:var(--text3)"></p>
+    </div>
+
+    <!-- ===== タブ3: 商品情報を編集（従来の中身） ===== -->
     <div class="pe-panel" id="peTabEdit" style="display:none">
     <div class="pe-grid">
       <div class="pe-row">
@@ -15743,13 +15760,13 @@ let _itTrendYm    = '';        // 'YYYY-MM'
 // 指標の定義。num/den を関数で持たせてあるので、累積も日別も同じ処理で回る。
 //   amount = 表の「実績額」列に出す分母の実額（null なら列を出さない）
 const IT_METRICS = [
-  { k: 'sroas',  label: '売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '',
+  { k: 'sroas',  label: '売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '', amountFull: '',
     num: a => a.rev,    den: a => a.adCost, amount: null },
-  { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: false, amountLabel: '広告＋PR',
+  { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: false, amountLabel: '広告＋PR', amountFull: '広告実績額＋PR実績額(7%超・推定)',
     num: a => a.rev,    den: a => (a.prKnown ? (a.adCost + a.prOver) : 0), amount: a => (a.prKnown ? (a.adCost + a.prOver) : null) },
-  { k: 'pronly', label: 'PR売上ROAS',      color: '#ec4899', bar: false, amountLabel: 'PR',
+  { k: 'pronly', label: 'PR売上ROAS',      color: '#ec4899', bar: false, amountLabel: 'PR', amountFull: 'PR実績額(7%超・推定)',
     num: a => a.rev,    den: a => (a.prKnown ? a.prOver : 0),              amount: a => (a.prKnown ? a.prOver : null) },
-  { k: 'roas',   label: '広告ROAS',        color: '#f59e0b', bar: true,  amountLabel: '広告',
+  { k: 'roas',   label: '広告ROAS',        color: '#f59e0b', bar: true,  amountLabel: '広告', amountFull: '広告実績額',
     num: a => a.adRev,  den: a => a.adCost, amount: a => a.adCost },
 ];
 
@@ -15874,6 +15891,111 @@ function _itRenderSaved() {
   sel.value = list.includes(_itTrendKey) ? _itTrendKey : '';
 }
 
+// ----------------------------------------------------------------------------
+// 【v1.0689】「累積×日別」の描画本体。商品-推移タブ と 商品モーダルの 商品-推移 で共用する。
+//   opt = { canvas, wrap, tbl, note, codes, days, ym, metrics, barKeys, clCode }
+//   戻り値: Chart インスタンス（Chart.js が無いときは null）
+//   ★ここを直すと両方に効く。片方だけ直したくなったら opt を足すこと（コピペで分岐させない）
+// ----------------------------------------------------------------------------
+function _trendRows(codes, days, metrics) {
+  const cum = { rev: 0, adRev: 0, adCost: 0, prOver: 0, prKnown: false };
+  return days.map(d => {
+    const a = _itDayRaw(codes, d);
+    cum.rev += a.rev; cum.adRev += a.adRev; cum.adCost += a.adCost; cum.prOver += a.prOver;
+    if (a.prKnown) cum.prKnown = true;
+    const r = { date: d, day: (+String(d).slice(8, 10)), raw: a, cum: Object.assign({}, cum) };
+    metrics.forEach(m => {
+      r['d_' + m.k] = _itPct(m.num(a), m.den(a));          // 日別＝その日の分子÷分母
+      r['c_' + m.k] = _itPct(m.num(cum), m.den(cum));      // 累積＝分子累積÷分母累積
+      r['a_' + m.k] = m.amount ? m.amount(a) : null;       // 実績額（その日の分母の実額）
+    });
+    return r;
+  });
+}
+function _trendPaint(opt) {
+  const metrics = opt.metrics, rows = _trendRows(opt.codes, opt.days, metrics);
+  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#a0aec0' : '#718096';
+  const mo = (+String(opt.ym).slice(5, 7));
+  const labels = rows.map(r => mo + '/' + r.day);
+  const nz = v => (v > 0 ? Math.round(v * 10) / 10 : null);   // ★0は null。0%の線が底を這うのを防ぐ
+  const hex2rgba = (h, a) => 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')';
+  const barSet = opt.barKeys || metrics.filter(m => m.bar).map(m => m.k);
+
+  const bars = metrics.filter(m => barSet.indexOf(m.k) >= 0).map(m => ({
+    type: 'bar', label: m.label + '(日別)',
+    data: rows.map(r => nz(r['d_' + m.k])),
+    yAxisID: 'y', backgroundColor: hex2rgba(m.color, isDark ? 0.22 : 0.32),
+    borderWidth: 0, order: 10,               // ★order が大きいほど背面。棒を背景に敷く
+    categoryPercentage: 0.8, barPercentage: 0.95
+  }));
+  const lines = metrics.map(m => ({
+    type: 'line', label: m.label,
+    data: rows.map(r => nz(r['c_' + m.k])),
+    borderColor: m.color, backgroundColor: hex2rgba(m.color, 0.13),
+    borderWidth: 2.5, pointRadius: 2.5, tension: 0.3,
+    fill: false, spanGaps: true, yAxisID: 'y', order: 1   // ★order 小＝前面
+  }));
+
+  const _clMarks = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.date), opt.clCode || null) : [];
+  let chart = null;
+  // ★Chart.js はCDN読み込み。オフライン等で落ちていても表だけは出す（他のグラフ画面と同じ作法）
+  if (typeof Chart === 'undefined') { if (opt.wrap) opt.wrap.style.display = 'none'; }
+  else chart = new Chart(opt.canvas.getContext('2d'), {
+    plugins: [YC_CHANGE_LINES],
+    // 凡例は「線（累積）→棒（日別）」の順に読ませたいので datasets は線が先。
+    // ★前後関係は datasets の順ではなく order で決まる（線 order:1 ＝前面 / 棒 order:10 ＝背面）
+    data: { labels: labels, datasets: lines.concat(bars) },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },       // ★どこにホバーしてもその日の全系列が出る
+      plugins: {
+        ycChangeLines: { marks: _clMarks },
+        legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 11 }, color: textColor } },
+        tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + (c.parsed.y == null ? '—' : Math.round(c.parsed.y).toLocaleString('ja-JP') + '%') } }
+      },
+      scales: {
+        x: { stacked: false, grid: { color: gridColor }, ticks: { font: { size: 10 }, color: textColor, maxRotation: 0, autoSkip: true } },
+        y: { beginAtZero: true, grid: { color: gridColor },
+             ticks: { font: { size: 10 }, color: textColor, callback: v => Number(v).toLocaleString('ja-JP') + '%' } }
+      }
+    }
+  });
+
+  // ---- 表（2段ヘッダー・新しい日が最上段） ----
+  const th = 'padding:6px 8px;font-size:0.72rem;font-weight:700;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;position:sticky;top:0;z-index:2;';
+  const th2 = th.replace('top:0', 'top:26px');
+  const grp = (m) => '<th colspan="' + (m.amount ? 3 : 2) + '" style="' + th + 'text-align:center;color:' + m.color + ';border-left:1px solid var(--border)">' + m.label + '</th>';
+  const sub = (m) => '<th style="' + th2 + 'text-align:center;border-left:1px solid var(--border)">累積</th>'
+                   + '<th style="' + th2 + 'text-align:center;background:rgba(127,127,127,0.07)">日別</th>'
+                   + (m.amount ? '<th style="' + th2 + 'text-align:center">実績額<span style="font-weight:400;color:var(--text3)">(' + m.amountLabel + ')</span></th>' : '');
+  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + metrics.map(grp).join('') + '</tr>'
+             + '<tr>' + metrics.map(sub).join('') + '</tr>';
+  const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
+  const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
+  const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
+  const body = rows.slice().reverse().map((r, i) => {
+    const hi = (i === 0) ? 'background:rgba(59,130,246,0.08);font-weight:700;' : '';   // ★最上段＝当月の着地見込み
+    const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;' + mono + hi;
+    let cells = '<td style="' + td + '">' + mo + '/' + r.day + '</td>';
+    metrics.forEach(m => {
+      cells += '<td style="' + td + 'border-left:1px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
+             + '<td style="' + td + 'background:rgba(127,127,127,0.05)">' + fp(r['d_' + m.k]) + '</td>'
+             + (m.amount ? '<td style="' + td + '">' + fyen(r['a_' + m.k]) + '</td>' : '');
+    });
+    return '<tr>' + cells + '</tr>';
+  }).join('');
+  opt.tbl.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+
+  if (opt.note) opt.note.innerHTML = '※ 累積（月初〜当日）と日別（当日単体）を併記。'
+    + '<b>累積は率の平均ではなく、分子と分母をそれぞれ足してから割っています。</b>'
+    + '実績額＝当日の実費で、指標ごとに分母が違います（' + metrics.filter(m => m.amount).map(m => m.label + '＝' + m.amountFull).join(' / ') + '）。'
+    + '最上段＝当月の着地見込み（累積）。棒＝日別で、線より先に動く<b>先行指標</b>として読みます。'
+    + 'PR系は⑤の設定PRオプ料率からの<b>推定</b>です（実測ではありません）。';
+  return chart;
+}
+
 function renderItemTrend() {
   const canvas = document.getElementById('itCanvas');
   const wrap   = document.getElementById('itChartWrap');
@@ -15907,101 +16029,13 @@ function renderItemTrend() {
   if (wrap) wrap.style.display = 'block';
   if (empty) empty.style.display = 'none';
 
-  // ---- 累積と日別を同時に作る ----
-  const cum = { rev: 0, adRev: 0, adCost: 0, prOver: 0, prKnown: false };
-  const rows = days.map(d => {
-    const a = _itDayRaw(codes, d);
-    cum.rev += a.rev; cum.adRev += a.adRev; cum.adCost += a.adCost; cum.prOver += a.prOver;
-    if (a.prKnown) cum.prKnown = true;
-    const r = { date: d, day: (+String(d).slice(8, 10)), raw: a, cum: Object.assign({}, cum) };
-    IT_METRICS.forEach(m => {
-      r['d_' + m.k] = _itPct(m.num(a), m.den(a));          // 日別＝その日の分子÷分母
-      r['c_' + m.k] = _itPct(m.num(cum), m.den(cum));      // 累積＝分子累積÷分母累積
-      r['a_' + m.k] = m.amount ? m.amount(a) : null;       // 実績額（その日の分母の実額）
-    });
-    return r;
-  });
-
-  // ---- グラフ ----
-  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-  const textColor = isDark ? '#a0aec0' : '#718096';
-  const labels = rows.map(r => (+_itTrendYm.slice(5, 7)) + '/' + r.day);
-  const nz = v => (v > 0 ? Math.round(v * 10) / 10 : null);   // ★0は null。0%の線が底を這うのを防ぐ
-  const hex2rgba = (h, a) => 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')';
-
-  const bars = IT_METRICS.filter(m => m.bar).map(m => ({
-    type: 'bar', label: m.label + '(日別)',
-    data: rows.map(r => nz(r['d_' + m.k])),
-    yAxisID: 'y', backgroundColor: hex2rgba(m.color, isDark ? 0.22 : 0.32),
-    borderWidth: 0, order: 10,               // ★order が大きいほど背面。棒を背景に敷く
-    categoryPercentage: 0.8, barPercentage: 0.95
-  }));
-  const lines = IT_METRICS.map(m => ({
-    type: 'line', label: m.label,
-    data: rows.map(r => nz(r['c_' + m.k])),
-    borderColor: m.color, backgroundColor: hex2rgba(m.color, 0.13),
-    borderWidth: 2.5, pointRadius: 2.5, tension: 0.3,
-    fill: false, spanGaps: true, yAxisID: 'y', order: 1   // ★order 小＝前面
-  }));
-
-  const _clMarks = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.date), _itTrendKey) : [];
-  if (_itTrendChart) { try { _itTrendChart.destroy(); } catch (e) {} _itTrendChart = null; }   // ★必ず破棄（多重ツールチップ防止）
-  // ★Chart.js はCDN読み込み。オフライン等で落ちていても表だけは出す（他のグラフ画面と同じ作法）
-  if (typeof Chart === 'undefined') { if (wrap) wrap.style.display = 'none'; }
-  else _itTrendChart = new Chart(canvas.getContext('2d'), {
-    plugins: [YC_CHANGE_LINES],
-    // 凡例は「線（累積）→棒（日別）」の順に読ませたいので datasets は線が先。
-    // ★前後関係は datasets の順ではなく order で決まる（線 order:1 ＝前面 / 棒 order:10 ＝背面）
-    data: { labels: labels, datasets: lines.concat(bars) },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
-      interaction: { mode: 'index', intersect: false },       // ★どこにホバーしてもその日の全系列が出る
-      plugins: {
-        ycChangeLines: { marks: _clMarks },
-        legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 11 }, color: textColor } },
-        tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + (c.parsed.y == null ? '—' : Math.round(c.parsed.y).toLocaleString('ja-JP') + '%') } }
-      },
-      scales: {
-        x: { stacked: false, grid: { color: gridColor }, ticks: { font: { size: 10 }, color: textColor, maxRotation: 0, autoSkip: true } },
-        y: { beginAtZero: true, grid: { color: gridColor },
-             ticks: { font: { size: 10 }, color: textColor, callback: v => Number(v).toLocaleString('ja-JP') + '%' } }
-      }
-    }
-  });
+  // ---- 累積と日別を同時に作る → グラフ＋表（描画は _trendPaint に集約。§75） ----
+  // ★必ず破棄してから作り直す（忘れるとインスタンスが積もってツールチップが多重に出る）
+  if (_itTrendChart) { try { _itTrendChart.destroy(); } catch (e) {} _itTrendChart = null; }
+  _itTrendChart = _trendPaint({ canvas: canvas, wrap: wrap, tbl: tbl, note: note,
+    codes: codes, days: days, ym: _itTrendYm, metrics: IT_METRICS, clCode: _itTrendKey });
   // ★タブ切替直後はコンテナ幅が0のことがある。2フレーム待ってから resize
   requestAnimationFrame(() => requestAnimationFrame(() => { try { if (_itTrendChart) _itTrendChart.resize(); } catch (e) {} }));
-
-  // ---- 表（2段ヘッダー・新しい日が最上段） ----
-  const th = 'padding:6px 8px;font-size:0.72rem;font-weight:700;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;position:sticky;top:0;z-index:2;';
-  const th2 = th.replace('top:0', 'top:26px');
-  const grp = (m) => '<th colspan="' + (m.amount ? 3 : 2) + '" style="' + th + 'text-align:center;color:' + m.color + ';border-left:1px solid var(--border)">' + m.label + '</th>';
-  const sub = (m) => '<th style="' + th2 + 'text-align:right;border-left:1px solid var(--border)">累積</th>'
-                   + '<th style="' + th2 + 'text-align:right;background:rgba(127,127,127,0.07)">日別</th>'
-                   + (m.amount ? '<th style="' + th2 + 'text-align:right">実績額<span style="font-weight:400;color:var(--text3)">(' + m.amountLabel + ')</span></th>' : '');
-  const head = '<tr><th rowspan="2" style="' + th + 'text-align:left;vertical-align:bottom">日</th>' + IT_METRICS.map(grp).join('') + '</tr>'
-             + '<tr>' + IT_METRICS.map(sub).join('') + '</tr>';
-  const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
-  const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
-  const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
-  const body = rows.slice().reverse().map((r, i) => {
-    const hi = (i === 0) ? 'background:rgba(59,130,246,0.08);font-weight:700;' : '';   // ★最上段＝当月の着地見込み
-    const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;' + mono + hi;
-    let cells = '<td style="padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);' + mono + hi + '">' + (+_itTrendYm.slice(5, 7)) + '/' + r.day + '</td>';
-    IT_METRICS.forEach(m => {
-      cells += '<td style="' + td + 'border-left:1px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
-             + '<td style="' + td + 'background:rgba(127,127,127,0.05)">' + fp(r['d_' + m.k]) + '</td>'
-             + (m.amount ? '<td style="' + td + '">' + fyen(r['a_' + m.k]) + '</td>' : '');
-    });
-    return '<tr>' + cells + '</tr>';
-  }).join('');
-  tbl.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
-
-  if (note) note.innerHTML = '※ 累積（月初〜当日）と日別（当日単体）を併記。'
-    + '<b>累積は率の平均ではなく、分子と分母をそれぞれ足してから割っています。</b>'
-    + '実績額＝当日の実費で、指標ごとに分母が違います（PR広告売上ROAS＝広告実績額＋PR実績額(7%超・推定) / PR売上ROAS＝PR実績額(7%超・推定) / 広告ROAS＝広告実績額）。'
-    + '最上段＝当月の着地見込み（累積）。棒＝日別で、線より先に動く<b>先行指標</b>として読みます。'
-    + 'PR系は⑤の設定PRオプ料率からの<b>推定</b>です（実測ではありません）。';
 }
 window.renderItemTrend = renderItemTrend;
 
@@ -17852,17 +17886,22 @@ let _peGrain = 'day';         // 'day' | 'month'
 let _peSpan = 60;             // 日別のとき何日ぶん見るか（0＝全期間）
 let _peMSpan = 'may';         // 【v1.0641】月別のときの期間: 'may'(直近の5月から) | '12'(1年) | '24'(2年)
 let _peChart = null;
-// 【v1.0638】全体情報タブの集計範囲: 'set'(合算) | 'self'(個別) | 'parent'(親商品) | 'child'(子商品)
+// 【v1.0638/v1.0688】全体情報タブの集計範囲: 'set'(親子合算) | 'self'(個別)
+//   ★'parent' / 'child' は v1.0688 でUIから撤去したが、_peScopeCodes の分岐は残してある
+//     （他から _peScope に入れられても壊れないように。peRenderInfo が 'set' へ倒す）
 //   【v1.0640】セットがある商品＝set/parent/child のみ（既定 set）。セットが無い商品＝self のみ。
 let _peScope = 'self';
 function peSetTab(t) {
-  _peTab = (t === 'edit') ? 'edit' : 'info';
+  // 【v1.0689】タブは3つ: 'info'（商品-日別）/ 'trend'（商品-推移）/ 'edit'（商品情報を編集）
+  _peTab = (t === 'edit' || t === 'trend') ? t : 'info';
   const tabs = document.getElementById('peTabs');
   if (tabs) tabs.querySelectorAll('.pe-tab').forEach(b => b.classList.toggle('on', b.getAttribute('data-petab') === _peTab));
-  const i = document.getElementById('peTabInfo'), e = document.getElementById('peTabEdit');
-  if (i) i.style.display = (_peTab === 'info') ? '' : 'none';
-  if (e) e.style.display = (_peTab === 'edit') ? '' : 'none';
-  if (_peTab === 'info') peRenderInfo();
+  const i = document.getElementById('peTabInfo'), e = document.getElementById('peTabEdit'), tr = document.getElementById('peTabTrend');
+  if (i)  i.style.display  = (_peTab === 'info')  ? '' : 'none';
+  if (tr) tr.style.display = (_peTab === 'trend') ? '' : 'none';
+  if (e)  e.style.display  = (_peTab === 'edit')  ? '' : 'none';
+  if (_peTab === 'info')  peRenderInfo();
+  if (_peTab === 'trend') peRenderTrend();
 }
 // この商品1件ぶんの行を作る（日別 or 月別）。行の形は共通:
 //   { key, rev, seoRev, adRev, adCost, sroas }
@@ -17965,27 +18004,26 @@ function peRenderInfo() {
   const cv = document.getElementById('peChart');
   if (!code || !wrap || !cv) return;
   // 【v1.0638】集計範囲トグルの状態同期。
-  // 【v1.0640】★出し分けに変更: セットがある商品＝合算/親商品/子商品（個別は出さない）
-  //                            セットが無い商品＝個別だけ（他の3つは出さない）
-  //   セットがある商品で 'self' のまま来たら（開いた直後など）'set' に寄せる。
+  // 【v1.0640/v1.0688】★出し分け: セットがある商品＝「親子合算」だけ／セットが無い商品＝「個別」だけ。
+  //   v1.0687までは 親商品 / 子商品 も選べたが、片側だけ見ても判断に使えないので撤去した。
+  //   ★_peScope に 'parent' / 'child' が残っていても（前のバージョンの状態・他所からの代入）
+  //     必ず 'set' へ倒す。倒さないと _peScopeCodes が片側だけを返し、ボタンはどれも on にならない。
   {
     const fam = _peFamily(code);
     const hasSet = fam.members.length >= 2;
     if (!hasSet) _peScope = 'self';
-    else if (_peScope === 'self') _peScope = 'set';
+    else if (_peScope !== 'set') _peScope = 'set';
     const sc = document.getElementById('peScopeSeg');
     if (sc) sc.querySelectorAll('.segf-btn').forEach(b => {
       const v = b.getAttribute('data-pescope');
-      const show = hasSet ? (v !== 'self') : (v === 'self');
+      const show = hasSet ? (v === 'set') : (v === 'self');
       b.style.display = show ? '' : 'none';
       b.disabled = !show;
       // 先頭に見えるボタンは左の区切り線を消す（:first-child は非表示のボタンを数えてしまうため）
-      b.style.borderLeft = (show && (hasSet ? v === 'set' : v === 'self')) ? 'none' : '';
+      b.style.borderLeft = show ? 'none' : '';
       b.classList.toggle('on', v === _peScope);
-      b.title = (v === 'set' ? 'セット全員（親＋子）を合計して見る（' + fam.members.length + '件）'
-         : v === 'self' ? 'この商品だけを見る（送り込みセットはありません）'
-         : v === 'parent' ? '送り込み元（親）だけを見る: ' + fam.key
-         : '送り込み先（子）だけを合計して見る（' + Math.max(0, fam.members.length - 1) + '件）');
+      b.title = (v === 'set' ? '送り込みセット（親＋子）を合計して見る（' + fam.members.length + '件）。合計してから率を計算し直します'
+                             : 'この商品だけを見る（送り込みセットはありません）');
     });
   }
   // トグルの状態同期
@@ -18002,7 +18040,7 @@ function peRenderInfo() {
   const rows = _peRows(code);
   const note = document.getElementById('peCtlNote');
   // 【v1.0638】いま何を合計しているかを注記に出す（合算・親・子のとき）
-  const _scNames = { set: '合算', self: '個別', parent: '親商品', child: '子商品' };
+  const _scNames = { set: '親子合算', self: '個別', parent: '親商品', child: '子商品' };   // 【v1.0688】parent/child は残置（古い状態の表示用）
   const _scCodes = _peScopeCodes(code);
   const _scNote = (_peScope === 'self') ? '' : ('【' + _scNames[_peScope] + '】' + _scCodes.join(' / ') + '　');
   if (note) note.textContent = rows.length
@@ -18158,6 +18196,85 @@ function peRenderInfo() {
     + body + '</tbody></table>';
 }
 
+// ============================================================================
+// 【v1.0689】商品モーダル「商品-推移」タブ
+//   商品-推移タブ（§70）と同じ「累積×日別」を、いま開いている商品だけで出す。
+//   ★指標はROAS3種類（売上ROAS / PR広告売上ROAS / PR売上ROAS）。
+//     広告ROASは 商品-日別 タブのグラフで見られるのでここでは出さない。
+//   ★計算も描画も _trendRows / _trendPaint の共用（§75）。ここには「どの商品・どの月」だけを書く。
+// ============================================================================
+let _peTrendChart = null;
+let _peTrendYm = '';
+const PE_TREND_METRICS = () => IT_METRICS.filter(m => m.k !== 'roas');
+const PE_TREND_BARS    = ['sroas', 'prsr'];   // 棒＝日別で出す2本（判断に使うもの）
+
+function _peTrendSetYm(v) { _peTrendYm = v || ''; peRenderTrend(); }
+function _peTrendCodes() {
+  const code = productEditModal && productEditModal.dataset.code;
+  if (!code) return [];
+  return _peScopeCodes(code);
+}
+function peRenderTrend() {
+  const code = productEditModal && productEditModal.dataset.code;
+  const canvas = document.getElementById('peTrendCanvas');
+  const wrap   = document.getElementById('peTrendWrap');
+  const empty  = document.getElementById('peTrendEmpty');
+  const tbl    = document.getElementById('peTrendTable');
+  const note   = document.getElementById('peTrendNote');
+  const foot   = document.getElementById('peTrendFoot');
+  if (!code || !canvas || !tbl) return;
+
+  // 集計範囲のボタン（商品-日別タブと同じ _peScope を共有する＝タブを行き来しても同じ範囲で見える）
+  {
+    const fam = _peFamily(code);
+    const hasSet = fam.members.length >= 2;
+    if (!hasSet) _peScope = 'self';
+    else if (_peScope !== 'set') _peScope = 'set';
+    const sc = document.getElementById('peTrendScopeSeg');
+    if (sc) sc.querySelectorAll('.segf-btn').forEach(b => {
+      const v = b.getAttribute('data-pescope');
+      const show = hasSet ? (v === 'set') : (v === 'self');
+      b.style.display = show ? '' : 'none';
+      b.disabled = !show;
+      b.style.borderLeft = show ? 'none' : '';
+      b.classList.toggle('on', v === _peScope);
+      b.title = (v === 'set' ? '送り込みセット（親＋子）を合計して見る（' + fam.members.length + '件）' : 'この商品だけを見る');
+    });
+  }
+
+  const codes = _peTrendCodes();
+  // ★その商品（群）に日別データがある月だけを出す。空の月を選ばせない
+  const yms = (typeof _itMonthsOf === 'function' ? _itMonthsOf(codes) : []).slice().reverse();
+  const sel = document.getElementById('peTrendYm');
+  if (sel) {
+    sel.innerHTML = yms.length ? yms.map(ym => '<option value="' + ym + '">' + ym.replace('-', '/') + '</option>').join('')
+                               : '<option value="">（日別データなし）</option>';
+    if (!(_peTrendYm && yms.includes(_peTrendYm))) _peTrendYm = yms.length ? yms[0] : '';   // ★商品を変えても同じ月を保つ
+    sel.value = _peTrendYm;
+  }
+
+  // ★空状態でも必ず destroy と表クリア（前の商品のグラフ・表が残る）
+  const _clear = (msg) => {
+    if (_peTrendChart) { try { _peTrendChart.destroy(); } catch (e) {} _peTrendChart = null; }
+    if (wrap) wrap.style.display = 'none';
+    if (empty) { empty.style.display = 'block'; empty.textContent = msg; }
+    tbl.innerHTML = ''; if (note) note.textContent = ''; if (foot) foot.innerHTML = '';
+  };
+  const days = _peTrendYm
+    ? (typeof dailyAllDates === 'function' ? dailyAllDates() : []).filter(d => String(d).slice(0, 7) === _peTrendYm).sort()
+    : [];
+  if (!days.length) { _clear('この月の日次データがありません。'); return; }
+  if (wrap) wrap.style.display = ''; if (empty) empty.style.display = 'none';
+  if (note) note.textContent = '【' + (_peScope === 'set' ? '親子合算' : '個別') + '】' + codes.join(' / ') + '　' + days.length + '日分';
+
+  if (_peTrendChart) { try { _peTrendChart.destroy(); } catch (e) {} _peTrendChart = null; }
+  _peTrendChart = _trendPaint({ canvas: canvas, wrap: wrap, tbl: tbl, note: foot,
+    codes: codes, days: days, ym: _peTrendYm, metrics: PE_TREND_METRICS(), barKeys: PE_TREND_BARS, clCode: code });
+  // ★タブ切替直後はコンテナ幅が0のことがある。2フレーム待ってから resize
+  requestAnimationFrame(() => requestAnimationFrame(() => { try { if (_peTrendChart) _peTrendChart.resize(); } catch (e) {} }));
+}
+window.peRenderTrend = peRenderTrend;
+
 function openProductEditModal(code) {
   if (!code) return;
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
@@ -18201,7 +18318,7 @@ function openProductEditModal(code) {
     if (hr) hr.textContent = rep; }
   productEditModal.classList.add('open');
   // 【v1.0606】開いた直後は必ず「全体情報」。売上をまず見せるのがこのモーダルの主目的
-  peSetTab('info');
+  peSetTab('info');   // 【v1.0689】開いた直後は 商品-日別
   // 【v176】背景スクロールを許可するため body.style.overflow='hidden' は付けない
   // 【v127】前後ボタンの有効/無効を更新
   if (typeof updatePrevNextButtons === 'function') updatePrevNextButtons(code);
@@ -18702,12 +18819,15 @@ $('#peImageDelete').addEventListener('click', () => {
     const b = e.target.closest && e.target.closest('.pe-tab'); if (!b) return;
     peSetTab(b.getAttribute('data-petab'));
   });
-  // 【v1.0638】集計範囲（合算/個別/親商品/子商品）
-  const _sc = document.getElementById('peScopeSeg');
-  if (_sc) _sc.addEventListener('click', (e) => {
-    const b = e.target.closest && e.target.closest('.segf-btn'); if (!b || b.disabled) return;
-    _peScope = b.getAttribute('data-pescope') || 'self';
-    peRenderInfo();
+  // 【v1.0638/v1.0689】集計範囲（親子合算/個別）。★_peScope は 商品-日別 と 商品-推移 で共有する
+  ['peScopeSeg', 'peTrendScopeSeg'].forEach(id => {
+    const _sc = document.getElementById(id);
+    if (!_sc) return;
+    _sc.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('.segf-btn'); if (!b || b.disabled) return;
+      _peScope = b.getAttribute('data-pescope') || 'self';
+      if (id === 'peTrendScopeSeg') peRenderTrend(); else peRenderInfo();
+    });
   });
   const _g = document.getElementById('peGrainSeg');
   if (_g) _g.addEventListener('click', (e) => {
