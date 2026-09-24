@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0678 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0679 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2978,7 +2978,7 @@ table.rank-table td.rank-legend-col-row {
 .pe-table-wrap td.pe-roas, .pe-table-wrap th.pe-roas { background-color: #f6effc; }
 .pe-table-wrap th.pe-roas { background-color: #e7d5f5; }
 /* 【v1.0678】見出しの下の補足行＝その率が考慮している項目 */
-.pe-table-wrap thead tr.pe-subhead th { background-color: #efe3f9; text-align: center; font-size: 0.66rem; font-weight: 600; color: #6b3fa0; padding-top: 2px; padding-bottom: 3px; white-space: nowrap; }
+.pe-table-wrap thead tr.pe-subhead th { background-color: #efe3f9; text-align: center; font-size: 0.66rem; font-weight: 700; padding-top: 2px; padding-bottom: 3px; white-space: nowrap; }
 .pe-table-wrap thead tr.pe-subhead th.pe-blank { background-color: transparent; }
 .pe-table-wrap td.pe-oya { background-color: #eaf7ef; }
 .pe-table-wrap th.pe-oya { background-color: #cfeadb; }
@@ -3648,8 +3648,12 @@ tr.row-setmember .code-cell::before { content: '└'; position: absolute; left: 
    「売上ROAS＝紫」で読める。青に戻すなら #cfe0f7 / #eef4fb。 */
 th.col-sroas, td.col-sroas { background-color:#f6effc; }
 th.col-sroas { background-color:#e7d5f5; }
-/* 【v1.0678】ROAS見出しの下に「その率が考慮している項目」を小さく出す（見出しの最終行） */
-.th-sub { display:block; margin-top:2px; font-size:0.62rem; font-weight:600; letter-spacing:0; color:#6b3fa0; white-space:nowrap; }
+/* 【v1.0678/v1.0679】ROAS見出しの下に「売上/費用」の形で内訳を小さく出す（見出しの最終行）
+   分子＝売上＝緑（プラス）／分母＝費用＝赤（マイナス）。色の意味は他の表と揃える */
+.th-sub { display:block; margin-top:2px; font-size:0.62rem; font-weight:700; letter-spacing:0; white-space:nowrap; }
+.ts-rev  { color:#0f8a52; }   /* 売上（プラス側） */
+.ts-cost { color:#d03f3f; }   /* 費用（マイナス側） */
+.ts-sl   { color:#9aa0a6; margin:0 1px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -3695,7 +3699,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0678</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0679</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4021,11 +4025,11 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
               <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総<br>売上</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
-              <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub">PR・売上・広告費</span></th>
+              <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR・広告費</span></span></th>
               <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。【v1.0678】PR広告売上ROASの右へ移動 -->
-              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上<br>ROAS<span class="th-sub">売上・広告費</span></th>
+              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上<br>ROAS<span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">広告費</span></span></th>
               <!-- 【v1.0676】PR売上ROAS(推定)＝総売上÷PR実績額(7%超・推定)×100。広告費は入れない -->
-              <th class="num col-sroas" data-sort="pronlyroas" title="PR 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR売上ROAS(推定) ＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です。&#10;★推定の仕組み上、同じ料率の商品は同じ値になります（料率の裏返し）。料率7％の商品は「—」。">PR<br>売上ROAS<span class="th-est">？</span><span class="th-sub">PR・売上</span></th>
+              <th class="num col-sroas" data-sort="pronlyroas" title="PR 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR売上ROAS(推定) ＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です。&#10;★推定の仕組み上、同じ料率の商品は同じ値になります（料率の裏返し）。料率7％の商品は「—」。">PR<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR</span></span></th>
               <th class="num col-sales" data-sort="seoRev">SEO<br>売上</th>
               <th class="num col-ad" data-sort="adRev">広告<br>売上</th>
               <!-- 【v1.0643】広告ROASを 広告売上 と 広告売上超過 の間へ移動（v1.0642まではPR実績額の右） -->
@@ -17774,13 +17778,15 @@ function peRenderInfo() {
   // 【v1.0678】見出しは2行。2行目には「その率が考慮している項目」を出す（商品-基本データの .th-sub と同じ考え方）
   //   ★ROAS3列は 日付/月 のすぐ右にまとめ、PR広告売上ROAS → 売上ROAS → PR売上ROAS の順（商品-基本データと同じ並び）
   const _blanks = 1 /* 総売上 */ + (_tblSplit ? 4 : 2) + 1 /* 広告実績額 */;
+  // 【v1.0679】「売上 / 費用」の形。分子＝売上＝緑、分母＝費用＝赤（商品-基本データの .th-sub と同じ）
+  const _subCell = (cost) => '<span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">' + cost + '</span>';
   wrap.innerHTML = '<table><thead><tr><th>' + (_peGrain === 'day' ? '日付' : '月')
     + '</th><th class="pe-roas" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th>'
     + '<th class="pe-roas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;PRオプ料率は考慮しません（広告費だけで見た効率）。">売上ROAS</th>'
     + '<th class="pe-roas" title="PR 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★⑤の設定PRオプ料率からの推定なので、同じ料率なら同じ値になります（料率の裏返し）。料率7％だけのときは「—」。">PR売上ROAS<span class="th-est">？</span></th>'
     + '<th>総売上</th>' + _midHead + '<th>広告実績額</th></tr>'
     + '<tr class="pe-subhead"><th class="pe-blank"></th>'
-    + '<th>PR・売上・広告費</th><th>売上・広告費</th><th>PR・売上</th>'
+    + '<th>' + _subCell('PR・広告費') + '</th><th>' + _subCell('広告費') + '</th><th>' + _subCell('PR') + '</th>'
     + new Array(_blanks + 1).join('<th class="pe-blank"></th>')
     + '</tr></thead><tbody>'
     + body + '</tbody></table>';
