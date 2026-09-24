@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0691 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0693 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3715,7 +3715,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0691</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0693</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -15975,10 +15975,16 @@ function _trendPaint(opt) {
   const thB = 'padding:6px 8px;font-size:0.72rem;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:2;';
   const th  = thB + 'background:var(--bg3);';
   const th2 = thB.replace('top:0', 'top:26px');
-  const grp = (m) => '<th colspan="' + (m.amount ? 3 : 2) + '" style="' + thB + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border)">' + m.label + '</th>';
+  // 【v1.0692】1指標あたりの列数 = 累積 + 日別 (+ 実績額) (+ 売上)
+  const _cols = (m) => 2 + (m.amount ? 1 : 0) + (m.revCol ? 1 : 0);
+  const grp = (m) => '<th colspan="' + _cols(m) + '" style="' + thB + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border)">' + m.label + '</th>';
   const sub = (m) => '<th style="' + th2 + 'background:' + m.bg + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
                    + '<th style="' + th2 + 'background:' + m.bg2 + ';text-align:center">日別</th>'
-                   + (m.amount ? '<th style="' + th2 + 'background:' + m.bg + ';text-align:center">実績額<span style="font-weight:400;color:var(--text3)">(' + m.amountLabel + ')</span></th>' : '');
+                   // 【v1.0692】「実績額」と「(広告＋PR)」を2行に分ける。1行だと横に間延びして、どの額か読みにくい
+                   + (m.amount ? '<th style="' + th2 + 'background:' + m.bg + ';text-align:center;line-height:1.35">実績額'
+                       + (m.amountLabel ? '<br><span style="font-weight:400;color:var(--text3);font-size:0.9em">(' + m.amountLabel + ')</span>' : '') + '</th>' : '')
+                   // 【v1.0692】分子（その日の総売上）。分母だけ見ても判断できないので隣に置く。★色は別系統にして分母と区別する
+                   + (m.revCol ? '<th style="' + th2 + 'background:' + (m.rbg || '#edf7f1') + ';text-align:center">' + (m.revLabel || '売上') + '</th>' : '');
   const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + metrics.map(grp).join('') + '</tr>'
              + '<tr>' + metrics.map(sub).join('') + '</tr>';
   const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
@@ -15991,7 +15997,8 @@ function _trendPaint(opt) {
     metrics.forEach(m => {
       cells += '<td style="' + td + 'background:' + m.bg  + ';border-left:2px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
              + '<td style="' + td + 'background:' + m.bg2 + '">' + fp(r['d_' + m.k]) + '</td>'
-             + (m.amount ? '<td style="' + td + 'background:' + m.bg + '">' + fyen(r['a_' + m.k]) + '</td>' : '');
+             + (m.amount ? '<td style="' + td + 'background:' + m.bg + '">' + fyen(r['a_' + m.k]) + '</td>' : '')
+             + (m.revCol ? '<td style="' + td + 'background:' + (m.rbg || '#edf7f1') + ';color:#0f8a52">' + fyen(m.revOf ? m.revOf(r.raw) : r.raw.rev) + '</td>' : '');
     });
     return '<tr>' + cells + '</tr>';
   }).join('');
@@ -18078,8 +18085,8 @@ function peRenderInfo() {
       {
         const _lg = document.getElementById('peLegend');
         if (_lg) _lg.innerHTML = (_peSplit
-          ? [['#6d28d9','SEO売上-親'],['#c4b5fd','SEO売上-子'],['#ea580c','広告売上-親'],['#fdba74','広告売上-子'],['#10b981','売上ROAS']]
-          : [['#7c3aed','SEO売上'],['#f97316','広告売上'],['#10b981','売上ROAS']]
+          ? [['#6d28d9','SEO売上-親'],['#c4b5fd','SEO売上-子'],['#ea580c','広告売上-親'],['#fdba74','広告売上-子'],['#10b981','PR広告売上ROAS？']]
+          : [['#7c3aed','SEO売上'],['#f97316','広告売上'],['#10b981','PR広告売上ROAS？']]
         ).map(x => '<span><i style="background:' + x[0] + '"></i>' + x[1] + '</span>').join('');
       }
       const _peBars = _peSplit
@@ -18099,7 +18106,9 @@ function peRenderInfo() {
           labels,
           datasets: [
             ..._peBars,
-            { type: 'line', label: '売上ROAS', data: rows.map(r => r.sroas), borderColor: '#10b981', backgroundColor: '#10b981',
+            // 【v1.0693】折れ線を 売上ROAS → PR広告売上ROAS(推定) に変更（表の列の並びと同じく、こちらを主に見る）
+            //   ★色は緑のまま。SEO売上の紫（#7c3aed）とぶつかるので、表の紫には合わせない
+            { type: 'line', label: 'PR広告売上ROAS', data: rows.map(r => r.prsr), borderColor: '#10b981', backgroundColor: '#10b981',
               borderWidth: 2, pointRadius: 2.5, tension: 0.25, spanGaps: true, yAxisID: 'y1', order: 1 }
           ]
         },
@@ -18112,7 +18121,7 @@ function peRenderInfo() {
             legend: { display: false },
             tooltip: { callbacks: { label: (c) => {
               const v = c.parsed.y;
-              if (c.dataset.label === '売上ROAS') return '売上ROAS: ' + (v == null ? '—' : Math.round(v) + '%');
+              if (c.dataset.label === 'PR広告売上ROAS') return 'PR広告売上ROAS(推定): ' + (v == null ? '—' : Math.round(v).toLocaleString('ja-JP') + '%');
               return c.dataset.label + ': ¥' + Math.round(v || 0).toLocaleString('ja-JP');
             } } }
           },
@@ -18214,7 +18223,14 @@ function peRenderInfo() {
 // ============================================================================
 let _peTrendChart = null;
 let _peTrendYm = '';
-const PE_TREND_METRICS = () => IT_METRICS.filter(m => m.k !== 'roas');
+// 【v1.0692】モーダルだけの上乗せ:
+//   ・売上ROAS にも「実績額(広告)」を出す（商品-推移タブ側は 広告ROAS に同じ額があるので出さない）
+//   ・PR広告売上ROAS の実績額の右に「売上」（分子＝その日の総売上）。★分母と区別するため色は緑系
+const PE_TREND_METRICS = () => IT_METRICS.filter(m => m.k !== 'roas').map(m => {
+  if (m.k === 'sroas') return Object.assign({}, m, { amount: a => a.adCost, amountLabel: '広告', amountFull: '広告実績額' });
+  if (m.k === 'prsr')  return Object.assign({}, m, { revCol: true, revLabel: '売上', revOf: a => a.rev, rhbg: '#cfe9dc', rbg: '#edf7f1' });
+  return m;
+});
 const PE_TREND_BARS    = ['prsr', 'sroas'];   // 棒＝日別で出す2本（判断に使うもの）
 
 function _peTrendSetYm(v) { _peTrendYm = v || ''; peRenderTrend(); }
