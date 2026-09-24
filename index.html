@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0684 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0686 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2952,11 +2952,10 @@ table.rank-table td.rank-legend-col-row {
    ※オーバーレイの上下padding(40px×2)を差し引いた高さに収め、ページ全体のスクロールも防ぐ。 */
 /* 【v1.0606】商品モーダルのタブ化（§5-I） */
 #productEditModal .modal.pe-modal-wide { max-width: min(1320px, 96vw) !important; width: min(1320px, 96vw); }   /* 【v1.0681】列が増えたので 1060 → 1320 */
-/* 【v1.0683】タブ（全体情報 / 商品情報を編集）をモーダル幅の中央に。
-   ★∧∨（商品送り）と ✕ は position:absolute で右端に逃がす。
-     これらを flex の並びに残したまま justify-content:center にすると、
-     右のボタンぶんだけタブが左にずれて「中央」にならない。 */
-.pe-tabs { display: flex; align-items: center; justify-content: center; gap: 2px; border-bottom: 2px solid var(--border);
+/* 【v1.0683/v1.0686】タブ（全体情報 / 商品情報を編集）は左寄せ（v1.0683で中央にしたが左に戻した）。
+   ★∧∨（商品送り）と ✕ は position:absolute のまま右端に固定しておく。
+     並びに戻すと、あとで中央寄せに変えたくなったときにまた同じ問題（右ボタンぶんずれる）が出る。 */
+.pe-tabs { display: flex; align-items: center; justify-content: flex-start; gap: 2px; border-bottom: 2px solid var(--border);
   margin: -20px -24px 0; padding: 0 20px; flex: 0 0 auto; position: relative; }
 .pe-tab { border: none; background: transparent; font-family: inherit; font-size: 0.92rem; font-weight: 700; color: var(--text3);
   padding: 13px 16px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
@@ -2964,8 +2963,8 @@ table.rank-table td.rank-legend-col-row {
 .pe-tab.on { color: var(--text); border-bottom-color: var(--accent); }
 .pe-tabs .pe-nav-mini { position: absolute; right: 54px; top: 50%; transform: translateY(-50%); margin-left: 0; }
 .pe-tabs-close { position: absolute !important; right: 18px; top: 50%; transform: translateY(-50%); margin-left: 0; }
-/* 【v1.0683】商品ヘッダー（画像・商品名・コード）もタブに合わせて中央寄せ */
-.pe-head { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+/* 【v1.0686】商品ヘッダー（画像・商品名・コード）は左寄せ（従来どおり） */
+.pe-head { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
 .pe-head-img img, .pe-head-img .product-img-placeholder { width: 46px; height: 46px; border-radius: 6px; }
 .pe-head-name { font-size: 1.02rem; font-weight: 700; line-height: 1.35; }
 .pe-head-sub { font-size: 0.74rem; color: var(--text3); font-family: ui-monospace, Consolas, monospace; margin-top: 2px; }
@@ -2986,8 +2985,11 @@ table.rank-table td.rank-legend-col-row {
 .pe-table-wrap thead tr.pe-subhead th { background-color: #efe3f9; text-align: center; font-size: 0.66rem; font-weight: 700; padding-top: 2px; padding-bottom: 3px; white-space: nowrap; }
 .pe-table-wrap thead tr.pe-subhead th.pe-blank { background-color: transparent; }
 /* 【v1.0681】PR実績額(7%超・推定)＝広告実績額の右。色は商品-基本データの col-prov と同じ青緑 */
-/* 【v1.0682】広告売上があるのに広告実績額が0＝データ欠損の疑い。うっすら注意色＋点線下線 */
-.pe-table-wrap td.pe-warn { background-color: #fff6e5; box-shadow: inset 0 -2px 0 #f0b429; cursor: help; }
+/* 【v1.0682/v1.0685】広告売上があるのに広告実績額が0＝データ欠損の疑い。
+   ★v1.0684までは inset box-shadow で下線を引いていたが、セル下端の罫線と重なって
+     オレンジがはみ出して見えた。帯（うすい黄）＋値の右の小さな⚠に変更。 */
+.pe-table-wrap td.pe-warn { background-color: #fff8ec; cursor: help; }
+.pe-table-wrap td.pe-warn .pe-warn-mk { margin-left: 4px; color: #d97706; font-size: 0.74em; font-style: normal; vertical-align: 1px; }
 .pe-table-wrap td.pe-prov { background-color: #eef8f5; }
 .pe-table-wrap th.pe-prov { background-color: #bfe3d8; }
 .pe-table-wrap td.pe-oya { background-color: #eaf7ef; }
@@ -2997,10 +2999,13 @@ table.rank-table td.rank-legend-col-row {
 .pe-table-wrap th.pe-oya:first-of-type, .pe-table-wrap td.pe-oya:nth-of-type(4) { border-left: 2px solid #86c9a5; }
 .pe-table-wrap th.pe-ko:first-of-type,  .pe-table-wrap td.pe-ko:nth-of-type(6)  { border-left: 2px solid #e8c473; }
 .pe-table-wrap table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.78rem; }
+/* 【v1.0686】表の中身は中央揃え（見出し・値・日付とも）。
+   ★数字が中央でも桁が揃うよう font-variant-numeric:tabular-nums は必ず残す。
+     これを外すと数字の幅が字ごとに変わって、中央揃えでは特に読みづらくなる。 */
 .pe-table-wrap th { background: var(--bg3); font-weight: 700; color: var(--text2);
-  padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
-.pe-table-wrap th:first-child, .pe-table-wrap td:first-child { text-align: left; }
-.pe-table-wrap td { padding: 5px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  padding: 6px 10px; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--border); }
+.pe-table-wrap th:first-child, .pe-table-wrap td:first-child { text-align: center; }
+.pe-table-wrap td { padding: 5px 10px; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
 .pe-table-wrap tr:last-child td { border-bottom: none; }
 .pe-empty { padding: 30px; text-align: center; color: var(--text3); font-size: 0.84rem; }
 
@@ -3709,7 +3714,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0684</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0686</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -18124,7 +18129,8 @@ function peRenderInfo() {
         ? '<td class="pe-oya">' + fmt(r.seoP || 0) + '</td><td class="pe-oya">' + fmt(r.adP || 0) + '</td>'
           + '<td class="pe-ko">' + fmt(r.seoC || 0) + '</td><td class="pe-ko">' + fmt(r.adC || 0) + '</td>'
         : '<td>' + fmt(r.seoRev) + '</td><td>' + fmt(r.adRev) + '</td>')
-    + '<td' + (_adGap(r) ? ' class="pe-warn" title="' + escapeHtml(_adGap(r)) + '"' : '') + '>' + fmt(r.adCost) + '</td>'
+    + '<td' + (_adGap(r) ? ' class="pe-warn" title="' + escapeHtml(_adGap(r)) + '"' : '') + '>'
+      + fmt(r.adCost) + (_adGap(r) ? '<span class="pe-warn-mk">⚠</span>' : '') + '</td>'
     // 【v1.0681】PR実績額(7%超・推定)。広告実績額の右。商品ごとに推定してから合計している（§5-D-3）
     + '<td class="pe-prov est-val" title="' + escapeHtml(_whyDash(r) || ('【内訳】\n' + _prPartsTip(r))) + '">'
       + (!r.prKnown ? '<span style="color:var(--text3)">—</span>'
