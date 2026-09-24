@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0683 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0684 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3709,7 +3709,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0683</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0684</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3744,6 +3744,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0661】商品-基本データ／商品-広告データ／商品-PRデータ の3つは【一覧】ブロックへ移動（ヘッダー2の左端）。§47 -->
     <a class="nav-tab nav-tab-link" data-view="monthly" href="?view=monthly">商品-日月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="itemgraph" href="?view=itemgraph">商品-グラフ</a>
+    <a class="nav-tab nav-tab-link" data-view="itemtrend" href="?view=itemtrend">商品-推移</a>
     <a class="nav-tab nav-tab-link" data-view="oyako" href="?view=oyako">商品-各比率<span class="chip-num" id="cntOyChildUnset"></span></a>
     <a class="nav-tab nav-tab-link" data-view="retired" href="?view=retired">撤退済み商品</a>
   </div>
@@ -4171,6 +4172,33 @@ th.col-sroas { background-color:#e7d5f5; }
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
         <div id="igTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
+      </div>
+    </div>
+
+    <!-- 【v1.0684】View: 商品-推移（1商品・1か月を「累積×日別」で同時に見る） -->
+    <div class="view" id="view-itemtrend">
+      <div class="card">
+        <h3 class="card-title">商品-推移</h3>
+        <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center;position:relative">
+          <span class="filter-label">商品</span>
+          <input type="search" id="itSearch" placeholder="商品コード・商品名で検索して選択..." autocomplete="off" data-lpignore="true" data-1p-ignore oninput="_itSuggest(this.value)" onfocus="_itSuggest(this.value)" onblur="setTimeout(function(){var b=document.getElementById('itSuggest');if(b)b.style.display='none';},200)" style="width:260px">
+          <div id="itSuggest" style="display:none;position:absolute;top:40px;left:60px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.18);max-height:340px;overflow:auto;min-width:360px"></div>
+          <button type="button" class="btn sm" id="itSaveBtn" onclick="_itSave()" title="この商品をよく見るリストに入れる（要: ⬆ 反映する）">★ 保存</button>
+          <span id="itLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
+          <span class="filter-label">保存リスト</span>
+          <select id="itSavedSel" onchange="_itPickSaved(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;max-width:260px"></select>
+          <button type="button" class="btn sm ghost" onclick="_itRemoveSel()" title="いま選んでいる商品を保存リストから外す">✕</button>
+          <span class="filter-label">対象月</span>
+          <select id="itMonthSel" onchange="_itSetYm(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="filter-label">親子</span>
+          <span class="seg-filter" id="itScopeSeg" role="group" aria-label="親子の集計"
+            title="合算＝送り込みセット（同じ代表コードの親子）の合計から率を出し直す&#10;個別＝選んだ商品1件だけ"><button type="button" class="segf-btn on" data-itscope="sum" onclick="_itSetScope('sum')">合算</button><button type="button" class="segf-btn" data-itscope="self" onclick="_itSetScope('self')">個別</button></span>
+          <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+        </div>
+        <div id="itChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="itCanvas"></canvas></div>
+        <div id="itEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
+        <div id="itTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:none"></div>
+        <p class="note" id="itNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
       </div>
     </div>
 
@@ -5467,7 +5495,7 @@ const state = {
   //   colWidths : { data-resize-key: px }  ← 従来 localStorage['ycheck_col_widths_v1'] にあったもの（端末内＝他PCに出ない）
   //   fontScale : 0.7〜1.5
   //   ★ state.fontScale =「いま画面に効いている値」／ viewPrefs.fontScale =「保存された値」。起動時に後者を前者へ反映する。
-  viewPrefs: { colWidths: {}, fontScale: 1, updatedAt: '', updatedBy: '' },
+  viewPrefs: { colWidths: {}, fontScale: 1, itTrendSaved: [], updatedAt: '', updatedBy: '' },   /* 【v1.0684】itTrendSaved＝商品-推移の★保存リスト */
   changeLog: { shop: [], items: {} },   // 【v1.0637】変更記録（いつ何を変えたか）。§21
   currentView: 'basic',
   activeStateFilter: null,  // {type: 'ad-ok'|'ad-ng'|..., targetView: 'ad-adjust'|'pro-adjust', label: '...'}
@@ -5700,7 +5728,7 @@ function _vpWriteDeviceBackup() {
   try {
     const vp = ensureViewPrefs();
     localStorage.setItem(VP_DEVICE_KEY, JSON.stringify({
-      colWidths: vp.colWidths, fontScale: vp.fontScale,
+      colWidths: vp.colWidths, fontScale: vp.fontScale, itTrendSaved: vp.itTrendSaved,   // 【v1.0684】
       updatedAt: vp.updatedAt || new Date().toISOString(), updatedBy: vp.updatedBy || 'この端末'
     }));
   } catch (e) {}
@@ -5715,6 +5743,7 @@ function _vpAdoptIncoming(incoming) {
     state.viewPrefs = {
       colWidths: Object.assign({}, bk.colWidths || {}),
       fontScale: (bk.fontScale > 0 ? bk.fontScale : 1),
+      itTrendSaved: Array.isArray(bk.itTrendSaved) ? bk.itTrendSaved.slice() : [],   // 【v1.0684】
       updatedAt: bk.updatedAt, updatedBy: bk.updatedBy || 'この端末'
     };
     ensureViewPrefs(); _vpLegacyMigrated = true;
@@ -5735,6 +5764,7 @@ function ensureViewPrefs() {
   const vp = state.viewPrefs;
   if (!vp.colWidths || typeof vp.colWidths !== 'object') vp.colWidths = {};
   if (!(vp.fontScale > 0)) vp.fontScale = 1;
+  if (!Array.isArray(vp.itTrendSaved)) vp.itTrendSaved = [];   // 【v1.0684】商品-推移の★保存リスト
   if (typeof vp.updatedAt !== 'string') vp.updatedAt = '';
   if (typeof vp.updatedBy !== 'string') vp.updatedBy = '';
   return vp;
@@ -15691,6 +15721,284 @@ function renderItemGraph() {
   tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
+// ============================================================================
+// 【v1.0684】商品-推移（ADcheck「商品-推移」の移植）
+//   1商品（または送り込みセット）・1か月を「累積×日別」で同時に見る画面。
+//   ・線＝累積（月初〜その日）＝今月どう着地しそうか。ゆるやかに動く
+//   ・棒＝日別（その日単体）＝昨日何が起きたか。荒れる。★先行指標
+//   ★累積は「率の平均」ではなく【分子と分母をそれぞれ累積してから割る】。
+//     率を平均すると売上の小さい日に引っ張られて嘘になる（§22・§5-D-1と同じ考え方）。
+// ============================================================================
+let _itTrendChart = null;
+let _itTrendKey   = '';        // 選択中の代表コード（_igFamilies のキー）
+let _itTrendScope = 'sum';     // 'sum'=合算 / 'self'=個別
+let _itTrendYm    = '';        // 'YYYY-MM'
+
+// 指標の定義。num/den を関数で持たせてあるので、累積も日別も同じ処理で回る。
+//   amount = 表の「実績額」列に出す分母の実額（null なら列を出さない）
+const IT_METRICS = [
+  { k: 'sroas',  label: '売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '',
+    num: a => a.rev,    den: a => a.adCost, amount: null },
+  { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: false, amountLabel: '広告＋PR',
+    num: a => a.rev,    den: a => (a.prKnown ? (a.adCost + a.prOver) : 0), amount: a => (a.prKnown ? (a.adCost + a.prOver) : null) },
+  { k: 'pronly', label: 'PR売上ROAS',      color: '#ec4899', bar: false, amountLabel: 'PR',
+    num: a => a.rev,    den: a => (a.prKnown ? a.prOver : 0),              amount: a => (a.prKnown ? a.prOver : null) },
+  { k: 'roas',   label: '広告ROAS',        color: '#f59e0b', bar: true,  amountLabel: '広告',
+    num: a => a.adRev,  den: a => a.adCost, amount: a => a.adCost },
+];
+
+// この画面が対象にする商品コード（合算ならセット全員）
+function _itCodes() {
+  if (!_itTrendKey) return [];
+  if (_itTrendScope === 'self') return [_itTrendKey];
+  const fam = _igFamilies();
+  return (fam[_itTrendKey] && fam[_itTrendKey].length) ? fam[_itTrendKey] : [_itTrendKey];
+}
+// 1日ぶんの素の値。★PR実績額は商品ごとに推定してから足す（§5-D-3。セット合計に代表の料率を掛けない）
+function _itDayRaw(codes, d) {
+  let rev = 0, adRev = 0, adCost = 0, prOver = 0, prKnown = false;
+  codes.forEach(c => {
+    const a = dayAgg(c, d);
+    rev += a.rev || 0; adRev += a.adRev || 0; adCost += a.adCost || 0;
+    const e = itemPrEstimate(c, a.rev || 0);
+    if (e) { prKnown = true; prOver += Math.max(0, +e.over || 0); }
+  });
+  return { rev: rev, adRev: adRev, adCost: adCost, prOver: prOver, prKnown: prKnown };
+}
+const _itPct = (n, d) => (d > 0 ? (n / d * 100) : 0);   // ★分母0は0を返し、描画時に null にして線を切る
+
+function _itSuggest(q) {
+  const box = document.getElementById('itSuggest');
+  if (!box) return;
+  q = String(q || '').trim().toLowerCase();
+  const fam = _igFamilies();
+  const _mn = (c) => String(((typeof getMaster === 'function' ? getMaster(c) : null) || {}).name || '');
+  const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s));
+  // ★母集団は 商品-グラフ と同じ（_igFamilies）。ただし日別データがある商品を上に出す
+  let items = Object.keys(fam).map(key => {
+    const nm = _igFamilyName(key, fam[key]);
+    const hasDay = (fam[key] || []).some(c => _itMonthsOf([c]).length > 0);
+    return { key: key, name: nm.name, members: fam[key], hasDay: hasDay };
+  });
+  if (q) items = items.filter(it => it.key.toLowerCase().includes(q) || it.name.toLowerCase().includes(q)
+    || it.members.some(c => c.toLowerCase().includes(q) || _mn(c).toLowerCase().includes(q)));
+  items.sort((a, b) => (b.hasDay - a.hasDay) || a.name.localeCompare(b.name));
+  items = items.slice(0, 30);   // ★候補は30件で打ち切る
+  if (!items.length) {
+    box.innerHTML = '<div style="padding:10px 12px;font-size:12px;line-height:1.7">該当する商品がありません。<br>'
+      + '<span style="color:var(--text3)">商品-推移は日別データを使います。「+レポート追加」で日別を取り込んでください。</span></div>';
+    box.style.display = 'block'; return;
+  }
+  box.innerHTML = items.map(it =>
+    '<div onmousedown="event.preventDefault();_itSelect(\'' + String(it.key).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')"'
+    + ' style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"'
+    + ' onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">'
+    + '<span style="font-family:\'DM Mono\',ui-monospace,monospace;color:var(--text3);font-size:11px">' + esc(it.key) + '</span>　' + esc(it.name)
+    + (it.hasDay ? '' : '<span style="color:var(--text3);font-size:11px">　（日別データなし）</span>')
+    + '</div>').join('');
+  box.style.display = 'block';
+}
+function _itSelect(key) {
+  _itTrendKey = key;
+  const box = document.getElementById('itSuggest'); if (box) box.style.display = 'none';
+  const inp = document.getElementById('itSearch'); if (inp) inp.value = '';
+  _itPopulateMonths();
+  renderItemTrend();
+}
+function _itSetScope(v) {
+  _itTrendScope = (v === 'self') ? 'self' : 'sum';
+  document.querySelectorAll('#itScopeSeg .segf-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-itscope') === _itTrendScope));
+  _itPopulateMonths();   // 合算にするとデータのある月が増えることがある
+  renderItemTrend();
+}
+function _itSetYm(v) { _itTrendYm = v || ''; renderItemTrend(); }
+
+// その商品（群）に日別データがある月だけを返す。★空の月を選ばせない
+function _itMonthsOf(codes) {
+  const d = (typeof ensureDaily === 'function') ? ensureDaily() : { item: {}, ad: {} };
+  const set = new Set();
+  ['item', 'ad'].forEach(kind => {
+    Object.keys(d[kind] || {}).forEach(date => {
+      const byCode = d[kind][date] || {};
+      if (codes.some(c => byCode[c] != null)) set.add(String(date).slice(0, 7));
+    });
+  });
+  return [...set].sort();
+}
+function _itPopulateMonths() {
+  const sel = document.getElementById('itMonthSel'); if (!sel) return;
+  const yms = _itMonthsOf(_itCodes()).reverse();   // ★新しい月が先頭
+  const cur = _itTrendYm;
+  sel.innerHTML = yms.length
+    ? yms.map(ym => '<option value="' + ym + '">' + ym.replace('-', '/') + '</option>').join('')
+    : '<option value="">（日別データなし）</option>';
+  if (cur && yms.includes(cur)) sel.value = cur;   // ★商品を変えても同じ月を保つ（比較しやすい）
+  else _itTrendYm = yms.length ? yms[0] : '';
+  sel.value = _itTrendYm;
+}
+
+// ---- ★保存リスト（state.viewPrefs.itTrendSaved。GitHubにも乗る＝「⬆ 反映する」で共有） ----
+function _itSavedList() { const vp = ensureViewPrefs(); return vp.itTrendSaved; }
+function _itSave() {
+  if (!_itTrendKey) { try { showToast('先に商品を選んでください', 'warn'); } catch (e) {} return; }
+  const list = _itSavedList();
+  if (!list.includes(_itTrendKey)) { list.push(_itTrendKey); _vpTouch('この端末'); }
+  _itRenderSaved();
+  try { showToast('★ 保存リストに入れました（他のPCにも残すには「⬆ 反映する」）', 'warn'); } catch (e) {}
+}
+function _itRemoveSel() {
+  const sel = document.getElementById('itSavedSel'); if (!sel || !sel.value) return;
+  const vp = ensureViewPrefs();
+  vp.itTrendSaved = _itSavedList().filter(c => c !== sel.value);
+  _vpTouch('この端末');
+  _itRenderSaved();
+}
+function _itPickSaved(key) { if (!key) return; _itSelect(key); }
+function _itRenderSaved() {
+  const sel = document.getElementById('itSavedSel'); if (!sel) return;
+  const list = _itSavedList();
+  const fam = _igFamilies();
+  const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s));
+  const opts = ['<option value="">（保存した商品）</option>'].concat(list.map(key => {
+    let nm = _igFamilyName(key, fam[key] || [key]).name || key;
+    if (nm.length > 26) nm = nm.slice(0, 26) + '…';   // ★長い商品名でセレクトが画面を突き破るのを防ぐ
+    return '<option value="' + esc(key) + '">' + esc(nm) + '</option>';
+  }));
+  sel.innerHTML = opts.join('');
+  sel.value = list.includes(_itTrendKey) ? _itTrendKey : '';
+}
+
+function renderItemTrend() {
+  const canvas = document.getElementById('itCanvas');
+  const wrap   = document.getElementById('itChartWrap');
+  const empty  = document.getElementById('itEmpty');
+  const tbl    = document.getElementById('itTableWrap');
+  const note   = document.getElementById('itNote');
+  if (!canvas || !tbl) return;
+  _itRenderSaved();
+  document.querySelectorAll('#itScopeSeg .segf-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-itscope') === _itTrendScope));
+
+  const codes = _itCodes();
+  const fam = _igFamilies();
+  const lbl = document.getElementById('itLabel');
+  if (lbl) lbl.textContent = _itTrendKey
+    ? ('▶ ' + _igFamilyName(_itTrendKey, fam[_itTrendKey] || [_itTrendKey]).name + '（' + _itTrendKey + (codes.length > 1 ? ' ほか' + (codes.length - 1) + '件' : '') + '）')
+    : '';
+
+  // ★空状態は3分岐。いずれも destroy と表クリアを必ずやる（前の商品が残る）
+  const _clear = (msg) => {
+    if (_itTrendChart) { try { _itTrendChart.destroy(); } catch (e) {} _itTrendChart = null; }
+    if (wrap) wrap.style.display = 'none';
+    if (empty) { empty.style.display = 'block'; empty.textContent = msg; }
+    tbl.innerHTML = ''; if (note) note.textContent = '';
+  };
+  if (!_itTrendKey) { _clear('商品を検索して選択してください。'); return; }
+  const days = (function () {
+    if (!_itTrendYm) return [];
+    return (typeof dailyAllDates === 'function' ? dailyAllDates() : []).filter(d => String(d).slice(0, 7) === _itTrendYm).sort();
+  })();
+  if (!days.length) { _clear('この月の日次データがありません。'); return; }
+  if (wrap) wrap.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  // ---- 累積と日別を同時に作る ----
+  const cum = { rev: 0, adRev: 0, adCost: 0, prOver: 0, prKnown: false };
+  const rows = days.map(d => {
+    const a = _itDayRaw(codes, d);
+    cum.rev += a.rev; cum.adRev += a.adRev; cum.adCost += a.adCost; cum.prOver += a.prOver;
+    if (a.prKnown) cum.prKnown = true;
+    const r = { date: d, day: (+String(d).slice(8, 10)), raw: a, cum: Object.assign({}, cum) };
+    IT_METRICS.forEach(m => {
+      r['d_' + m.k] = _itPct(m.num(a), m.den(a));          // 日別＝その日の分子÷分母
+      r['c_' + m.k] = _itPct(m.num(cum), m.den(cum));      // 累積＝分子累積÷分母累積
+      r['a_' + m.k] = m.amount ? m.amount(a) : null;       // 実績額（その日の分母の実額）
+    });
+    return r;
+  });
+
+  // ---- グラフ ----
+  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#a0aec0' : '#718096';
+  const labels = rows.map(r => (+_itTrendYm.slice(5, 7)) + '/' + r.day);
+  const nz = v => (v > 0 ? Math.round(v * 10) / 10 : null);   // ★0は null。0%の線が底を這うのを防ぐ
+  const hex2rgba = (h, a) => 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + a + ')';
+
+  const bars = IT_METRICS.filter(m => m.bar).map(m => ({
+    type: 'bar', label: m.label + '(日別)',
+    data: rows.map(r => nz(r['d_' + m.k])),
+    yAxisID: 'y', backgroundColor: hex2rgba(m.color, isDark ? 0.22 : 0.32),
+    borderWidth: 0, order: 10,               // ★order が大きいほど背面。棒を背景に敷く
+    categoryPercentage: 0.8, barPercentage: 0.95
+  }));
+  const lines = IT_METRICS.map(m => ({
+    type: 'line', label: m.label,
+    data: rows.map(r => nz(r['c_' + m.k])),
+    borderColor: m.color, backgroundColor: hex2rgba(m.color, 0.13),
+    borderWidth: 2.5, pointRadius: 2.5, tension: 0.3,
+    fill: false, spanGaps: true, yAxisID: 'y', order: 1   // ★order 小＝前面
+  }));
+
+  const _clMarks = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.date), _itTrendKey) : [];
+  if (_itTrendChart) { try { _itTrendChart.destroy(); } catch (e) {} _itTrendChart = null; }   // ★必ず破棄（多重ツールチップ防止）
+  // ★Chart.js はCDN読み込み。オフライン等で落ちていても表だけは出す（他のグラフ画面と同じ作法）
+  if (typeof Chart === 'undefined') { if (wrap) wrap.style.display = 'none'; }
+  else _itTrendChart = new Chart(canvas.getContext('2d'), {
+    plugins: [YC_CHANGE_LINES],
+    // 凡例は「線（累積）→棒（日別）」の順に読ませたいので datasets は線が先。
+    // ★前後関係は datasets の順ではなく order で決まる（線 order:1 ＝前面 / 棒 order:10 ＝背面）
+    data: { labels: labels, datasets: lines.concat(bars) },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },       // ★どこにホバーしてもその日の全系列が出る
+      plugins: {
+        ycChangeLines: { marks: _clMarks },
+        legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 11 }, color: textColor } },
+        tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + (c.parsed.y == null ? '—' : Math.round(c.parsed.y).toLocaleString('ja-JP') + '%') } }
+      },
+      scales: {
+        x: { stacked: false, grid: { color: gridColor }, ticks: { font: { size: 10 }, color: textColor, maxRotation: 0, autoSkip: true } },
+        y: { beginAtZero: true, grid: { color: gridColor },
+             ticks: { font: { size: 10 }, color: textColor, callback: v => Number(v).toLocaleString('ja-JP') + '%' } }
+      }
+    }
+  });
+  // ★タブ切替直後はコンテナ幅が0のことがある。2フレーム待ってから resize
+  requestAnimationFrame(() => requestAnimationFrame(() => { try { if (_itTrendChart) _itTrendChart.resize(); } catch (e) {} }));
+
+  // ---- 表（2段ヘッダー・新しい日が最上段） ----
+  const th = 'padding:6px 8px;font-size:0.72rem;font-weight:700;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;position:sticky;top:0;z-index:2;';
+  const th2 = th.replace('top:0', 'top:26px');
+  const grp = (m) => '<th colspan="' + (m.amount ? 3 : 2) + '" style="' + th + 'text-align:center;color:' + m.color + ';border-left:1px solid var(--border)">' + m.label + '</th>';
+  const sub = (m) => '<th style="' + th2 + 'text-align:right;border-left:1px solid var(--border)">累積</th>'
+                   + '<th style="' + th2 + 'text-align:right;background:rgba(127,127,127,0.07)">日別</th>'
+                   + (m.amount ? '<th style="' + th2 + 'text-align:right">実績額<span style="font-weight:400;color:var(--text3)">(' + m.amountLabel + ')</span></th>' : '');
+  const head = '<tr><th rowspan="2" style="' + th + 'text-align:left;vertical-align:bottom">日</th>' + IT_METRICS.map(grp).join('') + '</tr>'
+             + '<tr>' + IT_METRICS.map(sub).join('') + '</tr>';
+  const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
+  const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
+  const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
+  const body = rows.slice().reverse().map((r, i) => {
+    const hi = (i === 0) ? 'background:rgba(59,130,246,0.08);font-weight:700;' : '';   // ★最上段＝当月の着地見込み
+    const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;' + mono + hi;
+    let cells = '<td style="padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);' + mono + hi + '">' + (+_itTrendYm.slice(5, 7)) + '/' + r.day + '</td>';
+    IT_METRICS.forEach(m => {
+      cells += '<td style="' + td + 'border-left:1px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
+             + '<td style="' + td + 'background:rgba(127,127,127,0.05)">' + fp(r['d_' + m.k]) + '</td>'
+             + (m.amount ? '<td style="' + td + '">' + fyen(r['a_' + m.k]) + '</td>' : '');
+    });
+    return '<tr>' + cells + '</tr>';
+  }).join('');
+  tbl.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+
+  if (note) note.innerHTML = '※ 累積（月初〜当日）と日別（当日単体）を併記。'
+    + '<b>累積は率の平均ではなく、分子と分母をそれぞれ足してから割っています。</b>'
+    + '実績額＝当日の実費で、指標ごとに分母が違います（PR広告売上ROAS＝広告実績額＋PR実績額(7%超・推定) / PR売上ROAS＝PR実績額(7%超・推定) / 広告ROAS＝広告実績額）。'
+    + '最上段＝当月の着地見込み（累積）。棒＝日別で、線より先に動く<b>先行指標</b>として読みます。'
+    + 'PR系は⑤の設定PRオプ料率からの<b>推定</b>です（実測ではありません）。';
+}
+window.renderItemTrend = renderItemTrend;
+
 function renderAll() {
   if (typeof syncLinkedChildrenStatus === 'function') syncLinkedChildrenStatus();  // 【v1.0437】追従中の子ステータスを親へ同期（表示・件数・撤退判定の整合）
   // 【v1.0604】★商品件数が減っていないか毎回見張る。減ったらログに⚠を1行残す
@@ -15699,6 +16007,7 @@ function renderAll() {
   if (state.currentView === 'basic') renderBasic();
   else if (state.currentView === 'monthly') renderMonthly();
   else if (state.currentView === 'itemgraph') renderItemGraph();
+  else if (state.currentView === 'itemtrend') renderItemTrend();   // 【v1.0684】
   else if (state.currentView === 'oyako') renderOyako();
   else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraphAll();
