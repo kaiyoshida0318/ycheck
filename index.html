@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0676 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0677 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2976,6 +2976,9 @@ table.rank-table td.rank-legend-col-row {
    ★2列ずつのまとまりが分かるよう、親の左と子の左に区切り線を入れる。 */
 .pe-table-wrap td.pe-prsr, .pe-table-wrap th.pe-prsr { background-color: #f6effc; }   /* 【v1.0675】PR広告売上ROAS(推定)＝紫（商品-基本データの col-sroas と同系） */
 .pe-table-wrap th.pe-prsr { background-color: #e7d5f5; }
+/* 【v1.0677】PR売上ROAS(推定)＝総売上÷PR実績額(7%超)。PR広告売上ROASの右にもう1列（同じ紫系） */
+.pe-table-wrap td.pe-pronly, .pe-table-wrap th.pe-pronly { background-color: #f0e8fa; }
+.pe-table-wrap th.pe-pronly { background-color: #dbc3f0; }
 .pe-table-wrap td.pe-oya { background-color: #eaf7ef; }
 .pe-table-wrap th.pe-oya { background-color: #cfeadb; }
 .pe-table-wrap td.pe-ko  { background-color: #fdf6e3; }
@@ -3689,7 +3692,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0676</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0677</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17579,6 +17582,8 @@ function _peRows(code) {
       out.push({ key: d, rev: rev, seoRev: seoRev, adRev: adRev, adCost: adCost, sroas: salesRoasPct(rev, adCost, 0),
                  // 【v1.0675】PR広告売上ROAS(推定)＝総売上÷(広告実績額＋PR実績額7%超・推定)×100。★合計から計算し直す
                  prsr: (prKnown && (adCost + prOver) > 0) ? Math.round(rev / (adCost + prOver) * 100) : null,
+                 // 【v1.0677】PR売上ROAS(推定)＝総売上÷PR実績額(7%超・推定)×100。★広告費は分母に入れない
+                 pronly: (prKnown && prOver > 0) ? Math.round(rev / prOver * 100) : null,
                  seoP: seoP, seoC: seoC, adP: adP, adC: adC });
     });
   } else {
@@ -17597,6 +17602,7 @@ function _peRows(code) {
       const e = byMonth[m];
       out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0),
                  prsr: (e.prKnown && (e.adCost + e.prOver) > 0) ? Math.round(e.rev / (e.adCost + e.prOver) * 100) : null,   // 【v1.0675】
+                 pronly: (e.prKnown && e.prOver > 0) ? Math.round(e.rev / e.prOver * 100) : null,   // 【v1.0677】
                  seoP: e.seoP, seoC: e.seoC, adP: e.adP, adC: e.adC });
     });
     // 【v1.0641】月別の期間しぼり。★基準は「データの最終月」（今日の日付ではない）
@@ -17751,9 +17757,11 @@ function peRenderInfo() {
     : '<th>SEO売上</th><th>広告売上</th>';
   const body = rows.slice().reverse().map(r =>
     '<tr><td>' + escapeHtml(String(r.key)) + '</td>'
-    + '<td>' + (r.sroas == null ? '<span style="color:var(--text3)">—</span>' : Math.round(r.sroas) + '%') + '</td>'
+    + '<td>' + (r.sroas == null ? '<span style="color:var(--text3)">—</span>' : Number(Math.round(r.sroas)).toLocaleString('ja-JP') + '%') + '</td>'
     // 【v1.0675】PR広告売上ROAS(推定)。商品-基本データの同名列と同じ計算（⑤の設定料率からの推定）
-    + '<td class="pe-prsr est-val">' + (r.prsr == null ? '<span style="color:var(--text3)">—</span>' : Math.round(r.prsr) + '%') + '</td>'
+    + '<td class="pe-prsr est-val">' + (r.prsr == null ? '<span style="color:var(--text3)">—</span>' : Number(Math.round(r.prsr)).toLocaleString('ja-JP') + '%') + '</td>'
+    // 【v1.0677】PR売上ROAS(推定)。商品-基本データの同名列と同じ計算（広告費なし・7%超ぶんだけ）
+    + '<td class="pe-pronly est-val">' + (r.pronly == null ? '<span style="color:var(--text3)">—</span>' : Number(Math.round(r.pronly)).toLocaleString('ja-JP') + '%') + '</td>'
     + '<td>' + fmt(r.rev) + '</td>'
     + (_tblSplit
         ? '<td class="pe-oya">' + fmt(r.seoP || 0) + '</td><td class="pe-oya">' + fmt(r.adP || 0) + '</td>'
@@ -17761,7 +17769,9 @@ function peRenderInfo() {
         : '<td>' + fmt(r.seoRev) + '</td><td>' + fmt(r.adRev) + '</td>')
     + '<td>' + fmt(r.adCost) + '</td></tr>').join('');
   wrap.innerHTML = '<table><thead><tr><th>' + (_peGrain === 'day' ? '日付' : '月')
-    + '</th><th>売上ROAS</th><th class="pe-prsr" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th><th>総売上</th>' + _midHead + '<th>広告実績額</th></tr></thead><tbody>'
+    + '</th><th>売上ROAS</th><th class="pe-prsr" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th>'
+    + '<th class="pe-pronly" title="PR 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★⑤の設定PRオプ料率からの推定なので、同じ料率なら同じ値になります（料率の裏返し）。料率7％だけのときは「—」。">PR売上ROAS<span class="th-est">？</span></th>'
+    + '<th>総売上</th>' + _midHead + '<th>広告実績額</th></tr></thead><tbody>'
     + body + '</tbody></table>';
 }
 
