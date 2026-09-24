@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0673 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0674 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2972,6 +2972,14 @@ table.rank-table td.rank-legend-col-row {
 .pe-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
 .pe-table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; overflow-x: auto; }  /* 【v1.0642】合算で列が増えるので横スクロール可 */
 .pe-table-wrap th i.pe-sw { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:0; }
+/* 【v1.0674】合算のときの親／子の帯。親＝緑・子＝黄（商品コード左の .rep-badge と同じ色の考え方）。
+   ★2列ずつのまとまりが分かるよう、親の左と子の左に区切り線を入れる。 */
+.pe-table-wrap td.pe-oya { background-color: #eaf7ef; }
+.pe-table-wrap th.pe-oya { background-color: #cfeadb; }
+.pe-table-wrap td.pe-ko  { background-color: #fdf6e3; }
+.pe-table-wrap th.pe-ko  { background-color: #fbe7bb; }
+.pe-table-wrap th.pe-oya:first-of-type, .pe-table-wrap td.pe-oya:nth-of-type(4) { border-left: 2px solid #86c9a5; }
+.pe-table-wrap th.pe-ko:first-of-type,  .pe-table-wrap td.pe-ko:nth-of-type(6)  { border-left: 2px solid #e8c473; }
 .pe-table-wrap table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.78rem; }
 .pe-table-wrap th { background: var(--bg3); font-weight: 700; color: var(--text2);
   padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
@@ -3679,7 +3687,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0673</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0674</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17710,15 +17718,19 @@ function peRenderInfo() {
   //   ★親SEO＋子SEO＝SEO売上、親広告＋子広告＝広告売上（§23）。合算以外は従来の SEO売上｜広告売上 のまま。
   const _tblSplit = (_peScope === 'set');
   const _sw = (c) => '<i class="pe-sw" style="background:' + c + '"></i>';
+  // 【v1.0674】親＝緑 / 子＝黄 の帯を敷いて、親子のまとまりをひと目で分かるようにした
+  //   （色は 商品コード左の .rep-badge（親＝緑 / 子＝黄）と同じ考え方。SEO＝紫・広告＝オレンジの色チップはそのまま残す）
   const _midHead = _tblSplit
-    ? '<th>' + _sw('#6d28d9') + '親SEO売上</th><th>' + _sw('#ea580c') + '親広告売上</th><th>' + _sw('#c4b5fd') + '子SEO売上</th><th>' + _sw('#fdba74') + '子広告売上</th>'
+    ? '<th class="pe-oya">' + _sw('#6d28d9') + '親SEO売上</th><th class="pe-oya">' + _sw('#ea580c') + '親広告売上</th>'
+      + '<th class="pe-ko">' + _sw('#c4b5fd') + '子SEO売上</th><th class="pe-ko">' + _sw('#fdba74') + '子広告売上</th>'
     : '<th>SEO売上</th><th>広告売上</th>';
   const body = rows.slice().reverse().map(r =>
     '<tr><td>' + escapeHtml(String(r.key)) + '</td>'
     + '<td>' + (r.sroas == null ? '<span style="color:var(--text3)">—</span>' : Math.round(r.sroas) + '%') + '</td>'
     + '<td>' + fmt(r.rev) + '</td>'
     + (_tblSplit
-        ? '<td>' + fmt(r.seoP || 0) + '</td><td>' + fmt(r.adP || 0) + '</td><td>' + fmt(r.seoC || 0) + '</td><td>' + fmt(r.adC || 0) + '</td>'
+        ? '<td class="pe-oya">' + fmt(r.seoP || 0) + '</td><td class="pe-oya">' + fmt(r.adP || 0) + '</td>'
+          + '<td class="pe-ko">' + fmt(r.seoC || 0) + '</td><td class="pe-ko">' + fmt(r.adC || 0) + '</td>'
         : '<td>' + fmt(r.seoRev) + '</td><td>' + fmt(r.adRev) + '</td>')
     + '<td>' + fmt(r.adCost) + '</td></tr>').join('');
   wrap.innerHTML = '<table><thead><tr><th>' + (_peGrain === 'day' ? '日付' : '月')
