@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0693 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0694 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3715,7 +3715,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0693</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0694</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -15985,15 +15985,24 @@ function _trendPaint(opt) {
                        + (m.amountLabel ? '<br><span style="font-weight:400;color:var(--text3);font-size:0.9em">(' + m.amountLabel + ')</span>' : '') + '</th>' : '')
                    // 【v1.0692】分子（その日の総売上）。分母だけ見ても判断できないので隣に置く。★色は別系統にして分母と区別する
                    + (m.revCol ? '<th style="' + th2 + 'background:' + (m.rbg || '#edf7f1') + ';text-align:center">' + (m.revLabel || '売上') + '</th>' : '');
-  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + metrics.map(grp).join('') + '</tr>'
-             + '<tr>' + metrics.map(sub).join('') + '</tr>';
+  // 【v1.0694】いちばん左に「売上」グループ（累積売上 / 1日売上）。
+  //   ★ROASは率なので、金額の規模が分からないと判断できない（1,000円で300%と100万円で300%は別物）。
+  //     色は緑系＝プラス側（§65の「売上＝緑 / 費用＝赤」と同じ考え方）で、ROASの各色とぶつからないようにする。
+  const RV = { hbg: '#cfe9dc', bg: '#edf7f1', bg2: '#dff0e7', color: '#0f8a52' };
+  const grpRev = '<th colspan="2" style="' + thB + 'top:0;background:' + RV.hbg + ';text-align:center;color:' + RV.color + ';border-left:2px solid var(--border)">売上</th>';
+  const subRev = '<th style="' + th2 + 'background:' + RV.bg  + ';text-align:center;border-left:2px solid var(--border)">累積売上</th>'
+               + '<th style="' + th2 + 'background:' + RV.bg2 + ';text-align:center">1日売上</th>';
+  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + '</tr>'
+             + '<tr>' + subRev + metrics.map(sub).join('') + '</tr>';
   const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
   const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
   const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
   const body = rows.slice().reverse().map((r, i) => {
     const top = (i === 0);   // ★最上段＝当月の着地見込み。太字で目立たせる（背景は指標の色のまま）
     const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;' + mono + (top ? 'font-weight:700;' : '');
-    let cells = '<td style="' + td + (top ? 'background:rgba(59,130,246,0.10);' : '') + '">' + mo + '/' + r.day + '</td>';
+    let cells = '<td style="' + td + (top ? 'background:rgba(59,130,246,0.10);' : '') + '">' + mo + '/' + r.day + '</td>'
+      + '<td style="' + td + 'background:' + RV.bg  + ';color:' + RV.color + ';border-left:2px solid var(--border)">' + fyen(r.cum.rev) + '</td>'
+      + '<td style="' + td + 'background:' + RV.bg2 + ';color:' + RV.color + '">' + fyen(r.raw.rev) + '</td>';
     metrics.forEach(m => {
       cells += '<td style="' + td + 'background:' + m.bg  + ';border-left:2px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
              + '<td style="' + td + 'background:' + m.bg2 + '">' + fp(r['d_' + m.k]) + '</td>'
@@ -18228,7 +18237,7 @@ let _peTrendYm = '';
 //   ・PR広告売上ROAS の実績額の右に「売上」（分子＝その日の総売上）。★分母と区別するため色は緑系
 const PE_TREND_METRICS = () => IT_METRICS.filter(m => m.k !== 'roas').map(m => {
   if (m.k === 'sroas') return Object.assign({}, m, { amount: a => a.adCost, amountLabel: '広告', amountFull: '広告実績額' });
-  if (m.k === 'prsr')  return Object.assign({}, m, { revCol: true, revLabel: '売上', revOf: a => a.rev, rhbg: '#cfe9dc', rbg: '#edf7f1' });
+  // 【v1.0694】PR広告売上ROAS の中に入れていた「売上」列は、表の左の「売上」グループへ移したので撤去
   return m;
 });
 const PE_TREND_BARS    = ['prsr', 'sroas'];   // 棒＝日別で出す2本（判断に使うもの）
