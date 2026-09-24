@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0689 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0691 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3715,7 +3715,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0689</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0691</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4040,7 +4040,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
-              <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総<br>売上</th>
+              <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総売上</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
               <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR・広告費</span></span></th>
               <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。【v1.0678】PR広告売上ROASの右へ移動 -->
@@ -15760,13 +15760,19 @@ let _itTrendYm    = '';        // 'YYYY-MM'
 // 指標の定義。num/den を関数で持たせてあるので、累積も日別も同じ処理で回る。
 //   amount = 表の「実績額」列に出す分母の実額（null なら列を出さない）
 const IT_METRICS = [
-  { k: 'sroas',  label: '売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '', amountFull: '',
-    num: a => a.rev,    den: a => a.adCost, amount: null },
-  { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: false, amountLabel: '広告＋PR', amountFull: '広告実績額＋PR実績額(7%超・推定)',
+  // 【v1.0691】並びは 商品-基本データ と同じ「PR広告売上ROAS → 売上ROAS → PR売上ROAS」（広い→狭い）。広告ROASは最後
+  //   hbg=見出しの色 / bg=累積・実績額セル / bg2=日別セル（同系色の一段濃いほう）
+  { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: true,  amountLabel: '広告＋PR', amountFull: '広告実績額＋PR実績額(7%超・推定)',
+    hbg: '#e7d5f5', bg: '#f6effc', bg2: '#efe3f9',
     num: a => a.rev,    den: a => (a.prKnown ? (a.adCost + a.prOver) : 0), amount: a => (a.prKnown ? (a.adCost + a.prOver) : null) },
+  { k: 'sroas',  label: '売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '', amountFull: '',
+    hbg: '#d3e3fb', bg: '#eff5fe', bg2: '#e3edfd',
+    num: a => a.rev,    den: a => a.adCost, amount: null },
   { k: 'pronly', label: 'PR売上ROAS',      color: '#ec4899', bar: false, amountLabel: 'PR', amountFull: 'PR実績額(7%超・推定)',
+    hbg: '#fbd4e6', bg: '#fdeff6', bg2: '#fbe4ef',
     num: a => a.rev,    den: a => (a.prKnown ? a.prOver : 0),              amount: a => (a.prKnown ? a.prOver : null) },
-  { k: 'roas',   label: '広告ROAS',        color: '#f59e0b', bar: true,  amountLabel: '広告', amountFull: '広告実績額',
+  { k: 'roas',   label: '広告ROAS',        color: '#f59e0b', bar: false, amountLabel: '広告', amountFull: '広告実績額',
+    hbg: '#fce4b8', bg: '#fef6e8', bg2: '#fdeed3',
     num: a => a.adRev,  den: a => a.adCost, amount: a => a.adCost },
 ];
 
@@ -15964,25 +15970,28 @@ function _trendPaint(opt) {
   });
 
   // ---- 表（2段ヘッダー・新しい日が最上段） ----
-  const th = 'padding:6px 8px;font-size:0.72rem;font-weight:700;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;position:sticky;top:0;z-index:2;';
-  const th2 = th.replace('top:0', 'top:26px');
-  const grp = (m) => '<th colspan="' + (m.amount ? 3 : 2) + '" style="' + th + 'text-align:center;color:' + m.color + ';border-left:1px solid var(--border)">' + m.label + '</th>';
-  const sub = (m) => '<th style="' + th2 + 'text-align:center;border-left:1px solid var(--border)">累積</th>'
-                   + '<th style="' + th2 + 'text-align:center;background:rgba(127,127,127,0.07)">日別</th>'
-                   + (m.amount ? '<th style="' + th2 + 'text-align:center">実績額<span style="font-weight:400;color:var(--text3)">(' + m.amountLabel + ')</span></th>' : '');
+  // 【v1.0691】指標ごとに背景色を変える（グラフの線の色と同系）。
+  //   ★色は必ず metrics の hbg / bg / bg2 から取る。ここに色を直書きすると指標を足したとき色が付かない
+  const thB = 'padding:6px 8px;font-size:0.72rem;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:2;';
+  const th  = thB + 'background:var(--bg3);';
+  const th2 = thB.replace('top:0', 'top:26px');
+  const grp = (m) => '<th colspan="' + (m.amount ? 3 : 2) + '" style="' + thB + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border)">' + m.label + '</th>';
+  const sub = (m) => '<th style="' + th2 + 'background:' + m.bg + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
+                   + '<th style="' + th2 + 'background:' + m.bg2 + ';text-align:center">日別</th>'
+                   + (m.amount ? '<th style="' + th2 + 'background:' + m.bg + ';text-align:center">実績額<span style="font-weight:400;color:var(--text3)">(' + m.amountLabel + ')</span></th>' : '');
   const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + metrics.map(grp).join('') + '</tr>'
              + '<tr>' + metrics.map(sub).join('') + '</tr>';
   const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
   const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
   const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
   const body = rows.slice().reverse().map((r, i) => {
-    const hi = (i === 0) ? 'background:rgba(59,130,246,0.08);font-weight:700;' : '';   // ★最上段＝当月の着地見込み
-    const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;' + mono + hi;
-    let cells = '<td style="' + td + '">' + mo + '/' + r.day + '</td>';
+    const top = (i === 0);   // ★最上段＝当月の着地見込み。太字で目立たせる（背景は指標の色のまま）
+    const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;' + mono + (top ? 'font-weight:700;' : '');
+    let cells = '<td style="' + td + (top ? 'background:rgba(59,130,246,0.10);' : '') + '">' + mo + '/' + r.day + '</td>';
     metrics.forEach(m => {
-      cells += '<td style="' + td + 'border-left:1px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
-             + '<td style="' + td + 'background:rgba(127,127,127,0.05)">' + fp(r['d_' + m.k]) + '</td>'
-             + (m.amount ? '<td style="' + td + '">' + fyen(r['a_' + m.k]) + '</td>' : '');
+      cells += '<td style="' + td + 'background:' + m.bg  + ';border-left:2px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
+             + '<td style="' + td + 'background:' + m.bg2 + '">' + fp(r['d_' + m.k]) + '</td>'
+             + (m.amount ? '<td style="' + td + 'background:' + m.bg + '">' + fyen(r['a_' + m.k]) + '</td>' : '');
     });
     return '<tr>' + cells + '</tr>';
   }).join('');
@@ -18206,7 +18215,7 @@ function peRenderInfo() {
 let _peTrendChart = null;
 let _peTrendYm = '';
 const PE_TREND_METRICS = () => IT_METRICS.filter(m => m.k !== 'roas');
-const PE_TREND_BARS    = ['sroas', 'prsr'];   // 棒＝日別で出す2本（判断に使うもの）
+const PE_TREND_BARS    = ['prsr', 'sroas'];   // 棒＝日別で出す2本（判断に使うもの）
 
 function _peTrendSetYm(v) { _peTrendYm = v || ''; peRenderTrend(); }
 function _peTrendCodes() {
