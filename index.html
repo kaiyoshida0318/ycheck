@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0694 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0697 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -562,14 +562,19 @@ body.states-collapsed .top-nav-3 { display: none; }
   border-color: #15803d;
 }
 /* 【v195】ステータスチップ色分け：健常=青 / 中立=黄 / 撤退検討=橙 / 撤退予定=赤 / 撤退済み=茶（active時は白文字＝.active共通ルール） */
+.state-chip[data-state="status-kenzen"],
 .state-chip[data-state="status-kenzen-ad"],
 .state-chip[data-state="status-kenzen-noad"] { background:#e3edfd; border-color:#b6d0fb; }
-.state-chip[data-state="status-kenzen-ad"]:hover, .state-chip[data-state="status-kenzen-noad"]:hover,
-.state-chip[data-state="status-kenzen-ad"].active, .state-chip[data-state="status-kenzen-noad"].active { background:#2563eb; border-color:#1e4fbf; }
+.state-chip[data-state="status-kenzen"]:hover, .state-chip[data-state="status-kenzen-ad"]:hover, .state-chip[data-state="status-kenzen-noad"]:hover,
+.state-chip[data-state="status-kenzen"].active, .state-chip[data-state="status-kenzen-ad"].active, .state-chip[data-state="status-kenzen-noad"].active { background:#2563eb; border-color:#1e4fbf; }
+.state-chip[data-state="status-churitsu"],
 .state-chip[data-state="status-churitsu-ad"],
 .state-chip[data-state="status-churitsu-noad"] { background:#fbf3d9; border-color:#ead98a; }
-.state-chip[data-state="status-churitsu-ad"]:hover, .state-chip[data-state="status-churitsu-noad"]:hover,
-.state-chip[data-state="status-churitsu-ad"].active, .state-chip[data-state="status-churitsu-noad"].active { background:#c99700; border-color:#a67e00; }
+.state-chip[data-state="status-churitsu"]:hover, .state-chip[data-state="status-churitsu-ad"]:hover, .state-chip[data-state="status-churitsu-noad"]:hover,
+.state-chip[data-state="status-churitsu"].active, .state-chip[data-state="status-churitsu-ad"].active, .state-chip[data-state="status-churitsu-noad"].active { background:#c99700; border-color:#a67e00; }
+/* 【v1.0696】まとめチップは「そのグループの親」なので、文字を少し強めて区別する */
+.state-chip[data-state="status-kenzen"] .chip-label,
+.state-chip[data-state="status-churitsu"] .chip-label { font-weight:800; letter-spacing:0.04em; }
 .state-chip[data-state="pro-wc"] { background:#fdeede; border-color:#f5c99a; }
 .state-chip[data-state="pro-wc"]:hover, .state-chip[data-state="pro-wc"].active { background:#ea7317; border-color:#c85f0f; }
 .state-chip[data-state="status-withdraw-plan"] { background:#fde9e8; border-color:#f5b8b5; }
@@ -755,8 +760,10 @@ body.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="unselected-ad"],
 .top-nav-3 .state-chip[data-state="unselected-pro"] { color: #64748b; }
 .top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
+.top-nav-3 .state-chip[data-state="status-kenzen"] { color: #1e40af; }      /* 【v1.0696】まとめ＝濃い青 */
 .top-nav-3 .state-chip[data-state="status-kenzen-ad"] { color: #2563eb; }
 .top-nav-3 .state-chip[data-state="status-kenzen-noad"] { color: #12a5c8; }  /* 【v207】水色 */
+.top-nav-3 .state-chip[data-state="status-churitsu"] { color: #7a5c00; }     /* 【v1.0696】まとめ＝さらに濃い黄 */
 .top-nav-3 .state-chip[data-state="status-churitsu-ad"] { color: #a67c00; }   /* 濃い黄色 */
 .top-nav-3 .state-chip[data-state="status-churitsu-noad"] { color: #caa61e; } /* 少し薄い黄色 */
 .top-nav-3 .state-chip[data-state="pro-wc"] { color: #ea7317; }
@@ -2416,7 +2423,7 @@ tr.row-child .code-cell-inner::before {
 .zd-pl-exrow { line-height:1.7; }
 .zd-pl-roles { margin-top:8px; padding:7px 10px; background:var(--bg2); border:1px solid #cfe6d8; border-radius:6px; }
 .zd-pl-foot { margin-top:7px; padding-top:7px; border-top:1px solid #cfe6d8; }
-/* 【v1.0537】PRオプション実績の不足で売上ROASが算出できない旨の警告 */
+/* 【v1.0537】PRオプション実績の不足で広告売上ROASが算出できない旨の警告 */
 .zd-pr-note { margin:0 2px 10px; padding:9px 12px; border:1px solid #b6d4fe; border-radius:7px; background:#f2f7ff; color:#1e4fbf; font-size:0.83rem; line-height:1.8; }
 /* 【v1.0530】全-日月別データ：色分けルールの凡例 */
 .zd-color-legend { margin:10px 2px 2px; padding:9px 12px; border:1px solid var(--border); border-radius:7px; background:var(--bg3); font-size:0.8rem; line-height:1.85; color:var(--text2); }
@@ -2978,7 +2985,7 @@ table.rank-table td.rank-legend-col-row {
 .pe-table-wrap th i.pe-sw { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:0; }
 /* 【v1.0674】合算のときの親／子の帯。親＝緑・子＝黄（商品コード左の .rep-badge と同じ色の考え方）。
    ★2列ずつのまとまりが分かるよう、親の左と子の左に区切り線を入れる。 */
-/* 【v1.0675/v1.0677/v1.0678】ROAS3列（PR広告売上ROAS / 売上ROAS / PR売上ROAS）は紫で統一（商品-基本データの col-sroas と同じ色） */
+/* 【v1.0675/v1.0677/v1.0678】ROAS3列（PR広告売上ROAS / 広告売上ROAS / PR売上ROAS）は紫で統一（商品-基本データの col-sroas と同じ色） */
 .pe-table-wrap td.pe-roas, .pe-table-wrap th.pe-roas { background-color: #f6effc; }
 .pe-table-wrap th.pe-roas { background-color: #e7d5f5; }
 /* 【v1.0678】見出しの下の補足行＝その率が考慮している項目 */
@@ -3652,16 +3659,16 @@ tr.row-setmember .code-cell::before { content: '└'; position: absolute; left: 
 .ad-filter.search-bypass { opacity:0.4; }
 .ad-filter.search-bypass .adf-btn { cursor:default; }
 
-/* 【v1.0524】売上ROAS帯フィルタ（商品-基本データ）。各ボタンの色＝その帯の色。 */
+/* 【v1.0524】広告売上ROAS帯フィルタ（商品-基本データ）。各ボタンの色＝その帯の色。 */
 .sroas-filter { display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-left:4px; vertical-align:middle; }
 .sroas-filter .sroasf-btn { font-size:0.78rem; font-weight:700; padding:5px 10px; border:none; border-left:1px solid var(--border); background:var(--bg2); cursor:pointer; white-space:nowrap; line-height:1.3; }
 .sroas-filter .sroasf-btn:first-child { border-left:none; }
 .sroas-filter .sroasf-btn:hover { filter:brightness(0.94); }
 
-/* 【v1.0524】売上ROAS列。総売上系の重要指標なので総売上より少し濃いブルー系の地色にする。 */
+/* 【v1.0524】広告売上ROAS列。総売上系の重要指標なので総売上より少し濃いブルー系の地色にする。 */
 /* 【v1.0577】★青をやめて紫に。総売上（青）と地続きに見えて別指標だと分かりにくかったため。
-   全-月別/日別データの売上ROAS（MI_COLS の hbg/bg）と同じ色にしてあるので、画面をまたいでも
-   「売上ROAS＝紫」で読める。青に戻すなら #cfe0f7 / #eef4fb。 */
+   全-月別/日別データの広告売上ROAS（MI_COLS の hbg/bg）と同じ色にしてあるので、画面をまたいでも
+   「広告売上ROAS＝紫」で読める。青に戻すなら #cfe0f7 / #eef4fb。 */
 th.col-sroas, td.col-sroas { background-color:#f6effc; }
 th.col-sroas { background-color:#e7d5f5; }
 /* 【v1.0678/v1.0679】ROAS見出しの下に「売上/費用」の形で内訳を小さく出す（見出しの最終行）
@@ -3715,7 +3722,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0694</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0697</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3850,9 +3857,13 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
+    <!-- 【v1.0696】広告あり／なしをまとめた「健常」。広告あり◯ の左に置く -->
+    <button class="state-chip" data-state="status-kenzen" title="健常（広告あり◯＋広告なし◯）をまとめて表示"><span class="chip-label">健常</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen-ad"><span class="chip-label">健常-広告あり◯</span><span class="chip-num" id="cntStatusKenzenAd">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen-noad"><span class="chip-label">健常-広告なし◯</span><span class="chip-num" id="cntStatusKenzenNoad">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
+    <!-- 【v1.0696】広告あり／なしをまとめた「中立」。広告あり□ の左に置く -->
+    <button class="state-chip" data-state="status-churitsu" title="中立（広告あり□＋広告なし□）をまとめて表示"><span class="chip-label">中立</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu-ad"><span class="chip-label">中立-広告あり□</span><span class="chip-num" id="cntStatusChuritsuAd">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu-noad"><span class="chip-label">中立-広告なし□</span><span class="chip-num" id="cntStatusChuritsuNoad">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
@@ -3961,9 +3972,9 @@ th.col-sroas { background-color:#e7d5f5; }
           <!-- 【v1.0587】個別 / 合算 の切替（§5-D）。
                個別＝従来どおり親子を別々の行で表示
                合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
-                     （親が広告費を出して子が売れる構成では、個別の売上ROASが実態とズレるため） -->
+                     （親が広告費を出して子が売れる構成では、個別の広告売上ROASが実態とズレるため） -->
           <span class="seg-filter js-rowmode-bar" id="basicRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <!-- 【v1.0619】送り込み元（親＝緑）／送り込み先（子＝黄）だけを表示するワンクリック絞り込み。
                マークは商品コード左の .rep-badge とまったく同じ見た目（同じSVG・同じ緑/黄）にしてある。
                ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
@@ -3979,7 +3990,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <!-- 【v1.0585】ツールバーから撤去した2つ（要素ごと削除。ロジック・関数はすべて残置）
                ① 広告フィルタ #basicAdFilterBar（全体 / 広告あり商品 / 広告なし商品）
                   → クロス絞り込みパネルの「広告 有り／無し」が同じ basicAdFilter を動かすので重複していた（§16-B-1）
-               ② 売上ROAS帯フィルタ #basicSroasFilterBar（900- / 750-900 / 600-750 / -600 / —）＋ そのラベル
+               ② 広告売上ROAS帯フィルタ #basicSroasFilterBar（900- / 750-900 / 600-750 / -600 / —）＋ そのラベル
                   → basicSroasFilter は常に null になるだけ。renderBasic の絞り込みも _syncSroasFilterUI も
                     null ガード済みなので、ここに書き戻せばそのまま復活する。
                ★ basicAdFilter 自体は生きている。renderBasic の広告あり/なし絞り込みを消さないこと。 -->
@@ -4002,7 +4013,7 @@ th.col-sroas { background-color:#e7d5f5; }
           </span>
           <!-- 【v1.0318】「商品コード+KW CSV」ボタンは順位取得CSV(GitHub反映)と同一関数=冗長のため撤去 -->
           <!-- 【v1.0522】いま画面に表示されている商品（ステータス絞り込み等を反映）を、選択月の列内容でCSV出力（右端配置） -->
-          <button class="btn sm ghost plain-only" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（総売上・売上ROAS・PR広告売上ROAS(推定)・SEO売上・広告売上・広告ROAS・広告売上(不明分)・広告実績額・PR実績額(7%超・推定)・PRオプ料率・入札価格＋参考として送り込み売上・メインKW／各状態）でCSV出力します">⬇ このページをCSV出力</button>
+          <button class="btn sm ghost plain-only" id="btnDownloadBasicAllCsv" type="button" style="margin-left:auto" data-tooltip="いまこのページに表示されている商品（【ステータス】ブロックの絞り込み・検索・広告あり/なしを反映）を、選択月の列（総売上・広告売上ROAS・PR広告売上ROAS(推定)・SEO売上・広告売上・広告ROAS・広告売上(不明分)・広告実績額・PR実績額(7%超・推定)・PRオプ料率・入札価格＋参考として送り込み売上・メインKW／各状態）でCSV出力します">⬇ このページをCSV出力</button>
         </div>
         <!-- 【v1.0620】一括変更バー。#btnBasicBulk で出す。表示中だけ商品コード左にチェックボックスが出る。 -->
         <div class="bulk-bar" id="basicBulkBar" style="display:none">
@@ -4025,7 +4036,7 @@ th.col-sroas { background-color:#e7d5f5; }
             <!-- ============================================================
                  【v1.0580】商品-基本データを「全-月別データ相当」に作り直した。
                    並び・配色とも 全-月別データ（MI_COLS）に合わせてある:
-                     総売上 → PR広告売上ROAS → 売上ROAS → PR売上ROAS【v1.0678】 → SEO売上 → 広告売上 → 広告実績額
+                     総売上 → PR広告売上ROAS → 広告売上ROAS → PR売上ROAS【v1.0678】 → SEO売上 → 広告売上 → 広告実績額
                      → 広告CVR → PR実績額(7%超) → 広告ROAS
                    【v1.0643】広告ROASは 広告売上 の直後（広告売上超過の左）へ移動。全-月別データとは並びが異なる
                    その後ろに商品別だけの列（PRオプ料率・入札価格）を置く。【v1.0592】送り込み売上は撤去。
@@ -4042,15 +4053,15 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
               <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総売上</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
-              <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR・広告費</span></span></th>
-              <!-- 【v1.0524/v1.0577】売上ROAS＝総売上÷広告実績額×100。【v1.0678】PR広告売上ROASの右へ移動 -->
-              <th class="num col-sroas" data-sort="sroas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">売上<br>ROAS<span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">広告費</span></span></th>
+              <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、広告売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR・広告費</span></span></th>
+              <!-- 【v1.0524/v1.0577】広告売上ROAS＝総売上÷広告実績額×100。【v1.0678】PR広告売上ROASの右へ移動 -->
+              <th class="num col-sroas" data-sort="sroas" title="広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標。&#10;広告費0の商品は計算できないため「—」。">広告売上<br>ROAS<span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">広告費</span></span></th>
               <!-- 【v1.0676】PR売上ROAS(推定)＝総売上÷PR実績額(7%超・推定)×100。広告費は入れない -->
               <th class="num col-sroas" data-sort="pronlyroas" title="PR 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR売上ROAS(推定) ＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です。&#10;★推定の仕組み上、同じ料率の商品は同じ値になります（料率の裏返し）。料率7％の商品は「—」。">PR<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR</span></span></th>
               <th class="num col-sales" data-sort="seoRev">SEO<br>売上</th>
               <th class="num col-ad" data-sort="adRev">広告<br>売上</th>
               <!-- 【v1.0643】広告ROASを 広告売上 と 広告売上超過 の間へ移動（v1.0642まではPR実績額の右） -->
-              <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（売上ROASとは別物）">広告<br>ROAS</th>
+              <th class="num col-aroas" data-sort="roas" title="広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100（広告売上ROASとは別物）">広告<br>ROAS</th>
               <!-- 【v1.0590】広告売上(不明分)＝広告売上 − 総売上 の溢れたぶん（§5-E）。
                    広告売上はクリックされた商品に、総売上は売れた商品に計上されるので、
                    親の広告から入った客が子商品で買うと親の行で溢れる。その額をそのまま出す列。 -->
@@ -4526,7 +4537,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
           <span class="seg-filter js-rowmode-bar" id="adTuneRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="adTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -4585,7 +4596,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
           <span class="seg-filter js-rowmode-bar" id="proTuneRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="proTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -4641,7 +4652,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="adDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0650】商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み（親＋子／親／子）。状態は共有（basicRowMode / state.repFilter） -->
           <span class="seg-filter js-rowmode-bar" id="adDataRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="adDataSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -4666,10 +4677,10 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdData">商品名</th>
-              <!-- 【v1.0655】売上ROAS(総売上÷広告実績額)×3ヶ月。商品-基本データと同じ計算・同じ紫 -->
-              <th class="num col-sroas" data-sort="sroas0" id="hAdDataSroas0" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">売上ROAS<br>(3ヶ月前)</th>
-              <th class="num col-sroas" data-sort="sroas1" id="hAdDataSroas1" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">売上ROAS<br>(2ヶ月前)</th>
-              <th class="num col-sroas" data-sort="sroas2" id="hAdDataSroas2" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">売上ROAS<br>(前月)</th>
+              <!-- 【v1.0655】広告売上ROAS(総売上÷広告実績額)×3ヶ月。商品-基本データと同じ計算・同じ紫 -->
+              <th class="num col-sroas" data-sort="sroas0" id="hAdDataSroas0" title="広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">広告売上ROAS<br>(3ヶ月前)</th>
+              <th class="num col-sroas" data-sort="sroas1" id="hAdDataSroas1" title="広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">広告売上ROAS<br>(2ヶ月前)</th>
+              <th class="num col-sroas" data-sort="sroas2" id="hAdDataSroas2" title="広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;広告経由に限らず、広告費に対して総売上がどれだけ立っているかを見る指標（広告ROASとは別物）。&#10;広告費0の月は計算できないため「—」。商品-基本データの同名列と同じ計算。">広告売上ROAS<br>(前月)</th>
               <th class="num col-ad" data-sort="adRev0" id="hAdDataAdSales0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hAdDataAdSales1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hAdDataAdSales2">広告売上<br>(前月)</th>
@@ -4697,7 +4708,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="prDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0650】商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み（親＋子／親／子）。状態は共有（basicRowMode / state.repFilter） -->
           <span class="seg-filter js-rowmode-bar" id="prDataRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="prDataSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -5002,7 +5013,7 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="pe-legend" id="peLegend">
         <span><i style="background:#7c3aed"></i>SEO売上</span>
         <span><i style="background:#f97316"></i>広告売上</span>
-        <span><i style="background:#10b981"></i>売上ROAS</span>
+        <span><i style="background:#10b981"></i>広告売上ROAS</span>
       </div>
       <div class="pe-table-wrap" id="peTableWrap"></div>
     </div>
@@ -8377,7 +8388,7 @@ function itemPrEstimate(code, rev) {
 }
 // 商品別のPR広告売上ROAS(推定)＝総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。
 //   定義はストア全体版（storeSalesRoasPct・§4-B-6-4）と同じ。分母に入れるのは7%超ぶんだけ。
-//   ★料率が7%ちょうどの商品は上乗せ分が0なので、値は売上ROASと一致する（それが正しい）。
+//   ★料率が7%ちょうどの商品は上乗せ分が0なので、値は広告売上ROASと一致する（それが正しい）。
 function itemPrSalesRoasPct(code, rev, adCost) {
   const e = itemPrEstimate(code, rev);
   if (!e) return null;
@@ -9704,8 +9715,11 @@ function updateStateCounts() {
   _setTx('#cntUnselectedAd', unselectedAd);
   _setTx('#cntUnselectedPro', unselectedPro);
   // 【v195】新ステータスチップの件数
+  // 【v1.0696】まとめチップ＝あり＋なし。★個別チップと同じ変数から出す（別に数え直さない＝ズレない）
+  _setTx('#cntStatusKenzen', sKenzenAd + sKenzenNoad);
   _setTx('#cntStatusKenzenAd', sKenzenAd);
   _setTx('#cntStatusKenzenNoad', sKenzenNoad);
+  _setTx('#cntStatusChuritsu', sChuritsuAd + sChuritsuNoad);
   _setTx('#cntStatusChuritsuAd', sChuritsuAd);
   _setTx('#cntStatusChuritsuNoad', sChuritsuNoad);
   _setTx('#cntStatusWithdrawPlan', sWithdrawPlan);
@@ -10228,7 +10242,7 @@ function _updateBasicDayBanner() {
   if (!el) return;
   if (basicDayMode && basicSelectedDay) {
     el.style.display = '';
-    el.innerHTML = '📅 <b>' + basicSelectedDay + '</b> の1日分を表示中です（総売上・SEO売上・広告売上・実績額・広告ROAS・売上ROAS はこの日の数字）。'
+    el.innerHTML = '📅 <b>' + basicSelectedDay + '</b> の1日分を表示中です（総売上・SEO売上・広告売上・実績額・広告ROAS・広告売上ROAS はこの日の数字）。'
       + '<button type="button" class="btn sm ghost" onclick="document.getElementById(\'basicDaySel\').value=\'\';onBasicDaySelChange();" style="margin-left:8px">月合計に戻す</button>';
   } else {
     el.style.display = 'none';
@@ -10466,7 +10480,7 @@ function renderBasic() {
   }
   { const _b = $('#basicAdFilterBar'); if (_b) _b.classList.toggle('search-bypass', !!q); }
 
-  // 【v1.0524】売上ROASの帯フィルタ（800- / 500-800 / 200-500 / -200 / —）。
+  // 【v1.0524】広告売上ROASの帯フィルタ（800- / 500-800 / 200-500 / -200 / —）。
   //   広告あり/なしフィルタと違い、検索中もそのまま効かせる（帯は明示的に選んだときだけ立つため）。
   //   編集中ピン留めの商品は絞り込みで消さない（既存の他フィルタと同じ扱い）。
   if (basicSroasFilter) {
@@ -10654,7 +10668,7 @@ function renderBasic() {
         : 'PR売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100\n'
           + '★商品別のPR実績額はYahooから取得できないため、⑤の設定料率(' + (Math.round(_pe.rate * 10) / 10) + '%)からの推定です\n'
           + '推定 PR実績額(7%超) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (' + (Math.round(_pe.rate * 10) / 10) + '% − ' + PR_BASE_RATE_PCT + '%)\n'
-          + (Number(_pe.rate) <= PR_BASE_RATE_PCT ? '※この商品は料率7%＝上乗せ分0のため、売上ROASと同じ値になります' : ''));
+          + (Number(_pe.rate) <= PR_BASE_RATE_PCT ? '※この商品は料率7%＝上乗せ分0のため、広告売上ROASと同じ値になります' : ''));
     const _prOverTip = _isSet
       ? ('セット合計。商品ごとに「総売上 ÷ ' + PR_TAX_DIV + ' ×（設定料率 − ' + PR_BASE_RATE_PCT + '%）」を出してから足しています（推定）\nメンバー: ' + _mem.join(', '))
       : (_pe ? 'PR実績額(7%超・推定) ＝ 総売上 ÷ ' + PR_TAX_DIV + ' × (設定料率 − ' + PR_BASE_RATE_PCT + '%)。⑤の設定料率からの推定で、実測ではありません'
@@ -11233,27 +11247,27 @@ function _miSetGrain(g) {
   renderMonthly();
 }
 function _miSetDayYm(v) { _miDayYm = v; renderMonthly(); }
-// ==================== 【v1.0524】売上ROAS（ADcheckからの移植） ====================
-//   売上ROAS(%) = 総売上 ÷ 広告費全体 × 100
+// ==================== 【v1.0524】広告売上ROAS（ADcheckからの移植） ====================
+//   広告売上ROAS(%) = 総売上 ÷ 広告費全体 × 100
 //   一般的なROAS（広告経由売上÷広告費）と違い、分子が「総売上」。
 //   狙い＝「その商品に使っている広告費が、店全体の売上に対して効率的か」を見る。
 //   ycheck には CA調整（別枠の広告費）の概念が無いので caSpend は常に 0。
 //   ※ しきい値・色はここだけ触れば全画面に反映される（商材や広告比率に合わせて調整する前提）。
 // 【v1.0576】実データ（2026/05〜09）に合わせて見直した。
 //   旧: { g:800, y:500, o:200 } … v1.0564で分母からPR費を外して値が約2倍になり、ほぼ全部が緑になっていた。
-//   新: 売上ROAS＝総売上÷広告実績額 なので「広告費の何倍を売り上げたか」。9倍/7.5倍/6倍を境にする。
+//   新: 広告売上ROAS＝総売上÷広告実績額 なので「広告費の何倍を売り上げたか」。9倍/7.5倍/6倍を境にする。
 //     実測 829 / 897 / 910 / 963 / 978% → 茶・茶・緑・緑・緑 と差が出る。
 const SALES_ROAS_TH = { g: 900, y: 750, o: 600 };   // 緑/茶/橙 の下限（これ未満は赤）
 // 【v1.0579】PR売上ROAS＝総売上÷(広告実績額＋**PR実績額(7%超)**) 用。
-//   旧【v1.0576】: { g:450, y:375, o:300 } … 分母がPR実績額の【全額】だった頃の値（売上ROASのちょうど半分）。
-//   v1.0579 で分母を「7%超ぶんだけ」に変えたため、分母は 広告実績額の約1.6倍（＝売上ROASの約6割の値）になる。
-//     実測 2026/06〜09: 分母÷広告実績額 = 1.89 / 1.84 / 1.65 / 1.54 → 値は売上ROASの 0.53〜0.65 倍
-//   → しきい値も売上ROASの **6割** に置き直す。これで2列を同じ判断軸で読める（§3-1の表）。
+//   旧【v1.0576】: { g:450, y:375, o:300 } … 分母がPR実績額の【全額】だった頃の値（広告売上ROASのちょうど半分）。
+//   v1.0579 で分母を「7%超ぶんだけ」に変えたため、分母は 広告実績額の約1.6倍（＝広告売上ROASの約6割の値）になる。
+//     実測 2026/06〜09: 分母÷広告実績額 = 1.89 / 1.84 / 1.65 / 1.54 → 値は広告売上ROASの 0.53〜0.65 倍
+//   → しきい値も広告売上ROASの **6割** に置き直す。これで2列を同じ判断軸で読める（§3-1の表）。
 //     実測 483 / 501 / 524 / 542% → 茶・茶・茶・緑。
 //   ★ 数字はこの2定数だけ。帯フィルタのラベルも説明パネルの凡例もここから組み立てている（§18-23）。
 const PR_SALES_ROAS_TH = { g: 540, y: 450, o: 360 };
 const SALES_ROAS_COLORS = { g:'#1D9E75', y:'#BA7517', o:'#ED7D31', r:'#A32D2D', n:'#9ca3af' };
-// 売上ROAS(%)を整数で返す。広告費0＝分母0は計算不能なので null（表示は「—」）。
+// 広告売上ROAS(%)を整数で返す。広告費0＝分母0は計算不能なので null（表示は「—」）。
 function salesRoasPct(totSales, adSpend, caSpend) {
   const den = (adSpend || 0) + (caSpend || 0);
   if (!(den > 0)) return null;
@@ -11273,14 +11287,14 @@ function salesRoasCellHtml(v, th) {
   if (v == null || !(v > 0)) return '<span style="color:' + SALES_ROAS_COLORS.n + '">—</span>';
   return '<span style="color:' + SALES_ROAS_COLORS[salesRoasCat(v, th)] + ';font-weight:700">' + Math.round(v).toLocaleString() + '%</span>';
 }
-// 【v1.0537】★ストア全体の売上ROAS（全-日月別データ専用）
-//   売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100
+// 【v1.0537】★ストア全体の広告売上ROAS（全-日月別データ専用）
+//   広告売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PRオプ実績額）× 100
 //   PRオプ実績が揃っていない期間は「算出不可」として null を返す（＝表示は「—」）。
 //   ★PR未取込を0円とみなして旧定義（広告費のみが分母）で計算してはいけない。
-//     同じ「売上ROAS」という名前で計算式が日によって変わる状態を避けるため。
+//     同じ「広告売上ROAS」という名前で計算式が日によって変わる状態を避けるため。
 //   ※商品別画面は商品別PRオプ実績が存在しないため、従来どおり salesRoasPct() を使う（別途改修対象）。
 // 【v1.0537】総売上 ÷（広告実績額＋PRオプ実績額）×100。
-// 【v1.0564】★現在は未使用。売上ROASは salesRoasPct（総売上÷広告実績額）に統一した。
+// 【v1.0564】★現在は未使用。広告売上ROASは salesRoasPct（総売上÷広告実績額）に統一した。
 //   PR費も分母に入れた効率に戻したくなったら、_zenMonthlyRows / _zenDailyRowsFor の
 //   salesRoas をこの関数に差し替える（_prComplete の判定もそのまま残してある）。
 // ============================================================================
@@ -11295,7 +11309,7 @@ function salesRoasCellHtml(v, th) {
 //
 //   ★ v1.0575〜v1.0578 は分母がPR実績額の【全額】だった。数字が変わるので比較時は注意。
 //   ★ prOver が null（＝実効料率が7%未満で前提が崩れている §4-C-2）のときは 0 とみなさず null を返す。
-//     0円扱いにすると「上乗せゼロ＝広告費だけ」の意味になり、売上ROASと同じ値に化けてしまうため。
+//     0円扱いにすると「上乗せゼロ＝広告費だけ」の意味になり、広告売上ROASと同じ値に化けてしまうため。
 // ============================================================================
 function storeSalesRoasPct(totSales, adSpend, prOver, prComplete) {
   if (!prComplete) return null;                 // PR実績が揃っていない → 算出不可
@@ -11324,11 +11338,11 @@ function salesRoasCats() {
 // 【v1.0587】商品-基本データの「個別 / 合算」（§5-D）
 //   個別（既定）… 従来どおり。送り込み元（親）と送り込み先（子）は別々の行
 //   合算         … 同じ代表コード(repCode)の親子を1行にまとめ、
-//                  ★金額を合計してから 売上ROAS / 広告CVR / 広告ROAS を計算し直す
+//                  ★金額を合計してから 広告売上ROAS / 広告CVR / 広告ROAS を計算し直す
 //
 //   なぜ要るか: 親が広告費を出して上位表示を取り、子が売れる構成だと、
 //   個別の行では「親＝広告費だけで売上が少ない／子＝売上だけで費用ゼロ」に見え、
-//   1商品ずつの売上ROASでは判断できない。セットとしての採算はこちらで見る。
+//   1商品ずつの広告売上ROASでは判断できない。セットとしての採算はこちらで見る。
 //
 //   ★率（ROAS・CVR）は絶対に平均しない。合計した分子÷合計した分母で計算し直す
 //     （§4-B-5 の「月次は日別％の平均ではなく合計から再計算」と同じ考え方）。
@@ -11433,7 +11447,7 @@ function _dataRollupRows(rows) {
   const out = [];
   fam.forEach(f => {
     f.roass = f.adCosts.map((c, i) => c > 0 ? (f.adRevs[i] / c) * 100 : null);   // ★合計から再計算
-    f.sroass = f.revs.map((rv, i) => salesRoasPct(rv, f.adCosts[i], 0));         // 【v1.0655】売上ROASも合計から再計算
+    f.sroass = f.revs.map((rv, i) => salesRoasPct(rv, f.adCosts[i], 0));         // 【v1.0655】広告売上ROASも合計から再計算
     f.prsrs = f.revs.map((rv, i) => {
       if (!f._rateKnown[i]) return null;
       const den = (f.adCosts[i] || 0) + (f.provs[i] || 0);
@@ -11510,17 +11524,17 @@ function _syncSroasFilterUI() {
 //   色: SEO＝既存のグリーン／PRオプ＝SEOと同系統だが少し薄い／広告＝別系統(オレンジ)でPRと同程度の薄さ
 // ============================================================================
 // 【v1.0558】並びと配色を整理。
-//   並び: 総売上 → SEO → PRオプ → 広告(売上/実績額/CVR) → 効率(売上ROAS / 広告ROAS)
+//   並び: 総売上 → SEO → PRオプ → 広告(売上/実績額/CVR) → 効率(広告売上ROAS / 広告ROAS)
 //     ・ROAS系を右端にまとめた。「いくら売れて・いくら使ったか」を左から読み、最後に効率を見る流れ。
-//     ・売上ROAS は広告ROASの隣へ移動（v1.0557までは一番左）。
+//     ・広告売上ROAS は広告ROASの隣へ移動（v1.0557までは一番左）。
 //   配色: ブロックごとに色相を決め、その中で指標ごとに濃さを少し変える。
 //     売上=青 / SEO=緑 / PRオプ=青緑 / 広告=橙 / 効率(ROAS)=藍
 // 【v1.0577】★並びと配色を変更（現行）。
-//   並び: 総売上 → 売上ROAS → PR売上ROAS → SEO → 広告(売上/実績額/CVR) → PR実績額(7%超) → 広告ROAS
+//   並び: 総売上 → 広告売上ROAS → PR売上ROAS → SEO → 広告(売上/実績額/CVR) → PR実績額(7%超) → 広告ROAS
 //     ・「いくら売れたか」のすぐ右で「その売上をいくらの費用で作ったか」を読めるようにした。
-//       売上ROAS / PR売上ROAS は月（日）で1つの値なので、料率別に展開される列より左が読みやすい。
+//       広告売上ROAS / PR売上ROAS は月（日）で1つの値なので、料率別に展開される列より左が読みやすい。
 //     ・見出しは hLabel で2行（売上/ROAS・PR売上/ROAS）。
-//   配色: 売上=青 / 効率(売上ROAS・PR売上ROAS)=紫 / SEO=緑 / 広告=橙 / 広告実績額=ピンク
+//   配色: 売上=青 / 効率(広告売上ROAS・PR売上ROAS)=紫 / SEO=緑 / 広告=橙 / 広告実績額=ピンク
 //         / PRオプ=青緑 / 広告ROAS=藍
 //     ・効率を青系にしていたが総売上（青）と地続きに見えたため紫に変更。広告ROASの藍とも色相をずらしてある。
 //     さらに料率別の3列（合計/-7%/-7%超）は ZD_GRP_DEFS で「濃→中→薄」になる（§4-D）。
@@ -11531,10 +11545,10 @@ const MI_COLS = [
   //   「いくら売れたか（総売上）」のすぐ右で「その売上をいくらの費用で作ったか」を読めるようにした。
   //   ★配色は青系（総売上）と紛らわしかったので紫系に変更。広告ROAS の藍(#d8d9f6)とも色相をずらしてある。
   //   ★見出しは hLabel で2行（売上/ROAS・PR売上/ROAS）。列幅を詰めても読めるようにするため。
-  //   【v1.0537】売上ROAS＝総売上÷広告実績額×100（t:'sr' は絶対しきい値で色付け）
-  { key:'salesRoas', label:'売上ROAS', hLabel:'売上<br>ROAS', hbg:'#e7d5f5', bg:'#f6effc', hi:true,  t:'sr', blockStart:true },
+  //   【v1.0537】広告売上ROAS＝総売上÷広告実績額×100（t:'sr' は絶対しきい値で色付け）
+  { key:'salesRoas', label:'広告売上ROAS', hLabel:'広告売上<br>ROAS', hbg:'#e7d5f5', bg:'#f6effc', hi:true,  t:'sr', blockStart:true },
   // 【v1.0579】★PR売上ROAS ＝ 総売上 ÷（広告実績額 ＋ **PR実績額(7%超)**）× 100。
-  //   売上ROAS（＝総売上÷広告実績額）に対して、PR費のうち**自分で上乗せしている分**も費用に入れたときの効率。
+  //   広告売上ROAS（＝総売上÷広告実績額）に対して、PR費のうち**自分で上乗せしている分**も費用に入れたときの効率。
   //   ★分母に入れるのは「7%超ぶん」だけ。最低料率7%はYahooに出店している限り必ず発生する固定費に近いもので、
   //     上げ下げの判断材料にならないため、この指標では考慮しない（7%ぶんは別途ほかで見る）。
   //     → 分母は表に出ている「広告実績額」と「PR実績額(7%超)」の2つだけなので、画面の数字で検算できる。
@@ -11544,12 +11558,12 @@ const MI_COLS = [
   // 【v1.0676】名前を商品-基本データと同じ「PR広告売上ROAS」に統一（中身は無変更）。
   //   「PR売上ROAS」は下の prOnlyRoas（総売上 ÷ PR実績額(7%超)）に譲った。
   { key:'prSalesRoas', label:'PR広告売上ROAS', hLabel:'PR広告<br>売上ROAS', hbg:'#dbc3f0', bg:'#f0e8fa', hi:true, t:'sr',
-    th: PR_SALES_ROAS_TH,   // 【v1.0576】分母が大きいぶん、売上ROASの半分のしきい値で見る
+    th: PR_SALES_ROAS_TH,   // 【v1.0576】分母が大きいぶん、広告売上ROASの半分のしきい値で見る
     store:true,   // 【v1.0577】商品別PRオプ実績は取得できない（§1）ので、商品-日月別データには出さない（v1.0575以来ずっと空欄「—」だった）
 
     srNote:'PRオプション実績が未取込、または対象期間の一部しか無いため算出できません（PR広告売上ROAS＝総売上÷(広告実績額＋PR実績額(7%超))×100）' },
   // 【v1.0676】PR売上ROAS ＝ 総売上 ÷ PR実績額(7%超) × 100。広告費は入れない＝「PRに上乗せした分だけで見た効率」。
-  //   ★色分けはしない（norank）。分母が小さく値が数百〜数千%になり、売上ROASのしきい値では意味を持たないため。
+  //   ★色分けはしない（norank）。分母が小さく値が数百〜数千%になり、広告売上ROASのしきい値では意味を持たないため。
   //   ★PR未取込／7%超が出せない期間は null＝「—」。0円扱いにしない。
   { key:'prOnlyRoas', label:'PR売上ROAS', hLabel:'PR売上<br>ROAS', hbg:'#dbc3f0', bg:'#f0e8fa', t:'p', store:true, norank:true },
   // --- SEO（緑） ---
@@ -11570,7 +11584,7 @@ const MI_COLS = [
   { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true },
   { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
   // --- PRオプション（青緑）＋ 広告ROAS（藍） ---
-  //   【v1.0577】売上ROAS / PR売上ROAS は総売上の右へ移した（上の「効率（紫）」ブロック）。
+  //   【v1.0577】広告売上ROAS / PR売上ROAS は総売上の右へ移した（上の「効率（紫）」ブロック）。
   // 【v1.0574】PRオプション（青緑）は「7%より高い料率にしていることで余分に出ている分」だけを1列で出す。
   //   合計（実績額そのもの）と 7%相当（最低ライン）の列は撤去。判断に使うのは上乗せ分だけなので。
   //     PR実績額(7%超) ＝ 実績額 − レポート売上 ÷ PR_TAX_DIV × PR_BASE_RATE_PCT%
@@ -11878,7 +11892,7 @@ function renderMonthly() {
     const totSales = rev, seoSales = Math.max(0, totSales - adSales);
     const roas = spend > 0 ? Math.round(adSales / spend * 1000) / 10 : 0;
     const cvr  = cl > 0 ? Math.round(or / cl * 1000) / 10 : 0;
-    // 【v1.0524】売上ROAS＝総売上÷実績額×100（広告費0なら null＝「—」）
+    // 【v1.0524】広告売上ROAS＝総売上÷実績額×100（広告費0なら null＝「—」）
     const salesRoas = salesRoasPct(totSales, spend, 0);
     const _label = _isDay ? ((+ym.slice(5, 7)) + '/' + (+ym.slice(8, 10))) : ym.replace('-', '/');   // 【v1.0527】日別は 9/1 表記
     return { label: _label, salesRoas, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
@@ -11983,7 +11997,7 @@ function renderMonthly() {
         + '<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace">' + code + '</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + safeFull + '">' + safeFull + '</div></div></div></td>' : '';
       const cells = itemCols().map(c => {
         const v = m[c.key];
-        // 【v1.0524】売上ROASは月内相対ランクではなく絶対しきい値(800/500/200)で色付けする
+        // 【v1.0524】広告売上ROASは月内相対ランクではなく絶対しきい値(800/500/200)で色付けする
         const inner = (c.t === 'sr')
           ? salesRoasCellHtml(v)
           : (() => { const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
@@ -12444,8 +12458,8 @@ function _zenMonthlyRows() {
     const seoRev = Math.max(0, rev - adRev);
     // ============================================================
     // 【v1.0537】PRオプション実績（月次）。日別％の単純平均ではなく、月間合計値から再計算する。
-    //   ★売上ROASは「その月の対象日すべてにPR実績が揃っている」ときだけ算出する。
-    //     一部の日しかPRが無い状態で合計すると、PR費が過少になり売上ROASが実際より高く見えるため。
+    //   ★広告売上ROASは「その月の対象日すべてにPR実績が揃っている」ときだけ算出する。
+    //     一部の日しかPRが無い状態で合計すると、PR費が過少になり広告売上ROASが実際より高く見えるため。
     // ============================================================
     const _pa = prMonthAgg(m);
     let _prComplete = false;
@@ -12489,7 +12503,7 @@ function _zenMonthlyRows() {
     const _psOver = _ps ? ((_ps.over == null) ? null : _ps.over) : null;
     return {
       month: m, label: m.replace('-', '/'),
-      // 【v1.0564】売上ROAS ＝ 総売上 ÷ 広告実績額 × 100。
+      // 【v1.0564】広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100。
       //   v1.0537〜v1.0563 は分母に PRオプ実績額も足していた（storeSalesRoasPct）が、
       //   PR実績額の列を撤去した（v1.0562）ので、商品別画面と同じ定義に統一する。
       //   ★これで「画面によって分母が違う」問題が無くなり、PR未取込でも「—」にならない。
@@ -12729,7 +12743,7 @@ function downloadZenMonthlyCsv() {
     const esc = function (v) { let s = (v == null) ? '' : String(v); if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
     const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
     const numP = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v * 10) / 10); };
-    // 【v1.0524】売上ROASは画面表示のみ。CSVの列構成は従来どおり据え置く（出力にも入れたくなったらこの filter を外すだけ）。
+    // 【v1.0524】広告売上ROASは画面表示のみ。CSVの列構成は従来どおり据え置く（出力にも入れたくなったらこの filter を外すだけ）。
     // 【v1.0537】PR列は含める（この表はストア全体のため）／【v1.0547】検算列は画面の表示状態に合わせる
     const csvCols = zdCols().filter(function (c) { return c.key !== 'salesRoas'; });
     const header = ['月'].concat(csvCols.map(function (c) { return c.label; }));   // 【v1.0562】送り込み売上は撤去
@@ -12997,7 +13011,7 @@ function renderGraphData() {
   //   1段目: 指標名（料率別の3列は colspan でまとめる）
   //   2段目: 役割（送り込み元 / 利益源）。合計の上は空欄
   //   3段目: 合計 / 7%超 / 7%
-  //   分けない列（月・総売上・売上ROAS）は rowspan=3 でぶち抜き。
+  //   分けない列（月・総売上・広告売上ROAS）は rowspan=3 でぶち抜き。
   const _ROWS = _twoRow ? 3 : 1;
   const _rs = _twoRow ? ' rowspan="' + _ROWS + '"' : '';
   let _h1 = '<th' + _rs + ' style="position:sticky;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:center;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3);vertical-align:middle">' + (_dayMode ? '日' : '月') + '</th>';   /* 【v1.0527】左固定だけ。上固定は thead 側【v1.0565】 */
@@ -13048,9 +13062,9 @@ function renderGraphData() {
     const _r = opt.row;
     let inner;
     if (c.t === 'sr') {
-      // 【v1.0537】売上ROASは絶対しきい値で色付け。PR実績が揃っていない期間は null（＝算出不可）で「—」。
+      // 【v1.0537】広告売上ROASは絶対しきい値で色付け。PR実績が揃っていない期間は null（＝算出不可）で「—」。
       inner = (v == null)
-        ? '<span style="color:var(--text3)" title="' + (c.srNote || '広告実績額が0のため算出できません（売上ROAS＝総売上÷広告実績額×100）') + '">—</span>'
+        ? '<span style="color:var(--text3)" title="' + (c.srNote || '広告実績額が0のため算出できません（広告売上ROAS＝総売上÷広告実績額×100）') + '">—</span>'
         : salesRoasCellHtml(v, c.th);   /* 【v1.0576】列ごとのしきい値（未指定なら SALES_ROAS_TH） */
       // ============================================================
       // 【v1.0578】分母の内訳をツールチップに出す。
@@ -13070,7 +13084,7 @@ function renderGraphData() {
             + '※分母に入れるPR費は【7%超ぶんだけ】です【v1.0579】。最低料率7%（この月 ' + _zdYen(_r.prBase) + '）は\n'
             + '　どうやっても発生する分なので、上げ下げの判断材料にならないという理由で外しています\n'
             + '（PR実績額の全額 ' + _zdYen(_r.prCost) + ' ＝ 7%相当 ' + _zdYen(_r.prBase) + ' ＋ 7%超 ' + _zdYen(_r.prOver) + '）'
-          : '売上ROAS ＝ 総売上 ÷ 広告実績額 × 100\n'
+          : '広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100\n'
             + _zdYen(_r.totSales) + ' ÷ ' + _zdYen(_sp) + ' ＝ ' + v + '%\n'
             + '※分母はPR費を含みません（PR実績額(7%超)まで入れたものが右のPR広告売上ROAS）';
         inner = '<span title="' + escapeHtml(_tip) + '">' + inner + '</span>';
@@ -13133,7 +13147,7 @@ function renderGraphData() {
         + '）。<b>月次の数字はこれまでどおり月次レポートの値</b>を使っています（部分的な日別合計で月の数字が小さくなるのを防ぐため）。この画面の日別行は、取り込んだ日だけが並びます。</div>';
     }
   }
-  // 【v1.0537/v1.0564】売上ROASが「—」の期間の説明。
+  // 【v1.0537/v1.0564】広告売上ROASが「—」の期間の説明。
   //   v1.0563までは「PRオプション実績が未取込だから」だったが、v1.0564で分母からPR費を外したので、
   //   いま「—」になるのは単純に広告実績額が0の期間だけ。
   let _prNote = '';
@@ -13144,7 +13158,7 @@ function renderGraphData() {
       const _tot = drows.length;
       _prNote = '<div class="zd-pr-note">ℹ <b>' + _n + (_dayMode ? '日' : 'ヶ月') + '</b>'
         + (_n === _tot ? '（表示中のすべて）' : '')
-        + ' で <b>売上ROASが「—」</b>です。<b>広告実績額が0</b>（広告を出していない／広告データが未取込）の'
+        + ' で <b>広告売上ROASが「—」</b>です。<b>広告実績額が0</b>（広告を出していない／広告データが未取込）の'
         + (_dayMode ? '日' : '月') + 'は、割り算ができないため算出しません。</div>';
     }
   }
@@ -13213,7 +13227,7 @@ function renderGraphData() {
     + '<div class="zd-pl-roles"><b>指標の役割分担</b>'
     +   '<div class="zd-pl-exrow"><b>PR実績額</b>　… いくら払ったか（絶対額）</div>'
     +   '<div class="zd-pl-exrow"><b>PR実績額(7%相当) / (7%超)</b>　… そのうち「どうやっても出る分」と「7%超にしている分」</div>'
-    +   '<div class="zd-pl-exrow"><b>売上ROAS</b>　… 総売上 ÷ 広告実績額。広告費だけで見た全体効率（総売上の右）</div>'   /* 【v1.0577】v1.0564で定義を変えたのに説明が「広告費＋PR費」のまま残っていたので修正 */
+    +   '<div class="zd-pl-exrow"><b>広告売上ROAS</b>　… 総売上 ÷ 広告実績額。広告費だけで見た全体効率（総売上の右）</div>'   /* 【v1.0577】v1.0564で定義を変えたのに説明が「広告費＋PR費」のまま残っていたので修正 */
     +   '<div class="zd-pl-exrow"><b>PR売上ROAS</b>　… 総売上 ÷（広告実績額＋<b>PR実績額(7%超)</b>）。'
     +     '<b>自分で上げ下げできる費用</b>（広告費＋7%超の上乗せ分）に対する効率【v1.0579】。'
     +     '最低料率7%ぶんは必ず発生するので分母に入れていません。セルにカーソルを合わせると内訳が出ます</div>'
@@ -13230,10 +13244,10 @@ function renderGraphData() {
       + '<b>7%（利益源）</b>＝最低料率の7%のまま固定している商品（⑤に載っていない商品もここ）。実際に利益が落ちる側です。<br>'
       + '分けている列は <b>SEO売上・広告売上・広告実績額・広告CVR・広告ROAS</b> の5つで、'
       + '<b>同じ指標の「合計／-7%超／-7%」を隣り合わせ・同系色</b>で並べています（左ほど濃く、注目したい -7%超 が合計のすぐ右に来ます）。'
-      + '総売上・売上ROAS・PR売上ROASは、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています（【v1.0577】この3列は左端にまとめました）。<br>'
+      + '総売上・広告売上ROAS・PR売上ROASは、ストア全体でしか出せない／分ける意味が薄いため月（日）で1つにまとめています（【v1.0577】この3列は左端にまとめました）。<br>'
       + '<b>比率表記</b>を「あり」にすると、金額の下に<b>合計に対する構成比</b>が出ます（-7%超 ＋ -7% ＝ 100%）。'
       + '広告CVR・広告ROASのような率の列には出しません（構成比に意味が無いため）。<br>'
-      + '<b>PR実績額(7%超)</b>は、PRオプション費のうち<b>7%より高い料率にしていることで余分に出ている分</b>だけを出した列です（広告ROASの左）。<br>'   /* 【v1.0577】売上ROASを総売上の右へ移したので位置の表記を修正 */
+      + '<b>PR実績額(7%超)</b>は、PRオプション費のうち<b>7%より高い料率にしていることで余分に出ている分</b>だけを出した列です（広告ROASの左）。<br>'   /* 【v1.0577】広告売上ROASを総売上の右へ移したので位置の表記を修正 */
       + '　実績額 − 売上 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '%（＝全商品に最低料率がかかる「どうやっても出る分」）。'
       + '例) 売上 ¥55,950 / 実績額 ¥9,200 のとき、55,950 ÷ ' + PR_TAX_DIV + ' × ' + PR_BASE_RATE_PCT + '% = ¥3,560 を引いて <b>¥5,640</b>。<br>'
       + '　★<b>この列はそのまま PR売上ROAS の分母に入っています</b>【v1.0579】。'
@@ -13258,15 +13272,15 @@ function renderGraphData() {
     + '<span class="c-g1">濃青＝上位10%</span>　<span class="c-g2">緑＝上位20%</span>　<span class="c-bk">黒＝中間</span>　<span class="c-o">橙＝下位20%</span>　<span class="c-r">赤＝下位10%</span>'
     + '<br>総売上・SEO売上・広告売上・広告CVR・広告ROAS・送り込み売上は<b>大きいほど青</b>。'
     + '<b>広告実績額とPR実績額は費用なので、小さいほど青</b>（使った額が少ないほど良い、という評価）。'
-    + '<br><b>売上ROAS と PR売上ROAS</b> だけは相対評価ではなく、決まったしきい値で色が付きます（他の月との比較ではありません）。'
-    + '<br>　売上ROAS＝総売上÷広告実績額　／　PR売上ROAS＝総売上÷(広告実績額＋PR実績額(7%超))【v1.0579】'
-    + '<br>　<b>売上ROAS</b>：' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤'
+    + '<br><b>広告売上ROAS と PR売上ROAS</b> だけは相対評価ではなく、決まったしきい値で色が付きます（他の月との比較ではありません）。'
+    + '<br>　広告売上ROAS＝総売上÷広告実績額　／　PR売上ROAS＝総売上÷(広告実績額＋PR実績額(7%超))【v1.0579】'
+    + '<br>　<b>広告売上ROAS</b>：' + SALES_ROAS_TH.g + '％以上＝緑／' + SALES_ROAS_TH.y + '〜' + SALES_ROAS_TH.g + '＝茶／' + SALES_ROAS_TH.o + '〜' + SALES_ROAS_TH.y + '＝橙／' + SALES_ROAS_TH.o + '％未満＝赤'
     + '<br>　<b>PR売上ROAS</b>：' + PR_SALES_ROAS_TH.g + '％以上＝緑／' + PR_SALES_ROAS_TH.y + '〜' + PR_SALES_ROAS_TH.g + '＝茶／' + PR_SALES_ROAS_TH.o + '〜' + PR_SALES_ROAS_TH.y + '＝橙／' + PR_SALES_ROAS_TH.o + '％未満＝赤'
-    + '（PR費のぶん分母が大きくなるので、しきい値も売上ROASの半分にしてあります。同じ色なら同じ評価として読めます）'
+    + '（PR費のぶん分母が大きくなるので、しきい値も広告売上ROASの半分にしてあります。同じ色なら同じ評価として読めます）'
     + '<br><b>PR売上ROAS ＝ 総売上 ÷（広告実績額 ＋ PR実績額）× 100</b>【v1.0575】。'
-    + '売上ROASの隣に置いてあるので、「広告だけなら◯◯%、PR費まで入れると△△%」が並べて読めます。'
+    + '広告売上ROASの隣に置いてあるので、「広告だけなら◯◯%、PR費まで入れると△△%」が並べて読めます。'
     + 'PRオプション実績が取り込めていない期間は、費用の一部が欠けて実際より高く出てしまうため <b>「—」</b> にしています。'
-    + '<br><b>売上ROAS ＝ 総売上 ÷ 広告実績額 × 100</b>【v1.0564】。'
+    + '<br><b>広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100</b>【v1.0564】。'
     + '広告経由に限らない<b>店全体の売上</b>を、その月に使った<b>広告費</b>で割った効率です。商品-基本データ・商品-日月別データと同じ定義です。'
     + '広告実績額が0の期間は割り算ができないため <b>「—」</b> になります。'
     + (_dayMode ? '' : '<br>当月はまだ月の途中（未満了）なので、金額列は色を付けず黒字で表示します。')
@@ -13873,7 +13887,7 @@ function renderAdAdjust(cfg) {
   // 【v1.0649】商品-広告データ（layout:'data'）の 広告売上×3ヶ月 の見出し
   for (let i = 0; i < months.length; i++) {
     const _as = $('#'+hPrefix+'AdSales'+i); if (_as) _as.innerHTML = `広告売上<br>${months[i] || ''}`;
-    const _sr = $('#'+hPrefix+'Sroas'+i);   if (_sr) _sr.innerHTML = `売上ROAS<br>${months[i] || ''}`;   // 【v1.0655】
+    const _sr = $('#'+hPrefix+'Sroas'+i);   if (_sr) _sr.innerHTML = `広告売上ROAS<br>${months[i] || ''}`;   // 【v1.0655】
   }
   // 【v1.0461】広告売上（対象月＝表示中の最新月：今月含む→今月／含まない→満了直近月）の見出しに月を表示
   { const _arm = $('#'+hPrefix+'AdRevMain'); if (_arm) _arm.innerHTML = `広告売上<br>${months[months.length-1] || ''}`; }   // 【v1.0654】1列版は残置（いまはどの表も3列）
@@ -13895,7 +13909,7 @@ function renderAdAdjust(cfg) {
     const adCosts = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adCost : 0);
     const roass = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].roas : null);
     const seoRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].seoRev : 0);   // 【v1.0461】広告売上の構成比%用
-    // 【v1.0655】売上ROAS＝総売上÷広告実績額×100（商品-広告データの列。合算でも合計から計算し直せるよう revs も持つ）
+    // 【v1.0655】広告売上ROAS＝総売上÷広告実績額×100（商品-広告データの列。合算でも合計から計算し直せるよう revs も持つ）
     const revs = months.map(m => byKey[code + '|' + m] ? (+byKey[code + '|' + m].rev || 0) : 0);
     const sroass = revs.map((rv, i) => salesRoasPct(rv, adCosts[i], 0));
     return { code, adRevs, adCosts, roass, seoRevs, revs, sroass };
@@ -14093,7 +14107,7 @@ function renderAdData() {
   renderAdAdjust({
     tableSel: '#tableAdData', completedOnly: true, incl3Current: _tunePeriodInclCurrent,
     searchSel: '#adDataSearch', cntSel: null, hPrefix: 'hAdData',
-    emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 16   /* 【v1.0655】売上ROAS×3を足したので 13→16 */
+    emptyMsg: '該当する商品はありません', layout: 'data', xfAxis: true, colspan: 16   /* 【v1.0655】広告売上ROAS×3を足したので 13→16 */
   });
   if (typeof _bulkSyncUI === 'function') _bulkSyncUI();   // 【v1.0651】
 }
@@ -14133,7 +14147,7 @@ function renderProAdjust(cfg) {
   for (let i = 0; i < months.length; i++) {
     const _s = $('#'+hPrefix+'Seo'+i); if (_s) _s.innerHTML = `SEO売上<br>${months[i] || ''}`;
     const _p = $('#'+hPrefix+'Prsr'+i); if (_p) _p.innerHTML = `PR広告<br>売上ROAS<span class="th-est">？</span><br>${months[i] || ''}`;
-    const _v = $('#'+hPrefix+'Prov'+i); if (_v) _v.innerHTML = `PR<br>実績額<span class="th-est">？</span><br>${months[i] || ''}`;   // 【v1.0649】商品-PRデータ   // 【v1.0647】この3列だけ見出し3行（PR広告／売上ROAS？／月）
+    const _v = $('#'+hPrefix+'Prov'+i); if (_v) _v.innerHTML = `PR<br>実績額<span class="th-est">？</span><br>${months[i] || ''}`;   // 【v1.0649】商品-PRデータ   // 【v1.0647】この3列だけ見出し3行（PR広告／広告売上ROAS？／月）
   }
   // 【v279】月列(SEO売上)は th.innerHTML ごと差し替えるため専用ソートボタンが消える→再設置
   if (typeof installSortButtons === 'function') installSortButtons();
@@ -15760,12 +15774,12 @@ let _itTrendYm    = '';        // 'YYYY-MM'
 // 指標の定義。num/den を関数で持たせてあるので、累積も日別も同じ処理で回る。
 //   amount = 表の「実績額」列に出す分母の実額（null なら列を出さない）
 const IT_METRICS = [
-  // 【v1.0691】並びは 商品-基本データ と同じ「PR広告売上ROAS → 売上ROAS → PR売上ROAS」（広い→狭い）。広告ROASは最後
+  // 【v1.0691】並びは 商品-基本データ と同じ「PR広告売上ROAS → 広告売上ROAS → PR売上ROAS」（広い→狭い）。広告ROASは最後
   //   hbg=見出しの色 / bg=累積・実績額セル / bg2=日別セル（同系色の一段濃いほう）
   { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: true,  amountLabel: '広告＋PR', amountFull: '広告実績額＋PR実績額(7%超・推定)',
     hbg: '#e7d5f5', bg: '#f6effc', bg2: '#efe3f9',
     num: a => a.rev,    den: a => (a.prKnown ? (a.adCost + a.prOver) : 0), amount: a => (a.prKnown ? (a.adCost + a.prOver) : null) },
-  { k: 'sroas',  label: '売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '', amountFull: '',
+  { k: 'sroas',  label: '広告売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '', amountFull: '',
     hbg: '#d3e3fb', bg: '#eff5fe', bg2: '#e3edfd',
     num: a => a.rev,    den: a => a.adCost, amount: null },
   { k: 'pronly', label: 'PR売上ROAS',      color: '#ec4899', bar: false, amountLabel: 'PR', amountFull: 'PR実績額(7%超・推定)',
@@ -16218,8 +16232,12 @@ const STATE_FILTERS = {
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
   'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
+  // 【v1.0696】広告あり／なしをまとめた親チップ。★判定は「前方一致」ではなく2値の列挙にする
+  //   （'健常' で startsWith にすると、将来「健常-〇〇」を足したとき黙って混ざる）
+  'status-kenzen':    { label: '健常',             targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const st = effectiveStatusOf(code); return st === '健常-広告あり◯' || st === '健常-広告なし◯'; } },
   'status-kenzen-ad': { label: '健常-広告あり◯',    targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '健常-広告あり◯' },
   'status-kenzen-noad':{ label: '健常-広告なし◯',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '健常-広告なし◯' },
+  'status-churitsu':   { label: '中立',            targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const st = effectiveStatusOf(code); return st === '中立-広告あり□' || st === '中立-広告なし□'; } },   /* 【v1.0696】 */
   'status-churitsu-ad':{ label: '中立-広告あり□',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '中立-広告あり□' },
   'status-churitsu-noad':{ label: '中立-広告なし□', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '中立-広告なし□' },
   // 【v1.0658】入札状態は effectiveAdStatusOf（子＝入札なし）で判定。★件数（updateStateCounts）と同じ式にすること
@@ -18078,7 +18096,7 @@ function peRenderInfo() {
     wrap.innerHTML = '<div class="pe-empty">この商品のデータがありません（レポートを取り込むと出ます）</div>';
     return;
   }
-  // ---- グラフ（SEO売上＋広告売上の積み上げ棒／売上ROASの折れ線） ----
+  // ---- グラフ（SEO売上＋広告売上の積み上げ棒／広告売上ROASの折れ線） ----
   const labels = rows.map(r => (_peGrain === 'day')
     ? (+String(r.key).slice(5, 7)) + '/' + (+String(r.key).slice(8, 10))
     : String(r.key).replace('-', '/'));
@@ -18115,7 +18133,7 @@ function peRenderInfo() {
           labels,
           datasets: [
             ..._peBars,
-            // 【v1.0693】折れ線を 売上ROAS → PR広告売上ROAS(推定) に変更（表の列の並びと同じく、こちらを主に見る）
+            // 【v1.0693】折れ線を 広告売上ROAS → PR広告売上ROAS(推定) に変更（表の列の並びと同じく、こちらを主に見る）
             //   ★色は緑のまま。SEO売上の紫（#7c3aed）とぶつかるので、表の紫には合わせない
             { type: 'line', label: 'PR広告売上ROAS', data: rows.map(r => r.prsr), borderColor: '#10b981', backgroundColor: '#10b981',
               borderWidth: 2, pointRadius: 2.5, tension: 0.25, spanGaps: true, yAxisID: 'y1', order: 1 }
@@ -18151,15 +18169,6 @@ function peRenderInfo() {
   //   値は _peRows() の seoP / adP / seoC / adC（グラフの4系列と同じ）。見出しの色チップもグラフの色に合わせる。
   //   ★親SEO＋子SEO＝SEO売上、親広告＋子広告＝広告売上（§23）。合算以外は従来の SEO売上｜広告売上 のまま。
   const _tblSplit = (_peScope === 'set');
-  const _sw = (c) => '<i class="pe-sw" style="background:' + c + '"></i>';
-  // 【v1.0674/v1.0687】親＝緑 / 子＝黄 の帯（色は 商品コード左の .rep-badge と同じ考え方）。
-  //   ★v1.0686までは「親SEO / 親広告 / 子SEO / 子広告」の4列だったが、
-  //     広告売上は「売れた商品」ではなく「クリックされた商品」に付くため、4列を足しても総売上と合わなかった（§68-3）。
-  //     v1.0687で「親売上 / 子売上 / 広告売上」の3列に変更。★親売上＋子売上＝総売上 で必ず合う。
-  const _midHead = _tblSplit
-    ? '<th class="pe-oya pe-bd-oya">親売上</th><th class="pe-ko pe-bd-ko">子売上</th>'
-      + '<th>' + _sw('#ea580c') + '広告売上</th>'
-    : '<th>SEO売上</th><th>広告売上</th>';
   // 【v1.0681/v1.0682】PR実績額(7%超)が¥0／不明になる理由を、その行の商品ごとの内訳から言葉で出す（§67・§68）
   //   ★PRオプ料金は「実際に売れた商品の料率」でかかる。広告経由の売上が親に付いていても、
   //     売れたのが子（7％固定）なら上乗せ分は発生しない＝¥0。そのことが1行で分かるようにする。
@@ -18184,56 +18193,91 @@ function peRenderInfo() {
   const _adGap = (r) => ((+r.adRev || 0) > 0 && !((+r.adCost || 0) > 0))
     ? '★広告売上が ¥' + Math.round(r.adRev).toLocaleString('ja-JP') + ' あるのに広告実績額が ¥0 です。\n'
       + _unit() + 'の広告データ（②）が取り込まれていない可能性があります。\n'
-      + '広告費が0だと 売上ROAS と PR広告売上ROAS も「—」になります。' : '';
-  const body = rows.slice().reverse().map(r =>
-    '<tr><td>' + escapeHtml(String(r.key)) + '</td>'
-    // 【v1.0675/v1.0678】PR広告売上ROAS(推定)。商品-基本データの同名列と同じ計算（⑤の設定料率からの推定）
-    + '<td class="pe-roas est-val">' + (r.prsr == null ? '<span style="color:var(--text3)">—</span>' : Number(Math.round(r.prsr)).toLocaleString('ja-JP') + '%') + '</td>'
-    + '<td class="pe-roas">' + (r.sroas == null ? '<span style="color:var(--text3)">—</span>' : Number(Math.round(r.sroas)).toLocaleString('ja-JP') + '%') + '</td>'
-    // 【v1.0677】PR売上ROAS(推定)。商品-基本データの同名列と同じ計算（広告費なし・7%超ぶんだけ）
-    + '<td class="pe-roas est-val"' + (r.pronly == null ? ' title="' + escapeHtml(_whyDash(r)) + '"' : '') + '>'
-      + (r.pronly == null ? '<span style="color:var(--text3)">—</span>' : Number(Math.round(r.pronly)).toLocaleString('ja-JP') + '%') + '</td>'
-    + '<td>' + fmt(r.rev) + '</td>'
-    + (_tblSplit
-        ? '<td class="pe-oya pe-bd-oya">' + fmt(r.revP || 0) + '</td><td class="pe-ko pe-bd-ko">' + fmt(r.revC || 0) + '</td>'
-          + '<td>' + fmt(r.adRev) + '</td>'
-        : '<td>' + fmt(r.seoRev) + '</td><td>' + fmt(r.adRev) + '</td>')
-    + '<td' + (_adGap(r) ? ' class="pe-warn" title="' + escapeHtml(_adGap(r)) + '"' : '') + '>'
-      + fmt(r.adCost) + (_adGap(r) ? '<span class="pe-warn-mk">⚠</span>' : '') + '</td>'
-    // 【v1.0681】PR実績額(7%超・推定)。広告実績額の右。商品ごとに推定してから合計している（§5-D-3）
-    + '<td class="pe-prov est-val" title="' + escapeHtml(_whyDash(r) || ('【内訳】\n' + _prPartsTip(r))) + '">'
-      + (!r.prKnown ? '<span style="color:var(--text3)">—</span>'
-         : (r.prOver > 0 ? fmt(Math.round(r.prOver)) : '<span style="color:var(--text3)">¥0</span>')) + '</td>'
-    + '</tr>').join('');
-  // 【v1.0678】見出しは2行。2行目には「その率が考慮している項目」を出す（商品-基本データの .th-sub と同じ考え方）
-  //   ★ROAS3列は 日付/月 のすぐ右にまとめ、PR広告売上ROAS → 売上ROAS → PR売上ROAS の順（商品-基本データと同じ並び）
-  const _blanks = 1 /* 総売上 */ + (_tblSplit ? 3 : 2) + 2 /* 広告実績額・PR実績額 */;   // 【v1.0687】合算は 親売上/子売上/広告売上 の3列
+      + '広告費が0だと 広告売上ROAS と PR広告売上ROAS も「—」になります。' : '';
+  // ==========================================================================
+  // 【v1.0695】表を 商品-推移（§70/§80）と同じ「グループ2段見出し＋指標ごとの色」に作り直した。
+  //   日付 │ 売上〔総売上・(親売上・子売上)・広告売上〕│ PR広告売上ROAS〔率・実績額〕│ 広告売上ROAS〔…〕│ PR売上ROAS〔…〕
+  //   ★率のすぐ右にその分母（実績額）を置く。率だけでは判断できないため（§70-5）。
+  //   ★色は商品-推移と同じ体系: 売上＝緑 / PR広告売上ROAS＝紫 / 広告売上ROAS＝青 / PR売上ROAS＝桃
+  // ==========================================================================
+  const G = {
+    rev:  { hbg: '#cfe9dc', bg: '#edf7f1', bg2: '#dff0e7', color: '#0f8a52' },
+    prsr: { hbg: '#e7d5f5', bg: '#f6effc', bg2: '#efe3f9', color: '#7c3aed' },
+    sr:   { hbg: '#d3e3fb', bg: '#eff5fe', bg2: '#e3edfd', color: '#3b82f6' },
+    pron: { hbg: '#fbd4e6', bg: '#fdeff6', bg2: '#fbe4ef', color: '#ec4899' }
+  };
+  const OYA = { hbg: '#cfeadb', bg: '#eaf7ef' };   // 親＝緑（.rep-badge と同じ考え方。§60）
+  const KO  = { hbg: '#fbe7bb', bg: '#fdf6e3' };   // 子＝黄
+  const BD = 'border-left:2px solid var(--border);';
+  const thB = 'padding:6px 9px;font-size:0.72rem;font-weight:700;white-space:nowrap;border-bottom:1px solid var(--border);text-align:center;';
+  const tdB = 'padding:5px 9px;font-size:0.78rem;white-space:nowrap;border-bottom:1px solid var(--border);text-align:center;font-variant-numeric:tabular-nums;';
   // 【v1.0679】「売上 / 費用」の形。分子＝売上＝緑、分母＝費用＝赤（商品-基本データの .th-sub と同じ）
   const _subCell = (cost) => '<span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">' + cost + '</span>';
-  wrap.innerHTML = '<table><thead><tr><th>' + (_peGrain === 'day' ? '日付' : '月')
-    + '</th><th class="pe-roas" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th>'
-    + '<th class="pe-roas" title="売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;PRオプ料率は考慮しません（広告費だけで見た効率）。">売上ROAS</th>'
-    + '<th class="pe-roas" title="PR 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★⑤の設定PRオプ料率からの推定なので、同じ料率なら同じ値になります（料率の裏返し）。料率7％だけのときは「—」。">PR売上ROAS<span class="th-est">？</span></th>'
-    + '<th>総売上</th>' + _midHead + '<th>広告実績額</th>'
-    + '<th class="pe-prov" title="PR実績額（？＝7%超ぶん・推定値の印）&#10;＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;★合算では商品ごとに推定してから合計しています。&#10;料率7％の商品しか売れていない日／月は ¥0 になり、PR売上ROASは「—」になります。">PR実績額<span class="th-est">？</span></th></tr>'
-    + '<tr class="pe-subhead"><th class="pe-blank"></th>'
-    + '<th>' + _subCell('PR・広告費') + '</th><th>' + _subCell('広告費') + '</th><th>' + _subCell('PR') + '</th>'
-    + new Array(_blanks + 1).join('<th class="pe-blank"></th>')
-    + '</tr></thead><tbody>'
-    + body + '</tbody></table>';
+  const _amtTh = (label) => '実績額<br><span style="font-weight:400;color:var(--text3);font-size:0.9em">(' + label + ')</span>';
+  const _dash = '<span style="color:var(--text3)">—</span>';
+  const _pct  = (v) => (v == null ? _dash : Number(Math.round(v)).toLocaleString('ja-JP') + '%');
+  const _yen0 = (v) => (v == null ? _dash : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
+
+  // ---- 見出し（2段） ----
+  const _revCols = _tblSplit ? 4 : 3;
+  const head = '<tr>'
+    + '<th rowspan="2" style="' + thB + 'background:var(--bg3);vertical-align:bottom">' + (_peGrain === 'day' ? '日付' : '月') + '</th>'
+    + '<th colspan="' + _revCols + '" style="' + thB + BD + 'background:' + G.rev.hbg  + ';color:' + G.rev.color  + '">売上</th>'
+    + '<th colspan="2" style="' + thB + BD + 'background:' + G.prsr.hbg + ';color:' + G.prsr.color + '" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th>'
+    + '<th colspan="2" style="' + thB + BD + 'background:' + G.sr.hbg   + ';color:' + G.sr.color   + '" title="広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;PRオプ料率は考慮しません（広告費だけで見た効率）。">広告売上ROAS</th>'
+    + '<th colspan="2" style="' + thB + BD + 'background:' + G.pron.hbg + ';color:' + G.pron.color + '" title="PR 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★同じ料率なら同じ値になります（料率の裏返し）。料率7％だけのときは「—」。">PR売上ROAS<span class="th-est">？</span></th>'
+    + '</tr><tr>'
+    + '<th style="' + thB + BD + 'background:' + G.rev.bg + '">総売上</th>'
+    + (_tblSplit
+        ? '<th style="' + thB + 'background:' + OYA.hbg + '">親売上</th><th style="' + thB + 'background:' + KO.hbg + '">子売上</th>'
+        : '<th style="' + thB + 'background:' + G.rev.bg2 + '">SEO売上</th>')
+    + '<th style="' + thB + 'background:' + G.rev.bg2 + '">広告売上</th>'
+    + '<th style="' + thB + BD + 'background:' + G.prsr.bg  + '">' + _subCell('PR・広告費') + '</th>'
+    + '<th style="' + thB + 'background:'      + G.prsr.bg2 + ';line-height:1.35">' + _amtTh('広告＋PR') + '</th>'
+    + '<th style="' + thB + BD + 'background:' + G.sr.bg    + '">' + _subCell('広告費') + '</th>'
+    + '<th style="' + thB + 'background:'      + G.sr.bg2    + ';line-height:1.35">' + _amtTh('広告') + '</th>'
+    + '<th style="' + thB + BD + 'background:' + G.pron.bg  + '">' + _subCell('PR') + '</th>'
+    + '<th style="' + thB + 'background:'      + G.pron.bg2  + ';line-height:1.35">' + _amtTh('PR') + '</th>'
+    + '</tr>';
+
+  // ---- 明細（新しい順） ----
+  const body = rows.slice().reverse().map(r => {
+    const _prAmt = r.prKnown ? ((+r.adCost || 0) + (+r.prOver || 0)) : null;   // PR広告売上ROASの分母
+    const gap = _adGap(r);
+    return '<tr>'
+      + '<td style="' + tdB + 'background:var(--bg3);font-weight:700;color:var(--accent)">' + escapeHtml(String(r.key)) + '</td>'
+      + '<td style="' + tdB + BD + 'background:' + G.rev.bg + ';color:' + G.rev.color + '">' + _yen0(r.rev) + '</td>'
+      + (_tblSplit
+          ? '<td style="' + tdB + 'background:' + OYA.bg + '">' + _yen0(r.revP || 0) + '</td><td style="' + tdB + 'background:' + KO.bg + '">' + _yen0(r.revC || 0) + '</td>'
+          : '<td style="' + tdB + 'background:' + G.rev.bg2 + '">' + _yen0(r.seoRev) + '</td>')
+      + '<td style="' + tdB + 'background:' + G.rev.bg2 + '">' + _yen0(r.adRev) + '</td>'
+      // PR広告売上ROAS（推定）＋ その分母
+      + '<td class="est-val" style="' + tdB + BD + 'background:' + G.prsr.bg + '">' + _pct(r.prsr) + '</td>'
+      + '<td class="est-val" style="' + tdB + 'background:' + G.prsr.bg2 + '">' + _yen0(_prAmt) + '</td>'
+      // 広告売上ROAS ＋ 広告実績額（★広告売上があるのに0なら⚠。§68-2）
+      + '<td style="' + tdB + BD + 'background:' + G.sr.bg + '">' + _pct(r.sroas) + '</td>'
+      + '<td' + (gap ? ' class="pe-warn" title="' + escapeHtml(gap) + '"' : '') + ' style="' + tdB + 'background:' + (gap ? '#fff8ec' : G.sr.bg2) + '">'
+        + _yen0(r.adCost) + (gap ? '<span class="pe-warn-mk">⚠</span>' : '') + '</td>'
+      // PR売上ROAS（推定）＋ PR実績額(7%超・推定)。★¥0 と — を区別する（§67-2）
+      + '<td class="est-val"' + (r.pronly == null ? ' title="' + escapeHtml(_whyDash(r)) + '"' : '') + ' style="' + tdB + BD + 'background:' + G.pron.bg + '">' + _pct(r.pronly) + '</td>'
+      + '<td class="est-val" title="' + escapeHtml(_whyDash(r) || ('【内訳】\n' + _prPartsTip(r))) + '" style="' + tdB + 'background:' + G.pron.bg2 + '">'
+        + (!r.prKnown ? _dash : _yen0(r.prOver)) + '</td>'
+      + '</tr>';
+  }).join('');
+  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
 }
 
 // ============================================================================
 // 【v1.0689】商品モーダル「商品-推移」タブ
 //   商品-推移タブ（§70）と同じ「累積×日別」を、いま開いている商品だけで出す。
-//   ★指標はROAS3種類（売上ROAS / PR広告売上ROAS / PR売上ROAS）。
+//   ★指標はROAS3種類（広告売上ROAS / PR広告売上ROAS / PR売上ROAS）。
 //     広告ROASは 商品-日別 タブのグラフで見られるのでここでは出さない。
 //   ★計算も描画も _trendRows / _trendPaint の共用（§75）。ここには「どの商品・どの月」だけを書く。
 // ============================================================================
 let _peTrendChart = null;
 let _peTrendYm = '';
 // 【v1.0692】モーダルだけの上乗せ:
-//   ・売上ROAS にも「実績額(広告)」を出す（商品-推移タブ側は 広告ROAS に同じ額があるので出さない）
+//   ・広告売上ROAS にも「実績額(広告)」を出す（商品-推移タブ側は 広告ROAS に同じ額があるので出さない）
 //   ・PR広告売上ROAS の実績額の右に「売上」（分子＝その日の総売上）。★分母と区別するため色は緑系
 const PE_TREND_METRICS = () => IT_METRICS.filter(m => m.k !== 'roas').map(m => {
   if (m.k === 'sroas') return Object.assign({}, m, { amount: a => a.adCost, amountLabel: '広告', amountFull: '広告実績額' });
@@ -19175,7 +19219,7 @@ function downloadBasicAllCsv() {
       if (_rep && _rep !== r.code) _soiByParentCsv[_rep] = (_soiByParentCsv[_rep] || 0) + (+r.rev || 0);
     });
     const header = ['月', '商品コード', '画像URL', '商品名',
-                    '総売上', '売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告ROAS(%)', '広告売上(不明分)', '広告実績額',
+                    '総売上', '広告売上ROAS(%)', 'PR売上ROAS(推定,%)', 'SEO売上', '広告売上', '広告ROAS(%)', '広告売上(不明分)', '広告実績額',
                     'PR実績額(7%超・推定)', 'PRオプ料率(%)', '入札価格', 'セット内売上比率(%)',
                     '参考:広告CVR(%)', '参考:送り込み売上', '参考:メインKW', '参考:PRオプ状態', '参考:入札状態', '参考:ステータス',
                     '参考:行の種別', '参考:セット構成'];   /* 【v1.0588】合算/両表示でどの行なのかが分かるように */
@@ -20014,7 +20058,10 @@ function _xfHasAd(code) {
   return !adStatusIsNone(effectiveAdStatusOf(base));
 }
 function _xfAdBypassed() {
-  const types = ['status-kenzen-ad', 'status-kenzen-noad', 'status-churitsu-ad', 'status-churitsu-noad'];
+  // 【v1.0696】まとめチップ（status-kenzen / status-churitsu）も同じ扱い。★足し忘れると
+  //   「健常」を押したのに分類表の広告軸と二重に掛かって、件数と中身が合わなくなる
+  const types = ['status-kenzen', 'status-kenzen-ad', 'status-kenzen-noad',
+                 'status-churitsu', 'status-churitsu-ad', 'status-churitsu-noad'];
   return !!(state.activeStateFilter && types.indexOf(state.activeStateFilter.type) >= 0);
 }
 function _xfAdKey()  { return _xfAdBypassed() ? 'all' : (basicAdFilter || 'all'); }
@@ -20057,7 +20104,7 @@ function xfClearAll() {
   state.activeStateFilter = null;
   basicAdFilter = 'all';
   state.repFilter = null;
-  basicSroasFilter = null;                                     // 売上ROASの帯フィルタ（§3-1）
+  basicSroasFilter = null;                                     // 広告売上ROASの帯フィルタ（§3-1）
   const _s = document.getElementById('basicSearch'); if (_s) _s.value = '';
   // 【v1.0645】調整-入札価格 / 調整-PRオプ ではタブを離れない（そのタブの検索欄も空にする）
   if (_tuneStateTargetOf(state.currentView)) {
