@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0698 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0699 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3724,7 +3724,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0698</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0699</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7730,19 +7730,19 @@ async function expandFiles(files) {
 // ============================================================================
 const REPORT_TYPES = [
   { key:'ad', badge:'①', slotId:'slot-ad', label:'広告詳細レポート（日別）', daily:true,
-    sub:'広告詳細レポート', pat:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別-{YYYYMMDD}.csv', ex:'広告詳細レポート_アイテムリーチ（商品）_商品別_日別-20260701.csv',
+    sub:'item-reach', pat:'item-reach-{YYYYMMDD}.csv', ex:'item-reach-20260917.csv',   /* 【v1.0699】旧: 広告詳細レポート_アイテムリーチ（商品）_商品別_日別-{YYYYMMDD}.csv */
     note:'【拡張機能の「広告詳細」ボタンで取得】その日の商品別の広告実績（利用金額・クリック数・注文数・売上金額）。',
     dateFrom:'CSVの日付列' },
   { key:'item', badge:'②', slotId:'slot-item', label:'商品別売上（日別）', daily:true,
-    sub:'item_report', pat:'{shop}-item_report-{YYYYMMDD}.csv', ex:'{shop}-item_report-20260701.csv',
+    sub:'item_report', pat:'{shop}-item_report-{YYYYMMDD}.csv', ex:'{shop}-item_report-20260917.csv',
     note:'【拡張機能の「商品分析」ボタンで取得】その日の商品別売上。サブコード空欄の親行を優先して集計（枝番行との二重計上を防止）。',
     dateFrom:'★ファイル名の8桁日付のみ（このCSVには日付列がありません）' },
   { key:'overall', badge:'③', slotId:'slot-overall', label:'ショップ売上（日別）', daily:true,
-    sub:'store_overall', pat:'{shop}-store_overall_kpi-{YYYYMMDD}.csv', ex:'{shop}-store_overall_kpi-20260701.csv',
+    sub:'store-overall', pat:'{shop}-store-overall-{YYYYMMDD}.csv', ex:'{shop}-store-overall-20260917.csv',   /* 【v1.0699】旧: {shop}-store_overall_kpi-{YYYYMMDD}.csv */
     note:'【拡張機能の「全体分析」ボタンで取得】その日のストア全体の売上。総売上は「合算値売上合計値」列（PC＋スマホ＋アプリの合算）を使用。',
     dateFrom:'CSVの日付列' },
   { key:'pr', badge:'④', slotId:'slot-pr', label:'PRオプション実績（日別）', daily:true,
-    sub:'prreport', pat:'{YYYYMMDD}{YYYYMMDD}_total_prreport.csv', ex:'2026090920260909_total_prreport.csv',
+    sub:'total-report', pat:'total-report-{YYYYMMDD}.csv', ex:'total-report-20260917.csv',   /* 【v1.0699】旧: {YYYYMMDD}{YYYYMMDD}_total_prreport.csv */
     note:'【販売管理 → レポート → PRオプションレポート】その日のストア全体のPRオプション実績（広告費・表示回数・クリック数）。※レポートの「売上」はPRオプ経由売上ではないため、Ycheckの売上には反映しません。',
     dateFrom:'CSVのdate列' },
   { key:'proRate', badge:'⑤', slotId:'slot-prorate', label:'PRオプ料率（最新値）', daily:false,
@@ -7762,11 +7762,14 @@ function reportTypeOf(key) { return REPORT_TYPES.find(t => t.key === key) || nul
 function fileTypeFromName(name) {
   const raw = String(name || '');
   const n = raw.toLowerCase();
+  // 【v1.0699】レポート名の変更に対応。★旧名も残す（過去に落としたCSVを入れても通るように）
   if (n.includes('store_overall') || n.includes('store-overall')) return 'overall';
   if (n.includes('item_report') || n.includes('item-report')) return 'item';
-  if (n.includes('prreport') || n.includes('pr_report') || n.includes('pr-report')) return 'pr';   // 【v1.0537】PRオプション実績
+  if (n.includes('item-reach') || n.includes('item_reach') || n.includes('itemreach')) return 'ad';        // 【v1.0699】新: item-reach-YYYYMMDD
+  if (n.includes('prreport') || n.includes('pr_report') || n.includes('pr-report')
+      || n.includes('total-report') || n.includes('total_report')) return 'pr';                            // 【v1.0537/v1.0699】PRオプション実績（新: total-report-YYYYMMDD）
   if (n.includes('bid_item') || n.includes('bid-item') || n.startsWith('bid')) return 'bid';
-  if (raw.includes('広告詳細レポート') || n.includes('ad_') || n.includes('advertis')) return 'ad';
+  if (raw.includes('広告詳細レポート') || n.includes('ad_') || n.includes('advertis')) return 'ad';        // 旧名
   if (/(^|[^a-z])data\d/i.test(n)) return 'proRate';
   return null;
 }
@@ -9167,12 +9170,13 @@ async function commitUpload() {
 function buildSlotMap() {
   const sc = getCurrentShop().shopCode;
   return {
-    overall: { slotId: 'slot-overall', pattern: `${sc}-store_overall*.csv` },
+    // 【v1.0699】レポート名の変更に追従（表示用）。判定は fileTypeFromName 側で新旧どちらも通す
+    overall: { slotId: 'slot-overall', pattern: `${sc}-store-overall*.csv` },
     item:    { slotId: 'slot-item',    pattern: `${sc}-item_report*.csv` },
-    ad:      { slotId: 'slot-ad',      pattern: '広告詳細レポート商品別*.csv' },
+    ad:      { slotId: 'slot-ad',      pattern: 'item-reach*.csv' },
     // 【v1.0544】④PRオプションレポートのスロット定義漏れを修正（updateSlot('pr')が
     //   ここに無いため即returnし、ドロップしても緑の「✓ 読み込み済み」にならなかった）
-    pr:      { slotId: 'slot-pr',      pattern: '*_total_prreport.csv' },
+    pr:      { slotId: 'slot-pr',      pattern: 'total-report*.csv' },   /* 【v1.0699】旧: *_total_prreport.csv */
     bid:     { slotId: 'slot-bid',     pattern: 'BID_ITEM*.csv' },
     proRate: { slotId: 'slot-prorate', pattern: 'data*.csv' },
     master:  { slotId: 'slot-master',  pattern: '商品コード / 商品名 / メインKW / 検索URL の4列CSV' }
