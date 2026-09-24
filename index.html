@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0697 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0698 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -677,6 +677,8 @@ body.states-collapsed .top-nav-3 { display: none; }
 .xf-num { font-size: 0.68rem; color: var(--text3); font-weight: 500; }
 .xf-cross .xf-num { font-size: 0.78rem; color: var(--text); font-weight: 700; }
 /* 選択中。★色は1箇所（--accent 系）だけで決める */
+/* 【v1.0698】状態チップで絞り込み中＝分類表の数字がその絞り込み後であることを示す帯 */
+.xf-panel.xf-chipped { box-shadow: inset 3px 0 0 #7c3aed; }
 .xf-cell.active { background: #2563eb; color: #fff; }
 .xf-cell.active .xf-num { color: rgba(255,255,255,0.92); }
 /* 件数0のセルは押しても空になるだけなので薄く（クリックは殺さない＝0件であることの確認に使える） */
@@ -3722,7 +3724,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0697</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0698</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9610,6 +9612,13 @@ function updateStateCounts() {
   //   ★親＝_isSoiParent、子＝「送り込み有りだが親ではない」。こう決めると 親＋子＝合計 が必ず成り立つ。
   //     （親でも子でもある中継商品は親に寄せる。some/some で数えると合計を超えてしまう）
   let xfSoiYP = 0, xfSoiYC = 0, xfAdYSoiYP = 0, xfAdYSoiYC = 0, xfAdNSoiYP = 0, xfAdNSoiYC = 0;
+  // 【v1.0698】状態チップ（ステータス／入札状態／PR状態）で絞り込み中は、
+  //   分類表（送り込み × 広告）の件数も【その絞り込み後の数】にする。
+  //   ★判定は必ず STATE_FILTERS[...].match を使い回す。ここで条件を書き直すと
+  //     チップの件数・表の中身・分類表の数字が三者三様になる（§12・§59と同じ考え方）。
+  //   ★チップ自身の件数（sKenzenAd 等）には掛けない。掛けると他のチップの数が全部0になって選べなくなる。
+  const _xfChipDef = (state.activeStateFilter && STATE_FILTERS[state.activeStateFilter.type]) || null;
+  const _xfChipOk = (meta, code) => !_xfChipDef || typeof _xfChipDef.match !== 'function' || !!_xfChipDef.match(meta, code);
   allCodes.forEach(code => {
     // 【v195】撤退済みは別集計（isRetiredで以降スキップされるため先に数える）
     if (((state.productMeta[code] || {}).status || '') === '撤退済み') { withdrawnCount++; return; }
@@ -9648,7 +9657,7 @@ function updateStateCounts() {
     // 【v1.0583】クロス絞り込みの件数。判定は絞り込み本体とまったく同じ式を使う:
     //   広告     … renderBasic の basicAdFilter（ステータス文字列に「広告あり／広告なし」を含むか。§10）
     //   送り込み … applyRepFilter の _repHasSoikomi（'*' / '!' と同じ判定）
-    if (_xfInScope(code)) {                  // 【v1.0664】未設定・撤退予定・撤退済みは分類表に出さない
+    if (_xfInScope(code) && _xfChipOk(meta, code)) {   // 【v1.0664】未設定・撤退予定・撤退済みは分類表に出さない／【v1.0698】状態チップの絞り込みも掛ける
       const _isAd   = _xfHasAd(code);        // 【v1.0663】入札状態ベース（子は親に追従）
       const _isNoad = !_isAd;
       const _hasSoi = _repHasSoikomi(code, _xfRef);
@@ -9706,6 +9715,17 @@ function updateStateCounts() {
       const cell = el.closest('.xf-cross');
       if (cell) { cell.classList.toggle('xf-zero', (nP + nC) === 0); cell.title = _pcTip(nP, nC); }
     };
+    // 【v1.0698】状態チップで絞り込み中は、パネル自体に印（左に細い帯＋ツールチップ）を付ける。
+    //   ★数字だけ減ると「バグで減った」と見えるので、何で絞られているかを画面に出す
+    {
+      const _pnl = document.getElementById('xfPanel');
+      if (_pnl) {
+        _pnl.classList.toggle('xf-chipped', !!_xfChipDef);
+        _pnl.title = _xfChipDef
+          ? '【' + (_xfChipDef.label || '') + '】で絞り込み中の件数です（解除は「クリア（全体）」）'
+          : '';
+      }
+    }
     _xfAxisPC('xfNumSoiYes', xfSoiYP, xfSoiYC); _xfAxis('xfNumSoiNo', xfSoiN);
     _xfAxis('xfNumAdYes',  xfAdY);  _xfAxis('xfNumAdNo',  xfAdN);
     _xfCrossPC('xfNumAdYesSoiYes', xfAdYSoiYP, xfAdYSoiYC); _xfCross('xfNumAdYesSoiNo', xfAdYSoiN);
