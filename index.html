@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0682 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0683 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2952,15 +2952,20 @@ table.rank-table td.rank-legend-col-row {
    ※オーバーレイの上下padding(40px×2)を差し引いた高さに収め、ページ全体のスクロールも防ぐ。 */
 /* 【v1.0606】商品モーダルのタブ化（§5-I） */
 #productEditModal .modal.pe-modal-wide { max-width: min(1320px, 96vw) !important; width: min(1320px, 96vw); }   /* 【v1.0681】列が増えたので 1060 → 1320 */
-.pe-tabs { display: flex; align-items: center; gap: 2px; border-bottom: 2px solid var(--border);
-  margin: -20px -24px 0; padding: 0 20px; flex: 0 0 auto; }
+/* 【v1.0683】タブ（全体情報 / 商品情報を編集）をモーダル幅の中央に。
+   ★∧∨（商品送り）と ✕ は position:absolute で右端に逃がす。
+     これらを flex の並びに残したまま justify-content:center にすると、
+     右のボタンぶんだけタブが左にずれて「中央」にならない。 */
+.pe-tabs { display: flex; align-items: center; justify-content: center; gap: 2px; border-bottom: 2px solid var(--border);
+  margin: -20px -24px 0; padding: 0 20px; flex: 0 0 auto; position: relative; }
 .pe-tab { border: none; background: transparent; font-family: inherit; font-size: 0.92rem; font-weight: 700; color: var(--text3);
   padding: 13px 16px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
 .pe-tab:hover { color: var(--text2); }
 .pe-tab.on { color: var(--text); border-bottom-color: var(--accent); }
-.pe-tabs .pe-nav-mini { margin-left: auto; position: static; }
-.pe-tabs-close { position: static !important; margin-left: 8px; }
-.pe-head { display: flex; align-items: center; gap: 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+.pe-tabs .pe-nav-mini { position: absolute; right: 54px; top: 50%; transform: translateY(-50%); margin-left: 0; }
+.pe-tabs-close { position: absolute !important; right: 18px; top: 50%; transform: translateY(-50%); margin-left: 0; }
+/* 【v1.0683】商品ヘッダー（画像・商品名・コード）もタブに合わせて中央寄せ */
+.pe-head { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
 .pe-head-img img, .pe-head-img .product-img-placeholder { width: 46px; height: 46px; border-radius: 6px; }
 .pe-head-name { font-size: 1.02rem; font-weight: 700; line-height: 1.35; }
 .pe-head-sub { font-size: 0.74rem; color: var(--text3); font-family: ui-monospace, Consolas, monospace; margin-top: 2px; }
@@ -3704,7 +3709,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0682</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0683</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
