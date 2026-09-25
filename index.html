@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0727 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0729 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3842,7 +3842,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0727</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0729</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4743,12 +4743,13 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0724】列は 広告売上×3 / SEO売上×3 / 広告実績額×3 の9列だけ。
                    ★メインKW・ステータス・入札状態・入札価格・対応内容は外した（撤退の判断材料だけを並べる）。
                      ステータスの変更は「☑ 一括変更」バーから行う（行の先頭のチェックボックスは残してある）。 -->
+              <!-- 【v1.0728】SEO売上 → 総売上に差し替え。並びは 総売上 → 広告売上 → 広告実績額 -->
+              <th class="num col-total" data-sort="rev0" id="hWdRev0">総売上<br>(3ヶ月前)</th>
+              <th class="num col-total" data-sort="rev1" id="hWdRev1">総売上<br>(2ヶ月前)</th>
+              <th class="num col-total" data-sort="rev2" id="hWdRev2">総売上<br>(前月)</th>
               <th class="num col-ad" data-sort="adRev0" id="hWdAdSales0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hWdAdSales1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hWdAdSales2">広告売上<br>(前月)</th>
-              <th class="num col-sales" data-sort="seoRev0" id="hWdSeo0">SEO売上<br>(3ヶ月前)</th>
-              <th class="num col-sales" data-sort="seoRev1" id="hWdSeo1">SEO売上<br>(2ヶ月前)</th>
-              <th class="num col-sales" data-sort="seoRev2" id="hWdSeo2">SEO売上<br>(前月)</th>
               <th class="num col-spend" data-sort="adCost0" id="hWdAdRev0">広告実績額<br>(3ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost1" id="hWdAdRev1">広告実績額<br>(2ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost2" id="hWdAdRev2">広告実績額<br>(前月)</th>
@@ -13831,6 +13832,15 @@ function _wdMatch(mode, code) {
   return d.match(effectiveStatusOf(code));
 }
 function _wdIs(code) { return _wdMatch(_wdMode, code); }
+// 【v1.0729】【撤退】3タブの既定の並び＝総売上（最新月）の降順。
+//   ★タブに入る／タブを切り替える／URLで直接開く の3経路すべてでここを呼ぶ（1か所に集約）。
+//   ★ソート状態は調整-入札価格と同じ変数（adAdjustSortKey/Dir）を共有しているので、
+//     凍結（adAdjustFrozenOrder）も一緒に解除しないと前の並びが居座る。
+//   ★'rev2' は「表示中3ヶ月の最後＝最新月」。表示時期トグルを変えても列は3つのままなので2でよい。
+function _wdResetSort() {
+  adAdjustSortKey = 'rev2'; adAdjustSortDir = -1;
+  adAdjustFrozenOrder = null;
+}
 function _wdSyncNavTabs() {
   document.querySelectorAll('.nav-tab[data-view="withdraw"]').forEach(t => {
     t.classList.toggle('active', state.currentView === 'withdraw' && t.dataset.wdmode === _wdMode);
@@ -14267,6 +14277,7 @@ function renderAdAdjust(cfg) {
     const _as = $('#'+hPrefix+'AdSales'+i); if (_as) _as.innerHTML = `広告売上<br>${months[i] || ''}`;
     const _sr = $('#'+hPrefix+'Sroas'+i);   if (_sr) _sr.innerHTML = `広告売上ROAS<br>${months[i] || ''}`;   // 【v1.0655】
     const _se = $('#'+hPrefix+'Seo'+i);     if (_se) _se.innerHTML = `SEO売上<br>${months[i] || ''}`;       // 【v1.0722】撤退ビュー
+    const _rv2 = $('#'+hPrefix+'Rev'+i);    if (_rv2) _rv2.innerHTML = `総売上<br>${months[i] || ''}`;      // 【v1.0728】撤退ビューの総売上（★'AdRev'とは別のid）
   }
   // 【v1.0461】広告売上（対象月＝表示中の最新月：今月含む→今月／含まない→満了直近月）の見出しに月を表示
   { const _arm = $('#'+hPrefix+'AdRevMain'); if (_arm) _arm.innerHTML = `広告売上<br>${months[months.length-1] || ''}`; }   // 【v1.0654】1列版は残置（いまはどの表も3列）
@@ -14351,6 +14362,7 @@ function renderAdAdjust(cfg) {
     { const mm = /^adRev(\d+)$/.exec(k); if (mm) return r.adRevs[+mm[1]] || 0; }   // 【v1.0649】商品-広告データの広告売上×3
     { const mm = /^sroas(\d+)$/.exec(k); if (mm) { const v = (r.sroass || [])[+mm[1]]; return v == null ? -1 : v; } }   // 【v1.0655】
     { const mm = /^seoRev(\d+)$/.exec(k); if (mm) return r.seoRevs[+mm[1]] || 0; }   // 【v1.0722】撤退ビューのSEO売上×3
+    { const mm = /^rev(\d+)$/.exec(k);    if (mm) return (r.revs || [])[+mm[1]] || 0; }   // 【v1.0728】撤退ビューの総売上×3
     { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
     { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { return adStatusOrder(effectiveAdStatusOf(r.code)); }   /* 【v1.0658】 */
@@ -14443,8 +14455,8 @@ function renderAdAdjust(cfg) {
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
+      ${(r.revs || []).map(v => `<td class="num col-total">${fmt(v)}</td>`).join('')}
       ${_adRevMainCell}
-      ${r.seoRevs.map((v, i) => shareRevCell(v, r.adRevs[i], true, 'col-sales')).join('')}
       ${_revCells}
       ${_tdStatus}
     `;
@@ -16580,6 +16592,7 @@ $$('.nav-tab').forEach(item => {
     // 【v1.0609】「商品-基本データ／調整-基本」は同じビューのモード違い
     if (item.dataset.basicmode) _basicMode = (item.dataset.basicmode === 'tune') ? 'tune' : 'plain';
     if (item.dataset.wdmode) _wdMode = item.dataset.wdmode;   // 【v1.0722】【撤退】の3タブ
+    if (item.dataset.view === 'withdraw' && typeof _wdResetSort === 'function') _wdResetSort();   // 【v1.0729】総売上(最新月)の降順に戻す
     if (item.dataset.zdgrain) {
       const want = (item.dataset.zdgrain === 'day') ? 'day' : 'month';
       if (want === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) {
@@ -16718,7 +16731,10 @@ function switchToView(viewName) {
   $('#view-' + viewName).classList.add('active');
   if (viewName === 'graphdata' && typeof _zdSyncNavTabs === 'function') _zdSyncNavTabs();
   if (viewName === 'basic' && typeof _basicSyncNavTabs === 'function') _basicSyncNavTabs();   // 【v1.0609】
-  if (viewName === 'withdraw' && typeof _wdSyncNavTabs === 'function') _wdSyncNavTabs();     // 【v1.0722】
+  if (viewName === 'withdraw') {
+    if (typeof _wdSyncNavTabs === 'function') _wdSyncNavTabs();     // 【v1.0722】
+    if (typeof _wdResetSort === 'function') _wdResetSort();         // 【v1.0729】
+  }
   // 【v208】プログラム経由のビュー切替でも凍結を解除
   adAdjustFrozenOrder = null;
   proAdjustFrozenOrder = null;
