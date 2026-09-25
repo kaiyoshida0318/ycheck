@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0701 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0702 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -616,6 +616,13 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
    ・table ではなくグリッドにしてあるのは、アプリ共通の td 既定パディング(7px 10px)に
      巻き込まれて桁がずれるのを避けるため（仕様書 §18-5 と同じ理由）
    ============================================================================ */
+/* 【v1.0702】分類表（送り込み × 広告）の本体は非表示にし、「クリア（全体）」だけ残した。
+   ★マークアップとJS（updateStateCounts の件数書き込み・xfApply）は残してある。
+     件数は隠れたセルに入り続けるので、戻したくなったら下の .xf-panel > *:not(.xf-clear) の
+     display:none を外すだけでよい（数字も絞り込みもそのまま動く）。 */
+.xf-panel > *:not(.xf-clear) { display: none !important; }
+.xf-panel { grid-template-columns: auto !important; grid-template-rows: auto !important; }
+.xf-panel.xf-chipped { box-shadow: none; }   /* 表が無いので絞り込み中の帯も出さない */
 .xf-panel {
   flex: 0 0 auto;
   display: grid;
@@ -631,8 +638,8 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
   line-height: 1.15;
 }
 .xf-panel > * { background: #fff; display: flex; align-items: center; justify-content: center; text-align: center; }
-/* クリア（全体）: 1列目・4行ぶちぬき */
-.xf-clear { grid-column: 1; grid-row: 1 / span 4; flex-direction: column; gap: 1px; padding: 4px 10px; }
+/* クリア（全体）: 1列目・4行ぶちぬき 【v1.0702】表を隠したので 1/1 に */
+.xf-clear { grid-column: 1 !important; grid-row: 1 !important; flex-direction: column; gap: 1px; padding: 7px 14px; }
 .xf-clear-main { font-weight: 700; font-size: 0.8rem; }
 .xf-clear-sub  { font-size: 0.64rem; color: var(--text3); }
 /* 見出しの無い左上（広告ラベルの上） */
@@ -3735,7 +3742,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0701</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0702</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
