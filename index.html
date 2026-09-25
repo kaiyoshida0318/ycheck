@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0735 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0736 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1715,6 +1715,17 @@ td[data-resize-key] .col-resize-handle:hover,
 td[data-resize-key] .col-resize-handle.is-resizing {
   background: rgba(37,99,235,0.45);  /* hoverで青いライン */
 }
+/* 【v1.0736】★列幅ドラッグは「⇔ 幅」ボタンを押している間だけ。
+   既定では掴めない（pointer-events:none）＝表を普通に使っているときに誤って幅が変わらない。
+   ★ハンドルは JS が動的に作るので、ここは「作られた後に効く」形（子孫セレクタ）で書くこと。 */
+th[data-resize-key] .col-resize-handle,
+td[data-resize-key] .col-resize-handle { pointer-events: none; }
+body.col-resize-on th[data-resize-key] .col-resize-handle,
+body.col-resize-on td[data-resize-key] .col-resize-handle { pointer-events: auto; }
+/* ONのときは境目をうっすら見せる（どこを掴めるか分かるように） */
+body.col-resize-on th[data-resize-key] .col-resize-handle { background: rgba(37,99,235,0.22); }
+body.col-resize-on .data-grid thead th { box-shadow: inset -1px 0 0 rgba(37,99,235,0.25); }
+.font-btn.is-on { background: #2563eb !important; color: #fff !important; border-color: #1d4ed8; }
 /* リサイズ中はテキスト選択を全画面で無効化 */
 body.is-col-resizing,
 body.is-col-resizing * {
@@ -3856,13 +3867,16 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0735</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0736</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
       <button class="font-btn" id="fontUp">A+</button>
       <!-- 【v1.0545】列幅の調整パネル。GitHubに保存して他PCで一発再現する -->
-      <button class="font-btn vp-open-btn" id="btnViewPrefs" type="button" title="表示設定（列幅・文字サイズ）を開く。設定はGitHubに保存され、他のPCで開くと同じ見た目が再現されます">⇔ 幅</button>
+      <!-- 【v1.0736】「⇔ 幅」は【モード切替】に変更。押している間だけ列幅をドラッグで変えられる。
+           表示設定パネル（スライダー・他PCへ保存）は右隣の「⚙」に分けた。 -->
+      <button class="font-btn vp-open-btn" id="btnViewPrefs" type="button" title="幅調整モード：押すと列の境目をドラッグして列幅を変えられます（もう一度押すと終了）">⇔ 幅</button>
+      <button class="font-btn" id="btnViewPrefsPanel" type="button" title="表示設定（列幅・文字サイズ）を開く。設定はGitHubに保存され、他のPCで開くと同じ見た目が再現されます">⚙</button>
     </div>
     <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
@@ -17711,7 +17725,17 @@ document.addEventListener('change', (e) => {
   // 編集中のスクロール位置や操作感を保つため、遅延反映に変更。
   // 【v276】調整ビューでも状態変更＝対応でその場では動かさない（凍結）。次の更新/ビュー移動で反映。
   // 【v1.0645】件数は「次にボタンを押したとき／反映する／更新」で数え直す（ycRefreshStaleStateCounts）
-  _stateCountsStale = true;
+  // 【v1.0736】★ただしステータスだけは【その場で】数え直す。
+  //   ステータスはチップ・【撤退】【リニューアル】タブの件数に直結していて、
+  //   変えた直後に数字が動かないと「反映されていない」ように見えるため。
+  //   ★数え直すのは件数だけ（updateStateCounts）。renderAll は呼ばない
+  //     ＝行はその場から動かない（v276/v253 の「編集中は動かさない」方針はそのまま）。
+  if (kind === 'status') {
+    try { updateStateCounts(); } catch (e) {}
+    _stateCountsStale = false;
+  } else {
+    _stateCountsStale = true;
+  }
 });
 
 // ==================== 【子商品詳細】ドロップダウン変更 ====================
@@ -21138,6 +21162,24 @@ function _vpRenderPanel() {
   _vpSyncFontUI();
 }
 
+// 【v1.0736】幅調整モード。ONのときだけ列幅ハンドルを掴める（CSS: body.col-resize-on）。
+//   ★保存の仕組み（saveColWidth / applyColWidths / state.viewPrefs）は一切変えていない。
+//     「掴めるかどうか」だけを切り替えている。
+let _colResizeOn = false;
+function setColResizeMode(on) {
+  _colResizeOn = !!on;
+  document.body.classList.toggle('col-resize-on', _colResizeOn);
+  const b = document.getElementById('btnViewPrefs');
+  if (b) {
+    b.classList.toggle('is-on', _colResizeOn);
+    b.title = _colResizeOn
+      ? '幅調整モード中：列の境目をドラッグで幅変更／境目をダブルクリックで既定に戻す（もう一度押すと終了）'
+      : '幅調整モード：押すと列の境目をドラッグして列幅を変えられます';
+  }
+  try { ycLog('info', _colResizeOn ? '幅調整モード: ON（列の境目をドラッグできます）' : '幅調整モード: OFF'); } catch (e) {}
+}
+window.setColResizeMode = setColResizeMode;
+
 function openViewPrefsModal() {
   const m = document.getElementById('viewPrefsModal');
   if (!m) return;
@@ -21205,8 +21247,11 @@ async function _vpPushToGitHub() {
 }
 
 (function _vpBindUI() {
+  // 【v1.0736】「⇔ 幅」＝幅調整モードのON/OFF。「⚙」＝表示設定パネル
   const openBtn = document.getElementById('btnViewPrefs');
-  if (openBtn) openBtn.addEventListener('click', openViewPrefsModal);
+  if (openBtn) openBtn.addEventListener('click', () => setColResizeMode(!_colResizeOn));
+  const panelBtn = document.getElementById('btnViewPrefsPanel');
+  if (panelBtn) panelBtn.addEventListener('click', openViewPrefsModal);
   const closeBtn = document.getElementById('vpClose');
   if (closeBtn) closeBtn.addEventListener('click', closeViewPrefsModal);
   const overlay = document.getElementById('viewPrefsModal');
