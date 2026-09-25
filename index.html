@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0713 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0714 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3836,7 +3836,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0713</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0714</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10136,6 +10136,8 @@ function statusDisplayLabel(value) {
 // 【v1.0710】★チップ（§94）と同じ色に統一。広告あり／なしは同じ色にする（チップが「健常◯」「中立△」で1つだから）
 const STATUS_LIFE_COLOR = {
   '新商品': '#16a34a',              // 緑（これから決める）
+  '健常◯': '#2563eb',               // 【v1.0714】まとめの選択肢（青＝◯）
+  '中立△': '#a67c00',               // 【v1.0714】まとめの選択肢（黄＝△）
   '健常-広告あり◯': '#2563eb',      // 青（◯）
   '健常-広告なし◯': '#2563eb',      // 【v1.0710】水色 → 青（健常◯でひとまとめ）
   '中立-広告あり□': '#a67c00',      // 黄（△）
@@ -10157,7 +10159,25 @@ const STATUS_LIFE_NONE = '—';
 //     絞り込み・件数のときだけ親の値として扱う（＝親を変えても子の保存値はいじらない）。
 //   ★解決は effectiveStatusOf() 1本に集約。ステータスを読んで絞り込む処理は必ずそれを通すこと。
 const STATUS_LIFE_CHILD = '子（親に追従）';
-const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', STATUS_LIFE_CHILD, '健常-広告あり◯', '健常-広告なし◯', '中立-広告あり□', '中立-広告なし□', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止
+// 【v1.0714】★選べるのは「健常◯」「中立△」まで。広告あり/なしは【入札状態から自動で決まる】。
+//   保存値は従来どおり '健常-広告あり◯' 等の細かい値のまま（件数・絞り込み・チップはすべてそのまま動く）。
+//   選択肢からだけ外し、選ばれたら _statusLifeResolve() で細かい値へ変換して保存する。
+const STATUS_LIFE_COARSE = { '健常◯': ['健常-広告あり◯', '健常-広告なし◯'], '中立△': ['中立-広告あり□', '中立-広告なし□'] };
+const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
+// 保存値（細かい値）→ ドロップダウンで選択状態にする値（まとめ）
+function _statusLifeCoarseOf(v) {
+  for (const k in STATUS_LIFE_COARSE) if (STATUS_LIFE_COARSE[k].indexOf(v) >= 0) return k;
+  return v;
+}
+// まとめ（健常◯ / 中立△）＋その商品の入札状態 → 保存する細かい値。
+//   ★広告あり/なしの判定は effectiveAdStatusOf（子は親に追従）＝ 分類表の広告軸（_xfHasAd）と同じ考え方。
+//   ★まとめ以外の値（新商品・撤退予定…）はそのまま返す。
+function _statusLifeResolve(code, v) {
+  const pair = STATUS_LIFE_COARSE[v];
+  if (!pair) return v;
+  const hasAd = !adStatusIsNone(effectiveAdStatusOf(code));
+  return hasAd ? pair[0] : pair[1];
+}
 function statusLifeColor(value) { return STATUS_LIFE_COLOR[value] || '#1a1a1a'; }
 // 【v1.0626】★絞り込み・件数で使う「実効ステータス」。
 //   ステータスが「子（親に追従）」の商品は、親（代表商品コードの先）のステータスとして扱う。
@@ -10262,7 +10282,11 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   //   v1.0438〜v1.0617: 子は親に追従（v1.0613 で statusManual による個別設定を追加）
   //   v1.0618〜        : ステータス / 入札状態 / PRオプ状態 の3つとも商品ごとに完全に独立。
   //   ここにあった「子専用の読み取り専用/淡色セル」の分岐は丸ごと撤去した。
-  const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
+  // 【v1.0714】保存値は細かい値（健常-広告あり◯…）。選択肢はまとめ（健常◯）なので、
+  //   ★selected はまとめに直してから合わせる。直さないと「どれも選ばれていない」状態になり、
+  //     そのまま別の値を選ぶと元に戻せなくなる。
+  const _coarse = _statusLifeCoarseOf(value);
+  const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _coarse ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
   const dis = ghIsEnabled() ? '' : ' disabled';
@@ -11236,8 +11260,18 @@ function _bulkApply() {
   const ts = Date.now();   // 【v1.0350】状態専用Ts。セル編集と同じ扱いにしてマージで保護される。
   codes.forEach(code => {
     const meta = getMeta(code);
-    if (st !== BULK_KEEP) { meta.status    = st || '新商品'; meta.statusTs    = ts; }
+    // 【v1.0714】★入札状態を先に確定させてから、ステータスの「広告あり/なし」を解決する。
+    //   逆順だと、同じ一括変更で入札状態も変えたときに【変更前の入札状態】で広告あり/なしが決まってしまう。
     if (ad !== BULK_KEEP) { meta.adStatus  = ad;             meta.adStatusTs  = ts; markTuneAction(code, 'ad'); }
+    if (st !== BULK_KEEP) { meta.status    = _statusLifeResolve(code, st) || '新商品'; meta.statusTs = ts; }
+    else {
+      // ステータスは「変更しない」でも、入札状態を変えたなら 健常/中立 の あり/なし は付け替える
+      const _cur = meta.status || '', _grp = _statusLifeCoarseOf(_cur);
+      if (ad !== BULK_KEEP && STATUS_LIFE_COARSE[_grp]) {
+        const _next = _statusLifeResolve(code, _grp);
+        if (_next !== _cur) { meta.status = _next; meta.statusTs = ts; }
+      }
+    }
     if (pr !== BULK_KEEP) { meta.proStatus = pr;             meta.proStatusTs = ts; markTuneAction(code, 'pro'); }
     meta._ts = ts;
     if (typeof pinEditedCode === 'function') pinEditedCode(code);   // 絞り込みから外れてもその場では消さない
@@ -17309,10 +17343,21 @@ document.addEventListener('change', (e) => {
   const value = e.target.value;
   const meta = getMeta(code);
   const _stTs = Date.now();  // 【v1.0350】状態変更専用の時刻。保存時マージで状態を「フィールド単位」で保護するのに使う。
-  if (kind === 'ad') { meta.adStatus = value; meta.adStatusTs = _stTs; }
+  if (kind === 'ad') {
+    meta.adStatus = value; meta.adStatusTs = _stTs;
+    // 【v1.0714】入札状態を変えたら、健常/中立の「広告あり/なし」を自動で付け替える。
+    //   ★対象は健常・中立の4値だけ。新商品・撤退系には触らない（勝手に書き換えない）。
+    const _cur = meta.status || '';
+    const _grp = _statusLifeCoarseOf(_cur);
+    if (STATUS_LIFE_COARSE[_grp]) {
+      const _next = _statusLifeResolve(code, _grp);
+      if (_next !== _cur) { meta.status = _next; meta.statusTs = _stTs; }
+    }
+  }
   else if (kind === 'pro') { meta.proStatus = value; meta.proStatusTs = _stTs; }
   // 【v1.0618】子への伝播も statusManual の判定も無し。変えた商品のステータスだけを書き換える。
-  else if (kind === 'status') { meta.status = value || '新商品'; meta.statusTs = _stTs; }
+  // 【v1.0714】まとめ（健常◯/中立△）を選んだら、その商品の入札状態から細かい値へ変換して保存する
+  else if (kind === 'status') { meta.status = _statusLifeResolve(code, value) || '新商品'; meta.statusTs = _stTs; }
   meta._ts = _stTs;  // 【v285】最終編集時刻（ステータス含め全productMeta編集で更新。保存時マージ用）
   pinEditedCode(code);  // 【fix】変更した商品は、フィルタに一致しなくなっても“その場では消さない”（次のビュー切替/更新まで残す）
   // 【v249】入札状態/PRオプ状態の操作は「対応済み」として日時記録（statusは対象外）
@@ -17333,16 +17378,32 @@ document.addEventListener('change', (e) => {
       fac.style.borderColor = bd;
       fac.innerHTML = statusDisplayLabel(value) + '<span class="status-chev">▾</span>';
     }
+    // 【v1.0714】入札状態を変えると同じ行のステータス（健常/中立の あり/なし）も変わる。
+    //   ★その場で描き直さないと、画面を切り替えるまで古い表示のままになる
+    if (kind === 'ad') {
+      const row = e.target.closest('tr');
+      const sSel = row && row.querySelector('select.status-select[data-kind="status"]');
+      const sFac = sSel && sSel.closest('.status-cell') && sSel.closest('.status-cell').querySelector('.status-facade');
+      if (sSel && sFac) {
+        const sv = meta.status || '';
+        sSel.value = _statusLifeCoarseOf(sv);
+        const sc = statusLifeColor(sv);
+        sFac.style.color = sc; sFac.style.borderColor = sv ? sc : '#cbd5e1';
+        sFac.innerHTML = statusLifeDisplayLabel(sv) + '<span class="status-chev">▾</span>';
+      }
+    }
   } else {
     // 【v204】ステータスもファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
-    const c = statusLifeColor(value);
+    // 【v1.0714】★表示するのは「保存された細かい値」。value（まとめ）のままだと 健常◯ と出てしまう
+    const value2 = meta.status || value;
+    const c = statusLifeColor(value2);
     const bd = value ? c : '#cbd5e1';
     const cell = e.target.closest('.status-cell');
     const fac = cell && cell.querySelector('.status-facade');
     if (fac) {
       fac.style.color = c;
       fac.style.borderColor = bd;
-      fac.innerHTML = statusLifeDisplayLabel(value) + '<span class="status-chev">▾</span>';
+      fac.innerHTML = statusLifeDisplayLabel(value2) + '<span class="status-chev">▾</span>';
     }
   }
   // 【v77】件数バッジ・他ビューへの移動は即時反映せず、次のビュー切り替え時に更新
