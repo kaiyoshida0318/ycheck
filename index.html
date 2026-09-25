@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0730 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0732 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3679,6 +3679,7 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .nav-group-label.g-pr       { color:#7c3aed; }  /* 【PR状態】 */
 .nav-group-label.g-taiou    { color:#c2410c; }  /* 【対応検討】 */
 .nav-group-label.g-tettai   { color:#8b5a2b; }  /* 【撤退】【v1.0722】撤退済みチップと同じ茶色 */
+.nav-group-label.g-renew    { color:#7c3aed; }  /* 【リニューアル】【v1.0732】ステータス「リニューアル予定」と同じ紫 */
 /* 【v1.0322】広告あり/無し 絞り込み（商品-基本/月別データ）。検索欄の隣のセグメントボタン */
 /* 【v1.0587】.seg-filter / .segf-btn は .ad-filter と同じ見た目のセグメントボタン（合算/個別で使用）。
    同じ宣言を書き写さずに済むよう、セレクタを並べて共有している。 */
@@ -3842,7 +3843,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0730</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0732</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3951,6 +3952,13 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="consider" href="?view=withdraw-consider">撤退検討<span class="chip-num" id="cntWdConsider"></span></a>
     <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="plan" href="?view=withdraw-plan">撤退予定<span class="chip-num" id="cntWdPlan"></span></a>
     <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="done" href="?view=withdraw-done">撤退済<span class="chip-num" id="cntWdDone"></span></a>
+  </div>
+  <!-- 【v1.0732】【リニューアル】＝ステータス「リニューアル予定」だけを出す。
+       ★中身（ビュー・表・列・既定ソート）は【撤退】とまったく同じ #view-withdraw を使い回す。
+         WD_MODES に1つ足すだけで増やせる作りにしてある（§108-2）。 -->
+  <div class="nav-group nav-group-tune nav-group-renew">
+    <span class="nav-group-label g-renew">【リニューアル】</span>
+    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="renewal" href="?view=withdraw-renewal">リニュ-予定<span class="chip-num" id="cntWdRenewal"></span></a>
   </div>
   <!-- 【v1.0700】ヘッダー2（【一覧】【調整】のタブ行）の開閉。この行の右端に置く -->
   <button class="btn sm ghost" id="btnToggleTabs" type="button" title="【一覧】【調整】のタブ行を隠します">🔼 ヘッダー2を隠す</button>
@@ -9943,7 +9951,9 @@ function updateStateCounts() {
     _xfCrossPC('xfNumAdYesSoiYes', xfAdYSoiYP, xfAdYSoiYC); _xfCross('xfNumAdYesSoiNo', xfAdYSoiN);
     _xfCrossPC('xfNumAdNoSoiYes',  xfAdNSoiYP, xfAdNSoiYC); _xfCross('xfNumAdNoSoiNo',  xfAdNSoiN);
   }
-  _setTx('#cntProWithdrawConsider', sWithdrawConsider);
+  // 【v1.0731】撤退3種のチップは【撤退】タブと同じ「親だけ」の数にする。
+  //   ★数え直しは下の wdC/wdP/wdD ブロックで行う（sWithdrawConsider 等は子を含むので使わない）。
+  //     ここでは何もしない（旧: _setTx('#cntProWithdrawConsider', sWithdrawConsider)）。
   _setTx('#cntUnselectedAd', unselectedAd);
   _setTx('#cntUnselectedPro', unselectedPro);
   // 【v195】新ステータスチップの件数
@@ -9954,20 +9964,25 @@ function updateStateCounts() {
   _setTx('#cntStatusChuritsu', sChuritsuAd + sChuritsuNoad);
   _setTx('#cntStatusChuritsuAd', sChuritsuAd);
   _setTx('#cntStatusChuritsuNoad', sChuritsuNoad);
-  _setTx('#cntStatusWithdrawPlan', sWithdrawPlan);
-  _setTx('#cntStatusWithdrawn', withdrawnCount);
-  _setTx('#cntStatusRenewalPlan', sRenewalPlan);   // 【v1.0726】
+  // 【v1.0732】'#cntStatusRenewalPlan' は下の wdR ブロックで出す（親だけ／タブと同じ数）。sRenewalPlan は使わない
   // 【v1.0722/v1.0723】【撤退】タブの件数。★表の絞り込みとまったく同じ _wdMatch() で数える。
   //   チップ（撤退検討▲/撤退予定/撤退済み）とは数が違うことがある＝子商品を含めないため。これは仕様。
-  { let wdC = 0, wdP = 0, wdD = 0;
+  { let wdC = 0, wdP = 0, wdD = 0, wdR = 0;
     allCodes.forEach(code => {
       if (_wdMatch('consider', code)) wdC++;
       else if (_wdMatch('plan', code)) wdP++;
       else if (_wdMatch('done', code)) wdD++;
+      else if (_wdMatch('renewal', code)) wdR++;   // 【v1.0732】リニューアル予定（親だけ）
     });
     _setTx('#cntWdConsider', wdC);
     _setTx('#cntWdPlan', wdP);
     _setTx('#cntWdDone', wdD);
+    // 【v1.0731】★チップ（§94）も同じ数字を出す。タブとチップで数が違う、を無くした
+    _setTx('#cntProWithdrawConsider', wdC);
+    _setTx('#cntStatusWithdrawPlan', wdP);
+    _setTx('#cntStatusWithdrawn', wdD);
+    _setTx('#cntWdRenewal', wdR);
+    _setTx('#cntStatusRenewalPlan', wdR);   // 【v1.0732】★チップも同じ数（親だけ）にそろえる
   }
   // Basic(商品-基本データ)タブの現役商品合計数を表示
   const cntBasic = $('#cntBasicActive');
@@ -12938,7 +12953,7 @@ function _resolveViewName(v) {
   if (v === 'basic-tune')    return { view: 'basic', zdGrain: null, basicMode: 'tune' };
   if (v === 'basic')         return { view: 'basic', zdGrain: null, basicMode: 'plain' };
   // 【v1.0722】?view=withdraw-consider / -plan / -done ＝ #view-withdraw のモード違い
-  { const mm = /^withdraw-(consider|plan|done)$/.exec(v || ''); if (mm) return { view: 'withdraw', zdGrain: null, wdMode: mm[1] }; }
+  { const mm = /^withdraw-(consider|plan|done|renewal)$/.exec(v || ''); if (mm) return { view: 'withdraw', zdGrain: null, wdMode: mm[1] }; }   /* 【v1.0732】renewal を追加 */
   if (v === 'withdraw')      return { view: 'withdraw', zdGrain: null, wdMode: 'consider' };
   return { view: v, zdGrain: null };
 }
@@ -13840,7 +13855,8 @@ function last3MonthsInclCurrent() {
 const WD_MODES = {
   consider: { label: '撤退検討', match: st => st === '撤退検討▲' },
   plan:     { label: '撤退予定', match: st => st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済' },
-  done:     { label: '撤退済',   match: st => st === '撤退済み' }
+  done:     { label: '撤退済',   match: st => st === '撤退済み' },
+  renewal:  { label: 'リニュ-予定', match: st => st === 'リニューアル予定' }   // 【v1.0732】
 };
 let _wdMode = 'consider';
 // 【v1.0723】★送り込みの子商品は出さない（親1行にまとめる）。
@@ -16700,10 +16716,10 @@ const STATE_FILTERS = {
   // 【v1.0636】★親固定も拾う（統合したので、移行前の値が残っていても同じチップに出る）
   'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
   'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProNgValue(effectiveProStatusOf(code)) },   /* 【v1.0719】判定を1本化 */
-  'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
+  'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('consider', code) },                                    /* 【v1.0626/v1.0731】★【撤退】タブと同じ関数＝子は数えない（親1セット＝1） */
   'status-renewal-plan': { label: 'リニューアル予定', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === 'リニューアル予定' },   /* 【v1.0726】 */
-  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
-  'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
+  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('plan', code) },                                        /* 【v1.0626/v1.0731】旧値は WD_MODES が吸収。子は数えない */
+  'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta, code) => _wdMatch('done', code) },   /* 【v1.0731】子は数えない */
   'unselected-ad': { label: '選択前-入札', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => !effectiveAdStatusOf(code) },
   'unselected-pro':{ label: '選択前-PR', targetView: 'basic', basicMode: 'tune', match: (meta, code) => !effectiveProStatusOf(code) }
 };
