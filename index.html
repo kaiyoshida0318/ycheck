@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0718 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0720 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3838,7 +3838,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0718</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0720</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3988,7 +3988,7 @@ th.col-sroas { background-color:#e7d5f5; }
 
     <span class="sg-label g-status">【ステータス】</span>
     <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 新商品（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
-    <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip" data-state="new-product" title="新商品 ＋ リニューアル（一覧のセルではどちらも「新リニュ」と表示）"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
@@ -3996,7 +3996,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
 
     <span class="sg-label g-nyusatsu">【入札状態】</span>
-    <button class="state-chip chip-all" data-state="ad-all" title="現役全体のうち、入札価格が記入されている商品（撤退済み・入札なしは含みません）"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+    <button class="state-chip chip-all" data-state="ad-all" title="入札中＝入札価格が記入されている商品（撤退済み・入札なしは含みません）※中身はv1.0718までの「現役全体」と同じ"><span class="chip-label">入札中</span><span class="chip-num" id="cntAllAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <!-- 【v1.0715】入札△＝調整中＋飛ぶ手前固定。✕のチップは廃止（✕の値そのものが無くなったため） -->
@@ -4006,7 +4006,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
 
     <span class="sg-label g-pr">【PR状態】</span>
-    <button class="state-chip chip-all" data-state="pro-all" title="現役全体＝撤退済みを除いた全商品"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+    <button class="state-chip chip-all" data-state="pro-all" title="△以上＝PR◯ ＋ PR△ ＋ 選択前-PR（PR✕・撤退済みは含みません）"><span class="chip-label">△以上</span><span class="chip-num" id="cntAllPr">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
     <button class="state-chip" data-state="pro-tri" title="PR△（PR△-調整中 ＋ PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
@@ -9714,6 +9714,7 @@ function updateStateCounts() {
   let bidEnteredCount = 0;  // 【v208】入札価格が記入されている商品数
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
   let churitsuIjouCount = 0;  // 【v1.0718】中立以上（健常◯＋中立△＋新商品）。★判定は isChuritsuIjou() を使い回す
+  let proTriIjouCount = 0;    // 【v1.0719】PR△以上（PR◯＋PR△＋選択前）。★判定は isProTriIjou() を使い回す
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
   // 【v195】新ステータス別カウント
   let sKenzenAd = 0, sKenzenNoad = 0, sChuritsuAd = 0, sChuritsuNoad = 0, sWithdrawConsider = 0, sWithdrawPlan = 0, withdrawnCount = 0;
@@ -9759,13 +9760,14 @@ function updateStateCounts() {
     //   （移行前・他端末の古い値がまだ残っていても件数が合うように、両方をここで受ける）。
     //   'PR△-子-7％固定' は廃止。どのチップにも出ない（全体にだけ出る）。
     else if (proS === 'PR△-飛ぶ手前固定' || proS === 'PR△-親-飛ぶ手前固定') proHfixed++;
-    else if (proS === 'PR×' || proS === 'PRオプ×' || proS === 'PRO×') proNg++;
+    else if (isProNgValue(proS)) proNg++;   // 【v1.0719】判定を1本化（チップ pro-ng と同じ式）
     // 【v195】ステータス（商品ライフサイクル）別カウント。旧値(通常商品/現役商品)は新商品扱い。
     // 【v1.0626】「子（親に追従）」は親のステータスとして数える（＝親とセットで見る）。
     //   下のクロス絞り込みの件数も同じ st を使うので、ここを直せば両方そろう。
     const st = effectiveStatusOf(code);
     if (isChuritsuIjou(code)) churitsuIjouCount++;   // 【v1.0718】★絞り込みとまったく同じ関数で数える
-    if ((st || '新商品') === '新商品' || st === '通常商品' || st === '現役商品') newProductCount++;
+    if (isProTriIjou(code))   proTriIjouCount++;    // 【v1.0719】同上
+    if (isShinRenew(st)) newProductCount++;   // 【v1.0720】新商品＋リニューアル
     else if (st === '健常-広告あり◯') sKenzenAd++;
     else if (st === '健常-広告なし◯') sKenzenNoad++;
     else if (st === '中立-広告あり□') sChuritsuAd++;
@@ -9873,7 +9875,7 @@ function updateStateCounts() {
   const cntAll = $('#cntAll'); if (cntAll) cntAll.textContent = `(${activeCount})`;
   const cntAllS = $('#cntAllStatus'); if (cntAllS) cntAllS.textContent = `(${churitsuIjouCount})`;  // 【v197/v1.0718】ステータス側の先頭＝中立以上（現役全体ではない）
   const cntAllAd = $('#cntAllAd'); if (cntAllAd) cntAllAd.textContent = `(${bidEnteredCount})`;   // 【v208】入札状態側の全体＝入札価格記入ありの数
-  const cntAllPr = $('#cntAllPr'); if (cntAllPr) cntAllPr.textContent = `(${activeCount})`;   // 【v199】PR状態側の全体
+  const cntAllPr = $('#cntAllPr'); if (cntAllPr) cntAllPr.textContent = `(${proTriIjouCount})`;   // 【v199/v1.0719】PR状態側の先頭＝△以上（現役全体ではない）
   const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
   // 【子タイプ未選択】各比率タブのバッジ（親子2件以上でchildDetail未選択のグループ数）
   { const _pm = state.productMeta || {}; const _repKey = (c)=>{ const r=String((_pm[c]||{}).repCode||'').trim(); return r||c; };
@@ -9915,7 +9917,7 @@ const PRO_STATUS_ORDER = {
   'PR◯': 1, 'PR◯-親-30％固定': 1.2, 'PR◯-子-7％固定': 1.4, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR△-飛ぶ手前固定': 2, 'PR×': 3,
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
-const STATUS_ORDER = { '新商品': 0, '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
+const STATUS_ORDER = { '新商品': 0, 'リニューアル': 0.5,   /* 【v1.0720】新商品の直後 */ '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
   '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0,
   '—': -1, '子（親に追従）': 0.5 };  // 互換用（旧値。out記入済は撤退予定へ統合）／【v1.0614】未設定(—)は先頭／【v1.0626】子は新商品の直後
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
@@ -10152,6 +10154,7 @@ function statusDisplayLabel(value) {
 // 【v1.0710】★チップ（§94）と同じ色に統一。広告あり／なしは同じ色にする（チップが「健常◯」「中立△」で1つだから）
 const STATUS_LIFE_COLOR = {
   '新商品': '#16a34a',              // 緑（これから決める）
+  'リニューアル': '#16a34a',         // 【v1.0720】新商品と同じ緑（一覧では「新リニュ」とまとめて表示）
   '健常◯': '#2563eb',               // 【v1.0714】まとめの選択肢（青＝◯）
   '中立△': '#a67c00',               // 【v1.0714】まとめの選択肢（黄＝△）
   '健常-広告あり◯': '#2563eb',      // 青（◯）
@@ -10179,7 +10182,7 @@ const STATUS_LIFE_CHILD = '子（親に追従）';
 //   保存値は従来どおり '健常-広告あり◯' 等の細かい値のまま（件数・絞り込み・チップはすべてそのまま動く）。
 //   選択肢からだけ外し、選ばれたら _statusLifeResolve() で細かい値へ変換して保存する。
 const STATUS_LIFE_COARSE = { '健常◯': ['健常-広告あり◯', '健常-広告なし◯'], '中立△': ['中立-広告あり□', '中立-広告なし□'] };
-const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
+const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', 'リニューアル', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
 // 保存値（細かい値）→ ドロップダウンで選択状態にする値（まとめ）
 function _statusLifeCoarseOf(v) {
   for (const k in STATUS_LIFE_COARSE) if (STATUS_LIFE_COARSE[k].indexOf(v) >= 0) return k;
@@ -10208,11 +10211,28 @@ function statusLifeColor(value) { return STATUS_LIFE_COLOR[value] || '#1a1a1a'; 
 //   ★件数（updateStateCounts）も絞り込み（STATE_FILTERS['all-basic']）も必ずこの1本を通すこと。
 //     どちらかに条件を書き直すと「チップの数」と「表の中身」がズレる（§12）。
 //   ★子（親に追従）は effectiveStatusOf が親の値に置き換えるので、親が健常/中立なら自動で入る。
+// 【v1.0719】PR状態が「✕」かどうかの判定。★旧表記（PRオプ× / PRO×）もここでまとめて受ける。
+//   チップ pro-ng・件数 proNg・「△以上」の3か所すべてこの1本を通すこと。
+function isProNgValue(p) { return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; }
+// 【v1.0720】「新商品グループ」＝ 新商品 ＋ リニューアル（＋旧値 通常商品/現役商品）。
+//   一覧のセルではどちらも「新リニュ」と表示し、チップ new-product・件数・中立以上でも同じ1グループとして扱う。
+//   ★未設定（status なし）は '新商品' 扱い（あちこちの `meta.status || '新商品'` と合わせる）
+function isShinRenew(st) {
+  return (st || '新商品') === '新商品' || st === 'リニューアル' || st === '通常商品' || st === '現役商品';
+}
+// 【v1.0719】PR「△以上」＝ PR◯系 ＋ PR△系 ＋ 選択前（未選択）。PR✕ と 撤退済み だけ外す。
+//   ★ステータスの「中立以上」が新商品（＝まだ決めていない枠）を含むのと同じ考え方で、
+//     選択前-PR も含める（◯△✕の物差しに乗っていない＝まだ✕ではない、という扱い）。
+function isProTriIjou(code) {
+  if (((state.productMeta || {})[code] || {}).status === '撤退済み') return false;
+  if (isRetired(code)) return false;
+  return !isProNgValue(effectiveProStatusOf(code));
+}
 function isChuritsuIjou(code) {
   if (((state.productMeta || {})[code] || {}).status === '撤退済み') return false;
   if (isRetired(code)) return false;
   const st = effectiveStatusOf(code);
-  if ((st || '新商品') === '新商品' || st === '通常商品' || st === '現役商品') return true;   // 旧値も新商品扱い（updateStateCounts と同じ式）
+  if (isShinRenew(st)) return true;   // 【v1.0720】新商品＋リニューアル（updateStateCounts と同じ関数）
   return st === '健常-広告あり◯' || st === '健常-広告なし◯'
       || st === '中立-広告あり□' || st === '中立-広告なし□';
 }
@@ -10242,6 +10262,8 @@ function statusLifeDisplayValue(v) {
 }
 // 【v204】ステータスのセル表示用の2行ラベル（ドロップダウンの選択肢は正式名のまま）。<br>で改行。
 const STATUS_LIFE_DISPLAY_LABEL = {
+  '新商品':       '新リニュ',        // 【v1.0720】一覧のセルだけ「新リニュ」。ドロップダウンは「新商品」のまま
+  'リニューアル': '新リニュ',        // 【v1.0720】★新商品と同じ文字にする（一覧では2つを区別しない）
   '健常-広告あり◯': '健常<br>広告あり◯',
   '健常-広告なし◯': '健常<br>広告なし◯',
   '中立-広告あり□': '中立<br>広告あり□',
@@ -16448,14 +16470,14 @@ const STATE_FILTERS = {
   //   判定側にも同じ条件を明示しておく（match と件数で母集団がずれないように。§12）
   'all-basic':     { label: '中立以上',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => isChuritsuIjou(code) },   /* 【v1.0718】現役全体 → 中立以上（健常◯＋中立△＋新商品）。★キー 'all-basic' は保存され得るので変えない */
   // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
-  'ad-all':        { label: '現役全体',   targetView: 'basic', basicMode: 'tune',  match: (meta, code) => { if (isRetired(code)) return false;   /* 【v1.0711】撤退済みは含まない */
+  'ad-all':        { label: '入札中',     targetView: 'basic', basicMode: 'tune',  match: (meta, code) => { if (isRetired(code)) return false;   /* 【v1.0711】撤退済みは含まない／【v1.0719】名前だけ 現役全体→入札中（中身は無変更） */
      if (adStatusIsNone(effectiveAdStatusOf(code))) return false;   /* 【v1.0658】子は除外 */
      const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
   // 【v1.0496】PR状態の「全体」＝PRオプ調整（pro-adjust）の画面と同じ内容で全商品を表示。
-  'pro-all':       { label: '現役全体',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },   /* 【v1.0707】撤退済みは含まない */
+  'pro-all':       { label: '△以上',     targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProTriIjou(code) },   /* 【v1.0719】現役全体 → △以上（PR◯＋PR△＋選択前。PR✕は外す）。★キー 'pro-all' は保存され得るので変えない */
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
-  'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
+  'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenew(effectiveStatusOf(code)) },   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
   // 【v1.0696】広告あり／なしをまとめた親チップ。★判定は「前方一致」ではなく2値の列挙にする
   //   （'健常' で startsWith にすると、将来「健常-〇〇」を足したとき黙って混ざる）
   'status-kenzen':    { label: '健常',             targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const st = effectiveStatusOf(code); return st === '健常-広告あり◯' || st === '健常-広告なし◯'; } },
@@ -16485,7 +16507,7 @@ const STATE_FILTERS = {
   'pro-cfixed':    { label: 'PR△-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta) => (meta.proStatus || '') === 'PR△-子-7％固定' },
   // 【v1.0636】★親固定も拾う（統合したので、移行前の値が残っていても同じチップに出る）
   'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
-  'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return p === 'PR×' || p === 'PRオプ×' || p === 'PRO×'; } },
+  'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProNgValue(effectiveProStatusOf(code)) },   /* 【v1.0719】判定を1本化 */
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
   'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
