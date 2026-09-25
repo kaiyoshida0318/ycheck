@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0723 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0725 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -576,15 +576,15 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="status-churitsu-ad"],
 .state-chip[data-state="status-churitsu-noad"] { background:#fbf3d9; border-color:#ead98a; }
 .state-chip[data-state="status-churitsu"]:hover, .state-chip[data-state="status-churitsu-ad"]:hover, .state-chip[data-state="status-churitsu-noad"]:hover,
-.state-chip[data-state="status-churitsu"].active, .state-chip[data-state="status-churitsu-ad"].active, .state-chip[data-state="status-churitsu-noad"].active { background:#c99700; border-color:#a67e00; }
+.state-chip[data-state="status-churitsu"].active, .state-chip[data-state="status-churitsu-ad"].active, .state-chip[data-state="status-churitsu-noad"].active { background:#f97316; border-color:#c2410c; }   /* 【v1.0725】 */
 /* 【v1.0696】まとめチップは「そのグループの親」なので、文字を少し強めて区別する */
 .state-chip[data-state="status-kenzen"] .chip-label,
 .state-chip[data-state="status-churitsu"] .chip-label { font-weight:800; letter-spacing:0.04em; }
 .state-chip[data-state="pro-wc"] { background:#fdeede; border-color:#f5c99a; }
-.state-chip[data-state="pro-wc"]:hover, .state-chip[data-state="pro-wc"].active { background:#ea7317; border-color:#c85f0f; }
+.state-chip[data-state="pro-wc"]:hover, .state-chip[data-state="pro-wc"].active { background:#8b5a2b; border-color:#6f4720; }   /* 【v1.0725】 */
 .state-chip[data-state="status-withdraw-plan"] { background:#fde9e8; border-color:#f5b8b5; }
 .state-chip[data-state="status-withdraw-plan"]:hover,
-.state-chip[data-state="status-withdraw-plan"].active { background:#dc2626; border-color:#b91c1c; }
+.state-chip[data-state="status-withdraw-plan"].active { background:#8b5a2b; border-color:#6f4720; }   /* 【v1.0725】 */
 .state-chip[data-state="status-withdrawn"] { background:#efe4da; border-color:#d9c3ad; }
 .state-chip[data-state="status-withdrawn"]:hover, .state-chip[data-state="status-withdrawn"].active { background:#8b5a2b; border-color:#6f4720; }
 
@@ -846,9 +846,9 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="status-churitsu"],
 .top-nav-3 .state-chip[data-state="ad-fixed"],
 .top-nav-3 .state-chip[data-state="ad-tri"],
-.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; }   /* 【v1.0715】ad-tri（入札△＝調整中＋飛ぶ手前固定）を黄グループに追加 */
+.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #ea580c; }   /* 【v1.0725】黄 → オレンジ（△グループ） */   /* 【v1.0715】ad-tri（入札△＝調整中＋飛ぶ手前固定）を黄グループに追加 */
 .top-nav-3 .state-chip[data-state="ad-ng"],
-.top-nav-3 .state-chip[data-state="pro-ng"]      { color: #dc2626; }
+.top-nav-3 .state-chip[data-state="pro-ng"]      { color: #8b5a2b; }   /* 【v1.0725】赤 → 黄土色（PR✕） */
 /* 【v1.0705】選択時だけ色を塗る（通常時は白地＋文字色）。★グリッドでは白地を !important にしているので選択色も !important で上書きする */
 .states-grid .state-chip[data-state="status-kenzen"].active,
 .states-grid .state-chip[data-state="ad-ok"].active,
@@ -856,11 +856,11 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid .state-chip[data-state="status-churitsu"].active,
 .states-grid .state-chip[data-state="ad-fixed"].active,
 .states-grid .state-chip[data-state="ad-tri"].active,
-.states-grid .state-chip[data-state="pro-tri"].active     { background: #c99700 !important; }   /* 【v1.0715】ad-tri も黄 */
+.states-grid .state-chip[data-state="pro-tri"].active     { background: #f97316 !important; }   /* 【v1.0725】黄 → オレンジ */
 .states-grid .state-chip[data-state="ad-ng"].active,
-.states-grid .state-chip[data-state="pro-ng"].active      { background: #dc2626 !important; }
-.states-grid .state-chip[data-state="pro-wc"].active              { background: #ea7317 !important; }
-.states-grid .state-chip[data-state="status-withdraw-plan"].active{ background: #dc2626 !important; }
+.states-grid .state-chip[data-state="pro-ng"].active      { background: #8b5a2b !important; }   /* 【v1.0725】赤 → 黄土色 */
+.states-grid .state-chip[data-state="pro-wc"].active              { background: #8b5a2b !important; }   /* 【v1.0725】撤退3種は同色 */
+.states-grid .state-chip[data-state="status-withdraw-plan"].active{ background: #8b5a2b !important; }   /* 【v1.0725】撤退3種は同色 */
 .states-grid .state-chip[data-state="status-withdrawn"].active    { background: #8b5a2b !important; }
 .states-grid .state-chip[data-state="new-product"].active         { background: #16a34a !important; }
 .states-grid .state-chip[data-state="all-basic"].active,
@@ -876,11 +876,11 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="status-kenzen"] { color: #1e40af; }      /* 【v1.0696】まとめ＝濃い青 */
 .top-nav-3 .state-chip[data-state="status-kenzen-ad"] { color: #2563eb; }
 .top-nav-3 .state-chip[data-state="status-kenzen-noad"] { color: #12a5c8; }  /* 【v207】水色 */
-.top-nav-3 .state-chip[data-state="status-churitsu"] { color: #7a5c00; }     /* 【v1.0696】まとめ＝さらに濃い黄 */
+.top-nav-3 .state-chip[data-state="status-churitsu"] { color: #ea580c; }     /* 【v1.0725】黄 → オレンジ（△グループで統一）。★この行は §94 のグループ指定より【後ろ】にあるので、ここを直さないと中立△だけ黄のまま残る */
 .top-nav-3 .state-chip[data-state="status-churitsu-ad"] { color: #a67c00; }   /* 濃い黄色 */
 .top-nav-3 .state-chip[data-state="status-churitsu-noad"] { color: #caa61e; } /* 少し薄い黄色 */
-.top-nav-3 .state-chip[data-state="pro-wc"] { color: #ea7317; }
-.top-nav-3 .state-chip[data-state="status-withdraw-plan"] { color: #dc2626; }
+.top-nav-3 .state-chip[data-state="pro-wc"] { color: #8b5a2b; }   /* 【v1.0725】撤退3種は同色 */
+.top-nav-3 .state-chip[data-state="status-withdraw-plan"] { color: #8b5a2b; }   /* 【v1.0725】撤退3種は同色 */
 .top-nav-3 .state-chip[data-state="status-withdrawn"] { color: #8b5a2b; }
 
 /* 全体の説明ボタン（クリック不可のアイコン風） */
@@ -3666,7 +3666,7 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .sg-label.g-nyusatsu { color:#b45309; }
 .sg-label.g-pr       { color:#7c3aed; }
 .nav-group-label.g-basic   { color:#2563eb; }  /* 【基本】 */
-.nav-group-label.g-zentai  { color:#dc2626; }  /* 【全体】 */
+.nav-group-label.g-zentai  { color:#db2777; }  /* 【全体】【v1.0725】赤→マゼンタ（赤は「✕＝要対応」の色なので取り違えやすかった） */
 .nav-group-label.g-shutoku { color:#0891b2; }  /* 【取得データ】 */
 .nav-group-label.g-chosei  { color:#16a34a; }  /* 【調整】 */
 .nav-group-label.g-ichiran { color:#7c3aed; }  /* 【一覧】【v1.0661】 */
@@ -3839,7 +3839,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0723</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0725</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4733,17 +4733,18 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameWd">商品名</th>
-              <th class="nosort" data-resize-key="kwWd">メインKW</th>
-              <th class="status-col" data-sort="status">ステータス</th>
-              <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
-              <th data-sort="adNote" data-resize-key="adNoteWd">対応内容</th>
+              <!-- 【v1.0724】列は 広告売上×3 / SEO売上×3 / 広告実績額×3 の9列だけ。
+                   ★メインKW・ステータス・入札状態・入札価格・対応内容は外した（撤退の判断材料だけを並べる）。
+                     ステータスの変更は「☑ 一括変更」バーから行う（行の先頭のチェックボックスは残してある）。 -->
               <th class="num col-ad" data-sort="adRev0" id="hWdAdSales0">広告売上<br>(3ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev1" id="hWdAdSales1">広告売上<br>(2ヶ月前)</th>
               <th class="num col-ad" data-sort="adRev2" id="hWdAdSales2">広告売上<br>(前月)</th>
               <th class="num col-sales" data-sort="seoRev0" id="hWdSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hWdSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hWdSeo2">SEO売上<br>(前月)</th>
+              <th class="num col-spend" data-sort="adCost0" id="hWdAdRev0">広告実績額<br>(3ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost1" id="hWdAdRev1">広告実績額<br>(2ヶ月前)</th>
+              <th class="num col-spend" data-sort="adCost2" id="hWdAdRev2">広告実績額<br>(前月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -10165,8 +10166,8 @@ function rowParentChildClass(code, sets) {
 // 【v1.0710】★ヘッダーの状態チップ（§90-2 / §94）と色を統一した。3行・ドロップダウン共通の意味:
 //     緑 #16a34a … これから決める（選択前・新商品）
 //     青 #2563eb … ◯＝対応不要
-//     黄 #a67c00 … △＝様子見・調整中
-//     赤 #dc2626 … ✕＝要対応
+//     橙 #ea580c … △＝様子見・調整中【v1.0725】黄→オレンジ
+//     赤 #dc2626 … ✕＝要対応（※撤退3種とPR✕は黄土色 #8b5a2b ＝「もう手を入れない」）
 //     灰 #9ca3af … 対象外（入札なし）
 //   ★ここを直したら STATUS_LIFE_COLOR（ステータス側）と、チップのCSS（.top-nav-3 .state-chip[data-state=…]）も
 //     必ず同じ値にすること。色の意味が画面ごとに変わると一番混乱する。
@@ -10174,20 +10175,20 @@ const STATUS_TEXT_COLOR = {
   '': '#16a34a',                   // 【v1.0710】未選択（—）＝「選択前」チップと同じ緑
   // 入札価格状態
   '入札◯': '#2563eb',              // 青（◯）
-  '入札△-調整中': '#a67c00',        // 【v1.0715】黄（△）
-  '入札×-調整中': '#a67c00',        // 【v1.0715】旧名。同じ黄で表示する（データ移行なしで読めるように）
-  '入札△-飛ぶ手前固定': '#a67c00',  // 【v1.0710】黄（△）に統一
+  '入札△-調整中': '#ea580c',        // 【v1.0715】黄（△）
+  '入札×-調整中': '#ea580c',        // 【v1.0715】旧名。同じ黄で表示する（データ移行なしで読めるように）
+  '入札△-飛ぶ手前固定': '#ea580c',  // 【v1.0710】黄（△）に統一
   '入札なし': '#9ca3af',            // グレー（対象外）
   // PRオプ状態
   'PR◯': '#2563eb',                // 青（◯）
   'PR◯-親-30％固定': '#2563eb',     // 【v1.0710】◯はまとめて青（親子の別は .rep-badge とラベルで分かる）
   'PR◯-子-7％固定': '#2563eb',      // 【v1.0710】同上
-  'PR△-調整中': '#a67c00',          // 【v1.0713】黄（△）
-  'PR△-親-下げ挑戦中': '#a67c00',   // 黄（△）
-  'PR△-親-飛ぶ手前固定': '#a67c00', // 【v1.0710】水色 → 黄（△）
-  'PR△-子-7％固定': '#a67c00',      // 【v1.0710】水色 → 黄（△）
-  'PR△-飛ぶ手前固定': '#a67c00',    // 【v1.0710】黄（△）
-  'PR×': '#dc2626'                 // 【v1.0710】橙 → 赤（✕）
+  'PR△-調整中': '#ea580c',          // 【v1.0713】黄（△）
+  'PR△-親-下げ挑戦中': '#ea580c',   // 黄（△）
+  'PR△-親-飛ぶ手前固定': '#ea580c', // 【v1.0710】水色 → 黄（△）
+  'PR△-子-7％固定': '#ea580c',      // 【v1.0710】水色 → 黄（△）
+  'PR△-飛ぶ手前固定': '#ea580c',    // 【v1.0710】黄（△）
+  'PR×': '#8b5a2b'                 // 【v1.0725】赤 → 黄土色（撤退3種と同じ「もう手を入れない」色）
 };
 function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; }  // 未知の値は黒
 
@@ -10221,13 +10222,13 @@ const STATUS_LIFE_COLOR = {
   '新商品': '#16a34a',              // 緑（これから決める）
   'リニューアル': '#16a34a',         // 【v1.0720】新商品と同じ緑（一覧では「新リニュ」とまとめて表示）
   '健常◯': '#2563eb',               // 【v1.0714】まとめの選択肢（青＝◯）
-  '中立△': '#a67c00',               // 【v1.0714】まとめの選択肢（黄＝△）
+  '中立△': '#ea580c',               // 【v1.0714】まとめの選択肢（黄＝△）
   '健常-広告あり◯': '#2563eb',      // 青（◯）
   '健常-広告なし◯': '#2563eb',      // 【v1.0710】水色 → 青（健常◯でひとまとめ）
-  '中立-広告あり□': '#a67c00',      // 黄（△）
-  '中立-広告なし□': '#a67c00',      // 【v1.0710】薄黄 → 黄（中立△でひとまとめ）
-  '撤退検討▲': '#ea7317',          // オレンジ
-  '撤退予定': '#dc2626',           // 赤（✕）
+  '中立-広告あり□': '#ea580c',      // 黄（△）
+  '中立-広告なし□': '#ea580c',      // 【v1.0710】薄黄 → 黄（中立△でひとまとめ）
+  '撤退検討▲': '#8b5a2b',          // 【v1.0725】オレンジ → 黄土色（撤退3種で統一）
+  '撤退予定': '#8b5a2b',           // 【v1.0725】赤 → 黄土色（撤退3種で統一）
   '撤退済み': '#8b5a2b',           // 茶色（チップと同じ）
   '—': '#94a3b8',                 // 【v1.0614】未設定（—）: グレー
   '子（親に追従）': '#92400e'       // 【v1.0626】子: 商品コード左の黄色バッジ(.rep-badge.child)と同じ色
@@ -13836,7 +13837,7 @@ function renderWithdraw() {
     searchSel: '#wdSearch',
     cntSel: null,
     hPrefix: 'hWd',
-    colspan: 14,
+    colspan: 12,   // 【v1.0724】コード/画像/商品名 ＋ 9列
     emptyMsg: 'この区分の商品はありません',
     statusPick: _wdIs
   });
@@ -14428,13 +14429,9 @@ function renderAdAdjust(cfg) {
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
-      <td>${kwCellHtml(r.code)}</td>
-      ${_tdStatus}
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
-      ${_bidCellT}
-      <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
       ${r.seoRevs.map((v, i) => shareRevCell(v, r.adRevs[i], true, 'col-sales')).join('')}
+      ${_revCells}
     `;
       tbody.appendChild(tr);
       return;
