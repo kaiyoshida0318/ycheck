@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0714 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0715 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -845,7 +845,8 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="pro-ok-all"]  { color: #1e40af; }
 .top-nav-3 .state-chip[data-state="status-churitsu"],
 .top-nav-3 .state-chip[data-state="ad-fixed"],
-.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; }
+.top-nav-3 .state-chip[data-state="ad-tri"],
+.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; }   /* 【v1.0715】ad-tri（入札△＝調整中＋飛ぶ手前固定）を黄グループに追加 */
 .top-nav-3 .state-chip[data-state="ad-ng"],
 .top-nav-3 .state-chip[data-state="pro-ng"]      { color: #dc2626; }
 /* 【v1.0705】選択時だけ色を塗る（通常時は白地＋文字色）。★グリッドでは白地を !important にしているので選択色も !important で上書きする */
@@ -854,7 +855,8 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid .state-chip[data-state="pro-ok-all"].active  { background: #2563eb !important; }
 .states-grid .state-chip[data-state="status-churitsu"].active,
 .states-grid .state-chip[data-state="ad-fixed"].active,
-.states-grid .state-chip[data-state="pro-tri"].active     { background: #c99700 !important; }
+.states-grid .state-chip[data-state="ad-tri"].active,
+.states-grid .state-chip[data-state="pro-tri"].active     { background: #c99700 !important; }   /* 【v1.0715】ad-tri も黄 */
 .states-grid .state-chip[data-state="ad-ng"].active,
 .states-grid .state-chip[data-state="pro-ng"].active      { background: #dc2626 !important; }
 .states-grid .state-chip[data-state="pro-wc"].active              { background: #ea7317 !important; }
@@ -3836,7 +3838,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0714</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0715</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3997,9 +3999,10 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip chip-all" data-state="ad-all" title="現役全体のうち、入札価格が記入されている商品（撤退済み・入札なしは含みません）"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-    <button class="state-chip" data-state="ad-fixed" title="入札△-飛ぶ手前固定"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
+    <!-- 【v1.0715】入札△＝調整中＋飛ぶ手前固定。✕のチップは廃止（✕の値そのものが無くなったため） -->
+    <button class="state-chip" data-state="ad-tri" title="入札△（入札△-調整中 ＋ 入札△-飛ぶ手前固定）"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdTri">(0)</span></button>
     <span class="sg-empty"></span>
-    <button class="state-chip" data-state="ad-ng" title="入札×-調整中"><span class="chip-label">入札✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <span class="sg-empty"></span>
     <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
 
     <span class="sg-label g-pr">【PR状態】</span>
@@ -4013,7 +4016,7 @@ th.col-sroas { background-color:#e7d5f5; }
 
   </div>
   <!-- 【v1.0704】画面から消したチップの件数受け皿（updateStateCounts の _setTx が空振りしないように残す） -->
-  <span hidden><span id="cntStatusKenzenAd"></span><span id="cntStatusKenzenNoad"></span><span id="cntStatusChuritsuAd"></span><span id="cntStatusChuritsuNoad"></span><span id="cntProOk"></span><span id="cntProP30"></span><span id="cntProC7"></span><span id="cntProLower"></span><span id="cntProHfixed"></span></span>
+  <span hidden><span id="cntAdFixed"></span><span id="cntAdNg"></span><span id="cntStatusKenzenAd"></span><span id="cntStatusKenzenNoad"></span><span id="cntStatusChuritsuAd"></span><span id="cntStatusChuritsuNoad"></span><span id="cntProOk"></span><span id="cntProP30"></span><span id="cntProC7"></span><span id="cntProLower"></span><span id="cntProHfixed"></span></span>
   <!-- 【v1.0550/v1.0700】ヘッダー3（分類表＋【ステータス】【入札状態】【PR状態】）の開閉。右端に置く。 -->
   <button class="btn sm ghost" id="btnToggleStates" type="button" title="分類表と【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー3を隠す</button>
   </div><!-- /.states-stack 【v1.0583】 -->
@@ -4920,7 +4923,7 @@ th.col-sroas { background-color:#e7d5f5; }
       <h4 class="info-subheading" style="margin:2px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">入札価格状態</h4>
       <ul class="info-list">
         <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">入札◯</b>広告の入札価格が最安値の <b>25円</b> かつ、広告順位が <b>1〜4位</b> のもの。</li>
-        <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">入札×-調整中</b><b>「入札25円かつ広告1〜4位」</b> を満たすよう調整中のもの。</li>
+        <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">入札△-調整中</b><b>「入札25円かつ広告1〜4位」</b> を満たすよう調整中のもの。</li>
         <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">入札△-飛ぶ手前固定</b>下げると広告が飛ぶ手前の金額で <b>固定完了</b>。月1チェック用に「未確認」に出ます（入札価格を変えると推移確認へ）。</li>
         <li><b class="info-tag" style="color:#6b7280;background:#f1f3f5;border:1px solid var(--border2)">入札なし</b>広告を打っていないもの。</li>
       </ul>
@@ -7568,8 +7571,9 @@ function migrateAdStatusLabels() {
   // 【v186】旧ラベル → 新ラベルへ自動移行。入札価格○/✕ → 入札◯/入札×-調整中、PRオプ○/× → PR◯/PR×、現役商品 → 通常商品。
   //   ※固定系・下げ挑戦中系（△）は新規入力のみ。既存の×は「調整中」相当として入札×-調整中/PR×へ寄せる。
   const adMap = {
-    '広告○': '入札◯', '広告×': '入札×-調整中', '広告無': '入札なし', '入札無し': '入札なし',  // 旧広告ラベル
-    '入札価格○': '入札◯', '入札価格✕': '入札×-調整中'                                      // v185ラベル
+    '広告○': '入札◯', '広告×': '入札△-調整中', '広告無': '入札なし', '入札無し': '入札なし',  // 旧広告ラベル
+    '入札価格○': '入札◯', '入札価格✕': '入札△-調整中',                                     // v185ラベル
+    '入札×-調整中': '入札△-調整中'                                                        // 【v1.0715】旧名 → 新名
   };
   const proMap = {
     'PRオプ○': 'PR◯', 'PRO○': 'PR◯', 'PRオプ×': 'PR×', 'PRO×': 'PR×'
@@ -7596,7 +7600,7 @@ function migrateRemoveWarnStatus() {
   Object.keys(state.productMeta).forEach(code => {
     const m = state.productMeta[code];
     if (!m) return;
-    if (m.adStatus === '入札価格△') { m.adStatus = '入札×-調整中'; migrated++; }  // 【v186】旧△は新ラベルの×-調整中へ
+    if (m.adStatus === '入札価格△') { m.adStatus = '入札△-調整中'; migrated++; }  // 【v186/v1.0715】旧△は 入札△-調整中 へ
     if (m.proStatus === 'PRオプ△') { m.proStatus = 'PR×'; migrated++; }
     if (m.status === '撤退予定-out記入済') { m.status = '撤退予定'; m.statusTs = Date.now(); migrated++; }  // 【v1.0445】撤退予定-out記入済を廃止 → 撤退予定へ統合
   });
@@ -9793,6 +9797,7 @@ function updateStateCounts() {
   const cntAdWarn = $('#cntAdWarn'); if (cntAdWarn) cntAdWarn.textContent = `(${adWarn})`;
   $('#cntAdNg').textContent = `(${adNg})`;
   const cntAdFixed = $('#cntAdFixed'); if (cntAdFixed) cntAdFixed.textContent = `(${adFixed})`;
+  { const e = $('#cntAdTri'); if (e) e.textContent = `(${adFixed + adNg})`; }   // 【v1.0715】入札△＝調整中＋飛ぶ手前固定
   $('#cntAdNone').textContent = `(${adNone})`;
   $('#cntProOk').textContent = `(${proOk})`;
   { const e1 = $('#cntProP30'); if (e1) e1.textContent = `(${proP30})`;     // 【v1.0658】
@@ -9898,7 +9903,7 @@ function codeCellHtml(code, prefixHtml) {
 //   旧ラベルもキーとして残し、未マイグレーションデータでもソートが安定するようにする
 const AD_STATUS_ORDER = {
   '': 0,
-  '入札◯': 1, '入札△-飛ぶ手前固定': 2, '入札×-調整中': 3, '入札なし': 4,
+  '入札◯': 1, '入札△-飛ぶ手前固定': 2, '入札△-調整中': 3, '入札×-調整中': 3, '入札なし': 4,   /* 【v1.0715】新旧とも同じ重み */
   '入札価格○': 1, '入札価格✕': 3, '入札無し': 4,   // 互換用（旧ラベル）
   '広告○': 1, '広告×': 3, '広告無': 4              // 互換用（マイグレーション前の値もソート可能に）
 };
@@ -10100,7 +10105,8 @@ const STATUS_TEXT_COLOR = {
   '': '#16a34a',                   // 【v1.0710】未選択（—）＝「選択前」チップと同じ緑
   // 入札価格状態
   '入札◯': '#2563eb',              // 青（◯）
-  '入札×-調整中': '#dc2626',        // 【v1.0710】橙 → 赤（✕）
+  '入札△-調整中': '#a67c00',        // 【v1.0715】黄（△）
+  '入札×-調整中': '#a67c00',        // 【v1.0715】旧名。同じ黄で表示する（データ移行なしで読めるように）
   '入札△-飛ぶ手前固定': '#a67c00',  // 【v1.0710】黄（△）に統一
   '入札なし': '#9ca3af',            // グレー（対象外）
   // PRオプ状態
@@ -10227,7 +10233,8 @@ function statusLifeDisplayLabel(value) {
 // 【v1.0620】入札状態 / PRオプ状態の選択肢を定数に切り出した。
 //   セル（statusSelectHtml）と一括変更バー（#basicBulkBar）が必ず同じ並び・同じ値を使うため。
 //   ★選択肢を足すときはここだけ直す。先頭の '' は「—（未設定）」。
-const AD_STATUS_OPTIONS  = ['', '入札◯', '入札×-調整中', '入札△-飛ぶ手前固定', '入札なし'];
+// 【v1.0715】'入札×-調整中' を '入札△-調整中' に改称（✕ → △）。★保存済みの旧値もそのまま読める
+const AD_STATUS_OPTIONS  = ['', '入札◯', '入札△-調整中', '入札△-飛ぶ手前固定', '入札なし'];
 // 【v1.0636】'PR△-親-飛ぶ手前固定' は 'PR△-飛ぶ手前固定' に統合（migrateProStatusV1636 が一度だけ値を書き換える）。
 //   'PR△-子-7％固定' は廃止。どちらも選択肢から外したが、
 //   ★色（STATUS_TEXT_COLOR）・略称（STATUS_DISPLAY_LABEL）・並び順（PRO_STATUS_ORDER）の
@@ -10242,7 +10249,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   const meta = getMeta(code);
   let value, options;
   if (kind === 'ad') {
-    value = meta.adStatus;
+    value = adStatusCanon(meta.adStatus);   // 【v1.0715】旧名'入札×-調整中'は新名'入札△-調整中'として表示する（保存値は触らない）
     options = AD_STATUS_OPTIONS;    // 【v186/v1.0620】
   } else if (kind === 'pro') {
     value = meta.proStatus;
@@ -13733,8 +13740,12 @@ function ensureTuneMembers(kind) {
 //   ・×/調整中/下げ挑戦中（cross）: 未達・調整中。上位なら「修正あり」、それ以外は推移確認/未確認へ。
 //   ・△-飛ぶ手前固定 / △-子-7％固定（settled）: 対応完了で固定。修正あり・推移確認・未確認から除外（全体のみ）。
 function adStatusIsCircle(s) { return s === '入札◯' || s === '入札価格○' || s === '広告○'; }
-function adStatusIsCross(s)  { return s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }
+// 【v1.0715】'入札△-調整中'（旧 '入札×-調整中'）。★新旧どちらの保存値も必ずこの1本で判定する
+function _adIsAdjusting(s)   { return s === '入札△-調整中' || s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }
+function adStatusIsCross(s)  { return _adIsAdjusting(s); }   // 「調整中＝まだ条件を満たしていない」側の判定（isTuneFix が見る）
 function adStatusIsSettled(s){ return s === '入札△-飛ぶ手前固定'; }  // 固定＝対応不要
+// 【v1.0715】チップ「入札△」＝ 調整中 ＋ 飛ぶ手前固定
+function _adIsTri(s)         { return _adIsAdjusting(s) || adStatusIsSettled(s); }
 function adStatusIsNone(s)   { return s === '入札なし' || s === '入札無し' || s === '広告無'; }
 // 【v1.0660】「子商品」の判定。次のどちらかなら子。
 //   ・ステータスが「子（親に追従）」
@@ -13756,9 +13767,13 @@ function effectiveProStatusOf(code) {
 // 【v1.0658/v1.0660】子商品の入札状態は、いつでも「入札なし」として扱う。
 //   ★保存値（productMeta[code].adStatus）は書き換えない（v1.0618 の方針。読むときだけ差し替える＝effectiveStatusOf と同じ作り）。
 //   ★入札状態を読んで 絞り込む／数える／調整の母集団を決める 処理は、必ずこの関数を通すこと。
+// 【v1.0715】旧名 '入札×-調整中' → 新名 '入札△-調整中' に【読み取り時だけ】言い換える。
+//   ★保存値そのものは書き換えない（effectiveAdStatusOf を通せば全画面で新名になる）
+const AD_STATUS_ALIAS = { '入札×-調整中': '入札△-調整中', '入札価格✕': '入札△-調整中', '広告×': '入札△-調整中' };
+function adStatusCanon(s) { return AD_STATUS_ALIAS[s] || s || ''; }
 function effectiveAdStatusOf(code) {
   if (_isSoiChildProduct(code)) return '入札なし';
-  return ((state.productMeta || {})[code] || {}).adStatus || '';
+  return adStatusCanon(((state.productMeta || {})[code] || {}).adStatus);
 }  // 【v1.0323】入札なし判定（旧表記も許容）
 // 【v1.0523】以前は広告を出していたが、現在は広告なし＝広告を停止／削除した商品を自動判定する。
 //   条件: (1)現在アクティブな広告運用中でない（入札◯/×調整中/△固定 のいずれでもない）
@@ -16428,7 +16443,9 @@ const STATE_FILTERS = {
   'status-churitsu-noad':{ label: '中立-広告なし□', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '中立-広告なし□' },
   // 【v1.0658】入札状態は effectiveAdStatusOf（子＝入札なし）で判定。★件数（updateStateCounts）と同じ式にすること
   'ad-ok':         { label: '入札◯',            targetView: 'basic', basicMode: 'tune',  match: (meta, code) => adStatusIsCircle(effectiveAdStatusOf(code)) },
-  'ad-ng':         { label: '入札×-調整中',      targetView: 'basic', basicMode: 'tune',  match: (meta, code) => adStatusIsCross(effectiveAdStatusOf(code)) },
+  // 【v1.0715】チップは「入札△」にまとめた（調整中＋飛ぶ手前固定）。ad-ng / ad-fixed の定義は残置（保存済みの絞り込み状態が指していても壊れないように）
+  'ad-tri':        { label: '入札△',            targetView: 'basic', basicMode: 'tune',  match: (meta, code) => _adIsTri(effectiveAdStatusOf(code)) },
+  'ad-ng':         { label: '入札△-調整中',      targetView: 'basic', basicMode: 'tune',  match: (meta, code) => adStatusIsCross(effectiveAdStatusOf(code)) },
   'ad-fixed':      { label: '入札△-飛ぶ手前固定', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => adStatusIsSettled(effectiveAdStatusOf(code)) },
   'ad-none':       { label: '入札なし',          targetView: 'basic', basicMode: 'tune', match: (meta, code) => adStatusIsNone(effectiveAdStatusOf(code)) },
   // 【v1.0658】PR◯ は「素のPR◯」だけ（親-30％固定 / 子-7％固定 はそれぞれ専用チップ）。★件数の分け方と同じ
@@ -20208,7 +20225,7 @@ function _xfHelpBody(kind) {
     + '<table class="tc-table"><tbody>'
     + '<tr><td style="width:110px"><span class="tc-hi">有り</span></td><td>'
     +   '入札状態が「<b>入札なし</b>」以外の商品<br>'
-    +   '→ <b>入札◯</b> ／ <b>入札×-調整中</b> ／ <b>入札△-飛ぶ手前固定</b> ／ <b>—（未設定）</b>'
+    +   '→ <b>入札◯</b> ／ <b>入札△-調整中</b> ／ <b>入札△-飛ぶ手前固定</b> ／ <b>—（未設定）</b>'
     + '</td></tr>'
     + '<tr><td><span class="tc-hi">無し</span></td><td>'
     +   '入札状態が「<b>入札なし</b>」の商品'
