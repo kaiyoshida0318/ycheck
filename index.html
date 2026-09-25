@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0715 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0716 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3838,7 +3838,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0715</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0716</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10133,9 +10133,17 @@ const STATUS_DISPLAY_LABEL = {
   'PR△-飛ぶ手前固定':    'PR△<br>飛ぶ手前固定',
   '入札△-飛ぶ手前固定':  '入札△<br>飛ぶ手前固定'
 };
+// 【v1.0716】★「保存値は変えずに見た目の名前だけ変える」ための言い換え表。
+//   ここに入れた値は【ドロップダウンの選択肢】と【セルの閉じた表示】だけ名前が変わる。
+//   保存値・件数・絞り込み・チップ・CSV は従来のまま（'PR×' のまま）なので何も壊れない。
+//   ★逆に「チップの文字も変えたい」ときは、ここではなく §94 のチップHTMLを直すこと。
+const STATUS_OPTION_LABEL = {
+  'PR×': 'PR✕-放置'                 // 【v1.0716】見た目だけ改称（保存値は 'PR×' のまま）
+};
+function statusOptionLabel(value) { return escapeHtml(STATUS_OPTION_LABEL[value] || value) || '—'; }
 function statusDisplayLabel(value) {
   if (STATUS_DISPLAY_LABEL[value]) return STATUS_DISPLAY_LABEL[value];  // 固定略称（静的HTML・安全）
-  return escapeHtml(value) || '—';
+  return statusOptionLabel(value);                                      // 【v1.0716】言い換え表を通す
 }
 
 // 【v195】ステータス（商品ライフサイクル）の値ごとの文字色。背景は白、文字色のみ着色。
@@ -10275,7 +10283,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
       + `</span>`;
   }
   if (kind === 'ad' || kind === 'pro') {
-    const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusTextColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
+    const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusTextColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${statusOptionLabel(o)}</option>`).join('');   // 【v1.0716】★value は保存値のまま。表示だけ言い換える
     const c = statusTextColor(value);
     const bd = value ? c : '#cbd5e1';
     const dis = ghIsEnabled() ? '' : ' disabled';
@@ -10293,7 +10301,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   //   ★selected はまとめに直してから合わせる。直さないと「どれも選ばれていない」状態になり、
   //     そのまま別の値を選ぶと元に戻せなくなる。
   const _coarse = _statusLifeCoarseOf(value);
-  const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _coarse ? 'selected' : ''}>${escapeHtml(o) || '—'}</option>`).join('');
+  const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _coarse ? 'selected' : ''}>${statusOptionLabel(o)}</option>`).join('');   // 【v1.0716】
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
   const dis = ghIsEnabled() ? '' : ' disabled';
@@ -11204,7 +11212,7 @@ function _bulkFillSelects() {
     const el = document.getElementById(sel);
     if (!el) return;
     el.innerHTML = '<option value="' + BULK_KEEP + '" selected>（変更しない）</option>'
-      + opts.map(o => '<option value="' + escapeHtml(o) + '">' + (escapeHtml(o) || '—') + '</option>').join('');
+      + opts.map(o => '<option value="' + escapeHtml(o) + '">' + statusOptionLabel(o) + '</option>').join('');   // 【v1.0716】見た目だけ言い換える
   };
   mk('bulkStatus',    STATUS_LIFE_OPTIONS);
   mk('bulkAdStatus',  AD_STATUS_OPTIONS);
