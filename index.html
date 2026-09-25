@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0729 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0730 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3842,7 +3842,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0729</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0730</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5930,6 +5930,17 @@ const VP_LEGACY_COL_KEY = 'ycheck_col_widths_v1';   // 【〜v1.0544】旧・端
 //         端末のほうが新しければ端末側を勝たせる。あわせて未反映マークを立てて気づけるようにする。
 const VP_DEVICE_KEY = 'ycheck_viewprefs_device_v1';
 let _vpKeptLocal = null;   // 端末側を勝たせたときの情報（パネルの注記用）
+// 【v1.0730】★同じ状況で同じ警告を何度も出さないための印。
+//   viewPrefs の読み込みは「起動時・GitHubから読み込み・更新」など何度も通るので、
+//   何もしないと まったく同じ警告がログに積み上がる（実際に「出続ける」と言われた）。
+//   キーは（読み込んだ側の時刻 / 端末側の時刻）。この2つが同じなら“同じ状況”＝1回だけ出す。
+//   ★状況が変わったとき（新しいデータが来た／端末で列幅を触り直した）は別キーになるので、
+//     そのときは改めて1回だけ出る。「一生出さない」にはしないこと。
+//   ★印は localStorage に持つ。セッション変数だけだと【リロードのたびに1回ずつ】出てしまい、
+//     「2回目を出さない」にならない（ページを開き直すのが一番よくある操作なので実質毎回出る）。
+const VP_KEPT_NOTIFY_KEY = 'ycheck_viewprefs_keptnotify_v1';
+function _vpNotifiedKey() { try { return localStorage.getItem(VP_KEPT_NOTIFY_KEY) || ''; } catch (e) { return ''; } }
+function _vpSetNotifiedKey(k) { try { if (k) localStorage.setItem(VP_KEPT_NOTIFY_KEY, k); else localStorage.removeItem(VP_KEPT_NOTIFY_KEY); } catch (e) {} }
 function _vpReadDeviceBackup() {
   try { const o = JSON.parse(localStorage.getItem(VP_DEVICE_KEY) || 'null');
         return (o && typeof o === 'object' && o.colWidths) ? o : null; } catch (e) { return null; }
@@ -5959,13 +5970,23 @@ function _vpAdoptIncoming(incoming) {
     ensureViewPrefs(); _vpLegacyMigrated = true;
     try { applyViewPrefs(); } catch (e) {}
     _vpKeptLocal = { inTs: inTs, bkTs: bkTs, n: Object.keys(state.viewPrefs.colWidths).length };
-    try { ycLog('warn', '表示設定: 読み込んだデータより この端末のほうが新しかったので端末側を維持しました（列' + _vpKeptLocal.n + '件・未反映）'); } catch (e) {}
-    // 未反映マークを立てて「⬆ 反映する」に気づけるようにする（起動直後は _ycAutoSaveArmed で無視されるので少し遅らせる）
+    // 【v1.0730】ログと未反映マークは「この状況につき1回だけ」。
+    //   ★パネルの注記（⚠ この端末の設定のほうが新しい…）は _vpKeptLocal を見ているので今までどおり毎回出る。
+    //     消すのはログの繰り返しだけ＝気づけなくなるわけではない。
+    const _vpk = inTs + '/' + bkTs;
+    if (_vpNotifiedKey() !== _vpk) {
+      _vpSetNotifiedKey(_vpk);
+      try { ycLog('warn', '表示設定: 読み込んだデータより この端末のほうが新しかったので端末側を維持しました（列' + _vpKeptLocal.n + '件・未反映）'); } catch (e) {}
+    }
+    // ★未反映マークは【毎回】立てる。ログだけを止める（ここまで一緒に止めると
+    //   「⬆ 反映する」に気づく手がかりが無くなり、列幅がいつまでも他PCへ渡らない）。
+    //   起動直後は _ycAutoSaveArmed で無視されるので少し遅らせる。
     setTimeout(function () { try { if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave(); } catch (e) {} }, 3000);
     return;
   }
   state.viewPrefs = incoming; ensureViewPrefs(); _vpLegacyMigrated = true;
   try { applyViewPrefs(); } catch (e) {}
+  _vpKeptLocal = null; _vpSetNotifiedKey('');   // 【v1.0730】解消したので印もリセット（次に起きたらまた1回だけ出る）
   _vpWriteDeviceBackup();   // 採用したものを端末バックアップにも書いて、次回の比較基準にする
 }
 
