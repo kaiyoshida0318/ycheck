@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0734 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0735 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -599,8 +599,15 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; }
 .xf-row { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; width: 100%; }
 .nav-group-tune { flex: 0 0 auto; }
-.nav-row-tabs { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 26px; row-gap: 2px; }   /* 【v1.0661】【一覧】＋【調整】 */
-.nav-row-tabs > #btnToggleTabs { margin-left: auto; white-space: nowrap; align-self: center; }   /* 【v1.0700】ヘッダー2を隠すボタン */
+.nav-row-tabs { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 10px; row-gap: 2px; }   /* 【v1.0661】【一覧】＋【調整】／【v1.0735】グループ間 26px → 10px */
+/* 【v1.0735】★タブが増えて（【撤退】【リニューアル】）ボタンが行からあふれて下に落ちていた。
+   ・グループ間の余白（26→12px）とタブの左右padding（14→9px）を詰めて、4グループが1行に収まるようにした
+   ・ボタンは最小幅ぶんの席を必ず確保する（flex:0 0 auto ＝ 縮まない・折り返しの最後に置く）
+   ★タブをこれ以上増やすときは、この2つの数字を先に見直すこと。ボタンだけ別行に落ちるのは席が無いサイン。 */
+.top-nav-3 .nav-row-tabs .nav-tab { padding-left: 7px; padding-right: 7px; }
+.top-nav-3 .nav-row-tabs .nav-tab .chip-num { margin-left: 2px; }
+.top-nav-3 .nav-row-tabs .nav-group-tune .nav-group-label { padding-right: 3px; }
+.nav-row-tabs > #btnToggleTabs { margin-left: auto; white-space: nowrap; align-self: center; flex: 0 0 auto; }   /* 【v1.0700/v1.0735】ヘッダー2を隠すボタン（縮まない席を確保） */
 /* 【v1.0703】ヘッダー3の上に出すヘッダー2の復帰口。隠すボタンと同じ右端にそろえる */
 .hdr-restore-inline { width: 100%; display: flex; justify-content: flex-end; padding: 0 0 3px; }
 .top-nav-3 .xf-row { margin-top: 7px; }   /* 【v1.0668】【一覧】【調整】の行とバッジ群の間を少し空ける（.top-nav-3 の gap 6px ＋ 7px） */
@@ -609,7 +616,9 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 
 /* 【v1.0705】3行を1つのグリッドにしたので、.states-stack は「グリッド ＋ 右端の開閉ボタン」の横並びになった */
 .states-stack { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; flex: 1 1 auto; min-width: 0; }
-.states-stack > #btnToggleStates { margin-left: auto; flex: 0 0 auto; white-space: nowrap; }
+.states-stack > #btnToggleStates { margin-left: auto; flex: 0 0 auto; white-space: nowrap; align-self: flex-end; }
+/* 【v1.0735】★align-self: flex-end ＝ チップ3行ぶんの【右下】に置く。
+   .states-stack は align-items: flex-start なので、指定しないと1行目の高さに張り付く（＝右上）。 */
 /* ============================================================================
    【v1.0705】状態チップの表（ステータス / 入札状態 / PR状態 の3行）
    ・1つのグリッドに3行ぶん流し込む＝列トラックを共有するので必ず縦にそろう
@@ -3847,7 +3856,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0734</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0735</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
