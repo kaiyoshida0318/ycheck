@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0748 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0749 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3881,7 +3881,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0748</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0749</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -20992,6 +20992,7 @@ function saveColWidth(key, px) {
     if (px == null) delete vp.colWidths[key];
     else vp.colWidths[key] = Math.round(px);
     _vpTouch('この端末');
+    _colResizeDirty = true;   // 【v1.0749】幅調整モードを終えたときにまとめてGitHubへ反映するための印
   } catch (e) { console.warn('列幅の保存に失敗:', e); }
 }
 // 【v1.0623】列幅をドラッグで変えた直後の通知。連続操作でうるさくならないよう間引く。
@@ -21373,7 +21374,9 @@ function _vpRenderPanel() {
 //   ★保存の仕組み（saveColWidth / applyColWidths / state.viewPrefs）は一切変えていない。
 //     「掴めるかどうか」だけを切り替えている。
 let _colResizeOn = false;
+let _colResizeDirty = false;   // 【v1.0749】このモード中に幅を1つでも変えたか
 function setColResizeMode(on) {
+  const wasOn = _colResizeOn;
   _colResizeOn = !!on;
   document.body.classList.toggle('col-resize-on', _colResizeOn);
   const b = document.getElementById('btnViewPrefs');
@@ -21384,6 +21387,18 @@ function setColResizeMode(on) {
       : '幅調整モード：押すと列の境目をドラッグして列幅を変えられます';
   }
   try { ycLog('info', _colResizeOn ? '幅調整モード: ON（列の境目をドラッグできます）' : '幅調整モード: OFF'); } catch (e) {}
+  // 【v1.0749】★モードを【終える】ときに、そのあいだに変えた列幅をまとめてGitHubへ反映する。
+  //   「幅は一通り終わってからpush」という運用そのもの。
+  //   これで「この端末のほうが新しかったので端末側を維持しました」が出なくなる
+  //   （あの警告は＝端末に未反映の列幅が残っている、という意味だったため / §116・§124）。
+  //   ★ドラッグ1回ごとには送らない（コミットが荒れる）。モードON中は貯めるだけ。
+  if (wasOn && !_colResizeOn && _colResizeDirty) {
+    _colResizeDirty = false;
+    try { ycLog('save', '幅調整モードを終了 → 列幅をGitHubへ反映します'); } catch (e) {}
+    try { showToast('列幅をGitHubへ反映します（他のPCにも反映されます）', 'info'); } catch (e) {}
+    try { ycAutoPushSoon(); } catch (e) {}
+  }
+  if (_colResizeOn) _colResizeDirty = false;   // ONにした時点で印をリセット
 }
 window.setColResizeMode = setColResizeMode;
 
