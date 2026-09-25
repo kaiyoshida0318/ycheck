@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0709 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0711 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -814,7 +814,10 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state].active .chip-label { color: #fff; }
 .top-nav-3 .state-chip[data-state].active .chip-num { color: rgba(255,255,255,0.9); }
 /* 各チップの文字色＝その列で使っている色 */
-.top-nav-3 .state-chip[data-state="all-basic"] { color: #0d9488; }
+/* 【v1.0711】3行の「現役全体」は同じ色（ティール）。★1行だけ色が違うと、同じ意味のボタンに見えない */
+.top-nav-3 .state-chip[data-state="all-basic"],
+.top-nav-3 .state-chip[data-state="ad-all"],
+.top-nav-3 .state-chip[data-state="pro-all"] { color: #0d9488; font-weight: 700; }
 .top-nav-3 .state-chip[data-state="ad-ok"],
 .top-nav-3 .state-chip[data-state="pro-ok"] { color: #2563eb; }
 .top-nav-3 .state-chip[data-state="pro-p30"] { color: #15803d; }   /* 【v1.0658】親＝緑（送り込み元） */
@@ -3833,7 +3836,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0709</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0711</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3982,7 +3985,7 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="states-grid">
 
     <span class="sg-label g-status">【ステータス】</span>
-    <button class="state-chip chip-all" data-state="all-basic" title="撤退済みを除いた全商品"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <button class="state-chip chip-all" data-state="all-basic" title="現役全体＝撤退済みを除いた全商品"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
     <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
@@ -3991,7 +3994,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
 
     <span class="sg-label g-nyusatsu">【入札状態】</span>
-    <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+    <button class="state-chip chip-all" data-state="ad-all" title="現役全体のうち、入札価格が記入されている商品（撤退済み・入札なしは含みません）"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <button class="state-chip" data-state="ad-fixed" title="入札△-飛ぶ手前固定"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
@@ -4000,7 +4003,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
 
     <span class="sg-label g-pr">【PR状態】</span>
-    <button class="state-chip chip-all" data-state="pro-all" title="撤退済みを除いた全商品"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+    <button class="state-chip chip-all" data-state="pro-all" title="現役全体＝撤退済みを除いた全商品"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
     <button class="state-chip" data-state="pro-tri" title="PR△（PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
@@ -10082,23 +10085,32 @@ function rowParentChildClass(code, sets) {
 }
 
 // 【v186】入札価格状態・PRオプ状態の値ごとの文字色（サンプル画像準拠。背景は白、文字色のみ着色）。
+// 【v1.0710】★ヘッダーの状態チップ（§90-2 / §94）と色を統一した。3行・ドロップダウン共通の意味:
+//     緑 #16a34a … これから決める（選択前・新商品）
+//     青 #2563eb … ◯＝対応不要
+//     黄 #a67c00 … △＝様子見・調整中
+//     赤 #dc2626 … ✕＝要対応
+//     灰 #9ca3af … 対象外（入札なし）
+//   ★ここを直したら STATUS_LIFE_COLOR（ステータス側）と、チップのCSS（.top-nav-3 .state-chip[data-state=…]）も
+//     必ず同じ値にすること。色の意味が画面ごとに変わると一番混乱する。
 const STATUS_TEXT_COLOR = {
+  '': '#16a34a',                   // 【v1.0710】未選択（—）＝「選択前」チップと同じ緑
   // 入札価格状態
-  '入札◯': '#2563eb',              // 青
-  '入札×-調整中': '#ea7317',        // オレンジ
-  '入札△-飛ぶ手前固定': '#c99700',  // 黄色
-  '入札なし': '#9ca3af',            // グレー
+  '入札◯': '#2563eb',              // 青（◯）
+  '入札×-調整中': '#dc2626',        // 【v1.0710】橙 → 赤（✕）
+  '入札△-飛ぶ手前固定': '#a67c00',  // 【v1.0710】黄（△）に統一
+  '入札なし': '#9ca3af',            // グレー（対象外）
   // PRオプ状態
-  'PR◯': '#2563eb',                // 青
-  'PR◯-親-30％固定': '#15803d',     // 緑（送り込み元＝親バッジと同じ）【v1.0658】
-  'PR◯-子-7％固定': '#92400e',      // 黄土（送り込み先＝子バッジと同じ）【v1.0658】
-  'PR△-親-下げ挑戦中': '#a67c00',   // 中立-広告あり□と同色（濃い黄）
-  'PR△-親-飛ぶ手前固定': '#12a5c8', // 水色
-  'PR△-子-7％固定': '#12a5c8',      // 水色
-  'PR△-飛ぶ手前固定': '#c99700',    // 入札△-飛ぶ手前固定と同色（黄）
-  'PR×': '#ea7317'                 // オレンジ
+  'PR◯': '#2563eb',                // 青（◯）
+  'PR◯-親-30％固定': '#2563eb',     // 【v1.0710】◯はまとめて青（親子の別は .rep-badge とラベルで分かる）
+  'PR◯-子-7％固定': '#2563eb',      // 【v1.0710】同上
+  'PR△-親-下げ挑戦中': '#a67c00',   // 黄（△）
+  'PR△-親-飛ぶ手前固定': '#a67c00', // 【v1.0710】水色 → 黄（△）
+  'PR△-子-7％固定': '#a67c00',      // 【v1.0710】水色 → 黄（△）
+  'PR△-飛ぶ手前固定': '#a67c00',    // 【v1.0710】黄（△）
+  'PR×': '#dc2626'                 // 【v1.0710】橙 → 赤（✕）
 };
-function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; }  // -（未設定）は黒
+function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; }  // 未知の値は黒
 
 // 【v188】列（セル）での表示用ラベル。ドロップダウンの選択肢は正式名のまま、セルの閉じた表示だけ2行の略称にする。
 //   ※HTMLを返す（<br>で改行）。固定4値のみ略称化し、他は正式名（1行）。
@@ -10117,15 +10129,16 @@ function statusDisplayLabel(value) {
 }
 
 // 【v195】ステータス（商品ライフサイクル）の値ごとの文字色。背景は白、文字色のみ着色。
+// 【v1.0710】★チップ（§94）と同じ色に統一。広告あり／なしは同じ色にする（チップが「健常◯」「中立△」で1つだから）
 const STATUS_LIFE_COLOR = {
-  '新商品': '#16a34a',              // 緑
-  '健常-広告あり◯': '#2563eb',      // 青
-  '健常-広告なし◯': '#12a5c8',      // 水色（PR△-親-飛ぶ手前固定と同色）
-  '中立-広告あり□': '#a67c00',      // 濃い黄色
-  '中立-広告なし□': '#caa61e',      // 少し薄い黄色（可読性は確保）
+  '新商品': '#16a34a',              // 緑（これから決める）
+  '健常-広告あり◯': '#2563eb',      // 青（◯）
+  '健常-広告なし◯': '#2563eb',      // 【v1.0710】水色 → 青（健常◯でひとまとめ）
+  '中立-広告あり□': '#a67c00',      // 黄（△）
+  '中立-広告なし□': '#a67c00',      // 【v1.0710】薄黄 → 黄（中立△でひとまとめ）
   '撤退検討▲': '#ea7317',          // オレンジ
-  '撤退予定': '#dc2626',           // 赤
-  '撤退済み': '#8b5a2b',           // 茶色
+  '撤退予定': '#dc2626',           // 赤（✕）
+  '撤退済み': '#8b5a2b',           // 茶色（チップと同じ）
   '—': '#94a3b8',                 // 【v1.0614】未設定（—）: グレー
   '子（親に追従）': '#92400e'       // 【v1.0626】子: 商品コード左の黄色バッジ(.rep-badge.child)と同じ色
 };
@@ -16354,12 +16367,13 @@ $$('.nav-tab').forEach(item => {
 const STATE_FILTERS = {
   // 【v1.0707】「全体」は撤退済みを含まない。★件数（activeCount）は元から撤退済みを除いているので、
   //   判定側にも同じ条件を明示しておく（match と件数で母集団がずれないように。§12）
-  'all-basic':     { label: '全体',       targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },
+  'all-basic':     { label: '現役全体',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },
   // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
-  'ad-all':        { label: '全体',       targetView: 'basic', basicMode: 'tune',  match: (meta, code) => { if (adStatusIsNone(effectiveAdStatusOf(code))) return false;   /* 【v1.0658】子は除外 */
+  'ad-all':        { label: '現役全体',   targetView: 'basic', basicMode: 'tune',  match: (meta, code) => { if (isRetired(code)) return false;   /* 【v1.0711】撤退済みは含まない */
+     if (adStatusIsNone(effectiveAdStatusOf(code))) return false;   /* 【v1.0658】子は除外 */
      const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
   // 【v1.0496】PR状態の「全体」＝PRオプ調整（pro-adjust）の画面と同じ内容で全商品を表示。
-  'pro-all':       { label: '全体',       targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },   /* 【v1.0707】撤退済みは含まない */
+  'pro-all':       { label: '現役全体',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },   /* 【v1.0707】撤退済みは含まない */
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
   'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
