@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0708 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0709 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -633,8 +633,9 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 }
 .states-grid .sg-empty { }
 /* チップはセルいっぱいに。★角丸・枠線はグリッドの罫線と二重になるので消す */
+/* ★border-radius は 0。角丸のままだと左の罫線（border-left）が弧を描いて、線が途切れて見える */
 .states-grid .state-chip {
-  border: none; border-radius: 6px; width: 100%;
+  border: none; border-radius: 0; width: 100%;
   justify-content: center; padding: 3px 9px;
   background: transparent !important;
 }
@@ -651,7 +652,10 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
      列数を変えたらこの 8n+1 も必ず直す（直し忘れると線が1本ずれる）。
    ★この指定は .states-grid .state-chip { border:none } より【後ろ】に書くこと。
      セレクタの強さが同じなので、前に書くと border:none に負けて線が消える（実際に踏んだ）。 */
-.states-grid > *:not(:nth-child(8n+1)) { border-left: 2px solid #c3cad6; }
+/* 【v1.0709】★縦線の色は !important で固定する。
+   チップの配色ルール（.top-nav-3 .state-chip[data-state=…]）が border-color を持っていて、
+   そちらが後ろに書かれているため、!important が無いと線が【チップの色】になってバラバラに見える。 */
+.states-grid > *:not(:nth-child(8n+1)) { border-left: 2px solid #c3cad6 !important; }
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
 /* ============================================================================
@@ -832,14 +836,15 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
    ★行ごとのグループ色（広告系＝アンバー / PR系＝パープル）より後ろに書いて上書きしている。
      順番を入れ替えるとグループ色に戻ってしまう。
    ============================================================ */
+/* 【v1.0709】白地運用にしたので、まとめチップは【文字色だけ】を指定する（背景・枠色は持たせない） */
 .top-nav-3 .state-chip[data-state="status-kenzen"],
 .top-nav-3 .state-chip[data-state="ad-ok"],
-.top-nav-3 .state-chip[data-state="pro-ok-all"]  { color: #1e40af; background: #e3edfd; border-color: #b6d0fb; }
+.top-nav-3 .state-chip[data-state="pro-ok-all"]  { color: #1e40af; }
 .top-nav-3 .state-chip[data-state="status-churitsu"],
 .top-nav-3 .state-chip[data-state="ad-fixed"],
-.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; background: #fbf3d9; border-color: #ead98a; }
+.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; }
 .top-nav-3 .state-chip[data-state="ad-ng"],
-.top-nav-3 .state-chip[data-state="pro-ng"]      { color: #dc2626; background: #fde9e8; border-color: #f5b8b5; }
+.top-nav-3 .state-chip[data-state="pro-ng"]      { color: #dc2626; }
 /* 【v1.0705】選択時だけ色を塗る（通常時は白地＋文字色）。★グリッドでは白地を !important にしているので選択色も !important で上書きする */
 .states-grid .state-chip[data-state="status-kenzen"].active,
 .states-grid .state-chip[data-state="ad-ok"].active,
@@ -3828,7 +3833,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0708</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0709</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
