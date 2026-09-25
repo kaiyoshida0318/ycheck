@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0711 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0713 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3836,7 +3836,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0711</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0713</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4006,7 +4006,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip chip-all" data-state="pro-all" title="現役全体＝撤退済みを除いた全商品"><span class="chip-label">現役全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
-    <button class="state-chip" data-state="pro-tri" title="PR△（PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
+    <button class="state-chip" data-state="pro-tri" title="PR△（PR△-調整中 ＋ PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
     <span class="sg-empty"></span>
     <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <span class="sg-empty"></span>
@@ -4184,9 +4184,10 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0609】調整-基本のときだけ出す3列（body.basic-tune で表示）。
                    ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
                      片方だけ出し入れすると列がずれる。 -->
+              <!-- 【v1.0712】並びを ステータス → 入札状態 → PR状態 に（ヘッダーの3行と同じ順） -->
               <th class="status-col tune-col" data-sort="status">ステータス</th>
-              <th class="status-col tune-col" data-sort="proStatus">PR状態</th>
               <th class="status-col tune-col" data-sort="adStatus">入札状態</th>
+              <th class="status-col tune-col" data-sort="proStatus">PR状態</th>
               <!-- 【v1.0592】送り込み売上の列は撤去。
                    ★データ（_soiByParent / CSVの列）は残してある。戻すときは、この th と
                      renderBasic の tr.innerHTML に col-soi の td を書き戻すだけ。
@@ -9704,6 +9705,7 @@ function updateStateCounts() {
   let adOk = 0, adWarn = 0, adNg = 0, adFixed = 0, adNone = 0;
   let proOk = 0, proWarn = 0, proLower = 0, proPfixed = 0, proCfixed = 0, proHfixed = 0, proNg = 0, proWithdrawConsider = 0, proWithdraw = 0;
   let proP30 = 0, proC7 = 0;   // 【v1.0658】PR◯-親-30％固定 / PR◯-子-7％固定
+  let proAdj = 0;              // 【v1.0713】PR△-調整中
   let unselectedAd = 0, unselectedPro = 0;
   let bidEnteredCount = 0;  // 【v208】入札価格が記入されている商品数
   let activeCount = 0;  // 現役商品合計数（撤退済み以外）
@@ -9746,6 +9748,7 @@ function updateStateCounts() {
     if (_proIsP30(proS)) proP30++;
     else if (_proIsC7(proS)) proC7++;
     else if (proStatusIsCircle(proS)) proOk++;
+    else if (proS === 'PR△-調整中') proAdj++;   // 【v1.0713】
     else if (proS === 'PR△-親-下げ挑戦中') proLower++;
     // 【v1.0636】'PR△-親-飛ぶ手前固定' は 'PR△-飛ぶ手前固定' に統合したので同じカウンタへ入れる
     //   （移行前・他端末の古い値がまだ残っていても件数が合うように、両方をここで受ける）。
@@ -9801,7 +9804,7 @@ function updateStateCounts() {
   const cntProPfixed = $('#cntProPfixed'); if (cntProPfixed) cntProPfixed.textContent = `(${proPfixed})`;
   const cntProCfixed = $('#cntProCfixed'); if (cntProCfixed) cntProCfixed.textContent = `(${proCfixed})`;
   const cntProHfixed = $('#cntProHfixed'); if (cntProHfixed) cntProHfixed.textContent = `(${proHfixed})`;
-  { const e = $('#cntProTri'); if (e) e.textContent = `(${proLower + proHfixed})`; }   // 【v1.0704】
+  { const e = $('#cntProTri'); if (e) e.textContent = `(${proAdj + proLower + proHfixed})`; }   // 【v1.0704/v1.0713】PR△まとめ＝調整中＋下げ挑戦中＋飛ぶ手前固定
   $('#cntProNg').textContent = `(${proNg})`;
   const _setTx = (id, n) => { const el = $(id); if (el) el.textContent = `(${n})`; };
   // 【v1.0583】クロス絞り込みパネルの件数。交差セルは数字だけ、軸セルは (n) 表記
@@ -10104,6 +10107,7 @@ const STATUS_TEXT_COLOR = {
   'PR◯': '#2563eb',                // 青（◯）
   'PR◯-親-30％固定': '#2563eb',     // 【v1.0710】◯はまとめて青（親子の別は .rep-badge とラベルで分かる）
   'PR◯-子-7％固定': '#2563eb',      // 【v1.0710】同上
+  'PR△-調整中': '#a67c00',          // 【v1.0713】黄（△）
   'PR△-親-下げ挑戦中': '#a67c00',   // 黄（△）
   'PR△-親-飛ぶ手前固定': '#a67c00', // 【v1.0710】水色 → 黄（△）
   'PR△-子-7％固定': '#a67c00',      // 【v1.0710】水色 → 黄（△）
@@ -10208,7 +10212,8 @@ const AD_STATUS_OPTIONS  = ['', '入札◯', '入札×-調整中', '入札△-�
 //   'PR△-子-7％固定' は廃止。どちらも選択肢から外したが、
 //   ★色（STATUS_TEXT_COLOR）・略称（STATUS_DISPLAY_LABEL）・並び順（PRO_STATUS_ORDER）の
 //     旧キーは残してある。移行前のデータや他端末の古い保存値が来ても表示が崩れないようにするため。
-const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR◯-親-30％固定', 'PR◯-子-7％固定', 'PR△-親-下げ挑戦中', 'PR△-飛ぶ手前固定', 'PR×'];
+// 【v1.0713】'PR△-調整中' を追加。◯系（青）と△系（黄）の境目＝△グループの先頭に置く
+const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR◯-親-30％固定', 'PR◯-子-7％固定', 'PR△-調整中', 'PR△-親-下げ挑戦中', 'PR△-飛ぶ手前固定', 'PR×'];
 // 【v1.0658】◯系を2つ追加（どちらも「いま直すことはない」＝対応不要）。
 //   PR◯-親-30％固定 … 送り込み元。7％まで下げず、上位表示を取るために高い料率のまま固定している
 //   PR◯-子-7％固定  … 送り込み先。最低料率7％から動かしようがない（v1.0636で廃止した 'PR△-子-7％固定' の置き換え）
@@ -10900,8 +10905,8 @@ function renderBasic() {
       ${_proCell}
       ${_bidCell}
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'status')}</td>
-      <td class="status-col tune-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col tune-col">${statusSelectHtml(r.code, 'pro')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -13752,7 +13757,9 @@ function adStoppedBadge(code) {
 function _proIsP30(s){ return s === 'PR◯-親-30％固定'; }
 function _proIsC7(s) { return s === 'PR◯-子-7％固定' || s === 'PR△-子-7％固定'; }
 function proStatusIsCircle(s){ return s === 'PR◯' || s === 'PRオプ○' || s === 'PRO○' || _proIsP30(s) || _proIsC7(s); }
-function proStatusIsCross(s) { return s === 'PR×' || s === 'PR△-親-下げ挑戦中' || s === 'PRオプ×' || s === 'PRO×'; }
+// 【v1.0713】'PR△-調整中' も「いま動かしている最中」なので 下げ挑戦中 と同じ扱いにする
+//   （SEOが上位なのに調整中のままなら「修正あり」に出したい。isTuneFix がこの関数を見る）
+function proStatusIsCross(s) { return s === 'PR×' || s === 'PR△-調整中' || s === 'PR△-親-下げ挑戦中' || s === 'PRオプ×' || s === 'PRO×'; }
 function proStatusIsSettled(s){ return s === 'PR△-親-飛ぶ手前固定' || s === 'PR△-子-7％固定'; }  // 固定＝対応不要
 // 【v1.0636】「PR△-飛ぶ手前固定」の判定。旧値 'PR△-親-飛ぶ手前固定' もここで一緒に受ける。
 //   ★統合したので、チップ・件数・絞り込みは必ずこの1本を通すこと。
@@ -16397,7 +16404,7 @@ const STATE_FILTERS = {
   'pro-c7':        { label: 'PR◯-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsC7(effectiveProStatusOf(code)) },
   // 【v1.0704】チップをまとめたぶんの定義。★判定は既存のヘルパーをそのまま使い回す（条件を書き直さない）
   'pro-ok-all':    { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => proStatusIsCircle(effectiveProStatusOf(code)) },
-  'pro-tri':       { label: 'PR△',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return p === 'PR△-親-下げ挑戦中' || _proIsHFixed(p); } },
+  'pro-tri':       { label: 'PR△',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return p === 'PR△-調整中' || p === 'PR△-親-下げ挑戦中' || _proIsHFixed(p); } },   /* 【v1.0713】調整中を追加 */
   'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveProStatusOf(code) === 'PR△-親-下げ挑戦中' },
   // 【v1.0636】チップは撤去したが、保存済みの activeStateFilter が指していても壊れないよう定義は残す。
   'pro-pfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
