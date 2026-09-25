@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0736 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0738 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3867,7 +3867,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0736</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0738</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3977,8 +3977,8 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="nav-group nav-group-tune nav-group-tettai">
     <span class="nav-group-label g-tettai">【撤退】</span>
     <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="consider" href="?view=withdraw-consider">撤退検討<span class="chip-num" id="cntWdConsider"></span></a>
-    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="plan" href="?view=withdraw-plan">撤退予定<span class="chip-num" id="cntWdPlan"></span></a>
-    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="done" href="?view=withdraw-done">撤退済<span class="chip-num" id="cntWdDone"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="plan" href="?view=withdraw-plan">削除予定<span class="chip-num" id="cntWdPlan"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="done" href="?view=withdraw-done">削除済<span class="chip-num" id="cntWdDone"></span></a>
   </div>
   <!-- 【v1.0732】【リニューアル】＝ステータス「リニューアル予定」だけを出す。
        ★中身（ビュー・表・列・既定ソート）は【撤退】とまったく同じ #view-withdraw を使い回す。
@@ -4040,8 +4040,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
-    <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
-    <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
+    <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">削除予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
+    <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">削除済</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
     <!-- 【v1.0726】9列目。撤退の右＝「畳むのではなく作り直す」枠 -->
     <button class="state-chip" data-state="status-renewal-plan" title="リニューアル予定＝いったん止めて作り直す商品（撤退とは別枠）"><span class="chip-label">リニューアル予定</span><span class="chip-num" id="cntStatusRenewalPlan">(0)</span></button>
 
@@ -5973,7 +5973,12 @@ let _vpKeptLocal = null;   // 端末側を勝たせたときの情報（パネ�
 //     そのときは改めて1回だけ出る。「一生出さない」にはしないこと。
 //   ★印は localStorage に持つ。セッション変数だけだと【リロードのたびに1回ずつ】出てしまい、
 //     「2回目を出さない」にならない（ページを開き直すのが一番よくある操作なので実質毎回出る）。
-const VP_KEPT_NOTIFY_KEY = 'ycheck_viewprefs_keptnotify_v1';
+//   【v1.0738】★キーに「端末側の時刻(bkTs)」を入れてはいけない。
+//     端末バックアップは【列幅をドラッグするたび】に updatedAt が新しくなるので、
+//     bkTs を入れると 幅を触るたびに別キー＝また1回出る → 結局ずっと出続ける（v1.0730の失敗）。
+//     見るのは【読み込んだ側(inTs)】だけ。GitHub側の表示設定が変わらない限り二度と出さない。
+const VP_KEPT_NOTIFY_KEY = 'ycheck_viewprefs_keptnotify_v2';
+let _vpKeptNotifiedThisLoad = false;   // 【v1.0738】念のため「1回のページ表示につき最大1回」も掛ける
 function _vpNotifiedKey() { try { return localStorage.getItem(VP_KEPT_NOTIFY_KEY) || ''; } catch (e) { return ''; } }
 function _vpSetNotifiedKey(k) { try { if (k) localStorage.setItem(VP_KEPT_NOTIFY_KEY, k); else localStorage.removeItem(VP_KEPT_NOTIFY_KEY); } catch (e) {} }
 function _vpReadDeviceBackup() {
@@ -6008,8 +6013,9 @@ function _vpAdoptIncoming(incoming) {
     // 【v1.0730】ログと未反映マークは「この状況につき1回だけ」。
     //   ★パネルの注記（⚠ この端末の設定のほうが新しい…）は _vpKeptLocal を見ているので今までどおり毎回出る。
     //     消すのはログの繰り返しだけ＝気づけなくなるわけではない。
-    const _vpk = inTs + '/' + bkTs;
-    if (_vpNotifiedKey() !== _vpk) {
+    const _vpk = 'in:' + inTs;   // 【v1.0738】読み込んだ側の時刻だけ。端末側(bkTs)は入れない
+    if (!_vpKeptNotifiedThisLoad && _vpNotifiedKey() !== _vpk) {
+      _vpKeptNotifiedThisLoad = true;
       _vpSetNotifiedKey(_vpk);
       try { ycLog('warn', '表示設定: 読み込んだデータより この端末のほうが新しかったので端末側を維持しました（列' + _vpKeptLocal.n + '件・未反映）'); } catch (e) {}
     }
@@ -10293,7 +10299,8 @@ const STATUS_DISPLAY_LABEL = {
 //   ★逆に「チップの文字も変えたい」ときは、ここではなく §94 のチップHTMLを直すこと。
 const STATUS_OPTION_LABEL = {
   'PR×': 'PR✕-放置',                // 【v1.0716】見た目だけ改称（保存値は 'PR×' のまま）
-  '撤退済み': '撤退済'               // 【v1.0733】★保存値は '撤退済み' のまま。見た目だけ「撤退済」（タブの表記に合わせた）
+  '撤退予定': '削除予定',            // 【v1.0737】★保存値は '撤退予定' のまま
+  '撤退済み': '削除済'               // 【v1.0733/v1.0737】★保存値は '撤退済み' のまま
 };
 function statusOptionLabel(value) { return escapeHtml(STATUS_OPTION_LABEL[value] || value) || '—'; }
 function statusDisplayLabel(value) {
@@ -10414,7 +10421,8 @@ function statusLifeDisplayValue(v) {
 }
 // 【v204】ステータスのセル表示用の2行ラベル（ドロップダウンの選択肢は正式名のまま）。<br>で改行。
 const STATUS_LIFE_DISPLAY_LABEL = {
-  '撤退済み': '撤退済',              // 【v1.0733】見た目だけ。★保存値・判定式は '撤退済み' のまま
+  '撤退予定': '削除予定',            // 【v1.0737】見た目だけ。★保存値・判定式は '撤退予定' のまま
+  '撤退済み': '削除済',              // 【v1.0733/v1.0737】見た目だけ。★保存値・判定式は '撤退済み' のまま
   'リニューアル予定': 'リニューアル<br>予定',   // 【v1.0734】2行にそろえる
   /* 【v1.0721】v1.0720でここに入れていた '新商品'→'新リニュ' / 'リニューアル'→'新リニュ' は取りやめ。
      ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
@@ -13891,8 +13899,8 @@ function last3MonthsInclCurrent() {
 // ============================================================================
 const WD_MODES = {
   consider: { label: '撤退検討', match: st => st === '撤退検討▲' },
-  plan:     { label: '撤退予定', match: st => st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済' },
-  done:     { label: '撤退済',   match: st => st === '撤退済み' },
+  plan:     { label: '削除予定', match: st => st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済' },   /* 【v1.0737】表示だけ改称。★match の文字列は保存値なので変えない */
+  done:     { label: '削除済',   match: st => st === '撤退済み' },                                                  /* 【v1.0737】同上 */
   renewal:  { label: 'リニュ-予定', match: st => st === 'リニューアル予定' }   // 【v1.0732】
 };
 let _wdMode = 'consider';
@@ -16755,8 +16763,8 @@ const STATE_FILTERS = {
   'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProNgValue(effectiveProStatusOf(code)) },   /* 【v1.0719】判定を1本化 */
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('consider', code) },                                    /* 【v1.0626/v1.0731】★【撤退】タブと同じ関数＝子は数えない（親1セット＝1） */
   'status-renewal-plan': { label: 'リニューアル予定', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === 'リニューアル予定' },   /* 【v1.0726】 */
-  'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('plan', code) },                                        /* 【v1.0626/v1.0731】旧値は WD_MODES が吸収。子は数えない */
-  'status-withdrawn':     { label: '撤退済',     targetView: 'retired', match: (meta, code) => _wdMatch('done', code) },   /* 【v1.0731】子は数えない／【v1.0733】表示だけ「撤退済」 */
+  'status-withdraw-plan': { label: '削除予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('plan', code) },                                        /* 【v1.0626/v1.0731】旧値は WD_MODES が吸収。子は数えない */
+  'status-withdrawn':     { label: '削除済',     targetView: 'retired', match: (meta, code) => _wdMatch('done', code) },   /* 【v1.0731】子は数えない／【v1.0733】表示だけ「撤退済」 */
   'unselected-ad': { label: '選択前-入札', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => !effectiveAdStatusOf(code) },
   'unselected-pro':{ label: '選択前-PR', targetView: 'basic', basicMode: 'tune', match: (meta, code) => !effectiveProStatusOf(code) }
 };
