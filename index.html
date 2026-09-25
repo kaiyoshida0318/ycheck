@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0741 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0742 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3872,7 +3872,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0741</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0742</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10375,16 +10375,26 @@ function statusOptionLabel(value) { return escapeHtml(STATUS_OPTION_LABEL[value]
 //   ★順位は getLatestRankBucket(code,'ad') の 'top'（＝1〜4位）で判定する。
 //     この関数は「修正あり」判定（isTuneFix）でも使っている“唯一の順位判定”なので、
 //     ここで別の順位比較を書かないこと（画面ごとに1-4位の意味が変わってしまう）。
-const AD_CIRCLE_BID_BORDER = 30;   // 円。★この境界を変えるときはラベルの文字（30円以下/30円以上）も一緒に直す
+const AD_CIRCLE_BID_BORDER = 30;   // 円。★この境界を変えるときはラベルの文字（30円内/30円以上）も一緒に直す
+// 【v1.0742】2行目は「良い＝青 / 悪い＝赤」で部分ごとに色分けする。
+//   30円以上      … 全部 赤（払いすぎ＝要対応）
+//   1-4位30円内   … 全部 青（順位も価格も良い＝対応不要）
+//   1-4位外 30円内 … 順位は赤・価格は青（片方だけ悪い）
+//   ★返すのは【HTML】。中身は下の固定文字だけで、商品名などの外部文字は入れない
+//     （入れるときは必ず escapeHtml を通すこと）。
+const AD_SUB_RED = '#dc2626', AD_SUB_BLUE = '#2563eb';
+function _adSubPart(txt, color) { return '<span style="color:' + color + '">' + txt + '</span>'; }
 function _adCircleSubLabel(code) {
   let bid = null;
   try { bid = getBid(code); } catch (e) { bid = null; }
   const n = Number(bid);
   if (bid == null || !isFinite(n) || n <= 0) return '';                 // 未入力 → 2行目なし
-  if (n > AD_CIRCLE_BID_BORDER) return '30円以上';
+  if (n > AD_CIRCLE_BID_BORDER) return _adSubPart('30円以上', AD_SUB_RED);
   let bucket = null;
   try { bucket = getLatestRankBucket(code, 'ad'); } catch (e) { bucket = null; }
-  return (bucket === 'top') ? '1-4位30円以下' : '1-4位外 30円以下';
+  return (bucket === 'top')
+    ? _adSubPart('1-4位30円内', AD_SUB_BLUE)
+    : _adSubPart('1-4位外', AD_SUB_RED) + ' ' + _adSubPart('30円内', AD_SUB_BLUE);
 }
 // 入札状態セルの表示ラベル（入札◯だけ2行目が付く。他の値は従来どおり）
 function adStatusFacadeLabel(code, value) {
@@ -10394,8 +10404,10 @@ function adStatusFacadeLabel(code, value) {
   //   ★1行目と2行目は【1つの要素】にまとめること。
   //     .status-facade は inline-flex なので、<br> の前後を別々の要素にすると
   //     2つの flex アイテムになって【横に並んでしまう】（改行されない）。実際に踏んだ。
+  //   ★sub は _adCircleSubLabel が作った【色つきHTML】。ここで escapeHtml を通さないこと
+  //     （通すとタグが文字として出る）。外部文字は混ぜない作りにしてある。
   return sub
-    ? ('<span class="status-lbl2">' + base + '<br><span class="status-sub">' + escapeHtml(sub) + '</span></span>')
+    ? ('<span class="status-lbl2">' + base + '<br><span class="status-sub">' + sub + '</span></span>')
     : base;
 }
 function statusDisplayLabel(value) {
