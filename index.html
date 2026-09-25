@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0699 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0700 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -519,7 +519,7 @@ body.chrome-hidden .top-nav-3 { top: 0; }
    【v1.0549】states-collapsed ＝ ユーザーが「ヘッダー2を隠す」で手動で畳んだ状態（全ビュー共通）。
    ★ #btnToggleChrome / #btnToggleStates だけは必ず残す。
      これらが消えると、隠したヘッダーを元に戻す手段が画面から無くなるため。 */
-/* 【v1.0550】開閉ボタンを各行の右端（ヘッダー1＝【調整】行／ヘッダー2＝【PR状態】行）へ移したので、
+/* 【v1.0550/v1.0700】開閉ボタンは各行の右端（ヘッダー1＝1段目／ヘッダー2＝タブ行／ヘッダー3＝【PR状態】行）。
    畳むときは段ごと消してよくなった（v1.0549までは復帰ボタンを残すため細い帯が残っていた）。
    隠している間の復帰は、下の #hdrRestoreBar（細い帯）が受け持つ。 */
 /* 【v1.0607→v1.0632】★自動非表示（states-hidden）ではヘッダー2を段ごと消す。
@@ -538,10 +538,15 @@ body.chrome-hidden .top-nav-3 { top: 0; }
    消すのはチップ段（.xf-row ＝ クロス絞り込み＋ステータス/PR状態/入札状態）だけ。
    ★「🔼 ヘッダー2を隠す」（#btnToggleStates）はチップ段の中にあるので一緒に消える。復帰は #hdrRestoreBar（applyHeaderCollapse の show2）。 */
 body.states-hidden .top-nav-3 .xf-row { display: none; }
-/* 【v1.0671】★手動で「🔼 ヘッダー2を隠す」を押したときは、【一覧】【調整】のタブ行ごと段まるごと隠す。
-   （表を画面いっぱいで見るため。自動非表示＝states-hidden はタブ行を残す＝そこからしか戻れないので別扱い）
-   戻す口は #hdrRestoreBar（applyHeaderCollapse の show2 ＝ 手動で畳んだときだけ出る）。 */
-body.states-collapsed .top-nav-3 { display: none; }
+/* 【v1.0700】ヘッダーの開閉を3段に分割した。
+     ヘッダー1 … 上部バー ＋【基本】【全体】【取得データ】（body.chrome-hidden）
+     ヘッダー2 … 【一覧】【調整】のタブ行（body.tabs-collapsed）★v1.0700で新設
+     ヘッダー3 … クロス絞り込み＋状態チップ段（body.states-collapsed）★v1.0699までの「ヘッダー2」
+   ★.top-nav-3 は「タブ行 ＋ チップ段」の入れ物。段まるごと消すのは【両方】畳んだときだけにする。
+     片方だけで段ごと消すと、残っているはずの行まで一緒に消える。 */
+body.tabs-collapsed  .top-nav-3 .nav-row-tabs { display: none; }
+body.states-collapsed .top-nav-3 .xf-row      { display: none; }
+body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .state-chip[data-state="all-basic"] {
   background: #d9f2ef;
   border-color: #99e0d6;
@@ -595,6 +600,7 @@ body.states-collapsed .top-nav-3 { display: none; }
 .xf-row { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; gap: 12px; width: 100%; }
 .nav-group-tune { flex: 0 0 auto; }
 .nav-row-tabs { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 26px; row-gap: 2px; }   /* 【v1.0661】【一覧】＋【調整】 */
+.nav-row-tabs > #btnToggleTabs { margin-left: auto; white-space: nowrap; align-self: center; }   /* 【v1.0700】ヘッダー2を隠すボタン */
 .top-nav-3 .xf-row { margin-top: 7px; }   /* 【v1.0668】【一覧】【調整】の行とバッジ群の間を少し空ける（.top-nav-3 の gap 6px ＋ 7px） */
 .top-nav > .nav-break { flex-basis: 100%; height: 0; }
 .top-nav:not(.top-nav-3) { row-gap: 0; }   /* 改行要素の上下に行間が2回入って間延びするので、行間は0にする */   /* 【v1.0649】ヘッダー1の改行（【基本】【全体】の行 / 【取得データ】の行） */
@@ -3724,7 +3730,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0699</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0700</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3785,7 +3791,7 @@ th.col-sroas { background-color:#e7d5f5; }
   <!-- 【v1.0550/v1.0607】ヘッダー1（上部バー＋タブ段）の開閉。
        v1.0606までは .top-nav-2 の右端にあったが、その段ごと撤去したのでこの行の右端へ移した。
        ★隠している間はこのボタンごと消えるので、復帰は #hdrRestoreBarTop が受け持つ（§18-14）。 -->
-  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーとタブ段（【基本】【全体】【取得データ】）を隠します">🔼 ヘッダー1を隠す</button>
+  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーと【基本】【全体】【取得データ】の段を隠します">🔼 ヘッダー1を隠す</button>
 </nav>
 
 <!-- 【v1.0607】2段目（.top-nav-2）は撤去。
@@ -3819,6 +3825,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">調整-入札価格</a>
     <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">調整-PRオプ</a>
   </div>
+  <!-- 【v1.0700】ヘッダー2（【一覧】【調整】のタブ行）の開閉。この行の右端に置く -->
+  <button class="btn sm ghost" id="btnToggleTabs" type="button" title="【一覧】【調整】のタブ行を隠します">🔼 ヘッダー2を隠す</button>
   </div><!-- /.nav-row-tabs 【v1.0661】 -->
 
   <div class="xf-row">
@@ -3908,8 +3916,8 @@ th.col-sroas { background-color:#e7d5f5; }
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     </div>
-    <!-- 【v1.0550】ヘッダー2（【ステータス】【PR状態】【入札状態】の3行）の開閉。この行の右端に置く。 -->
-    <button class="btn sm ghost" id="btnToggleStates" type="button" title="【ステータス】【PR状態】【入札状態】の行を隠します">🔼 ヘッダー2を隠す</button>
+    <!-- 【v1.0550/v1.0700】ヘッダー3（分類表＋【ステータス】【入札状態】【PR状態】）の開閉。この行の右端に置く。 -->
+    <button class="btn sm ghost" id="btnToggleStates" type="button" title="分類表と【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー3を隠す</button>
     </div>
   </div>
   </div><!-- /.states-stack 【v1.0583】 -->
@@ -3923,7 +3931,8 @@ th.col-sroas { background-color:#e7d5f5; }
      ヘッダー1の復帰ボタンは #hdrRestoreBarTop（いちばん上）へ移す。 -->
 <div class="hdr-restore-bar" id="hdrRestoreBar" style="display:none">
   <button class="btn sm ghost" id="btnRestoreChrome" type="button" style="display:none">🔽 ヘッダー1を表示</button>
-  <button class="btn sm ghost" id="btnRestoreStates" type="button" style="display:none">🔽 ヘッダー2を表示</button>
+  <button class="btn sm ghost" id="btnRestoreTabs" type="button" style="display:none">🔽 ヘッダー2を表示</button>
+  <button class="btn sm ghost" id="btnRestoreStates" type="button" style="display:none">🔽 ヘッダー3を表示</button>
 </div>
 
 <!-- 【v239】調整サブフィルタバー（入札価格調整／PRオプ調整のときだけ表示。3グループで排他絞り込み） -->
@@ -19797,48 +19806,61 @@ if (codeMigrateModal) {
 }
 $('#btnJumpCodeMigrate').addEventListener('click', openCodeMigrateModal);
 
-// 【v231/v1.0549】ヘッダーの開閉トグル。上下2つに分けた。
-//   ヘッダー1 (body.chrome-hidden)   … 上部バー ＋ タブ2段（【基本】【全体】【取得データ】/【調整】【対応検討】）
-//   ヘッダー2 (body.states-collapsed) … 【ステータス】【入札状態】【PR状態】の行
-//   ★ どちらを隠しても、2つのトグルボタン自体は必ず画面に残す（元に戻せなくなるため）。
+// 【v231/v1.0549/v1.0700】ヘッダーの開閉トグル。★v1.0700で3段に分割。
+//   ヘッダー1 (body.chrome-hidden)    … 上部バー ＋【基本】【全体】【取得データ】の段
+//   ヘッダー2 (body.tabs-collapsed)   … 【一覧】【調整】のタブ行          ← v1.0700 新設
+//   ヘッダー3 (body.states-collapsed) … 分類表 ＋【ステータス】【入札状態】【PR状態】の段（v1.0699までの「ヘッダー2」）
+//   ★ どれを隠しても、復帰ボタンは必ず画面に残す（元に戻せなくなるため）。
 //   ★ 開閉状態は端末ごと（localStorage）に覚える。画面サイズがPCごとに違うので viewPrefs（GitHub同期）には載せない。
 const HDR_COLLAPSE_KEY = 'ycheck_header_collapse_v1';
-let _hdrCollapse = { h1: false, h2: false };
+let _hdrCollapse = { h1: false, h2: false, h3: false };
 function _hdrCollapseLoad() {
   try {
     const o = JSON.parse(localStorage.getItem(HDR_COLLAPSE_KEY) || 'null');
-    if (o && typeof o === 'object') _hdrCollapse = { h1: !!o.h1, h2: !!o.h2 };
+    if (o && typeof o === 'object') {
+      // ★v1.0699までの保存値は { h1, h2 } で、その h2 は【いまのヘッダー3】を指していた。
+      //   h3 を持たない古い値が来たら h2 → h3 へ読み替える（読み替えないと、
+      //   前回チップ段を畳んでいた人が、今度はタブ行が消えた状態で起動することになる）。
+      _hdrCollapse = ('h3' in o)
+        ? { h1: !!o.h1, h2: !!o.h2, h3: !!o.h3 }
+        : { h1: !!o.h1, h2: false,  h3: !!o.h2 };
+    }
   } catch (e) {}
 }
 function _hdrCollapseSave() {
   try { localStorage.setItem(HDR_COLLAPSE_KEY, JSON.stringify(_hdrCollapse)); } catch (e) {}
 }
 function applyHeaderCollapse() {
-  document.body.classList.toggle('chrome-hidden', !!_hdrCollapse.h1);
-  document.body.classList.toggle('states-collapsed', !!_hdrCollapse.h2);
-  // 【v1.0550】隠している間の復帰口。
-  //   ・ヘッダー1 … 隠していれば常に出す
-  //   ・ヘッダー2 … 「ユーザーが畳んだ」ときだけ出す。§16の自動非表示（このビューでは状態チップを使わない）
+  document.body.classList.toggle('chrome-hidden',   !!_hdrCollapse.h1);
+  document.body.classList.toggle('tabs-collapsed',  !!_hdrCollapse.h2);   // 【v1.0700】
+  document.body.classList.toggle('states-collapsed', !!_hdrCollapse.h3);
+  // 【v1.0550/v1.0700】隠している間の復帰口。
+  //   ・ヘッダー1／2 … 隠していれば常に出す
+  //   ・ヘッダー3 … 「ユーザーが畳んだ」ときだけ出す。§16の自動非表示（このビューでは状態チップを使わない）
   //     で消えているだけの場合は、出しても押す意味が無いので出さない。
   const autoHidden = document.body.classList.contains('states-hidden');
   const r1 = document.getElementById('btnRestoreChrome');
-  const r2 = document.getElementById('btnRestoreStates');
-  const bar = document.getElementById('hdrRestoreBar');          // ナビの下（ヘッダー2の位置）
+  const r2 = document.getElementById('btnRestoreTabs');     // 【v1.0700】
+  const r3 = document.getElementById('btnRestoreStates');
+  const bar = document.getElementById('hdrRestoreBar');          // ナビの下（ヘッダー2/3の位置）
   const barTop = document.getElementById('hdrRestoreBarTop');    // いちばん上（ヘッダー1の位置）
   const show1 = !!_hdrCollapse.h1;
-  const show2 = !!_hdrCollapse.h2 && !autoHidden;
+  const show2 = !!_hdrCollapse.h2;
+  const show3 = !!_hdrCollapse.h3 && !autoHidden;
   if (r1) r1.style.display = show1 ? '' : 'none';
   if (r2) r2.style.display = show2 ? '' : 'none';
-  // 【v1.0581】★復帰ボタンは「隠したヘッダーが元あった位置」に出す。
-  //   ヘッダー1 → いちばん上（barTop） / ヘッダー2 → ナビの下（bar）
-  //   両方隠しているときだけ、細い帯が2本並ぶのを避けて barTop にまとめる。
+  if (r3) r3.style.display = show3 ? '' : 'none';
+  // 【v1.0581/v1.0700】★復帰ボタンは「隠したヘッダーが元あった位置」に出す。
+  //   ヘッダー1 → いちばん上（barTop） / ヘッダー2・3 → ナビの下（bar）
+  //   ヘッダー1も隠しているときだけ、細い帯が2本並ぶのを避けて barTop にまとめる。
   if (r1 && barTop && r1.parentNode !== barTop) barTop.appendChild(r1);
-  if (r2 && bar && barTop) {
-    const _want = (show1 && show2) ? barTop : bar;
-    if (r2.parentNode !== _want) _want.appendChild(r2);
-  }
+  [r2, r3].forEach(r => {
+    if (!r || !bar || !barTop) return;
+    const _want = show1 ? barTop : bar;
+    if (r.parentNode !== _want) _want.appendChild(r);
+  });
   if (barTop) barTop.style.display = show1 ? '' : 'none';
-  if (bar) bar.style.display = (show2 && !show1) ? '' : 'none';
+  if (bar) bar.style.display = ((show2 || show3) && !show1) ? '' : 'none';
   if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
   // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
   if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
@@ -19848,7 +19870,8 @@ applyHeaderCollapse();
 {
   const _toggle = (k) => { _hdrCollapse[k] = !_hdrCollapse[k]; _hdrCollapseSave(); applyHeaderCollapse(); };
   ['#btnToggleChrome', '#btnRestoreChrome'].forEach(sel => { const e = $(sel); if (e) e.addEventListener('click', () => _toggle('h1')); });
-  ['#btnToggleStates', '#btnRestoreStates'].forEach(sel => { const e = $(sel); if (e) e.addEventListener('click', () => _toggle('h2')); });
+  ['#btnToggleTabs',   '#btnRestoreTabs'].forEach(sel => { const e = $(sel); if (e) e.addEventListener('click', () => _toggle('h2')); });   // 【v1.0700】
+  ['#btnToggleStates', '#btnRestoreStates'].forEach(sel => { const e = $(sel); if (e) e.addEventListener('click', () => _toggle('h3')); });
 }
 
 // ==================== 【v125/v126】代表コード絞り込み ====================
