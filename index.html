@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0747 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0748 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1910,6 +1910,8 @@ td[data-resize-key] {
 .status-sub { font-size: 0.78em; opacity: 0.85; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
 /* 【v1.0743】入札△の1行目（入札△-調整中 など）を1行に収めるため少しだけ縮める */
 .status-lbl-1line { font-size: 0.86em; letter-spacing: -0.03em; white-space: nowrap; }
+/* 【v1.0748】ステータスの「広告なし」部分＝入札状態の「入札なし」と同じグレー（対象外の色） */
+.lbl-noad { color: #9ca3af; }
 /* ★この 0.86em は「入札△-飛ぶ手前固定」（最長の1行ラベル）が 112px に収まる限界。
    選択肢に もっと長い名前を足すときは、ここか .status-facade の width を見直すこと。 */
 /* 【v204】ステータスのファサードは内容に合わせて可変幅（入札/PRの固定98pxは使わない）。 */
@@ -3879,7 +3881,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0747</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0748</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10600,9 +10602,12 @@ const STATUS_LIFE_DISPLAY_LABEL = {
      ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
      まとめて1つに見せるのは【チップ】の役目（チップ名を「新リニュ」にした）。 */
   '健常-広告あり◯': '健常<br>広告あり◯',
-  '健常-広告なし◯': '健常<br>広告なし◯',
+  // 【v1.0748】「広告なし」の行だけ 入札なし と同じグレー（#9ca3af）にする。
+  //   ★.status-facade は inline-flex なので、<br> の前後を別要素にすると横並びになる（§127-3）。
+  //     必ず .status-lbl2 で【1つの要素】にまとめること。
+  '健常-広告なし◯': '<span class="status-lbl2">健常<br><span class="lbl-noad">広告なし◯</span></span>',
   '中立-広告あり□': '中立<br>広告あり□',
-  '中立-広告なし□': '中立<br>広告なし□',
+  '中立-広告なし□': '<span class="status-lbl2">中立<br><span class="lbl-noad">広告なし□</span></span>',
   '子（親に追従）': '子<br>(親に追従)'   // 【v1.0626】
 };
 function statusLifeDisplayLabel(value) {
@@ -10658,7 +10663,10 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
       + `</span>`;
   }
   if (kind === 'ad' || kind === 'pro') {
-    const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusTextColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${statusOptionLabel(o)}</option>`).join('');   // 【v1.0716】★value は保存値のまま。表示だけ言い換える
+    // 【v1.0748】★選択中の行はブラウザが反転表示するので、値ごとの文字色が見えなくなる。
+    //   どれを選んでいるか分かるように、選択中の選択肢だけ末尾に ✓ を付ける。
+    //   ★付けるのは【表示テキスト】だけ。value は保存値のまま（✓ は絶対に value に入れない）。
+    const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusTextColor(o)};background:#fff" ${o === value ? 'selected' : ''}>${statusOptionLabel(o)}${o === value ? '　✓' : ''}</option>`).join('');   // 【v1.0716/v1.0748】
     const c = statusTextColor(value);
     const bd = value ? c : '#cbd5e1';
     const dis = ghIsEnabled() ? '' : ' disabled';
@@ -10677,7 +10685,7 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
   //   ★selected はまとめに直してから合わせる。直さないと「どれも選ばれていない」状態になり、
   //     そのまま別の値を選ぶと元に戻せなくなる。
   const _coarse = _statusLifeCoarseOf(value);
-  const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _coarse ? 'selected' : ''}>${statusOptionLabel(o)}</option>`).join('');   // 【v1.0716】
+  const opts = options.map(o => `<option value="${escapeHtml(o)}" style="color:${statusLifeColor(o)};background:#fff" ${o === _coarse ? 'selected' : ''}>${statusOptionLabel(o)}${o === _coarse ? '　✓' : ''}</option>`).join('');   // 【v1.0716/v1.0748】選択中に ✓
   const c = statusLifeColor(value);
   const bd = value ? c : '#cbd5e1';
   const dis = ghIsEnabled() ? '' : ' disabled';
