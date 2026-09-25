@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0733 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0734 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1870,7 +1870,11 @@ td[data-resize-key] {
   text-align: center; gap: 2px; line-height: 1.18; white-space: nowrap;  /* 改行は<br>のみ。自動折返し・1文字折返しを禁止 */
   background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
   font-size: 12.6px; font-weight: 600; padding: 2px 6px;  /* 【v192】12.6px・太さ600 */
-  width: 98px; min-width: 0; min-height: 28px; box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
+  width: 98px; min-width: 0; min-height: 37px; box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
+  /* 【v1.0734】★min-height は「2行ぶん」。28px のままだと 1行の値（入札◯ など）だけ枠が低くなり、
+     2行の値（入札△-調整中 など）と並んだときに行の高さがガタガタになる。
+     計算: 12.6px × line-height1.18 × 2行 ＋ 上下padding4 ＋ 枠線3 ≒ 37px。
+     ★フォントサイズ（12.6px）や line-height を変えたら、この 37px も一緒に見直すこと。 */
   /* 【v1.0659】★列幅を98pxより狭くしたとき、枠が右へはみ出して隣の列と重なって見えていた。
      セル幅を超えないようにし、はみ出した文字はセルの中で切る（列幅は保存値どおりのまま）。 */
   max-width: 100%; overflow: hidden;
@@ -3843,7 +3847,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0733</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0734</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10244,13 +10248,20 @@ function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; 
 
 // 【v188】列（セル）での表示用ラベル。ドロップダウンの選択肢は正式名のまま、セルの閉じた表示だけ2行の略称にする。
 //   ※HTMLを返す（<br>で改行）。固定4値のみ略称化し、他は正式名（1行）。
+// 【v1.0734】★2行ラベルは「全部の値」に付ける。1行の値が混ざると行の高さがバラバラになる。
+//   決まりごと: 1行目＝グループ（入札◯ / 入札△ / PR◯ / PR△ …）、2行目＝その中身。
+//   分ける場所が無い短い値（入札◯ など）は1行のままでよい。高さは CSS の min-height でそろえる。
 const STATUS_DISPLAY_LABEL = {
   'PR◯-親-30％固定':     'PR◯-親<br>30％固定',      /* 【v1.0658】 */
   'PR◯-子-7％固定':      'PR◯-子<br>7％固定',       /* 【v1.0658】 */
+  'PR△-調整中':          'PR△<br>調整中',           /* 【v1.0734】 */
   'PR△-親-下げ挑戦中':   'PR△-親<br>下げ挑戦中',
-  'PR△-親-飛ぶ手前固定': 'PRオプ△-親<br>飛ぶ手前固定',
+  'PR△-親-飛ぶ手前固定': 'PR△-親<br>飛ぶ手前固定',   /* 【v1.0734】'PRオプ△-親' → 'PR△-親'（他とそろえた） */
   'PR△-子-7％固定':      'PR△-子<br>7％固定',
   'PR△-飛ぶ手前固定':    'PR△<br>飛ぶ手前固定',
+  'PR×':                 'PR✕<br>放置',             /* 【v1.0734】v1.0716の「PR✕-放置」を2行に */
+  '入札△-調整中':        '入札△<br>調整中',          /* 【v1.0734】 */
+  '入札×-調整中':        '入札△<br>調整中',          /* 【v1.0734】旧名も同じ見た目 */
   '入札△-飛ぶ手前固定':  '入札△<br>飛ぶ手前固定'
 };
 // 【v1.0716】★「保存値は変えずに見た目の名前だけ変える」ための言い換え表。
@@ -10381,6 +10392,7 @@ function statusLifeDisplayValue(v) {
 // 【v204】ステータスのセル表示用の2行ラベル（ドロップダウンの選択肢は正式名のまま）。<br>で改行。
 const STATUS_LIFE_DISPLAY_LABEL = {
   '撤退済み': '撤退済',              // 【v1.0733】見た目だけ。★保存値・判定式は '撤退済み' のまま
+  'リニューアル予定': 'リニューアル<br>予定',   // 【v1.0734】2行にそろえる
   /* 【v1.0721】v1.0720でここに入れていた '新商品'→'新リニュ' / 'リニューアル'→'新リニュ' は取りやめ。
      ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
      まとめて1つに見せるのは【チップ】の役目（チップ名を「新リニュ」にした）。 */
