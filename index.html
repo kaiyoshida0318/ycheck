@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0720 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0721 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3838,7 +3838,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0720</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0721</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3988,7 +3988,7 @@ th.col-sroas { background-color:#e7d5f5; }
 
     <span class="sg-label g-status">【ステータス】</span>
     <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 新商品（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
-    <button class="state-chip" data-state="new-product" title="新商品 ＋ リニューアル（一覧のセルではどちらも「新リニュ」と表示）"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip" data-state="new-product" title="新リニュ＝新商品 ＋ リニューアル（一覧のセルには選んだ方がそのまま出ます）"><span class="chip-label">新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
@@ -10262,8 +10262,9 @@ function statusLifeDisplayValue(v) {
 }
 // 【v204】ステータスのセル表示用の2行ラベル（ドロップダウンの選択肢は正式名のまま）。<br>で改行。
 const STATUS_LIFE_DISPLAY_LABEL = {
-  '新商品':       '新リニュ',        // 【v1.0720】一覧のセルだけ「新リニュ」。ドロップダウンは「新商品」のまま
-  'リニューアル': '新リニュ',        // 【v1.0720】★新商品と同じ文字にする（一覧では2つを区別しない）
+  /* 【v1.0721】v1.0720でここに入れていた '新商品'→'新リニュ' / 'リニューアル'→'新リニュ' は取りやめ。
+     ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
+     まとめて1つに見せるのは【チップ】の役目（チップ名を「新リニュ」にした）。 */
   '健常-広告あり◯': '健常<br>広告あり◯',
   '健常-広告なし◯': '健常<br>広告なし◯',
   '中立-広告あり□': '中立<br>広告あり□',
@@ -16477,7 +16478,7 @@ const STATE_FILTERS = {
   'pro-all':       { label: '△以上',     targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProTriIjou(code) },   /* 【v1.0719】現役全体 → △以上（PR◯＋PR△＋選択前。PR✕は外す）。★キー 'pro-all' は保存され得るので変えない */
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
-  'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenew(effectiveStatusOf(code)) },   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
+  'new-product':      { label: '新リニュ',         targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenew(effectiveStatusOf(code)) },   /* 【v1.0721】チップ名＝新リニュ（新商品＋リニューアル） */   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
   // 【v1.0696】広告あり／なしをまとめた親チップ。★判定は「前方一致」ではなく2値の列挙にする
   //   （'健常' で startsWith にすると、将来「健常-〇〇」を足したとき黙って混ざる）
   'status-kenzen':    { label: '健常',             targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const st = effectiveStatusOf(code); return st === '健常-広告あり◯' || st === '健常-広告なし◯'; } },
