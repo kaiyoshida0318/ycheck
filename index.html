@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0704 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0705 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -607,7 +607,42 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav > .nav-break { flex-basis: 100%; height: 0; }
 .top-nav:not(.top-nav-3) { row-gap: 0; }   /* 改行要素の上下に行間が2回入って間延びするので、行間は0にする */   /* 【v1.0649】ヘッダー1の改行（【基本】【全体】の行 / 【取得データ】の行） */
 
-.states-stack { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 1 1 auto; min-width: 0; }  /* 【v198】ステータス⇔状態の行間を倍に */
+/* 【v1.0705】3行を1つのグリッドにしたので、.states-stack は「グリッド ＋ 右端の開閉ボタン」の横並びになった */
+.states-stack { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.states-stack > #btnToggleStates { margin-left: auto; flex: 0 0 auto; white-space: nowrap; }
+/* ============================================================================
+   【v1.0705】状態チップの表（ステータス / 入札状態 / PR状態 の3行）
+   ・1つのグリッドに3行ぶん流し込む＝列トラックを共有するので必ず縦にそろう
+   ・罫線は gap(1px) を親の背景色で見せる方式（.xf-panel と同じ作り）
+   ・★セルの背景は白のまま。色は【文字色】でだけ付ける
+   ・★空きセル（.sg-empty）を省くと、そこから先の列が1つずつ左へずれる
+   ============================================================================ */
+.states-grid {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: auto auto auto auto auto auto auto auto;   /* 8列（§90-2の意味づけ） */
+  gap: 1px;
+  background: #c7cedb;                /* 罫線の色 */
+  border: 1px solid #c7cedb;
+  border-radius: 6px;
+  overflow: hidden;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.states-grid > * { background: #fff; }
+.states-grid .sg-label {
+  display: flex; align-items: center; justify-content: flex-start;
+  padding: 3px 9px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap;
+}
+.states-grid .sg-empty { background: #fafbfc; }
+/* チップはセルいっぱいに。★角丸・枠線はグリッドの罫線と二重になるので消す */
+.states-grid .state-chip {
+  border: none; border-radius: 0; width: 100%;
+  justify-content: center; padding: 4px 10px;
+  background: #fff !important;
+}
+.states-grid .state-chip:hover { background: #eef2f8 !important; }
+.states-grid .state-chip.active { color: #fff !important; }
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
 /* ============================================================================
@@ -796,15 +831,25 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; background: #fbf3d9; border-color: #ead98a; }
 .top-nav-3 .state-chip[data-state="ad-ng"],
 .top-nav-3 .state-chip[data-state="pro-ng"]      { color: #dc2626; background: #fde9e8; border-color: #f5b8b5; }
-/* 選択時／ホバー */
-.top-nav-3 .state-chip[data-state="status-kenzen"]:hover,   .top-nav-3 .state-chip[data-state="status-kenzen"].active,
-.top-nav-3 .state-chip[data-state="ad-ok"]:hover,           .top-nav-3 .state-chip[data-state="ad-ok"].active,
-.top-nav-3 .state-chip[data-state="pro-ok-all"]:hover,      .top-nav-3 .state-chip[data-state="pro-ok-all"].active  { background: #2563eb; border-color: #1e4fbf; color: #fff; }
-.top-nav-3 .state-chip[data-state="status-churitsu"]:hover, .top-nav-3 .state-chip[data-state="status-churitsu"].active,
-.top-nav-3 .state-chip[data-state="ad-fixed"]:hover,        .top-nav-3 .state-chip[data-state="ad-fixed"].active,
-.top-nav-3 .state-chip[data-state="pro-tri"]:hover,         .top-nav-3 .state-chip[data-state="pro-tri"].active     { background: #c99700; border-color: #a67e00; color: #fff; }
-.top-nav-3 .state-chip[data-state="ad-ng"]:hover,           .top-nav-3 .state-chip[data-state="ad-ng"].active,
-.top-nav-3 .state-chip[data-state="pro-ng"]:hover,          .top-nav-3 .state-chip[data-state="pro-ng"].active      { background: #dc2626; border-color: #b91c1c; color: #fff; }
+/* 【v1.0705】選択時だけ色を塗る（通常時は白地＋文字色）。★グリッドでは白地を !important にしているので選択色も !important で上書きする */
+.states-grid .state-chip[data-state="status-kenzen"].active,
+.states-grid .state-chip[data-state="ad-ok"].active,
+.states-grid .state-chip[data-state="pro-ok-all"].active  { background: #2563eb !important; }
+.states-grid .state-chip[data-state="status-churitsu"].active,
+.states-grid .state-chip[data-state="ad-fixed"].active,
+.states-grid .state-chip[data-state="pro-tri"].active     { background: #c99700 !important; }
+.states-grid .state-chip[data-state="ad-ng"].active,
+.states-grid .state-chip[data-state="pro-ng"].active      { background: #dc2626 !important; }
+.states-grid .state-chip[data-state="pro-wc"].active              { background: #ea7317 !important; }
+.states-grid .state-chip[data-state="status-withdraw-plan"].active{ background: #dc2626 !important; }
+.states-grid .state-chip[data-state="status-withdrawn"].active    { background: #8b5a2b !important; }
+.states-grid .state-chip[data-state="new-product"].active         { background: #16a34a !important; }
+.states-grid .state-chip[data-state="all-basic"].active,
+.states-grid .state-chip[data-state="ad-all"].active,
+.states-grid .state-chip[data-state="pro-all"].active             { background: #0d9488 !important; }
+.states-grid .state-chip[data-state="ad-none"].active             { background: #6b7280 !important; }
+.states-grid .state-chip[data-state="unselected-ad"].active,
+.states-grid .state-chip[data-state="unselected-pro"].active      { background: #64748b !important; }
 .top-nav-3 .state-chip[data-state="unselected-ad"],
 .top-nav-3 .state-chip[data-state="unselected-pro"] { color: #64748b; }
 .top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
@@ -3597,6 +3642,9 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .np-or::before, .np-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 @media (max-width: 640px) { .np-quick-grid { grid-template-columns: 1fr; } }
 /* 【v1.0318】メインページの分類ラベルを分類ごとに色分け（分析の確認場所ドロップダウンと同じ配色に統一） */
+.sg-label.g-status  { color:#0d9488; }  /* 【v1.0705】グリッドの行ラベル。従来の .nav-group-label と同じ色 */
+.sg-label.g-nyusatsu { color:#b45309; }
+.sg-label.g-pr       { color:#7c3aed; }
 .nav-group-label.g-basic   { color:#2563eb; }  /* 【基本】 */
 .nav-group-label.g-zentai  { color:#dc2626; }  /* 【全体】 */
 .nav-group-label.g-shutoku { color:#0891b2; }  /* 【取得データ】 */
@@ -3770,7 +3818,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0704</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0705</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3905,64 +3953,50 @@ th.col-sroas { background-color:#e7d5f5; }
 
   <!-- 【v1.0583】従来の2段（【ステータス】／【入札状態】＋【PR状態】）はここへ縦積み -->
   <div class="states-stack">
-  <!-- 【v195】ステータス（商品ライフサイクル）ブロック。【状態】の上に配置。【v197】縦線でグルーピング。 -->
-  <div class="nav-group nav-group-status">
-    <span class="nav-group-label g-status">【ステータス】</span>
+  <!-- ============================================================
+       【v1.0705】3行を1つのグリッド（.states-grid）にまとめた。
+         ・列を共有するので 健常／入札◯／PR◯ … が必ず縦にそろう
+         ・罫線は gap(1px) ＋ 親の背景色で出す（セルは白）
+         ・★背景は白、色は【文字色】で付ける。背景を塗ると縦のまとまりが読めなくなるため
+         ・空きセルは <span class="sg-empty"></span> を必ず置く（省くと列がずれる）
+       ★列の意味（3行共通）:
+         1 ラベル / 2 全体 / 3 新商品・選択前 / 4 ◯=対応不要(青) / 5 △=様子見(黄)
+         6 ✕=要対応(赤)・撤退検討(橙) / 7 撤退予定・入札なし / 8 撤退済み
+       ============================================================ -->
+  <div class="states-grid">
+
+    <span class="sg-label g-status">【ステータス】</span>
     <button class="state-chip chip-all" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
-    <!-- 【v1.0622】3行とも「ラベル → 全体 → 区切り」で始まるように、ここにも区切りを入れた（縦にそろえるため） -->
-    <span class="chip-sep" aria-hidden="true"></span>
-    <button class="state-chip chip-slot2" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
-    <span class="chip-sep" aria-hidden="true"></span>
-    <!-- 【v1.0704】チップは「まとめ」だけにした。細かい値（健常-広告あり◯ など）は表のドロップダウンで選ぶ。 -->
+    <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
-    <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
-    <!-- 【v1.0704】画面から消したチップの件数受け皿（updateStateCounts の _setTx が空振りしないように残す） -->
-    <span hidden><span id="cntStatusKenzenAd"></span><span id="cntStatusKenzenNoad"></span><span id="cntStatusChuritsuAd"></span><span id="cntStatusChuritsuNoad"></span></span>
-    <!-- 【v1.0550】開閉ボタンはここから移設。
-         ヘッダー1 →【調整】行（.top-nav-2）の右端 ／ ヘッダー2 →【PR状態】行の右端 -->
+
+    <span class="sg-label g-nyusatsu">【入札状態】</span>
+    <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
+    <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+    <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+    <button class="state-chip" data-state="ad-fixed" title="入札△-飛ぶ手前固定"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
+    <button class="state-chip" data-state="ad-ng" title="入札×-調整中"><span class="chip-label">入札✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
+    <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+    <span class="sg-empty"></span>
+
+    <span class="sg-label g-pr">【PR状態】</span>
+    <button class="state-chip chip-all" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+    <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+    <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
+    <button class="state-chip" data-state="pro-tri" title="PR△（PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
+    <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
+    <span class="sg-empty"></span>
+    <span class="sg-empty"></span>
+
   </div>
-  <!-- 【v200】【入札状態】＋【PR状態】を1行に横並び。 -->
-  <div class="nav-row-states">
-    <!-- 【v1.0646】行の並びを ステータス → 入札状態 → PR状態 に変更（v1.0634〜v1.0645 は PR状態 → 入札状態）。
-         ★ヘッダー2を隠すボタンは「いちばん下の行」の右端に置く決まりなので、.nav-states-lastrow を【PR状態】側へ付け替えた。 -->
-    <div class="nav-group nav-group-jotai nav-group-ad">
-      <span class="nav-group-label g-nyusatsu">【入札状態】</span>
-      <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <!-- 【v1.0701】「選択前」は3行とも【全体】の右＝2番目の位置に揃える（縦の区切り線がそろう） -->
-      <button class="state-chip chip-slot2" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <!-- 【v1.0704】◯／△／✕ の3段＋入札なし。細かい表記は表のドロップダウンで見る -->
-      <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
-      <button class="state-chip" data-state="ad-fixed" title="入札△-飛ぶ手前固定"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
-      <button class="state-chip" data-state="ad-ng" title="入札×-調整中"><span class="chip-label">入札✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
-    </div>
-    <div class="nav-states-lastrow">
-    <div class="nav-group nav-group-jotai nav-group-pr">
-      <span class="nav-group-label g-pr">【PR状態】</span>
-      <button class="state-chip chip-all" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <!-- 【v1.0701】「選択前」は3行とも【全体】の右＝2番目の位置に揃える -->
-      <button class="state-chip chip-slot2" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <!-- 【v1.0704】◯／△／✕ の3段にまとめた。内訳は表のドロップダウンで見る。
-           ★件数用の span（cntProOk / cntProP30 / cntProC7 / cntProLower / cntProHfixed）は
-             updateStateCounts が書き込むので、画面から消しても hidden で残しておく。 -->
-      <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
-      <button class="state-chip" data-state="pro-tri" title="PR△（PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
-      <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
-      <span hidden><span id="cntProOk"></span><span id="cntProP30"></span><span id="cntProC7"></span><span id="cntProLower"></span><span id="cntProHfixed"></span></span>
-    </div>
-    <!-- 【v1.0550/v1.0700】ヘッダー3（分類表＋【ステータス】【入札状態】【PR状態】）の開閉。この行の右端に置く。 -->
-    <button class="btn sm ghost" id="btnToggleStates" type="button" title="分類表と【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー3を隠す</button>
-    </div>
-  </div>
+  <!-- 【v1.0704】画面から消したチップの件数受け皿（updateStateCounts の _setTx が空振りしないように残す） -->
+  <span hidden><span id="cntStatusKenzenAd"></span><span id="cntStatusKenzenNoad"></span><span id="cntStatusChuritsuAd"></span><span id="cntStatusChuritsuNoad"></span><span id="cntProOk"></span><span id="cntProP30"></span><span id="cntProC7"></span><span id="cntProLower"></span><span id="cntProHfixed"></span></span>
+  <!-- 【v1.0550/v1.0700】ヘッダー3（分類表＋【ステータス】【入札状態】【PR状態】）の開閉。右端に置く。 -->
+  <button class="btn sm ghost" id="btnToggleStates" type="button" title="分類表と【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー3を隠す</button>
   </div><!-- /.states-stack 【v1.0583】 -->
   </div><!-- /.xf-row 【v1.0607】 -->
 </nav>
