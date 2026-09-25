@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0739 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0741 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1890,7 +1890,7 @@ td[data-resize-key] {
   text-align: center; gap: 2px; line-height: 1.18; white-space: nowrap;  /* 改行は<br>のみ。自動折返し・1文字折返しを禁止 */
   background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
   font-size: 12.6px; font-weight: 600; padding: 2px 6px;  /* 【v192】12.6px・太さ600 */
-  width: 98px; min-width: 0; min-height: 37px; box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
+  width: 112px; min-width: 0; min-height: 37px;   /* 【v1.0741】98→112px（入札◯の2行目「1-4位外 30円以下」が入る幅） */ box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
   /* 【v1.0734】★min-height は「2行ぶん」。28px のままだと 1行の値（入札◯ など）だけ枠が低くなり、
      2行の値（入札△-調整中 など）と並んだときに行の高さがガタガタになる。
      計算: 12.6px × line-height1.18 × 2行 ＋ 上下padding4 ＋ 枠線3 ≒ 37px。
@@ -1900,6 +1900,11 @@ td[data-resize-key] {
   max-width: 100%; overflow: hidden;
 }
 .status-chev { font-size: 0.66em; opacity: 0.55; flex: 0 0 auto; }
+/* 【v1.0741】入札◯の2行目（広告順位×入札価格から自動で出る補足）。
+   ★色は1行目と同じ（＝◯の青）。小さく・少し薄くして「選んだ値ではない」ことを示す。 */
+/* ★.status-lbl2 で2行ぶんを1つの flex アイテムにまとめる（これが無いと横並びになる） */
+.status-lbl2 { display: inline-block; text-align: center; line-height: 1.18; min-width: 0; }
+.status-sub { font-size: 0.78em; opacity: 0.85; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
 /* 【v204】ステータスのファサードは内容に合わせて可変幅（入札/PRの固定98pxは使わない）。 */
 .status-cell-life { display: inline-block; width: auto; }
 .status-facade-life { width: auto; min-width: 0; max-width: 100%; padding: 3px 8px; }   /* 【v1.0659】min-width:84px をやめて狭い列でもはみ出さないように */
@@ -3867,7 +3872,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0739</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0741</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7352,6 +7357,62 @@ function _ycInjectReflectButtons() {
   });
   _ycUpdateReflectBtn();
 }
+// 【v1.0739/v1.0740】反映が成功したあとの共通処理。★ycReflect（手動）と自動pushの両方から呼ぶ。
+//   編集ピン（v253/v276）を外して描き直す＝いま選んでいる絞り込みから外れた商品が消える。
+//   ★ピンを外すのは「反映が成功したとき」だけ。編集のたびに外すと1行直すごとに表が飛ぶ。
+function _ycAfterReflectRefresh() {
+  try {
+    if (typeof clearEditPins === 'function') clearEditPins();
+    if (typeof resetTuneMembers === 'function') resetTuneMembers();   // 調整ビューの凍結メンバーも作り直す
+    adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;          // 並び順の凍結も解除（最新値で並べ直す）
+    _stateCountsStale = false;
+    if (typeof renderAll === 'function') renderAll();
+  } catch (e) { try { ycLog('warn', '反映後の再描画でエラー: ' + (e && e.message ? e.message : e)); } catch (e2) {} }
+}
+
+// 【v1.0740】========= ドロップダウンだけ「その場でGitHubへ反映」 =========
+//   ★対象は ステータス / 入札状態 / PR状態 の3つのドロップダウンだけ。
+//     列幅・文字サイズ（表示設定）や 入札価格・対応内容 は従来どおり手動（⬆ 反映する）のまま。
+//     幅は一通り触ってからまとめて push したいため（毎回コミットすると履歴が荒れる）。
+//   ★連打対策: 1.2秒のまとめ待ち ＋ 保存中は次の1回だけ予約（_ycAutoPushAgain）。
+//   ★失敗しても alert は出さない（連続操作の邪魔になる）。未反映のままにして「⬆ 反映する」に任せる。
+let _ycAutoPushTimer = null, _ycAutoPushBusy = false, _ycAutoPushAgain = false;
+const YC_AUTOPUSH_DELAY_MS = 1200;
+function ycAutoPushSoon() {
+  if (!ghIsEnabled()) return;
+  if (typeof _ghQuiet !== 'undefined' && _ghQuiet > 0) return;   // 読込/同期中はユーザー操作ではない
+  clearTimeout(_ycAutoPushTimer);
+  _ycAutoPushTimer = setTimeout(ycAutoPushNow, YC_AUTOPUSH_DELAY_MS);
+}
+async function ycAutoPushNow() {
+  if (!ghIsEnabled()) return;
+  if (_ycAutoPushBusy) { _ycAutoPushAgain = true; return; }
+  _ycAutoPushBusy = true;
+  try {
+    ghSetSyncStatus('saving');
+    const r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
+    if (r && r.success) {
+      _ghDirty = false; ghSetSyncStatus('saved');
+      try { ycLog('save', 'GitHubへ反映しました（ドロップダウン変更）'); } catch (e) {}
+      _ycAfterReflectRefresh();
+    } else {
+      // ★上書きガード等でスキップされたときは【未反映のまま】にして手動の「⬆ 反映する」に委ねる。
+      //   ここで force 保存してはいけない（他PCの新しいデータを黙って消す可能性がある）。
+      _ghDirty = true; ghSetSyncStatus('dirty');
+      try { ycLog('warn', '⚠ 自動反映をスキップ（理由: ' + ((r && r.reason) || '不明') + '）。「⬆ 反映する」で確認してください'); } catch (e) {}
+    }
+  } catch (e) {
+    _ghDirty = true;
+    try { ghSetSyncStatus('error', e && e.message); } catch (e2) {}
+    try { ycLog('warn', '⚠ 自動反映に失敗: ' + (e && e.message ? e.message : e) + '（「⬆ 反映する」で再試行できます）'); } catch (e2) {}
+  } finally {
+    _ycAutoPushBusy = false;
+    if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
+    if (_ycAutoPushAgain) { _ycAutoPushAgain = false; ycAutoPushSoon(); }
+  }
+}
+window.ycAutoPushSoon = ycAutoPushSoon;
+
 // 【v1.0452】未反映の変更を取り消してGitHubの保存済みデータに戻す
 async function ycCancelReflect() {
   if (!ghIsEnabled()) { alert('この端末は閲覧専用です（トークン未設定）。'); return; }
@@ -7411,19 +7472,7 @@ async function ycReflect() {
     if (r && r.success) {
       _ghDirty = false; ghSetSyncStatus('saved');
       ycLog('save', 'GitHubへ反映しました');   // 【v1.0604】
-      // 【v1.0739】★反映したら、その場で一覧を作り直す。
-      //   編集中は「絞り込みに合わなくなっても行を消さない」ピン（_editPinnedCodes / v253・v276）が
-      //   効いているので、反映しても直したはずの商品が残って見える。
-      //   反映＝ひと区切りなので、ここでピンと凍結メンバーを解除して描き直す
-      //   ＝ステータスを変えた商品は、いま選んでいる絞り込みから消える。
-      //   ★ピンを外すのはこの1か所だけ。編集のたびに外すと、1行直すごとに表が飛んで使えなくなる。
-      try {
-        if (typeof clearEditPins === 'function') clearEditPins();
-        if (typeof resetTuneMembers === 'function') resetTuneMembers();   // 調整ビューの凍結メンバーも作り直す
-        adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;          // 並び順の凍結も解除（最新値で並べ直す）
-        _stateCountsStale = false;
-        if (typeof renderAll === 'function') renderAll();
-      } catch (e) { try { ycLog('warn', '反映後の再描画でエラー: ' + (e && e.message ? e.message : e)); } catch (e2) {} }
+      _ycAfterReflectRefresh();   // 【v1.0739】反映したら一覧を作り直す（条件から外れた商品が消える）
       // 【v1.0600】保存した内容が別クライアントに上書きされていないか、15秒後に確認する
       try { _ycScheduleOverwriteCheck(_ycLastSavedAt, Object.keys(state.master || {}).length); } catch (e) {}
     }
@@ -10316,6 +10365,39 @@ const STATUS_OPTION_LABEL = {
   '撤退済み': '削除済'               // 【v1.0733/v1.0737】★保存値は '撤退済み' のまま
 };
 function statusOptionLabel(value) { return escapeHtml(STATUS_OPTION_LABEL[value] || value) || '—'; }
+// 【v1.0741】入札◯のときだけ、セルの2行目を「その商品の広告順位と入札価格」から自動で作る。
+//   ・30円より高い          → 「30円以上」
+//   ・30円以下 かつ 1-4位    → 「1-4位30円以下」
+//   ・30円以下 かつ それ以外 → 「1-4位外 30円以下」（5位以下・圏外・順位データ無しを含む）
+//   ・入札価格が未入力      → 2行目は出さない
+//   ★ドロップダウンの選択肢は「入札◯」1つのまま。保存値も '入札◯' のまま。
+//     ここは【表示だけ】＝ 順位や価格が変われば勝手に追従する（人が選び直す必要がない）。
+//   ★順位は getLatestRankBucket(code,'ad') の 'top'（＝1〜4位）で判定する。
+//     この関数は「修正あり」判定（isTuneFix）でも使っている“唯一の順位判定”なので、
+//     ここで別の順位比較を書かないこと（画面ごとに1-4位の意味が変わってしまう）。
+const AD_CIRCLE_BID_BORDER = 30;   // 円。★この境界を変えるときはラベルの文字（30円以下/30円以上）も一緒に直す
+function _adCircleSubLabel(code) {
+  let bid = null;
+  try { bid = getBid(code); } catch (e) { bid = null; }
+  const n = Number(bid);
+  if (bid == null || !isFinite(n) || n <= 0) return '';                 // 未入力 → 2行目なし
+  if (n > AD_CIRCLE_BID_BORDER) return '30円以上';
+  let bucket = null;
+  try { bucket = getLatestRankBucket(code, 'ad'); } catch (e) { bucket = null; }
+  return (bucket === 'top') ? '1-4位30円以下' : '1-4位外 30円以下';
+}
+// 入札状態セルの表示ラベル（入札◯だけ2行目が付く。他の値は従来どおり）
+function adStatusFacadeLabel(code, value) {
+  const base = statusDisplayLabel(value);
+  if (!adStatusIsCircle(value)) return base;
+  const sub = _adCircleSubLabel(code);
+  //   ★1行目と2行目は【1つの要素】にまとめること。
+  //     .status-facade は inline-flex なので、<br> の前後を別々の要素にすると
+  //     2つの flex アイテムになって【横に並んでしまう】（改行されない）。実際に踏んだ。
+  return sub
+    ? ('<span class="status-lbl2">' + base + '<br><span class="status-sub">' + escapeHtml(sub) + '</span></span>')
+    : base;
+}
 function statusDisplayLabel(value) {
   if (STATUS_DISPLAY_LABEL[value]) return STATUS_DISPLAY_LABEL[value];  // 固定略称（静的HTML・安全）
   return statusOptionLabel(value);                                      // 【v1.0716】言い換え表を通す
@@ -10500,8 +10582,9 @@ function statusSelectHtml(code, kind /* 'ad' | 'pro' | 'status' */) {
     const c = statusTextColor(value);
     const bd = value ? c : '#cbd5e1';
     const dis = ghIsEnabled() ? '' : ' disabled';
+    const _facLbl = (kind === 'ad') ? adStatusFacadeLabel(code, value) : statusDisplayLabel(value);   // 【v1.0741】
     return `<span class="status-cell">`
-      + `<span class="status-facade" style="color:${c};border-color:${bd}">${statusDisplayLabel(value)}<span class="status-chev">▾</span></span>`
+      + `<span class="status-facade" style="color:${c};border-color:${bd}">${_facLbl}<span class="status-chev">▾</span></span>`
       + `<select class="status-select status-overlay"${dis} data-code="${escapeHtml(code)}" data-kind="${kind}">${opts}</select>`
       + `</span>`;
   }
@@ -17711,7 +17794,7 @@ document.addEventListener('change', (e) => {
     if (fac) {
       fac.style.color = c;
       fac.style.borderColor = bd;
-      fac.innerHTML = statusDisplayLabel(value) + '<span class="status-chev">▾</span>';
+      fac.innerHTML = ((kind === 'ad') ? adStatusFacadeLabel(code, value) : statusDisplayLabel(value)) + '<span class="status-chev">▾</span>';   // 【v1.0741】
     }
     // 【v1.0714】入札状態を変えると同じ行のステータス（健常/中立の あり/なし）も変わる。
     //   ★その場で描き直さないと、画面を切り替えるまで古い表示のままになる
@@ -17757,6 +17840,9 @@ document.addEventListener('change', (e) => {
   } else {
     _stateCountsStale = true;
   }
+  // 【v1.0740】★ドロップダウンの変更は、その場でGitHubへ反映する（1.2秒まとめ待ち）。
+  //   反映が成功した時点で _ycAfterReflectRefresh() が走る＝条件から外れた商品はそこで消える。
+  try { ycAutoPushSoon(); } catch (e) {}
 });
 
 // ==================== 【子商品詳細】ドロップダウン変更 ====================
