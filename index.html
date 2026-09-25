@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0722 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0723 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3839,7 +3839,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0722</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0723</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9921,10 +9921,18 @@ function updateStateCounts() {
   _setTx('#cntStatusChuritsuNoad', sChuritsuNoad);
   _setTx('#cntStatusWithdrawPlan', sWithdrawPlan);
   _setTx('#cntStatusWithdrawn', withdrawnCount);
-  // 【v1.0722】【撤退】タブの件数（チップと同じ数字。★同じ変数を使い回す＝二重集計しない）
-  _setTx('#cntWdConsider', sWithdrawConsider);
-  _setTx('#cntWdPlan', sWithdrawPlan);
-  _setTx('#cntWdDone', withdrawnCount);
+  // 【v1.0722/v1.0723】【撤退】タブの件数。★表の絞り込みとまったく同じ _wdMatch() で数える。
+  //   チップ（撤退検討▲/撤退予定/撤退済み）とは数が違うことがある＝子商品を含めないため。これは仕様。
+  { let wdC = 0, wdP = 0, wdD = 0;
+    allCodes.forEach(code => {
+      if (_wdMatch('consider', code)) wdC++;
+      else if (_wdMatch('plan', code)) wdP++;
+      else if (_wdMatch('done', code)) wdD++;
+    });
+    _setTx('#cntWdConsider', wdC);
+    _setTx('#cntWdPlan', wdP);
+    _setTx('#cntWdDone', wdD);
+  }
   // Basic(商品-基本データ)タブの現役商品合計数を表示
   const cntBasic = $('#cntBasicActive');
   if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
@@ -13798,7 +13806,16 @@ const WD_MODES = {
   done:     { label: '撤退済',   match: st => st === '撤退済み' }
 };
 let _wdMode = 'consider';
-function _wdIs(code) { const d = WD_MODES[_wdMode] || WD_MODES.consider; return d.match(effectiveStatusOf(code)); }
+// 【v1.0723】★送り込みの子商品は出さない（親1行にまとめる）。
+//   子のステータスは effectiveStatusOf が親の値を返すので、何もしないと
+//   「撤退予定(3)」＝親1＋子2 のように、同じ1セットが人数ぶん数えられてしまう。
+//   ★件数（updateStateCounts）も表（cfg.statusPick）も必ずこの1本を通すこと（§12）。
+function _wdMatch(mode, code) {
+  if (_isSoiChildProduct(code)) return false;   // 子は親に含める
+  const d = WD_MODES[mode] || WD_MODES.consider;
+  return d.match(effectiveStatusOf(code));
+}
+function _wdIs(code) { return _wdMatch(_wdMode, code); }
 function _wdSyncNavTabs() {
   document.querySelectorAll('.nav-tab[data-view="withdraw"]').forEach(t => {
     t.classList.toggle('active', state.currentView === 'withdraw' && t.dataset.wdmode === _wdMode);
