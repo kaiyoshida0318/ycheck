@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0700 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0701 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -733,6 +733,11 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 /* ★行ごとの gap も揃える。.nav-group は 2px、.nav-row-states .nav-group は 3px で、1pxずれていた。 */
 .top-nav-3 .states-stack .nav-group { gap: 3px; }
 .top-nav-3 .states-stack .chip-all { min-width: 74px; justify-content: center; }
+/* 【v1.0701】3行の頭を「ラベル｜全体｜2番目」で縦にそろえる。
+   ★区切り線（.chip-sep）は【幅が固定された要素の右】に置いて初めて縦にそろう。
+     ラベル 98px ／ 全体 74px ／ 2番目 132px の3つを固定幅にしてある。
+   ★2番目に入れるチップには必ず .chip-slot2 を付けること（付け忘れた行だけ線がずれる）。 */
+.top-nav-3 .states-stack .chip-slot2 { min-width: 132px; justify-content: center; }
 
 /* 【v196】状態行は白背景。チップは塗りつぶさず（白背景・淡い枠）、文字色だけ各列の色に合わせる。 */
 .top-nav-3 { background: #fff; }
@@ -3730,7 +3735,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0700</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0701</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3865,7 +3870,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip chip-all" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
     <!-- 【v1.0622】3行とも「ラベル → 全体 → 区切り」で始まるように、ここにも区切りを入れた（縦にそろえるため） -->
     <span class="chip-sep" aria-hidden="true"></span>
-    <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip chip-slot2" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
     <!-- 【v1.0696】広告あり／なしをまとめた「健常」。広告あり◯ の左に置く -->
     <button class="state-chip" data-state="status-kenzen" title="健常（広告あり◯＋広告なし◯）をまとめて表示"><span class="chip-label">健常</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
@@ -3891,18 +3896,22 @@ th.col-sroas { background-color:#e7d5f5; }
       <span class="nav-group-label g-nyusatsu">【入札状態】</span>
       <button class="state-chip chip-all" data-state="ad-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllAd">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
+      <!-- 【v1.0701】「選択前」は3行とも【全体】の右＝2番目の位置に揃える（縦の区切り線がそろう） -->
+      <button class="state-chip chip-slot2" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
       <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
       <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     </div>
     <div class="nav-states-lastrow">
     <div class="nav-group nav-group-jotai nav-group-pr">
       <span class="nav-group-label g-pr">【PR状態】</span>
       <button class="state-chip chip-all" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <!-- 【v1.0701】「選択前」は3行とも【全体】の右＝2番目の位置に揃える -->
+      <button class="state-chip chip-slot2" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
       <!-- 【v1.0658】◯系の内訳（親は高料率のまま固定 / 子は7％から動かせない）。どちらも「対応不要」 -->
@@ -3913,8 +3922,6 @@ th.col-sroas { background-color:#e7d5f5; }
       <span class="chip-sep" aria-hidden="true"></span>
       <button class="state-chip" data-state="pro-hfixed"><span class="chip-label">PR△-飛ぶ手前固定</span><span class="chip-num" id="cntProHfixed">(0)</span></button>
       <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     </div>
     <!-- 【v1.0550/v1.0700】ヘッダー3（分類表＋【ステータス】【入札状態】【PR状態】）の開閉。この行の右端に置く。 -->
     <button class="btn sm ghost" id="btnToggleStates" type="button" title="分類表と【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー3を隠す</button>
