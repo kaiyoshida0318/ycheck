@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0742 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0743 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1905,6 +1905,10 @@ td[data-resize-key] {
 /* ★.status-lbl2 で2行ぶんを1つの flex アイテムにまとめる（これが無いと横並びになる） */
 .status-lbl2 { display: inline-block; text-align: center; line-height: 1.18; min-width: 0; }
 .status-sub { font-size: 0.78em; opacity: 0.85; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+/* 【v1.0743】入札△の1行目（入札△-調整中 など）を1行に収めるため少しだけ縮める */
+.status-lbl-1line { font-size: 0.86em; letter-spacing: -0.03em; white-space: nowrap; }
+/* ★この 0.86em は「入札△-飛ぶ手前固定」（最長の1行ラベル）が 112px に収まる限界。
+   選択肢に もっと長い名前を足すときは、ここか .status-facade の width を見直すこと。 */
 /* 【v204】ステータスのファサードは内容に合わせて可変幅（入札/PRの固定98pxは使わない）。 */
 .status-cell-life { display: inline-block; width: auto; }
 .status-facade-life { width: auto; min-width: 0; max-width: 100%; padding: 3px 8px; }   /* 【v1.0659】min-width:84px をやめて狭い列でもはみ出さないように */
@@ -3872,7 +3876,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0742</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0743</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10396,10 +10400,18 @@ function _adCircleSubLabel(code) {
     ? _adSubPart('1-4位30円内', AD_SUB_BLUE)
     : _adSubPart('1-4位外', AD_SUB_RED) + ' ' + _adSubPart('30円内', AD_SUB_BLUE);
 }
-// 入札状態セルの表示ラベル（入札◯だけ2行目が付く。他の値は従来どおり）
+// 入札状態セルの表示ラベル
+//   入札◯ … 1行目「入札◯」／2行目に順位×価格の自動判定
+//   入札△ … 【v1.0743】◯と同じ形にする。1行目は選んだ値をそのまま1行で（入札△-調整中 / 入札△-飛ぶ手前固定）、
+//            2行目に同じ自動判定を出す。★どちらの△を選んだかは1行目に必ず残す（§107）。
+//   それ以外（入札なし・未選択）… 従来どおり
 function adStatusFacadeLabel(code, value) {
-  const base = statusDisplayLabel(value);
-  if (!adStatusIsCircle(value)) return base;
+  const isCircle = adStatusIsCircle(value);
+  const isTri = (typeof _adIsTri === 'function') && _adIsTri(value);
+  if (!isCircle && !isTri) return statusDisplayLabel(value);
+  // ★△は2行ラベル（入札△<br>調整中）ではなく【1行】にする。2行目を自動判定に使うため
+  const base = isCircle ? statusDisplayLabel(value)
+                        : '<span class="status-lbl-1line">' + statusOptionLabel(value) + '</span>';
   const sub = _adCircleSubLabel(code);
   //   ★1行目と2行目は【1つの要素】にまとめること。
   //     .status-facade は inline-flex なので、<br> の前後を別々の要素にすると
