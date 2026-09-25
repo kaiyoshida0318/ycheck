@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0738 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0739 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3867,7 +3867,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0738</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0739</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7411,6 +7411,19 @@ async function ycReflect() {
     if (r && r.success) {
       _ghDirty = false; ghSetSyncStatus('saved');
       ycLog('save', 'GitHubへ反映しました');   // 【v1.0604】
+      // 【v1.0739】★反映したら、その場で一覧を作り直す。
+      //   編集中は「絞り込みに合わなくなっても行を消さない」ピン（_editPinnedCodes / v253・v276）が
+      //   効いているので、反映しても直したはずの商品が残って見える。
+      //   反映＝ひと区切りなので、ここでピンと凍結メンバーを解除して描き直す
+      //   ＝ステータスを変えた商品は、いま選んでいる絞り込みから消える。
+      //   ★ピンを外すのはこの1か所だけ。編集のたびに外すと、1行直すごとに表が飛んで使えなくなる。
+      try {
+        if (typeof clearEditPins === 'function') clearEditPins();
+        if (typeof resetTuneMembers === 'function') resetTuneMembers();   // 調整ビューの凍結メンバーも作り直す
+        adAdjustFrozenOrder = null; proAdjustFrozenOrder = null;          // 並び順の凍結も解除（最新値で並べ直す）
+        _stateCountsStale = false;
+        if (typeof renderAll === 'function') renderAll();
+      } catch (e) { try { ycLog('warn', '反映後の再描画でエラー: ' + (e && e.message ? e.message : e)); } catch (e2) {} }
       // 【v1.0600】保存した内容が別クライアントに上書きされていないか、15秒後に確認する
       try { _ycScheduleOverwriteCheck(_ycLastSavedAt, Object.keys(state.master || {}).length); } catch (e) {}
     }
