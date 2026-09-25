@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0705 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0708 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -621,28 +621,37 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
   display: grid;
   grid-auto-flow: row;
   grid-template-columns: auto auto auto auto auto auto auto auto;   /* 8列（§90-2の意味づけ） */
-  gap: 1px;
-  background: #c7cedb;                /* 罫線の色 */
-  border: 1px solid #c7cedb;
-  border-radius: 6px;
-  overflow: hidden;
+  column-gap: 0;
+  row-gap: 3px;
   flex: 0 1 auto;
   min-width: 0;
 }
-.states-grid > * { background: #fff; }
+.states-grid > * { background: transparent; align-self: stretch; }
 .states-grid .sg-label {
   display: flex; align-items: center; justify-content: flex-start;
   padding: 3px 9px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap;
 }
-.states-grid .sg-empty { background: #fafbfc; }
+.states-grid .sg-empty { }
 /* チップはセルいっぱいに。★角丸・枠線はグリッドの罫線と二重になるので消す */
 .states-grid .state-chip {
-  border: none; border-radius: 0; width: 100%;
-  justify-content: center; padding: 4px 10px;
-  background: #fff !important;
+  border: none; border-radius: 6px; width: 100%;
+  justify-content: center; padding: 3px 9px;
+  background: transparent !important;
 }
 .states-grid .state-chip:hover { background: #eef2f8 !important; }
 .states-grid .state-chip.active { color: #fff !important; }
+/* 【v1.0706】件数の () は桁が増えても幅が変わらないようにする。
+   ★min-width ＋ tabular-nums の両方が要る。tabular-nums だけだと (1) と (12) で幅が変わる。 */
+.states-grid .chip-num {
+  display: inline-block; min-width: 34px; text-align: left;
+  font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;
+}
+/* 【v1.0706】罫線は【縦線だけ】。表の枠（横線・外枠）は出さない。
+   ★列の左に線を引く＝1列目（行ラベル）以外。8列なので「8n+1 ではないセル」が対象。
+     列数を変えたらこの 8n+1 も必ず直す（直し忘れると線が1本ずれる）。
+   ★この指定は .states-grid .state-chip { border:none } より【後ろ】に書くこと。
+     セレクタの強さが同じなので、前に書くと border:none に負けて線が消える（実際に踏んだ）。 */
+.states-grid > *:not(:nth-child(8n+1)) { border-left: 2px solid #c3cad6; }
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
 /* ============================================================================
@@ -849,9 +858,10 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid .state-chip[data-state="pro-all"].active             { background: #0d9488 !important; }
 .states-grid .state-chip[data-state="ad-none"].active             { background: #6b7280 !important; }
 .states-grid .state-chip[data-state="unselected-ad"].active,
-.states-grid .state-chip[data-state="unselected-pro"].active      { background: #64748b !important; }
+.states-grid .state-chip[data-state="unselected-pro"].active      { background: #16a34a !important; }   /* 【v1.0707】新商品と同色 */
+/* 【v1.0707】「選択前」は 新商品 と同じ緑。3行とも2列目＝「これから決める枠」なので色をそろえる */
 .top-nav-3 .state-chip[data-state="unselected-ad"],
-.top-nav-3 .state-chip[data-state="unselected-pro"] { color: #64748b; }
+.top-nav-3 .state-chip[data-state="unselected-pro"] { color: #16a34a; }
 .top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
 .top-nav-3 .state-chip[data-state="status-kenzen"] { color: #1e40af; }      /* 【v1.0696】まとめ＝濃い青 */
 .top-nav-3 .state-chip[data-state="status-kenzen-ad"] { color: #2563eb; }
@@ -3818,7 +3828,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0705</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0708</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3959,17 +3969,18 @@ th.col-sroas { background-color:#e7d5f5; }
          ・罫線は gap(1px) ＋ 親の背景色で出す（セルは白）
          ・★背景は白、色は【文字色】で付ける。背景を塗ると縦のまとまりが読めなくなるため
          ・空きセルは <span class="sg-empty"></span> を必ず置く（省くと列がずれる）
-       ★列の意味（3行共通）:
-         1 ラベル / 2 全体 / 3 新商品・選択前 / 4 ◯=対応不要(青) / 5 △=様子見(黄)
-         6 ✕=要対応(赤)・撤退検討(橙) / 7 撤退予定・入札なし / 8 撤退済み
+       ★列の意味（3行共通）【v1.0708】:
+         1 ラベル / 2 全体 / 3 新商品・選択前(緑) / 4 ◯=対応不要(青) / 5 △=様子見(黄)
+         6 撤退検討▲(橙。ステータスだけ) / 7 ✕=要対応(赤): 撤退予定・入札✕・PR✕ / 8 撤退済み・入札なし(灰)
+       ★6列目は入札/PRでは空。「赤＝要対応」を縦にそろえるために1つ空けている（詰めると色の列が崩れる）
        ============================================================ -->
   <div class="states-grid">
 
     <span class="sg-label g-status">【ステータス】</span>
-    <button class="state-chip chip-all" data-state="all-basic"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <button class="state-chip chip-all" data-state="all-basic" title="撤退済みを除いた全商品"><span class="chip-label">全体</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
     <button class="state-chip" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
-    <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
-    <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
+    <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
+    <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
@@ -3979,17 +3990,17 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
     <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <button class="state-chip" data-state="ad-fixed" title="入札△-飛ぶ手前固定"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
+    <span class="sg-empty"></span>
     <button class="state-chip" data-state="ad-ng" title="入札×-調整中"><span class="chip-label">入札✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
     <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
-    <span class="sg-empty"></span>
 
     <span class="sg-label g-pr">【PR状態】</span>
-    <button class="state-chip chip-all" data-state="pro-all"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
+    <button class="state-chip chip-all" data-state="pro-all" title="撤退済みを除いた全商品"><span class="chip-label">全体</span><span class="chip-num" id="cntAllPr">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
     <button class="state-chip" data-state="pro-tri" title="PR△（PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
-    <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <span class="sg-empty"></span>
+    <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <span class="sg-empty"></span>
 
   </div>
@@ -16336,12 +16347,14 @@ $$('.nav-tab').forEach(item => {
 //     ここを変えるだけで絞り込みは効く（renderBasic は無変更）。
 //   ★ad-adjust / pro-adjust のビューと、その中の targetView 判定は残置（データ互換・戻せるように）。
 const STATE_FILTERS = {
-  'all-basic':     { label: '全体',       targetView: 'basic', basicMode: 'tune', match: () => true },
+  // 【v1.0707】「全体」は撤退済みを含まない。★件数（activeCount）は元から撤退済みを除いているので、
+  //   判定側にも同じ条件を明示しておく（match と件数で母集団がずれないように。§12）
+  'all-basic':     { label: '全体',       targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },
   // 【v208】入札状態の「全体」＝入札価格が記入されている商品のみ。
   'ad-all':        { label: '全体',       targetView: 'basic', basicMode: 'tune',  match: (meta, code) => { if (adStatusIsNone(effectiveAdStatusOf(code))) return false;   /* 【v1.0658】子は除外 */
      const b = state.bid ? (state.bid[code] != null ? state.bid[code] : state.bid[String(code).toLowerCase()]) : null; return b != null && Number(b) > 0; } },
   // 【v1.0496】PR状態の「全体」＝PRオプ調整（pro-adjust）の画面と同じ内容で全商品を表示。
-  'pro-all':       { label: '全体',       targetView: 'basic', basicMode: 'tune', match: () => true },
+  'pro-all':       { label: '全体',       targetView: 'basic', basicMode: 'tune', match: (meta, code) => !isRetired(code) },   /* 【v1.0707】撤退済みは含まない */
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
   'new-product':      { label: '新商品',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '新商品' },   // 【fix】旧値(通常商品/現役商品)も新商品扱い＝件数バッジ(updateStateCounts)と判定式を一致させる
