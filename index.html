@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0743 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0744 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3876,7 +3876,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0743</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0744</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10122,7 +10122,7 @@ function codeCellHtml(code, prefixHtml) {
 //   旧ラベルもキーとして残し、未マイグレーションデータでもソートが安定するようにする
 const AD_STATUS_ORDER = {
   '': 0,
-  '入札◯': 1, '入札△-飛ぶ手前固定': 2, '入札△-調整中': 3, '入札×-調整中': 3, '入札なし': 4,   /* 【v1.0715】新旧とも同じ重み */
+  '入札◯': 1, '入札△': 2, '入札△-飛ぶ手前固定': 2, '入札△-調整中': 3, '入札×-調整中': 3, '入札なし': 4,   /* 【v1.0744】'入札△' を追加 */   /* 【v1.0715】新旧とも同じ重み */
   '入札価格○': 1, '入札価格✕': 3, '入札無し': 4,   // 互換用（旧ラベル）
   '広告○': 1, '広告×': 3, '広告無': 4              // 互換用（マイグレーション前の値もソート可能に）
 };
@@ -10324,6 +10324,7 @@ const STATUS_TEXT_COLOR = {
   '': '#16a34a',                   // 【v1.0710】未選択（—）＝「選択前」チップと同じ緑
   // 入札価格状態
   '入札◯': '#2563eb',              // 青（◯）
+  '入札△': '#ea580c',              // 【v1.0744】△（オレンジ）。選択肢はこの1つだけ
   '入札△-調整中': '#ea580c',        // 【v1.0715】黄（△）
   '入札×-調整中': '#ea580c',        // 【v1.0715】旧名。同じ黄で表示する（データ移行なしで読めるように）
   '入札△-飛ぶ手前固定': '#ea580c',  // 【v1.0710】黄（△）に統一
@@ -10409,17 +10410,17 @@ function adStatusFacadeLabel(code, value) {
   const isCircle = adStatusIsCircle(value);
   const isTri = (typeof _adIsTri === 'function') && _adIsTri(value);
   if (!isCircle && !isTri) return statusDisplayLabel(value);
-  // ★△は2行ラベル（入札△<br>調整中）ではなく【1行】にする。2行目を自動判定に使うため
-  const base = isCircle ? statusDisplayLabel(value)
-                        : '<span class="status-lbl-1line">' + statusOptionLabel(value) + '</span>';
+  const base = statusDisplayLabel(value);   // 入札◯ / 入札△（どちらも1行）
   const sub = _adCircleSubLabel(code);
   //   ★1行目と2行目は【1つの要素】にまとめること。
   //     .status-facade は inline-flex なので、<br> の前後を別々の要素にすると
   //     2つの flex アイテムになって【横に並んでしまう】（改行されない）。実際に踏んだ。
   //   ★sub は _adCircleSubLabel が作った【色つきHTML】。ここで escapeHtml を通さないこと
   //     （通すとタグが文字として出る）。外部文字は混ぜない作りにしてある。
+  //   【v1.0744】★上下を逆にした: 1行目＝自動判定（順位×価格）／2行目＝選んだ状態（入札◯ / 入札△）。
+  //     見るのはまず「いまどうなっているか」で、状態名は確認用、という優先順位に合わせた。
   return sub
-    ? ('<span class="status-lbl2">' + base + '<br><span class="status-sub">' + sub + '</span></span>')
+    ? ('<span class="status-lbl2"><span class="status-sub">' + sub + '</span><br>' + base + '</span>')
     : base;
 }
 function statusDisplayLabel(value) {
@@ -10561,7 +10562,10 @@ function statusLifeDisplayLabel(value) {
 //   セル（statusSelectHtml）と一括変更バー（#basicBulkBar）が必ず同じ並び・同じ値を使うため。
 //   ★選択肢を足すときはここだけ直す。先頭の '' は「—（未設定）」。
 // 【v1.0715】'入札×-調整中' を '入札△-調整中' に改称（✕ → △）。★保存済みの旧値もそのまま読める
-const AD_STATUS_OPTIONS  = ['', '入札◯', '入札△-調整中', '入札△-飛ぶ手前固定', '入札なし'];
+// 【v1.0744】△は「入札△」1つに統一。調整中／飛ぶ手前固定 の区別は廃止
+//   （2行目に出る 順位×価格 の自動判定で足りるようになったため）。
+//   ★保存済みの旧値（入札△-調整中 / 入札△-飛ぶ手前固定 …）は AD_STATUS_ALIAS が読み替えるので消さない。
+const AD_STATUS_OPTIONS  = ['', '入札◯', '入札△', '入札なし'];
 // 【v1.0636】'PR△-親-飛ぶ手前固定' は 'PR△-飛ぶ手前固定' に統合（migrateProStatusV1636 が一度だけ値を書き換える）。
 //   'PR△-子-7％固定' は廃止。どちらも選択肢から外したが、
 //   ★色（STATUS_TEXT_COLOR）・略称（STATUS_DISPLAY_LABEL）・並び順（PRO_STATUS_ORDER）の
@@ -14133,7 +14137,7 @@ function ensureTuneMembers(kind) {
 //   ・△-飛ぶ手前固定 / △-子-7％固定（settled）: 対応完了で固定。修正あり・推移確認・未確認から除外（全体のみ）。
 function adStatusIsCircle(s) { return s === '入札◯' || s === '入札価格○' || s === '広告○'; }
 // 【v1.0715】'入札△-調整中'（旧 '入札×-調整中'）。★新旧どちらの保存値も必ずこの1本で判定する
-function _adIsAdjusting(s)   { return s === '入札△-調整中' || s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }
+function _adIsAdjusting(s)   { return s === '入札△' || s === '入札△-調整中' || s === '入札×-調整中' || s === '入札価格✕' || s === '広告×'; }   /* 【v1.0744】'入札△' を追加 */
 function adStatusIsCross(s)  { return _adIsAdjusting(s); }   // 「調整中＝まだ条件を満たしていない」側の判定（isTuneFix が見る）
 function adStatusIsSettled(s){ return s === '入札△-飛ぶ手前固定'; }  // 固定＝対応不要
 // 【v1.0715】チップ「入札△」＝ 調整中 ＋ 飛ぶ手前固定
@@ -14161,7 +14165,11 @@ function effectiveProStatusOf(code) {
 //   ★入札状態を読んで 絞り込む／数える／調整の母集団を決める 処理は、必ずこの関数を通すこと。
 // 【v1.0715】旧名 '入札×-調整中' → 新名 '入札△-調整中' に【読み取り時だけ】言い換える。
 //   ★保存値そのものは書き換えない（effectiveAdStatusOf を通せば全画面で新名になる）
-const AD_STATUS_ALIAS = { '入札×-調整中': '入札△-調整中', '入札価格✕': '入札△-調整中', '広告×': '入札△-調整中' };
+const AD_STATUS_ALIAS = {
+  // 【v1.0744】△はすべて '入札△' に寄せる（表示・選択肢とも1つ）
+  '入札△-調整中': '入札△', '入札△-飛ぶ手前固定': '入札△',
+  '入札×-調整中': '入札△', '入札価格✕': '入札△', '広告×': '入札△', '入札価格△': '入札△'
+};
 function adStatusCanon(s) { return AD_STATUS_ALIAS[s] || s || ''; }
 function effectiveAdStatusOf(code) {
   if (_isSoiChildProduct(code)) return '入札なし';
