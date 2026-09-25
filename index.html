@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0721 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0722 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3675,6 +3675,7 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 .nav-group-label.g-nyusatsu { color:#b45309; }  /* 【入札状態】 */
 .nav-group-label.g-pr       { color:#7c3aed; }  /* 【PR状態】 */
 .nav-group-label.g-taiou    { color:#c2410c; }  /* 【対応検討】 */
+.nav-group-label.g-tettai   { color:#8b5a2b; }  /* 【撤退】【v1.0722】撤退済みチップと同じ茶色 */
 /* 【v1.0322】広告あり/無し 絞り込み（商品-基本/月別データ）。検索欄の隣のセグメントボタン */
 /* 【v1.0587】.seg-filter / .segf-btn は .ad-filter と同じ見た目のセグメントボタン（合算/個別で使用）。
    同じ宣言を書き写さずに済むよう、セレクタを並べて共有している。 */
@@ -3838,7 +3839,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0721</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0722</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3938,6 +3939,15 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="basic" data-basicmode="tune" href="?view=basic-tune" id="navTuneBasic">調整-基本</a>
     <a class="nav-tab nav-tab-link" data-view="ad-tune" href="?view=ad-tune">調整-入札価格</a>
     <a class="nav-tab nav-tab-link" data-view="pro-tune" href="?view=pro-tune">調整-PRオプ</a>
+  </div>
+  <!-- 【v1.0722】【撤退】＝ステータスが 撤退検討▲/撤退予定/撤退済み の商品だけを出す3タブ。
+       ★ビュー実体は #view-withdraw ひとつ。data-wdmode で中身を切り替える
+         （調整-基本の data-basicmode と同じ作り。表を3つ作らない＝列幅の保存キーも1組で済む）。 -->
+  <div class="nav-group nav-group-tune nav-group-tettai">
+    <span class="nav-group-label g-tettai">【撤退】</span>
+    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="consider" href="?view=withdraw-consider">撤退検討<span class="chip-num" id="cntWdConsider"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="plan" href="?view=withdraw-plan">撤退予定<span class="chip-num" id="cntWdPlan"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="done" href="?view=withdraw-done">撤退済<span class="chip-num" id="cntWdDone"></span></a>
   </div>
   <!-- 【v1.0700】ヘッダー2（【一覧】【調整】のタブ行）の開閉。この行の右端に置く -->
   <button class="btn sm ghost" id="btnToggleTabs" type="button" title="【一覧】【調整】のタブ行を隠します">🔼 ヘッダー2を隠す</button>
@@ -4691,6 +4701,49 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-spend" data-sort="adCost0" id="hAdTuneAdRev0">広告実績額<br>(3ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost1" id="hAdTuneAdRev1">広告実績額<br>(2ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost2" id="hAdTuneAdRev2">広告実績額<br>(前月)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 【v1.0722】View: 撤退（撤退検討／撤退予定／撤退済）。
+         左半分は 調整-入札価格 と同じ（コード/画像/商品名/メインKW/ステータス/入札状態/入札価格/対応内容）、
+         右半分だけ 広告売上×3ヶ月 ＋ SEO売上×3ヶ月 に差し替えたもの。
+         ★描画は renderAdAdjust の layout:'withdraw' を使い回す（新しい描画関数は作らない）。 -->
+    <div class="view" id="view-withdraw">
+      <div class="card">
+        <h3 class="card-title" id="wdCardTitle">撤退検討</h3>
+        <div class="filters">
+          <span class="filter-label">検索</span>
+          <input type="search" id="wdSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
+          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">表示時期</span>
+            <span style="display:inline-flex;gap:4px">
+              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）">今月含まない</button>
+              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月">今月含む</button>
+            </span>
+          </span>
+        </div>
+        <div class="table-wrap">
+          <table id="tableWithdraw" class="data-grid">
+            <thead><tr>
+              <th data-sort="code" data-resize-key="code">商品コード</th>
+              <th class="nosort">画像</th>
+              <th data-sort="name" data-resize-key="nameWd">商品名</th>
+              <th class="nosort" data-resize-key="kwWd">メインKW</th>
+              <th class="status-col" data-sort="status">ステータス</th>
+              <th class="status-col" data-sort="adStatus">入札状態</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th data-sort="adNote" data-resize-key="adNoteWd">対応内容</th>
+              <th class="num col-ad" data-sort="adRev0" id="hWdAdSales0">広告売上<br>(3ヶ月前)</th>
+              <th class="num col-ad" data-sort="adRev1" id="hWdAdSales1">広告売上<br>(2ヶ月前)</th>
+              <th class="num col-ad" data-sort="adRev2" id="hWdAdSales2">広告売上<br>(前月)</th>
+              <th class="num col-sales" data-sort="seoRev0" id="hWdSeo0">SEO売上<br>(3ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev1" id="hWdSeo1">SEO売上<br>(2ヶ月前)</th>
+              <th class="num col-sales" data-sort="seoRev2" id="hWdSeo2">SEO売上<br>(前月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -9868,6 +9921,10 @@ function updateStateCounts() {
   _setTx('#cntStatusChuritsuNoad', sChuritsuNoad);
   _setTx('#cntStatusWithdrawPlan', sWithdrawPlan);
   _setTx('#cntStatusWithdrawn', withdrawnCount);
+  // 【v1.0722】【撤退】タブの件数（チップと同じ数字。★同じ変数を使い回す＝二重集計しない）
+  _setTx('#cntWdConsider', sWithdrawConsider);
+  _setTx('#cntWdPlan', sWithdrawPlan);
+  _setTx('#cntWdDone', withdrawnCount);
   // Basic(商品-基本データ)タブの現役商品合計数を表示
   const cntBasic = $('#cntBasicActive');
   if (cntBasic) cntBasic.textContent = activeCount > 0 ? `(${activeCount})` : '';
@@ -11260,7 +11317,8 @@ function _bulkFillSelects() {
 // 【v1.0651】一括変更は 商品-基本データ／調整-基本／商品-広告データ／商品-PRデータ で使う。
 //   ★バー（#basicBulkBar）は1本だけ。いま開いている画面のツールバー（.filters）の直後へ DOM ごと移して使う（id を複製しない）。
 const BULK_TABLE_OF = { 'basic': '#tableBasic', 'ad-data': '#tableAdData', 'pr-data': '#tablePrData',
-  'ad-tune': '#tableAdTune', 'pro-tune': '#tableProTune' };   // 【v1.0662】調整-入札価格／調整-PRオプでも一括変更
+  'ad-tune': '#tableAdTune', 'pro-tune': '#tableProTune',   // 【v1.0662】調整-入札価格／調整-PRオプでも一括変更
+  'withdraw': '#tableWithdraw' };   // 【v1.0722】【撤退】でもステータスの一括変更を使う
 function _bulkTableSel() { return BULK_TABLE_OF[state.currentView] || '#tableBasic'; }
 function _bulkPlaceBar() {
   const bar = document.getElementById('basicBulkBar');
@@ -12834,6 +12892,9 @@ function _resolveViewName(v) {
   // 【v1.0609】?view=basic-tune ＝ 調整-基本（#view-basic の tune モード）
   if (v === 'basic-tune')    return { view: 'basic', zdGrain: null, basicMode: 'tune' };
   if (v === 'basic')         return { view: 'basic', zdGrain: null, basicMode: 'plain' };
+  // 【v1.0722】?view=withdraw-consider / -plan / -done ＝ #view-withdraw のモード違い
+  { const mm = /^withdraw-(consider|plan|done)$/.exec(v || ''); if (mm) return { view: 'withdraw', zdGrain: null, wdMode: mm[1] }; }
+  if (v === 'withdraw')      return { view: 'withdraw', zdGrain: null, wdMode: 'consider' };
   return { view: v, zdGrain: null };
 }
 
@@ -13726,6 +13787,46 @@ function last3MonthsInclCurrent() {
   const completed = months.filter(m => m < curYM).slice(-2);  // 直近2ヶ月（完了）
   return [...completed, curYM];                               // ＋当月＝3ヶ月
 }
+// ============================================================================
+// 【v1.0722】【撤退】ビュー（撤退検討／撤退予定／撤退済）
+//   ★ステータスの判定は effectiveStatusOf（子は親に追従）を通す＝チップ・件数と同じ土俵。
+//   ★'撤退予定' は旧値（撤退■ / 撤退予定-out記入済）も拾う。updateStateCounts と同じ列挙。
+// ============================================================================
+const WD_MODES = {
+  consider: { label: '撤退検討', match: st => st === '撤退検討▲' },
+  plan:     { label: '撤退予定', match: st => st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済' },
+  done:     { label: '撤退済',   match: st => st === '撤退済み' }
+};
+let _wdMode = 'consider';
+function _wdIs(code) { const d = WD_MODES[_wdMode] || WD_MODES.consider; return d.match(effectiveStatusOf(code)); }
+function _wdSyncNavTabs() {
+  document.querySelectorAll('.nav-tab[data-view="withdraw"]').forEach(t => {
+    t.classList.toggle('active', state.currentView === 'withdraw' && t.dataset.wdmode === _wdMode);
+  });
+  const h = document.getElementById('wdCardTitle');
+  if (h) h.textContent = (WD_MODES[_wdMode] || WD_MODES.consider).label;
+}
+// 【v1.0722】描画は renderAdAdjust の使い回し。★新しい絞り込みロジックは書かない
+function renderWithdraw() {
+  _syncTunePeriodSegs();
+  _wdSyncNavTabs();
+  if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();
+  renderAdAdjust({
+    tableSel: '#tableWithdraw',
+    layout: 'withdraw',
+    completedOnly: true,
+    incl3Current: _tunePeriodInclCurrent,
+    searchSel: '#wdSearch',
+    cntSel: null,
+    hPrefix: 'hWd',
+    colspan: 14,
+    emptyMsg: 'この区分の商品はありません',
+    statusPick: _wdIs
+  });
+  if (typeof _bulkSyncUI === 'function') _bulkSyncUI();
+}
+window.renderWithdraw = renderWithdraw;
+
 // 【v1.0400】入札価格調整/PRオプ調整の「表示時期」トグル。false=今月含まない(例5-7月) / true=今月含む(例6-8月)。
 let _tunePeriodInclCurrent = false;
 function _setTunePeriod(incl) {
@@ -13738,6 +13839,7 @@ function _setTunePeriod(incl) {
   else if (v === 'pr-data') renderPrData();
   else if (v === 'ad-adjust') renderAdAdjust();   // 【v1.0495】入札状態チップで絞り込んだ表も再描画
   else if (v === 'pro-adjust') renderProAdjust();
+  else if (v === 'withdraw') renderWithdraw();   // 【v1.0722】
   else if (v === 'review-sales4') renderReviewSales4();   // 【v1.0498】総売上-直近4ヶ月分
 }
 function _syncTunePeriodSegs() {
@@ -14132,6 +14234,7 @@ function renderAdAdjust(cfg) {
   for (let i = 0; i < months.length; i++) {
     const _as = $('#'+hPrefix+'AdSales'+i); if (_as) _as.innerHTML = `広告売上<br>${months[i] || ''}`;
     const _sr = $('#'+hPrefix+'Sroas'+i);   if (_sr) _sr.innerHTML = `広告売上ROAS<br>${months[i] || ''}`;   // 【v1.0655】
+    const _se = $('#'+hPrefix+'Seo'+i);     if (_se) _se.innerHTML = `SEO売上<br>${months[i] || ''}`;       // 【v1.0722】撤退ビュー
   }
   // 【v1.0461】広告売上（対象月＝表示中の最新月：今月含む→今月／含まない→満了直近月）の見出しに月を表示
   { const _arm = $('#'+hPrefix+'AdRevMain'); if (_arm) _arm.innerHTML = `広告売上<br>${months[months.length-1] || ''}`; }   // 【v1.0654】1列版は残置（いまはどの表も3列）
@@ -14159,8 +14262,10 @@ function renderAdAdjust(cfg) {
     return { code, adRevs, adCosts, roass, seoRevs, revs, sroass };
   });
 
+  // 【v1.0722】★撤退ビューは「撤退済み＝引退」も出すのが目的なので、この除外を通さない
+  const _wd = (cfg.layout === 'withdraw');
   // 引退済み商品（商品名なし）を除外
-  list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
+  if (!_wd) list = list.filter(r => !isRetired(r.code) || _editPinnedCodes.has(r.code));
 
   // 【v1.0650】商品-広告データの 合算/両表示。★絞り込みより先にまとめる（§5-D-2）。入札なしの除外もセット単位（メンバーの誰かが入札中なら残す）
   const _dataRoll = (cfg.layout === 'data' || cfg.rollup) && _basicIsRollup();   /* 【v1.0662】調整-入札価格／調整-PRオプでも効かせる */
@@ -14170,7 +14275,10 @@ function renderAdAdjust(cfg) {
   // 【v223】入札状態が「入札なし」の商品は入札価格全体に表示しない。
   //   インラインで入札なしに変更しても即時には消えない（変更ハンドラは再描画しないため）。
   //   更新・別ビューへの移動など renderAdAdjust が再実行されたタイミングで除外される。
-  list = list.filter(r => _rfMembersOf(r).some(c => !adStatusIsNone(effectiveAdStatusOf(c))) || _editPinnedCodes.has(r.code));   // 【v1.0658】子は入札なし扱い
+  // 【v1.0722】撤退ビューは「入札なし除外」ではなく、ステータス（撤退検討▲/撤退予定/撤退済み）で絞る。
+  //   ★判定は cfg.statusPick（＝_wdIs）1本。ここに文字列比較を書き足さないこと（タブと件数がズレる）
+  if (_wd) list = list.filter(r => _rfMembersOf(r).some(c => cfg.statusPick(c)) || _editPinnedCodes.has(r.code));
+  else list = list.filter(r => _rfMembersOf(r).some(c => !adStatusIsNone(effectiveAdStatusOf(c))) || _editPinnedCodes.has(r.code));   // 【v1.0658】子は入札なし扱い
 
   const _adSearchEl = $(searchSel);
   const q = (_adSearchEl ? _adSearchEl.value : '').trim().toLowerCase();
@@ -14210,6 +14318,7 @@ function renderAdAdjust(cfg) {
     if (k === 'adRevMain') return r.adRevs[r.adRevs.length - 1] || 0;   // 【v1.0461】広告売上（対象月）でソート
     { const mm = /^adRev(\d+)$/.exec(k); if (mm) return r.adRevs[+mm[1]] || 0; }   // 【v1.0649】商品-広告データの広告売上×3
     { const mm = /^sroas(\d+)$/.exec(k); if (mm) { const v = (r.sroass || [])[+mm[1]]; return v == null ? -1 : v; } }   // 【v1.0655】
+    { const mm = /^seoRev(\d+)$/.exec(k); if (mm) return r.seoRevs[+mm[1]] || 0; }   // 【v1.0722】撤退ビューのSEO売上×3
     { const mm = /^adCost(\d+)$/.exec(k); if (mm) return r.adCosts[+mm[1]] || 0; }   // 【v278】当月列(adCost3)も対応
     { const mm = /^roas(\d+)$/.exec(k);   if (mm) { const v = r.roass[+mm[1]]; return (v == null || !isFinite(v)) ? -1 : v; } }
     if (k === 'adStatus')  { return adStatusOrder(effectiveAdStatusOf(r.code)); }   /* 【v1.0658】 */
@@ -14292,6 +14401,23 @@ function renderAdAdjust(cfg) {
       ${_roasCells}
       ${_revCells}
       ${_bidCellD}
+    `;
+      tbody.appendChild(tr);
+      return;
+    }
+    // 【v1.0722】撤退ビュー: 左は調整-入札価格と同じ、右だけ 広告売上×3 ＋ SEO売上×3
+    if (_wd) {
+      tr.innerHTML = `
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
+      <td>${imageCellHtml(r.code)}</td>
+      <td>${nameCellHtml(r.code)}</td>
+      <td>${kwCellHtml(r.code)}</td>
+      ${_tdStatus}
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      ${_bidCellT}
+      <td>${noteCellHtml(r.code, 'ad')}</td>
+      ${_adRevMainCell}
+      ${r.seoRevs.map((v, i) => shareRevCell(v, r.adRevs[i], true, 'col-sales')).join('')}
     `;
       tbody.appendChild(tr);
       return;
@@ -16342,6 +16468,7 @@ function renderAll() {
   else if (state.currentView === 'pro-tune') renderProTune();
   else if (state.currentView === 'ad-data') renderAdData();   // 【v1.0649】
   else if (state.currentView === 'pr-data') renderPrData();   // 【v1.0649】
+  else if (state.currentView === 'withdraw') renderWithdraw();   // 【v1.0722】
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
   else if (state.currentView === 'review-sales4') renderReviewSales4();
@@ -16423,6 +16550,7 @@ $$('.nav-tab').forEach(item => {
     // 【v1.0546】「全-月別データ／全-日別データ」は同じビューの粒度違い。タブ側の data-zdgrain を _zdGrain に反映する。
     // 【v1.0609】「商品-基本データ／調整-基本」は同じビューのモード違い
     if (item.dataset.basicmode) _basicMode = (item.dataset.basicmode === 'tune') ? 'tune' : 'plain';
+    if (item.dataset.wdmode) _wdMode = item.dataset.wdmode;   // 【v1.0722】【撤退】の3タブ
     if (item.dataset.zdgrain) {
       const want = (item.dataset.zdgrain === 'day') ? 'day' : 'month';
       if (want === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) {
@@ -16547,6 +16675,7 @@ function switchToView(viewName) {
   const _rv = (typeof _resolveViewName === 'function') ? _resolveViewName(viewName) : { view: viewName, zdGrain: null };
   viewName = _rv.view;
   if (_rv.basicMode) _basicMode = _rv.basicMode;   // 【v1.0609】
+  if (_rv.wdMode) _wdMode = _rv.wdMode;             // 【v1.0722】
   if (_rv.zdGrain) {
     if (_rv.zdGrain === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) _zdGrain = 'month';
     else { _zdGrain = _rv.zdGrain; if (_zdGrain === 'day' && !_zdDayYm) { const ms = [...dailyMonths()].sort(); _zdDayYm = ms.length ? ms[ms.length - 1] : ''; } }
@@ -16559,6 +16688,7 @@ function switchToView(viewName) {
   $('#view-' + viewName).classList.add('active');
   if (viewName === 'graphdata' && typeof _zdSyncNavTabs === 'function') _zdSyncNavTabs();
   if (viewName === 'basic' && typeof _basicSyncNavTabs === 'function') _basicSyncNavTabs();   // 【v1.0609】
+  if (viewName === 'withdraw' && typeof _wdSyncNavTabs === 'function') _wdSyncNavTabs();     // 【v1.0722】
   // 【v208】プログラム経由のビュー切替でも凍結を解除
   adAdjustFrozenOrder = null;
   proAdjustFrozenOrder = null;
@@ -17336,6 +17466,7 @@ wireSort('#tablePrData', (k) => {
 });
 // 【v239】調整（tune）ビューの検索・ソート・サブフィルタ配線
 if ($('#adTuneSearch'))  $('#adTuneSearch').addEventListener('input', renderAdTune);
+if ($('#wdSearch'))      $('#wdSearch').addEventListener('input', renderWithdraw);   // 【v1.0722】
 if ($('#proTuneSearch')) $('#proTuneSearch').addEventListener('input', renderProTune);
 wireSort('#tableAdTune', (k) => {
   if (adAdjustSortKey === k) adAdjustSortDir *= -1;
@@ -18695,6 +18826,7 @@ function getCurrentViewCodesInOrder() {
     'ad-adjust':  '#tableAdAdjust',
     'pro-adjust': '#tableProAdjust',
     'ad-tune':    '#tableAdTune',
+    'withdraw':   '#tableWithdraw',   // 【v1.0722】
     'pro-tune':   '#tableProTune',
     'ad-data':    '#tableAdData',   // 【v1.0649】
     'pr-data':    '#tablePrData',
