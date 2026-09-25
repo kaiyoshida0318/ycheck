@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0732 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0733 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3843,7 +3843,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0732</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0733</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4014,7 +4014,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
-    <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
+    <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
     <!-- 【v1.0726】9列目。撤退の右＝「畳むのではなく作り直す」枠 -->
     <button class="state-chip" data-state="status-renewal-plan" title="リニューアル予定＝いったん止めて作り直す商品（撤退とは別枠）"><span class="chip-label">リニューアル予定</span><span class="chip-num" id="cntStatusRenewalPlan">(0)</span></button>
 
@@ -10258,7 +10258,8 @@ const STATUS_DISPLAY_LABEL = {
 //   保存値・件数・絞り込み・チップ・CSV は従来のまま（'PR×' のまま）なので何も壊れない。
 //   ★逆に「チップの文字も変えたい」ときは、ここではなく §94 のチップHTMLを直すこと。
 const STATUS_OPTION_LABEL = {
-  'PR×': 'PR✕-放置'                 // 【v1.0716】見た目だけ改称（保存値は 'PR×' のまま）
+  'PR×': 'PR✕-放置',                // 【v1.0716】見た目だけ改称（保存値は 'PR×' のまま）
+  '撤退済み': '撤退済'               // 【v1.0733】★保存値は '撤退済み' のまま。見た目だけ「撤退済」（タブの表記に合わせた）
 };
 function statusOptionLabel(value) { return escapeHtml(STATUS_OPTION_LABEL[value] || value) || '—'; }
 function statusDisplayLabel(value) {
@@ -10379,6 +10380,7 @@ function statusLifeDisplayValue(v) {
 }
 // 【v204】ステータスのセル表示用の2行ラベル（ドロップダウンの選択肢は正式名のまま）。<br>で改行。
 const STATUS_LIFE_DISPLAY_LABEL = {
+  '撤退済み': '撤退済',              // 【v1.0733】見た目だけ。★保存値・判定式は '撤退済み' のまま
   /* 【v1.0721】v1.0720でここに入れていた '新商品'→'新リニュ' / 'リニューアル'→'新リニュ' は取りやめ。
      ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
      まとめて1つに見せるのは【チップ】の役目（チップ名を「新リニュ」にした）。 */
@@ -16719,7 +16721,7 @@ const STATE_FILTERS = {
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('consider', code) },                                    /* 【v1.0626/v1.0731】★【撤退】タブと同じ関数＝子は数えない（親1セット＝1） */
   'status-renewal-plan': { label: 'リニューアル予定', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === 'リニューアル予定' },   /* 【v1.0726】 */
   'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => _wdMatch('plan', code) },                                        /* 【v1.0626/v1.0731】旧値は WD_MODES が吸収。子は数えない */
-  'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta, code) => _wdMatch('done', code) },   /* 【v1.0731】子は数えない */
+  'status-withdrawn':     { label: '撤退済',     targetView: 'retired', match: (meta, code) => _wdMatch('done', code) },   /* 【v1.0731】子は数えない／【v1.0733】表示だけ「撤退済」 */
   'unselected-ad': { label: '選択前-入札', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => !effectiveAdStatusOf(code) },
   'unselected-pro':{ label: '選択前-PR', targetView: 'basic', basicMode: 'tune', match: (meta, code) => !effectiveProStatusOf(code) }
 };
