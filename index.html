@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0725 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0727 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -620,7 +620,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid {
   display: grid;
   grid-auto-flow: row;
-  grid-template-columns: auto auto auto auto auto auto auto auto;   /* 8列（§90-2の意味づけ） */
+  grid-template-columns: auto auto auto auto auto auto auto auto auto;   /* 【v1.0726】9列（リニューアル予定を追加。§90-2の意味づけ） */
   column-gap: 0;
   row-gap: 3px;
   flex: 0 1 auto;
@@ -648,14 +648,15 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
   font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;
 }
 /* 【v1.0706】罫線は【縦線だけ】。表の枠（横線・外枠）は出さない。
-   ★列の左に線を引く＝1列目（行ラベル）以外。8列なので「8n+1 ではないセル」が対象。
-     列数を変えたらこの 8n+1 も必ず直す（直し忘れると線が1本ずれる）。
+   ★列の左に線を引く＝1列目（行ラベル）以外。9列なので「9n+1 ではないセル」が対象。
+     ★列数を変えたらこの 9n+1 と grid-template-columns の両方を必ず直す。
+       片方だけだと線が1本ずつずれていく（v1.0726 で 8→9 に変更）。
    ★この指定は .states-grid .state-chip { border:none } より【後ろ】に書くこと。
      セレクタの強さが同じなので、前に書くと border:none に負けて線が消える（実際に踏んだ）。 */
 /* 【v1.0709】★縦線の色は !important で固定する。
    チップの配色ルール（.top-nav-3 .state-chip[data-state=…]）が border-color を持っていて、
    そちらが後ろに書かれているため、!important が無いと線が【チップの色】になってバラバラに見える。 */
-.states-grid > *:not(:nth-child(8n+1)) { border-left: 2px solid #c3cad6 !important; }
+.states-grid > *:not(:nth-child(9n+1)) { border-left: 2px solid #c3cad6 !important; }   /* 【v1.0726】8n+1 → 9n+1 */
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
 /* ============================================================================
@@ -862,6 +863,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid .state-chip[data-state="pro-wc"].active              { background: #8b5a2b !important; }   /* 【v1.0725】撤退3種は同色 */
 .states-grid .state-chip[data-state="status-withdraw-plan"].active{ background: #8b5a2b !important; }   /* 【v1.0725】撤退3種は同色 */
 .states-grid .state-chip[data-state="status-withdrawn"].active    { background: #8b5a2b !important; }
+.states-grid .state-chip[data-state="status-renewal-plan"].active { background: #8b5cf6 !important; }   /* 【v1.0726】 */
 .states-grid .state-chip[data-state="new-product"].active         { background: #16a34a !important; }
 .states-grid .state-chip[data-state="all-basic"].active,
 .states-grid .state-chip[data-state="ad-all"].active,
@@ -882,6 +884,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="pro-wc"] { color: #8b5a2b; }   /* 【v1.0725】撤退3種は同色 */
 .top-nav-3 .state-chip[data-state="status-withdraw-plan"] { color: #8b5a2b; }   /* 【v1.0725】撤退3種は同色 */
 .top-nav-3 .state-chip[data-state="status-withdrawn"] { color: #8b5a2b; }
+.top-nav-3 .state-chip[data-state="status-renewal-plan"] { color: #7c3aed; }   /* 【v1.0726】リニューアル予定＝紫（撤退の茶とも△のオレンジとも別枠） */
 
 /* 全体の説明ボタン（クリック不可のアイコン風） */
 .state-chip.info-chip {
@@ -3839,7 +3842,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0725</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0727</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4004,6 +4007,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
+    <!-- 【v1.0726】9列目。撤退の右＝「畳むのではなく作り直す」枠 -->
+    <button class="state-chip" data-state="status-renewal-plan" title="リニューアル予定＝いったん止めて作り直す商品（撤退とは別枠）"><span class="chip-label">リニューアル予定</span><span class="chip-num" id="cntStatusRenewalPlan">(0)</span></button>
 
     <span class="sg-label g-nyusatsu">【入札状態】</span>
     <button class="state-chip chip-all" data-state="ad-all" title="入札中＝入札価格が記入されている商品（撤退済み・入札なしは含みません）※中身はv1.0718までの「現役全体」と同じ"><span class="chip-label">入札中</span><span class="chip-num" id="cntAllAd">(0)</span></button>
@@ -4014,6 +4019,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="sg-empty"></span>
     <span class="sg-empty"></span>
     <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+    <span class="sg-empty"></span>   <!-- 【v1.0726】9列目の空き -->
 
     <span class="sg-label g-pr">【PR状態】</span>
     <button class="state-chip chip-all" data-state="pro-all" title="△以上＝PR◯ ＋ PR△ ＋ 選択前-PR（PR✕・撤退済みは含みません）"><span class="chip-label">△以上</span><span class="chip-num" id="cntAllPr">(0)</span></button>
@@ -4023,6 +4029,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="sg-empty"></span>
     <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <span class="sg-empty"></span>
+    <span class="sg-empty"></span>   <!-- 【v1.0726】9列目の空き -->
 
   </div>
   <!-- 【v1.0704】画面から消したチップの件数受け皿（updateStateCounts の _setTx が空振りしないように残す） -->
@@ -4745,6 +4752,9 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-spend" data-sort="adCost0" id="hWdAdRev0">広告実績額<br>(3ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost1" id="hWdAdRev1">広告実績額<br>(2ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost2" id="hWdAdRev2">広告実績額<br>(前月)</th>
+              <!-- 【v1.0727】★右端にステータスのドロップダウン。ここで撤退区分（撤退検討▲→撤退予定→撤退済み）を
+                   その場で動かせるようにする。★td 側の並びと必ずセットで直すこと -->
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -9772,6 +9782,7 @@ function updateStateCounts() {
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
   // 【v195】新ステータス別カウント
   let sKenzenAd = 0, sKenzenNoad = 0, sChuritsuAd = 0, sChuritsuNoad = 0, sWithdrawConsider = 0, sWithdrawPlan = 0, withdrawnCount = 0;
+  let sRenewalPlan = 0;   // 【v1.0726】リニューアル予定
   // 【v1.0583】クロス絞り込み（広告 × 送り込み）の件数。
   //   ★母集団はこのループ＝状態チップとまったく同じ（撤退済み・引退済みは除外）。
   //   ★軸の合計（xfAdY など）と交差の和は一致しない。ステータスに「広告あり/なし」が
@@ -9826,6 +9837,7 @@ function updateStateCounts() {
     else if (st === '健常-広告なし◯') sKenzenNoad++;
     else if (st === '中立-広告あり□') sChuritsuAd++;
     else if (st === '中立-広告なし□') sChuritsuNoad++;
+    else if (st === 'リニューアル予定') sRenewalPlan++;   // 【v1.0726】
     else if (st === '撤退検討▲') sWithdrawConsider++;
     else if (st === '撤退予定' || st === '撤退■' || st === '撤退予定-out記入済') sWithdrawPlan++;   // 【v1.0445】out記入済は撤退予定へ統合
     // 【v1.0583】クロス絞り込みの件数。判定は絞り込み本体とまったく同じ式を使う:
@@ -9922,6 +9934,7 @@ function updateStateCounts() {
   _setTx('#cntStatusChuritsuNoad', sChuritsuNoad);
   _setTx('#cntStatusWithdrawPlan', sWithdrawPlan);
   _setTx('#cntStatusWithdrawn', withdrawnCount);
+  _setTx('#cntStatusRenewalPlan', sRenewalPlan);   // 【v1.0726】
   // 【v1.0722/v1.0723】【撤退】タブの件数。★表の絞り込みとまったく同じ _wdMatch() で数える。
   //   チップ（撤退検討▲/撤退予定/撤退済み）とは数が違うことがある＝子商品を含めないため。これは仕様。
   { let wdC = 0, wdP = 0, wdD = 0;
@@ -9983,7 +9996,7 @@ const PRO_STATUS_ORDER = {
   'PR◯': 1, 'PR◯-親-30％固定': 1.2, 'PR◯-子-7％固定': 1.4, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR△-飛ぶ手前固定': 2, 'PR×': 3,
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
-const STATUS_ORDER = { '新商品': 0, 'リニューアル': 0.5,   /* 【v1.0720】新商品の直後 */ '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
+const STATUS_ORDER = { '新商品': 0, 'リニューアル': 0.5,   /* 【v1.0720】新商品の直後 */ 'リニューアル予定': 8,   /* 【v1.0726】撤退済みの直後 */ '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
   '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0,
   '—': -1, '子（親に追従）': 0.5 };  // 互換用（旧値。out記入済は撤退予定へ統合）／【v1.0614】未設定(—)は先頭／【v1.0626】子は新商品の直後
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
@@ -10221,6 +10234,7 @@ function statusDisplayLabel(value) {
 const STATUS_LIFE_COLOR = {
   '新商品': '#16a34a',              // 緑（これから決める）
   'リニューアル': '#16a34a',         // 【v1.0720】新商品と同じ緑（一覧では「新リニュ」とまとめて表示）
+  'リニューアル予定': '#7c3aed',   // 【v1.0726】紫。★「リニューアル」（緑・新リニュ枠）とは別物。こちらは作り直し待ち
   '健常◯': '#2563eb',               // 【v1.0714】まとめの選択肢（青＝◯）
   '中立△': '#ea580c',               // 【v1.0714】まとめの選択肢（黄＝△）
   '健常-広告あり◯': '#2563eb',      // 青（◯）
@@ -10248,7 +10262,7 @@ const STATUS_LIFE_CHILD = '子（親に追従）';
 //   保存値は従来どおり '健常-広告あり◯' 等の細かい値のまま（件数・絞り込み・チップはすべてそのまま動く）。
 //   選択肢からだけ外し、選ばれたら _statusLifeResolve() で細かい値へ変換して保存する。
 const STATUS_LIFE_COARSE = { '健常◯': ['健常-広告あり◯', '健常-広告なし◯'], '中立△': ['中立-広告あり□', '中立-広告なし□'] };
-const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', 'リニューアル', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み'];   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
+const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', 'リニューアル', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み', 'リニューアル予定'];   /* 【v1.0726】リニューアル予定を追加（チップと同じ並び＝撤退済みの右） */   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
 // 保存値（細かい値）→ ドロップダウンで選択状態にする値（まとめ）
 function _statusLifeCoarseOf(v) {
   for (const k in STATUS_LIFE_COARSE) if (STATUS_LIFE_COARSE[k].indexOf(v) >= 0) return k;
@@ -13837,7 +13851,7 @@ function renderWithdraw() {
     searchSel: '#wdSearch',
     cntSel: null,
     hPrefix: 'hWd',
-    colspan: 12,   // 【v1.0724】コード/画像/商品名 ＋ 9列
+    colspan: 13,   // 【v1.0724/v1.0727】コード/画像/商品名 ＋ 9列 ＋ ステータス
     emptyMsg: 'この区分の商品はありません',
     statusPick: _wdIs
   });
@@ -14432,6 +14446,7 @@ function renderAdAdjust(cfg) {
       ${_adRevMainCell}
       ${r.seoRevs.map((v, i) => shareRevCell(v, r.adRevs[i], true, 'col-sales')).join('')}
       ${_revCells}
+      ${_tdStatus}
     `;
       tbody.appendChild(tr);
       return;
@@ -16652,6 +16667,7 @@ const STATE_FILTERS = {
   'pro-hfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
   'pro-ng':        { label: 'PR×',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProNgValue(effectiveProStatusOf(code)) },   /* 【v1.0719】判定を1本化 */
   'pro-wc':        { label: '撤退検討▲',        targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退検討▲' },                      /* 【v1.0626】 */
+  'status-renewal-plan': { label: 'リニューアル予定', targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === 'リニューアル予定' },   /* 【v1.0726】 */
   'status-withdraw-plan': { label: '撤退予定',   targetView: 'basic', basicMode: 'tune',   match: (meta, code) => effectiveStatusOf(code) === '撤退予定' },                        /* 【v1.0626】旧値は statusLifeDisplayValue が吸収 */
   'status-withdrawn':     { label: '撤退済み',   targetView: 'retired', match: (meta) => (meta.status || '') === '撤退済み' },
   'unselected-ad': { label: '選択前-入札', targetView: 'basic', basicMode: 'tune',  match: (meta, code) => !effectiveAdStatusOf(code) },
