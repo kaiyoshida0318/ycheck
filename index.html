@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0744 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0747 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1793,6 +1793,9 @@ td[data-resize-key] {
   font-size: 0.8rem; white-space: nowrap;
 }
 .link-btn:hover { text-decoration: underline; }
+/* 【v1.0745】入札価格の下に出す「この金額になった日」。金額の邪魔をしないよう小さく薄く */
+.bid-upd { display: block; font-size: 0.66rem; font-weight: 600; color: var(--text3);
+           line-height: 1.1; margin-top: 1px; font-variant-numeric: tabular-nums; }
 .bid-price,
 .pro-rate-cell {
   font-weight: 600;
@@ -3876,7 +3879,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0744</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0747</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10401,6 +10404,55 @@ function _adCircleSubLabel(code) {
     ? _adSubPart('1-4位30円内', AD_SUB_BLUE)
     : _adSubPart('1-4位外', AD_SUB_RED) + ' ' + _adSubPart('30円内', AD_SUB_BLUE);
 }
+// 【v1.0745】入札価格の「最終更新日」＝ いまの金額になった日。
+//   ★日別履歴（state.rankEdits[ym][code].bid）は【変わらない日も前日の値をコピーして毎日入る】。
+//     なので「値が入っている一番新しい日」＝今日になってしまい、更新日にならない。
+//     新しい日から遡って【いまの金額と違う値が出てくる直前の日】＝その金額になった日、を返す。
+//   ★履歴がまったく無い（CSV取り込みだけで一度も編集していない）場合は空文字＝何も出さない。
+function bidLastChangedYmd(code) {
+  const key = String(code || '').toLowerCase();
+  const re = (typeof state !== 'undefined' && state.rankEdits) ? state.rankEdits : null;
+  if (!re) return '';
+  const months = Object.keys(re).sort().reverse();   // 新しい月から
+  const seq = [];                                     // {ym, d, v} を新しい順に
+  for (const ym of months) {
+    let arr = null;
+    try { arr = getRankEditArray(ym, key, 'bid'); } catch (e) { arr = null; }
+    if (!arr) continue;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const v = arr[i];
+      if (v == null || v === '') continue;
+      seq.push({ ym: ym, d: i + 1, v: Number(v) });
+    }
+    if (seq.length > 400) break;   // 安全弁（何年ぶんも遡らない）
+  }
+  if (!seq.length) return '';
+  const cur = seq[0].v;
+  let last = seq[0];
+  for (const it of seq) { if (it.v !== cur) break; last = it; }   // 同じ値が続く一番古い日
+  return last.ym + '/' + String(last.d).padStart(2, '0');         // 'YYYY/MM/DD'
+}
+// 表示用に短くする。今年なら M/D、去年以前は YY/M/D
+function _bidUpdLabel(ymd) {
+  if (!ymd) return '';
+  const m = /^(\d{4})\/(\d{2})\/(\d{2})$/.exec(ymd);
+  if (!m) return '';
+  const y = +m[1], mo = +m[2], d = +m[3];
+  const nowY = new Date().getFullYear();
+  return (y === nowY) ? (mo + '/' + d) : (String(y).slice(2) + '/' + mo + '/' + d);
+}
+// 入札価格セルの中身（金額 ＋ 小さく最終更新日）。★4か所から呼ぶので必ずこの関数を通すこと
+function bidCellInnerHtml(code, bid) {
+  const has = (bid != null && Number(bid) > 0);
+  const main = has ? ('¥' + Number(bid)) : '—';
+  if (!has) return main;
+  const ymd = bidLastChangedYmd(code);
+  const lbl = _bidUpdLabel(ymd);
+  return lbl
+    ? (main + '<span class="bid-upd" title="' + escapeHtml('この金額になった日: ' + ymd.replace(/\//g, '-')) + '">' + escapeHtml(lbl) + '</span>')
+    : main;
+}
+
 // 入札状態セルの表示ラベル
 //   入札◯ … 1行目「入札◯」／2行目に順位×価格の自動判定
 //   入札△ … 【v1.0743】◯と同じ形にする。1行目は選んだ値をそのまま1行で（入札△-調整中 / 入札△-飛ぶ手前固定）、
@@ -11250,7 +11302,7 @@ function renderBasic() {
     const _bidCell = _isSet
       ? (() => { const v = _basicMultiVal(_mem, c => getBid(c), x => '¥' + x);
                  return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
-      : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
+      : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -12896,7 +12948,7 @@ function renderRetired() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td class="num col-total">${fmt(r.rev)}</td>
-      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${r.bid != null && r.bid > 0 ? "¥" + r.bid : "—"}</td>
+      <td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, r.bid)}</td>
       <td class="status-col">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
@@ -14628,7 +14680,7 @@ function renderAdAdjust(cfg) {
     const _bidCellT = _isSetT
       ? (() => { const v = _basicMultiVal(r._members, c => getBid(c), x => '¥' + x);
                  return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
-      : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
+      : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     // 【v1.0647】色を商品-基本データに合わせた: 広告実績額＝ピンク(col-spend) / 広告ROAS＝藍(col-aroas)。広告売上はアンバー(col-ad)のまま
     const _revCells  = r.adCosts.map(v => `<td class="num col-spend">${fmt(v)}</td>`).join('');
@@ -14645,7 +14697,7 @@ function renderAdAdjust(cfg) {
       const _bidCellD = _isSetD
         ? (() => { const v = _basicMultiVal(r._members, c => getBid(c), x => '¥' + x);
                    return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
-        : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bid != null && bid > 0 ? "¥" + bid : "—"}</td>`;
+        : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
       tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
       <td>${imageCellHtml(r.code)}</td>
@@ -17009,6 +17061,13 @@ function _tuneApplyAdAxis(list) {
 //   条件: そのチップで絞ったとき、入札価格の表（撤退・引退を除き、入札なしを除いた母集団＝調整グループ「全体」）に1件以上出る。
 //   ★母集団は ensureTuneMembers('ad') の tuneGroup==='all' と同じ式。STATE_FILTERS[…].match をそのまま使う。
 //   調整-基本 / 調整-PRオプ では何もしない（クラスを外すだけ）。
+// 【v1.0747】調整-入札価格（と商品-広告データ）で【太枠を付けるチップ】＝【入札状態】の行だけ。
+//   太枠は「押せば入札の調整対象が出る」という目印なので、
+//   ステータスの行（健常◯・中立△・リニューアル予定…）やPR状態の行（PR◯・PR△・PR✕…）には付けない。
+//   ★v1.0746 は「付けないものを並べる」方式だったが、チップが増えるたびに足し忘れるので
+//     「付けるものだけを並べる」方式に変えた（＝知らないキーには付かない側が既定）。
+//   ★入札なし(ad-none)は母集団の時点で除外されている（下の pool）ので、書いても光らない。
+const TUNE_EMPHASIS_ONLY = ['ad-all', 'unselected-ad', 'ad-ok', 'ad-tri', 'ad-ng', 'ad-fixed', 'ad-none'];
 function updateTuneChipEmphasis() {
   const chips = document.querySelectorAll('.top-nav-3 .state-chip[data-state]');
   const onAd = (state.currentView === 'ad-tune' || state.currentView === 'ad-data');   // 【v1.0649】商品-広告データも太枠
@@ -17025,6 +17084,7 @@ function updateTuneChipEmphasis() {
     pool.push([code, meta]);
   });
   chips.forEach(chip => {
+    if (TUNE_EMPHASIS_ONLY.indexOf(chip.dataset.state) < 0) { chip.classList.remove('chip-adlive'); return; }   // 【v1.0747】【入札状態】の行だけ
     const f = STATE_FILTERS[chip.dataset.state];
     const live = !!(f && f.targetView !== 'retired' && typeof f.match === 'function' && pool.some(x => f.match(x[1], x[0])));
     chip.classList.toggle('chip-adlive', live);
