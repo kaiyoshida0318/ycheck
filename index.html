@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0702 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0704 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -601,6 +601,8 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .nav-group-tune { flex: 0 0 auto; }
 .nav-row-tabs { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-end; column-gap: 26px; row-gap: 2px; }   /* 【v1.0661】【一覧】＋【調整】 */
 .nav-row-tabs > #btnToggleTabs { margin-left: auto; white-space: nowrap; align-self: center; }   /* 【v1.0700】ヘッダー2を隠すボタン */
+/* 【v1.0703】ヘッダー3の上に出すヘッダー2の復帰口。隠すボタンと同じ右端にそろえる */
+.hdr-restore-inline { width: 100%; display: flex; justify-content: flex-end; padding: 0 0 3px; }
 .top-nav-3 .xf-row { margin-top: 7px; }   /* 【v1.0668】【一覧】【調整】の行とバッジ群の間を少し空ける（.top-nav-3 の gap 6px ＋ 7px） */
 .top-nav > .nav-break { flex-basis: 100%; height: 0; }
 .top-nav:not(.top-nav-3) { row-gap: 0; }   /* 改行要素の上下に行間が2回入って間延びするので、行間は0にする */   /* 【v1.0649】ヘッダー1の改行（【基本】【全体】の行 / 【取得データ】の行） */
@@ -777,6 +779,32 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state="ad-none"] { color: #9ca3af; }
 .top-nav-3 .state-chip[data-state="pro-pfixed"],
 .top-nav-3 .state-chip[data-state="pro-cfixed"] { color: #12a5c8; }
+/* ============================================================
+   【v1.0704】3行を「重さ」で縦にそろえた配色。★この4色の意味は3行共通:
+     青   … ◯＝対応不要（健常 / 入札◯ / PR◯）
+     黄   … △＝様子見・調整中（中立 / 入札△ / PR△）
+     オレンジ … 撤退検討（ステータスだけ）
+     赤   … ✕＝要対応（撤退予定 / 入札✕ / PR✕）
+   ★行ごとのグループ色（広告系＝アンバー / PR系＝パープル）より後ろに書いて上書きしている。
+     順番を入れ替えるとグループ色に戻ってしまう。
+   ============================================================ */
+.top-nav-3 .state-chip[data-state="status-kenzen"],
+.top-nav-3 .state-chip[data-state="ad-ok"],
+.top-nav-3 .state-chip[data-state="pro-ok-all"]  { color: #1e40af; background: #e3edfd; border-color: #b6d0fb; }
+.top-nav-3 .state-chip[data-state="status-churitsu"],
+.top-nav-3 .state-chip[data-state="ad-fixed"],
+.top-nav-3 .state-chip[data-state="pro-tri"]     { color: #8a6500; background: #fbf3d9; border-color: #ead98a; }
+.top-nav-3 .state-chip[data-state="ad-ng"],
+.top-nav-3 .state-chip[data-state="pro-ng"]      { color: #dc2626; background: #fde9e8; border-color: #f5b8b5; }
+/* 選択時／ホバー */
+.top-nav-3 .state-chip[data-state="status-kenzen"]:hover,   .top-nav-3 .state-chip[data-state="status-kenzen"].active,
+.top-nav-3 .state-chip[data-state="ad-ok"]:hover,           .top-nav-3 .state-chip[data-state="ad-ok"].active,
+.top-nav-3 .state-chip[data-state="pro-ok-all"]:hover,      .top-nav-3 .state-chip[data-state="pro-ok-all"].active  { background: #2563eb; border-color: #1e4fbf; color: #fff; }
+.top-nav-3 .state-chip[data-state="status-churitsu"]:hover, .top-nav-3 .state-chip[data-state="status-churitsu"].active,
+.top-nav-3 .state-chip[data-state="ad-fixed"]:hover,        .top-nav-3 .state-chip[data-state="ad-fixed"].active,
+.top-nav-3 .state-chip[data-state="pro-tri"]:hover,         .top-nav-3 .state-chip[data-state="pro-tri"].active     { background: #c99700; border-color: #a67e00; color: #fff; }
+.top-nav-3 .state-chip[data-state="ad-ng"]:hover,           .top-nav-3 .state-chip[data-state="ad-ng"].active,
+.top-nav-3 .state-chip[data-state="pro-ng"]:hover,          .top-nav-3 .state-chip[data-state="pro-ng"].active      { background: #dc2626; border-color: #b91c1c; color: #fff; }
 .top-nav-3 .state-chip[data-state="unselected-ad"],
 .top-nav-3 .state-chip[data-state="unselected-pro"] { color: #64748b; }
 .top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
@@ -3742,7 +3770,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0702</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0704</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3817,6 +3845,12 @@ th.col-sroas { background-color:#e7d5f5; }
        .top-nav-3 は横並び（左＝パネル固定幅 / 右＝従来の2段を縦積みする .states-stack）。 -->
 <nav class="top-nav top-nav-3">
 
+  <!-- 【v1.0703】ヘッダー2（タブ行）を隠していて、ヘッダー3が残っているときの復帰口。
+       ★タブ行が元あった位置＝ヘッダー3のすぐ上に出す。ナビの下（#hdrRestoreBar）に出すと、
+         「隠した行の下にその復帰ボタンがある」ことになり上下関係が入れ替わって見える（§86-3と同じ考え方）。
+       ★両方畳むと .top-nav-3 ごと消えるので、そのときは #hdrRestoreBar 側を使う（applyHeaderCollapse で振り分け）。 -->
+  <div class="hdr-restore-inline" id="hdrRestoreBarTabs" style="display:none"></div>
+
   <!-- 【v1.0661】ヘッダー2の1行目＝【一覧】（ざっと全体を見る）＋【調整】（そのページで直す）。
        ★この行はどのビューでも出す（自動非表示・手動の「ヘッダー2を隠す」で消えるのは下の .xf-row だけ）。
          ここを段ごと消すと、商品-基本データへ戻る口が画面から無くなるため（§47）。 -->
@@ -3879,19 +3913,15 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip chip-slot2" data-state="new-product"><span class="chip-label">新商品</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
-    <!-- 【v1.0696】広告あり／なしをまとめた「健常」。広告あり◯ の左に置く -->
-    <button class="state-chip" data-state="status-kenzen" title="健常（広告あり◯＋広告なし◯）をまとめて表示"><span class="chip-label">健常</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
-    <button class="state-chip" data-state="status-kenzen-ad"><span class="chip-label">健常-広告あり◯</span><span class="chip-num" id="cntStatusKenzenAd">(0)</span></button>
-    <button class="state-chip" data-state="status-kenzen-noad"><span class="chip-label">健常-広告なし◯</span><span class="chip-num" id="cntStatusKenzenNoad">(0)</span></button>
-    <span class="chip-sep" aria-hidden="true"></span>
-    <!-- 【v1.0696】広告あり／なしをまとめた「中立」。広告あり□ の左に置く -->
-    <button class="state-chip" data-state="status-churitsu" title="中立（広告あり□＋広告なし□）をまとめて表示"><span class="chip-label">中立</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
-    <button class="state-chip" data-state="status-churitsu-ad"><span class="chip-label">中立-広告あり□</span><span class="chip-num" id="cntStatusChuritsuAd">(0)</span></button>
-    <button class="state-chip" data-state="status-churitsu-noad"><span class="chip-label">中立-広告なし□</span><span class="chip-num" id="cntStatusChuritsuNoad">(0)</span></button>
+    <!-- 【v1.0704】チップは「まとめ」だけにした。細かい値（健常-広告あり◯ など）は表のドロップダウンで選ぶ。 -->
+    <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
+    <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <span class="chip-sep" aria-hidden="true"></span>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
     <button class="state-chip" data-state="status-withdraw-plan"><span class="chip-label">撤退予定</span><span class="chip-num" id="cntStatusWithdrawPlan">(0)</span></button>
     <button class="state-chip" data-state="status-withdrawn"><span class="chip-label">撤退済み</span><span class="chip-num" id="cntStatusWithdrawn">(0)</span></button>
+    <!-- 【v1.0704】画面から消したチップの件数受け皿（updateStateCounts の _setTx が空振りしないように残す） -->
+    <span hidden><span id="cntStatusKenzenAd"></span><span id="cntStatusKenzenNoad"></span><span id="cntStatusChuritsuAd"></span><span id="cntStatusChuritsuNoad"></span></span>
     <!-- 【v1.0550】開閉ボタンはここから移設。
          ヘッダー1 →【調整】行（.top-nav-2）の右端 ／ ヘッダー2 →【PR状態】行の右端 -->
   </div>
@@ -3906,11 +3936,12 @@ th.col-sroas { background-color:#e7d5f5; }
       <!-- 【v1.0701】「選択前」は3行とも【全体】の右＝2番目の位置に揃える（縦の区切り線がそろう） -->
       <button class="state-chip chip-slot2" data-state="unselected-ad"><span class="chip-label">選択前-入札□</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="ad-ok"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+      <!-- 【v1.0704】◯／△／✕ の3段＋入札なし。細かい表記は表のドロップダウンで見る -->
+      <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
+      <button class="state-chip" data-state="ad-fixed" title="入札△-飛ぶ手前固定"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
+      <button class="state-chip" data-state="ad-ng" title="入札×-調整中"><span class="chip-label">入札✕</span><span class="chip-num" id="cntAdNg">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="ad-fixed"><span class="chip-label">入札△-飛ぶ手前固定</span><span class="chip-num" id="cntAdFixed">(0)</span></button>
-      <button class="state-chip" data-state="ad-ng"><span class="chip-label">入札×-調整中</span><span class="chip-num" id="cntAdNg">(0)</span></button>
-      <button class="state-chip" data-state="ad-none"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
+      <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
     </div>
     <div class="nav-states-lastrow">
     <div class="nav-group nav-group-jotai nav-group-pr">
@@ -3920,15 +3951,13 @@ th.col-sroas { background-color:#e7d5f5; }
       <!-- 【v1.0701】「選択前」は3行とも【全体】の右＝2番目の位置に揃える -->
       <button class="state-chip chip-slot2" data-state="unselected-pro"><span class="chip-label">選択前-PR□</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
       <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="pro-ok"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOk">(0)</span></button>
-      <!-- 【v1.0658】◯系の内訳（親は高料率のまま固定 / 子は7％から動かせない）。どちらも「対応不要」 -->
-      <button class="state-chip" data-state="pro-p30" title="送り込み元（親）。7％まで下げず、上位表示を取るために高い料率のまま固定している商品"><span class="chip-label">PR◯-親-30％固定</span><span class="chip-num" id="cntProP30">(0)</span></button>
-      <button class="state-chip" data-state="pro-c7" title="送り込み先（子）。最低料率7％から動かしようがない商品"><span class="chip-label">PR◯-子-7％固定</span><span class="chip-num" id="cntProC7">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="pro-lower"><span class="chip-label">PR△-親-下げ挑戦中</span><span class="chip-num" id="cntProLower">(0)</span></button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <button class="state-chip" data-state="pro-hfixed"><span class="chip-label">PR△-飛ぶ手前固定</span><span class="chip-num" id="cntProHfixed">(0)</span></button>
-      <button class="state-chip" data-state="pro-ng"><span class="chip-label">PR×</span><span class="chip-num" id="cntProNg">(0)</span></button>
+      <!-- 【v1.0704】◯／△／✕ の3段にまとめた。内訳は表のドロップダウンで見る。
+           ★件数用の span（cntProOk / cntProP30 / cntProC7 / cntProLower / cntProHfixed）は
+             updateStateCounts が書き込むので、画面から消しても hidden で残しておく。 -->
+      <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
+      <button class="state-chip" data-state="pro-tri" title="PR△（PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
+      <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
+      <span hidden><span id="cntProOk"></span><span id="cntProP30"></span><span id="cntProC7"></span><span id="cntProLower"></span><span id="cntProHfixed"></span></span>
     </div>
     <!-- 【v1.0550/v1.0700】ヘッダー3（分類表＋【ステータス】【入札状態】【PR状態】）の開閉。この行の右端に置く。 -->
     <button class="btn sm ghost" id="btnToggleStates" type="button" title="分類表と【ステータス】【入札状態】【PR状態】の行を隠します">🔼 ヘッダー3を隠す</button>
@@ -9714,9 +9743,12 @@ function updateStateCounts() {
     const e2 = $('#cntProC7');  if (e2) e2.textContent = `(${proC7})`; }
   const cntProWarn = $('#cntProWarn'); if (cntProWarn) cntProWarn.textContent = `(${proWarn})`;
   const cntProLower = $('#cntProLower'); if (cntProLower) cntProLower.textContent = `(${proLower})`;
+  // 【v1.0704】まとめチップの件数＝内訳の合計。★個別カウンタから足す（別に数え直さない）
+  { const e = $('#cntProOkAll'); if (e) e.textContent = `(${proOk + proP30 + proC7})`; }
   const cntProPfixed = $('#cntProPfixed'); if (cntProPfixed) cntProPfixed.textContent = `(${proPfixed})`;
   const cntProCfixed = $('#cntProCfixed'); if (cntProCfixed) cntProCfixed.textContent = `(${proCfixed})`;
   const cntProHfixed = $('#cntProHfixed'); if (cntProHfixed) cntProHfixed.textContent = `(${proHfixed})`;
+  { const e = $('#cntProTri'); if (e) e.textContent = `(${proLower + proHfixed})`; }   // 【v1.0704】
   $('#cntProNg').textContent = `(${proNg})`;
   const _setTx = (id, n) => { const el = $(id); if (el) el.textContent = `(${n})`; };
   // 【v1.0583】クロス絞り込みパネルの件数。交差セルは数字だけ、軸セルは (n) 表記
@@ -16297,6 +16329,9 @@ const STATE_FILTERS = {
   'pro-ok':        { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return proStatusIsCircle(p) && !_proIsP30(p) && !_proIsC7(p); } },
   'pro-p30':       { label: 'PR◯-親-30％固定',   targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsP30(effectiveProStatusOf(code)) },
   'pro-c7':        { label: 'PR◯-子-7％固定',    targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsC7(effectiveProStatusOf(code)) },
+  // 【v1.0704】チップをまとめたぶんの定義。★判定は既存のヘルパーをそのまま使い回す（条件を書き直さない）
+  'pro-ok-all':    { label: 'PR◯',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => proStatusIsCircle(effectiveProStatusOf(code)) },
+  'pro-tri':       { label: 'PR△',              targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const p = effectiveProStatusOf(code); return p === 'PR△-親-下げ挑戦中' || _proIsHFixed(p); } },
   'pro-lower':     { label: 'PR△-親-下げ挑戦中',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveProStatusOf(code) === 'PR△-親-下げ挑戦中' },
   // 【v1.0636】チップは撤去したが、保存済みの activeStateFilter が指していても壊れないよう定義は残す。
   'pro-pfixed':    { label: 'PR△-飛ぶ手前固定',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => _proIsHFixed(effectiveProStatusOf(code)) },
@@ -19856,25 +19891,37 @@ function applyHeaderCollapse() {
   const r1 = document.getElementById('btnRestoreChrome');
   const r2 = document.getElementById('btnRestoreTabs');     // 【v1.0700】
   const r3 = document.getElementById('btnRestoreStates');
-  const bar = document.getElementById('hdrRestoreBar');          // ナビの下（ヘッダー2/3の位置）
+  const bar = document.getElementById('hdrRestoreBar');          // ナビの下
   const barTop = document.getElementById('hdrRestoreBarTop');    // いちばん上（ヘッダー1の位置）
+  const barTabs = document.getElementById('hdrRestoreBarTabs');  // 【v1.0703】.top-nav-3 の先頭（ヘッダー3の上）
   const show1 = !!_hdrCollapse.h1;
   const show2 = !!_hdrCollapse.h2;
   const show3 = !!_hdrCollapse.h3 && !autoHidden;
   if (r1) r1.style.display = show1 ? '' : 'none';
   if (r2) r2.style.display = show2 ? '' : 'none';
   if (r3) r3.style.display = show3 ? '' : 'none';
-  // 【v1.0581/v1.0700】★復帰ボタンは「隠したヘッダーが元あった位置」に出す。
-  //   ヘッダー1 → いちばん上（barTop） / ヘッダー2・3 → ナビの下（bar）
-  //   ヘッダー1も隠しているときだけ、細い帯が2本並ぶのを避けて barTop にまとめる。
+  // 【v1.0581/v1.0700/v1.0703】★復帰ボタンは「隠したヘッダーが元あった位置」に出す。
+  //   ヘッダー1 … いちばん上（barTop）
+  //   ヘッダー2 … ヘッダー3が残っていれば .top-nav-3 の先頭（barTabs＝タブ行が元あった位置）
+  //               ★両方畳むと .top-nav-3 ごと消えるので、そのときはナビの下（bar）
+  //   ヘッダー3 … ナビの下（bar）
+  //   ヘッダー1も隠しているときだけ、細い帯が何本も並ぶのを避けて barTop にまとめる。
+  const _h3Gone = !!_hdrCollapse.h3;   // ★autoHidden ではなく「手動で畳んだか」で見る（段ごと消えるのは手動だけ）
   if (r1 && barTop && r1.parentNode !== barTop) barTop.appendChild(r1);
-  [r2, r3].forEach(r => {
-    if (!r || !bar || !barTop) return;
+  if (r2 && barTop && bar && barTabs) {
+    const _want = show1 ? barTop : (_h3Gone ? bar : barTabs);
+    if (r2.parentNode !== _want) _want.appendChild(r2);
+  }
+  if (r3 && barTop && bar) {
     const _want = show1 ? barTop : bar;
-    if (r.parentNode !== _want) _want.appendChild(r);
-  });
-  if (barTop) barTop.style.display = show1 ? '' : 'none';
-  if (bar) bar.style.display = ((show2 || show3) && !show1) ? '' : 'none';
+    if (r3.parentNode !== _want) _want.appendChild(r3);
+  }
+  if (barTop)  barTop.style.display  = show1 ? '' : 'none';
+  if (barTabs) barTabs.style.display = (show2 && !show1 && !_h3Gone) ? '' : 'none';
+  if (bar) {
+    const _inBar = (show3 || (show2 && _h3Gone)) && !show1;
+    bar.style.display = _inBar ? '' : 'none';
+  }
   if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
   // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
   if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
