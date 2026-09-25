@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0749 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0751 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3881,7 +3881,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0749</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0751</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6027,12 +6027,16 @@ function _vpAdoptIncoming(incoming) {
     // 【v1.0730】ログと未反映マークは「この状況につき1回だけ」。
     //   ★パネルの注記（⚠ この端末の設定のほうが新しい…）は _vpKeptLocal を見ているので今までどおり毎回出る。
     //     消すのはログの繰り返しだけ＝気づけなくなるわけではない。
-    const _vpk = 'in:' + inTs;   // 【v1.0738】読み込んだ側の時刻だけ。端末側(bkTs)は入れない
-    if (!_vpKeptNotifiedThisLoad && _vpNotifiedKey() !== _vpk) {
-      _vpKeptNotifiedThisLoad = true;
-      _vpSetNotifiedKey(_vpk);
-      try { ycLog('warn', '表示設定: 読み込んだデータより この端末のほうが新しかったので端末側を維持しました（列' + _vpKeptLocal.n + '件・未反映）'); } catch (e) {}
-    }
+    // 【v1.0750】★このログは【完全に廃止】した。
+    //   v1.0730 → v1.0738 と「1回だけ出す」条件を絞ってきたが、
+    //   ・列幅を触るたび / 反映のたび / 読み込み経路が複数ある（起動・GitHub・localStorage）
+    //   という事情で「同じ状況」を正しく判定しきれず、結局ユーザーには出続けて見えていた。
+    //   ★そもそもこれは異常ではなく【端末に未反映の表示設定がある】という状態表示にすぎない。
+    //     状態は下の2つで十分伝わるので、ログには出さない:
+    //       ・表示設定パネルの「⚠ この端末の設定のほうが新しいので維持しています（未反映）」
+    //       ・ヘッダーの「⬆ 反映する（未反映）」
+    //   ★ここにログを復活させないこと。出すなら「回数を抑える」ではなく
+    //     「なぜ未反映のままなのか」を無くす側（v1.0749 の 幅調整モード終了時の自動反映）で直す。
     // ★未反映マークは【毎回】立てる。ログだけを止める（ここまで一緒に止めると
     //   「⬆ 反映する」に気づく手がかりが無くなり、列幅がいつまでも他PCへ渡らない）。
     //   起動直後は _ycAutoSaveArmed で無視されるので少し遅らせる。
@@ -7370,6 +7374,15 @@ function _ycInjectReflectButtons() {
 //   編集ピン（v253/v276）を外して描き直す＝いま選んでいる絞り込みから外れた商品が消える。
 //   ★ピンを外すのは「反映が成功したとき」だけ。編集のたびに外すと1行直すごとに表が飛ぶ。
 function _ycAfterReflectRefresh() {
+  // 【v1.0750】★反映できた＝もう「端末だけが新しい」状態ではない。
+  //   端末バックアップを書き直して比較の基準をそろえ、パネルの⚠注記も消す。
+  //   これをしないと、保存できているのに「未反映」の注記が残り続ける。
+  try {
+    if (typeof _vpWriteDeviceBackup === 'function') _vpWriteDeviceBackup();
+    _vpKeptLocal = null;
+    if (typeof _vpSetNotifiedKey === 'function') _vpSetNotifiedKey('');
+    if (typeof _vpRenderPanel === 'function') _vpRenderPanel();
+  } catch (e) {}
   try {
     if (typeof clearEditPins === 'function') clearEditPins();
     if (typeof resetTuneMembers === 'function') resetTuneMembers();   // 調整ビューの凍結メンバーも作り直す
@@ -21102,6 +21115,54 @@ function autoAssignResizeKeys() {
   });
 }
 
+// 【v1.0751】列を広げたとき、横スクロールを出さずに【他の列から均等にもらう】ための計算。
+//   戻り値: { w: この列の幅, others: Map<th, 幅> }（others が null なら他の列は動かさない）
+//   考え方:
+//     1. いま表に使える横幅（.table-wrap の内幅）を超えないぶんは、そのまま広げる
+//     2. 超えるぶんは【他の全列から均等に】もらう（1列ずつ最小幅 COL_RESIZE_MIN_PX まで）
+//     3. 他の列がもう縮められない＝そこが限界。この列もそれ以上は広がらない
+//   ★均等割りは1回では終わらない（先に最小幅に達する列があるため）ので、
+//     残りをもう一度、まだ縮められる列だけで割り直す（最大10周の安全弁つき）。
+function _colPlanWiden(ownerTh, wantW) {
+  const none = { w: wantW, others: null };
+  const table = ownerTh.closest('table');
+  const wrap = table ? table.closest('.table-wrap') : null;
+  if (!table || !wrap) return none;
+  const avail = wrap.clientWidth - 2;   // 2px は余裕（境界でスクロールバーが出るのを防ぐ）
+  if (!(avail > 0)) return none;
+  const ths = Array.from(table.querySelectorAll('thead th'));
+  if (ths.length < 2) return none;
+  const others = ths.filter(t => t !== ownerTh);
+  const cur = new Map();
+  let othersTotal = 0;
+  others.forEach(t => { const w = t.getBoundingClientRect().width; cur.set(t, w); othersTotal += w; });
+  let remaining = (wantW + othersTotal) - avail;
+  if (remaining <= 0.5) return none;            // そのまま収まる
+  const next = new Map(cur);
+  let pool = others.filter(t => next.get(t) > COL_RESIZE_MIN_PX + 0.5);
+  let guard = 0;
+  while (remaining > 0.5 && pool.length && guard++ < 10) {
+    const per = remaining / pool.length;
+    let took = 0;
+    pool.forEach(t => {
+      const w = next.get(t);
+      const can = Math.max(0, w - COL_RESIZE_MIN_PX);
+      const take = Math.min(per, can);
+      next.set(t, w - take); took += take;
+    });
+    if (took <= 0.01) break;                    // もう誰も縮められない
+    remaining -= took;
+    pool = pool.filter(t => next.get(t) > COL_RESIZE_MIN_PX + 0.5);
+  }
+  const plan = new Map();
+  others.forEach(t => { if (Math.abs(next.get(t) - cur.get(t)) > 0.5) plan.set(t, Math.round(next.get(t))); });
+  // ★もらいきれなかったぶん（remaining）は、この列を広げない＝これが限界値
+  return { w: Math.round(wantW - Math.max(0, remaining)), others: plan.size ? plan : null };
+}
+function _colApplyWidth(th, w) {
+  th.style.width = w + 'px'; th.style.minWidth = w + 'px'; th.style.maxWidth = w + 'px';
+}
+
 // 各 th の右端にリサイズハンドル div を差し込む（再呼び出し可、既設置はスキップ）
 // 【v142】th だけでなく、各 tbody tr の同じ列番目の td 右端にもハンドルを設置。
 //        renderAll後に呼べば、再描画されたtdにもハンドルが付く。
@@ -21126,14 +21187,33 @@ function installColResizeHandles() {
       document.body.classList.add('is-col-resizing');
       let moved = false;   // 【v278】ドラッグしたか（誤ソート抑止用）
 
+      let _shrunk = null;   // 【v1.0751】このドラッグで縮めた他の列（mouseupでまとめて保存する）
       const onMove = (ev) => {
         moved = true;
         const dx = ev.clientX - startX;
-        const newW = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, startWidth + dx));
-        // ドラッグ中はこの th だけ即時更新（軽いプレビュー）
-        ownerTh.style.width = newW + 'px';
-        ownerTh.style.minWidth = newW + 'px';
-        ownerTh.style.maxWidth = newW + 'px';
+        const wantW = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, startWidth + dx));
+        // 【v1.0751】横スクロールが出る直前で止め、足りないぶんは他の列から均等にもらう
+        const plan = _colPlanWiden(ownerTh, wantW);
+        _colApplyWidth(ownerTh, plan.w);
+        if (plan.others) {
+          if (!_shrunk) _shrunk = new Map();
+          plan.others.forEach((w, t) => { _colApplyWidth(t, w); _shrunk.set(t, w); });
+        }
+        // 【v1.0751】★仕上げの実測補正。
+        //   計算だけでは 数px ずれて横スクロールが出ることがある
+        //   （セルのpadding/border・最小幅に達した列・小数の丸めなど、計算では読み切れない要素があるため）。
+        //   適用したあとに【実際にはみ出しているか】を測り、はみ出したぶんだけこの列を縮める。
+        //   ★ここを消すと「ほぼ収まるが1〜2px だけスクロールバーが出る」状態に戻る。
+        try {
+          const wrap = ownerTh.closest('.table-wrap');
+          if (wrap) {
+            const over = wrap.scrollWidth - wrap.clientWidth;
+            if (over > 0) {
+              const w2 = Math.max(COL_RESIZE_MIN_PX, (parseFloat(ownerTh.style.width) || plan.w) - over);
+              _colApplyWidth(ownerTh, Math.round(w2));
+            }
+          }
+        } catch (e) {}
       };
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
@@ -21142,6 +21222,9 @@ function installColResizeHandles() {
         document.body.classList.remove('is-col-resizing');
         const finalW = parseFloat(ownerTh.style.width) || COL_RESIZE_MIN_PX;
         saveColWidth(key, finalW);
+        // 【v1.0751】★他の列からもらった結果も保存する。しないと再描画で元の幅に戻り、
+        //   横スクロールがまた出る（見た目とデータが食い違う）。
+        if (_shrunk) _shrunk.forEach((w, t) => { const k2 = t.dataset && t.dataset.resizeKey; if (k2) saveColWidth(k2, w); });
         applyColWidths();
         // 【v1.0623】★今までドラッグしても画面に何も出ず、「保存されていない」ように見えていた。
         //   実際は端末には保存されているが、GitHubへは「⬆ 反映する」を押すまで上がらない（v1.0354で自動保存廃止）。
