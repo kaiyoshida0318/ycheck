@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0751 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0752 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3881,7 +3881,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0751</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0752</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6002,9 +6002,17 @@ function _vpReadDeviceBackup() {
 function _vpWriteDeviceBackup() {
   try {
     const vp = ensureViewPrefs();
+    // 【v1.0752】★★ここが「端末のほうが新しい」が出続けた【真犯人】。
+    //   以前は updatedAt が空のとき `new Date().toISOString()`（＝いまの時刻）を入れていた。
+    //   updatedAt が空なのは「この端末ではまだ表示設定を一度も触っていない」状態なので、
+    //   そこに“いまの時刻”を刻むと、GitHub から読み込んだ設定より必ず新しくなり、
+    //   【新しいバージョンのファイルを開くたび／読み込みのたびに「端末のほうが新しい」】になっていた。
+    //   （ログで警告が毎回 “新しい版の最初の1行目” に出ていたのはこのため）
+    //   ★時刻を勝手に作らない。空なら「守るべき端末の変更が無い」ので、そもそも書かない。
+    if (!vp.updatedAt) return;
     localStorage.setItem(VP_DEVICE_KEY, JSON.stringify({
       colWidths: vp.colWidths, fontScale: vp.fontScale, itTrendSaved: vp.itTrendSaved,   // 【v1.0684】
-      updatedAt: vp.updatedAt || new Date().toISOString(), updatedBy: vp.updatedBy || 'この端末'
+      updatedAt: vp.updatedAt, updatedBy: vp.updatedBy || 'この端末'
     }));
   } catch (e) {}
 }
@@ -6013,7 +6021,8 @@ function _vpAdoptIncoming(incoming) {
   const bk = _vpReadDeviceBackup();
   const inTs = Date.parse((incoming && incoming.updatedAt) || '') || 0;
   const bkTs = Date.parse((bk && bk.updatedAt) || '') || 0;
-  if (bk && bkTs > inTs) {
+  // 【v1.0752】2秒の余裕。保存と書き戻しのわずかな時刻差で「端末が新しい」と誤判定しないため
+  if (bk && bkTs > inTs + 2000) {
     // 端末のほうが新しい＝まだ反映していない（or 誰かに古いデータで上書きされた）
     state.viewPrefs = {
       colWidths: Object.assign({}, bk.colWidths || {}),
