@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0764 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0765 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1963,6 +1963,14 @@ td[data-resize-key] {
 .cb-rev  { color: #0f8a52; font-weight: 700; }   /* 売上＝緑（§65） */
 .cb-cost { color: #be123c; font-weight: 700; }   /* 広告費＝赤（§65） */
 .cb-cum  { color: var(--text3); font-size: 0.78rem; }
+/* 【v1.0765】比較月（左）は「参考値」なので、対象月より一段薄く・小さくして主役を取らせない */
+.cb-prev  { background: var(--bg3); color: var(--text3); font-size: 0.78rem; line-height: 1.35; }
+.cb-prevp { color: var(--text3); font-weight: 700; }
+.cb-table th.cb-prev-th { background: var(--bg3); color: var(--text3); }
+.cb-bd { border-left: 2px solid var(--border); }          /* 対象月の始まり */
+.cb-grp { text-align: center; border-left: 2px solid var(--border); }
+.cb-grp-rev  { background: #d3edd9; color: #0f8a52; }     /* 売上＝緑（§65） */
+.cb-grp-cost { background: #f6c9d7; color: #be123c; }     /* 広告費＝赤（§65） */
 /* 【v1.0760】見出しの中を「列名（上）／計算式（下）」の2段に固定する。
    ★列名は必ずセルの【上端】から始める。中央揃えのままだと、計算式の行数（1〜3行）で
      列名の位置が列ごとにズレて、横に読めなくなる（例: 総売上 と 広告売上ROAS の1行目が揃わない）。
@@ -3955,7 +3963,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0764</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0765</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4689,9 +4697,12 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="card">
         <h3 class="card-title">全-貢献度</h3>
         <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center">
-          <span class="filter-label">対象月</span>
-          <select id="cbMonthSel" onchange="_cbSetYm(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
-          <span class="filter-label" style="color:var(--text3);font-weight:500">その月の売上・広告費を、商品ごとのシェア(%)で見ます。親子は親にまとめています。</span>
+          <span class="filter-label">比較月（左）</span>
+          <select id="cbMonthSelL" onchange="_cbSetYmL(this.value)" title="左側に出す月。既定は対象月の1つ前" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="filter-label" style="color:var(--text3);font-weight:500">→</span>
+          <span class="filter-label">対象月（右）</span>
+          <select id="cbMonthSel" onchange="_cbSetYm(this.value)" title="右側に出す月。既定は最新月" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="filter-label" style="color:var(--text3);font-weight:500">売上・広告費が全体の中で何%を占めるかを、2か月ぶん並べて比べます。親子は親にまとめています。</span>
         </div>
         <div id="cbEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
         <div id="cbTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto"></div>
@@ -17057,36 +17068,42 @@ function renderItemTrend() {
 }
 window.renderItemTrend = renderItemTrend;
 
-// ==================== 【v1.0764】全-貢献度 ====================
-//   その月の「商品別売上の合計」「広告実績額の合計」を 100% として、商品ごとのシェアを出す。
+// ==================== 【v1.0764/v1.0765】全-貢献度 ====================
+//   選んだ2か月について「商品別売上の合計」「広告実績額の合計」を 100% として、商品ごとのシェアを出し、
+//   左＝比較月（ふつうは前月）／右＝対象月（ふつうは今月）で横に並べて差を見る。
 //   ★親子（代表コード）は親1行にまとめる。子の売上・広告費は親に足す。
-//     （撤退の件数カウント §127 と同じ考え方。セットを2件と数えるとシェアの意味が変わる）
-let _cbYm = '';
-let _cbSortKey = 'rev';   // 'rev'（売上）| 'cost'（広告費）| 'diff'（シェアの差）
+//     （撤退の件数カウント §127 と同じ考え方。セットを2行に分けるとシェアの意味が変わる）
+let _cbYm  = '';   // 右＝対象月（今月）
+//   ★_cbYmL は null＝「まだ決めていない（＝既定の前月を入れる）」、''＝「ユーザーが"比較しない"を選んだ」。
+//     この2つを区別しないと、"比較しない" を選んだ瞬間に既定の前月が入り直して永久に消せない。
+let _cbYmL = null;   // 左＝比較月（前月）
+let _cbSortKey = 'rev';   // 'rev'=対象月の売上シェア / 'cost'=対象月の広告費シェア / 'drev'=売上シェアの差 / 'dcost'=広告費シェアの差
 let _cbSortDir = -1;      // -1＝降順
 function _cbMonths() { return getImportedDataMonths().slice().sort().reverse(); }   // 新しい月が先頭
-function _cbSetYm(v) { _cbYm = v || ''; renderContrib(); }
+function _cbSetYm(v)  { _cbYm  = v || ''; renderContrib(); }
+function _cbSetYmL(v) { _cbYmL = v || ''; renderContrib(); }
 function _cbSort(k) {
   if (_cbSortKey === k) _cbSortDir *= -1; else { _cbSortKey = k; _cbSortDir = -1; }
   renderContrib();
 }
-window._cbSetYm = _cbSetYm; window._cbSort = _cbSort;
+window._cbSetYm = _cbSetYm; window._cbSetYmL = _cbSetYmL; window._cbSort = _cbSort;
 
-// その月の行を作る。★集計は buildFullAggregate()（＝全画面共通の月次集計）から取る。
+// その月の集計を { 代表コード: {rev, cost, kids} } で返す。
+// ★集計は buildFullAggregate()（＝全画面共通の月次集計）から取る。
 //   ここで state.item / state.ad を直接足し直さないこと。日別がある月は日別合計を使う、
 //   という判断が buildFullAggregate の中にあり、自前集計だと他の画面と数字がズレる。
-function _cbRows(ym) {
+function _cbAggFor(ym, all) {
   const repKeyOf = (c) => { const r = String(((state.productMeta || {})[c] || {}).repCode || '').trim(); return r || c; };
   const by = {};
-  buildFullAggregate().forEach(r => {
+  (all || []).forEach(r => {
     if (r.month !== ym) return;
     const k = repKeyOf(r.code);
-    if (!by[k]) by[k] = { code: k, rev: 0, cost: 0, kids: new Set() };
+    if (!by[k]) by[k] = { rev: 0, cost: 0, kids: new Set() };
     by[k].rev  += (+r.rev || 0);
     by[k].cost += (+r.adCost || 0);
     if (r.code !== k) by[k].kids.add(r.code);
   });
-  return Object.keys(by).map(k => by[k]).filter(r => r.rev > 0 || r.cost > 0);
+  return by;
 }
 
 function renderContrib() {
@@ -17094,14 +17111,47 @@ function renderContrib() {
   const empty = document.getElementById('cbEmpty');
   const note = document.getElementById('cbNote');
   if (!tbl) return;
-  const months = _cbMonths();
+  const months = _cbMonths();   // 新しい順
   if (!_cbYm || months.indexOf(_cbYm) < 0) _cbYm = months[0] || '';
-  const sel = document.getElementById('cbMonthSel');
-  if (sel) {
-    sel.innerHTML = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
-    sel.value = _cbYm;
+  // 比較月の既定＝対象月の1つ前。★対象月と同じ月は選ばせない（差が必ず0になり意味が無い）
+  //   ★'' は「比較しない」というユーザーの選択なので、既定を入れ直さないこと（null のときだけ入れる）。
+  if (_cbYmL === null || (_cbYmL && (months.indexOf(_cbYmL) < 0 || _cbYmL === _cbYm))) {
+    const i = months.indexOf(_cbYm);
+    _cbYmL = (i >= 0 && months[i + 1]) ? months[i + 1] : '';
   }
-  const rows = _cbYm ? _cbRows(_cbYm) : [];
+  const selL = document.getElementById('cbMonthSelL');
+  const selR = document.getElementById('cbMonthSel');
+  if (selR) { selR.innerHTML = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join(''); selR.value = _cbYm; }
+  if (selL) {
+    selL.innerHTML = '<option value="">（比較しない）</option>'
+      + months.filter(m => m !== _cbYm).map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
+    selL.value = _cbYmL;
+  }
+  const _cmp = !!_cbYmL;   // 比較列を出すか
+
+  const all = buildFullAggregate();
+  const R = _cbAggFor(_cbYm, all);
+  const L = _cmp ? _cbAggFor(_cbYmL, all) : {};
+  const sum = (o, k) => Object.keys(o).reduce((s, c) => s + o[c][k], 0);
+  const totRevR = sum(R, 'rev'), totCostR = sum(R, 'cost');
+  const totRevL = sum(L, 'rev'), totCostL = sum(L, 'cost');
+
+  const keys = new Set(Object.keys(R)); Object.keys(L).forEach(k => keys.add(k));
+  const pct = (v, t) => (t > 0 ? v / t * 100 : 0);
+  let rows = [...keys].map(k => {
+    const r = R[k] || { rev: 0, cost: 0, kids: new Set() };
+    const l = L[k] || { rev: 0, cost: 0, kids: new Set() };
+    const o = {
+      code: k, kids: (r.kids.size ? r.kids : l.kids),
+      revR: r.rev, costR: r.cost, revL: l.rev, costL: l.cost,
+      pRevR: pct(r.rev, totRevR), pCostR: pct(r.cost, totCostR),
+      pRevL: pct(l.rev, totRevL), pCostL: pct(l.cost, totCostL)
+    };
+    o.dRev = o.pRevR - o.pRevL;
+    o.dCost = o.pCostR - o.pCostL;
+    return o;
+  }).filter(r => r.revR > 0 || r.costR > 0 || r.revL > 0 || r.costL > 0);
+
   if (!rows.length) {
     tbl.innerHTML = ''; if (note) note.textContent = '';
     if (empty) { empty.style.display = 'block'; empty.textContent = _cbYm ? 'この月の商品別データがありません。' : 'データを読み込んでください。'; }
@@ -17109,74 +17159,100 @@ function renderContrib() {
   }
   if (empty) empty.style.display = 'none';
 
-  const totRev  = rows.reduce((s, r) => s + r.rev, 0);
-  const totCost = rows.reduce((s, r) => s + r.cost, 0);
-  const pRev  = (v) => (totRev  > 0 ? v / totRev  * 100 : 0);
-  const pCost = (v) => (totCost > 0 ? v / totCost * 100 : 0);
-  rows.forEach(r => { r.pRev = pRev(r.rev); r.pCost = pCost(r.cost); r.diff = r.pRev - r.pCost; });
-
   // 並べ替え。★累積%は「この並び順」で積む（下の注記でそう断っている）
-  const key = _cbSortKey;
-  rows.sort((a, b) => {
-    const va = (key === 'cost') ? a.pCost : (key === 'diff') ? a.diff : a.pRev;
-    const vb = (key === 'cost') ? b.pCost : (key === 'diff') ? b.diff : b.pRev;
-    return (vb - va) * (_cbSortDir < 0 ? 1 : -1) || (b.rev - a.rev);
-  });
+  const pick = (r) => (_cbSortKey === 'cost') ? r.pCostR
+                    : (_cbSortKey === 'drev') ? r.dRev
+                    : (_cbSortKey === 'dcost') ? r.dCost : r.pRevR;
+  rows.sort((a, b) => (pick(b) - pick(a)) * (_cbSortDir < 0 ? 1 : -1) || (b.revR - a.revR));
 
-  const fp = (v) => (v > 0 ? v.toFixed(1) + '%' : '<span style="color:var(--text3)">—</span>');
+  const fp  = (v) => (v > 0 ? v.toFixed(1) + '%' : '<span style="color:var(--text3)">—</span>');
+  const fd  = (v, costSide) => {                       // 差（ポイント）。★費用側は増＝赤・減＝緑（hi:false と同じ考え方）
+    if (Math.abs(v) < 0.05) return '<span style="color:var(--text3)">±0.0</span>';
+    const up = v > 0;
+    const good = costSide ? !up : up;
+    return '<span style="color:' + (good ? '#0f8a52' : '#be123c') + ';font-weight:700">'
+      + (up ? '+' : '−') + Math.abs(v).toFixed(1) + '</span>';
+  };
+  const bar = (v, color) => '<span class="cb-bar"><i style="width:' + Math.min(100, Math.max(0, v)).toFixed(2) + '%;background:' + color + '"></i></span>';
+  const cellL = (amt, p) => '<td class="num cb-prev">' + fmt(amt) + '<br><span class="cb-prevp">' + fp(p) + '</span></td>';
   const arrow = (k) => (_cbSortKey === k ? (_cbSortDir < 0 ? ' ▼' : ' ▲') : '');
-  let cumR = 0, cumC = 0;
+
+  let cumR = 0;
   const body = rows.map((r, i) => {
-    cumR += r.pRev; cumC += r.pCost;
-    const kid = r.kids.size ? '<span style="color:var(--text3);font-size:0.74rem">　＋子' + r.kids.size + '件</span>' : '';
+    cumR += r.pRevR;
+    const kid = (r.kids && r.kids.size) ? '<span style="color:var(--text3);font-size:0.74rem">　＋子' + r.kids.size + '件</span>' : '';
     return '<tr>'
       + '<td class="cb-rank">' + (i + 1) + '</td>'
       + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td>' + nameCellHtml(r.code) + kid + '</td>'
-      + '<td class="num">' + fmt(r.rev) + '</td>'
-      + '<td class="num"><span class="cb-rev">' + fp(r.pRev) + '</span>'
-        + '<span class="cb-bar"><i style="width:' + Math.min(100, r.pRev).toFixed(2) + '%;background:#0f8a52"></i></span></td>'
+      // ---- 売上 ----
+      + (_cmp ? cellL(r.revL, r.pRevL) : '')
+      + '<td class="num cb-bd">' + fmt(r.revR) + '</td>'
+      + '<td class="num"><span class="cb-rev">' + fp(r.pRevR) + '</span>' + bar(r.pRevR, '#0f8a52') + '</td>'
+      + (_cmp ? '<td class="num">' + fd(r.dRev, false) + '</td>' : '')
       + '<td class="num cb-cum">' + cumR.toFixed(1) + '%</td>'
-      + '<td class="num">' + fmt(r.cost) + '</td>'
-      + '<td class="num"><span class="cb-cost">' + fp(r.pCost) + '</span>'
-        + '<span class="cb-bar"><i style="width:' + Math.min(100, r.pCost).toFixed(2) + '%;background:#be123c"></i></span></td>'
-      + '<td class="num cb-cum">' + cumC.toFixed(1) + '%</td>'
+      // ---- 広告費 ----
+      + (_cmp ? cellL(r.costL, r.pCostL) : '')
+      + '<td class="num cb-bd">' + fmt(r.costR) + '</td>'
+      + '<td class="num"><span class="cb-cost">' + fp(r.pCostR) + '</span>' + bar(r.pCostR, '#be123c') + '</td>'
+      + (_cmp ? '<td class="num">' + fd(r.dCost, true) + '</td>' : '')
       + '</tr>';
   }).join('');
 
-  const head = '<tr>'
-    + '<th class="cb-rank">#</th>'
-    + '<th>商品コード</th><th>画像</th><th>商品名</th>'
-    + '<th class="num sortable" onclick="_cbSort(\'rev\')" title="売上の多い順に並べ替え">売上' + arrow('rev') + '</th>'
-    + '<th class="num sortable" onclick="_cbSort(\'rev\')">売上シェア' + arrow('rev') + '</th>'
-    + '<th class="num">売上 累積</th>'
-    + '<th class="num sortable" onclick="_cbSort(\'cost\')" title="広告費の多い順に並べ替え">広告費' + arrow('cost') + '</th>'
-    + '<th class="num sortable" onclick="_cbSort(\'cost\')">広告費シェア' + arrow('cost') + '</th>'
-    + '<th class="num">広告費 累積</th>'
+  // ---- 2段見出し。1段目＝指標、2段目＝月 ----
+  const mL = _cbYmL.replace('-', '/'), mR = _cbYm.replace('-', '/');
+  const nRev  = (_cmp ? 4 : 2) + 1;   // 前月 + 金額 + シェア (+差) + 累積
+  const nCost = (_cmp ? 4 : 2);
+  const h1 = '<tr>'
+    + '<th class="cb-rank" rowspan="2">#</th>'
+    + '<th rowspan="2">商品コード</th><th rowspan="2">画像</th><th rowspan="2">商品名</th>'
+    + '<th colspan="' + nRev  + '" class="cb-grp cb-grp-rev">売上</th>'
+    + '<th colspan="' + nCost + '" class="cb-grp cb-grp-cost">広告費</th>'
+    + '</tr>';
+  const h2 = '<tr>'
+    + (_cmp ? '<th class="num cb-prev-th">' + mL + '</th>' : '')
+    + '<th class="num cb-bd sortable" onclick="_cbSort(\'rev\')" title="対象月の売上シェアの大きい順">' + mR + arrow('rev') + '</th>'
+    + '<th class="num sortable" onclick="_cbSort(\'rev\')">シェア' + arrow('rev') + '</th>'
+    + (_cmp ? '<th class="num sortable" onclick="_cbSort(\'drev\')" title="シェアの増減（ポイント）が大きい順">差' + arrow('drev') + '</th>' : '')
+    + '<th class="num">累積</th>'
+    + (_cmp ? '<th class="num cb-prev-th">' + mL + '</th>' : '')
+    + '<th class="num cb-bd sortable" onclick="_cbSort(\'cost\')" title="対象月の広告費シェアの大きい順">' + mR + arrow('cost') + '</th>'
+    + '<th class="num sortable" onclick="_cbSort(\'cost\')">シェア' + arrow('cost') + '</th>'
+    + (_cmp ? '<th class="num sortable" onclick="_cbSort(\'dcost\')" title="シェアの増減（ポイント）が大きい順">差' + arrow('dcost') + '</th>' : '')
     + '</tr>';
   const foot = '<tr class="cb-total">'
     + '<td colspan="4">合計（' + rows.length + '件）</td>'
-    + '<td class="num">' + fmt(totRev) + '</td><td class="num">100.0%</td><td class="num"></td>'
-    + '<td class="num">' + fmt(totCost) + '</td><td class="num">100.0%</td><td class="num"></td>'
+    + (_cmp ? '<td class="num">' + fmt(totRevL) + '<br><span class="cb-prevp">100.0%</span></td>' : '')
+    + '<td class="num cb-bd">' + fmt(totRevR) + '</td><td class="num">100.0%</td>'
+    + (_cmp ? '<td class="num"></td>' : '') + '<td class="num"></td>'
+    + (_cmp ? '<td class="num">' + fmt(totCostL) + '<br><span class="cb-prevp">100.0%</span></td>' : '')
+    + '<td class="num cb-bd">' + fmt(totCostR) + '</td><td class="num">100.0%</td>'
+    + (_cmp ? '<td class="num"></td>' : '')
     + '</tr>';
-  tbl.innerHTML = '<table class="cb-table"><thead>' + head + '</thead><tbody>' + body + foot + '</tbody></table>';
+  tbl.innerHTML = '<table class="cb-table"><thead>' + h1 + h2 + '</thead><tbody>' + body + foot + '</tbody></table>';
 
   // ---- 注記。★分母が何かを必ず書く（シェアは分母が違えば別物になる） ----
   if (note) {
-    let shopRev = null;
-    if (typeof dailyOverallRevForMonth === 'function') { const v = dailyOverallRevForMonth(_cbYm); if (v != null && v > 0) shopRev = v; }
-    if (shopRev == null && state.overall && Array.isArray(state.overall.months)) {
-      const o = state.overall.months.find(x => x.month === _cbYm); if (o && o.revenue > 0) shopRev = o.revenue;
-    }
-    let h = '分母＝この月の<b>商品別売上の合計 ' + fmt(totRev) + '</b> と <b>広告実績額の合計 ' + fmt(totCost) + '</b>（表示中の' + rows.length + '件の合計＝100%）。';
-    if (shopRev != null) {
-      const d = shopRev - totRev;
-      h += '<br>ショップ総売上(KPI) は ' + fmt(shopRev) + '。差 ' + (d >= 0 ? '+' : '') + fmt(Math.abs(d)).replace('¥', '¥')
-         + '（' + (totRev > 0 ? (d / totRev * 100).toFixed(1) : '—') + '%）。'
+    const shopRevOf = (ym) => {
+      let v = null;
+      if (typeof dailyOverallRevForMonth === 'function') { const d = dailyOverallRevForMonth(ym); if (d != null && d > 0) v = d; }
+      if (v == null && state.overall && Array.isArray(state.overall.months)) {
+        const o = state.overall.months.find(x => x.month === ym); if (o && o.revenue > 0) v = o.revenue;
+      }
+      return v;
+    };
+    let h = '分母は<b>月ごと</b>に取り直しています。' + mR + ' ＝ 商品別売上の合計 <b>' + fmt(totRevR) + '</b> / 広告実績額の合計 <b>' + fmt(totCostR) + '</b>'
+          + (_cmp ? ('、' + mL + ' ＝ <b>' + fmt(totRevL) + '</b> / <b>' + fmt(totCostL) + '</b>') : '') + '（それぞれ100%）。';
+    const sr = shopRevOf(_cbYm);
+    if (sr != null) {
+      const d = sr - totRevR;
+      h += '<br>' + mR + ' のショップ総売上(KPI) は ' + fmt(sr) + '（差 ' + (d >= 0 ? '+' : '−') + fmt(Math.abs(d)) + '）。'
          + '商品別レポートに出ない売上（送料・まとめ買いなど）があるため一致しないことがあります。ここでは商品別の合計を100%としています。';
     }
-    h += '<br><b>累積</b>は<b>いまの並び順</b>で上から足した値です。並べ替えを変えると累積の意味も変わります（売上の並びなら「上位◯件で売上の◯%」）。';
+    if (_cmp) h += '<br><b>差</b>は「' + mR + ' のシェア − ' + mL + ' のシェア」＝<b>ポイント</b>です（%の割り算ではありません）。'
+                 + '売上は増＝緑、広告費は増＝赤（費用は少ないほうが良いため）。';
+    h += '<br><b>累積</b>は<b>いまの並び順</b>で上から足した ' + mR + ' の売上シェアです。並べ替えを変えると累積の意味も変わります。';
     h += '<br>親子（代表コードのあるセット）は<b>親1行にまとめ</b>、子の売上・広告費を親に足しています。';
     note.innerHTML = h;
   }
