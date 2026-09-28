@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0755 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0756 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1916,6 +1916,13 @@ td[data-resize-key] {
   max-width: 100%; overflow: hidden;
 }
 .status-chev { font-size: 0.66em; opacity: 0.55; flex: 0 0 auto; }
+/* 【v1.0756】列見出しの下に出す計算式。★見出しの高さを増やさないよう、細く薄く */
+.fx-line { font-size: 0.64rem; font-weight: 500; line-height: 1.25; margin-top: 2px;
+           color: var(--text3); white-space: normal; max-width: 200px; opacity: 0.95; }
+.fx-toggle-btn { font-size: 0.78rem; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 6px;
+                 background: var(--bg2); color: var(--text2); cursor: pointer; white-space: nowrap; font-weight: 600; }
+.fx-toggle-btn:hover { background: var(--bg3); }
+.fx-toggle-btn.on { background: #0d9488; color: #fff; border-color: #0b7c72; }
 /* 【v1.0741】入札◯の2行目（広告順位×入札価格から自動で出る補足）。
    ★色は1行目と同じ（＝◯の青）。小さく・少し薄くして「選んだ値ではない」ことを示す。 */
 /* ★.status-lbl2 で2行ぶんを1つの flex アイテムにまとめる（これが無いと横並びになる） */
@@ -3894,7 +3901,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0755</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0756</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4404,6 +4411,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="seg-filter" id="itScopeSeg" role="group" aria-label="親子の集計"
             title="合算＝送り込みセット（同じ代表コードの親子）の合計から率を出し直す&#10;個別＝選んだ商品1件だけ"><button type="button" class="segf-btn on" data-itscope="sum" onclick="_itSetScope('sum')">合算</button><button type="button" class="segf-btn" data-itscope="self" onclick="_itSetScope('self')">個別</button></span>
           <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
         </div>
         <div id="itChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="itCanvas"></canvas></div>
         <div id="itEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
@@ -4423,6 +4431,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <select id="ztMonthSel" onchange="_ztSetYm(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
           <span class="filter-label" style="color:var(--text3);font-weight:500">月末までの推移（月初からの累積ROAS。日が進むほど確定値に近づきます）。表には日別値も併記。</span>
           <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
         </div>
         <div id="ztChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="ztCanvas"></canvas></div>
         <div id="ztEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
@@ -4597,6 +4606,8 @@ th.col-sroas { background-color:#e7d5f5; }
                列の定義は MI_COLS に verify:true のまま残してあるので、戻したくなったらここにボタンを置き直す。 -->
           <!-- 【v1.0569】配色の凡例をツールバーに常時表示（同じ列の中での相対評価）。
                色は本文セルと同じ c-g1 / c-g2 / c-bk / c-o / c-r を使うので、凡例と実物が必ず一致する。 -->
+          <!-- 【v1.0756】列見出しの下に計算式を出す/消す（1クリック） -->
+          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
           <span id="zdColorLegend" style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
             <span class="filter-label" title="同じ列の中で月（日）どうしを比べた相対評価です。詳しくは「❓ 説明」の「色の意味」を参照">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
@@ -12206,15 +12217,43 @@ function _syncSroasFilterUI() {
 //         / PRオプ=青緑 / 広告ROAS=藍
 //     ・効率を青系にしていたが総売上（青）と地続きに見えたため紫に変更。広告ROASの藍とも色相をずらしてある。
 //     さらに料率別の3列（合計/-7%/-7%超）は ZD_GRP_DEFS で「濃→中→薄」になる（§4-D）。
+// ============================================================================
+// 【v1.0756】列見出しの下に「計算式」を出す／出さない（1クリック切替）。
+//   ・式の文字は各列の定義（MI_COLS の fx ／ IT_METRICS の fx）に1か所だけ書く。
+//     ★式を画面のHTMLに直書きしないこと。定義と表示がズレて「式だけ古い」が起きる。
+//   ・ON/OFF は端末に覚えさせる（localStorage）。GitHubには送らない＝人によって好みが違うため。
+// ============================================================================
+const FX_KEY = 'ycheck_fx_show_v1';
+let _fxShow = (function () { try { return localStorage.getItem(FX_KEY) === '1'; } catch (e) { return false; } })();
+function fxToggle() {
+  _fxShow = !_fxShow;
+  try { localStorage.setItem(FX_KEY, _fxShow ? '1' : '0'); } catch (e) {}
+  fxSyncBtns();
+  if (typeof renderAll === 'function') renderAll();
+}
+function fxSyncBtns() {
+  document.querySelectorAll('.fx-toggle-btn').forEach(b => {
+    b.classList.toggle('on', _fxShow);
+    b.textContent = _fxShow ? '🧮 計算式 表示中' : '🧮 計算式';
+    b.title = _fxShow ? '列見出しの下の計算式を隠します' : '各列が何を割り算しているかを見出しの下に出します';
+  });
+}
+// 見出しの中に差し込む式の1行（式が無い列は何も出さない）
+function fxLine(fx, color) {
+  if (!_fxShow || !fx) return '';
+  return '<div class="fx-line"' + (color ? ' style="color:' + color + '"' : '') + '>' + fx + '</div>';
+}
+window.fxToggle = fxToggle;
+
 const MI_COLS = [
   // --- 売上（青） ---
-  { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y' },
+  { key:'totSales', label:'総売上',   hbg:'#d6e1fa', bg:'#f0f3fd', hi:true,  t:'y', fx:'ショップ売上KPI(日別)の売上。無い日は 商品別売上の合計' },
   // --- 効率（紫）【v1.0577】総売上の右へ移動 ---
   //   「いくら売れたか（総売上）」のすぐ右で「その売上をいくらの費用で作ったか」を読めるようにした。
   //   ★配色は青系（総売上）と紛らわしかったので紫系に変更。広告ROAS の藍(#d8d9f6)とも色相をずらしてある。
   //   ★見出しは hLabel で2行（売上/ROAS・PR売上/ROAS）。列幅を詰めても読めるようにするため。
   //   【v1.0537】広告売上ROAS＝総売上÷広告実績額×100（t:'sr' は絶対しきい値で色付け）
-  { key:'salesRoas', label:'広告売上ROAS', hLabel:'広告売上<br>ROAS', hbg:'#e7d5f5', bg:'#f6effc', hi:true,  t:'sr', blockStart:true },
+  { key:'salesRoas', label:'広告売上ROAS', hLabel:'広告売上<br>ROAS', hbg:'#e7d5f5', bg:'#f6effc', hi:true,  t:'sr', blockStart:true, fx:'総売上 ÷ 広告実績額 × 100' },
   // 【v1.0579】★PR売上ROAS ＝ 総売上 ÷（広告実績額 ＋ **PR実績額(7%超)**）× 100。
   //   広告売上ROAS（＝総売上÷広告実績額）に対して、PR費のうち**自分で上乗せしている分**も費用に入れたときの効率。
   //   ★分母に入れるのは「7%超ぶん」だけ。最低料率7%はYahooに出店している限り必ず発生する固定費に近いもので、
@@ -12229,28 +12268,29 @@ const MI_COLS = [
     th: PR_SALES_ROAS_TH,   // 【v1.0576】分母が大きいぶん、広告売上ROASの半分のしきい値で見る
     store:true,   // 【v1.0577】商品別PRオプ実績は取得できない（§1）ので、商品-日月別データには出さない（v1.0575以来ずっと空欄「—」だった）
 
+    fx:'総売上 ÷（広告実績額 ＋ PR実績額(7%超)）× 100',
     srNote:'PRオプション実績が未取込、または対象期間の一部しか無いため算出できません（PR広告売上ROAS＝総売上÷(広告実績額＋PR実績額(7%超))×100）' },
   // 【v1.0676】PR売上ROAS ＝ 総売上 ÷ PR実績額(7%超) × 100。広告費は入れない＝「PRに上乗せした分だけで見た効率」。
   //   ★色分けはしない（norank）。分母が小さく値が数百〜数千%になり、広告売上ROASのしきい値では意味を持たないため。
   //   ★PR未取込／7%超が出せない期間は null＝「—」。0円扱いにしない。
-  { key:'prOnlyRoas', label:'PR売上ROAS', hLabel:'PR売上<br>ROAS', hbg:'#dbc3f0', bg:'#f0e8fa', t:'p', store:true, norank:true },
+  { key:'prOnlyRoas', label:'PR売上ROAS', hLabel:'PR売上<br>ROAS', hbg:'#dbc3f0', bg:'#f0e8fa', t:'p', store:true, norank:true, fx:'総売上 ÷ PR実績額(7%超) × 100' },
   // --- SEO（緑） ---
-  { key:'seoSales', label:'SEO売上',  hbg:'#d3edd9', bg:'#f1faf4', hi:true,  t:'y', blockStart:true, split:true },
+  { key:'seoSales', label:'SEO売上',  hbg:'#d3edd9', bg:'#f1faf4', hi:true,  t:'y', blockStart:true, split:true, fx:'総売上 − 広告売上' },
   // 【v1.0562】PR実績額(7%相当) / PR実績額(7%超) の2列は撤去（総額分解 §4-C）。データは残置。
   //   参考（撤去した定義）:
   //     { key:'prBase', label:'PR実績額(7%相当)', hbg:'#d3ebe3', bg:'#f3faf8', hi:false, t:'y', store:true, norank:true },
   //     { key:'prOver', label:'PR実績額(7%超)',   hbg:'#c7e7dc', bg:'#eff9f6', hi:false, t:'y', store:true, norank:true },
   // 【v1.0547】検算列。ツールバーのトグルは v1.0569 で撤去したので既定は出ない（定義だけ残置）。
-  { key:'prEffRate', label:'実効料率(税抜)',      hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
-  { key:'prSetRate', label:'設定料率(加重平均)',  hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true },
+  { key:'prEffRate', label:'実効料率(税抜)',      hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true, fx:'PR実績額 ÷（レポート売上 ÷ 1.1）× 100' },
+  { key:'prSetRate', label:'設定料率(加重平均)',  hbg:'#eef2f6', bg:'#f8fafc', hi:false, t:'p', store:true, norank:true, verify:true, fx:'商品ごとの設定PRオプ料率を、その商品の売上で加重平均' },
   // 【v1.0554】PR費用率 / PR表示回数 / PRクリック数 / PR-CTR の4列は撤去。
   //   ★ データ自体は state.daily.pr と各行（prRatio / prImpr / prClick / prCtr）に残してある。
   //     戻したくなったら、ここに定義を書き戻すだけでよい（パース・集計側は無変更）。
   // --- 広告（橙。売上→費用→CVR の順に少しずつ濃さを変える） ---
-  { key:'adSales',  label:'広告売上',    hbg:'#fbe3c4', bg:'#fdf6ec', hi:true,  t:'y', blockStart:true, split:true },
+  { key:'adSales',  label:'広告売上',    hbg:'#fbe3c4', bg:'#fdf6ec', hi:true,  t:'y', blockStart:true, split:true, fx:'広告詳細レポートの売上の合計' },
   // 【v1.0559】広告実績額はピンク系。広告売上・広告CVRの橙と近すぎて見分けづらかったため。
-  { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true },
-  { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true },
+  { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true, fx:'広告詳細レポートの実績額の合計（＝広告費）' },
+  { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true, fx:'広告の注文数 ÷ 広告のクリック数 × 100' },
   // --- PRオプション（青緑）＋ 広告ROAS（藍） ---
   //   【v1.0577】広告売上ROAS / PR売上ROAS は総売上の右へ移した（上の「効率（紫）」ブロック）。
   // 【v1.0574】PRオプション（青緑）は「7%より高い料率にしていることで余分に出ている分」だけを1列で出す。
@@ -12259,8 +12299,8 @@ const MI_COLS = [
   //   ★ 合計・7%相当は行の prCost / prBase に残っているので、列に戻したくなればここに足すだけでよい。
   //   費用なので hi:false（小さいほど青）。前提が崩れた期間（超過分が負）は prOver が null ＝「—」。
   //   【v1.0575】見出しは hLabel で2行にする。
-  { key:'prOver',    label:'PR実績額(7%超)', hLabel:'PR実績額<br>(7%超)', hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true },
-  { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', split:true },
+  { key:'prOver',    label:'PR実績額(7%超)', hLabel:'PR実績額<br>(7%超)', hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true, fx:'PR実績額 − レポート売上 ÷ 1.1 × 7%' },
+  { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', split:true, fx:'広告売上 ÷ 広告実績額 × 100' },
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
 function itemCols() { return MI_COLS.filter(c => !c.store); }
@@ -13693,13 +13733,15 @@ function renderGraphData() {
     const lastIdx = g.start + g.len - 1;
     const leftBd = (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c));
     if (g.len === 1) {
-      _h1 += '<th' + _rs + ' style="' + _thBase + 'text-align:center;background:' + c.hbg + ';'
-        + leftBd + _vb(lastIdx) + 'vertical-align:middle">' + (c.hLabel || escapeHtml(c.label)) + '</th>';   /* 【v1.0575】hLabel があれば2行見出し */
+      _h1 += '<th' + _rs + ' style="' + _thBase + (_fxShow ? 'white-space:normal;' : '') + 'text-align:center;background:' + c.hbg + ';'
+        + leftBd + _vb(lastIdx) + 'vertical-align:middle">' + (c.hLabel || escapeHtml(c.label))
+        + fxLine(c.fx) + '</th>';   /* 【v1.0575】hLabel があれば2行見出し／【v1.0756】計算式 */
       return;
     }
     // 1段目＝指標名をまとめて1セル（色はその指標の一番濃い色）
-    _h1 += '<th colspan="' + g.len + '" style="' + _thBase + 'text-align:center;background:' + c.hbg + ';'
-      + leftBd + _vb(lastIdx) + '">' + escapeHtml(c.famLabel || c.label) + '</th>';
+    _h1 += '<th colspan="' + g.len + '" style="' + _thBase + (_fxShow ? 'white-space:normal;' : '') + 'text-align:center;background:' + c.hbg + ';'
+      + leftBd + _vb(lastIdx) + '">' + escapeHtml(c.famLabel || c.label)
+      + fxLine(c.fx) + '</th>';   /* 【v1.0756】計算式 */
     for (let k = 0; k < g.len; k++) {
       const sc = _zdCols[g.start + k];
       const bd = (k === 0 ? leftBd : 'border-left:' + VBD + ';') + _vb(g.start + k);
@@ -16545,15 +16587,19 @@ const IT_METRICS = [
   // 【v1.0691】並びは 商品-基本データ と同じ「PR広告売上ROAS → 広告売上ROAS → PR売上ROAS」（広い→狭い）。広告ROASは最後
   //   hbg=見出しの色 / bg=累積・実績額セル / bg2=日別セル（同系色の一段濃いほう）
   { k: 'prsr',   label: 'PR広告売上ROAS',  color: '#7c3aed', bar: true,  amountLabel: '広告＋PR', amountFull: '広告実績額＋PR実績額(7%超・推定)',
+    fx: '総売上 ÷（広告実績額＋PR実績額(7%超)）× 100',
     hbg: '#e7d5f5', bg: '#f6effc', bg2: '#efe3f9',
     num: a => a.rev,    den: a => (a.prKnown ? (a.adCost + a.prOver) : 0), amount: a => (a.prKnown ? (a.adCost + a.prOver) : null) },
   { k: 'sroas',  label: '広告売上ROAS',        color: '#3b82f6', bar: true,  amountLabel: '', amountFull: '',
+    fx: '総売上 ÷ 広告実績額 × 100',
     hbg: '#d3e3fb', bg: '#eff5fe', bg2: '#e3edfd',
     num: a => a.rev,    den: a => a.adCost, amount: null },
   { k: 'pronly', label: 'PR売上ROAS',      color: '#ec4899', bar: false, amountLabel: 'PR', amountFull: 'PR実績額(7%超・推定)',
+    fx: '総売上 ÷ PR実績額(7%超) × 100',
     hbg: '#fbd4e6', bg: '#fdeff6', bg2: '#fbe4ef',
     num: a => a.rev,    den: a => (a.prKnown ? a.prOver : 0),              amount: a => (a.prKnown ? a.prOver : null) },
   { k: 'roas',   label: '広告ROAS',        color: '#f59e0b', bar: false, amountLabel: '広告', amountFull: '広告実績額',
+    fx: '広告売上 ÷ 広告実績額 × 100',
     hbg: '#fce4b8', bg: '#fef6e8', bg2: '#fdeed3',
     num: a => a.adRev,  den: a => a.adCost, amount: a => a.adCost },
 ];
@@ -16764,7 +16810,7 @@ function _trendPaint(opt) {
   const th2 = thB.replace('top:0', 'top:26px');
   // 【v1.0692】1指標あたりの列数 = 累積 + 日別 (+ 実績額) (+ 売上)
   const _cols = (m) => 2 + (m.amount ? 1 : 0) + (m.revCol ? 1 : 0);
-  const grp = (m) => '<th colspan="' + _cols(m) + '" style="' + thB + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border)">' + m.label + '</th>';
+  const grp = (m) => '<th colspan="' + _cols(m) + '" style="' + thB + (_fxShow ? 'white-space:normal;' : '') + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border)">' + m.label + fxLine(m.fx) + '</th>';   /* 【v1.0756】計算式 */
   const sub = (m) => '<th style="' + th2 + 'background:' + m.bg + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
                    + '<th style="' + th2 + 'background:' + m.bg2 + ';text-align:center">日別</th>'
                    // 【v1.0692】「実績額」と「(広告＋PR)」を2行に分ける。1行だと横に間延びして、どの額か読みにくい
@@ -16776,7 +16822,7 @@ function _trendPaint(opt) {
   //   ★ROASは率なので、金額の規模が分からないと判断できない（1,000円で300%と100万円で300%は別物）。
   //     色は緑系＝プラス側（§65の「売上＝緑 / 費用＝赤」と同じ考え方）で、ROASの各色とぶつからないようにする。
   const RV = { hbg: '#cfe9dc', bg: '#edf7f1', bg2: '#dff0e7', color: '#0f8a52' };
-  const grpRev = '<th colspan="2" style="' + thB + 'top:0;background:' + RV.hbg + ';text-align:center;color:' + RV.color + ';border-left:2px solid var(--border)">売上</th>';
+  const grpRev = '<th colspan="2" style="' + thB + (_fxShow ? 'white-space:normal;' : '') + 'top:0;background:' + RV.hbg + ';text-align:center;color:' + RV.color + ';border-left:2px solid var(--border)">売上' + fxLine('累積＝月初からの合計／1日＝その日だけ') + '</th>';
   const subRev = '<th style="' + th2 + 'background:' + RV.bg  + ';text-align:center;border-left:2px solid var(--border)">累積売上</th>'
                + '<th style="' + th2 + 'background:' + RV.bg2 + ';text-align:center">1日売上</th>';
   const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + '</tr>'
@@ -16908,6 +16954,7 @@ function renderItemTrend() {
 window.renderItemTrend = renderItemTrend;
 
 function renderAll() {
+  if (typeof fxSyncBtns === 'function') fxSyncBtns();   // 【v1.0756】計算式トグルの見た目を合わせる
   if (typeof syncLinkedChildrenStatus === 'function') syncLinkedChildrenStatus();  // 【v1.0437】追従中の子ステータスを親へ同期（表示・件数・撤退判定の整合）
   // 【v1.0604】★商品件数が減っていないか毎回見張る。減ったらログに⚠を1行残す
   if (typeof ycWatchMasterCount === 'function') { try { ycWatchMasterCount('画面更新'); } catch (e) {} }
