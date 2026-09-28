@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0767 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0768 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1972,6 +1972,13 @@ td[data-resize-key] {
 .cb-rev  { color: #0f8a52; font-weight: 700; }   /* 売上＝緑（§65） */
 .cb-cost { color: #be123c; font-weight: 700; }   /* 広告費＝赤（§65） */
 .cb-cum  { color: var(--text3); font-size: 0.78rem; }
+/* 【v1.0768】右の月の数字の下に出す「左の月からの増減」。
+   ★数字より一段小さく。増減は主役ではなく、その数字の読み方を助ける補助情報。 */
+.cb-d    { display: block; font-size: 0.68rem; font-weight: 700; line-height: 1.2; margin-top: 2px; white-space: nowrap; }
+.cb-d-up { color: #0f8a52; }   /* 良い向き（売上・ROASは増、広告費は減） */
+.cb-d-dn { color: #be123c; }   /* 悪い向き */
+.cb-d-0  { color: var(--text3); font-weight: 600; }
+.cb-d-new{ color: #7c3aed; }   /* 比較月に無かった商品 */
 /* 【v1.0766】★2か月を「月まるごと」横に並べるので、どちらの月かは【背景色】で区別する。
    数字の色は 売上＝緑 / 広告費＝赤（§65）のまま＝「指標」を表す。
    月も指標も文字色でやると、その色がどちらの意味なのか読めなくなる。 */
@@ -3973,7 +3980,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0767</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0768</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17167,6 +17174,7 @@ function renderContrib() {
     const l = L[k] || _empty;
     return {
       code: k, kids: (r.kids.size ? r.kids : l.kids),
+      inL: !!L[k],   // 【v1.0768】比較月にこの商品が無ければ増減ではなく「新規」と出す
       revR: r.rev, costR: r.cost, revL: l.rev, costL: l.cost,
       prsrR: _prsrOf(R[k]), prsrL: _prsrOf(L[k]),
       pRevR: pct(r.rev, totRevR), pCostR: pct(r.cost, totCostR),
@@ -17194,17 +17202,43 @@ function renderContrib() {
   const arrow = (k) => (_cbSortKey === k ? (_cbSortDir < 0 ? ' ▼' : ' ▲') : '');
   // 1か月ぶん（6列）を作る。cls＝その月の背景色クラス
   //   ★月ごとの列はこの関数（と下の sub()）だけで作る。片方の月に手で書き足すと左右で列数がズレる。
+  // 【v1.0768】増減（右の月 − 左の月）。
+  //   ★good の向きは指標で違う。売上・ROASは増えたら緑／広告費は増えたら赤（費用は少ないほうが良い＝§65）。
+  //     ここを一律「増＝緑」にすると、広告費が増えた月が良く見えてしまう。
+  const _dWrap = (txt, cls) => '<span class="cb-d ' + cls + '">' + txt + '</span>';
+  const _dNum = (v, costSide, fmtOne, eps) => {
+    if (v == null) return '';
+    if (Math.abs(v) < (eps || 0.05)) return _dWrap('±0', 'cb-d-0');
+    const up = v > 0, good = costSide ? !up : up;
+    return _dWrap((up ? '+' : '−') + fmtOne(Math.abs(v)), good ? 'cb-d-up' : 'cb-d-dn');
+  };
+  const _yen = (v) => '¥' + Math.round(v).toLocaleString('ja-JP');
+  const _pt  = (v) => v.toFixed(1) + 'pt';
+  const _ptR = (v) => Math.round(v).toLocaleString('ja-JP') + 'pt';
+  const _dNew = () => _dWrap('新規', 'cb-d-new');
   const _prsrCell = (v) => (v == null)
     ? '<span style="color:var(--text3)">—</span>'
     : ((typeof salesRoasCellHtml === 'function' && typeof PR_SALES_ROAS_TH !== 'undefined')
         ? salesRoasCellHtml(v, PR_SALES_ROAS_TH) : (v + '%'));
-  const monthCells = (cls, rev, pRev, cum, cost, pCost, prsr) =>
-      '<td class="num ' + cls + ' cb-bd">' + fmt(rev) + '</td>'
-    + '<td class="num ' + cls + '"><span class="cb-rev">' + fp(pRev) + '</span>' + bar(pRev, '#0f8a52') + '</td>'
+  //   d＝この月の下に出す増減（右の月のときだけ渡す。左の月とヘッダーは null）
+  //   ★累積には増減を出さない。累積は「いまの並び順で上から足した値」なので、
+  //     月をまたいで引き算しても意味のある数字にならない。
+  const monthCells = (cls, rev, pRev, cum, cost, pCost, prsr, d) => {
+    const dd = (key, costSide, fmtOne, eps) => {
+      if (!d) return '';
+      // ★両月とも0（画面では「—」）の指標には増減を出さない。
+      //   「— / ±0」が並ぶと、値が無いのか変わっていないのか読めなくなる。
+      if (d[key + 'None']) return '';
+      if (d.isNew) return _dNew();
+      return _dNum(d[key], costSide, fmtOne, eps);
+    };
+    return '<td class="num ' + cls + ' cb-bd">' + fmt(rev) + dd('rev', false, _yen, 1) + '</td>'
+    + '<td class="num ' + cls + '"><span class="cb-rev">' + fp(pRev) + '</span>' + bar(pRev, '#0f8a52') + dd('pRev', false, _pt) + '</td>'
     + '<td class="num ' + cls + ' cb-cum">' + cum.toFixed(1) + '%</td>'
-    + '<td class="num ' + cls + '">' + fmt(cost) + '</td>'
-    + '<td class="num ' + cls + '"><span class="cb-cost">' + fp(pCost) + '</span>' + bar(pCost, '#be123c') + '</td>'
-    + '<td class="num ' + cls + ' cb-prsr">' + _prsrCell(prsr) + '</td>';
+    + '<td class="num ' + cls + '">' + fmt(cost) + dd('cost', true, _yen, 1) + '</td>'
+    + '<td class="num ' + cls + '"><span class="cb-cost">' + fp(pCost) + '</span>' + bar(pCost, '#be123c') + dd('pCost', true, _pt) + '</td>'
+    + '<td class="num ' + cls + ' cb-prsr">' + _prsrCell(prsr) + dd('prsr', false, _ptR, 0.5) + '</td>';
+  };
 
   let cumL = 0, cumR = 0;
   const body = rows.map((r, i) => {
@@ -17215,8 +17249,17 @@ function renderContrib() {
       + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td class="cb-name">' + nameCellHtml(r.code) + kid + '</td>'
-      + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, cumL, r.costL, r.pCostL, r.prsrL) : '')
-      + monthCells('cb-m2', r.revR, r.pRevR, cumR, r.costR, r.pCostR, r.prsrR)
+      + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, cumL, r.costL, r.pCostL, r.prsrL, null) : '')
+      + monthCells('cb-m2', r.revR, r.pRevR, cumR, r.costR, r.pCostR, r.prsrR, _cmp ? {
+          isNew: !r.inL,
+          rev: r.revR - r.revL, cost: r.costR - r.costL,
+          pRev: r.pRevR - r.pRevL, pCost: r.pCostR - r.pCostL,
+          revNone:  (!r.revR  && !r.revL),  pRevNone:  (!r.revR  && !r.revL),
+          costNone: (!r.costR && !r.costL), pCostNone: (!r.costR && !r.costL),
+          prsrNone: (r.prsrR == null && r.prsrL == null),
+          // ★どちらかの月が「—」（料率未取得など）なら増減は出さない。0扱いにすると巨大な増減が出る
+          prsr: (r.prsrR == null || r.prsrL == null) ? null : (r.prsrR - r.prsrL)
+        } : null)
       + '</tr>';
   }).join('');
 
@@ -17246,14 +17289,19 @@ function renderContrib() {
     const den = totCost + over;
     return (known && den > 0) ? Math.round(totRev / den * 100) : null;
   };
-  const totCells = (cls, rev, cost, prsr) =>
-      '<td class="num ' + cls + ' cb-bd">' + fmt(rev) + '</td><td class="num ' + cls + '">100.0%</td>'
+  const totCells = (cls, rev, cost, prsr, d) =>
+      '<td class="num ' + cls + ' cb-bd">' + fmt(rev) + (d ? _dNum(d.rev, false, _yen, 1) : '') + '</td><td class="num ' + cls + '">100.0%</td>'
     + '<td class="num ' + cls + '"></td>'
-    + '<td class="num ' + cls + '">' + fmt(cost) + '</td><td class="num ' + cls + '">100.0%</td>'
-    + '<td class="num ' + cls + '"' + (prsr == null ? ' title="PRオプ料率が未取得の商品が1件でもあると、合計の分母（PR実績額の推定）が出せないため「—」にしています"' : '') + '>' + _prsrCell(prsr) + '</td>';
+    + '<td class="num ' + cls + '">' + fmt(cost) + (d ? _dNum(d.cost, true, _yen, 1) : '') + '</td><td class="num ' + cls + '">100.0%</td>'
+    + '<td class="num ' + cls + '"' + (prsr == null ? ' title="PRオプ料率が未取得の商品が1件でもあると、合計の分母（PR実績額の推定）が出せないため「—」にしています"' : '') + '>'
+      + _prsrCell(prsr) + (d ? _dNum(d.prsr, false, _ptR, 0.5) : '') + '</td>';
+  const _tpL = _totPrsr(L, totRevL, totCostL), _tpR = _totPrsr(R, totRevR, totCostR);
   const foot = '<tr class="cb-total"><td colspan="4">合計（' + rows.length + '件）</td>'
-    + (_cmp ? totCells('cb-m1', totRevL, totCostL, _totPrsr(L, totRevL, totCostL)) : '')
-    + totCells('cb-m2', totRevR, totCostR, _totPrsr(R, totRevR, totCostR)) + '</tr>';
+    + (_cmp ? totCells('cb-m1', totRevL, totCostL, _tpL, null) : '')
+    + totCells('cb-m2', totRevR, totCostR, _tpR, _cmp ? {
+        rev: totRevR - totRevL, cost: totCostR - totCostL,
+        prsr: (_tpR == null || _tpL == null) ? null : (_tpR - _tpL)
+      } : null) + '</tr>';
   tbl.innerHTML = '<table class="cb-table"><thead>' + h1 + h2 + '</thead><tbody>' + body + foot + '</tbody></table>';
 
   // ---- 注記。★分母が何かを必ず書く（シェアは分母が違えば別物になる） ----
@@ -17275,7 +17323,11 @@ function renderContrib() {
       h += '<br>' + mR + ' のショップ総売上(KPI) は ' + fmt(sr) + '（差 ' + (d >= 0 ? '+' : '−') + fmt(Math.abs(d)) + '）。'
          + '商品別レポートに出ない売上（送料・まとめ買いなど）があるため一致しないことがあります。ここでは商品別の合計を100%としています。';
     }
-    h += '<br><b>累積</b>は<b>いまの並び順</b>で上から足した売上シェアです。並べ替えを変えると累積の意味も変わります。';
+    if (_cmp) h += '<br>右（' + mR + '）の数字の下は<b>' + mL + 'からの増減</b>です。金額は円、シェアとPR広告売上ROASは<b>ポイント(pt)</b>'
+                 + '（%の割り算ではありません）。<b>売上・ROASは増＝緑／広告費は増＝赤</b>（費用は少ないほうが良いため）。'
+                 + mL + ' に無かった商品は <span style="color:#7c3aed;font-weight:700">新規</span>、'
+                 + 'どちらかが「—」の指標は増減を出しません。';
+    h += '<br><b>累積</b>は<b>いまの並び順</b>で上から足した売上シェアです。並べ替えを変えると累積の意味も変わるため、<b>累積には増減を出していません</b>。';
     h += '<br><b>PR広告売上ROAS</b>＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超)）× 100。'
        + '★商品別のPRオプ実績はYahooから取得できないため、⑤の<b>設定PRオプ料率からの推定</b>です（実測ではありません）。'
        + '料率が7%の商品は上乗せ分が0なので、広告売上ROASと同じ値になります。';
