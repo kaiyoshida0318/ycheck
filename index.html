@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0783 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0784 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2009,6 +2009,10 @@ td[data-resize-key] {
 /* 【v1.0773】「新規」＝比較月に無かった商品。★4段の色とは必ず別の色にすること。
    順位の色に混ぜると「いちばん増えた」と「そもそも先月無かった」が見分けられない。 */
 .cb-new { color: #9333ea; font-weight: 700; }
+/* 【v1.0784】出稿中の列。2つの月のあいだに挟むので、背景は月の色に染めず中立の灰にする */
+.cb-run    { background: #f4f6f8; }
+.cb-table th.cb-run-h { background: #e3e8ed; color: var(--text2); }
+.cb-run-on { color: #0f766e; font-weight: 700; font-size: 1.02rem; }
 /* 【v1.0783】対象月（右）のPR広告売上ROAS「そのものの値」の順位色。
    ★増減ではなく【その月の値】の順位。高いほうが上位＝青。
    ★.cb-prsrv を先に書いて既定色（黒）を決め、.cb-prsrv.c-◯ で上書きする（§157-5と同じ理由）。 */
@@ -4027,7 +4031,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0783</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0784</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17208,7 +17212,8 @@ function _cbAggFor(ym, all) {
   (all || []).forEach(r => {
     if (r.month !== ym) return;
     const k = repKeyOf(r.code);
-    if (!by[k]) by[k] = { rev: 0, cost: 0, prOver: 0, rateKnown: true, kids: new Set() };
+    if (!by[k]) by[k] = { rev: 0, cost: 0, prOver: 0, rateKnown: true, kids: new Set(), all: new Set() };
+    by[k].all.add(r.code);   // 【v1.0784】出稿中の判定は親子の全メンバーで見る
     by[k].rev  += (+r.rev || 0);
     by[k].cost += (+r.adCost || 0);
     // 【v1.0767】PR広告売上ROAS(推定)用。★7%超ぶんは【商品ごとに】設定料率から出してから足す。
@@ -17267,6 +17272,23 @@ function _cbRank5(val, pool, invert) {
   return 'bk';
 }
 
+// 【v1.0784】★「直近で広告を出稿しているか」。
+//   日別の広告データ（①広告詳細レポート）の【いちばん新しい日から CB_ACTIVE_DAYS 日ぶん】を見て、
+//   1日でも広告費が出ていれば「出稿中」。
+//   ★「今日から○日」ではなく「取り込んである最新日から○日」で見ること。
+//     レポートの取り込みが数日遅れるのが普通なので、今日基準だと常に「出稿なし」になる。
+//   ★親子は全メンバーを見る（子だけ広告を回しているセットがあるため）。
+//   戻り値: true=出稿中 / false=出稿なし / null=日別の広告データが無く判定できない
+const CB_ACTIVE_DAYS = 7;
+function _cbAdActive(codes) {
+  const ds = (typeof dailyDates === 'function') ? dailyDates('ad').slice().sort() : [];
+  if (!ds.length) return null;
+  const last = ds.slice(-CB_ACTIVE_DAYS);
+  return last.some(d => (codes || []).some(c => {
+    try { return (+((dayAgg(c, d) || {}).adCost) || 0) > 0; } catch (e) { return false; }
+  }));
+}
+
 function renderContrib() {
   const tbl = document.getElementById('cbTableWrap');
   const empty = document.getElementById('cbEmpty');
@@ -17305,12 +17327,14 @@ function renderContrib() {
     const den = (+a.cost || 0) + (+a.prOver || 0);
     return (den > 0) ? Math.round((+a.rev || 0) / den * 100) : null;
   };
-  const _empty = { rev: 0, cost: 0, prOver: 0, rateKnown: false, kids: new Set() };
+  const _empty = { rev: 0, cost: 0, prOver: 0, rateKnown: false, kids: new Set(), all: new Set() };
   let rows = [...keys].map(k => {
     const r = R[k] || _empty;
     const l = L[k] || _empty;
     return {
       code: k, kids: (r.kids.size ? r.kids : l.kids),
+      // 【v1.0784】出稿中の判定は、両方の月に出てきたコードをまとめて見る
+      adActive: _cbAdActive([...new Set([k].concat([...((R[k] || _empty).all || [])], [...((L[k] || _empty).all || [])]))]),
       inL: !!L[k],   // 【v1.0768】比較月にこの商品が無ければ増減ではなく「新規」と出す
       revR: r.rev, costR: r.cost, revL: l.rev, costL: l.cost,
       prsrR: _prsrOf(R[k]), prsrL: _prsrOf(L[k]),
@@ -17406,6 +17430,11 @@ function renderContrib() {
   };
   const fp  = (v) => (v > 0 ? v.toFixed(1) + '%' : '<span style="color:var(--text3)">—</span>');
   // 【v1.0770】帯の色は指標で分けない（全部グレー）。長さだけで大小を示す
+  // 【v1.0784】出稿中のセル。★「出稿なし」は空欄にする。✓と×が交互に並ぶと、どちらが目印なのか分からなくなる
+  const runCell = (v) => (v == null)
+    ? '<td class="num cb-run" title="日別の広告データ（①広告詳細レポート）が無いため判定できません">—</td>'
+    : (v ? '<td class="num cb-run" title="直近' + CB_ACTIVE_DAYS + '日（取込済みの最新日から）に広告費が出ています"><span class="cb-run-on">✓</span></td>'
+         : '<td class="num cb-run" title="直近' + CB_ACTIVE_DAYS + '日（取込済みの最新日から）に広告費が出ていません"></td>');
   const bar = (v) => '<span class="cb-bar"><i style="width:' + Math.min(100, Math.max(0, v)).toFixed(2) + '%;background:#555"></i></span>';
   const arrow = (k) => (_cbSortKey === k ? (_cbSortDir < 0 ? ' ▼' : ' ▲') : '');
   // 1か月ぶん（6列）を作る。cls＝その月の背景色クラス
@@ -17464,6 +17493,7 @@ function renderContrib() {
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td class="cb-name">' + nameCellHtml(r.code) + kid + '</td>'
       + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, r.costL, r.pCostL, r.prOverL, r.prsrL, null) : '')
+      + runCell(r.adActive)
       + monthCells('cb-m2', r.revR, r.pRevR, r.costR, r.pCostR, r.prOverR, r.prsrR, _cmp ? {
           isNew: !r.inL, rankOk: r.rankOk,
           rev: r.dRev, cost: r.dCost, pRev: r.dPRev, pCost: r.dPCost,
@@ -17490,6 +17520,7 @@ function renderContrib() {
     + '<th class="cb-rank" rowspan="2">#</th>'
     + '<th rowspan="2">商品コード</th><th rowspan="2">画像</th><th rowspan="2">商品名</th>'
     + (_cmp ? '<th colspan="6" class="cb-grp cb-m1-h">' + mL + '</th>' : '')
+    + '<th rowspan="2" class="num cb-run-h" title="直近' + CB_ACTIVE_DAYS + '日（取り込んである最新の日からさかのぼって）に広告費が出ている商品に ✓。&#10;★親子は子の出稿も見ます。">出稿中</th>'
     + '<th colspan="6" class="cb-grp cb-m2-h">' + mR + '</th>'
     + (_cmp ? '<th colspan="3" class="cb-grp cb-chg-h cb-chg-l cb-chg-r" title="売上・広告費は「増えた金額」と、その下に小さく変動率(%)。PR広告ROASは pt（右の月 − 左の月）">最新月変動</th>' : '')
     + '</tr>';
@@ -17545,6 +17576,7 @@ function renderContrib() {
   const _toL = _totPrOver(L), _toR = _totPrOver(R);
   const foot = '<tr class="cb-total"><td colspan="4">合計（' + rows.length + '件）</td>'
     + (_cmp ? totCells('cb-m1', totRevL, totCostL, _toL, _tpL, null) : '')
+    + '<td class="num cb-run">' + (function () { const n = rows.filter(x => x.adActive).length; return n ? ('<span class="cb-run-on">' + n + '</span>') : ''; })() + '</td>'
     + totCells('cb-m2', totRevR, totCostR, _toR, _tpR, _cmp ? {
         rev: totRevR - totRevL, cost: totCostR - totCostL,
         prsr: (_tpR == null || _tpL == null) ? null : (_tpR - _tpL),
@@ -17609,6 +17641,9 @@ function renderContrib() {
        + '<b>PR広告売上ROAS</b>＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超)）× 100。'
        + '★商品別のPRオプ実績はYahooから取得できないため、⑤の<b>設定PRオプ料率からの推定</b>です（実測ではありません）。'
        + '料率が7%の商品は上乗せ分が0なので、広告売上ROASと同じ値になります。';
+    h += '<br><b>出稿中</b>＝取り込んである日別広告データの<b>いちばん新しい日から' + CB_ACTIVE_DAYS + '日</b>のあいだに、'
+       + '1日でも広告費が出ている商品に ✓（合計行は ✓ の件数）。'
+       + '★「今日から' + CB_ACTIVE_DAYS + '日」ではありません。レポートの取り込みは数日遅れるのが普通なので、今日基準だと常に「出稿なし」になってしまうためです。';
     h += '<br>親子（代表コードのあるセット）は<b>親1行にまとめ</b>、子の売上・広告費を親に足しています。'
        + 'PR実績額(7%超)は<b>商品ごとに</b>設定料率から出してから足しています（セット合計の売上に代表の料率を掛けると誤ります）。';
     note.innerHTML = h;
