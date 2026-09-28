@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0774 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0775 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1986,6 +1986,7 @@ td[data-resize-key] {
 /* 【v1.0772】ツールバーの凡例 */
 .cb-legend { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; }
 .cb-lg-ttl { font-size: 0.76rem; color: var(--text3); font-weight: 600; margin-right: 2px; }
+.cb-lg-cond { display: block; font-size: 0.66rem; color: var(--text3); font-weight: 500; letter-spacing: -0.02em; }
 .cb-legend b { font-size: 0.74rem; font-weight: 700; padding: 2px 7px; border: 1px solid var(--border2);
                border-radius: 5px; background: var(--bg2); white-space: nowrap; }
 /* 【v1.0772】最新月変動の列。★左右の枠だけオレンジ。中の仕切りには線を引かない（1つのかたまりに見せる） */
@@ -4014,7 +4015,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0774</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0775</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4757,8 +4758,8 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label">（右）</span>
           <select id="cbMonthSel" onchange="_cbSetYm(this.value)" title="右側に出す月。既定は最新月" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
           <!-- 【v1.0772】増減の色の凡例。★色を変えたら .c-g1/.c-g2/.c-o/.c-r 側と一緒に直すこと（ここは同じクラスを使う） -->
-          <span class="cb-legend" title="増減（右の月の数字の下）に付く色。その列の中での順位で決まります">
-            <span class="cb-lg-ttl">増減の色</span>
+          <span class="cb-legend" title="増減・最新月変動に付く色。その列の中での順位で決まります。&#10;★売上3万円未満の商品には色を付けません（少額だと変化率が大きく振れて、順位が誤差で埋まるため）">
+            <span class="cb-lg-ttl">増減の色<span class="cb-lg-cond">売上3万円以上の商品のみ</span></span>
             <b class="c-g1">上位5%</b><b class="c-g2">上位10%</b><b class="c-o">下位10%</b><b class="c-r">下位5%</b>
             <b class="cb-new" title="比較月に無かった商品。増減や変動率は出せません">新規</b>
           </span>
@@ -17172,19 +17173,35 @@ function _cbAggFor(ym, all) {
   return by;
 }
 
+// 【v1.0775】★ランク色を付ける対象は「売上がこの額以上の商品」だけ。
+//   売上が小さい商品は、わずかな金額の動きで変化率が±数十%に振れる（例: ¥800→¥1,600 で +100%）。
+//   そのまま順位に混ぜると、上位5%/下位5%が毎月その手の商品で埋まって色が役に立たなくなる。
+//   ★母集団からも外す（＝順位の分母にも入れない）。色を消すだけでは、小さい商品が
+//     上位を占めているぶん、本来色が付くべき商品に色が回らない。
+//   ★金額はどちらかの月で満たせばよい（例: ¥50,000 → ¥5,000 の急落も見たいため）。
+const CB_RANK_MIN_REV = 30000;
 // 【v1.0771】増減のランク色。★母集団はその列の増減だけ（金額とシェアを混ぜない）。
 //   全-月別データの _zenRank5（10%/20%）と同じ作りで、境目を 5%/10% にしたもの。
 //   ★同じ値が並ぶとき indexOf は先頭の順位を返す＝同値は全部同じ色になる（_zenRank5 と同じ挙動）。
 function _cbRank5(val, pool) {
-  if (val == null || Math.abs(val) < 1e-9 || !pool || pool.length < 3) return 'bk';   // ★±0には色を付けない
+  if (val == null || Math.abs(val) < 1e-9 || !pool) return 'bk';   // ★±0には色を付けない
   const s = pool.slice().sort((a, b) => b - a);   // 降順＝大きいほど上位
+  const n = s.length;
+  if (n < 4) return 'bk';                          // 4段に分けられない母集団には色を付けない
   let idx = s.indexOf(val);
   if (idx < 0) idx = s.filter(x => x > val).length;
-  const n = s.length;
-  if (idx < Math.ceil(n * 0.05)) return 'g1';    // 青
-  if (idx < Math.ceil(n * 0.10)) return 'g2';    // 緑
-  if (idx >= Math.floor(n * 0.95)) return 'r';   // 赤
-  if (idx >= Math.floor(n * 0.90)) return 'o';   // 黄
+  // 【v1.0775】★各段に必ず1枠は残す。
+  //   素直に ceil(n*0.05) / ceil(n*0.10) だけで切ると、母集団が10件以下のとき
+  //   両方とも 1 になって【緑と黄が1度も出ない】（下位側も同じ）。
+  const up1 = Math.max(1, Math.ceil(n * 0.05));            // 青の枠数
+  const up2 = Math.max(up1 + 1, Math.ceil(n * 0.10));      // 青＋緑の枠数
+  const dn1 = Math.max(1, Math.ceil(n * 0.05));            // 赤の枠数
+  const dn2 = Math.max(dn1 + 1, Math.ceil(n * 0.10));      // 赤＋黄の枠数
+  if (up2 + dn2 > n) return (idx < up1) ? 'g1' : (idx >= n - dn1 ? 'r' : 'bk');   // 狭すぎるときは青と赤だけ
+  if (idx < up1)      return 'g1';   // 青
+  if (idx < up2)      return 'g2';   // 緑
+  if (idx >= n - dn1) return 'r';    // 赤
+  if (idx >= n - dn2) return 'o';    // 黄
   return 'bk';
 }
 
@@ -17270,8 +17287,11 @@ function renderContrib() {
     //   左の月が0の商品は割り算できないので null（＝「新規」。母集団にも入れない）
     r.cRev  = (_cmp && r.revL  > 0) ? ((r.revR  / r.revL  - 1) * 100) : null;
     r.cCost = (_cmp && r.costL > 0) ? ((r.costR / r.costL - 1) * 100) : null;
+    // 【v1.0775】ランク色の対象かどうか。どちらかの月の売上が CB_RANK_MIN_REV 以上
+    r.rankOk = Math.max(+r.revR || 0, +r.revL || 0) >= CB_RANK_MIN_REV;
   });
-  const _poolOf = (k) => rows.map(r => r[k]).filter(v => v != null && Math.abs(v) > 1e-9);
+  //   ★母集団は「売上 CB_RANK_MIN_REV 以上の商品」だけ（§v1.0775）
+  const _poolOf = (k) => rows.filter(r => r.rankOk).map(r => r[k]).filter(v => v != null && Math.abs(v) > 1e-9);
   const _pools = _cmp ? { rev: _poolOf('dRev'), cost: _poolOf('dCost'), pRev: _poolOf('dPRev'),
                           pCost: _poolOf('dPCost'), prsr: _poolOf('dPrsr'), prOver: _poolOf('dPrOver'),
                           cRev: _poolOf('cRev'), cCost: _poolOf('cCost') } : {};
@@ -17281,11 +17301,12 @@ function renderContrib() {
   //     出さないこと（既存商品の伸びと区別できなくなる）。
   //   【v1.0773】★色は増減と同じ「順位で4段」に統一（上位5%=青 / 上位10%=緑 / 下位10%=黄 / 下位5%=赤）。
   //     符号で青赤に塗り分けると、+2.7% と +44.0% が同じ青になって「どれが効いたのか」が読めない。
-  const _chg = (v, rankKey) => {
+  const _chg = (v, rankKey, rankOk) => {
     if (v == null) return '<span class="cb-new">新規</span>';
     if (isNaN(v)) return '<span style="color:var(--text3)">—</span>';
     if (Math.abs(v) < 0.05) return '<span class="cb-chg-0">±0%</span>';
-    return '<span class="cb-chgv c-' + _cbRank5(v, _pools[rankKey]) + '">'
+    const rank = (rankKey && rankOk) ? _cbRank5(v, _pools[rankKey]) : 'bk';   // 【v1.0775】
+    return '<span class="cb-chgv c-' + rank + '">'
       + (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%</span>';
   };
   // 【v1.0774】最新月変動の中に出す「PR広告売上ROASの差」。★単位は pt（右の月 − 左の月）。
@@ -17296,13 +17317,13 @@ function renderContrib() {
     if (!r.inL) return '<span class="cb-new">新規</span>';
     if (r.dPrsr == null) return '<span style="color:var(--text3)">—</span>';
     if (Math.abs(r.dPrsr) < 0.5) return '<span class="cb-chg-0">±0pt</span>';
-    return '<span class="cb-chgv c-' + _cbRank5(r.dPrsr, _pools.prsr) + '">'
+    return '<span class="cb-chgv c-' + (r.rankOk ? _cbRank5(r.dPrsr, _pools.prsr) : 'bk') + '">'   /* 【v1.0775】 */
       + (r.dPrsr > 0 ? '+' : '−') + Math.round(Math.abs(r.dPrsr)).toLocaleString('ja-JP') + 'pt</span>';
   };
   //   値が無い（両月とも0）ときは「—」、左の月が0なら「新規」
   const _chgCell = (r, key, nowV, beforeV) =>
     (!nowV && !beforeV) ? '<span style="color:var(--text3)">—</span>'
-    : (r[key] == null ? '<span class="cb-new">新規</span>' : _chg(r[key], key));
+    : (r[key] == null ? '<span class="cb-new">新規</span>' : _chg(r[key], key, r.rankOk));
   const fp  = (v) => (v > 0 ? v.toFixed(1) + '%' : '<span style="color:var(--text3)">—</span>');
   // 【v1.0770】帯の色は指標で分けない（全部グレー）。長さだけで大小を示す
   const bar = (v) => '<span class="cb-bar"><i style="width:' + Math.min(100, Math.max(0, v)).toFixed(2) + '%;background:#555"></i></span>';
@@ -17314,10 +17335,11 @@ function renderContrib() {
   //     ここを一律「増＝緑」にすると、広告費が増えた月が良く見えてしまう。
   const _dWrap = (txt, cls) => '<span class="cb-d ' + cls + '">' + txt + '</span>';
   //   rankKey＝その列の母集団のキー。渡したときだけ上位5%/10%・下位10%/5%に色が付く
-  const _dNum = (v, costSide, fmtOne, eps, rankKey) => {
+  const _dNum = (v, costSide, fmtOne, eps, rankKey, rankOk) => {
     if (v == null) return '';
     if (Math.abs(v) < (eps || 0.05)) return _dWrap('±0', 'cb-d-0');
-    const rank = rankKey ? _cbRank5(v, _pools[rankKey]) : 'bk';
+    // 【v1.0775】売上が小さい商品は色を付けない（順位の母集団にも入っていない）
+    const rank = (rankKey && rankOk) ? _cbRank5(v, _pools[rankKey]) : 'bk';
     return _dWrap((v > 0 ? '+' : '−') + fmtOne(Math.abs(v)), 'c-' + rank);
   };
   const _yen = (v) => '¥' + Math.round(v).toLocaleString('ja-JP');
@@ -17339,7 +17361,7 @@ function renderContrib() {
       //   「— / ±0」が並ぶと、値が無いのか変わっていないのか読めなくなる。
       if (d[key + 'None']) return '';
       if (d.isNew) return _dNew();
-      return _dNum(d[key], costSide, fmtOne, eps, key);   // 【v1.0771】key＝母集団のキー（＝ランク色）
+      return _dNum(d[key], costSide, fmtOne, eps, key, d.rankOk);   // 【v1.0771】key＝母集団のキー（＝ランク色）
     };
     return '<td class="num ' + cls + ' cb-bd">' + fmt(rev) + dd('rev', false, _yen, 1) + '</td>'
     + '<td class="num ' + cls + '"><span class="cb-rev">' + fp(pRev) + '</span>' + bar(pRev) + dd('pRev', false, _pt) + '</td>'
@@ -17363,7 +17385,7 @@ function renderContrib() {
                + '<td class="num cb-chg cb-chg-r">' + _chgPt(r) + '</td>') : '')
       + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, r.costL, r.pCostL, r.prOverL, r.prsrL, null) : '')
       + monthCells('cb-m2', r.revR, r.pRevR, r.costR, r.pCostR, r.prOverR, r.prsrR, _cmp ? {
-          isNew: !r.inL,
+          isNew: !r.inL, rankOk: r.rankOk,
           rev: r.dRev, cost: r.dCost, pRev: r.dPRev, pCost: r.dPCost,
           prsr: r.dPrsr, prOver: r.dPrOver,
           revNone:  (!r.revR  && !r.revL),  pRevNone:  (!r.revR  && !r.revL),
@@ -17467,6 +17489,9 @@ function renderContrib() {
     if (_cmp) h += '<br>右（' + mR + '）の数字の下は<b>' + mL + 'からの増減</b>です。金額は円、シェアとPR広告売上ROASは<b>ポイント(pt)</b>'
                  + '（%の割り算ではありません）。' + mL + ' に無かった商品は「新規」、'
                  + 'どちらかが「—」の指標は増減を出しません。'
+                 + '<br>★色が付くのは<b>売上3万円以上の商品</b>だけです（どちらかの月で3万円以上）。'
+                 + '少額の商品は¥800→¥1,600で+100%のように変化率が大きく振れ、上位・下位がその手の商品で埋まってしまうため、'
+                 + '<b>順位の母集団からも外しています</b>。'
                  + '<br>増減に色が付くのは<b>その列の中で上位5%・上位10%・下位10%・下位5%</b>だけです'
                  + '（<span style="color:#1565C0;font-weight:700">青</span>＝いちばん増えた／'
                  + '<span style="color:#2E7D32;font-weight:700">緑</span>＝上位10%／'
