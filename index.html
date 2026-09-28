@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0784 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0785 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2009,10 +2009,15 @@ td[data-resize-key] {
 /* 【v1.0773】「新規」＝比較月に無かった商品。★4段の色とは必ず別の色にすること。
    順位の色に混ぜると「いちばん増えた」と「そもそも先月無かった」が見分けられない。 */
 .cb-new { color: #9333ea; font-weight: 700; }
-/* 【v1.0784】出稿中の列。2つの月のあいだに挟むので、背景は月の色に染めず中立の灰にする */
-.cb-run    { background: #f4f6f8; }
-.cb-table th.cb-run-h { background: #e3e8ed; color: var(--text2); }
+/* 【v1.0784】出稿中の列。2つの月のあいだに挟むので、背景は月の色に染めず中立にする
+   【v1.0785】★左右を赤の太線で囲う。2つの月のあいだに挟まる1列なので、
+     枠が弱いとどちらの月のブロックの一部なのか分からなくなる。 */
+.cb-run    { background: #fdf5f5; border-left: 3px solid #dc2626 !important; border-right: 3px solid #dc2626 !important; }
+.cb-table th.cb-run-h { background: #fbe2e2; color: #991b1b; border-left: 3px solid #dc2626; border-right: 3px solid #dc2626; line-height: 1.25; }
+.cb-run-sub { display: block; font-size: 0.62rem; font-weight: 600; color: #b91c1c; letter-spacing: -0.02em; }
 .cb-run-on { color: #0f766e; font-weight: 700; font-size: 1.02rem; }
+/* 【v1.0785】月のかたまりの区切りも太く・濃くする（2px→3px・色も濃い灰）。
+   ★1本1本の罫線（1px）と見分けが付かないと、列のまとまりが読めない。 */
 /* 【v1.0783】対象月（右）のPR広告売上ROAS「そのものの値」の順位色。
    ★増減ではなく【その月の値】の順位。高いほうが上位＝青。
    ★.cb-prsrv を先に書いて既定色（黒）を決め、.cb-prsrv.c-◯ で上書きする（§157-5と同じ理由）。 */
@@ -2037,7 +2042,8 @@ td[data-resize-key] {
 .cb-m2   { background: #fdf6ec; }                          /* 右＝対象月（橙系） */
 .cb-table th.cb-m1-h { background: #d6e1fa; color: var(--text); }   /* 【v1.0770】文字は黒。月の区別は背景色だけ */
 .cb-table th.cb-m2-h { background: #fbe3c4; color: var(--text); }
-.cb-bd   { border-left: 2px solid var(--border); }         /* 月のかたまりの区切り */
+.cb-bd   { border-left: 3px solid #94a3b8; }               /* 月のかたまりの区切り */
+.cb-table th.cb-grp { border-left: 3px solid #94a3b8; }
 .cb-grp  { text-align: center; border-left: 2px solid var(--border); font-size: 0.9rem; letter-spacing: .02em; }
 /* 【v1.0760】見出しの中を「列名（上）／計算式（下）」の2段に固定する。
    ★列名は必ずセルの【上端】から始める。中央揃えのままだと、計算式の行数（1〜3行）で
@@ -4031,7 +4037,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0784</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0785</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17279,7 +17285,7 @@ function _cbRank5(val, pool, invert) {
 //     レポートの取り込みが数日遅れるのが普通なので、今日基準だと常に「出稿なし」になる。
 //   ★親子は全メンバーを見る（子だけ広告を回しているセットがあるため）。
 //   戻り値: true=出稿中 / false=出稿なし / null=日別の広告データが無く判定できない
-const CB_ACTIVE_DAYS = 7;
+const CB_ACTIVE_DAYS = 3;
 function _cbAdActive(codes) {
   const ds = (typeof dailyDates === 'function') ? dailyDates('ad').slice().sort() : [];
   if (!ds.length) return null;
@@ -17520,7 +17526,7 @@ function renderContrib() {
     + '<th class="cb-rank" rowspan="2">#</th>'
     + '<th rowspan="2">商品コード</th><th rowspan="2">画像</th><th rowspan="2">商品名</th>'
     + (_cmp ? '<th colspan="6" class="cb-grp cb-m1-h">' + mL + '</th>' : '')
-    + '<th rowspan="2" class="num cb-run-h" title="直近' + CB_ACTIVE_DAYS + '日（取り込んである最新の日からさかのぼって）に広告費が出ている商品に ✓。&#10;★親子は子の出稿も見ます。">出稿中</th>'
+    + '<th rowspan="2" class="num cb-run-h" title="直近' + CB_ACTIVE_DAYS + '日（取り込んである最新の日からさかのぼって）に広告費が出ている商品に ✓。&#10;★今日からではなく【取込済みの最新日】から数えます（レポートの取り込みは数日遅れるため）。&#10;★親子は子の出稿も見ます。">出稿中<span class="cb-run-sub">（直近' + CB_ACTIVE_DAYS + '日）</span></th>'
     + '<th colspan="6" class="cb-grp cb-m2-h">' + mR + '</th>'
     + (_cmp ? '<th colspan="3" class="cb-grp cb-chg-h cb-chg-l cb-chg-r" title="売上・広告費は「増えた金額」と、その下に小さく変動率(%)。PR広告ROASは pt（右の月 − 左の月）">最新月変動</th>' : '')
     + '</tr>';
@@ -17643,7 +17649,8 @@ function renderContrib() {
        + '料率が7%の商品は上乗せ分が0なので、広告売上ROASと同じ値になります。';
     h += '<br><b>出稿中</b>＝取り込んである日別広告データの<b>いちばん新しい日から' + CB_ACTIVE_DAYS + '日</b>のあいだに、'
        + '1日でも広告費が出ている商品に ✓（合計行は ✓ の件数）。'
-       + '★「今日から' + CB_ACTIVE_DAYS + '日」ではありません。レポートの取り込みは数日遅れるのが普通なので、今日基準だと常に「出稿なし」になってしまうためです。';
+       + '★「今日から' + CB_ACTIVE_DAYS + '日」ではありません。レポートの取り込みは数日遅れるのが普通なので、今日基準だと常に「出稿なし」になってしまうためです。'
+       + '（判定に使った最新日: <b>' + ((typeof dailyDates === 'function' && dailyDates('ad').length) ? dailyDates('ad').slice().sort().slice(-1)[0] : '—') + '</b>）';
     h += '<br>親子（代表コードのあるセット）は<b>親1行にまとめ</b>、子の売上・広告費を親に足しています。'
        + 'PR実績額(7%超)は<b>商品ごとに</b>設定料率から出してから足しています（セット合計の売上に代表の料率を掛けると誤ります）。';
     note.innerHTML = h;
