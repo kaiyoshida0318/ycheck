@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0754 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0755 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1479,6 +1479,19 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   display: flex;
   flex-direction: column;
 }
+/* ============================================================================
+   【v1.0755】商品-推移 / 全-推移 は「表だけが内側でスクロール」をやめ、
+   グラフごと【画面全体】を縦スクロールする。
+   ・このアプリは body{height:100vh;overflow:hidden} ＋ .main{overflow:hidden} の
+     “高さ固定レイアウト”なので、既定では中の .card が伸びられず、表の中だけがスクロールする。
+   ・この2画面だけ、ビューを縦スクロールの器にして、カードは中身ぶんだけ伸びるようにする。
+   ★.card の flex:1 → flex:0 0 auto を外すと、また表の中だけスクロールに戻る（両方セット）。
+   ★表のラッパー側は overflow-x だけ（横に長い表は今までどおり横スクロール）。
+   ============================================================================ */
+#view-itemtrend.view.active,
+#view-zentrend.view.active { overflow-y: auto; overflow-x: hidden; }
+#view-itemtrend > .card,
+#view-zentrend  > .card { flex: 0 0 auto; min-height: 0; }
 
 /* Cards */
 .card {
@@ -3881,7 +3894,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0754</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0755</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4394,7 +4407,7 @@ th.col-sroas { background-color:#e7d5f5; }
         </div>
         <div id="itChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="itCanvas"></canvas></div>
         <div id="itEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
-        <div id="itTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:none"></div>
+        <div id="itTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto;overflow-y:visible;max-height:none"></div>
         <p class="note" id="itNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
       </div>
     </div>
@@ -4413,7 +4426,7 @@ th.col-sroas { background-color:#e7d5f5; }
         </div>
         <div id="ztChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="ztCanvas"></canvas></div>
         <div id="ztEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
-        <div id="ztTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:none"></div>
+        <div id="ztTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto;overflow-y:visible;max-height:none"></div>
         <p class="note" id="ztNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
       </div>
     </div>
