@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0771 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0772 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1983,6 +1983,19 @@ td[data-resize-key] {
            color: var(--text2); }
 .cb-d-up, .cb-d-dn, .cb-d-new { color: var(--text2); }
 .cb-d-0  { color: var(--text3); font-weight: 600; }
+/* 【v1.0772】ツールバーの凡例 */
+.cb-legend { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; }
+.cb-lg-ttl { font-size: 0.76rem; color: var(--text3); font-weight: 600; margin-right: 2px; }
+.cb-legend b { font-size: 0.74rem; font-weight: 700; padding: 2px 7px; border: 1px solid var(--border2);
+               border-radius: 5px; background: var(--bg2); white-space: nowrap; }
+/* 【v1.0772】最新月変動の列。★左右の枠だけオレンジ。中の仕切りには線を引かない（1つのかたまりに見せる） */
+.cb-chg    { background: #fff7ed; }
+.cb-chg-l  { border-left:  2px solid #f59e0b; }
+.cb-chg-r  { border-right: 2px solid #f59e0b; }
+.cb-table th.cb-chg-h { background: #fde3c0; color: var(--text); }
+.cb-chg-up { color: #1565C0; font-weight: 700; }   /* 増＝青（増減の色と同じ言語にそろえる） */
+.cb-chg-dn { color: #A32D2D; font-weight: 700; }   /* 減＝赤 */
+.cb-chg-0  { color: var(--text3); font-weight: 600; }
 /* 【v1.0771】増減の色分け。★色が付くのは上位5%/10%・下位10%/5%の4段だけ。それ以外は黒のまま。
    色そのものは全-月別データのランク色（.c-g1 / .c-g2 / .c-o / .c-r）と同じものを使う。
    ★.cb-d より後ろに書くこと。同じ詳細度なので、先に書くと .cb-d の色に負ける。 */
@@ -3991,7 +4004,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0771</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0772</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4733,6 +4746,11 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label" style="color:var(--text3);font-weight:500">→</span>
           <span class="filter-label">（右）</span>
           <select id="cbMonthSel" onchange="_cbSetYm(this.value)" title="右側に出す月。既定は最新月" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <!-- 【v1.0772】増減の色の凡例。★色を変えたら .c-g1/.c-g2/.c-o/.c-r 側と一緒に直すこと（ここは同じクラスを使う） -->
+          <span class="cb-legend" title="増減（右の月の数字の下）に付く色。その列の中での順位で決まります">
+            <span class="cb-lg-ttl">増減の色</span>
+            <b class="c-g1">上位5%</b><b class="c-g2">上位10%</b><b class="c-o">下位10%</b><b class="c-r">下位5%</b>
+          </span>
         </div>
         <div id="cbEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
         <div id="cbTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto"></div>
@@ -17242,6 +17260,15 @@ function renderContrib() {
   const _pools = _cmp ? { rev: _poolOf('dRev'), cost: _poolOf('dCost'), pRev: _poolOf('dPRev'),
                           pCost: _poolOf('dPCost'), prsr: _poolOf('dPrsr'), prOver: _poolOf('dPrOver') } : {};
 
+  // 【v1.0772】最新月変動＝（右の月 ÷ 左の月 − 1）×100。★ptではなく「何%増えたか」の変化率。
+  //   ★左の月が0（または無い）商品は割り算できないので「新規」。0からの増加を「+∞%」や「+100%」と
+  //     出さないこと（既存商品の伸びと区別できなくなる）。
+  const _chg = (now, before) => {
+    if (!(before > 0)) return (now > 0) ? '<span class="cb-chg-up">新規</span>' : '<span style="color:var(--text3)">—</span>';
+    const v = (now / before - 1) * 100;
+    if (Math.abs(v) < 0.05) return '<span class="cb-chg-0">±0%</span>';
+    return '<span class="' + (v > 0 ? 'cb-chg-up' : 'cb-chg-dn') + '">' + (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%</span>';
+  };
   const fp  = (v) => (v > 0 ? v.toFixed(1) + '%' : '<span style="color:var(--text3)">—</span>');
   // 【v1.0770】帯の色は指標で分けない（全部グレー）。長さだけで大小を示す
   const bar = (v) => '<span class="cb-bar"><i style="width:' + Math.min(100, Math.max(0, v)).toFixed(2) + '%;background:#555"></i></span>';
@@ -17297,6 +17324,8 @@ function renderContrib() {
       + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td class="cb-name">' + nameCellHtml(r.code) + kid + '</td>'
+      + (_cmp ? ('<td class="num cb-chg cb-chg-l">' + _chg(r.revR,  r.revL)  + '</td>'
+               + '<td class="num cb-chg cb-chg-r">' + _chg(r.costR, r.costL) + '</td>') : '')
       + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, r.costL, r.pCostL, r.prOverL, r.prsrL, null) : '')
       + monthCells('cb-m2', r.revR, r.pRevR, r.costR, r.pCostR, r.prOverR, r.prsrR, _cmp ? {
           isNew: !r.inL,
@@ -17315,6 +17344,7 @@ function renderContrib() {
   const h1 = '<tr>'
     + '<th class="cb-rank" rowspan="2">#</th>'
     + '<th rowspan="2">商品コード</th><th rowspan="2">画像</th><th rowspan="2">商品名</th>'
+    + (_cmp ? '<th colspan="2" class="cb-grp cb-chg-h cb-chg-l cb-chg-r" title="右の月が左の月から何%増えたか（ptではなく変化率）">最新月変動</th>' : '')
     + (_cmp ? '<th colspan="6" class="cb-grp cb-m1-h">' + mL + '</th>' : '')
     + '<th colspan="6" class="cb-grp cb-m2-h">' + mR + '</th>'
     + '</tr>';
@@ -17332,7 +17362,9 @@ function renderContrib() {
     + '<th class="num ' + cls + ' sortable" onclick="_cbSort(\'' + kCost + '\')">シェア' + arrow(kCost) + '</th>'
     + '<th class="num ' + cls + '" title="' + escapeHtml(_prOverTip) + '">PR実績額<br>(7%超)</th>'
     + '<th class="num ' + cls + ' sortable" onclick="_cbSort(\'' + kPrsr + '\')" title="' + escapeHtml(_prsrTip) + '">PR広告<br>売上ROAS' + arrow(kPrsr) + '</th>';
-  const h2 = '<tr>' + (_cmp ? sub('cb-m1-h', 'revL', 'costL', 'prsrL') : '') + sub('cb-m2-h', 'rev', 'cost', 'prsr') + '</tr>';
+  const h2 = '<tr>'
+    + (_cmp ? '<th class="num cb-chg-h cb-chg-l">売上</th><th class="num cb-chg-h cb-chg-r">広告費</th>' : '')
+    + (_cmp ? sub('cb-m1-h', 'revL', 'costL', 'prsrL') : '') + sub('cb-m2-h', 'rev', 'cost', 'prsr') + '</tr>';
   // 合計行のPR広告売上ROASは「合計どうしで割り直した値」。★行の平均ではない
   const _totPrsr = (agg, totRev, totCost) => {
     const over = Object.keys(agg).reduce((s, c) => s + (agg[c].prOver || 0), 0);
@@ -17356,6 +17388,8 @@ function renderContrib() {
   const _tpL = _totPrsr(L, totRevL, totCostL), _tpR = _totPrsr(R, totRevR, totCostR);
   const _toL = _totPrOver(L), _toR = _totPrOver(R);
   const foot = '<tr class="cb-total"><td colspan="4">合計（' + rows.length + '件）</td>'
+    + (_cmp ? ('<td class="num cb-chg cb-chg-l">' + _chg(totRevR,  totRevL)  + '</td>'
+             + '<td class="num cb-chg cb-chg-r">' + _chg(totCostR, totCostL) + '</td>') : '')
     + (_cmp ? totCells('cb-m1', totRevL, totCostL, _toL, _tpL, null) : '')
     + totCells('cb-m2', totRevR, totCostR, _toR, _tpR, _cmp ? {
         rev: totRevR - totRevL, cost: totCostR - totCostL,
@@ -17384,6 +17418,9 @@ function renderContrib() {
       h += '<br>' + mR + ' のショップ総売上(KPI) は ' + fmt(sr) + '（差 ' + (d >= 0 ? '+' : '−') + fmt(Math.abs(d)) + '）。'
          + '商品別レポートに出ない売上（送料・まとめ買いなど）があるため一致しないことがあります。ここでは商品別の合計を100%としています。';
     }
+    if (_cmp) h += '<br><b>最新月変動</b>＝（' + mR + ' ÷ ' + mL + ' − 1）×100。'
+                 + '「何%増えたか」の<b>変化率</b>で、シェアの差（pt）とは別物です。'
+                 + mL + ' が0の商品は割り算できないので「新規」。';
     if (_cmp) h += '<br>右（' + mR + '）の数字の下は<b>' + mL + 'からの増減</b>です。金額は円、シェアとPR広告売上ROASは<b>ポイント(pt)</b>'
                  + '（%の割り算ではありません）。' + mL + ' に無かった商品は「新規」、'
                  + 'どちらかが「—」の指標は増減を出しません。'
