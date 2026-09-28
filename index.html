@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0789 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0790 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4052,7 +4052,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0789</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0790</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17475,11 +17475,11 @@ function renderContrib() {
     let cls = 'cb-run-on', note = '', tip = base;
     if (roas != null && roas <= CB_ROAS_ALERT) {
       cls = 'cb-run-ng';
-      note = '<span class="cb-run-note cb-run-ng">ROAS低い</span>';
+      note = '<span class="cb-run-note cb-run-ng">' + CB_ROAS_ALERT + '%以下</span>';   /* 【v1.0790】しきい値をそのまま出す */
       tip = base + '\n★PR広告売上ROAS ' + Math.round(roas).toLocaleString('ja-JP') + '% ＝ ' + CB_ROAS_ALERT + '%以下。出稿を見直す候補です。';
     } else if (roas != null && roas <= CB_ROAS_WARN) {
       cls = 'cb-run-wn';
-      note = '<span class="cb-run-note cb-run-wn">' + CB_ROAS_WARN + '以下</span>';
+      note = '<span class="cb-run-note cb-run-wn">' + CB_ROAS_WARN + '%以下</span>';   /* 【v1.0790】%を付ける */
       tip = base + '\n★PR広告売上ROAS ' + Math.round(roas).toLocaleString('ja-JP') + '% ＝ ' + CB_ROAS_WARN + '%以下。';
     }
     return '<td class="num cb-run" title="' + escapeHtml(tip) + '"><span class="' + cls + '">✓</span>' + note + '</td>';
@@ -17571,7 +17571,7 @@ function renderContrib() {
     + '<th class="cb-rank" rowspan="2">#</th>'
     + '<th rowspan="2">商品コード</th><th rowspan="2">画像</th><th rowspan="2">商品名</th>'
     + (_cmp ? '<th colspan="6" class="cb-grp cb-m1-h">' + mL + '</th>' : '')
-    + '<th rowspan="2" class="num cb-run-h" title="直近' + CB_ACTIVE_DAYS + '日（取り込んである最新の日からさかのぼって）に広告費が出ている商品に ✓。&#10;★今日からではなく【取込済みの最新日】から数えます（レポートの取り込みは数日遅れるため）。&#10;★親子は子の出稿も見ます。&#10;★出稿中でも 対象月のPR広告売上ROAS が ' + CB_ROAS_ALERT + '%以下なら赤（ROAS低い）、' + CB_ROAS_WARN + '%以下なら黄。">出稿中<span class="cb-run-sub">（直近' + CB_ACTIVE_DAYS + '日）</span></th>'
+    + '<th rowspan="2" class="num cb-run-h" title="直近' + CB_ACTIVE_DAYS + '日（取り込んである最新の日からさかのぼって）に広告費が出ている商品に ✓。&#10;★今日からではなく【取込済みの最新日】から数えます（レポートの取り込みは数日遅れるため）。&#10;★親子は子の出稿も見ます。&#10;★出稿中でも 対象月のPR広告売上ROAS が ' + CB_ROAS_ALERT + '%以下なら赤、' + CB_ROAS_WARN + '%以下ならオレンジ。">出稿中<span class="cb-run-sub">（直近' + CB_ACTIVE_DAYS + '日）</span></th>'
     + '<th colspan="6" class="cb-grp cb-m2-h">' + mR + '</th>'
     + (_cmp ? '<th colspan="3" class="cb-grp cb-chg-h cb-chg-l cb-chg-r" title="売上・広告費は「増えた金額」と、その下に小さく変動率(%)。PR広告ROASは pt（右の月 − 左の月）">最新月変動</th>' : '')
     + '</tr>';
@@ -17699,8 +17699,8 @@ function renderContrib() {
        + '1日でも広告費が出ている商品に ✓（合計行は ✓ の件数）。'
        + '★「今日から' + CB_ACTIVE_DAYS + '日」ではありません。レポートの取り込みは数日遅れるのが普通なので、今日基準だと常に「出稿なし」になってしまうためです。'
        + '<br>出稿中の商品のうち、<b>' + mR + ' のPR広告売上ROAS</b>が '
-       + '<b style="color:#dc2626">' + CB_ROAS_ALERT + '%以下は赤の✓＋「ROAS低い」</b>、'
-       + '<b style="color:#BA7517">' + CB_ROAS_WARN + '%以下は黄の✓＋「' + CB_ROAS_WARN + '以下」</b>。'
+       + '<b style="color:#dc2626">' + CB_ROAS_ALERT + '%以下は赤の✓＋「' + CB_ROAS_ALERT + '%以下」</b>、'
+       + '<b style="color:#BA7517">' + CB_ROAS_WARN + '%以下はオレンジの✓＋「' + CB_ROAS_WARN + '%以下」</b>。'
        + 'ROASが「—」の商品（料率未取得・広告費0など）には警告を出しません（0扱いにすると全部「低い」になるため）。'
        + '（判定に使った最新日: <b>' + ((typeof dailyDates === 'function' && dailyDates('ad').length) ? dailyDates('ad').slice().sort().slice(-1)[0] : '—') + '</b>）';
     h += '<br>親子（代表コードのあるセット）は<b>親1行にまとめ</b>、子の売上・広告費を親に足しています。'
