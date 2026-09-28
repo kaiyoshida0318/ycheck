@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0778 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0779 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4018,7 +4018,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0778</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0779</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17003,11 +17003,34 @@ function _trendPaint(opt) {
     + fxLine(fxT('累積＝月初から','plain') + fxOp('／') + '<wbr>' + fxT('1日＝その日','plain')) + '</div></th>';   /* 【v1.0760】上下2段 */
   const subRev = '<th style="' + th2 + 'background:' + RV.bg  + ';text-align:center;border-left:2px solid var(--border)">累積売上</th>'
                + '<th style="' + th2 + 'background:' + RV.bg2 + ';text-align:center">1日売上</th>';
-  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + '</tr>'
-             + '<tr>' + subRev + metrics.map(sub).join('') + '</tr>';
+  // 【v1.0779】いちばん右に「PR実績額(7%超)」（累積／日別）。
+  //   ★PR広告売上ROAS・PR売上ROAS が「—」になる理由をこの列で確かめられるようにするためのもの。
+  //     「—」かつ この列が【—】 → 設定PRオプ料率が未取得（推定できない）
+  //     「—」かつ この列が【¥0】 → 料率7%で上乗せ分0。その日の広告費も0なら分母0＝計算不能
+  const PO = { hbg: '#bfe3d8', bg: '#eef8f5', bg2: '#e2f2ec', color: '#0f766e' };
+  const grpPr = '<th colspan="2" style="' + thB + 'top:0;background:' + PO.hbg + ';text-align:center;color:' + PO.color + ';border-left:2px solid var(--border);vertical-align:top">'
+    + '<div class="th-stack"><div class="th-lbl">PR実績額<br>(7%超)</div>'
+    + fxLine(fxT('総売上','tot') + fxOp('÷1.1×(料率−7%)')) + '</div></th>';
+  const subPr = '<th style="' + th2 + 'background:' + PO.bg  + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
+              + '<th style="' + th2 + 'background:' + PO.bg2 + ';text-align:center">日別</th>';
+  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + grpPr + '</tr>'
+             + '<tr>' + subRev + metrics.map(sub).join('') + subPr + '</tr>';
   const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
   const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
   const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
+  // 【v1.0779】率が「—」になる理由をセルの title に出す。★売上があるのに「—」だと不具合に見えるため
+  const dashTip = (m, a) => {
+    if (m.den(a) > 0) return '';
+    if ((m.k === 'prsr' || m.k === 'pronly') && !a.prKnown)
+      // ★「PRが分からない理由」は画面で違う。商品別＝料率未設定／店全体＝レポート未取込
+      return (opt.prSrc === 'store')
+        ? 'この日のPRオプションレポート(④)が未取込のため、PR実績額(7%超)が出せません。'
+        : '設定PRオプ料率(⑤)が未取得のため、PR実績額(7%超)を推定できません。料率を入れると出ます。';
+    if (m.k === 'prsr' || m.k === 'pronly')
+      return 'この日は分母が0です（料率7%＝上乗せ分0' + (m.k === 'prsr' ? '、かつ広告費も0' : '') + '）。売上があっても割る相手が無いので計算できません。';
+    return 'この日は' + (m.amountFull || '広告実績額') + 'が0のため計算できません。';
+  };
+  const tipAttr = (m, a, v) => { if (v > 0) return ''; const t = dashTip(m, a); return t ? ' title="' + escapeHtml(t) + '"' : ''; };
   const body = rows.slice().reverse().map((r, i) => {
     const top = (i === 0);   // ★最上段＝当月の着地見込み。太字で目立たせる（背景は指標の色のまま）
     const td = 'padding:5px 8px;font-size:0.8rem;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;' + mono + (top ? 'font-weight:700;' : '');
@@ -17015,11 +17038,14 @@ function _trendPaint(opt) {
       + '<td style="' + td + 'background:' + RV.bg  + ';color:' + RV.color + ';border-left:2px solid var(--border)">' + fyen(r.cum.rev) + '</td>'
       + '<td style="' + td + 'background:' + RV.bg2 + ';color:' + RV.color + '">' + fyen(r.raw.rev) + '</td>';
     metrics.forEach(m => {
-      cells += '<td style="' + td + 'background:' + m.bg  + ';border-left:2px solid var(--border)">' + fp(r['c_' + m.k]) + '</td>'
-             + '<td style="' + td + 'background:' + m.bg2 + '">' + fp(r['d_' + m.k]) + '</td>'
+      cells += '<td style="' + td + 'background:' + m.bg  + ';border-left:2px solid var(--border)"' + tipAttr(m, r.cum, r['c_' + m.k]) + '>' + fp(r['c_' + m.k]) + '</td>'
+             + '<td style="' + td + 'background:' + m.bg2 + '"' + tipAttr(m, r.raw, r['d_' + m.k]) + '>' + fp(r['d_' + m.k]) + '</td>'
              + (m.amount ? '<td style="' + td + 'background:' + m.bg + '">' + fyen(r['a_' + m.k]) + '</td>' : '')
              + (m.revCol ? '<td style="' + td + 'background:' + (m.rbg || '#edf7f1') + ';color:#0f8a52">' + fyen(m.revOf ? m.revOf(r.raw) : r.raw.rev) + '</td>' : '');
     });
+    // 【v1.0779】PR実績額(7%超)。★料率未取得の日は 0円ではなく「—」
+    cells += '<td style="' + td + 'background:' + PO.bg  + ';color:' + PO.color + ';border-left:2px solid var(--border)">' + fyen(r.cum.prKnown ? r.cum.prOver : null) + '</td>'
+           + '<td style="' + td + 'background:' + PO.bg2 + ';color:' + PO.color + '">' + fyen(r.raw.prKnown ? r.raw.prOver : null) + '</td>';
     return '<tr>' + cells + '</tr>';
   }).join('');
   opt.tbl.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
@@ -17028,7 +17054,10 @@ function _trendPaint(opt) {
     + '<b>累積は率の平均ではなく、分子と分母をそれぞれ足してから割っています。</b>'
     + '実績額＝当日の実費で、指標ごとに分母が違います（' + metrics.filter(m => m.amount).map(m => m.label + '＝' + m.amountFull).join(' / ') + '）。'
     + '最上段＝当月の着地見込み（累積）。棒＝日別で、線より先に動く<b>先行指標</b>として読みます。'
-    + 'PR系は⑤の設定PRオプ料率からの<b>推定</b>です（実測ではありません）。';
+    + 'PR系は⑤の設定PRオプ料率からの<b>推定</b>です（実測ではありません）。'
+    + '<br>★売上がある日でも<b>PR広告売上ROASが「—」</b>になることがあります。理由はいちばん右の<b>PR実績額(7%超)</b>で分かります: '
+    + 'そこが<b>「—」</b>＝' + (opt.prSrc === 'store' ? 'その日のPRオプションレポート(④)が未取込' : '設定PRオプ料率(⑤)が未取得で推定できない') + '／'
+    + 'そこが<b>¥0</b>＝料率7%で上乗せ分が0。その日の広告費も0なら分母が0になるため計算できません（セルにマウスを乗せると理由が出ます）。';
   return chart;
 }
 
@@ -17082,7 +17111,8 @@ function renderZenTrend() {
   if (empty) empty.style.display = 'none';
   // ★必ず破棄してから作り直す（忘れるとツールチップが多重に出る。§75で踏んだ）
   if (_ztChart) { try { _ztChart.destroy(); } catch (e) {} _ztChart = null; }
-  _ztChart = _trendPaint({ canvas: canvas, wrap: wrap, tbl: tbl, note: note,
+  _ztChart = _trendPaint({ prSrc: 'store',   /* 【v1.0779】「—」の理由が商品別と違う（レポート未取込） */
+    canvas: canvas, wrap: wrap, tbl: tbl, note: note,
     codes: null, dayRaw: _ztDayRaw, days: days, ym: _ztYm, metrics: IT_METRICS, clCode: null });
   requestAnimationFrame(() => requestAnimationFrame(() => { try { if (_ztChart) _ztChart.resize(); } catch (e) {} }));
 }
