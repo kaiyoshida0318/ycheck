@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0779 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0780 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4018,7 +4018,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0779</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0780</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5281,7 +5281,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <div class="cl-list" id="clShopList"></div>
     <div class="cl-add">
       <label>日付<input type="date" id="clShopDate"></label>
-      <label>内容<input type="text" id="clShopText" placeholder="例: 予算の仕組み変更 / PRオプ料率の一斉見直し" maxlength="60"></label>
+      <label>内容<span style="font-size:0.72rem;color:var(--text3);font-weight:500">（任意）</span><input type="text" id="clShopText" placeholder="空欄でもOK。例: 予算の仕組み変更 / PRオプ料率の一斉見直し" maxlength="60"></label>
       <label>線の色<span class="cl-colors" id="clShopColors"></span></label>
       <button type="button" class="btn sm primary" id="clShopAdd">＋ 追加</button>
     </div>
@@ -5509,7 +5509,7 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="cl-list" id="peClList" style="max-height:26vh"></div>
         <div class="cl-add">
           <label>日付<input type="date" id="peClDate"></label>
-          <label>内容<input type="text" id="peClText" placeholder="例: リニューアル / 画像差し替え / 入札単価を上げた" maxlength="60"></label>
+          <label>内容<span style="font-size:0.72rem;color:var(--text3);font-weight:500">（任意）</span><input type="text" id="peClText" placeholder="空欄でもOK。例: リニューアル / 画像差し替え / 入札単価を上げた" maxlength="60"></label>
           <button type="button" class="btn sm primary" id="peClAdd">＋ 追加</button>
         </div>
         <div class="cl-note">登録すると、この商品のグラフ（商品-グラフ／このモーダルの全体情報）に<b style="color:#ea580c">オレンジの縦線</b>が出ます。一覧の商品名の横にも<b style="color:#ea580c">●</b>が付きます。</div>
@@ -11677,7 +11677,10 @@ const YC_CHANGE_LINES = {
       ctx.setLineDash([]);
       // ラベル（内容）を上端に小さく
       const lv = (used[m.index] = (used[m.index] || 0) + 1);
-      const label = String(m.text || '').slice(0, 14);
+      // 【v1.0780】内容は任意なので、空のときは日付(M/D)をラベルにする。
+      //   ★空文字のままだと幅8pxの潰れた色板だけが描かれて、何の線か分からなくなる。
+      const label = (String(m.text || '').trim()
+        || (m.date ? ((+String(m.date).slice(5, 7)) + '/' + (+String(m.date).slice(8, 10))) : '記録')).slice(0, 14);
       if (!label) return;
       ctx.font = '600 11px "Noto Sans JP", sans-serif';
       const w = ctx.measureText(label).width + 8;
@@ -11774,7 +11777,7 @@ function clRenderItemList(code) {
     const msg = document.getElementById('clShopMsg');
     const date = (d && d.value) || '', text = ((t && t.value) || '').trim();
     if (!date) { if (msg) msg.innerHTML = '<b style="color:#b91c1c">日付を入れてください。</b>'; return; }
-    if (!text) { if (msg) msg.innerHTML = '<b style="color:#b91c1c">内容を入れてください。</b>'; return; }
+    // 【v1.0780】★内容は任意（商品側と同じ）。片方だけ必須にすると、同じ「変更記録」なのに挙動が違って混乱する。
     clAddShop(date, text, _clPickColor);
     if (t) t.value = '';
     clRenderShopModal();
@@ -11788,11 +11791,13 @@ function clRenderItemList(code) {
     if (!code) return;
     const d = document.getElementById('peClDate'), t = document.getElementById('peClText');
     const date = (d && d.value) || '', text = ((t && t.value) || '').trim();
-    if (!date || !text) { try { showToast('日付と内容の両方を入れてください。', 'warn'); } catch (e) {} return; }
+    // 【v1.0780】★内容は任意。日付だけで登録できる（「この日に何かした」を先に置いておきたいため）。
+    //   内容が空でも一覧は「（内容なし）」、グラフの縦線のラベルは日付(M/D)で出る。
+    if (!date) { try { showToast('日付を入れてください。', 'warn'); } catch (e) {} return; }
     clAddItem(code, date, text);
     if (t) t.value = '';
     clRenderItemList(code);
-    try { ycLog('edit', '変更記録（' + code + '）を追加: ' + date + ' ' + text); } catch (e) {}
+    try { ycLog('edit', '変更記録（' + code + '）を追加: ' + date + ' ' + (text || '（内容なし）')); } catch (e) {}
     try { showToast('変更記録を追加しました（未反映）。「⬆ 反映する」でGitHubへ保存してください。', 'warn'); } catch (e) {}
     if (typeof renderAll === 'function') renderAll();
   });
