@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0777 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0778 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4018,7 +4018,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0777</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0778</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17191,11 +17191,16 @@ function _cbRank5(val, pool) {
   const s = pool.slice().sort((a, b) => b - a);   // 降順＝大きいほど上位
   const n = s.length;
   if (n < 4) return 'bk';                          // 4段に分けられない母集団には色を付けない
-  // 【v1.0777】★同じ値が並ぶとき（例: 全商品が同じだけ増えた月）は、
-  //   その【かたまり全体が枠に収まるときだけ】色を付ける。
-  //   indexOf（先頭の順位）だけで判定すると、13件が同値でも全部「上位10%」になってしまう。
+  // 【v1.0777/v1.0778】★同じ値が並ぶときの扱い。
+  //   v1.0777 は「かたまり全体が枠に収まるときだけ色を付ける」という厳しい規則にしたが、
+  //   PR広告売上ROASは整数(pt)なので同値が出やすく、下位に2〜3件の同値があるだけで
+  //   【下位5%の赤が1件も出ない】という副作用が出た。
+  //   v1.0778: かたまりが枠に触れていれば色を付ける。ただし
+  //   「同値が多すぎる（母集団の20%超）」ときだけ、順位に意味が無いとみなして色を付けない。
+  //   → 全商品が同じだけ動いた月は色なし、ふつうの2〜3件の同値はちゃんと色が付く。
   let first = s.indexOf(val), last = s.lastIndexOf(val);
   if (first < 0) { first = last = s.filter(x => x > val).length; }
+  if ((last - first + 1) > Math.max(1, Math.ceil(n * 0.20))) return 'bk';   // ★同値が多すぎる
   // 【v1.0775】★各段に必ず1枠は残す。
   //   素直に ceil(n*0.05) / ceil(n*0.10) だけで切ると、母集団が10件以下のとき
   //   両方とも 1 になって【緑と黄が1度も出ない】（下位側も同じ）。
@@ -17203,11 +17208,12 @@ function _cbRank5(val, pool) {
   const up2 = Math.max(up1 + 1, Math.ceil(n * 0.10));      // 青＋緑の枠数
   const dn1 = Math.max(1, Math.ceil(n * 0.05));            // 赤の枠数
   const dn2 = Math.max(dn1 + 1, Math.ceil(n * 0.10));      // 赤＋黄の枠数
-  if (up2 + dn2 > n) return (last < up1) ? 'g1' : (first >= n - dn1 ? 'r' : 'bk');   // 狭すぎるときは青と赤だけ
-  if (last  < up1)      return 'g1';   // 青
-  if (last  < up2)      return 'g2';   // 緑
-  if (first >= n - dn1) return 'r';    // 赤
-  if (first >= n - dn2) return 'o';    // 黄
+  //   ★上位は「かたまりの先頭」、下位は「かたまりの末尾」で判定＝枠に触れていれば色が付く
+  if (up2 + dn2 > n) return (first < up1) ? 'g1' : (last >= n - dn1 ? 'r' : 'bk');   // 狭すぎるときは青と赤だけ
+  if (first < up1)     return 'g1';   // 青
+  if (first < up2)     return 'g2';   // 緑
+  if (last >= n - dn1) return 'r';    // 赤
+  if (last >= n - dn2) return 'o';    // 黄
   return 'bk';
 }
 
