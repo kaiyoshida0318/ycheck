@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0759 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0761 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1931,6 +1931,16 @@ td[data-resize-key] {
 .fx-line span { white-space: nowrap; }
 /* 【v1.0759】式のうしろの「＝楽天」。式（緑/赤）とは別物だと分かるように灰＋少し細く */
 .fx-eq { color: #9aa0a6; font-weight: 600; }
+/* 【v1.0760】見出しの中を「列名（上）／計算式（下）」の2段に固定する。
+   ★列名は必ずセルの【上端】から始める。中央揃えのままだと、計算式の行数（1〜3行）で
+     列名の位置が列ごとにズレて、横に読めなくなる（例: 総売上 と 広告売上ROAS の1行目が揃わない）。
+   ★計算式は残りの高さの【真ん中】に置く。「列名＋式」をまとめて中央揃えにしないこと。 */
+.th-stack { display: flex; flex-direction: column; align-items: stretch; height: 100%;
+             /* ★計算式OFF（.fx-slot が無い）のときは従来どおり列名を上下中央に。
+                ONのときは .fx-slot が余white-space を全部取るので、列名は自動的に上端へ行く。 */
+             justify-content: center; }
+.th-stack > .th-lbl  { flex: 0 0 auto; }
+.th-stack > .fx-slot { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
 .fx-toggle-btn { font-size: 0.78rem; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 6px;
                  background: var(--bg2); color: var(--text2); cursor: pointer; white-space: nowrap; font-weight: 600; }
 .fx-toggle-btn:hover { background: var(--bg3); }
@@ -3913,7 +3923,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0759</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0761</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -12254,16 +12264,23 @@ function fxSyncBtns() {
 //   （分子＝売上側＝緑 / スラッシュ＝灰 / 分母＝費用側＝赤）。
 //   ★長い日本語の説明文は書かない。列幅を食うし、結局読まれない（v1.0756の反省）。
 function fxR(num, den) {
-  // ★<wbr>＝ここだけ改行してよい印。狭い列では「売上/」「PR・広告費」の2行になる
-  return '<span class="ts-rev">' + num + '</span><span class="ts-sl">/</span><wbr><span class="ts-cost">' + den + '</span>';
+  // 【v1.0761】★スラッシュの後は <br> で【必ず】改行する（分子＝上／分母＝下の2行固定）。
+  //   v1.0760 までは <wbr>（＝入れば1行、狭ければ2行）だったので、列幅によって1行だったり2行だったりした。
+  //   同じ形の式が列ごとに違う見た目になると、分子と分母の対応がぱっと読めない。
+  return '<span class="ts-rev">' + num + '</span><span class="ts-sl">/</span><br><span class="ts-cost">' + den + '</span>';
 }
 // 【v1.0759】式のうしろに足す「＝◯◯」の注記。式の一部ではないので色を分ける（灰）。
-//   ★<wbr> は狭い列で「＝楽天」だけ次の行に落とすため（§143-4）。
-function fxEq(name) { return '<wbr><span class="fx-eq">＝' + name + '</span>'; }
+//   【v1.0761】★<br> で必ず独立した行にする（式の2行と混ざると注記に見えない）。
+function fxEq(name) { return '<br><span class="fx-eq">＝' + name + '</span>'; }
 // 見出しの中に差し込む式の1行（式が無い列は何も出さない）
 function fxLine(fx, color) {
-  if (!_fxShow || !fx) return '';
-  return '<div class="fx-line"' + (color ? ' style="color:' + color + '"' : '') + '>' + fx + '</div>';
+  if (!_fxShow) return '';
+  // 【v1.0760】★式が無い列（総売上・広告売上など）も、ONのときは空の枠だけ出す。
+  //   出さないと その列の列名だけ上下中央のままになり、隣の列と1行目が揃わない。
+  if (!fx) return '<div class="fx-slot"></div>';
+  // 【v1.0760】.fx-slot ＝ .th-stack の中で「残りの高さ」を受け取って式を上下中央に置く枠。
+  //   ★.fx-line 自体を flex にしないこと。中の <span> が別々の行になって式がバラける（§143-4）。
+  return '<div class="fx-slot"><div class="fx-line"' + (color ? ' style="color:' + color + '"' : '') + '>' + fx + '</div></div>';
 }
 window.fxToggle = fxToggle;
 
@@ -13761,14 +13778,16 @@ function renderGraphData() {
     const leftBd = (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c));
     if (g.len === 1) {
       _h1 += '<th' + _rs + ' style="' + _thBase + 'text-align:center;background:' + c.hbg + ';'
-        + leftBd + _vb(lastIdx) + 'vertical-align:middle">' + (c.hLabel || escapeHtml(c.label))
-        + fxLine(c.fx) + '</th>';   /* 【v1.0575】hLabel があれば2行見出し／【v1.0756】計算式 */
+        + leftBd + _vb(lastIdx) + 'vertical-align:top;height:1px;">'
+        + '<div class="th-stack"><div class="th-lbl">' + (c.hLabel || escapeHtml(c.label)) + '</div>'
+        + fxLine(c.fx) + '</div></th>';   /* 【v1.0575】hLabel があれば2行見出し／【v1.0756】計算式／【v1.0760】上下2段 */
       return;
     }
     // 1段目＝指標名をまとめて1セル（色はその指標の一番濃い色）
     _h1 += '<th colspan="' + g.len + '" style="' + _thBase + 'text-align:center;background:' + c.hbg + ';'
-      + leftBd + _vb(lastIdx) + '">' + escapeHtml(c.famLabel || c.label)
-      + fxLine(c.fx) + '</th>';   /* 【v1.0756】計算式 */
+      + leftBd + _vb(lastIdx) + 'vertical-align:top;height:1px;">'
+      + '<div class="th-stack"><div class="th-lbl">' + escapeHtml(c.famLabel || c.label) + '</div>'
+      + fxLine(c.fx) + '</div></th>';   /* 【v1.0756】計算式／【v1.0760】上下2段 */
     for (let k = 0; k < g.len; k++) {
       const sc = _zdCols[g.start + k];
       const bd = (k === 0 ? leftBd : 'border-left:' + VBD + ';') + _vb(g.start + k);
@@ -16837,7 +16856,8 @@ function _trendPaint(opt) {
   const th2 = thB.replace('top:0', 'top:26px');
   // 【v1.0692】1指標あたりの列数 = 累積 + 日別 (+ 実績額) (+ 売上)
   const _cols = (m) => 2 + (m.amount ? 1 : 0) + (m.revCol ? 1 : 0);
-  const grp = (m) => '<th colspan="' + _cols(m) + '" style="' + thB + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border)">' + m.label + fxLine(m.fx) + '</th>';   /* 【v1.0756】計算式 */
+  const grp = (m) => '<th colspan="' + _cols(m) + '" style="' + thB + 'top:0;background:' + m.hbg + ';text-align:center;color:' + m.color + ';border-left:2px solid var(--border);vertical-align:top">'
+    + '<div class="th-stack"><div class="th-lbl">' + m.label + '</div>' + fxLine(m.fx) + '</div></th>';   /* 【v1.0756】計算式／【v1.0760】上下2段 */
   const sub = (m) => '<th style="' + th2 + 'background:' + m.bg + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
                    + '<th style="' + th2 + 'background:' + m.bg2 + ';text-align:center">日別</th>'
                    // 【v1.0692】「実績額」と「(広告＋PR)」を2行に分ける。1行だと横に間延びして、どの額か読みにくい
@@ -16849,7 +16869,9 @@ function _trendPaint(opt) {
   //   ★ROASは率なので、金額の規模が分からないと判断できない（1,000円で300%と100万円で300%は別物）。
   //     色は緑系＝プラス側（§65の「売上＝緑 / 費用＝赤」と同じ考え方）で、ROASの各色とぶつからないようにする。
   const RV = { hbg: '#cfe9dc', bg: '#edf7f1', bg2: '#dff0e7', color: '#0f8a52' };
-  const grpRev = '<th colspan="2" style="' + thB + 'top:0;background:' + RV.hbg + ';text-align:center;color:' + RV.color + ';border-left:2px solid var(--border)">売上' + fxLine('<span>累積＝月初から</span>／<wbr><span>1日＝その日</span>') + '</th>';
+  const grpRev = '<th colspan="2" style="' + thB + 'top:0;background:' + RV.hbg + ';text-align:center;color:' + RV.color + ';border-left:2px solid var(--border);vertical-align:top">'
+    + '<div class="th-stack"><div class="th-lbl">売上</div>'
+    + fxLine('<span>累積＝月初から</span>／<wbr><span>1日＝その日</span>') + '</div></th>';   /* 【v1.0760】上下2段 */
   const subRev = '<th style="' + th2 + 'background:' + RV.bg  + ';text-align:center;border-left:2px solid var(--border)">累積売上</th>'
                + '<th style="' + th2 + 'background:' + RV.bg2 + ';text-align:center">1日売上</th>';
   const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + '</tr>'
