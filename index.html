@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0752 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0753 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3881,7 +3881,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0752</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0753</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3897,11 +3897,12 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v206】title属性のラグ（OS標準ツールチップは0.5〜1秒遅延）を回避するため、data-tip属性＋CSSの即時ツールチップに変更。 -->
     <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札価格・PRオプションの説明などを表示する"><span class="chip-label">💡 全体の説明</span></button>
     <!-- 【v1.0582】「分析」ボタンはここから .header-left（ショップ選択の右）へ移動した -->
+    <!-- 【v1.0753】並びを「商品追加 → コード移行 → レポート追加」にした（作業の順番に合わせた）。
+         ★ボタンの id とハンドラは変えていない。順番だけの入れ替え。 -->
+    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新・反映</button>
+    <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
     <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
-    <!-- 【v1.0594】「+ 商品追加・更新」は「🔁 再登録後のコード移行」の右へ移動（ボタンの実体は1つだけ） -->
-    <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
-    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新・反映</button>
     <!-- 【v1.0604】操作ログ。商品の追加/更新・GitHubへの反映・別クライアントの上書き・商品件数の増減を記録する。
          「追加したのに消えた」をその場で見せられるようにするのが目的（§20）。 -->
     <button class="btn sm ghost" id="btnOpLog" type="button" title="操作ログ（商品の追加・更新 / GitHubへの反映 / 上書き検知 / 商品件数の増減）を表示します">🧾 ログ<span class="oplog-badge" id="opLogBadge" style="display:none">0</span></button>
@@ -5507,6 +5508,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
 </div>
 
+<!-- 【v1.0753】#btnConfirmUploadTop（日別レポートの右上）は #btnConfirmUpload の分身。同期は _bindUploadTopBtn() -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
     <div class="modal-header">
@@ -5557,7 +5559,12 @@ th.col-sroas { background-color:#e7d5f5; }
     <div class="file-slots">
       <!-- 【v1.0539】対応ファイル一覧（アコーディオン）と同じ配置に統一：日別4つを2×2、最新値2つを横並び -->
       <div class="fs-group fs-group-daily">
-        <div class="fs-group-head"><span class="fs-group-title">日別レポート</span><span class="fs-group-sub">毎日この4つを同じ日付で揃えます</span></div>
+        <!-- 【v1.0753】下までスクロールしなくても取り込めるよう、ここに実行ボタンの【分身】を置く。
+             ★実体は下の #btnConfirmUpload のまま。分身は「押したら本体を押す」だけで、
+               文字と押せる/押せないは MutationObserver で本体から自動コピーする（二重管理にしない）。 -->
+        <div class="fs-group-head"><span class="fs-group-title">日別レポート</span><span class="fs-group-sub">毎日この4つを同じ日付で揃えます</span>
+          <button class="btn sm primary" id="btnConfirmUploadTop" type="button" style="margin-left:auto" disabled>⬆ アップロード実行</button>
+        </div>
         <div class="fs-grid">
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge">①</span>広告詳細レポート（日別）</div>
@@ -5634,6 +5641,30 @@ th.col-sroas { background-color:#e7d5f5; }
 </div>
 
 <script>
+// 【v1.0753】取り込みボタンの分身（日別レポートの右上）を本体と同期する。
+//   ★本体（#btnConfirmUpload）の文字・disabled を書き換えている箇所は何か所もあるので、
+//     そこを1つずつ直すのではなく MutationObserver で【結果】をコピーする。
+//     こうすれば、今後どこで本体を書き換えても分身が勝手に追従する（＝二重管理にならない）。
+(function _bindUploadTopBtn() {
+  const init = () => {
+    const main = document.getElementById('btnConfirmUpload');
+    const top  = document.getElementById('btnConfirmUploadTop');
+    if (!main || !top) return;
+    const sync = () => {
+      top.textContent = main.textContent;
+      top.disabled = main.disabled;
+      top.className = main.className + ' btn sm';
+      top.style.marginLeft = 'auto';
+      top.title = main.disabled ? 'ファイルを入れると押せるようになります' : 'この内容で取り込みます';
+    };
+    sync();
+    try { new MutationObserver(sync).observe(main, { attributes: true, childList: true, characterData: true, subtree: true }); } catch (e) {}
+    top.addEventListener('click', () => { if (!main.disabled) main.click(); });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
 // ==================== Shops (マルチショップ対応 v93〜) ====================
 // 初期ショップ定義。ユーザーが編集する想定は無いため const で固定。
 // 将来ショップを追加する場合はこの SHOPS_INITIAL に追記 + 既存ユーザーの localStorage を意識すること。
