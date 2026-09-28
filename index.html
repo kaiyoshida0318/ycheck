@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0790 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0791 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1948,7 +1948,18 @@ td[data-resize-key] {
 #view-contrib.view.active { overflow-y: auto; overflow-x: hidden; }   /* 商品数ぶん縦に伸びるのでページごとスクロール（§141と同じ） */
 #view-contrib > .card { flex: 0 0 auto; min-height: 0; }
 .cb-table { border-collapse: collapse; width: 100%; font-size: 0.84rem; }
-.cb-table th { position: sticky; top: 0; z-index: 2; background: var(--bg3); padding: 7px 8px;
+/* 【v1.0791】2段見出しをスクロール中も固定する。
+   ★1段目は top:0、2段目は「1段目の高さ」を top にする。2段目を 0 のままにすると
+     1段目の下にもぐって見えなくなる。高さは描画のたびに JS で実測して入れる（列の文字数で変わるため）。
+   ★z-index は 1段目 > 2段目 > 本体 の順。逆にすると本体のセルが見出しの上に描かれる。 */
+.cb-table thead tr:nth-child(1) th { z-index: 5; }
+.cb-table thead tr:nth-child(2) th { z-index: 4; }
+/* ★見出しの【下罫線】は border ではなく内側の影で描く。
+   border-collapse:collapse の罫線は「表」が描くので、見出しを position:sticky で止めても
+   罫線だけ元の位置に置き去りになり、そこが透けて本体の行が見えてしまう（Chromiumの挙動）。
+   影なら要素と一緒に動くので、固定しても線が残る。 */
+.cb-table thead th { border-bottom: 0 !important; box-shadow: inset 0 -2px 0 var(--border); }
+.cb-table th { position: sticky; top: 0; z-index: 4; background: var(--bg3); padding: 7px 8px;
                 font-size: 0.74rem; font-weight: 700; color: var(--text2); white-space: nowrap;
                 border-bottom: 2px solid var(--border); }
 .cb-table th.sortable { cursor: pointer; user-select: none; }
@@ -4052,7 +4063,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0790</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0791</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4802,7 +4813,10 @@ th.col-sroas { background-color:#e7d5f5; }
           </span>
         </div>
         <div id="cbEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
-        <div id="cbTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto"></div>
+        <!-- 【v1.0791】★この枠が縦横スクロールのコンテナ。見出しの position:sticky は
+             「いちばん近いスクロール容器」を基準にするので、高さを決めてここでスクロールさせないと
+             見出しがページと一緒に流れて固定されない。 -->
+        <div id="cbTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:calc(100vh - 190px)"></div>
         <p class="note" id="cbNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
       </div>
     </div>
@@ -17321,6 +17335,29 @@ function _cbAdActive(codes) {
   }));
 }
 
+// 【v1.0791】2段見出しの固定位置を合わせる。
+//   1段目の高さは「2026/08」などの文字や列構成で変わるので、CSSに固定値を書かず毎回実測する。
+function _cbFixStickyHead(wrap) {
+  if (!wrap) return;
+  const apply = () => {
+    const thead = wrap.querySelector('thead');
+    if (!thead || thead.rows.length < 2) return;
+    const r1 = thead.rows[0], r2 = thead.rows[1];
+    // ★測るのは「1段目のうち rowspan を持たないセル（＝月などのまとめ見出し）の高さ」。
+    //   行そのものの高さ（offsetTop の差や rect.height）を使うと、rowspan="2" のセル
+    //   （#・商品コード・画像・商品名・出稿中）が2段ぶんの高さを持っているせいで行が背高になり、
+    //   まとめ見出しの下端と2段目の上端のあいだに数pxの隙間ができて、本体の行が透けて見える。
+    const g = r1.querySelector('th:not([rowspan])');
+    let h = g ? Math.round(g.getBoundingClientRect().height) : 0;
+    if (!(h > 0)) h = r2.offsetTop - r1.offsetTop;
+    if (!(h > 0)) h = Math.round(r1.getBoundingClientRect().height);
+    [].forEach.call(r2.cells, th => { th.style.top = h + 'px'; });
+  };
+  apply();
+  // ★1フレーム待ってからもう一度。タブを切り替えた直後は幅0で高さが正しく測れないことがある
+  requestAnimationFrame(() => requestAnimationFrame(apply));
+}
+
 function renderContrib() {
   const tbl = document.getElementById('cbTableWrap');
   const empty = document.getElementById('cbEmpty');
@@ -17642,6 +17679,8 @@ function renderContrib() {
                     : '<b>' + (_tpR > _tpL ? '+' : '−') + Math.round(Math.abs(_tpR - _tpL)).toLocaleString('ja-JP') + 'pt</b>')) + '</td>') : '')
     + '</tr>';
   tbl.innerHTML = '<table class="cb-table' + (_cmp ? ' cb-has-run' : '') + '"><thead>' + h1 + h2 + '</thead><tbody>' + body + foot + '</tbody></table>';
+  // 【v1.0791】2段目の見出しの top＝1段目の実測高さ。★描画のたびに測り直す（月名や列数で高さが変わる）
+  _cbFixStickyHead(tbl);
 
   // ---- 注記。★分母が何かを必ず書く（シェアは分母が違えば別物になる） ----
   if (note) {
