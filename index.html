@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0782 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0783 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2009,6 +2009,15 @@ td[data-resize-key] {
 /* 【v1.0773】「新規」＝比較月に無かった商品。★4段の色とは必ず別の色にすること。
    順位の色に混ぜると「いちばん増えた」と「そもそも先月無かった」が見分けられない。 */
 .cb-new { color: #9333ea; font-weight: 700; }
+/* 【v1.0783】対象月（右）のPR広告売上ROAS「そのものの値」の順位色。
+   ★増減ではなく【その月の値】の順位。高いほうが上位＝青。
+   ★.cb-prsrv を先に書いて既定色（黒）を決め、.cb-prsrv.c-◯ で上書きする（§157-5と同じ理由）。 */
+.cb-prsrv { font-weight: 700; color: var(--text); }
+.cb-prsrv.c-g1 { color: #1565C0; }
+.cb-prsrv.c-g2 { color: #2E7D32; }
+.cb-prsrv.c-o  { color: #BA7517; }
+.cb-prsrv.c-r  { color: #A32D2D; }
+.cb-prsrv.c-bk { color: var(--text); }
 .cb-d.cb-new { color: #9333ea; }
 /* 【v1.0771】増減の色分け。★色が付くのは上位5%/10%・下位10%/5%の4段だけ。それ以外は黒のまま。
    色そのものは全-月別データのランク色（.c-g1 / .c-g2 / .c-o / .c-r）と同じものを使う。
@@ -4018,7 +4027,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0782</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0783</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17345,9 +17354,12 @@ function renderContrib() {
   });
   //   ★母集団は「売上 CB_RANK_MIN_REV 以上の商品」だけ（§v1.0775）
   const _poolOf = (k) => rows.filter(r => r.rankOk).map(r => r[k]).filter(v => v != null && Math.abs(v) > 1e-9);
+  const _poolsBase = { prsrVal: rows.filter(r => r.rankOk).map(r => r.prsrR).filter(v => v != null && v > 0) };
   const _pools = _cmp ? { rev: _poolOf('dRev'), cost: _poolOf('dCost'), pRev: _poolOf('dPRev'),
                           pCost: _poolOf('dPCost'), prsr: _poolOf('dPrsr'), prOver: _poolOf('dPrOver'),
-                          cRev: _poolOf('cRev'), cCost: _poolOf('cCost') } : {};
+                          cRev: _poolOf('cRev'), cCost: _poolOf('cCost'),
+                          // 【v1.0783】対象月のPR広告売上ROAS「そのものの値」。★増減の母集団とは別物なので別キー
+                          prsrVal: _poolsBase.prsrVal } : _poolsBase;
 
   // 【v1.0772】最新月変動＝（右の月 ÷ 左の月 − 1）×100。★ptではなく「何%増えたか」の変化率。
   //   ★左の月が0（または無い）商品は割り算できないので「新規」。0からの増加を「+∞%」や「+100%」と
@@ -17416,13 +17428,16 @@ function renderContrib() {
   const _dNew = () => _dWrap('新規', 'cb-new');   // 【v1.0773】4段の色とは別の色（紫）
   // 【v1.0770】★salesRoasCellHtml（しきい値で色を付ける）は使わない。この画面は全部黒。
   //   使うと style="color:…" が直書きで入るのでCSSからは黒に戻せない。
-  const _prsrCell = (v) => (v == null)
+  //   rank＝'c-◯'（対象月のときだけ渡す）。渡さなければ従来どおり黒
+  const _prsrCell = (v, rank) => (v == null)
     ? '<span style="color:var(--text3)">—</span>'
-    : '<b>' + Math.round(v).toLocaleString('ja-JP') + '%</b>';
+    : '<span class="cb-prsrv ' + (rank || 'c-bk') + '">' + Math.round(v).toLocaleString('ja-JP') + '%</span>';
   //   d＝この月の下に出す増減（右の月のときだけ渡す。左の月とヘッダーは null）
   //   【v1.0770】累積の列は撤去。「いまの並び順で上から足した値」なので並べ替えるたび意味が変わり、
   //     月をまたいだ比較にも使えなかった（増減も出せなかった）。
-  const monthCells = (cls, rev, pRev, cost, pCost, prOver, prsr, d) => {
+  //   prsrRank＝PR広告売上ROASの値に付ける順位色。★対象月（右）のときだけ渡す。
+  //     比較月にも付けると「どちらの月の順位を見ているのか」が分からなくなる。
+  const monthCells = (cls, rev, pRev, cost, pCost, prOver, prsr, d, prsrRank) => {
     const dd = (key, costSide, fmtOne, eps) => {
       if (!d) return '';
       // ★両月とも0（画面では「—」）の指標には増減を出さない。
@@ -17438,7 +17453,7 @@ function renderContrib() {
     // 【v1.0769】PR実績額(7%超・推定)。広告費と同じ「費用」なので増＝赤（costSide=true）
     + '<td class="num ' + cls + ' cb-pr">' + (prOver == null ? '<span style="color:var(--text3)">—</span>' : fmt(prOver))
       + dd('prOver', true, _yen, 1) + '</td>'
-    + '<td class="num ' + cls + ' cb-prsr">' + _prsrCell(prsr) + dd('prsr', false, _ptR, 0.5) + '</td>';
+    + '<td class="num ' + cls + ' cb-prsr">' + _prsrCell(prsr, prsrRank) + dd('prsr', false, _ptR, 0.5) + '</td>';
   };
 
   const body = rows.map((r, i) => {
@@ -17457,7 +17472,9 @@ function renderContrib() {
           costNone: (!r.costR && !r.costL), pCostNone: (!r.costR && !r.costL),
           prsrNone: (r.prsrR == null && r.prsrL == null),
           prOverNone: (!r.prOverR && !r.prOverL)
-        } : null)
+        } : null,
+        // 【v1.0783】対象月のPR広告売上ROASの値に順位色（高いほうが上位＝青）
+        'c-' + ((r.rankOk && r.prsrR != null) ? _cbRank5(r.prsrR, _pools.prsrVal, false) : 'bk'))
       // 【v1.0782】最新月変動はいちばん右（対象月のさらに右）。
       //   ★左に置くと「まず変動を見て、それから月の数字を見る」順になり、
       //     2か月を横に並べて読んでから差を確かめる、という自然な視線と逆になる。
@@ -17514,7 +17531,7 @@ function renderContrib() {
     + '<td class="num ' + cls + '">' + (prOver == null ? '<span style="color:var(--text3)">—</span>' : fmt(prOver))
       + (d && d.prOver != null ? _dNum(d.prOver, true, _yen, 1) : '') + '</td>'
     + '<td class="num ' + cls + '"' + (prsr == null ? ' title="PRオプ料率が未取得の商品が1件でもあると、合計の分母（PR実績額の推定）が出せないため「—」にしています"' : '') + '>'
-      + _prsrCell(prsr) + (d ? _dNum(d.prsr, false, _ptR, 0.5) : '') + '</td>';
+      + _prsrCell(prsr) + (d ? _dNum(d.prsr, false, _ptR, 0.5) : '') + '</td>';   /* 合計行は順位色なし（母集団の1件ではないため） */
   const _totChg = (now, before) => {
     if (!now && !before) return '<span style="color:var(--text3)">—</span>';
     const d = (+now || 0) - (+before || 0);
@@ -17579,6 +17596,8 @@ function renderContrib() {
                  + '<br>★<b>費用の列（広告費・PR実績額）は順位が逆</b>で、<b>減ったほうが上位＝青</b>です'
                  + '（売上と同じ向きにすると、広告費が増えた商品がいちばん良い色になってしまうため）。'
                  + '売上・PR広告売上ROAS は増えたほうが上位＝青。'
+                 + '<br>' + mR + ' の<b>PR広告売上ROASの数字そのもの</b>にも同じ4段の色が付きます'
+                 + '（増減ではなく<b>その月の値の順位</b>。高いほうが上位＝青）。比較月の数字には付けません。'
                  + '<br>増減に色が付くのは<b>その列の中で上位5%・上位10%・下位10%・下位5%</b>だけです'
                  + '（<span style="color:#1565C0;font-weight:700">青</span>＝いちばん増えた／'
                  + '<span style="color:#2E7D32;font-weight:700">緑</span>＝上位10%／'
