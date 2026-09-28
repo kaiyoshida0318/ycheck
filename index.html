@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0785 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0786 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2012,8 +2012,15 @@ td[data-resize-key] {
 /* 【v1.0784】出稿中の列。2つの月のあいだに挟むので、背景は月の色に染めず中立にする
    【v1.0785】★左右を赤の太線で囲う。2つの月のあいだに挟まる1列なので、
      枠が弱いとどちらの月のブロックの一部なのか分からなくなる。 */
-.cb-run    { background: #fdf5f5; border-left: 3px solid #dc2626 !important; border-right: 3px solid #dc2626 !important; }
-.cb-table th.cb-run-h { background: #fbe2e2; color: #991b1b; border-left: 3px solid #dc2626; border-right: 3px solid #dc2626; line-height: 1.25; }
+.cb-run    { background: #fdf5f5; border-left: 2px solid #dc2626 !important; border-right: 2px solid #dc2626 !important; }
+.cb-table th.cb-run-h { background: #fbe2e2; color: #991b1b; border-left: 2px solid #dc2626; border-right: 2px solid #dc2626; line-height: 1.25; }
+/* ★出稿中の【右どなり】の列も左線を赤にする。
+   border-collapse では「太いほうが勝つ」ので、となりの .cb-bd（灰の区切り線）が太いと
+   出稿中の右側だけ灰色になって、枠が片側しか無いように見える。
+   同じ太さにしたうえで、となり側も赤に塗って確実に赤で揃える。 */
+.cb-has-run .cb-m2.cb-bd,
+.cb-has-run th.cb-m2-h.cb-bd,
+.cb-has-run th.cb-m2-h.cb-grp { border-left-color: #dc2626 !important; }
 .cb-run-sub { display: block; font-size: 0.62rem; font-weight: 600; color: #b91c1c; letter-spacing: -0.02em; }
 .cb-run-on { color: #0f766e; font-weight: 700; font-size: 1.02rem; }
 /* 【v1.0785】月のかたまりの区切りも太く・濃くする（2px→3px・色も濃い灰）。
@@ -2042,8 +2049,8 @@ td[data-resize-key] {
 .cb-m2   { background: #fdf6ec; }                          /* 右＝対象月（橙系） */
 .cb-table th.cb-m1-h { background: #d6e1fa; color: var(--text); }   /* 【v1.0770】文字は黒。月の区別は背景色だけ */
 .cb-table th.cb-m2-h { background: #fbe3c4; color: var(--text); }
-.cb-bd   { border-left: 3px solid #94a3b8; }               /* 月のかたまりの区切り */
-.cb-table th.cb-grp { border-left: 3px solid #94a3b8; }
+.cb-bd   { border-left: 2px solid #94a3b8; }               /* 月のかたまりの区切り */
+.cb-table th.cb-grp { border-left: 2px solid #94a3b8; }
 .cb-grp  { text-align: center; border-left: 2px solid var(--border); font-size: 0.9rem; letter-spacing: .02em; }
 /* 【v1.0760】見出しの中を「列名（上）／計算式（下）」の2段に固定する。
    ★列名は必ずセルの【上端】から始める。中央揃えのままだと、計算式の行数（1〜3行）で
@@ -4037,7 +4044,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0785</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0786</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17596,7 +17603,7 @@ function renderContrib() {
                  : (Math.abs(_tpR - _tpL) < 0.5 ? '<span class="cb-chg-0">±0pt</span>'
                     : '<b>' + (_tpR > _tpL ? '+' : '−') + Math.round(Math.abs(_tpR - _tpL)).toLocaleString('ja-JP') + 'pt</b>')) + '</td>') : '')
     + '</tr>';
-  tbl.innerHTML = '<table class="cb-table"><thead>' + h1 + h2 + '</thead><tbody>' + body + foot + '</tbody></table>';
+  tbl.innerHTML = '<table class="cb-table' + (_cmp ? ' cb-has-run' : '') + '"><thead>' + h1 + h2 + '</thead><tbody>' + body + foot + '</tbody></table>';
 
   // ---- 注記。★分母が何かを必ず書く（シェアは分母が違えば別物になる） ----
   if (note) {
