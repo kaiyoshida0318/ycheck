@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0776 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0777 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4018,7 +4018,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0776</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0777</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17191,8 +17191,11 @@ function _cbRank5(val, pool) {
   const s = pool.slice().sort((a, b) => b - a);   // 降順＝大きいほど上位
   const n = s.length;
   if (n < 4) return 'bk';                          // 4段に分けられない母集団には色を付けない
-  let idx = s.indexOf(val);
-  if (idx < 0) idx = s.filter(x => x > val).length;
+  // 【v1.0777】★同じ値が並ぶとき（例: 全商品が同じだけ増えた月）は、
+  //   その【かたまり全体が枠に収まるときだけ】色を付ける。
+  //   indexOf（先頭の順位）だけで判定すると、13件が同値でも全部「上位10%」になってしまう。
+  let first = s.indexOf(val), last = s.lastIndexOf(val);
+  if (first < 0) { first = last = s.filter(x => x > val).length; }
   // 【v1.0775】★各段に必ず1枠は残す。
   //   素直に ceil(n*0.05) / ceil(n*0.10) だけで切ると、母集団が10件以下のとき
   //   両方とも 1 になって【緑と黄が1度も出ない】（下位側も同じ）。
@@ -17200,11 +17203,11 @@ function _cbRank5(val, pool) {
   const up2 = Math.max(up1 + 1, Math.ceil(n * 0.10));      // 青＋緑の枠数
   const dn1 = Math.max(1, Math.ceil(n * 0.05));            // 赤の枠数
   const dn2 = Math.max(dn1 + 1, Math.ceil(n * 0.10));      // 赤＋黄の枠数
-  if (up2 + dn2 > n) return (idx < up1) ? 'g1' : (idx >= n - dn1 ? 'r' : 'bk');   // 狭すぎるときは青と赤だけ
-  if (idx < up1)      return 'g1';   // 青
-  if (idx < up2)      return 'g2';   // 緑
-  if (idx >= n - dn1) return 'r';    // 赤
-  if (idx >= n - dn2) return 'o';    // 黄
+  if (up2 + dn2 > n) return (last < up1) ? 'g1' : (first >= n - dn1 ? 'r' : 'bk');   // 狭すぎるときは青と赤だけ
+  if (last  < up1)      return 'g1';   // 青
+  if (last  < up2)      return 'g2';   // 緑
+  if (first >= n - dn1) return 'r';    // 赤
+  if (first >= n - dn2) return 'o';    // 黄
   return 'bk';
 }
 
@@ -17324,14 +17327,17 @@ function renderContrib() {
       + (r.dPrsr > 0 ? '+' : '−') + Math.round(Math.abs(r.dPrsr)).toLocaleString('ja-JP') + 'pt</span>';
   };
   // 【v1.0776】最新月変動の売上・広告費は「増えた金額（大）＋ 変動率（小）」の2段。
-  //   ★色は金額だけに付け、順位は【変動率】で決める。
-  //     金額の順位にすると、もともと売上の大きい商品が毎月そのまま上位を占めて動きが読めない。
+  //   【v1.0777】★順位は【金額】で決める（%の順位ではない）。
+  //     %の順位だと、+¥100 でも率が高ければ上位に来てしまい、「どこが金額として効いたか」が分からない。
+  //     率のブレが大きい少額商品は CB_RANK_MIN_REV（売上3万円）で母集団から外してあるので、
+  //     金額順位でも小さい商品に食われることはない（§161）。
+  //   ★poolKey は増減（右の月の下）と同じ母集団を指す＝同じ値・同じ色になる。
   //   値が無い（両月とも0）ときは「—」、左の月に商品が無ければ「新規」。
-  const _chgCell = (r, amtKey, pctKey, nowV, beforeV) => {
+  const _chgCell = (r, amtKey, pctKey, poolKey, nowV, beforeV) => {
     if (!nowV && !beforeV) return '<span style="color:var(--text3)">—</span>';
     if (!r.inL) return '<span class="cb-new">新規</span>';
     const amt = r[amtKey], pct = r[pctKey];
-    const rank = (r.rankOk && pct != null) ? _cbRank5(pct, _pools[pctKey]) : 'bk';
+    const rank = (r.rankOk && amt != null) ? _cbRank5(amt, _pools[poolKey]) : 'bk';
     const main = (amt == null || Math.abs(amt) < 1)
       ? '<span class="cb-chg-0">±0</span>'
       : '<span class="cb-chgv c-' + rank + '">' + (amt > 0 ? '+' : '−') + '¥' + Math.round(Math.abs(amt)).toLocaleString('ja-JP') + '</span>';
@@ -17395,8 +17401,8 @@ function renderContrib() {
       + '<td class="code-cell">' + codeCellHtml(r.code) + '</td>'
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td class="cb-name">' + nameCellHtml(r.code) + kid + '</td>'
-      + (_cmp ? ('<td class="num cb-chg cb-chg-l">' + _chgCell(r, 'dRev',  'cRev',  r.revR,  r.revL)  + '</td>'
-               + '<td class="num cb-chg">' + _chgCell(r, 'dCost', 'cCost', r.costR, r.costL) + '</td>'
+      + (_cmp ? ('<td class="num cb-chg cb-chg-l">' + _chgCell(r, 'dRev',  'cRev',  'rev',  r.revR,  r.revL)  + '</td>'
+               + '<td class="num cb-chg">' + _chgCell(r, 'dCost', 'cCost', 'cost', r.costR, r.costL) + '</td>'
                + '<td class="num cb-chg cb-chg-r">' + _chgPt(r) + '</td>') : '')
       + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, r.costL, r.pCostL, r.prOverL, r.prsrL, null) : '')
       + monthCells('cb-m2', r.revR, r.pRevR, r.costR, r.pCostR, r.prOverR, r.prsrR, _cmp ? {
@@ -17506,8 +17512,8 @@ function renderContrib() {
          + '商品別レポートに出ない売上（送料・まとめ買いなど）があるため一致しないことがあります。ここでは商品別の合計を100%としています。';
     }
     if (_cmp) h += '<br><b>最新月変動</b>の売上・広告費は<b>増えた金額</b>（' + mR + ' − ' + mL + '）と、その下に小さく<b>変動率</b>（' + mR + ' ÷ ' + mL + ' − 1）。'
-                 + '変動率は「何%増えたか」で、シェアの差（pt）とは別物です。★色は<b>変動率の順位</b>で決めています'
-                 + '（金額の順位だと、もともと売上の大きい商品が毎月そのまま上位を占めてしまうため）。'
+                 + '変動率は「何%増えたか」で、シェアの差（pt）とは別物です。★色は<b>金額の順位</b>で決めています'
+                 + '（率で並べると+¥100でも率が高ければ上位に来てしまい、金額としてどこが効いたのか分からないため）。'
                  + mL + ' が0の商品は割り算できないので<span style="color:#9333ea;font-weight:700">新規</span>。'
                  + '色は増減と同じ<b>順位で4段</b>（上位5%＝青 / 上位10%＝緑 / 下位10%＝黄 / 下位5%＝赤）。'
                  + '<br>最新月変動の<b>PR広告ROAS差</b>だけは単位が<b>pt</b>（' + mR + ' − ' + mL + '）で、'
