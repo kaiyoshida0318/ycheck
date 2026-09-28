@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0773 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0774 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4014,7 +4014,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0773</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0774</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17288,6 +17288,17 @@ function renderContrib() {
     return '<span class="cb-chgv c-' + _cbRank5(v, _pools[rankKey]) + '">'
       + (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%</span>';
   };
+  // 【v1.0774】最新月変動の中に出す「PR広告売上ROASの差」。★単位は pt（右の月 − 左の月）。
+  //   ★値も母集団も、右の月の下に出している増減とまったく同じもの（_pools.prsr）を使う。
+  //     ここで別に計算すると、同じ行に違う数字が2か所出る事故になる。
+  const _chgPt = (r) => {
+    if (r.prsrR == null && r.prsrL == null) return '<span style="color:var(--text3)">—</span>';
+    if (!r.inL) return '<span class="cb-new">新規</span>';
+    if (r.dPrsr == null) return '<span style="color:var(--text3)">—</span>';
+    if (Math.abs(r.dPrsr) < 0.5) return '<span class="cb-chg-0">±0pt</span>';
+    return '<span class="cb-chgv c-' + _cbRank5(r.dPrsr, _pools.prsr) + '">'
+      + (r.dPrsr > 0 ? '+' : '−') + Math.round(Math.abs(r.dPrsr)).toLocaleString('ja-JP') + 'pt</span>';
+  };
   //   値が無い（両月とも0）ときは「—」、左の月が0なら「新規」
   const _chgCell = (r, key, nowV, beforeV) =>
     (!nowV && !beforeV) ? '<span style="color:var(--text3)">—</span>'
@@ -17348,7 +17359,8 @@ function renderContrib() {
       + '<td>' + imageCellHtml(r.code) + '</td>'
       + '<td class="cb-name">' + nameCellHtml(r.code) + kid + '</td>'
       + (_cmp ? ('<td class="num cb-chg cb-chg-l">' + _chgCell(r, 'cRev',  r.revR,  r.revL)  + '</td>'
-               + '<td class="num cb-chg cb-chg-r">' + _chgCell(r, 'cCost', r.costR, r.costL) + '</td>') : '')
+               + '<td class="num cb-chg">' + _chgCell(r, 'cCost', r.costR, r.costL) + '</td>'
+               + '<td class="num cb-chg cb-chg-r">' + _chgPt(r) + '</td>') : '')
       + (_cmp ? monthCells('cb-m1', r.revL, r.pRevL, r.costL, r.pCostL, r.prOverL, r.prsrL, null) : '')
       + monthCells('cb-m2', r.revR, r.pRevR, r.costR, r.pCostR, r.prOverR, r.prsrR, _cmp ? {
           isNew: !r.inL,
@@ -17367,7 +17379,7 @@ function renderContrib() {
   const h1 = '<tr>'
     + '<th class="cb-rank" rowspan="2">#</th>'
     + '<th rowspan="2">商品コード</th><th rowspan="2">画像</th><th rowspan="2">商品名</th>'
-    + (_cmp ? '<th colspan="2" class="cb-grp cb-chg-h cb-chg-l cb-chg-r" title="右の月が左の月から何%増えたか（ptではなく変化率）">最新月変動</th>' : '')
+    + (_cmp ? '<th colspan="3" class="cb-grp cb-chg-h cb-chg-l cb-chg-r" title="売上・広告費は「何%増えたか」の変化率、PR広告ROASは pt（右の月 − 左の月）">最新月変動</th>' : '')
     + (_cmp ? '<th colspan="6" class="cb-grp cb-m1-h">' + mL + '</th>' : '')
     + '<th colspan="6" class="cb-grp cb-m2-h">' + mR + '</th>'
     + '</tr>';
@@ -17386,7 +17398,8 @@ function renderContrib() {
     + '<th class="num ' + cls + '" title="' + escapeHtml(_prOverTip) + '">PR実績額<br>(7%超)</th>'
     + '<th class="num ' + cls + ' sortable" onclick="_cbSort(\'' + kPrsr + '\')" title="' + escapeHtml(_prsrTip) + '">PR広告<br>売上ROAS' + arrow(kPrsr) + '</th>';
   const h2 = '<tr>'
-    + (_cmp ? '<th class="num cb-chg-h cb-chg-l">売上</th><th class="num cb-chg-h cb-chg-r">広告費</th>' : '')
+    + (_cmp ? '<th class="num cb-chg-h cb-chg-l">売上</th><th class="num cb-chg-h">広告費</th>'
+            + '<th class="num cb-chg-h cb-chg-r" title="PR広告売上ROASの差（pt）。右の月 − 左の月">PR広告<br>ROAS差</th>' : '')
     + (_cmp ? sub('cb-m1-h', 'revL', 'costL', 'prsrL') : '') + sub('cb-m2-h', 'rev', 'cost', 'prsr') + '</tr>';
   // 合計行のPR広告売上ROASは「合計どうしで割り直した値」。★行の平均ではない
   const _totPrsr = (agg, totRev, totCost) => {
@@ -17412,7 +17425,11 @@ function renderContrib() {
   const _toL = _totPrOver(L), _toR = _totPrOver(R);
   const foot = '<tr class="cb-total"><td colspan="4">合計（' + rows.length + '件）</td>'
     + (_cmp ? ('<td class="num cb-chg cb-chg-l">' + (totRevL  > 0 ? _chg((totRevR / totRevL - 1) * 100)   : '<span style="color:var(--text3)">—</span>') + '</td>'
-             + '<td class="num cb-chg cb-chg-r">' + (totCostL > 0 ? _chg((totCostR / totCostL - 1) * 100) : '<span style="color:var(--text3)">—</span>') + '</td>') : '')
+             + '<td class="num cb-chg">' + (totCostL > 0 ? _chg((totCostR / totCostL - 1) * 100) : '<span style="color:var(--text3)">—</span>') + '</td>'
+             // 合計のROAS差は「合計どうしで割り直したROAS」の差。★行の平均ではない
+             + '<td class="num cb-chg cb-chg-r">' + ((_tpR == null || _tpL == null) ? '<span style="color:var(--text3)">—</span>'
+                 : (Math.abs(_tpR - _tpL) < 0.5 ? '<span class="cb-chg-0">±0pt</span>'
+                    : '<b>' + (_tpR > _tpL ? '+' : '−') + Math.round(Math.abs(_tpR - _tpL)).toLocaleString('ja-JP') + 'pt</b>')) + '</td>') : '')
     + (_cmp ? totCells('cb-m1', totRevL, totCostL, _toL, _tpL, null) : '')
     + totCells('cb-m2', totRevR, totCostR, _toR, _tpR, _cmp ? {
         rev: totRevR - totRevL, cost: totCostR - totCostL,
@@ -17444,7 +17461,9 @@ function renderContrib() {
     if (_cmp) h += '<br><b>最新月変動</b>＝（' + mR + ' ÷ ' + mL + ' − 1）×100。'
                  + '「何%増えたか」の<b>変化率</b>で、シェアの差（pt）とは別物です。'
                  + mL + ' が0の商品は割り算できないので<span style="color:#9333ea;font-weight:700">新規</span>。'
-                 + '色は増減と同じ<b>順位で4段</b>（上位5%＝青 / 上位10%＝緑 / 下位10%＝黄 / 下位5%＝赤）。';
+                 + '色は増減と同じ<b>順位で4段</b>（上位5%＝青 / 上位10%＝緑 / 下位10%＝黄 / 下位5%＝赤）。'
+                 + '<br>最新月変動の<b>PR広告ROAS差</b>だけは単位が<b>pt</b>（' + mR + ' − ' + mL + '）で、'
+                 + '右の月のPR広告売上ROASの下に出ている増減と同じ値です（同じ数字を、探さなくてよいように左にも置いています）。';
     if (_cmp) h += '<br>右（' + mR + '）の数字の下は<b>' + mL + 'からの増減</b>です。金額は円、シェアとPR広告売上ROASは<b>ポイント(pt)</b>'
                  + '（%の割り算ではありません）。' + mL + ' に無かった商品は「新規」、'
                  + 'どちらかが「—」の指標は増減を出しません。'
