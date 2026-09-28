@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0753 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0754 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3881,7 +3881,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0753</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0754</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -3932,6 +3932,8 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="graphdata" data-zdgrain="month" href="?view=graphdata">全-月別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graphdata" data-zdgrain="day" href="?view=graphdata-day" id="navGraphDataDay">全-日別データ</a>
     <a class="nav-tab nav-tab-link" data-view="graph" href="?view=graph">全-日月別グラフ</a>
+    <!-- 【v1.0754】全-推移＝店全体の「月初からの累積ROAS」の推移。商品-推移（§75）の店版。 -->
+    <a class="nav-tab nav-tab-link" data-view="zentrend" href="?view=zentrend">全-推移</a>
     <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
     <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
     <span id="cntAdAdjustActive" style="display:none"></span><span id="cntProAdjustActive" style="display:none"></span>
@@ -4394,6 +4396,25 @@ th.col-sroas { background-color:#e7d5f5; }
         <div id="itEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
         <div id="itTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:none"></div>
         <p class="note" id="itNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
+      </div>
+    </div>
+
+    <!-- 【v1.0754】View: 全-推移（店全体）。
+         ★グラフ・表・配色は 商品-推移 とまったく同じ関数（_trendPaint / IT_METRICS）を使う。
+           違いは「1日ぶんの素の値」を商品からではなく店全体（_zenDailyRowsFor）から取るところだけ。 -->
+    <div class="view" id="view-zentrend">
+      <div class="card">
+        <h3 class="card-title">全-推移</h3>
+        <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center">
+          <span class="filter-label">対象月</span>
+          <select id="ztMonthSel" onchange="_ztSetYm(this.value)" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <span class="filter-label" style="color:var(--text3);font-weight:500">月末までの推移（月初からの累積ROAS。日が進むほど確定値に近づきます）。表には日別値も併記。</span>
+          <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+        </div>
+        <div id="ztChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="ztCanvas"></canvas></div>
+        <div id="ztEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
+        <div id="ztTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:none"></div>
+        <p class="note" id="ztNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
       </div>
     </div>
 
@@ -16651,10 +16672,15 @@ function _itRenderSaved() {
 //   戻り値: Chart インスタンス（Chart.js が無いときは null）
 //   ★ここを直すと両方に効く。片方だけ直したくなったら opt を足すこと（コピペで分岐させない）
 // ----------------------------------------------------------------------------
-function _trendRows(codes, days, metrics) {
+// 【v1.0754】dayRaw を差し替えられるようにした（既定は商品ベースの _itDayRaw）。
+//   店全体の推移（全-推移）は同じ表・同じグラフのまま、1日ぶんの取り方だけ差し替えて使う。
+//   ★返す形（rev / adRev / adCost / prOver / prKnown）は必ず揃えること。ここが崩れると
+//     累積の足し算（cum）も IT_METRICS の num/den も全部おかしくなる。
+function _trendRows(codes, days, metrics, dayRaw) {
+  const _raw = (typeof dayRaw === 'function') ? dayRaw : _itDayRaw;
   const cum = { rev: 0, adRev: 0, adCost: 0, prOver: 0, prKnown: false };
   return days.map(d => {
-    const a = _itDayRaw(codes, d);
+    const a = _raw(codes, d);
     cum.rev += a.rev; cum.adRev += a.adRev; cum.adCost += a.adCost; cum.prOver += a.prOver;
     if (a.prKnown) cum.prKnown = true;
     const r = { date: d, day: (+String(d).slice(8, 10)), raw: a, cum: Object.assign({}, cum) };
@@ -16667,7 +16693,7 @@ function _trendRows(codes, days, metrics) {
   });
 }
 function _trendPaint(opt) {
-  const metrics = opt.metrics, rows = _trendRows(opt.codes, opt.days, metrics);
+  const metrics = opt.metrics, rows = _trendRows(opt.codes, opt.days, metrics, opt.dayRaw);   // 【v1.0754】
   const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? '#a0aec0' : '#718096';
@@ -16769,6 +16795,62 @@ function _trendPaint(opt) {
   return chart;
 }
 
+// ============================================================================
+// 【v1.0754】全-推移（店全体）
+//   ・1日ぶんの素の値は _zenDailyRowsFor([d]) から取る＝全-日別データとまったく同じ数字
+//   ・グラフ／表／配色は 商品-推移 と完全共通（_trendPaint ＋ IT_METRICS）
+// ============================================================================
+let _ztYm = '', _ztChart = null;
+function _ztDayRaw(_codes, d) {
+  let r = null;
+  try { r = (_zenDailyRowsFor([d]) || [])[0] || null; } catch (e) { r = null; }
+  if (!r) return { rev: 0, adRev: 0, adCost: 0, prOver: 0, prKnown: false };
+  return {
+    rev:    +r.totSales || 0,
+    adRev:  +r.adSales  || 0,
+    adCost: +r.spend    || 0,
+    prOver: (r.prOver != null) ? (+r.prOver || 0) : 0,
+    prKnown: (r.prCost != null)     // ★PRオプ実績を取り込んでいない日は「不明」。0円扱いにしない
+  };
+}
+function _ztMonths() {
+  const all = (typeof dailyAllDates === 'function' ? dailyAllDates() : []);
+  return [...new Set(all.map(d => String(d).slice(0, 7)))].sort().reverse();
+}
+function _ztSetYm(ym) { _ztYm = ym || ''; renderZenTrend(); }
+window._ztSetYm = _ztSetYm;
+function renderZenTrend() {
+  const canvas = document.getElementById('ztCanvas');
+  const wrap   = document.getElementById('ztChartWrap');
+  const empty  = document.getElementById('ztEmpty');
+  const tbl    = document.getElementById('ztTableWrap');
+  const note   = document.getElementById('ztNote');
+  if (!canvas || !tbl) return;
+  const months = _ztMonths();
+  if (!_ztYm || months.indexOf(_ztYm) < 0) _ztYm = months[0] || '';
+  const sel = document.getElementById('ztMonthSel');
+  if (sel) {
+    sel.innerHTML = months.map(m => '<option value="' + m + '">' + m.replace('-', '/') + '</option>').join('');
+    sel.value = _ztYm;
+  }
+  const _clear = (msg) => {
+    if (_ztChart) { try { _ztChart.destroy(); } catch (e) {} _ztChart = null; }
+    if (wrap) wrap.style.display = 'none';
+    if (empty) { empty.style.display = 'block'; empty.textContent = msg; }
+    tbl.innerHTML = ''; if (note) note.textContent = '';
+  };
+  const days = _ztYm ? (typeof dailyAllDates === 'function' ? dailyAllDates() : []).filter(d => String(d).slice(0, 7) === _ztYm).sort() : [];
+  if (!days.length) { _clear('この月の日次データがありません。レポートを取り込んでください。'); return; }
+  if (wrap) wrap.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+  // ★必ず破棄してから作り直す（忘れるとツールチップが多重に出る。§75で踏んだ）
+  if (_ztChart) { try { _ztChart.destroy(); } catch (e) {} _ztChart = null; }
+  _ztChart = _trendPaint({ canvas: canvas, wrap: wrap, tbl: tbl, note: note,
+    codes: null, dayRaw: _ztDayRaw, days: days, ym: _ztYm, metrics: IT_METRICS, clCode: null });
+  requestAnimationFrame(() => requestAnimationFrame(() => { try { if (_ztChart) _ztChart.resize(); } catch (e) {} }));
+}
+window.renderZenTrend = renderZenTrend;
+
 function renderItemTrend() {
   const canvas = document.getElementById('itCanvas');
   const wrap   = document.getElementById('itChartWrap');
@@ -16825,6 +16907,7 @@ function renderAll() {
   else if (state.currentView === 'retired') renderRetired();
   else if (state.currentView === 'graph') renderGraphAll();
   else if (state.currentView === 'graphdata') renderGraphData();
+  else if (state.currentView === 'zentrend') renderZenTrend();   // 【v1.0754】
   else if (state.currentView === 'compare') renderCompare();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
