@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0815 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0816 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4180,7 +4180,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0815</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0816</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5576,6 +5576,8 @@ th.col-sroas { background-color:#e7d5f5; }
         <button class="btn sm" id="ghBtnManualSave" type="button">⬆ 今すぐGitHub保存</button>
         <button class="btn sm" id="ghBtnManualLoad" type="button">⬇ GitHubから再取得</button>
         <button class="btn sm ghost" id="ghBtnClear" type="button" style="margin-left:auto;color:var(--red);">🗑 PATを削除</button>
+        <!-- 【v1.0816】いま開いているショップのデータだけを空にする。他のショップには触らない。 -->
+        <button class="btn sm ghost" id="ghBtnResetShop" type="button" style="color:#b91c1c;border-color:#fca5a5;">🧹 このショップのデータを全消去</button>
       </div>
 
       <div id="ghSettingsLog" style="margin-top:10px;padding:10px;background:#1a1a1a;color:#0f0;font-family:monospace;font-size:0.75rem;border-radius:6px;max-height:180px;overflow-y:auto;display:none;"></div>
@@ -6893,6 +6895,81 @@ async function ghGetFileForLoad() {
   } catch (e) { return { sha: null, content: null, fromLegacy: false }; }
 }
 
+// ============================================================================
+// 【v1.0816】★いま開いているショップのデータだけを空にする。
+//   別の店のレポートを取り込んでしまった等で、作り直したほうが早いときに使う。
+//
+//   ★他のショップには一切触らない。消すのは
+//     ・メモリ上の state（このタブが読んでいるショップのぶん）
+//     ・localStorage の ycheck_data_v1_{shop} / 未反映フラグ / 操作ログ
+//     ・GitHub の data/{shop}/ycheck_data_v2.json（空で上書き）
+//   ★data/{shop}/rank.json は外部CIが作るファイルなので触らない
+//     （state.rank は消すので、次の取得でその店の順位が入り直す）。
+//   ★表示設定（列幅・文字サイズ）は【消さない】。店のデータではなく使う人の好みなので。
+//
+//   ★★ allowEmpty:true と force:true の両方が要る。
+//      ・allowEmpty … 「中身0件では保存しない」という安全弁を外す
+//      ・force      … 「月が消える／件数が大きく減る」のを止める古い上書き防止ガードを外す
+//      どちらか片方だと **消したつもりで消えていない**（保存が中止され、次回起動で元に戻る）。
+// ============================================================================
+async function ycResetShopData() {
+  const shop = (typeof getSessionShop === 'function') ? getSessionShop() : null;
+  if (!shop) return;
+  const nm = shop.name || shop.id;
+  if (!ghIsEnabled()) {
+    alert('GitHubのトークンが設定されていないため、この操作はできません。\n（消してもGitHub側が残り、次に開いたときに元に戻ります）');
+    return;
+  }
+  const ok = prompt(
+    'ショップ「' + nm + '」のデータを【全部】消します。\n\n'
+    + '消えるもの: 売上・広告・PR・日別・商品マスタ・ステータス・入札価格・料率・順位・変更記録\n'
+    + '消えないもの: 他のショップのデータ / 表示設定（列幅・文字サイズ） / ショップの登録そのもの\n\n'
+    + '※GitHub上の data/' + shop.id + '/ycheck_data_v2.json も空で上書きされます。元に戻せません。\n'
+    + '※コミット履歴には残るので、GitHubから前の版を取り出すことはできます。\n\n'
+    + '実行するには、下の欄にショップ名「' + nm + '」をそのまま入力してください。');
+  if (ok == null) return;
+  if (String(ok).trim() !== nm) { alert('入力が一致しなかったので中止しました。'); return; }
+
+  try {
+    // 1) メモリ上のデータを空にする（★viewPrefs と currentView は残す）
+    state.overall = null; state.item = null; state.ad = null;
+    state.bid = null; state.proRate = null;
+    state.master = {}; state.productMeta = {};
+    state.rank = {}; state.rankEdits = {}; state.rankMeta = null;
+    state.productsCsvSnapshot = null;
+    state.changeLog = { shop: [], items: {} };
+    state.daily = { overall: {}, item: {}, ad: {}, pr: {} };
+    state.uploadBuffer = { overall: null, item: null, ad: null, bid: null, proRate: null, master: null };
+    try { if (typeof ensureDaily === 'function') ensureDaily(); } catch (e) {}
+    try { if (typeof invalidateDailyRollup === 'function') invalidateDailyRollup(); } catch (e) {}
+    try { if (typeof ensureChangeLog === 'function') ensureChangeLog(); } catch (e) {}
+
+    // 2) この店ぶんの localStorage を消す（★他店のキーには触らない）
+    try { localStorage.removeItem(getStorageKey()); } catch (e) {}
+    try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}
+    try { localStorage.removeItem(_ycLogKey()); } catch (e) {}
+
+    // 3) GitHub を空で上書き（★2つのフラグが要る。上のコメント参照）
+    ghLog('「' + nm + '」のデータを全消去しています…', 'warn');
+    const r = await ghSaveToGitHub({ allowEmpty: true, force: true, manual: true });
+    if (r && r.success) {
+      ghLog('✓ 「' + nm + '」のデータを全消去しました（' + ghFilePath() + ' を空で保存）', 'ok');
+      try { if (typeof showToast === 'function') showToast('「' + nm + '」のデータを全消去しました', 'ok'); } catch (e) {}
+    } else {
+      // ★ここで「消えました」と言わないこと。GitHubが残っていれば次回起動で元に戻る。
+      ghLog('⚠ 画面と端末のデータは消しましたが、GitHubへの保存に失敗しました: '
+        + ((r && (r.reason || r.error)) || '原因不明') + ' → もう一度「⬆ 反映する」を押してください', 'ng');
+      alert('画面と端末のデータは消しましたが、GitHubへの保存に失敗しました。\n'
+        + 'このままだと次に開いたときに元に戻ります。\n「⬆ 反映する」を押して、空の状態をGitHubへ保存してください。');
+    }
+  } catch (e) {
+    console.error('[Ycheck] 全消去に失敗:', e);
+    alert('全消去に失敗しました: ' + (e && e.message));
+  }
+  try { renderAll(); } catch (e) {}
+}
+window.ycResetShopData = ycResetShopData;
+
 // PAT取得・設定
 function ghGetPat() {
   try { return localStorage.getItem(GH_PAT_KEY) || ''; } catch (e) { return ''; }
@@ -8207,6 +8284,20 @@ function initGitHubSettings() {
   const btnManualSave = document.getElementById('ghBtnManualSave');
   const btnManualLoad = document.getElementById('ghBtnManualLoad');
   const btnClear = document.getElementById('ghBtnClear');
+  // 【v1.0816】このショップのデータを全消去
+  {
+    const bR = document.getElementById('ghBtnResetShop');
+    if (bR && !bR._wired) {
+      bR._wired = true;
+      bR.addEventListener('click', () => { ycResetShopData(); });
+      // 【v1.0816】★ラベルに店名を入れる。「このショップ」だけだと、
+      //   どの店を消そうとしているのか画面から分からず事故になる。
+      try {
+        const _s = (typeof getSessionShop === 'function') ? getSessionShop() : null;
+        if (_s) bR.textContent = '\ud83e\uddf9 「' + (_s.name || _s.id) + '」のデータを全消去';
+      } catch (e) {}
+    }
+  }
   const pathEl = document.getElementById('ghSavePath');
 
   function refreshModal() {
