@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0822 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0824 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4258,7 +4258,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0822</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0824</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4671,19 +4671,33 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
+          <!-- 【v1.0822/v1.0824】サムネ帯の並べ方。
+               ★【サムネ帯より上の行】に置くこと。帯より下（操作行）に置くと、
+                 「上下」で帯が縦に伸びたときボタンが画面外へ押し出され、
+                 横並びに戻すために毎回スクロールが要る（v1.0824 で移動した理由）。
+               ★3画面共通の1設定なので、どの画面で押しても同じ。
+               ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
+                 ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
+          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
+          </span>
           <span style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
             <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
           </span>
-          <!-- 【v1.0820】サムネ帯を「売上上位50件」から「対象商品ぜんぶ」に切り替える。
+          <!-- 【v1.0823】ヘッダー1とヘッダー2を【1回で】隠す／戻す。
+               画面上部の「🔼 ヘッダー1を隠す」「🔼 ヘッダー2を隠す」を2回押さずに、
+               この画面から表を広く使えるようにするためのもの。
+               ★状態は _hdrCollapse ／ applyHeaderCollapse を【そのまま使う】。
+                 ここで body のクラスを直接付け外ししないこと（開閉の入口が2本になり、
+                 上部のボタンと食い違う）。
                ★この行の【最後の子】に置くこと。配色凡例より前に置くと、margin-left:auto で右へ寄っても
-                 凡例がさらに右に残り、一番右にならない（v1.0820 で実際に踏んだ）。
+                 凡例がさらに右に残り、一番右にならない（v1.0820 で踏んだ）。
                  ★反映するボタンは「margin-left:auto の要素の【手前】」に入る作りなので
                    （_ycInjectReflectButtons）、このボタンが一番右、その左に反映する、になる。
-                   逆にしたいならボタン側ではなく _ycInjectReflectButtons を直すこと。
-               ★見た目は「親子のみ」と同じ .mi-mode-btn。同じ行の同じ種類（ON/OFFの切替）なので
-                 別のデザインにしない。 -->
-          <button type="button" class="mi-mode-btn" id="miThumbAllBtn" onclick="_miToggleThumbAll()" style="margin-left:auto" title="サムネ帯に、売上上位だけでなく対象商品を全部並べます。件数が多いと少し重くなります。">全表示</button>
+               ★ラベルは applyHeaderCollapse が状態から作る（ここに直書きしない）。 -->
+          <button type="button" class="mi-mode-btn" id="miHdr12Btn" onclick="_hdr12Toggle()" style="margin-left:auto" title="上部バー・【基本】【全体】【取得データ】の段（ヘッダー1）と、【一覧】【調整】のタブ行（ヘッダー2）をまとめて隠します。もう一度押すと戻ります。">🔼 ヘッダー1・2を隠す</button>
         </div>
         <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（<span id="miThumbNLabel">売上上位50</span>）を押すか、商品コード・商品名で検索して切り替えます（<span id="miThumbScrollNote">サムネは横スクロール</span>）。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
@@ -4729,13 +4743,6 @@ th.col-sroas { background-color:#e7d5f5; }
                「表の読み方を変える操作」だから（比率表記と同じ仲間）。検索・親子のみは
                【どの商品を出すか】の操作なので上のまま。軸が違うものを混ぜない。 -->
           <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
-          <!-- 【v1.0822】サムネ帯の並べ方。★3画面共通の1設定なので、どの画面で押しても同じ。
-               ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
-                 ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
-          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
-            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
-            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
-          </span>
         </div>
         <!-- 【v1.0801】商品名・日別の注記は表の【外】に置く。
              表の中に入れると、30日ぶんスクロールした時点で「どの商品を見ているか」が画面から消える。 -->
@@ -4781,6 +4788,17 @@ th.col-sroas { background-color:#e7d5f5; }
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
           <!-- 【v1.0637】変更記録の縦線の出し分け（商品ごとの記録は 商品情報を編集 から登録する） -->
           <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+          <!-- 【v1.0822/v1.0824】サムネ帯の並べ方。
+               ★【サムネ帯より上の行】に置くこと。帯より下（操作行）に置くと、
+                 「上下」で帯が縦に伸びたときボタンが画面外へ押し出され、
+                 横並びに戻すために毎回スクロールが要る（v1.0824 で移動した理由）。
+               ★3画面共通の1設定なので、どの画面で押しても同じ。
+               ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
+                 ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
+          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
+          </span>
         </div>
         <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品のグラフに切り替わる（商品-日月別データと同じ見た目） -->
         <div id="igThumbs" class="mi-thumbs"></div>
@@ -4819,13 +4837,6 @@ th.col-sroas { background-color:#e7d5f5; }
           <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
           <span style="color:var(--text3)" id="igRangeTilde">〜</span>
           <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
-          <!-- 【v1.0822】サムネ帯の並べ方。★3画面共通の1設定なので、どの画面で押しても同じ。
-               ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
-                 ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
-          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
-            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
-            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
-          </span>
         </div>
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
@@ -13104,7 +13115,7 @@ function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0
 //     同じサムネ帯なのに画面によって並びが違う、という分かりにくい状態になる。
 //   ★切り替えは【CSSのクラスだけ】。描き直さない。
 //     描き直すと選択中の商品の位置や横スクロール位置がリセットされる。
-//   ★保存しない（_miThumbAll と同じ理由＝一時的な見方の切替）。
+//   ★保存しない（一時的な見方の切替なので）。
 // ============================================================================
 let _ycThumbStack = false;   // false = 横並び（既定）
 function _ycThumbLayoutApply() {
@@ -13124,16 +13135,13 @@ function _ycThumbLayoutSet(v) { _ycThumbStack = (v === 'stack'); _ycThumbLayoutA
 window._ycThumbLayoutSet = _ycThumbLayoutSet;
 window._ycThumbLayoutApply = _ycThumbLayoutApply;
 
-// 【v1.0820】サムネ帯を全件表示にするか。★このタブの間だけの表示切替なので保存しない
-//   （列幅や文字サイズと違い「いま全部見たい」という一時的な操作。保存すると
-//    次に開いたとき勝手に重い状態で始まる）。
-let _miThumbAll = false;
-// 【v1.0807/v1.0820】サムネ帯に出す既定の件数。★説明文もボタンの説明もここから作る（直書きしない）。
+// 【v1.0807/v1.0820】サムネ帯に出す件数。★説明文もここから作る（直書きしない）。
 //   ★増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がこの件数ぶん走る。
 //     重くなるようならここを戻すだけでよい（他は何も触らなくていい）。
+//   【v1.0823】★v1.0820 の「全表示」（帯を全件にする）は撤去した。ボタンは
+//     「ヘッダー1・2を隠す」に作り替えている。たくさん見たいときは v1.0822 の
+//     「上下」（折り返して縦に積む）を使う。
 const MI_THUMB_N_MAX = 50;
-function _miToggleThumbAll(){ _miThumbAll = !_miThumbAll; renderMonthly(); }
-window._miToggleThumbAll = _miToggleThumbAll;
 // 【v1.0527】商品-日月別データの粒度切替。'month'=従来（月を並べる）／'day'=対象月の1日ごとを並べる。
 // 【v1.0799】既定は日別。対象月は _miDayYm 未設定 → 取込済みの最新月（＝今月）が入る（renderMonthly 内）。
 //   ★日別データが1日も無い環境では renderMonthly 側で 'month' に落とす（下の _hasAnyDaily 判定）。
@@ -13880,8 +13888,6 @@ function renderMonthly() {
   if (_seg) _seg.querySelectorAll('.mi-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === _miRangeMode));
   const _pBtn = document.getElementById('miParentOnlyBtn');   // 【v1.0408】親子のみボタンの選択状態
   if (_pBtn) _pBtn.classList.toggle('on', _miParentOnly);
-  { const _aBtn = document.getElementById('miThumbAllBtn');   // 【v1.0820】全表示ボタンの選択状態
-    if (_aBtn) _aBtn.classList.toggle('on', _miThumbAll); }
   const _rangeSel = document.getElementById('miRangeSel');
   const _rangeLbl = document.getElementById('miRangeLabel');
   if (_rangeSel && _rangeLbl) {
@@ -14060,7 +14066,7 @@ function renderMonthly() {
   //   全表示のとき「売上上位全123件」という日本語にならない文が出る。
   { const e = document.getElementById('miThumbNLabel');
     if (e) e.textContent = rows.length === 0 ? '0件'
-      : (_miThumbAll ? ('全' + rows.length + '件') : ('売上上位' + MI_THUMB_N_MAX)); }
+      : ('売上上位' + MI_THUMB_N_MAX); }
 
   // ============================================================
   // 【v1.0798】ここから下を「1商品ずつ・全-月別データと同じ並べ方」に作り替えた。
@@ -14097,7 +14103,7 @@ function renderMonthly() {
   // 【v1.0820】★実際に並べる件数。「全表示」ONなら対象商品ぜんぶ。
   //   ★ここ1ヶ所で決めて、slice も順位も説明文もこの値を見る。
   //     別々に書くと「51件目からは順位が — なのに帯には出ている」のようなズレが出る。
-  const _thumbN = _miThumbAll ? rows.length : MI_THUMB_N;
+  const _thumbN = MI_THUMB_N;
   const _esc = s2 => String(s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   // 【v1.0798】★選択中の商品が21位以下でも必ず帯に出す。
   //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
@@ -23198,6 +23204,19 @@ function _hdrCollapseLoad() {
 function _hdrCollapseSave() {
   try { localStorage.setItem(HDR_COLLAPSE_KEY, JSON.stringify(_hdrCollapse)); } catch (e) {}
 }
+// 【v1.0823】ヘッダー1とヘッダー2を1回でまとめて切り替える。
+//   ★どちらか片方でも出ていれば【両方隠す】、両方隠れていれば【両方出す】。
+//     「片方ずつ反転」にすると、h1だけ隠れている状態で押したとき
+//     h1が出てh2が隠れる＝押すたびに入れ替わるだけで、いつまでも隠れない。
+//   ★状態は _hdrCollapse の1本だけ。body のクラスは applyHeaderCollapse しか触らない。
+//     ここで直接クラスを付け外しすると、上部の個別ボタンと食い違う。
+function _hdr12Toggle() {
+  const hideBoth = !(_hdrCollapse.h1 && _hdrCollapse.h2);
+  _hdrCollapse.h1 = hideBoth; _hdrCollapse.h2 = hideBoth;
+  _hdrCollapseSave(); applyHeaderCollapse();
+}
+window._hdr12Toggle = _hdr12Toggle;
+
 function applyHeaderCollapse() {
   document.body.classList.toggle('chrome-hidden',   !!_hdrCollapse.h1);
   document.body.classList.toggle('tabs-collapsed',  !!_hdrCollapse.h2);   // 【v1.0700】
@@ -23241,6 +23260,15 @@ function applyHeaderCollapse() {
     const _inBar = (show3 || (show2 && _h3Gone)) && !show1;
     bar.style.display = _inBar ? '' : 'none';
   }
+  // 【v1.0823】商品-日月別データのボタンのラベルと選択状態を【状態から】作る。
+  //   ★上部の「ヘッダー1を隠す」「ヘッダー2を隠す」を個別に押しても必ずここを通るので、
+  //     ラベルが食い違わない。ボタン側で書き換えないこと。
+  { const hb = document.getElementById('miHdr12Btn');
+    if (hb) {
+      const both = !!(_hdrCollapse.h1 && _hdrCollapse.h2);
+      hb.textContent = both ? '🔽 ヘッダー1・2を表示' : '🔼 ヘッダー1・2を隠す';
+      hb.classList.toggle('on', both);
+    } }
   if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
   // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
   if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
