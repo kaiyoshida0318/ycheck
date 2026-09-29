@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0812 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0814 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4171,7 +4171,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0812</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0814</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4686,6 +4686,8 @@ th.col-sroas { background-color:#e7d5f5; }
           <span style="color:var(--text3)" id="igRangeTilde">〜</span>
           <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
         </div>
+        <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品のグラフに切り替わる（商品-日月別データと同じ見た目） -->
+        <div id="igThumbs" class="mi-thumbs"></div>
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
         <div id="igTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
@@ -4713,6 +4715,8 @@ th.col-sroas { background-color:#e7d5f5; }
           <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
           <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
         </div>
+        <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品の推移に切り替わる -->
+        <div id="itThumbs" class="mi-thumbs"></div>
         <div id="itChartWrap" style="position:relative;height:380px;margin:6px 0 14px"><canvas id="itCanvas"></canvas></div>
         <div id="itEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
         <div id="itTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto;overflow-y:visible;max-height:none"></div>
@@ -5554,7 +5558,7 @@ th.col-sroas { background-color:#e7d5f5; }
 
       <div style="margin-bottom:14px;padding:10px 12px;background:var(--bg3);border-radius:6px;font-size:0.8rem;">
         <div style="margin-bottom:4px;"><b>保存先（現在のショップ）</b>:</div>
-        <code id="ghSavePath" style="font-size:0.78rem;color:var(--text2);">data/yukaiya/ycheck_data.json</code>
+<code id="ghSavePath" style="font-size:0.78rem;color:var(--text2);">—</code><!-- 【v1.0814】実体は ghFilePath()。直書きしない -->
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
@@ -5945,29 +5949,33 @@ th.col-sroas { background-color:#e7d5f5; }
           <button class="btn sm primary" id="btnConfirmUploadTop" type="button" style="margin-left:auto" disabled>⬆ アップロード実行</button>
         </div>
         <div class="fs-grid">
+      <!-- 【v1.0814】★リンクは data-yc-link で種類だけ書き、URLは _ycSyncStoreLinks() が
+           現在ショップの shopCode から組み立てる。ここに直接URLを書かないこと。
+           v1.0813まで yukaiya 固定で、KAIRY を開いていてもゆかい屋の管理画面に飛び、
+           そこで落としたCSVを取り込んで**KAIRYのデータがゆかい屋に汚染された**。 -->
       <div class="file-slot" id="slot-ad" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge">①</span>広告詳細レポート（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">広告詳細レポート商品別*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → 実績・明細・<b class="src-key">広告詳細レポート</b> → 商品別 → CSVファイルダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://cam.yahoo.co.jp/yukaiya/report/adDetail" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/report/adDetail</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="#" data-yc-link="adDetail" target="_blank" rel="noopener">（ショップ未確定）</a></div>
       </div>
       <div class="file-slot" id="slot-item" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge">②</span>商品別売上（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
-        <div class="file-slot-filename">yukaiya-item_report*.csv</div>
+        <div class="file-slot-filename" data-yc-fname="item">—</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → <b class="src-key">商品分析</b> → CSVファイルダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/item_report</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="#" data-yc-link="itemReport" target="_blank" rel="noopener">（ショップ未確定）</a></div>
       </div>
       <div class="file-slot" id="slot-overall" data-upload-group="monthly">
         <div class="file-slot-label"><span class="slot-badge">③</span>ショップ売上（日別）</div>
         <div class="file-slot-status">未アップロード</div>
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
-        <div class="file-slot-filename">yukaiya-store_overall*.csv</div>
+        <div class="file-slot-filename" data-yc-fname="overall">—</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → <b class="src-key">全体分析</b> → CSVファイルダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/overall</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="#" data-yc-link="overall" target="_blank" rel="noopener">（ショップ未確定）</a></div>
       </div>
       <div class="file-slot" id="slot-pr" data-upload-group="daily">
         <div class="file-slot-label"><span class="slot-badge">④</span>PRオプション実績（日別）</div>
@@ -5975,7 +5983,7 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">*_total_prreport.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>販売管理 → レポート → <b class="src-key">PRオプションレポート</b> → CSVファイルダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport" target="_blank" rel="noopener">https://pro.store.yahoo.co.jp/pro.yukaiya/sales_manage/report/prreport</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="#" data-yc-link="prReport" target="_blank" rel="noopener">（ショップ未確定）</a></div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※このレポートの「売上」はPRオプ経由売上ではないため、Ycheckの総売上・SEO売上・広告売上には反映しません。</div>
       </div>
         </div>
@@ -5989,7 +5997,7 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="file-slot-example"><span class="fse-label">ファイル名の例</span><code></code></div>
         <div class="file-slot-filename">data*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>商品登録 → 商品管理 → 商品データ → ダウンロード</div>
-        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/" target="_blank" rel="noopener">https://editor.store.yahoo.co.jp/RT/yukaiya/ItemMgr/</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon">🔗</span><a href="#" data-yc-link="itemMgr" target="_blank" rel="noopener">（ショップ未確定）</a></div>
       </div>
       <div class="file-slot" id="slot-bid" data-upload-group="spot">
         <div class="file-slot-label"><span class="slot-badge">⑥</span>入札価格（最新値）</div>
@@ -5998,8 +6006,8 @@ th.col-sroas { background-color:#e7d5f5; }
         <div class="file-slot-filename">BID_ITEM*.csv</div>
         <div class="file-slot-source"><span class="file-slot-source-label">取得元</span>集客・販促 → コマースアドマネージャー → アイテムリーチ → CSV入札・削除 → 商品データのダウンロード</div>
         <!-- 【v1.0499】未ログイン時にCSVがストクリトップへ飛ぶ問題対策：先にログインする導線を①として明示 -->
-        <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">①</span><a href="https://pro.store.yahoo.co.jp/pro.yukaiya" target="_blank" rel="noopener">ストアクリエイターを開く（未ログインなら先にログイン）</a></div>
-        <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">②</span><a href="https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629" target="_blank" rel="noopener">https://cam.yahoo.co.jp/yukaiya/itemad/csv?campaignId=11287&amp;adGroupId=11629</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">①</span><a href="#" data-yc-link="storeTop" target="_blank" rel="noopener">ストアクリエイターを開く（未ログインなら先にログイン）</a></div>
+        <div class="file-slot-link"><span class="file-slot-link-icon" style="font-weight:700;color:var(--accent)">②</span><a href="#" data-yc-link="bidCsv" target="_blank" rel="noopener">（ショップ未確定）</a></div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5">※未ログインだと②は一度ストクリのトップに飛びます。先に①でログインしてから②を押すと、1回目からダウンロードできます。</div>
       </div>
         </div>
@@ -6051,8 +6059,11 @@ th.col-sroas { background-color:#e7d5f5; }
 //   ★コードから参照するときは必ず getShops() を通すこと。SHOPS_INITIAL を直接見ると
 //     ユーザーが追加したショップが存在しないことになる。
 const SHOPS_INITIAL = {
-  yukaiya: { id: 'yukaiya', name: 'ゆかい屋', shopCode: 'yukaiya' },
-  kairy:   { id: 'kairy',   name: 'KAIRY',   shopCode: 'burariya' }
+  // 【v1.0814】adCampaignId / adGroupId ＝ ⑥入札価格CSVのリンクに付けるID。店ごとに違う。
+  //   ★分からない店は空のままにする。他店のIDを付けて開くと【別の店の入札データ】を落としてしまう。
+  //     空ならクエリ無しでアイテムリーチのCSV画面を開くだけなので害がない。
+  yukaiya: { id: 'yukaiya', name: 'ゆかい屋', shopCode: 'yukaiya', adCampaignId: '11287', adGroupId: '11629' },
+  kairy:   { id: 'kairy',   name: 'KAIRY',   shopCode: 'burariya', adCampaignId: '', adGroupId: '' }
 };
 const DEFAULT_SHOP_ID = 'yukaiya';
 const CURRENT_SHOP_STORAGE_KEY = 'ycheck_current_shop';  // 選択中のショップID（shopまたぎで共通）
@@ -6070,7 +6081,11 @@ function getShops() {
       if (!v || !v.id) return;
       const id = String(v.id).trim().toLowerCase().replace(/[^a-z0-9]/g, '');   // ★IDは英数字のみ
       if (!id) return;
-      out[id] = { id: id, name: String(v.name || id), shopCode: String(v.shopCode || id) };
+      // 【v1.0814】★adCampaignId / adGroupId も必ず持ち回ること。
+      //   ここで拾い忘れると、ショップ管理で「保存」を押した瞬間にIDが消える
+      //   （saveShops は getShops() の結果をそのまま書き戻すため）。
+      out[id] = { id: id, name: String(v.name || id), shopCode: String(v.shopCode || id),
+                  adCampaignId: String(v.adCampaignId || ''), adGroupId: String(v.adGroupId || '') };
     });
   }
   if (!Object.keys(out).length) {   // 未設定 or 全部壊れている → 種から復元
@@ -6085,7 +6100,22 @@ function saveShops(map) {
 }
 // 初回だけ種を書き込む（以後はユーザーの編集が正）
 (function initShopsIfNeeded() {
-  try { if (!localStorage.getItem(SHOPS_STORAGE_KEY)) saveShops(getShops()); } catch (e) {}
+  try {
+    if (!localStorage.getItem(SHOPS_STORAGE_KEY)) { saveShops(getShops()); return; }
+    // 【v1.0814】v1.0812/0813 で保存された定義には adCampaignId が無い。
+    //   同じIDの種に値があるときだけ補う（ユーザーが空にした値を勝手に戻さないよう、
+    //   「キーがそもそも無い」場合だけに限る）。
+    const cur = getShops();
+    let changed = false;
+    Object.keys(SHOPS_INITIAL).forEach(function (k) {
+      if (!cur[k]) return;
+      const seed = SHOPS_INITIAL[k];
+      if (cur[k].adCampaignId === '' && seed.adCampaignId && cur[k].shopCode === seed.shopCode) {
+        cur[k].adCampaignId = seed.adCampaignId; cur[k].adGroupId = seed.adGroupId || ''; changed = true;
+      }
+    });
+    if (changed) saveShops(cur);
+  } catch (e) {}
 })();
 
 // 現在選択中のショップIDを取得（未設定・未登録ならデフォルト）
@@ -9787,6 +9817,21 @@ async function processFiles(files) {
       const rows = await readCsvFile(file);
       const kind = classifyFile(file.name, rows);
       if (kind === 'unknown') { log(`⚠ 種別判定できず: ${file.name}`, 'err'); continue; }
+      // 【v1.0814】★別の店のレポートなら取り込まない。
+      //   ここで止めないと、他店の売上がそのまま混ざり、あとから分離できなくなる
+      //   （実際にKAIRYがゆかい屋のデータで汚染された）。
+      {
+        const _sc = ycFileShopCheck(file.name);
+        if (!_sc.ok) {
+          const _now = (typeof getSessionShop === 'function') ? getSessionShop() : {};
+          log(`⛔ 別のショップのファイルです: ${file.name}`
+            + `（このファイルは「${_sc.found}」/ いま開いているのは「${_now.name || ''}（${_sc.expect}）」）`
+            + ' → 取り込みませんでした。ヘッダーのショップを切り替えてからやり直してください。', 'err');
+          try { if (typeof showToast === 'function') showToast(
+            '別のショップのファイルなので取り込みませんでした（' + _sc.found + ' → ' + _sc.expect + '）', 'warn'); } catch (e) {}
+          continue;
+        }
+      }
 
       // 【v1.0526】まず日別レポートかどうかを判定する。
       //   日別3種（ショップ売上・商品別売上・広告詳細）で日付が取れたものは、日別として取り込む。
@@ -10092,6 +10137,77 @@ async function commitUpload() {
     log('💾 この端末に保存しました（GitHub未設定のため、他PCには共有されません）', 'ok');
   }
   closeUploadModal();
+}
+
+// ============================================================================
+// 【v1.0814】ストア管理画面へのリンクを、現在ショップの shopCode から組み立てる。
+//   ★URLをHTMLに直接書かないこと。v1.0813まで yukaiya 固定だったせいで、
+//     KAIRYを開いていてもゆかい屋の管理画面に飛び、そこで落としたCSVを取り込んで
+//     **KAIRYのデータがゆかい屋のもので汚染された**（2026-07の時点ですでに発生）。
+//   ★キャンペーンID/広告グループIDは店ごとに違う。ショップ定義に
+//     adCampaignId / adGroupId があればクエリを付け、無ければ付けない
+//     （他店のIDを付けて開くほうが害が大きい）。
+// ============================================================================
+function ycStoreLinks(shop) {
+  const sc = String((shop || {}).shopCode || '').trim();
+  if (!sc) return null;
+  const cam = 'https://cam.yahoo.co.jp/' + sc;
+  const pro = 'https://pro.store.yahoo.co.jp/pro.' + sc;
+  const rt  = 'https://editor.store.yahoo.co.jp/RT/' + sc;
+  const cid = String(shop.adCampaignId || '').trim(), gid = String(shop.adGroupId || '').trim();
+  const q = (cid && gid) ? ('?campaignId=' + encodeURIComponent(cid) + '&adGroupId=' + encodeURIComponent(gid)) : '';
+  return {
+    adDetail:   cam + '/report/adDetail',
+    itemReport: pro + '/sales_manage/item_report',
+    overall:    pro + '/sales_manage/overall',
+    prReport:   pro + '/sales_manage/report/prreport',
+    itemMgr:    rt  + '/ItemMgr/',
+    storeTop:   pro,
+    bidCsv:     cam + '/itemad/csv' + q
+  };
+}
+function _ycSyncStoreLinks() {
+  try {
+    const shop = (typeof getSessionShop === 'function') ? getSessionShop() : null;
+    const links = ycStoreLinks(shop);
+    const sc = (shop || {}).shopCode || '';
+    document.querySelectorAll('[data-yc-link]').forEach(function (a) {
+      const k = a.getAttribute('data-yc-link');
+      const u = links && links[k];
+      if (!u) { a.removeAttribute('href'); a.textContent = '（ショップ未設定）'; return; }
+      a.href = u;
+      // ★リンク文字も実URLにする。どの店の管理画面を開こうとしているか、押す前に読めるようにする。
+      if (a.textContent === '（ショップ未確定）' || /^https?:/.test(a.textContent)) a.textContent = u;
+      a.title = (shop.name || sc) + ' の管理画面を開きます';
+    });
+    // ファイル名の例もショップコードから作る（ここも直書きしない）
+    document.querySelectorAll('[data-yc-fname]').forEach(function (e) {
+      const k = e.getAttribute('data-yc-fname');
+      e.textContent = sc ? (sc + (k === 'item' ? '-item_report*.csv' : '-store-overall*.csv')) : '—';
+    });
+  } catch (e) { console.warn('[Ycheck] ストアリンクの生成に失敗:', e); }
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _ycSyncStoreLinks);
+else setTimeout(_ycSyncStoreLinks, 0);
+
+// ============================================================================
+// 【v1.0814】★取り込むCSVが【別の店のもの】でないか、ファイル名で確かめる。
+//   ②商品別売上 と ③ショップ売上 のファイル名は  {ストアアカウント}-item_report-YYYYMMDD.csv /
+//   {ストアアカウント}-store-overall-YYYYMMDD.csv  の形で、先頭にストアアカウントが入る。
+//   ここが現在ショップの shopCode と違うなら、別の店のレポート。
+//   戻り値: { ok:true } / { ok:false, found:'yukaiya', expect:'burariya' } / { ok:true, unknown:true }
+//   ★判定できないファイル（①④⑤⑥＝名前に店名が入らない）は通す。
+//     「分からない＝拒否」にすると、正しいファイルまで入らなくなる。
+// ============================================================================
+function ycFileShopCheck(filename) {
+  const expect = String((typeof getSessionShop === 'function' ? getSessionShop() : {}).shopCode || '').toLowerCase();
+  const n = String(filename || '').toLowerCase();
+  const m = n.match(/^(.+?)-(?:item_report|item-report|store-overall|store_overall)/);
+  if (!m || !expect) return { ok: true, unknown: true };
+  const found = m[1].replace(/^.*[\/\\]/, '').trim();
+  if (!found) return { ok: true, unknown: true };
+  // ★完全一致で見る。前方一致にすると yukaiya と yukaiya2 のような店を取り違える。
+  return (found === expect) ? { ok: true } : { ok: false, found: found, expect: expect };
 }
 
 // ==================== Slot management ====================
@@ -17402,6 +17518,7 @@ function _igSelect(key) {
   renderItemGraph();
 }
 function _igMetricChange(v) { _igMetric = v; renderItemGraph(); }
+window._igSelect = _igSelect;   // 【v1.0813】サムネ帯の onclick から呼ぶ
 
 // 【v1.0377】期間プリセット（ADcheck準拠）。1月始まり/5月始まり/2年横並び(前年同月〜当月・当月が右端)。
 let _igActivePreset = '';
@@ -17450,6 +17567,11 @@ function _igSetGrain(g) {
 }
 function _igSetDayYm(v) { _igDayYm = v; renderItemGraph(); }
 function renderItemGraph() {
+  // 【v1.0813】サムネ帯（選択中をハイライト）。★毎回描き直す＝選択・データ更新に必ず追従する。
+  //   ★ただし表示中のビューのときだけ。renderAll() は隠れているビューも描くので、
+  //     無条件に組むと帯の集計（商品数×メンバー数）が毎回3画面ぶん走って重くなる。
+  try { if (state.currentView === 'itemgraph')
+    ycRenderThumbStrip(document.getElementById('igThumbs'), _igSelected, '_igSelect'); } catch (e) {}
   const canvas = document.getElementById('igCanvas');
   const tableWrap = document.getElementById('igTableWrap');
   if (!canvas || !tableWrap) return;
@@ -17597,6 +17719,143 @@ let _itTrendYm    = '';        // 'YYYY-MM'
 
 // 指標の定義。num/den を関数で持たせてあるので、累積も日別も同じ処理で回る。
 //   amount = 表の「実績額」列に出す分母の実額（null なら列を出さない）
+// ============================================================================
+// 【v1.0813】商品サムネ帯（共通）。
+//   商品-日月別データ / 商品-グラフ / 商品-推移 の3画面で【同じ見た目・同じ判定】にするため、
+//   バッジの判定と1枚ぶんのHTMLをここに集約した。
+//   ★画面ごとにコピーしないこと。v1.0804〜v1.0807 で足したルール（出稿中の直近3日・
+//     PR料率の並び順・リニュ予定の判定・透明の枠で行をそろえる）が画面ごとにズレる。
+//   ★違ってよいのは「どの期間で順位を出すか」だけ。そこは呼び出し側が rows を作って渡す。
+// ============================================================================
+const YC_THUMB_N = 50;   // 帯に出す件数（横スクロール1本なので縦は伸びない）
+
+// 出稿中か。全-貢献度と同じ 1本（取込済みの最新日から直近 CB_ACTIVE_DAYS 日に広告費があるか）
+function ycThumbAdActive(members) {
+  try { return _cbAdActive(members || []); } catch (e) { return null; }
+}
+// PRオプ料率。親30%・子7% のセットなら「30-7」。★高い順（親→子）。取れなければ null
+function ycThumbPrRate(members) {
+  const mem = members || [], vals = [];
+  mem.forEach(c => { const v = (typeof getProRate === 'function') ? getProRate(c) : null;
+    if (v != null && !isNaN(v) && Number(v) > 0) vals.push(Number(v)); });
+  if (!vals.length) return null;
+  const uniq = [...new Set(vals)].sort((a, b) => b - a);
+  return { text: uniq.join('-'), tip: mem.map(c => { const v = getProRate(c);
+    return c + ': ' + ((v == null || isNaN(v)) ? '—' : (v + '%')); }).join('\n') };
+}
+// リニューアル予定か。★判定は状態チップ 'status-renewal-plan' の match をそのまま使う
+function ycThumbRenew(members) {
+  const f = (typeof STATE_FILTERS === 'object' && STATE_FILTERS) ? STATE_FILTERS['status-renewal-plan'] : null;
+  const mem = members || [];
+  if (f && typeof f.match === 'function') {
+    return mem.some(c => { try { return !!f.match((state.productMeta || {})[c] || {}, c); } catch (e) { return false; } });
+  }
+  return mem.some(c => { try { return effectiveStatusOf(c) === 'リニューアル予定'; } catch (e) { return false; } });
+}
+// 1枚ぶんのHTML。
+//   r    : { code, dispCode, name, members, amt, roas }
+//   opts : { selected, rank, onclick, sumLabel }
+//   ★該当しない商品も「広告出稿中」「PR」「リニュ予定」の枠を出す（透明）。
+//     消すと その商品だけ下の行が1行ぶん上にずれ、横に見比べられなくなる（§190-4）。
+function ycThumbHtml(r, opts) {
+  const o = opts || {};
+  const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const mem = r.members || [r.code];
+  const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(r.dispCode || r.code) : '';
+  const amt = Math.round(+r.amt || 0);
+  const act = ycThumbAdActive(mem);
+  const pr = ycThumbPrRate(mem);
+  const renew = ycThumbRenew(mem);
+  const roas = (r.roas == null) ? null : Math.round(r.roas);
+  const sumLabel = o.sumLabel || '売上';
+  const tip = esc(r.code + ' ' + (r.name || '')) + '&#10;' + esc(sumLabel) + ' ¥' + amt.toLocaleString()
+    + '&#10;PR広告売上ROAS(推定) ' + (roas == null ? '—（広告実績額＋PR実績額(7%超)が0、または料率未取得）'
+        : (roas.toLocaleString() + '%　＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）'))
+    + '&#10;広告: ' + (act === true ? ('出稿中（取込済みの最新日から直近' + CB_ACTIVE_DAYS + '日に広告費あり）')
+        : act === false ? ('直近' + CB_ACTIVE_DAYS + '日は広告費なし') : '日別の広告データが無く判定できません')
+    + (pr ? '&#10;PRオプ料率 ' + esc(pr.text) + '%&#10;' + esc(pr.tip) : '&#10;PRオプ料率 未取得')
+    + (renew ? '&#10;★ステータス: リニューアル予定（いったん止めて作り直す商品）' : '');
+  const roasColor = (roas == null) ? SALES_ROAS_COLORS.n : SALES_ROAS_COLORS[salesRoasCat(roas, PR_SALES_ROAS_TH)];
+  return '<button type="button" class="mi-thumb' + (o.selected ? ' is-on' : '') + '"'
+    + ' onclick="' + esc(o.onclick || '') + '" title="' + tip + '">'
+    + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + esc(src) + '" onerror="this.remove()">' : '📦')
+    + '<span class="mi-thumb-rank">' + esc(o.rank == null ? '—' : o.rank) + '</span></div>'
+    + '<span class="mi-thumb-amt">' + (amt ? '¥' + amt.toLocaleString() : '—') + '</span>'
+    + '<span class="mi-thumb-roas" style="color:' + roasColor + '">'
+    + '<span class="mi-roas-k">ROAS</span> ' + (roas == null ? '—' : (roas.toLocaleString() + '%')) + '</span>'
+    + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
+    + '<span class="mi-thumb-pr"><span class="mi-pr-k">PR</span> ' + (pr ? esc(pr.text) : '—') + '</span>'
+    + '<span class="mi-thumb-renew' + (renew ? '' : ' is-off') + '">リニュ予定</span>'
+    + '<span class="mi-thumb-code">' + esc(r.code) + '</span>'
+    + '</button>';
+}
+
+// 【v1.0813】「最新月」を基準にした帯用の行を作る（商品-グラフ / 商品-推移 用）。
+//   ★母集団は _igFamilies()＝この2画面の商品候補とまったく同じ。別に組むと
+//     「帯に出ているのに検索では出ない」商品ができる。
+//   ★基準月は【いちばん新しい、データのある月】。当月のレポート未取込で全商品0円になり
+//     帯が空になるのを防ぐ（§189-2 と同じ考え方）。
+function ycThumbRowsLatestMonth() {
+  const fam = (typeof _igFamilies === 'function') ? _igFamilies() : {};
+  const months = (typeof getAvailableMonths === 'function' ? getAvailableMonths() : []).slice().reverse();  // 新しい順
+  if (!months.length) return { rows: [], ym: '' };
+  const itemMap = {}, adMap = {};
+  (typeof effMonthlyItemRows === 'function' ? effMonthlyItemRows() : []).forEach(i => {
+    const k = i.code + '|' + i.month; (itemMap[k] || (itemMap[k] = { rev: 0 })).rev += +i.revenue || 0; });
+  (typeof effMonthlyAdRows === 'function' ? effMonthlyAdRows() : []).forEach(a => {
+    const k = a.code + '|' + a.month; const o = (adMap[k] || (adMap[k] = { adCost: 0, adRev: 0 }));
+    o.adCost += +a.adCost || 0; o.adRev += +a.adRevenue || 0; });
+  const keys = Object.keys(fam);
+  const build = (ym) => keys.map(key => {
+    const mem = fam[key] && fam[key].length ? fam[key] : [key];
+    let rev = 0, spend = 0, over = 0, known = false;
+    mem.forEach(c => {
+      const it = itemMap[c + '|' + ym], ad = adMap[c + '|' + ym];
+      const r0 = it ? (it.rev || 0) : 0;
+      rev += r0; if (ad) spend += ad.adCost || 0;
+      const e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(c, r0) : null;
+      if (e) { known = true; over += Math.max(0, +e.over || 0); }
+    });
+    const den = spend + over;
+    const nm = (typeof _igFamilyName === 'function') ? _igFamilyName(key, mem) : { name: key, dispCode: key };
+    return { code: key, dispCode: nm.dispCode || key, name: nm.name || key, members: mem,
+             amt: rev, spend: spend,
+             roas: (known && den > 0) ? Math.round(rev / den * 100) : null };
+  });
+  // データのある月まで遡る（★全商品を合わせて0かで判定する）
+  //   ★先に months[0] を組み立ててから同じ月をもう一度回さないこと。
+  //     商品数×メンバー数ぶんの集計なので、無駄な1周がそのまま描画の重さになる。
+  let ym = months[0], rows = null;
+  for (let i = 0; i < months.length; i++) {
+    const cand = build(months[i]);
+    if (cand.some(r => (+r.amt || 0) > 0 || (+r.spend || 0) > 0)) { ym = months[i]; rows = cand; break; }
+    if (i === months.length - 1) rows = cand;   // どの月も0＝最後の結果をそのまま使う
+  }
+  if (!rows) rows = build(ym);
+  rows = rows.filter(r => (+r.amt || 0) > 0 || (+r.spend || 0) > 0);
+  rows.sort((a, b) => b.amt - a.amt);
+  return { rows: rows, ym: ym };
+}
+
+// 【v1.0813】帯を描く。選択中が上位N件の外でも必ず出す（戻り方が分からなくなるため）。
+function ycRenderThumbStrip(el, selectedKey, pickFn) {
+  if (!el) return;
+  const r0 = ycThumbRowsLatestMonth();
+  const rows = r0.rows;
+  if (!rows.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
+  const top = rows.slice(0, YC_THUMB_N);
+  const selIdx = rows.findIndex(r => r.code === selectedKey);
+  if (selIdx >= YC_THUMB_N) top.push(rows[selIdx]);
+  const sumLabel = String(r0.ym || '').replace('-', '/') + ' の売上';
+  el.innerHTML = top.map((r, i) => ycThumbHtml(r, {
+    selected: r.code === selectedKey,
+    rank: (i < YC_THUMB_N) ? (i + 1) : '—',
+    onclick: pickFn + "('" + String(r.code).replace(/'/g, "\\'") + "')",
+    sumLabel: sumLabel
+  })).join('');
+}
+
 const IT_METRICS = [
   // 【v1.0691】並びは 商品-基本データ と同じ「PR広告売上ROAS → 広告売上ROAS → PR売上ROAS」（広い→狭い）。広告ROASは最後
   //   hbg=見出しの色 / bg=累積・実績額セル / bg2=日別セル（同系色の一段濃いほう）
@@ -17676,6 +17935,7 @@ function _itSelect(key) {
   _itPopulateMonths();
   renderItemTrend();
 }
+window._itSelect = _itSelect;   // 【v1.0813】サムネ帯の onclick から呼ぶ
 function _itSetScope(v) {
   _itTrendScope = (v === 'self') ? 'self' : 'sum';
   document.querySelectorAll('#itScopeSeg .segf-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-itscope') === _itTrendScope));
@@ -17958,6 +18218,9 @@ function renderZenTrend() {
 window.renderZenTrend = renderZenTrend;
 
 function renderItemTrend() {
+  // 【v1.0813】サムネ帯（選択中をハイライト）。★表示中のビューのときだけ（上と同じ理由）
+  try { if (state.currentView === 'itemtrend')
+    ycRenderThumbStrip(document.getElementById('itThumbs'), _itTrendKey, '_itSelect'); } catch (e) {}
   const canvas = document.getElementById('itCanvas');
   const wrap   = document.getElementById('itChartWrap');
   const empty  = document.getElementById('itEmpty');
