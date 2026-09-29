@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0807 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0809 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -812,9 +812,27 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .state-chip[data-state]:hover { background: #f6f8fb; border-color: #c3cad4; }
 .top-nav-3 .state-chip[data-state].active { background: currentColor; border: 1.5px solid currentColor; }
 /* 【v1.0645】調整-入札価格タブ: そのチップで絞ると入札価格の表に1件以上出る（＝広告を出している商品がある）ものは枠を太く濃く。
-   padding を1px詰めて、枠が太くなってもチップの大きさ（＝行の並び）が変わらないようにしている。 */
-.top-nav-3 .state-chip[data-state].chip-adlive { border: 2px solid #1f2937; padding: 2px 6px; }
-.top-nav-3 .state-chip[data-state].chip-adlive.active { border-color: #1f2937; }
+   【v1.0808】★強調は border ではなく【内側のリング（inset box-shadow）】で描く。
+     ・border で描くと、グリッドの縦罫線
+         .states-grid > *:not(:nth-child(9n+1)) { border-left: 2px solid #c3cad6 !important; }
+       と【同じプロパティ】を取り合う。!important が付いている罫線側が勝つので
+       左辺だけ灰色のまま残り、**3方だけ黒枠**になっていた（v1.0645〜v1.0807）。
+     ・box-shadow なら border とは別プロパティなので取り合わない。
+       inset は罫線の【内側】に描かれるため、四方が黒く囲まれ、かつ灰色の縦罫線もそのまま見える。
+     ・1本目の白いリングは「灰色の縦罫線と黒枠をくっつけない」ための隙間。
+       【v1.0809】1px → **3px** に広げた。1pxだと等倍では隙間が見えず、
+       灰色の棒が黒枠の一部（＝黒枠の左辺が灰色）に見えてしまう。
+       3pxあれば「灰色の棒｜隙間｜黒枠」と3つに読める。
+     ・隙間は四方に入る（box-shadow の spread は辺ごとに変えられない）。
+       結果として黒枠はセルより一回り小さい箱になり、灰色の縦罫線だけが
+       セルの高さいっぱいに通る。縦罫線が「列の区切り」、黒枠が「そのチップ」と役割が分かれて読める。
+     ・★レイアウトが動かないのも利点。border と違って幅・高さを増やさないので、
+       v1.0645 で入れていた「padding を1px詰めて大きさを合わせる」小細工が不要になった
+       （詰めていたせいで、光っているチップだけ文字が窮屈になっていた）。
+     ・角丸はチップ自身の border-radius に従う（グリッド内は0、他の場所では丸いまま）。 */
+.top-nav-3 .state-chip[data-state].chip-adlive {
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 5px #1f2937;
+}
 .top-nav-3 .state-chip[data-state] .chip-label,
 .top-nav-3 .state-chip[data-state]:hover .chip-label,
 .top-nav-3 .state-chip[data-state].active .chip-label { color: inherit; }
@@ -4122,7 +4140,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0807</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0809</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
