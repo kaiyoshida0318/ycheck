@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0814 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0815 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1769,8 +1769,9 @@ tbody tr:hover td:first-child:last-child {
 .mi-thumb-amt { display:block; margin-top:2px; font-size:11.5px; font-weight:800; color:var(--text);
                 font-family:'DM Mono',ui-monospace,monospace; white-space:nowrap;
                 letter-spacing:-0.03em; overflow:hidden; text-overflow:ellipsis; }
-.mi-thumb-code { display:block; font-size:9.5px; color:var(--text3); white-space:nowrap;
-                 overflow:hidden; text-overflow:ellipsis; font-family:'DM Mono',ui-monospace,monospace; }
+/* 【v1.0815】商品コードの行は撤去（ツールチップとドロップダウンで足りるため）。
+   ★スタイルは残す。他の場所から使われていないかを確かめるより、残しておくほうが安い。 */
+.mi-thumb-code { display:none; }
 /* 【v1.0804】サムネの下の状態表示。★幅86pxに収まる文字数で作ること（はみ出すと帯がガタつく） */
 .mi-thumb-ad { display:block; margin-top:1px; font-size:9.5px; font-weight:800; line-height:1.35;
                color:#b45309; background:#fef3c7; border-radius:4px; white-space:nowrap; }
@@ -1782,10 +1783,18 @@ tbody tr:hover td:first-child:last-child {
 .mi-thumb-roas { display:block; font-size:10.5px; font-weight:800; white-space:nowrap;
                  font-family:'DM Mono',ui-monospace,monospace; letter-spacing:-0.03em; font-style:italic; }
 .mi-thumb-roas .mi-roas-k { font-size:9px; font-weight:600; font-style:normal; color:var(--text3); }
-/* 【v1.0807】リニューアル予定。色はステータスの紫（STATUS_COLORS['リニューアル予定']＝#7c3aed）に合わせる */
-.mi-thumb-renew { display:block; font-size:9.5px; font-weight:800; line-height:1.35;
-                  color:#6d28d9; background:#ede9fe; border-radius:4px; white-space:nowrap; }
-.mi-thumb-renew.is-off { visibility:hidden; }
+/* 【v1.0815】ステータスをサムネの中で直接変えられるドロップダウン。
+   ★幅86pxに収めるため文字を小さく、矢印も出さない（クリックできることは色と枠で示す）。
+   ★色は選ばれている値に合わせて JS 側で入れる（STATUS_LIFE_COLOR と同じ1本を使う）。 */
+.mi-thumb-st { display:block; width:100%; margin-top:1px; font-size:9.5px; font-weight:800;
+               line-height:1.35; border:1px solid transparent; border-radius:4px; padding:1px 2px;
+               background:transparent; cursor:pointer; text-align:center; text-align-last:center;
+               appearance:none; -webkit-appearance:none; -moz-appearance:none;
+               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mi-thumb-st:hover { border-color:var(--border2); background:var(--bg2); }
+.mi-thumb-st:focus { outline:none; border-color:var(--accent); background:var(--bg2); }
+.mi-thumb-st[disabled] { cursor:default; opacity:.6; }
+.mi-thumb-st option { font-size:12px; font-weight:600; color:var(--text); background:var(--bg2); }
 .mi-thumb-pr .mi-pr-k { color:var(--text3); font-weight:600; }
 /* 【v1.0799】選択中の商品を大きく出す帯（.mi-cur）は撤去。
    サムネの枠＋下の売上でどれを見ているか分かるので、縦を1段ぶん返した。
@@ -4171,7 +4180,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0814</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0815</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13526,9 +13535,6 @@ function renderMonthly() {
   //   ★日別の広告データが無いと判定できない（null）。そのときは**何も出さない**。
   //     「出稿なし」と書くと、判定できないだけなのに止めていると誤読される。
   //   ★親子セットは全メンバーを見る（子だけ広告を回しているセットがある）。
-  const _adActiveOf = (r) => {
-    try { return _cbAdActive(r.members || [r.code]); } catch (e) { return null; }
-  };
   // 【v1.0806】サムネに出す PR広告売上ROAS（推定）。
   //   ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100
   //   ★必ず**ランキング期間ぶんを足してから1回割る**こと（_rankStats と同じ期間）。
@@ -13549,61 +13555,23 @@ function renderMonthly() {
   //   ★判定は状態チップ 'status-renewal-plan' の match をそのまま使う（定義は1か所）。
   //     ここで effectiveStatusOf(code) === '…' と書き直すと、チップの件数とサムネの印がずれる。
   //   ★親子セットは1件でも該当すればマークを出す（セットごと作り直すため）。
-  const _renewOf = (r) => {
-    const f = (typeof STATE_FILTERS === 'object' && STATE_FILTERS) ? STATE_FILTERS['status-renewal-plan'] : null;
-    const mem = r.members || [r.code];
-    if (f && typeof f.match === 'function') {
-      return mem.some(c => { try { return !!f.match((state.productMeta || {})[c] || {}, c); } catch (e) { return false; } });
-    }
-    return mem.some(c => { try { return effectiveStatusOf(c) === 'リニューアル予定'; } catch (e) { return false; } });
-  };
   // PRオプ料率。親30%・子7% のセットなら「30-7」。1種類なら「7」。
   //   ★高い順（親→子）に並べる。低い順だと「7-30」になり、どちらが親か読めない。
   //   ★料率が取れない商品しかないセットは null（0%扱いにしない）。
-  const _prRateOf = (r) => {
-    const mem = r.members || [r.code], vals = [];
-    mem.forEach(c => { const v = (typeof getProRate === 'function') ? getProRate(c) : null;
-      if (v != null && !isNaN(v) && Number(v) > 0) vals.push(Number(v)); });
-    if (!vals.length) return null;
-    const uniq = [...new Set(vals)].sort((a, b) => b - a);
-    return { text: uniq.join('-'), tip: mem.map(c => { const v = getProRate(c);
-      return c + ': ' + ((v == null || isNaN(v)) ? '—' : (v + '%')); }).join('\n') };
-  };
   if (thumbsEl) {
-    thumbsEl.innerHTML = top.map((r, i2) => {
-      const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(r.dispCode) : '';
-      const on = r.code === sel.code;
-      const rank = (i2 < MI_THUMB_N) ? (i2 + 1) : '—';
-      const amt = Math.round(_sumOf(r));
-      const act = _adActiveOf(r);
-      const pr = _prRateOf(r);
-      const roas = _prRoasOf(r);
-      const renew = _renewOf(r);
-      const tip = _esc(r.code + ' ' + r.name) + '&#10;' + _sumLabel + ' ¥' + amt.toLocaleString()
-        + '&#10;PR広告売上ROAS(推定) ' + (roas == null ? '—（広告実績額＋PR実績額(7%超)が0、または料率未取得）'
-             : (roas.toLocaleString() + '%　＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）'))
-        + '&#10;広告: ' + (act === true ? ('出稿中（取込済みの最新日から直近' + CB_ACTIVE_DAYS + '日に広告費あり）')
-                         : act === false ? ('直近' + CB_ACTIVE_DAYS + '日は広告費なし') : '日別の広告データが無く判定できません')
-        + (pr ? '&#10;PRオプ料率 ' + _esc(pr.text) + '%&#10;' + _esc(pr.tip) : '&#10;PRオプ料率 未取得')
-        + (renew ? '&#10;★ステータス: リニューアル予定（いったん止めて作り直す商品）' : '');
-      return '<button type="button" class="mi-thumb' + (on ? ' is-on' : '') + '" onclick="_miPickCode(\'' + _esc(r.code).replace(/'/g, "\\'") + '\')"'
-        + ' title="' + tip + '">'
-        + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦')
-        + '<span class="mi-thumb-rank">' + rank + '</span></div>'
-        + '<span class="mi-thumb-amt">' + (amt ? '¥' + amt.toLocaleString() : '—') + '</span>'
-        // 【v1.0806】売上の直下にPR広告売上ROAS(推定)。★取れない商品も「ROAS —」で行を残す（下の行がずれる）
-        + '<span class="mi-thumb-roas" style="color:' + (roas == null ? SALES_ROAS_COLORS.n : SALES_ROAS_COLORS[salesRoasCat(roas, PR_SALES_ROAS_TH)]) + '">'
-        + '<span class="mi-roas-k">ROAS</span> ' + (roas == null ? '—' : (roas.toLocaleString() + '%')) + '</span>'
-        // 【v1.0804】★出稿していない商品でも枠だけ出す（is-off で透明）。
-        //   出さないと下のPR・商品コードが1行ぶん上にずれ、サムネごとに行の位置が変わって
-        //   「同じ高さの情報を横に見比べる」ができなくなる（計算式の空スロットと同じ考え方・§143-4）。
-        + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
-        + '<span class="mi-thumb-pr"><span class="mi-pr-k">PR</span> ' + (pr ? _esc(pr.text) : '—') + '</span>'
-        // 【v1.0807】PRの下。該当しない商品は透明で枠だけ残す（下の商品コードの位置を揃えるため・§190-4）
-        + '<span class="mi-thumb-renew' + (renew ? '' : ' is-off') + '">リニュ予定</span>'
-        + '<span class="mi-thumb-code">' + _esc(r.code) + '</span>'
-        + '</button>';
-    }).join('');
+    // 【v1.0815】★ここで1枚ぶんのHTMLを組まない。商品-グラフ / 商品-推移 と共通の ycThumbHtml() を通す。
+    //   v1.0813 で共通化したのに この画面だけ自前のコピーが残っていたため、
+    //   v1.0815 のステータス選択を足しても【この画面にだけ出ない】という食い違いが起きた。
+    //   期間ごとに違うのは金額とROASだけなので、そこだけ計算して渡す。
+    thumbsEl.innerHTML = top.map((r, i2) => ycThumbHtml({
+      code: r.code, dispCode: r.dispCode, name: r.name, members: r.members || [r.code],
+      amt: _sumOf(r), roas: _prRoasOf(r)
+    }, {
+      selected: r.code === sel.code,
+      rank: (i2 < MI_THUMB_N) ? (i2 + 1) : '—',
+      onclick: "_miPickCode('" + String(r.code).replace(/'/g, "\\'") + "')",
+      sumLabel: _sumLabel
+    })).join('');
   }
 
   // ---------- 表の上の1行（選択中の商品名＋件数） ----------
@@ -17776,7 +17744,9 @@ function ycThumbHtml(r, opts) {
     + (pr ? '&#10;PRオプ料率 ' + esc(pr.text) + '%&#10;' + esc(pr.tip) : '&#10;PRオプ料率 未取得')
     + (renew ? '&#10;★ステータス: リニューアル予定（いったん止めて作り直す商品）' : '');
   const roasColor = (roas == null) ? SALES_ROAS_COLORS.n : SALES_ROAS_COLORS[salesRoasCat(roas, PR_SALES_ROAS_TH)];
-  return '<button type="button" class="mi-thumb' + (o.selected ? ' is-on' : '') + '"'
+  // 【v1.0815】★<button> をやめて <div role="button"> にする。
+  //   中に <select> を入れるため。<button> の中の <select> は開けないブラウザがある。
+  return '<div role="button" tabindex="0" class="mi-thumb' + (o.selected ? ' is-on' : '') + '"'
     + ' onclick="' + esc(o.onclick || '') + '" title="' + tip + '">'
     + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + esc(src) + '" onerror="this.remove()">' : '📦')
     + '<span class="mi-thumb-rank">' + esc(o.rank == null ? '—' : o.rank) + '</span></div>'
@@ -17785,12 +17755,61 @@ function ycThumbHtml(r, opts) {
     + '<span class="mi-roas-k">ROAS</span> ' + (roas == null ? '—' : (roas.toLocaleString() + '%')) + '</span>'
     + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
     + '<span class="mi-thumb-pr"><span class="mi-pr-k">PR</span> ' + (pr ? esc(pr.text) : '—') + '</span>'
-    + '<span class="mi-thumb-renew' + (renew ? '' : ' is-off') + '">リニュ予定</span>'
-    + '<span class="mi-thumb-code">' + esc(r.code) + '</span>'
-    + '</button>';
+    + ycThumbStatusHtml(r.code)
+    + '</div>';
 }
 
-// 【v1.0813】「最新月」を基準にした帯用の行を作る（商品-グラフ / 商品-推移 用）。
+// 【v1.0815】サムネの中のステータス選択。
+//   ★class="status-select" と data-kind="status" を付けるだけで、
+//     保存・未反映・件数の更新は【商品-基本データと同じ既存のchangeハンドラ】が面倒を見る。
+//     ここで保存処理を書かないこと（書くと保存の経路が2本になって必ずズレる）。
+//   ★対象は家族の代表コード（親）。子は effectiveStatusOf が親に追従するので、親を直せば揃う。
+//   ★閲覧専用（GitHubトークン未設定）のときは操作させない。既存ハンドラが
+//     ghIsEnabled() で弾くので、押せてしまうと「変えたのに戻る」ように見える。
+function ycThumbStatusHtml(code) {
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  // 【v1.0815】★selected を合わせるには「まとめ（健常◯ / 中立△）」に直してから比べること。
+  //   保存値は '健常-広告あり◯' のような細かい値で、選択肢（STATUS_LIFE_OPTIONS）には無い。
+  //   直さないと **どれも選ばれていない＝先頭の「—」が出る** 状態になる
+  //   （商品-基本データ側も同じ理由で _statusLifeCoarseOf を通している）。
+  let cur = '新商品';
+  try { cur = _statusLifeCoarseOf(statusLifeDisplayValue((getMeta(code) || {}).status || '新商品')); } catch (e) {}
+  const editable = (typeof ghIsEnabled === 'function') ? ghIsEnabled() : false;
+  let color = 'var(--text3)';
+  try { color = statusLifeColor(cur) || 'var(--text3)'; } catch (e) {}
+  // 【v1.0815】幅86pxに収まらない値だけ短い表記にする。
+  //   ★value は必ず正式な文字列のまま。ここを短くすると保存値が壊れる（表示だけ差し替える）。
+  const SHORT = { 'リニューアル予定': 'リニュ予定', 'リニューアル': 'リニュ', '子（親に追従）': '子-追従' };
+  const opts = (typeof STATUS_LIFE_OPTIONS !== 'undefined' ? STATUS_LIFE_OPTIONS : []).map(v =>
+    '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>'
+    + esc(SHORT[v] || v) + '</option>').join('');
+  // ★click / mousedown を止める。止めないと親の onclick（商品の切り替え）が走り、
+  //   選ぼうとしただけで別の商品に飛ぶ。
+  return '<select class="status-select mi-thumb-st" data-code="' + esc(code) + '" data-kind="status"'
+    + (editable ? '' : ' disabled')
+    + ' style="color:' + color + '"'
+    + ' title="ステータスを変える（' + esc(cur) + '）"'
+    + ' onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">'
+    + opts + '</select>';
+}
+
+// 【v1.0815】ステータスを変えたら帯を描き直す（色とツールチップを合わせるため）。
+//   ★setTimeout で「イベントが全部終わってから」走らせる。
+//     保存する既存ハンドラ（.status-select の change）より先に DOM を作り替えると、
+//     そのハンドラが掴んでいる select が消えて保存されない。
+document.addEventListener('change', (e) => {
+  if (!e.target.classList || !e.target.classList.contains('mi-thumb-st')) return;
+  setTimeout(() => {
+    try {
+      if (state.currentView === 'monthly') renderMonthly();
+      else if (state.currentView === 'itemgraph') renderItemGraph();
+      else if (state.currentView === 'itemtrend') renderItemTrend();
+    } catch (err) { console.warn('[Ycheck] サムネ帯の再描画に失敗:', err); }
+  }, 0);
+});
+
+// 【v1.0813】「最新月」を基準にした行を作る（商品-グラフ / 商品-推移 用）。
 //   ★母集団は _igFamilies()＝この2画面の商品候補とまったく同じ。別に組むと
 //     「帯に出ているのに検索では出ない」商品ができる。
 //   ★基準月は【いちばん新しい、データのある月】。当月のレポート未取込で全商品0円になり
