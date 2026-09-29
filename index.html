@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0817 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0818 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1999,6 +1999,29 @@ td[data-resize-key] {
   white-space: nowrap; margin-right: 4px;
 }
 .yc-cancel-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--red); }
+/* 【v1.0818】アップ内容ボタン。反映するの【左】。
+   ★キャンセル（赤）とも反映する（オレンジ）とも違う見た目にすること。
+     押しても何も起きない（見るだけ）ので、同じ色だと事故を誘う。 */
+.yc-up-btn { font-size: 12px; padding: 6px 10px; border: 1px solid var(--border2); border-radius: 6px;
+             background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 700; white-space: nowrap; }
+.yc-up-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--accent); }
+.yc-up-btn[hidden] { display: none !important; }
+.filters .yc-reflect-wrap .yc-up-btn { flex: 0 0 auto; }
+.yc-up-head { display: grid; gap: 3px; font-size: 13px; color: var(--text2); line-height: 1.6;
+              background: var(--bg3); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+.yc-up-head b { color: var(--text); }
+.yc-up-msg { font-size: 13.5px; line-height: 1.7; margin: 0 0 10px; }
+.yc-up-msg.ok { color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; }
+.yc-up-msg.warn { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; }
+.yc-up-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.yc-up-tbl th, .yc-up-tbl td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+.yc-up-tbl th { background: var(--bg3); font-weight: 700; color: var(--text2); }
+.yc-up-tbl td.w { white-space: nowrap; font-weight: 700; color: #b45309; }
+.yc-up-tbl td.dt { color: var(--text2); font-size: 12px; word-break: break-all; }
+.yc-up-log { margin-top: 14px; font-size: 12.5px; color: var(--text2); }
+.yc-up-log ol { margin: 6px 0 0; padding-left: 20px; line-height: 1.8; }
+.yc-up-log .t { font-family: 'DM Mono', ui-monospace, monospace; color: var(--text3); margin-right: 6px; }
+.yc-up-log .yc-up-none { color: var(--text3); margin-top: 4px; }
 .yc-cancel-btn[hidden] { display: none !important; }
 .yc-reflect-wrap[hidden] { display: none !important; }   /* 【v1.0455】未反映が無いときはラッパーごと隠して余白を作らない */
 @keyframes ycReflectPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(217,119,6,.5);} 50%{ box-shadow:0 0 0 6px rgba(217,119,6,0);} }
@@ -4204,7 +4227,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0817</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0818</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5574,6 +5597,20 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
 </div>
 
+<!-- 【v1.0818】アップ内容（いま反映を押したら何が書かれるか） -->
+<div class="modal-overlay" id="ycUpModal">
+  <div class="modal" style="max-width: 860px;">
+    <div class="modal-header">
+      <h2 class="modal-title">📋 アップする内容</h2>
+      <button class="modal-close" type="button" onclick="ycUpClose()">×</button>
+    </div>
+    <div id="ycUpBody" style="max-height:70vh;overflow:auto"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn sm ghost" type="button" onclick="ycUpClose()">閉じる</button>
+      <button class="btn sm" type="button" onclick="ycUpClose(); ycReflect();">⬆ このまま反映する</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="ghSettingsModal">
   <div class="modal" style="max-width: 620px;">
     <div class="modal-header">
@@ -7747,6 +7784,8 @@ async function ghSaveToGitHub(options = {}) {
     try {
       await ghPutFile(outStr);
       _ghDirty = false;
+      // 【v1.0818】★実際に送れた本文から基準を作る。ここ以外で作らない。
+      try { _ycUpSetBase(outStr, '（このタブが保存）'); } catch (e) {}
       console.log('[Ycheck診断] GitHub保存成功（この内容がGitHubに書き込まれました）');
       try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}  // 【v199】保存成功 → 未保存フラグ解除
       ghSetSyncStatus('saved');
@@ -7904,6 +7943,10 @@ async function ghLoadFromGitHub(opts) {
     if (_wrote) console.log('[Ycheck診断-load] localStorage書き戻し成功: ' + _wrote.label + ' ' + _wrote.kb + 'KB / productMeta ' + Object.keys(state.productMeta || {}).length + '件');
     else console.warn('[Ycheck診断-load] localStorage書き戻しは最小構成でも失敗（他アプリのlocalStorage逼迫の可能性）。GitHubを正として継続。');
     _ghDirty = false;
+    // 【v1.0818】★受け取ったリモートの中身をそのまま基準にする。
+    //   マージ後の state から作らないこと。「送ったつもり」の基準になり、
+    //   未送信の変更を「差分なし」と言ってしまう。
+    try { _ycUpSetBase(data, '（GitHubから取得）'); } catch (e) {}
     ghSetSyncStatus('synced');   // 【v1.0355】読み込み完了は「✓ 最新」（保存ではない）
     ghLog(`取得成功: ${(content.length / 1024).toFixed(1)} KB`);
     // 【v287】ローカルの方が新しい変更を検出＝GitHubは別セッションの古い上書きを受けていた
@@ -8039,6 +8082,275 @@ try {
 // 【v1.0811】いま「未反映」になっている理由。★「何もしていないのに未反映が出る」の調査用。
 //   ボタンのツールチップとコンソールに出す。false→true に変わった瞬間だけ記録する
 //   （同じ理由で何度も立つので、毎回記録すると最初の原因が流れてしまう）。
+
+// ============================================================================
+// 【v1.0818】★「アップ内容」＝ いま⬆反映するを押したら GitHub に何が書かれるか。
+//
+//   なぜ要るか: 「未反映」が出ても、何が変わったのか画面から分からなかった。
+//   理由の文字列（_ghDirtyReason）はあるが「データの保存（saveToStorage）」のように
+//   呼び出し元が分かるだけで、**中身が本当に変わったのか**は分からない。
+//
+//   仕組み: GitHubと【やり取りが成功した瞬間】の中身の指紋（_ycUpBase）を取っておき、
+//           いまの中身の指紋と突き合わせる。
+//
+//   ★指紋を取るのは「成功した瞬間」だけ。
+//     ・PUT 成功直後（実際に送った本文から）
+//     ・取得成功直後（受け取ったリモートの中身から）
+//     作りかけの state から取ると「送ったつもり」の基準ができて、
+//     本当は未送信の変更を「差分なし」と言ってしまう。
+// ============================================================================
+const YC_UP_BASE_KEY = 'ycheck_upbase';
+function _ycUpBaseKey() { return YC_UP_BASE_KEY + '_' + getSessionShopId(); }
+
+// ★比較から外す項目。毎回・またはバージョンを上げるたびに必ず変わるので、
+//   入れると「中身は同じなのに差分あり」になり、未反映が永久に消えなくなる。
+const YC_UP_IGNORE = ['savedAt', 'savedBy', 'savedByLabel', 'savedByVer', 'shopId', 'schemaVersion'];
+
+// ★キーをソートしてから文字列化する。
+//   JSON.stringify は【キーの挿入順】で結果が変わるので、
+//   「CSVから作り直した state」と「GitHubのJSONを読んだ state」は
+//   中身が同じでも文字列が違う＝差分ありに見えてしまう。
+function _ycUpStable(v) {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v === undefined ? null : v);
+  if (Array.isArray(v)) return '[' + v.map(_ycUpStable).join(',') + ']';
+  const ks = Object.keys(v).sort();
+  return '{' + ks.map(k => JSON.stringify(k) + ':' + _ycUpStable(v[k])).join(',') + '}';
+}
+function _ycUpHash(v) {
+  const s = (typeof v === 'string') ? v : _ycUpStable(v);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0; }
+  return h.toString(16);
+}
+function _ycUpCount(v) {
+  if (v == null) return 0;
+  if (Array.isArray(v)) return v.length;
+  if (typeof v === 'object') return Object.keys(v).length;
+  return 1;
+}
+
+// ★区分の定義は1ヶ所。指紋づくりと差分表示が同じ表を見る（別々に持つと必ずズレる）。
+const YC_UP_SECTIONS = [
+  { key: 'overall', label: '店全体の月別売上', kind: 'list', unit: '行' },
+  { key: 'item', label: '商品の月別明細', kind: 'list', unit: '行' },
+  { key: 'ad', label: '広告の月別明細', kind: 'list', unit: '行' },
+  { key: 'bid', label: '入札価格', kind: 'map', unit: '商品' },
+  { key: 'proRate', label: 'PRオプ料率', kind: 'map', unit: '商品' },
+  { key: 'master', label: '商品マスタ（名前・画像）', kind: 'map', unit: '商品' },
+  { key: 'productMeta', label: 'ステータス・入札状態・PR状態・対応内容', kind: 'map', unit: '商品' },
+  { key: 'rankEdits', label: '順位表の記入（月ごと）', kind: 'map', unit: 'ヶ月' },
+  { key: 'rank', label: '順位（CI取得・月ごと）', kind: 'map', unit: 'ヶ月' },
+  { key: 'rankMeta', label: '順位の取得情報', kind: 'blob', unit: '' },
+  { key: 'daily', label: '日別データ', kind: 'daily', unit: '' },
+  { key: 'changeLog', label: '変更記録', kind: 'blob', unit: '' },
+  { key: 'productsCsvSnapshot', label: '商品CSVの控え', kind: 'blob', unit: '' },
+  { key: 'viewPrefs', label: '表示設定（列幅・文字サイズ）', kind: 'vp', unit: '' }
+];
+
+// データ1件ぶんの指紋を作る。d は ghBuildDataString() をJSON.parseしたもの（＝送る本文そのもの）。
+function _ycUpFinger(d) {
+  d = d || {};
+  const out = { v: 1, at: new Date().toISOString(), sec: {} };
+  YC_UP_SECTIONS.forEach(s => {
+    const v = d[s.key];
+    if (s.kind === 'map') {
+      const m = {}; Object.keys(v || {}).forEach(k => { m[k] = _ycUpHash(v[k]); });
+      out.sec[s.key] = { n: Object.keys(m).length, k: m };
+    } else if (s.kind === 'daily') {
+      const ax = {}; const dd = v || {};
+      Object.keys(dd).forEach(a => { const m = {}; Object.keys(dd[a] || {}).forEach(dt => { m[dt] = _ycUpHash(dd[a][dt]); }); ax[a] = m; });
+      out.sec[s.key] = { ax: ax };
+    } else if (s.kind === 'vp') {
+      const vp = v || {};
+      // ★updatedAt / updatedBy は入れない。中身が同じでも時刻だけ新しいことがあり、
+      //   それで未反映にし続けていたのが v1.0811 で直した問題そのもの。
+      out.sec[s.key] = { fs: (+vp.fontScale > 0 ? +vp.fontScale : 1),
+                         cw: Object.assign({}, vp.colWidths || {}),
+                         it: Array.isArray(vp.itTrendSaved) ? vp.itTrendSaved.slice().map(String).sort() : [] };
+    } else if (s.kind === 'list') {
+      // ★並び順で差が出ないように、行ごとのハッシュを【ソートしてから】まとめる。
+      //   取り込み直しで順番だけ変わったものを「変更」と言わないため。
+      const a = Array.isArray(v) ? v : [];
+      const hs = a.map(_ycUpHash).sort();
+      out.sec[s.key] = { n: a.length, h: _ycUpHash(hs.join('|')) };
+    } else {
+      out.sec[s.key] = { n: _ycUpCount(v), h: _ycUpHash(v == null ? null : v) };
+    }
+  });
+  return out;
+}
+
+// ★除外リストと区分リストが食い違っていないかを起動時に1回だけ確かめる。
+//   「除外したつもりの savedAt を、あとで区分に足してしまう」のが一番怖い間違い
+//   （中身が同じでも毎回 差分あり になり、未反映が永久に消えなくなる）。
+(function () {
+  const bad = YC_UP_SECTIONS.filter(s => YC_UP_IGNORE.indexOf(s.key) >= 0).map(s => s.key);
+  if (bad.length) console.error('[Ycheck] アップ内容の定義ミス: 比較から外すはずの項目が区分に入っています → ' + bad.join(','));
+})();
+
+let _ycUpBase = null;     // 直近でGitHubと一致していたときの指紋
+function _ycUpLoadBase() {
+  if (_ycUpBase) return _ycUpBase;
+  try { _ycUpBase = JSON.parse(localStorage.getItem(_ycUpBaseKey()) || 'null'); } catch (e) { _ycUpBase = null; }
+  return _ycUpBase;
+}
+// ★成功した瞬間にだけ呼ぶ。src は「送った本文」または「受け取った本文」の文字列/オブジェクト。
+function _ycUpSetBase(src, how) {
+  try {
+    const d = (typeof src === 'string') ? JSON.parse(src) : src;
+    _ycUpBase = _ycUpFinger(d); _ycUpBase.how = how || '';
+    // ★localStorage が満杯でも【落とさない】。指紋は無くても本体は動く（差分が出せなくなるだけ）。
+    try { localStorage.setItem(_ycUpBaseKey(), JSON.stringify(_ycUpBase)); } catch (e) {
+      console.warn('[Ycheck] アップ内容の基準をlocalStorageに保存できませんでした（このタブの間だけ有効）');
+    }
+  } catch (e) { console.warn('[Ycheck] アップ内容の基準づくりに失敗:', e && e.message); }
+}
+
+// いまの中身と基準を突き合わせる。→ { ok, rows:[{label,what,detail}], base }
+function _ycUpDiff() {
+  const base = _ycUpLoadBase();
+  let cur = null;
+  try { cur = _ycUpFinger(JSON.parse(ghBuildDataString())); } catch (e) { return { ok: false, err: e && e.message, rows: [], base: base }; }
+  if (!base || !base.sec) return { ok: false, noBase: true, rows: [], base: null, cur: cur };
+  const rows = [];
+  const names = (arr, max) => arr.slice(0, max || 8).join(' / ') + (arr.length > (max || 8) ? ' ほか' + (arr.length - (max || 8)) + '件' : '');
+  YC_UP_SECTIONS.forEach(s => {
+    const b = base.sec[s.key] || {}, c = cur.sec[s.key] || {};
+    if (s.kind === 'map') {
+      const bk = b.k || {}, ck = c.k || {};
+      const add = Object.keys(ck).filter(k => !(k in bk));
+      const del = Object.keys(bk).filter(k => !(k in ck));
+      const chg = Object.keys(ck).filter(k => (k in bk) && bk[k] !== ck[k]);
+      if (!add.length && !del.length && !chg.length) return;
+      const parts = [];
+      if (chg.length) parts.push('変更 ' + chg.length + s.unit);
+      if (add.length) parts.push('追加 ' + add.length + s.unit);
+      if (del.length) parts.push('削除 ' + del.length + s.unit);
+      rows.push({ label: s.label, what: parts.join('・'),
+                  detail: [chg.length ? '変更: ' + names(chg) : '', add.length ? '追加: ' + names(add) : '', del.length ? '削除: ' + names(del) : ''].filter(Boolean).join('　') });
+    } else if (s.kind === 'daily') {
+      const ba = b.ax || {}, ca = c.ax || {};
+      const axes = Array.from(new Set(Object.keys(ba).concat(Object.keys(ca))));
+      const det = [];
+      let total = 0;
+      axes.forEach(a => {
+        const bm = ba[a] || {}, cm = ca[a] || {};
+        const add = Object.keys(cm).filter(k => !(k in bm));
+        const del = Object.keys(bm).filter(k => !(k in cm));
+        const chg = Object.keys(cm).filter(k => (k in bm) && bm[k] !== cm[k]);
+        const n = add.length + del.length + chg.length;
+        if (!n) return; total += n;
+        det.push(a + ': ' + [chg.length ? '変更' + chg.length + '日' : '', add.length ? '追加' + add.length + '日' : '', del.length ? '削除' + del.length + '日' : ''].filter(Boolean).join('・')
+          + '（' + names(chg.concat(add).concat(del).sort(), 6) + '）');
+      });
+      if (total) rows.push({ label: s.label, what: '合計 ' + total + '日ぶん', detail: det.join('　') });
+    } else if (s.kind === 'vp') {
+      const det = [];
+      if ((b.fs || 1) !== (c.fs || 1)) det.push('文字サイズ ' + (b.fs || 1) + ' → ' + (c.fs || 1));
+      const bw = b.cw || {}, cw = c.cw || {};
+      const ks = Array.from(new Set(Object.keys(bw).concat(Object.keys(cw))))
+        .filter(k => Math.round(+bw[k] || 0) !== Math.round(+cw[k] || 0));
+      if (ks.length) det.push('列幅 ' + ks.length + '列（' + ks.slice(0, 6).map(k => k + ' ' + (bw[k] == null ? '—' : Math.round(bw[k])) + '→' + (cw[k] == null ? '—' : Math.round(cw[k]))).join(' / ') + (ks.length > 6 ? ' ほか' : '') + '）');
+      const bi = (b.it || []).join(','), ci = (c.it || []).join(',');
+      if (bi !== ci) det.push('推移の保存商品 ' + (b.it || []).length + ' → ' + (c.it || []).length + '件');
+      if (det.length) rows.push({ label: s.label, what: det.length + '項目', detail: det.join('　') });
+    } else {
+      const bn = b.n == null ? 0 : b.n, cn = c.n == null ? 0 : c.n;
+      if (b.h === c.h && bn === cn) return;
+      rows.push({ label: s.label, what: (bn === cn ? '中身が変わりました' : (bn + (s.unit || '件') + ' → ' + cn + (s.unit || '件'))), detail: '' });
+    }
+  });
+  return { ok: true, rows: rows, base: base, cur: cur };
+}
+window._ycUpDiff = _ycUpDiff;
+
+// 【v1.0818】未反映になった経緯（このタブの間だけ）。原因を追うためのもの。
+const YC_UP_LOG_MAX = 30;
+let _ycUpLog = [];
+function _ycUpLogPush(reason) {
+  _ycUpLog.push({ t: new Date(), r: String(reason || '') });
+  if (_ycUpLog.length > YC_UP_LOG_MAX) _ycUpLog = _ycUpLog.slice(-YC_UP_LOG_MAX);
+}
+window._ycUpLogGet = function () { return _ycUpLog.slice(); };
+
+// ============================================================================
+// 【v1.0818】★中身が1つも変わっていないのに立った「未反映」を、自分で下ろす。
+//   これが「何もいじってないのに毎回 未反映が出る」の直し方。
+//   ★立てるのは今までどおり即座に行う（取りこぼすと変更が飛ぶ）。
+//     そのあとで【中身を見て、本当に同じなら下ろす】という順番にすること。
+//     「同じかどうか確かめてから立てる」にすると、確認に失敗したときに立たない＝消失事故になる。
+//   ★基準（_ycUpBase）が無いときは何もしない。基準が無い＝比べようがない＝立てたままが安全。
+// ============================================================================
+let _ycUpVerifyTimer = null;
+const YC_UP_VERIFY_DELAY_MS = 1500;
+function _ycUpVerifySoon() {
+  clearTimeout(_ycUpVerifyTimer);
+  _ycUpVerifyTimer = setTimeout(function () {
+    try {
+      if (!_ghDirty || !ghIsEnabled()) return;
+      if (typeof _ghSaveInFlight !== 'undefined' && _ghSaveInFlight) return;   // 保存中は触らない
+      const d = _ycUpDiff();
+      if (!d.ok || d.rows.length) return;                 // 基準が無い / 本当に差分あり → そのまま
+      _ghDirty = false; _ghDirtyReason = '';
+      try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}
+      ghSetSyncStatus('synced');
+      if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
+      console.log('[Ycheck] 未反映を解除しました: GitHubに入っている内容と【中身が完全に同じ】でした'
+        + '（基準: ' + ((d.base && d.base.at) || '不明') + ' ' + ((d.base && d.base.how) || '') + '）');
+    } catch (e) { console.warn('[Ycheck] 未反映の自動解除に失敗:', e && e.message); }
+  }, YC_UP_VERIFY_DELAY_MS);
+}
+
+// ============================================================================
+// 【v1.0818】アップ内容モーダル
+// ============================================================================
+function ycUpShow() {
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const m = document.getElementById('ycUpModal'); if (!m) return;
+  const body = document.getElementById('ycUpBody');
+  const d = _ycUpDiff();
+  let h = '';
+  h += '<div class="yc-up-head">';
+  h += '<div><b>いまの状態</b>：' + (_ghDirty ? '<span style="color:#b45309;font-weight:800">未反映あり</span>' : '<span style="color:#15803d;font-weight:800">反映済み</span>') + '</div>';
+  h += '<div><b>未反映になった理由</b>：' + esc(_ghDirtyReason || '（なし）') + '</div>';
+  h += '<div><b>比べている基準</b>：' + (d.base ? (esc(String(d.base.at).replace('T', ' ').slice(0, 19)) + '　' + esc(d.base.how || '')) : '<span style="color:#b91c1c">まだありません</span>') + '</div>';
+  h += '<div><b>保存先</b>：' + esc(typeof ghFilePath === 'function' ? ghFilePath() : '') + '</div>';
+  h += '</div>';
+
+  if (!d.ok && d.noBase) {
+    h += '<p class="yc-up-msg warn">GitHubとやり取りした記録がまだ無いので、差分を出せません。<br>'
+      + '一度「⬆ 反映する」または設定の「⬇ GitHubから再取得」を実行すると、次からここに差分が出ます。</p>';
+  } else if (!d.ok) {
+    h += '<p class="yc-up-msg warn">差分を計算できませんでした：' + esc(d.err || '原因不明') + '</p>';
+  } else if (!d.rows.length) {
+    h += '<p class="yc-up-msg ok">GitHubに入っている内容と<b>中身は完全に同じ</b>です。アップするものはありません。<br>'
+      + '未反映のマークだけが残っていた状態なので、<b>解除しました</b>。</p>';
+    // ★ここで実際に下ろす。「同じです」と言いながらマークが残っていると、何も解決しない。
+    if (_ghDirty) {
+      _ghDirty = false; _ghDirtyReason = '';
+      try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}
+      ghSetSyncStatus('synced');
+      if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
+    }
+  } else {
+    h += '<p class="yc-up-msg">「⬆ 反映する」を押すと、次の内容が <b>' + esc(ghFilePath()) + '</b> に書き込まれます。</p>';
+    h += '<table class="yc-up-tbl"><thead><tr><th>区分</th><th>変化</th><th>中身</th></tr></thead><tbody>';
+    d.rows.forEach(r => { h += '<tr><td>' + esc(r.label) + '</td><td class="w">' + esc(r.what) + '</td><td class="dt">' + esc(r.detail) + '</td></tr>'; });
+    h += '</tbody></table>';
+  }
+
+  const lg = window._ycUpLogGet ? _ycUpLogGet() : [];
+  h += '<div class="yc-up-log"><b>未反映になった経緯（このタブを開いてから・新しい順）</b>';
+  if (!lg.length) h += '<div class="yc-up-none">まだありません</div>';
+  else { h += '<ol>'; lg.slice().reverse().forEach(x => { h += '<li><span class="t">' + esc(x.t.toTimeString().slice(0, 8)) + '</span> ' + esc(x.r) + '</li>'; }); h += '</ol>'; }
+  h += '</div>';
+  body.innerHTML = h;
+  m.classList.add('open');
+}
+window.ycUpShow = ycUpShow;
+function ycUpClose() { const m = document.getElementById('ycUpModal'); if (m) m.classList.remove('open'); }
+window.ycUpClose = ycUpClose;
+
 let _ghDirtyReason = '';
 window._ghDirtyReason = function () { return _ghDirtyReason; };
 function scheduleGitHubSave(reason) {
@@ -8054,6 +8366,10 @@ function scheduleGitHubSave(reason) {
   _ghDirty = true;
   ghSetSyncStatus('dirty');
   if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
+  // 【v1.0818】★まず立ててから、あとで中身を見て「本当に同じなら下ろす」。
+  //   順番を逆にしない（確認に失敗したときに立たない＝変更が消える）。
+  try { _ycUpLogPush(reason || 'データの変更'); } catch (e) {}
+  try { _ycUpVerifySoon(); } catch (e) {}
 }
 
 // 【v1.0354】========= 「反映する」ボタン + 保存中フルロック =========
@@ -8070,8 +8386,10 @@ function _ycUpdateReflectBtn() {
   document.querySelectorAll('.yc-reflect-btn').forEach(b => {
     const wrap = b.closest('.yc-reflect-wrap');                               // 【v1.0455】ラッパーごと表示制御
     const cb = wrap ? wrap.querySelector('.yc-cancel-btn') : (b.parentElement ? b.parentElement.querySelector('.yc-cancel-btn') : null);
-    if (!editable) { b.hidden = true; if (cb) cb.hidden = true; if (wrap) wrap.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
+    const ub = wrap ? wrap.querySelector('.yc-up-btn') : null;   // 【v1.0818】アップ内容
+    if (!editable) { b.hidden = true; if (cb) cb.hidden = true; if (ub) ub.hidden = true; if (wrap) wrap.hidden = true; return; }   // 閲覧専用(トークン無し)は非表示
     b.hidden = false;
+    if (ub) ub.hidden = !_ghDirty;   // ★未反映のときだけ出す（反映するボタンと同じ条件）
     if (_ghDirty) {
       b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
       b.textContent = '⬆ 反映する（未反映）';
@@ -8098,6 +8416,13 @@ function _ycInjectReflectButtons() {
     c.hidden = true;
     c.addEventListener('click', ycCancelReflect);
     wrap.appendChild(c);
+    // 【v1.0818】★「アップ内容」は【反映するの左】。ラッパーの中に入れることで、
+    //   未反映が無いときはラッパーごと隠れる（アップするものが無いのに押せると紛らわしい）。
+    const u = document.createElement('button');
+    u.type = 'button'; u.className = 'yc-up-btn'; u.textContent = '📋 アップ内容';
+    u.title = 'いま「⬆ 反映する」を押したら、GitHubに何が書き込まれるかを表示します。';
+    u.addEventListener('click', function (ev) { ev.preventDefault(); ycUpShow(); });
+    wrap.appendChild(u);
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'yc-reflect-btn'; b.textContent = '⬆ 反映する';
     b.title = '変更をGitHubに反映（保存）します。押すまでは書き込みません。保存中は操作できません。';
@@ -24120,6 +24445,13 @@ try {
       console.warn(`[${curShop.id}] ⚠ 未保存のローカル変更を検出。GitHubからの上書きをスキップしました。`);
       _ghDirty = true;
       ghSetSyncStatus('dirty');
+      // 【v1.0818】★ここが「何もいじっていないのに起動したら未反映」の主な入口。
+      //   ghPendingFlagKey() は saveToStorage() が localStorage へフル保存できたときに毎回立て、
+      //   GitHubへのPUTが成功したときにだけ下ろす。つまり
+      //   「保存はできたが、まだ⬆反映していない」状態で閉じると、次の起動で必ずここに来る。
+      //   ★中身が本当に違うかどうかは見ていないので、同じでも未反映になる。
+      //     下の _ycUpVerifySoon() が、読み直したあとで中身を突き合わせて自動で下ろす。
+      try { _ycUpLogPush('起動時: 前回の未保存フラグ（' + ghPendingFlagKey() + '）が残っていた'); } catch (e) {}
       // 【v204】以前は無条件でalert警告を出していたが、正常に保存できていた場合でも
       // 「保存完了前にリロード/タブを閉じた」だけでフラグが残り、毎回誤警告が出ていた。
       // そこで、まず黙ってGitHub保存を試み、成功したら警告を出さない（フラグもクリアされる）。
@@ -24140,6 +24472,11 @@ try {
           }
         } else if (result && result.skipped) {
           // 空ガード等でスキップ：ローカルは保持されているので静かに継続
+          // 【v1.0818】★reason が 'manual-only' のときは【必ず】ここに来る。
+          //   v1.0354 で「⬆反映する等の明示操作(manual:true)以外は保存しない」に変えたとき、
+          //   この起動時の自動保存（manual を付けていない）は【動かない経路になった】。
+          //   消さずに残してあるのは、将来 manual モデルを見直すときの入口を消さないため。
+          //   ★ここを manual:true にして復活させないこと。「開いただけでGitHubに書く」に戻る。
           console.warn(`[${curShop.id}] 起動時保存スキップ: ${result.reason || ''}`);
         }
       }).catch(err => {
@@ -24156,6 +24493,8 @@ try {
             if (typeof renderAll === 'function') renderAll();
             if (typeof updateRankLastUpdatedDisplay === 'function') updateRankLastUpdatedDisplay();
             console.log('[Ycheck] 起動時: 保存後にGitHub最新を読み直して表示を同期しました');
+            // 【v1.0818】★読み直してから突き合わせる。中身が同じなら未反映を自動で下ろす。
+            try { _ycUpVerifySoon(); } catch (e) {}
           }).catch(() => {});
         } catch (e) {}
       });
