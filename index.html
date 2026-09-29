@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0798 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0799 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1697,31 +1697,37 @@ tbody tr:hover td:first-child:last-child {
    【v1.0798】商品-日月別データ：サムネ帯＋選択中の商品
    ★帯は横スクロール1本にする（折り返すと縦に伸びて表が画面外へ落ちる）。
    ============================================================ */
-.mi-thumbs { display:flex; gap:6px; overflow-x:auto; overflow-y:hidden; padding:6px 2px 8px; }
-.mi-thumb { flex:0 0 auto; width:84px; border:2px solid transparent; border-radius:9px; background:var(--bg2);
-            padding:4px; cursor:pointer; text-align:center; line-height:1.25; }
+.mi-thumbs { display:flex; gap:6px; overflow-x:auto; padding:6px 2px 10px; align-items:flex-start;
+              flex:0 0 auto; }
+/* 【v1.0799】★flex:0 0 auto が必須。
+   .card は display:flex;flex-direction:column の高さ固定レイアウトなので、この帯は【フレックスアイテム】。
+   overflow-x:auto を付けると CSS の規定で overflow-y も auto になり＝スクロールコンテナになる。
+   スクロールコンテナは min-height:auto が 0 に解決されるため、
+   **中身より低く潰される**（実測 118px の中身が 73px の枠に押し込まれ、画像の下の売上とコードが消えた）。
+   flex:0 0 auto（縮まない）にして初めて中身ぶんの高さを保てる。 */
+/* 【v1.0799】★height を決め打ちしないこと。overflow-y:hidden と併せると
+   横スクロールバーのぶん下が削られ、画像の下の売上・コードが消える（v1.0798で実際に起きた）。
+   高さは中身（画像＋2行）に任せ、スクロールバーぶんは padding-bottom で確保する。 */
+.mi-thumb { flex:0 0 auto; width:86px; border:2px solid transparent; border-radius:9px; background:var(--bg2);
+            padding:4px 3px 5px; cursor:pointer; text-align:center; line-height:1.3; }
 .mi-thumb:hover { background:var(--bg3); }
 .mi-thumb.is-on { border-color:var(--accent); background:var(--bg3); }
-.mi-thumb-img { width:72px; height:72px; margin:0 auto; border-radius:6px; overflow:hidden; background:var(--bg3);
-                display:flex; align-items:center; justify-content:center; font-size:28px; }
+.mi-thumb-img { position:relative; width:76px; height:76px; margin:0 auto; border-radius:6px; overflow:hidden;
+                background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:28px; }
 .mi-thumb-img img { width:100%; height:100%; object-fit:cover; }
-.mi-thumb-rank { display:inline-block; min-width:18px; font-size:11px; font-weight:800; color:var(--text3);
-                 font-family:'DM Mono',ui-monospace,monospace; }
-.mi-thumb.is-on .mi-thumb-rank { color:var(--accent); }
-.mi-thumb-amt { display:block; font-size:11px; font-weight:700; color:var(--text2);
-                font-family:'DM Mono',ui-monospace,monospace; white-space:nowrap; }
-.mi-thumb-code { display:block; font-size:10px; color:var(--text3); white-space:nowrap;
+/* 順位は画像の角に重ねる（下の2行は売上とコードに使う） */
+.mi-thumb-rank { position:absolute; top:0; left:0; min-width:16px; padding:0 3px;
+                 background:rgba(15,23,42,0.72); color:#fff; font-size:10px; font-weight:800;
+                 border-radius:6px 0 6px 0; font-family:'DM Mono',ui-monospace,monospace; }
+.mi-thumb.is-on .mi-thumb-rank { background:var(--accent); }
+.mi-thumb-amt { display:block; margin-top:2px; font-size:11.5px; font-weight:800; color:var(--text);
+                font-family:'DM Mono',ui-monospace,monospace; white-space:nowrap;
+                letter-spacing:-0.03em; overflow:hidden; text-overflow:ellipsis; }
+.mi-thumb-code { display:block; font-size:9.5px; color:var(--text3); white-space:nowrap;
                  overflow:hidden; text-overflow:ellipsis; font-family:'DM Mono',ui-monospace,monospace; }
-.mi-cur { display:flex; align-items:center; gap:12px; padding:8px 10px; margin:2px 0 8px;
-          background:var(--bg3); border:1px solid var(--border); border-radius:8px; }
-.mi-cur-img { width:56px; height:56px; flex:0 0 auto; border-radius:7px; overflow:hidden; background:var(--bg2);
-              display:flex; align-items:center; justify-content:center; font-size:24px; }
-.mi-cur-img img { width:100%; height:100%; object-fit:cover; }
-.mi-cur-code { font-size:12px; color:var(--text3); font-family:'DM Mono',ui-monospace,monospace; }
-.mi-cur-name { font-size:1rem; font-weight:700; line-height:1.3; }
-.mi-cur-sum  { margin-left:auto; text-align:right; font-size:12px; color:var(--text2); white-space:nowrap; }
-.mi-cur-sum b { display:block; font-size:1.05rem; color:var(--text);
-                font-family:'DM Mono',ui-monospace,monospace; }
+/* 【v1.0799】選択中の商品を大きく出す帯（.mi-cur）は撤去。
+   サムネの枠＋下の売上でどれを見ているか分かるので、縦を1段ぶん返した。
+   商品名は表の上の1行（note）に出している。 */
 /* 【v140】列リサイズ機能：data-resize-key を持つthの右端にハンドル */
 /* 【v142】th だけでなく td(各行のセル)にもハンドルを設置できるよう拡張 */
 /* 【v159 真の根本修正】 元の `th[data-resize-key], td[data-resize-key] { position: relative }` は
@@ -4100,7 +4106,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0798</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0799</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4534,7 +4540,6 @@ th.col-sroas { background-color:#e7d5f5; }
         </div>
         <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位20）を押すか、商品コード・商品名で検索して切り替えます。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
-        <div id="mi-cur" class="mi-cur" style="display:none"></div>
         <div id="mi-wrap" style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
@@ -12204,7 +12209,10 @@ function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
 // 【v1.0527】商品-日月別データの粒度切替。'month'=従来（月を並べる）／'day'=対象月の1日ごとを並べる。
-let _miGrain = 'month';
+// 【v1.0799】既定は日別。対象月は _miDayYm 未設定 → 取込済みの最新月（＝今月）が入る（renderMonthly 内）。
+//   ★日別データが1日も無い環境では renderMonthly 側で 'month' に落とす（下の _hasAnyDaily 判定）。
+//     ここを 'day' 固定にしただけだと、日別ゼロの状態で空の表が出る。
+let _miGrain = 'day';
 let _miDayYm = '';        // 日別モードで見る対象月 'YYYY-MM'
 function _miSetGrain(g) {
   const want = (g === 'day') ? 'day' : 'month';
@@ -12672,6 +12680,28 @@ const MI_COLS = [
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
 function itemCols() { return MI_COLS.filter(c => !c.store); }
+// 【v1.0799】商品-日月別データの列。全-日別データ（画面）とまったく同じ並び・同じ色にする。
+//   ★store:true の3列（PR広告売上ROAS / PR売上ROAS / PR実績額(7%超)）も**出す**。
+//     ただし商品別のPRオプ実績はYahooから取得できない（§1）ので、中身は
+//     設定料率×税抜売上からの【推定値】（itemPrEstimate・§5-B）。
+//     → 見出しに「推定」と入れ、数字は斜体にして実測列と必ず区別する。
+//        区別を付けないと、ストア全体の実測値と同じ精度だと誤解される。
+//   ★広告CVRはこの並びには入れない（全-日別データがv1.0793で撤去したため）。
+//     MI_COLS には定義が残っているので、戻したくなればこの配列に 'cvr' を足すだけでよい。
+const MI_EST_KEYS = { prSalesRoas: 1, prOnlyRoas: 1, prOver: 1 };
+const MI_VIEW_ORDER = ['totSales', 'prSalesRoas', 'salesRoas', 'prOnlyRoas', 'seoSales', 'prOver', 'adSales', 'spend', 'roas'];
+// 見出しの2行目に「推定」を入れた版（行数を増やさないため、元の2行のまま差し替える）
+const MI_EST_HLABEL = {
+  prSalesRoas: 'PR広告売上<br>ROAS(推定)',
+  prOnlyRoas:  'PR売上<br>ROAS(推定)',
+  prOver:      'PR実績額<br>(7%超・推定)'
+};
+function miViewCols() {
+  return MI_VIEW_ORDER.map(k => MI_COLS.find(c => c.key === k)).filter(Boolean).map(c => {
+    const est = !!MI_EST_KEYS[c.key];
+    return Object.assign({}, c, est ? { est: true, hLabel: MI_EST_HLABEL[c.key], label: c.label + '(推定)' } : {});
+  });
+}
 // 【v1.0547】全-月別/全-日別データで実際に描く列。検算列は「検算列＝表示」のときだけ入れる。
 // 【v1.0569】検算列のトグルを撤去したので、以後は常に false（実効料率 / 設定料率の列は出さない）。
 //   列の定義は MI_COLS に verify:true のまま残してある。
@@ -12963,6 +12993,11 @@ function renderMonthly() {
   // 【v1.0527】key は月('YYYY-MM')でも日('YYYY-MM-DD')でもよい。日なら dayAgg から、月なら従来の月次マップから取る。
   const _statForFamily = (members, ym) => {
     let rev = 0, spend = 0, adSales = 0, cl = 0, or = 0, soikomi = 0;
+    // 【v1.0799】PR実績額(7%超)の推定。★必ず【商品ごとに】出してから足す。
+    //   セット合計の売上に代表商品の料率を掛けてはいけない（商品ごとに料率が違う・§5-B）。
+    //   _prKnown は商品-基本データ（_prRateKnown）と同じ判定＝「1件でも料率が取れたら true」。
+    //   ここを全件必須にすると、料率未取得の子が1つあるだけで親の推定が消える。
+    let _prOverEst = 0, _prKnown = false;
     const _isDay = isYmd(ym);
     members.forEach(code => {
       let _rev = 0, _cost = 0, _asales = 0, _cl = 0, _or = 0;
@@ -12974,6 +13009,8 @@ function renderMonthly() {
         const ad = adMap[code + '|' + ym]; if (ad) { _cost = ad.adCost || 0; _asales = ad.adRev || 0; _cl = ad.cl || 0; _or = ad.or || 0; }
       }
       rev += _rev;
+      { const e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(code, _rev) : null;
+        if (e) { _prKnown = true; _prOverEst += Math.max(0, +e.over || 0); } }
       // 【v1.0410】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
       const _rep = String((_pm[code] || {}).repCode || '').trim();
       if (_rep && _rep !== code) soikomi += _rev;
@@ -12985,7 +13022,12 @@ function renderMonthly() {
     // 【v1.0524】広告売上ROAS＝総売上÷実績額×100（広告費0なら null＝「—」）
     const salesRoas = salesRoasPct(totSales, spend, 0);
     const _label = _isDay ? ((+ym.slice(5, 7)) + '/' + (+ym.slice(8, 10))) : ym.replace('-', '/');   // 【v1.0527】日別は 9/1 表記
-    return { label: _label, salesRoas, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
+    // 【v1.0799】PR推定の3指標。料率が1件も取れない期間は null＝「—」（0円扱いにしない）。
+    const prOver = _prKnown ? _prOverEst : null;
+    const _den = spend + (_prOverEst || 0);
+    const prSalesRoas = (_prKnown && _den > 0) ? Math.round(totSales / _den * 100) : null;
+    const prOnlyRoas  = (_prKnown && _prOverEst > 0) ? (totSales / _prOverEst * 100) : null;
+    return { label: _label, salesRoas, prSalesRoas, prOnlyRoas, prOver, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
   };
 
   // 全コード → 家族(代表コード)ごとにメンバーをまとめる（撤退は除外）
@@ -13046,10 +13088,8 @@ function renderMonthly() {
     : '';
   const fmtP = (v, dec) => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : fmtPctBy(v, dec);   /* 【v1.0794】桁は列の dec 任せ */
   const thumbsEl = document.getElementById('mi-thumbs');
-  const curEl = document.getElementById('mi-cur');
   if (rows.length === 0) {
     if (thumbsEl) thumbsEl.innerHTML = '';
-    if (curEl) { curEl.innerHTML = ''; curEl.style.display = 'none'; }
     wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">' + (_miParentOnly ? '親子設定された商品グループがありません' : '該当する商品がありません') + '</div>';
     return;
   }
@@ -13066,43 +13106,36 @@ function renderMonthly() {
   //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
   const top = rows.slice(0, MI_THUMB_N);
   if (!top.some(r => r.code === sel.code)) top.push(sel);
-  const _man = (v) => {
-    const n = Math.round(+v || 0);
-    if (n >= 100000000) return '¥' + (Math.round(n / 10000000) / 10) + '億';
-    if (n >= 10000) return '¥' + Math.round(n / 10000).toLocaleString() + '万';
-    return n ? '¥' + n.toLocaleString() : '—';
-  };
+  // 【v1.0799】サムネの下に出すのは「いま並べている期間の売上」。
+  //   日別モードなら対象月の1日〜最新日ぶん＝**その月内の売上**になる。
+  //   ★万・億に丸めない。¥151,140 のように出す（丸めると同じ「¥15万」が並んで順位が読めない）。
+  const _sumLabel = _dayMode ? (String(_miDayYm).replace('-', '/') + ' の売上') : (selKeys.length + 'ヶ月の売上');
   if (thumbsEl) {
     thumbsEl.innerHTML = top.map((r, i2) => {
       const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(r.dispCode) : '';
       const on = r.code === sel.code;
       const rank = (i2 < MI_THUMB_N) ? (i2 + 1) : '—';
+      const amt = Math.round(_sumOf(r));
       return '<button type="button" class="mi-thumb' + (on ? ' is-on' : '') + '" onclick="_miPickCode(\'' + _esc(r.code).replace(/'/g, "\\'") + '\')"'
-        + ' title="' + _esc(r.code + ' ' + r.name) + '&#10;期間合計 ¥' + Math.round(_sumOf(r)).toLocaleString() + '">'
-        + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦') + '</div>'
-        + '<span class="mi-thumb-rank">' + rank + '</span>'
-        + '<span class="mi-thumb-amt">' + _man(_sumOf(r)) + '</span>'
+        + ' title="' + _esc(r.code + ' ' + r.name) + '&#10;' + _sumLabel + ' ¥' + amt.toLocaleString() + '">'
+        + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦')
+        + '<span class="mi-thumb-rank">' + rank + '</span></div>'
+        + '<span class="mi-thumb-amt">' + (amt ? '¥' + amt.toLocaleString() : '—') + '</span>'
         + '<span class="mi-thumb-code">' + _esc(r.code) + '</span>'
         + '</button>';
     }).join('');
   }
 
-  // ---------- 選択中の商品 ----------
-  if (curEl) {
-    const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(sel.dispCode) : '';
-    curEl.innerHTML = '<div class="mi-cur-img">' + (src ? '<img src="' + _esc(src) + '" onerror="this.remove()">' : '📦') + '</div>'
-      + '<div style="min-width:0"><div class="mi-cur-code">' + _esc(sel.code) + (sel.memberCount > 1 ? '（親子' + sel.memberCount + '件の合計）' : '') + '</div>'
-      + '<div class="mi-cur-name">' + _esc(sel.name) + '</div></div>'
-      + '<div class="mi-cur-sum">' + (_dayMode ? String(_miDayYm).replace('-', '/') + ' の合計' : selKeys.length + 'ヶ月の合計')
-      + '<b>¥' + Math.round(_sumOf(sel)).toLocaleString() + '</b></div>';
-    curEl.style.display = '';   // 【v1.0798】中身を入れてから出す（空の枠だけ先に出さない）
-  }
-
-  const note = (rows.length > 1)
-    ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">'
-      + (_miParentOnly ? '親子商品グループ ' : '対象商品 ') + rows.length + '件' + (q ? '（検索で絞り込み中）' : '')
-      + '。サムネを押すか検索して切り替えます。</div>'
-    : '';
+  // ---------- 表の上の1行（選択中の商品名＋件数） ----------
+  // 【v1.0799】v1.0798の「大きいグレーの帯」は撤去。どれを見ているかはサムネの枠で分かるので、
+  //   商品名だけをこの1行に入れる（縦を1段ぶん返す）。
+  const note = '<div style="padding:6px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+    + '<b style="color:var(--text)">' + _esc(sel.name) + '</b>'
+    + ' <span style="font-family:\'DM Mono\',ui-monospace,monospace;color:var(--text3)">' + _esc(sel.code) + '</span>'
+    + (sel.memberCount > 1 ? '<span style="color:var(--text3)">（親子' + sel.memberCount + '件の合計）</span>' : '')
+    + (rows.length > 1 ? '<span style="color:var(--text3)">　｜　' + (_miParentOnly ? '親子商品グループ ' : '対象商品 ') + rows.length + '件'
+        + (q ? '（検索で絞り込み中）' : '') + '。サムネを押すか検索して切り替え</span>' : '')
+    + '</div>';
 
   // ============================================================
   // 【v1.0798】表は全-月別データと同じ作り（ZD_TD_PAD 等の数値もそろえてある）。
@@ -13113,7 +13146,7 @@ function renderMonthly() {
   // ============================================================
   const MI_TD_PAD = '3px 8px', MI_TD_FS = '0.8rem';
   const MI_TH_PAD = '5px 8px', MI_TH_FS = '0.74rem';
-  const cols = itemCols();
+  const cols = miViewCols();   // 【v1.0799】全-日別データと同じ並び（PR3列は推定値）
   // 【v1.0798】比率表記の分母。SEO売上・広告売上・送り込み売上は「総売上の何%か」を出す。
   //   ★率の列（広告CVR・広告ROAS・広告売上ROAS）は対象外。構成比に意味が無い。
   const MI_RATIO_DEN = { seoSales: 'totSales', adSales: 'totSales' };
@@ -13129,7 +13162,8 @@ function renderMonthly() {
   const HEAD = '<th style="position:sticky;left:0;z-index:6;padding:' + MI_TH_PAD + ';text-align:center;background:var(--bg3);'
       + 'border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + MI_TH_FS + ';color:var(--text3);vertical-align:middle">'
       + (_dayMode ? '日' : '月') + '</th>'
-    + cols.map(c => '<th style="' + _thBase + 'background:' + c.hbg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + '">'
+    + cols.map(c => '<th' + (c.est ? ' title="商品別のPRオプ実績はYahooから取得できないため、設定PRオプ料率×税抜売上からの【推定値】です（実測ではありません）。&#10;料率は「いまの値」なので、過去の月に当てると当時の設定とズレます。"' : '')
+        + ' style="' + _thBase + 'background:' + c.hbg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + '">'
         + '<div class="th-stack"><div class="th-lbl">' + (c.hLabel || escapeHtml(c.label)) + '</div>' + fxLine(c.fx) + '</div></th>').join('')
     + '<th style="' + _thBase + 'background:#ece0fb;color:#7c3aed;border-left:2px solid #c4b5fd;">'
       + '<div class="th-stack"><div class="th-lbl">送り込み売上</div>' + fxLine('') + '</div></th>';
@@ -13146,14 +13180,22 @@ function renderMonthly() {
     const cells = cols.map(c => {
       const v = m[c.key];
       let inner;
-      if (c.t === 'sr') inner = salesRoasCellHtml(v, c.th);
-      else {
+      if (c.t === 'sr') {
+        inner = (v == null)
+          ? '<span style="color:var(--text3)" title="' + (c.srNote || '広告実績額が0のため算出できません') + '">—</span>'
+          : salesRoasCellHtml(v, c.th);
+      } else {
         const disp = c.t === 'y' ? fmtY2(v) : fmtP(v, c.dec);
-        inner = (!v || v === 0) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+        // 【v1.0799】norank の列（PR売上ROAS）は色を付けない。分母が小さく値が数百〜数千%になり、
+        //   他の列と同じ「上位/下位◯%」で塗ると意味の無い色になる（全-月別データと同じ扱い）。
+        inner = (!v || v === 0 || c.norank) ? disp
+          : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
         const denKey = MI_RATIO_DEN[c.key];
         if (denKey && c.t === 'y') inner += _ratioLine(v, m[denKey]);
       }
-      return '<td style="' + TDBASE + 'background:' + c.bg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + '">' + inner + '</td>';
+      // 【v1.0799】推定列は斜体。ストア全体の実測値と同じ精度だと誤解させないための印（§5-B と同じ）。
+      return '<td style="' + TDBASE + 'background:' + c.bg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '')
+        + (c.est ? 'font-style:italic;' : '') + '">' + inner + '</td>';
     }).join('');
     const sv = m.soikomi;
     const sInner = (!sv || sv === 0) ? fmtY2(sv)
