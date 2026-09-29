@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0818 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0819 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1802,12 +1802,21 @@ tbody tr:hover td:first-child:last-child {
 /* ★高さは2行ぶん（9px×1.25×2＝22.5px）＋枠1pxずつ＝25px で固定。1行の値のときも縮めない。
    縮めると「リニューアル予定」の商品だけ背が高くなり、帯の行がガタつく
    （.mi-thumb-ad を visibility:hidden にしているのと同じ理由）。 */
+/* 【v1.0819】★枠と▾を【常に】出す。v1.0817 は枠を透明にしてホバーで出していたが、
+   サムネの中に文字が並ぶだけに見えて、押せることに気づけなかった。
+   ★枠の1pxは v1.0817 から入っている（transparent だっただけ）ので、
+     色を付けても高さは変わらない＝帯の行はずれない。 */
 .mi-thumb-stl { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                 font-size:9px; font-weight:800; line-height:1.25; text-align:center;
-                border:1px solid transparent; border-radius:4px; padding:0 1px;
-                pointer-events:none; overflow:hidden; word-break:keep-all; }
-.mi-thumb-stw:not(.is-ro):hover .mi-thumb-stl { border-color:var(--border2); background:var(--bg2); }
-.mi-thumb-st:focus-visible + .mi-thumb-stl { border-color:var(--accent); background:var(--bg2); }
+                border:1px solid var(--border2); border-radius:4px; padding:0 9px 0 2px;
+                background:var(--bg2); pointer-events:none; overflow:hidden; word-break:keep-all; }
+/* ▾ は【ラッパー】に付ける。ラベルに付けると、2行になったとき文字と重なる位置へずれる。 */
+.mi-thumb-stw::after { content:'▾'; position:absolute; right:3px; top:50%; transform:translateY(-50%);
+                       font-size:8px; line-height:1; color:var(--text3); pointer-events:none; z-index:3; }
+.mi-thumb-stw.is-ro::after { display:none; }   /* 閲覧専用は押せないので出さない */
+.mi-thumb-stw.is-ro .mi-thumb-stl { border-style:dashed; }
+.mi-thumb-stw:not(.is-ro):hover .mi-thumb-stl { border-color:var(--accent); background:var(--bg3); }
+.mi-thumb-st:focus-visible + .mi-thumb-stl { border-color:var(--accent); background:var(--bg3); }
 .mi-thumb-st[disabled] + .mi-thumb-stl { opacity:.6; }
 /* ★select は透明にするだけで消さない。display:none / visibility:hidden にすると
    クリックもキーボード操作も効かなくなる。opacity:0 のままなら当たり判定は残る。 */
@@ -4227,7 +4236,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0818</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0819</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4635,7 +4644,6 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
-          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
           <span style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
             <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
@@ -4681,6 +4689,10 @@ th.col-sroas { background-color:#e7d5f5; }
             <button type="button" id="miRatioOn" onclick="_zdSetRatio(true)">あり</button>
             <button type="button" id="miRatioOff" onclick="_zdSetRatio(false)">なし</button>
           </span>
+          <!-- 【v1.0819】★計算式は比率表記の右。上の検索行ではなくここに置く理由は
+               「表の読み方を変える操作」だから（比率表記と同じ仲間）。検索・親子のみは
+               【どの商品を出すか】の操作なので上のまま。軸が違うものを混ぜない。 -->
+          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
         </div>
         <!-- 【v1.0801】商品名・日別の注記は表の【外】に置く。
              表の中に入れると、30日ぶんスクロールした時点で「どの商品を見ているか」が画面から消える。 -->
@@ -13945,10 +13957,14 @@ function renderMonthly() {
   //       → 1商品ぶんが12行あるので、2商品目から下は必ずスクロールしないと見えなかった。
   //   新: 売上上位のサムネ帯（MI_THUMB_N 件）から1商品を選び、その商品だけを 縦=月 × 横=指標 で出す。
   // ============================================================
-  // 【v1.0527】日別モードの見出し（何を並べているかを明示）
-  const _dayNote = _dayMode
-    ? '<div style="padding:7px 12px;font-size:13px;color:#1e4fbf;background:#eaf0fd;border-bottom:1px solid #b6d4fe">📅 <b>' + String(_miDayYm).replace('-', '/') + '</b> の日別推移（' + selKeys.length + '日分・新しい日が上）。日別データを取り込んだ日だけ並びます。</div>'
-    : '';
+  // 【v1.0819】★日別モードの青い注記（「2026/09 の日別推移（28日分…）」）は撤去した。
+  //   同じことが【すぐ上の操作行】に出ているため（対象月のドロップダウンが
+  //   「2026/09（28日分）」と月も日数も表示している）。
+  //   ★二重に出すと、表とサムネの間に読まなくていい行が挟まり、
+  //     サムネ→操作→表 の並びが分断される。
+  //   ★消すのはこの1行だけ。同じ #mi-note に入っている【商品名の行】は残すこと
+  //     （§v1.0801: 30日ぶんスクロールすると、どの商品を見ているか画面から消えるため）。
+  const _dayNote = '';
   const fmtP = (v, dec) => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : fmtPctBy(v, dec);   /* 【v1.0794】桁は列の dec 任せ */
   const thumbsEl = document.getElementById('mi-thumbs');
   if (rows.length === 0) {
