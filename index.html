@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0801 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0802 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4106,7 +4106,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0801</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0802</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -12707,10 +12707,18 @@ const MI_EST_HLABEL = {
   prOver:      'PR実績額<br>(7%超・推定)'
 };
 function miViewCols() {
-  return MI_VIEW_ORDER.map(k => MI_COLS.find(c => c.key === k)).filter(Boolean).map(c => {
+  const base = MI_VIEW_ORDER.map(k => MI_COLS.find(c => c.key === k)).filter(Boolean).map(c => {
     const est = !!MI_EST_KEYS[c.key];
     return Object.assign({}, c, est ? { est: true, hLabel: MI_EST_HLABEL[c.key], label: c.label + '(推定)' } : {});
   });
+  // 【v1.0802】内訳（合計 / 送り込み元 / 利益源 / 通常商品）も全-日別データと同じに展開する。
+  //   1商品しか出していないこの画面では、内訳は**その商品の家族の中**の内訳になる:
+  //     送り込み元 … 親（他の商品から代表コードとして参照されているコード）
+  //     利益源     … 子（代表コードを持っていて親ではない商品）
+  //     通常商品   … 親子設定がまったく無い商品
+  //   → 親子設定のない単品は「通常商品」に全額が入り、残り2列は空になる（それが正しい）。
+  //   ★展開は zdCols と同じ _zdExpandSplitCols を通す（定義もグループも1か所）。
+  return _zdExpandSplitCols(base);
 }
 // 【v1.0547】全-月別/全-日別データで実際に描く列。検算列は「検算列＝表示」のときだけ入れる。
 // 【v1.0569】検算列のトグルを撤去したので、以後は常に false（実効料率 / 設定料率の列は出さない）。
@@ -12784,10 +12792,16 @@ function zdCols() {
     return true;
   });
   if (!_zdSplit) return base.map(c => Object.assign({ id: c.key, grp: null, famKey: c.key }, c));
+  return _zdExpandSplitCols(base);
+}
+// 【v1.0802】split:true の列を「合計＋ZD_GRP_DEFS の各グループ」に展開する。
+//   ★全-月別/全-日別データ（zdCols）と 商品-日月別データ（miViewCols）は**必ずこの関数を通す**。
+//     展開を2か所に書くと、片方だけグループが増える／色の濃淡が違う、が必ず起きる。
+function _zdExpandSplitCols(base) {
   const out = [];
   base.forEach(c => {
     if (!c.split) { out.push(Object.assign({ id: c.key, grp: null, famKey: c.key }, c)); return; }
-    // 【v1.0572】PR実績額だけ内訳の定義が違う（7%相当 / 超過分）。他は 7%超 / 7% の商品グループ別。
+    // 【v1.0572】PR実績額だけ内訳の定義が違う（7%相当 / 超過分）。他は商品グループ別。
     const defs = (c.key === 'prCost') ? PR_SPLIT_DEFS : ZD_GRP_DEFS;
     defs.forEach((g, gi) => {
       out.push(Object.assign({}, c, {
@@ -12798,9 +12812,9 @@ function zdCols() {
         label: c.label + g.suffix,
         hbg: g.hLight ? _zdLighten(c.hbg, g.hLight) : c.hbg,
         bg:  _zdLighten(c.hbg, g.bLight),            // 本体も見出し色から作り、左ほど濃くする
-        short: g.short,                              // 【v1.0560】見出し3段目のラベル
-        role: g.role,                                // 【v1.0568】見出し2段目のラベル
-        famLabel: c.label,                           // 【v1.0560】見出し1段目（指標名）
+        short: g.short,                              // 見出し下段のラベル
+        role: g.role,                                // 役割の段（ZD_GRP_DEFS は空＝段ごと出さない）
+        famLabel: c.label,                           // 見出し上段（指標名）
         blockStart: !!c.blockStart && gi === 0,     // ブロック境界は家族の先頭だけ
         famStart: gi === 0,                          // 指標のまとまりの先頭（中太の区切り）
         famLast: gi === defs.length - 1,
@@ -13088,7 +13102,7 @@ function renderMonthly() {
       } while (_n !== _prev);
       _dispName = _n + '【親】';
     }
-    rows.push({ code: key, dispCode, name: _dispName, memberCount: members.length, stats });
+    rows.push({ code: key, dispCode, name: _dispName, memberCount: members.length, members: members, stats });
   });
   rows.sort((a, b) => b.stats.reduce((s, m) => s + (m.totSales || 0), 0) - a.stats.reduce((s, m) => s + (m.totSales || 0), 0));
 
@@ -13163,37 +13177,98 @@ function renderMonthly() {
   // ============================================================
   const MI_TD_PAD = '3px 8px', MI_TD_FS = '0.8rem';
   const MI_TH_PAD = '5px 8px', MI_TH_FS = '0.74rem';
-  const cols = miViewCols();   // 【v1.0799】全-日別データと同じ並び（PR3列は推定値）
-  // 【v1.0798】比率表記の分母。SEO売上・広告売上・送り込み売上は「総売上の何%か」を出す。
-  //   ★率の列（広告CVR・広告ROAS・広告売上ROAS）は対象外。構成比に意味が無い。
-  const MI_RATIO_DEN = { seoSales: 'totSales', adSales: 'totSales' };
-  const stats = sel.stats;
-  const pool = {}; cols.forEach(c => { pool[c.key] = stats.map(m => m[c.key]).filter(v => v > 0); });
-  const soiPool = stats.map(m => m.soikomi).filter(v => v > 0);
+  // 【v1.0802】内訳の列だけ左右の余白を詰める（全-月別データの ZD_*_PAD_G と同じ理由・同じ値）。
+  //   1指標が4列になるので、合計列と同じ余白のままだと表が横に伸びて横スクロールが出る。
+  const MI_TD_PAD_G = '3px 4px', MI_TH_PAD_G = '5px 4px';
+  const _miTdPad = (c) => (c && c.grp ? MI_TD_PAD_G : MI_TD_PAD);
+  const _miThPad = (c) => (c && c.grp ? MI_TH_PAD_G : MI_TH_PAD);
+  const cols = miViewCols();   // 【v1.0802】全-日別データと同じ並び＋同じ内訳（PR3列は推定値）
+  // 【v1.0802】比率表記は**内訳の列（grp 付き）だけ**。分母はその指標の合計（4列で100%）。
+  //   ★合計列に「総売上に対する%」を出すのはやめた（v1.0798〜v1.0801）。
+  //     隣り合うセルで分母が変わる（合計=総売上 / 内訳=その指標の合計）ので、
+  //     並べて見たときにどちらの%なのか読み取れない。全-日別データも内訳だけに出している。
+
+  // ---------- 選択中の商品だけ、家族の中の内訳（送り込み元/利益源/通常商品）を作る ----------
+  // 【v1.0802】★内訳は**選択中の1商品ぶんだけ**計算する。
+  //   rows 全部に付けると（商品数×日数）回 _zdGroupSplit が走り、日別20〜31日で目に見えて重くなる。
+  //   サムネの並べ替えに内訳は要らない（総売上だけ）。
+  const _selMembers = sel.members || [sel.code];
+  const _miGrpFor = (ym) => {
+    const isDay = isYmd(ym);
+    const irs = [], ars = [];
+    _selMembers.forEach(code => {
+      if (isDay) {
+        const a = dayAgg(code, ym);
+        irs.push({ code: code, revenue: a.rev });
+        ars.push({ code: code, adCost: a.adCost, adRevenue: a.adRev, adClicks: a.adClicks, adOrders: a.adOrders });
+      } else {
+        const it = itemMap[code + '|' + ym], ad = adMap[code + '|' + ym];
+        irs.push({ code: code, revenue: it ? (it.rev || 0) : 0 });
+        ars.push({ code: code, adCost: ad ? (ad.adCost || 0) : 0, adRevenue: ad ? (ad.adRev || 0) : 0,
+                   adClicks: ad ? (ad.cl || 0) : 0, adOrders: ad ? (ad.or || 0) : 0 });
+      }
+    });
+    // ★全-月別/全-日別データとまったく同じ関数を通す。ここで独自に足し算を書くと
+    //   同じ「送り込み元」が画面ごとに違う金額になる。PR費は商品別に按分しないので 0 を渡す。
+    return _zdGroupSplit(irs, ars, 0);
+  };
+  const stats = sel.stats.map((m, i2) => Object.assign({}, m, { grp: _miGrpFor(selKeys[i2]) }));
+
+  const pool = {}; cols.forEach(c => { pool[c.id] = stats.map(m => _zdValOf(m, c)).filter(v => v > 0); });
   const fmtY2 = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
 
-  const _thBase = 'padding:' + MI_TH_PAD + ';border-bottom:2px solid var(--border);font-size:' + MI_TH_FS
-    + ';font-weight:700;color:var(--text2);white-space:nowrap;text-align:center;vertical-align:top;height:1px;';
   const BLK = '2px solid var(--border2)';
   const VBD = '1px solid var(--border)';
-  // 【v1.0801】列と列の間の細い縦罫線。全-月別/全-日別データ（_vb）とまったく同じ考え方:
-  //   ★次の列に太い左線（blockStart）が来るときは、自分の右罫線を出さない。
-  //     1px と 2px が並ぶと境界だけ太く見えてブロックの区切りがぼやける。
-  //   ★最後の指標列の次は「送り込み売上」＝紫の太い左線なので、ここも出さない。
+  const FAM = '1px solid #b9c2cf';
+  // 次の列がブロック先頭なら自分の右罫線は出さない（1px+2px で境界だけ太く見えるのを防ぐ）
   const _miVb = (ci) => { const nx = cols[ci + 1]; return (nx ? !!nx.blockStart : true) ? '' : 'border-right:' + VBD + ';'; };
+  const _famL = (c) => (c.famStart && !c.blockStart ? 'border-left:' + FAM + ';' : '');
+  const _thBase = 'border-bottom:2px solid var(--border);font-size:' + MI_TH_FS
+    + ';font-weight:700;color:var(--text2);white-space:nowrap;text-align:center;';
   const _estTip = '商品別のPRオプ実績はYahooから取得できないため、設定PRオプ料率×税抜売上からの【推定値】です（実測ではありません）。&#10;料率は「いまの値」なので、過去の月に当てると当時の設定とズレます。';
-  const HEAD = '<tr>'
-    + '<th style="position:sticky;left:0;z-index:6;padding:' + MI_TH_PAD + ';text-align:center;background:var(--bg3);'
-      + 'border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + MI_TH_FS + ';color:var(--text3);vertical-align:middle">'
-      + (_dayMode ? '日' : '月') + '</th>'
-    + cols.map((c, ci) => '<th' + (c.est ? ' title="' + _estTip + '"' : '')
-        + ' style="' + _thBase + 'background:' + c.hbg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + _miVb(ci) + '">'
-        + '<div class="th-stack"><div class="th-lbl">' + (c.hLabel || escapeHtml(c.label)) + '</div>' + fxLine(c.fx) + '</div></th>').join('')
-    + '<th style="' + _thBase + 'background:#ece0fb;color:#7c3aed;border-left:2px solid #c4b5fd;">'
-      + '<div class="th-stack"><div class="th-lbl">送り込み売上</div>' + fxLine('') + '</div></th>'
-    + '</tr>';
 
-  const TDBASE = 'padding:' + MI_TD_PAD + ';text-align:center;font-size:' + MI_TD_FS
+  // ---------- 2段見出し（全-日別データと同じ作り） ----------
+  // 1段目: 指標名（内訳のある指標は colspan でまとめる／無い指標は rowspan でぶち抜き）
+  // 2段目: 合計 / 送り込み元 / 利益源 / 通常商品
+  const _famGroups = [];
+  for (let k2 = 0; k2 < cols.length; ) {
+    if (cols[k2].famStart) { const n2 = cols[k2]._famLen || ZD_GRP_DEFS.length; _famGroups.push({ start: k2, len: n2 }); k2 += n2; }
+    else { _famGroups.push({ start: k2, len: 1 }); k2 += 1; }
+  }
+  const _twoRow = _famGroups.some(g => g.len > 1);
+  const _rs = _twoRow ? ' rowspan="2"' : '';
+  let _h1 = '<th' + _rs + ' style="position:sticky;left:0;z-index:6;padding:' + MI_TH_PAD + ';text-align:center;background:var(--bg3);'
+    + 'border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + MI_TH_FS + ';color:var(--text3);vertical-align:middle">'
+    + (_dayMode ? '日' : '月') + '</th>';
+  let _h2 = '';
+  _famGroups.forEach(g => {
+    const c = cols[g.start];
+    const lastIdx = g.start + g.len - 1;
+    const leftBd = (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c));
+    const lbl = '<div class="th-stack"><div class="th-lbl">' + (c.hLabel || escapeHtml(c.famLabel || c.label)) + '</div>' + fxLine(c.fx) + '</div>';
+    const tip = c.est ? ' title="' + _estTip + '"' : '';
+    if (g.len === 1) {
+      _h1 += '<th' + _rs + tip + ' style="' + _thBase + 'padding:' + _miThPad(c) + ';background:' + c.hbg + ';'
+        + leftBd + _miVb(lastIdx) + 'vertical-align:top;height:1px;">' + lbl + '</th>';
+      return;
+    }
+    _h1 += '<th colspan="' + g.len + '"' + tip + ' style="' + _thBase + 'padding:' + MI_TH_PAD + ';background:' + c.hbg + ';'
+      + leftBd + _miVb(lastIdx) + 'vertical-align:top;height:1px;">' + lbl + '</th>';
+    for (let k3 = 0; k3 < g.len; k3++) {
+      const sc = cols[g.start + k3];
+      const bd = (k3 === 0 ? leftBd : 'border-left:' + VBD + ';') + _miVb(g.start + k3);
+      // 濃さ・太さは並び順（合計→送り込み元→利益源→通常商品）どおりに落とす
+      const gi = ZD_GRP_KEYS.indexOf(sc.grp);
+      const col = gi <= 0 ? 'var(--text)' : (gi === 1 ? 'var(--text2)' : 'var(--text3)');
+      const wgt = sc.grp ? (gi === 0 ? '800' : '600') : '700';
+      _h2 += '<th style="' + _thBase + 'padding:' + _miThPad(sc) + ';background:' + sc.hbg + ';' + bd
+        + 'font-size:0.68rem;letter-spacing:-0.03em;color:' + col + ';font-weight:' + wgt + '">'
+        + escapeHtml(sc.short || '') + '</th>';
+    }
+  });
+  const HEAD = '<tr>' + _h1 + '</tr>' + (_twoRow ? '<tr>' + _h2 + '</tr>' : '');
+
+  const TDBASE0 = 'text-align:center;font-size:' + MI_TD_FS
     + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;border-bottom:1px solid var(--border);';
   const _ratioLine = (v, den) => {
     if (!_zdRatio || !(v > 0) || !(den > 0)) return '';
@@ -13201,14 +13276,12 @@ function renderMonthly() {
     return '<div style="font-size:0.86em;font-weight:700;line-height:1.2;margin-top:1px;color:'
       + pctBandColor(pc) + '">' + (Math.round(pc * 10) / 10) + '%</div>';
   };
-  // 【v1.0801】未満了（当月）は色を付けない。全-月別データ（_unmatured）と同じ扱い。
-  //   まだ日数が残っている月を、満了した月と同じ物差しで「下位10%＝赤」と塗ると必ず悪く見える。
-  //   ★日別は抑制しない。取り込んだ日はすべて確定済みだから（全-日別データも同じ）。
+  // 【v1.0801】未満了（当月）は色を付けない。日別は抑制しない（取り込んだ日は確定済み）。
   const _curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   const body = stats.map(m => {
     const _unmatured = !_dayMode && !!(m.key && _curYm && m.key >= _curYm);
     const cells = cols.map((c, ci) => {
-      const v = m[c.key];
+      const v = _zdValOf(m, c);
       let inner;
       if (c.t === 'sr') {
         inner = (v == null)
@@ -13216,31 +13289,24 @@ function renderMonthly() {
           : salesRoasCellHtml(v, c.th);
       } else {
         const disp = c.t === 'y' ? fmtY2(v) : fmtP(v, c.dec);
-        // 【v1.0799】norank の列（PR売上ROAS）は色を付けない。分母が小さく値が数百〜数千%になり、
-        //   他の列と同じ「上位/下位◯%」で塗ると意味の無い色になる（全-月別データと同じ扱い）。
         inner = (!v || v === 0 || c.norank || _unmatured) ? disp
-          : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
-        const denKey = MI_RATIO_DEN[c.key];
-        if (denKey && c.t === 'y') inner += _ratioLine(v, m[denKey]);
+          : '<span class="c-' + _zenRank5(v, pool[c.id], c.hi) + '">' + disp + '</span>';
+        // 比率表記: 内訳列だけ。分母はその指標の合計（送り込み元＋利益源＋通常商品＝100%）
+        if (c.t === 'y' && v > 0 && c.grp) inner += _ratioLine(v, m[c.famKey]);
       }
-      // 【v1.0799】推定列は斜体。ストア全体の実測値と同じ精度だと誤解させないための印（§5-B と同じ）。
-      return '<td style="' + TDBASE + 'background:' + c.bg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + _miVb(ci)
+      return '<td style="padding:' + _miTdPad(c) + ';' + TDBASE0 + 'background:' + c.bg + ';'
+        + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + _miVb(ci)
         + (c.est ? 'font-style:italic;' : '') + '">' + inner + '</td>';
     }).join('');
-    const sv = m.soikomi;
-    const sInner = (!sv || sv === 0 || _unmatured) ? fmtY2(sv)
-      : ('<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + fmtY2(sv) + '</span>' + _ratioLine(sv, m.totSales));
-    const soiCell = '<td style="' + TDBASE + 'background:#f7f1fe;border-left:2px solid #c4b5fd;">' + sInner + '</td>';
     return '<tr><td style="padding:' + MI_TD_PAD + ';text-align:center;font-weight:700;font-size:' + MI_TD_FS
       + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;'
       + 'border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap">' + m.label + '</td>'
-      + cells + soiCell + '</tr>';
+      + cells + '</tr>';
   }).join('');
 
-  // 【v1.0801】★表の組み方も全-月別データに合わせる。
-  //   border-collapse:collapse だと、見出しを固定したときに罫線が表側に残って**本文が透けて見える**
-  //   （§4 の sticky 事故と同じ）。separate + border-spacing:0 にして、罫線は各セルの border だけで描く。
-  //   ★見出しの固定は <thead> に掛ける。<tr> に position:sticky を掛けるのはブラウザ差が大きい。
+  // 【v1.0801】border-collapse:collapse だと見出しを固定したとき罫線が表側に残り本文が透ける。
+  //   separate + border-spacing:0 にして、罫線は各セルの border だけで描く。
+  //   見出しの固定は <thead> に掛ける（<tr> 個別はブラウザ差が大きい）。
   { const n = document.getElementById('mi-note');
     if (n) { n.innerHTML = _dayNote + note; n.style.display = ''; } }
   wrap.innerHTML = '<table style="border-collapse:separate;border-spacing:0;width:100%">'
@@ -13249,8 +13315,6 @@ function renderMonthly() {
 }
 
 // 【v1.0801】商品-日月別データの表を画面の一番下まで伸ばす（_zdFitTableHeight と同じ作り）。
-//   ★CSSの max-height:70vh のままだと、ヘッダーを隠しても下が白く余る／
-//     逆にヘッダーを出すと表がはみ出す。実際の位置から毎回測る。
 function _miFitTableHeight() {
   try {
     const wrap = document.getElementById('mi-wrap');
