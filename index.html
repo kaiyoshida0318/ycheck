@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0799 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0800 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4106,7 +4106,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0799</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0800</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4513,8 +4513,14 @@ th.col-sroas { background-color:#e7d5f5; }
           <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
           <!-- 【v1.0527】日別／月別トグル。日別＝対象月の1日ごとの推移、月別＝従来どおり月を横並び。 -->
           <span class="dm-seg" id="miDayMonthSeg" role="group" aria-label="日別/月別">
-            <button type="button" class="dm-btn on" data-dm="month" onclick="_miSetGrain('month')" title="月ごとの推移（従来）">月別</button>
-            <button type="button" class="dm-btn" data-dm="day" onclick="_miSetGrain('day')" title="対象月の1日ごとの推移。日別データを取り込んだ日だけ並びます">日別</button>
+            <!-- 【v1.0800】★日別を左（＝先頭）に置く。v1.0799 で既定を日別にしたので、
+                 既定でないほう（月別）が左にあると「押していないボタンが先頭」で並びが読みにくい。
+                 ★静的な class="on" も日別側へ移すこと。renderMonthly が走る前の一瞬、
+                   月別が選択状態に見えてしまう（実際に表示されているのは日別）。
+                 ★角丸・区切り線は .dm-seg .dm-btn:first-child が担うので、
+                   HTMLの順番を入れ替えるだけでよい（CSSは触らない）。 -->
+            <button type="button" class="dm-btn on" data-dm="day" onclick="_miSetGrain('day')" title="対象月の1日ごとの推移。日別データを取り込んだ日だけ並びます">日別</button>
+            <button type="button" class="dm-btn" data-dm="month" onclick="_miSetGrain('month')" title="月ごとの推移（従来）">月別</button>
           </span>
           <span class="filter-label" id="miDayYmLabel" style="display:none">対象月</span>
           <select id="miDayYmSel" onchange="_miSetDayYm(this.value)" style="display:none;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
@@ -12955,6 +12961,11 @@ function renderMonthly() {
   //   行データは dayAgg() を各日で計算するだけ。表の描画コードは月別とまったく共通。
   // ============================================================
   const _hasAnyDaily = dailyAllDates().length > 0;
+  // 【v1.0800】★落とし込み（日別データが無ければ月別へ）を、ボタンの選択状態を塗る**前**に済ませる。
+  //   v1.0799 までは塗ってから落としていたので、日別データが0件の環境では
+  //   「日別ボタンが選択状態なのに、表は月別」という食い違いが出ていた
+  //   （既定が月別だった v1.0798 以前は _miGrain が 'day' にならず表面化しなかった）。
+  if (_miGrain === 'day' && !_hasAnyDaily) _miGrain = 'month';
   {
     const seg = document.getElementById('miDayMonthSeg');
     if (seg) {
@@ -12964,7 +12975,6 @@ function renderMonthly() {
     const noData = document.getElementById('miDayNoData');
     if (noData) noData.style.display = _hasAnyDaily ? 'none' : '';
   }
-  if (_miGrain === 'day' && !_hasAnyDaily) _miGrain = 'month';
   const _dayMode = (_miGrain === 'day');
   ['miDayYmLabel', 'miDayYmSel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
   ['miModeLabel', 'miModeSeg'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
