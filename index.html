@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0791 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0793 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3928,6 +3928,14 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
 
 /* 【v1.0619】親／子ワンクリック絞り込み。商品コード左の .rep-badge と同じ色・同じアイコン。 */
 .soi-pc-seg { display: inline-flex; align-items: center; gap: 6px; }
+/* 【v1.0792】親／子の絞り込みは「個別」のときだけ使う。
+   ★合算・両表示では行がセット単位なので、親か子かで絞る意味が無い。
+     ボタンを消さずに薄くするのは、「いま押せない」ことと「そもそも無い」ことを区別するため。 */
+.soi-pc-seg.is-off .soi-pc-btn { opacity: 0.3; pointer-events: none; filter: grayscale(0.5); }
+/* 【v1.0792】「全表示」は絞り込み解除のボタン。段（合算/個別/両表示）とは別物なので
+   .on は付かない。色も分けて「モードではない」ことを示す。 */
+.segf-btn.segf-act { background: var(--bg2); color: var(--text2); font-weight: 700; }
+.segf-btn.segf-act:hover { background: #fdeceb; color: #b91c1c; }
 .soi-pc-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   height: 27px; padding: 0 7px 0 5px;
@@ -4063,7 +4071,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0791</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0793</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4341,7 +4349,7 @@ th.col-sroas { background-color:#e7d5f5; }
                合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
                      （親が広告費を出して子が売れる構成では、個別の広告売上ROASが実態とズレるため） -->
           <span class="seg-filter js-rowmode-bar" id="basicRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <!-- 【v1.0619】送り込み元（親＝緑）／送り込み先（子＝黄）だけを表示するワンクリック絞り込み。
                マークは商品コード左の .rep-badge とまったく同じ見た目（同じSVG・同じ緑/黄）にしてある。
                ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
@@ -4957,7 +4965,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
           <span class="seg-filter js-rowmode-bar" id="adTuneRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="adTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -5064,7 +5072,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
           <span class="seg-filter js-rowmode-bar" id="proTuneRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="proTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -5120,7 +5128,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="adDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0650】商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み（親＋子／親／子）。状態は共有（basicRowMode / state.repFilter） -->
           <span class="seg-filter js-rowmode-bar" id="adDataRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="adDataSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -5176,7 +5184,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="search" id="prDataSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0650】商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み（親＋子／親／子）。状態は共有（basicRowMode / state.repFilter） -->
           <span class="seg-filter js-rowmode-bar" id="prDataRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="soi-pc-seg" id="prDataSoiPcBar" role="group" aria-label="親／子で絞り込み">
             <button type="button" class="soi-pc-btn both" data-repf="*A"
               title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
@@ -9027,14 +9035,27 @@ function prSplitByBaseRate(cost, sales) {
 //   実効料率とほぼ一致すれば、上の分解の前提（税率・課金対象）が妥当だと確認できる。
 //   ★ state.proRate は「最新値」のスナップショットなので、過去月に当てると当時の料率とはズレる（参考値）。
 //   加重に使う売上は税込/税抜どちらでも比率なので結果は変わらない。
-// ==================== 【v1.0551】設定PRオプ料率で商品を2グループに分ける ====================
-//  low  … 料率が下限(7%)以下 ＝「7%」グループ。⑤ data*.csv に載っていない商品もここ（現在Yahooに無い＝撤退等）
-//  high … 料率が下限より高い ＝「7%超」グループ
-//  ★ state.proRate は「いまの設定値」のスナップショット。過去月に当てると当時の料率とはズレる（参考値）。
-function _prGroupOf(code) {
-  const r = (typeof getProRate === 'function') ? getProRate(code) : null;
-  return ((+r || 0) > PR_BASE_RATE_PCT) ? 'high' : 'low';
+// ==================== 【v1.0793】商品を「親子設定」で3グループに分ける ====================
+//  soi    … 送り込み元＝親。他の商品から代表コードとして参照されているコード（自己参照の親も含む）
+//  prof   … 利益源＝子。代表コードを持っていて、かつ親ではない商品
+//  normal … 通常商品。親子設定がまったく無い商品
+//
+//  ★【v1.0793】v1.0551〜v1.0792 は「PRオプ料率が7%超か否か」で2分割していた（high / low）。
+//    料率は state.proRate の**いまの値**しか無いので、過去月に当てると当時の設定とズレていた（§4-D の弱点）。
+//    親子設定（productMeta.repCode）に変えたことで、少なくとも「誰が送り込み元か」は設定どおりになる。
+//    ただし repCode も履歴を持たないので、過去月に今の親子関係を当てている点は同じ（依然として参考値）。
+//
+//  ★中継商品（親でも子でもある）は【親に寄せる】。
+//    親判定と子判定を独立に書くと両方に入り、送り込み元＋利益源＋通常商品＞合計 になって
+//    「3つ足しても合計に合わない」表になる。v1.0627（分類表の親/子件数）とまったく同じ寄せ方にしてある。
+//  ★判定の入口は _repHasSoikomi / _isSoiParent。repFilter（'*' '*P' '*C' '!'）や
+//    分類表の件数と同じ関数を使うので、「表の金額」と「絞り込んだ件数」が必ず同じ母集団になる。
+function _zdGroupOf(code, referenced) {
+  const ref = referenced || getReferencedRepCodes();
+  if (!_repHasSoikomi(code, ref)) return 'normal';
+  return _isSoiParent(code, ref) ? 'soi' : 'prof';
 }
+const ZD_GRP_KEYS = ['soi', 'prof', 'normal'];
 
 // 期間の商品別行を2グループに集計する。
 //   itemRows: [{code, revenue}]  /  adRows: [{code, adCost, adRevenue, adClicks, adOrders}]
@@ -9047,9 +9068,12 @@ function _prGroupOf(code) {
 //     税抜への割り戻しは比率計算で相殺されるので、rev は税込のままでよい。
 function _zdGroupSplit(itemRows, adRows, prCost) {
   const mk = () => ({ totSales: 0, adSales: 0, spend: 0, adClicks: 0, adOrders: 0, _prEst: 0, codes: 0 });
-  const g = { low: mk(), high: mk() };
+  const g = {}; ZD_GRP_KEYS.forEach(k => { g[k] = mk(); });
+  // 【v1.0793】★参照集合は1回だけ作る。商品ごとに getReferencedRepCodes() を呼ぶと
+  //   商品数×日数ぶん Set を作り直すことになり、全-日別データ（最大93日）が目に見えて重くなる。
+  const ref = getReferencedRepCodes();
   (itemRows || []).forEach(i => {
-    const k = _prGroupOf(i.code);
+    const k = _zdGroupOf(i.code, ref);
     const rev = +i.revenue || 0;
     g[k].totSales += rev;
     g[k].codes++;
@@ -9057,14 +9081,14 @@ function _zdGroupSplit(itemRows, adRows, prCost) {
     g[k]._prEst += rev * rate;
   });
   (adRows || []).forEach(a => {
-    const k = _prGroupOf(a.code);
+    const k = _zdGroupOf(a.code, ref);
     g[k].adSales  += +a.adRevenue || 0;
     g[k].spend    += +a.adCost || 0;
     g[k].adClicks += +a.adClicks || 0;
     g[k].adOrders += +a.adOrders || 0;
   });
-  const estTot = g.low._prEst + g.high._prEst;
-  ['low', 'high'].forEach(k => {
+  let estTot = 0; ZD_GRP_KEYS.forEach(k => { estTot += g[k]._prEst; });
+  ZD_GRP_KEYS.forEach(k => {
     const o = g[k];
     o.seoSales = Math.max(0, o.totSales - o.adSales);
     o.cvr  = o.adClicks > 0 ? (o.adOrders / o.adClicks * 100) : 0;
@@ -11520,8 +11544,10 @@ function renderBasic() {
          : '<span class="pro-rate-val ' + (Number(pr) > PR_BASE_RATE_PCT ? 'over' : 'base') + '">' + fmtProRate(pr) + '</span>');
     const _prRateTip = (pr == null || isNaN(pr)) ? 'クリックで編集'
       : (Number(pr) > PR_BASE_RATE_PCT
-          ? '設定料率が' + PR_BASE_RATE_PCT + '%超（緑）＝料率を上げて上位表示を取り、子商品へ流す側（全-月別データの「送り込み元」）\nクリックで編集'
-          : '設定料率は最低の' + PR_BASE_RATE_PCT + '%（青）＝実際に利益が落ちる側（全-月別データの「利益源」）\nクリックで編集');
+          ? '設定料率が' + PR_BASE_RATE_PCT + '%超（緑）＝料率を上げて上位表示を取り、子商品へ流す側\nクリックで編集'
+          : '設定料率は最低の' + PR_BASE_RATE_PCT + '%（青）＝実際に利益が落ちる側\nクリックで編集');
+          /* 【v1.0793】★旧文言にあった「全-月別データの送り込み元/利益源」という言い換えは削除。
+             v1.0793 でその列の分け方が料率→親子設定に変わったので、料率の色とは別物になった。 */
     const _prsrTip = _isSet
       ? ('PR売上ROAS(推定) ＝ セット合計の総売上 ÷（合計の広告実績額 ＋ 合計のPR実績額(7%超・推定)）× 100\n'
          + '★7%超ぶんは商品ごとに⑤の設定料率から出してから足し上げています（実測ではありません）\n'
@@ -12246,17 +12272,54 @@ function setBasicRowMode(mode) {
   const v = (mode === 'sum' || mode === 'both') ? mode : 'each';
   if (basicRowMode === v) return;
   basicRowMode = v;
+  // 【v1.0792】★合算・両表示では親／子の絞り込みが使えなくなるので、掛かっていたら外す。
+  //   押せないボタンの絞り込みが残ると、件数が減った理由が画面から分からなくなる。
+  if (v !== 'each' && ['*A', '*P', '*C'].indexOf(state.repFilter) >= 0) {
+    state.repFilter = null;
+    if (typeof updateRepFilterUI === 'function') { try { updateRepFilterUI(); } catch (e) {} }
+    if (typeof updateFilterBanners === 'function') { try { updateFilterBanners(); } catch (e) {} }
+  }
   if (typeof clearEditPins === 'function') clearEditPins();   // 行の粒度が変わる＝再絞り込み扱い
   _syncBasicRollupUI();
   // 【v1.0650】商品-広告データ／商品-PRデータも同じ切替を使うので、いまのビューを描き直す（並び順の凍結も解く）
   try { adAdjustFrozenOrder = null; proAdjustFrozenOrder = null; } catch (e) {}
   if (typeof renderAll === 'function') renderAll(); else if (typeof renderBasic === 'function') renderBasic();
 }
+// 【v1.0792】「全表示」＝絞り込みをすべて解除して全商品を出す。
+//   ★xfClearAll と違って【ビューを移動しない】。いま見ている表のまま全件にしたいだけなので、
+//     商品-基本データへ飛ばされると、押した人の意図と違う画面になる。
+//   ★行のまとめ方（合算/個別/両表示）は変えない。絞り込みと表示単位は別の軸。
+function basicShowAll() {
+  if (typeof clearEditPins === 'function') clearEditPins();
+  state.activeStateFilter = null;
+  try { basicAdFilter = 'all'; } catch (e) {}
+  state.repFilter = null;
+  try { basicSroasFilter = null; } catch (e) {}
+  ['basicSearch', 'adTuneSearch', 'proTuneSearch', 'adDataSearch', 'prDataSearch', 'wdSearch']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  try { adAdjustFrozenOrder = null; proAdjustFrozenOrder = null; } catch (e) {}
+  if (typeof updateActiveStateChip === 'function') updateActiveStateChip();
+  if (typeof updateFilterBanners === 'function') updateFilterBanners();
+  if (typeof updateRepFilterUI === 'function') updateRepFilterUI();
+  if (typeof _syncSroasFilterUI === 'function') { try { _syncSroasFilterUI(); } catch (e) {} }
+  if (typeof renderAll === 'function') renderAll();
+}
+window.basicShowAll = basicShowAll;
+
 function _syncBasicRollupUI() {
   // 【v1.0650】バーは3つ（商品-基本データ／商品-広告データ／商品-PRデータ）。.js-rowmode-bar を全部そろえる
   document.querySelectorAll('.js-rowmode-bar').forEach(bar => bar.querySelectorAll('.segf-btn').forEach(b => {
-    b.classList.toggle('on', (b.getAttribute('data-rollup') || 'each') === basicRowMode);
+    // 【v1.0792】★data-rollup を持たないボタン（全表示）は「モード」ではないので .on を触らない
+    if (!b.hasAttribute('data-rollup')) return;
+    b.classList.toggle('on', b.getAttribute('data-rollup') === basicRowMode);
   }));
+  // 【v1.0792】親／子の緑黄ボタンは「個別」のときだけ使える
+  const usable = (basicRowMode === 'each');
+  document.querySelectorAll('.soi-pc-seg').forEach(seg => {
+    seg.classList.toggle('is-off', !usable);
+    seg.setAttribute('title', usable ? '送り込み元（親）／送り込み先（子）で絞り込み'
+      : '「個別」のときだけ使えます（合算・両表示は行がセット単位なので、親か子かで絞る意味がありません）');
+  });
 }
 // 代表コード（repCode。無ければ自分自身）でまとめる。_igFamilies と同じキーの取り方。
 function _basicRepKeyOf(code) {
@@ -12516,7 +12579,10 @@ const MI_COLS = [
   { key:'adSales',  label:'広告売上',    hbg:'#fbe3c4', bg:'#fdf6ec', hi:true,  t:'y', blockStart:true, split:true },   /* 【v1.0757】fxなし（レポートの合計そのもの） */
   // 【v1.0559】広告実績額はピンク系。広告売上・広告CVRの橙と近すぎて見分けづらかったため。
   { key:'spend',    label:'広告実績額',  hbg:'#f6c9d7', bg:'#fdeff4', hi:false, t:'y', split:true },   /* 【v1.0757】fxなし（レポートの合計そのもの） */
-  { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true, fx:fxR(fxT('注文','plain'), fxT('クリック','plain')) },
+  // 【v1.0793】広告CVRは全-月別/全-日別データから撤去（zdHide）。3分割で列が増えた横幅を空けるため。
+  //   ★store:true にすると「ストア専用列」の意味になり 商品-日月別データ から消えてしまう。
+  //     逆に MI_COLS から消すと商品側からも消える。だから zdCols() だけが見る zdHide で外す。
+  { key:'cvr',      label:'広告CVR',     hbg:'#fdeacd', bg:'#fef8ef', hi:true,  t:'p', split:true, zdHide:true, fx:fxR(fxT('注文','plain'), fxT('クリック','plain')) },
   // --- PRオプション（青緑）＋ 広告ROAS（藍） ---
   //   【v1.0577】広告売上ROAS / PR売上ROAS は総売上の右へ移した（上の「効率（紫）」ブロック）。
   // 【v1.0574】PRオプション（青緑）は「7%より高い料率にしていることで余分に出ている分」だけを1列で出す。
@@ -12547,15 +12613,18 @@ const ZD_SPLIT_KEYS = ['seoSales', 'prCost', 'adSales', 'spend', 'cvr', 'roas'];
 //   ★【v1.0556】見出しも本体セルも「左が濃く → 中くらい → 薄い」の3段階にする。
 //     濃さの順がそのまま 合計 → -7% → -7%超 の順になるので、どの列がどのグループか色だけで分かる。
 //     hLight＝見出しの薄め具合／bLight＝本体セルの薄め具合（どちらも見出し色を白へ寄せて作る）。
-// 【v1.0559】並びは 合計 → -7%超 → -7%。注目したい「7%超」を左（＝濃い側）に置く。
-//   short … 【v1.0560】見出し2段目に出す短いラベル（1段目に指標名が出るので繰り返さない）
-//   role  … 【v1.0568】見出し2段目に出す「そのグループが何をしている商品か」。
-//     7%超 ＝ 料率を上げて上位表示させ、子商品へ流している商品 → 送り込み元
-//     7%   ＝ 最低料率のまま固定している商品。実際に利益が落ちる先 → 利益源
+// 【v1.0793】並びは 合計 → 送り込み元 → 利益源 → 通常商品（左が濃い）。
+//   注目する順（送り込み元 → 利益源 → 通常商品）がそのまま濃い→薄いの順になる。
+//   short … 見出し2段目に出すラベル。グループ名そのもの。
+//   role  … 旧v1.0568の「そのグループが何をしている商品か」を書く段。
+//     ★【v1.0793】short がグループ名そのものになったので role は空にした。
+//       role が全部空のときは見出しを2段（指標名＋グループ名）にする＝1段ぶん縦が空く。
+//       PR_SPLIT_DEFS を復活させたときは role が入るので自動で3段に戻る（下の _hasRole）。
 const ZD_GRP_DEFS = [
-  { grp: null,   suffix: '',      short: '合計',  role: '',           hLight: 0,    bLight: 0.25 },
-  { grp: 'high', suffix: '-7%超', short: '7%超',  role: '送り込み元', hLight: 0.24, bLight: 0.55 },
-  { grp: 'low',  suffix: '-7%',   short: '7%',    role: '利益源',     hLight: 0.48, bLight: 0.82 }
+  { grp: null,     suffix: '',           short: '合計',      role: '', hLight: 0,    bLight: 0.25 },
+  { grp: 'soi',    suffix: '-送り込み元', short: '送り込み元', role: '', hLight: 0.20, bLight: 0.50 },
+  { grp: 'prof',   suffix: '-利益源',     short: '利益源',    role: '', hLight: 0.38, bLight: 0.68 },
+  { grp: 'normal', suffix: '-通常商品',   short: '通常商品',  role: '', hLight: 0.56, bLight: 0.86 }
 ];
 // 色を白に寄せる（t=0でそのまま、t=1で白）。同系色の濃淡を作るため。
 function _zdLighten(hex, t) {
@@ -12594,6 +12663,8 @@ function zdCols() {
     // 【v1.0562】prBase（7%相当）は列として出さない。データは行に残してある。
     // 【v1.0574】prOver（7%超＝上げている分）は単独の列として出すので、ここでは外さない。
     if (c.key === 'prBase') return false;
+    // 【v1.0793】zdHide＝この表にだけ出さない列（広告CVR）。商品-日月別データ（itemCols）には残る。
+    if (c.zdHide) return false;
     return true;
   });
   if (!_zdSplit) return base.map(c => Object.assign({ id: c.key, grp: null, famKey: c.key }, c));
@@ -13456,7 +13527,7 @@ function _zenMonthlyRows() {
       prOver:    _psOver,
       prEffRate: _ps ? (_ps.effRate || null) : null,
       prSetRate: prWeightedSetRatePct(_itemRows.map(i => [i.code, i.revenue])),
-      grp: _zdGroupSplit(_itemRows, _adRows, _pa ? _pa.cost : 0),   // 【v1.0551】料率別（7% / 7%超）の内訳
+      grp: _zdGroupSplit(_itemRows, _adRows, _pa ? _pa.cost : 0),   // 【v1.0793】親子設定別（送り込み元 / 利益源 / 通常商品）の内訳
       _prDayCount: _pa ? _pa.days.length : 0,
       _prComplete: _prComplete,
       // 【v1.0578】PRレポートが対象期間の一部しか無い月。PR実績額(7%超)は「その日数ぶんの額」なので印を付ける
@@ -13649,7 +13720,7 @@ function _zenDailyRowsFor(days) {
       prOver:    _psOver,
       prEffRate: _ps ? (_ps.effRate || null) : null,
       prSetRate: prWeightedSetRatePct(Object.keys(it).map(c => [c, it[c].revenue])),
-      // 【v1.0551】料率別（7% / 7%超）の内訳。日別も月別と同じ形にしておく（描画コードを共通にするため）
+      // 【v1.0793】親子設定別（送り込み元 / 利益源 / 通常商品）の内訳。日別も月別と同じ形にしておく（描画コードを共通にするため）
       grp: _zdGroupSplit(
         Object.keys(it).map(c => ({ code: c, revenue: it[c].revenue })),
         Object.keys(ad).map(c => ({ code: c, adCost: ad[c].adCost, adRevenue: ad[c].adRevenue, adClicks: ad[c].adClicks, adOrders: ad[c].adOrders })),
@@ -13910,6 +13981,12 @@ function renderGraphData() {
   //   ここの4つを変えれば密度を調整できる（全体の文字サイズはヘッダーの A− / A+ で別途調整可）。
   const ZD_TD_PAD = '3px 8px', ZD_TD_FS = '0.8rem';     // 本体セル（旧: 6px 12px / 0.9rem）
   const ZD_TH_PAD = '5px 8px', ZD_TH_FS = '0.74rem';    // 見出し  （旧: 9px 12px / 0.82rem）
+  // 【v1.0793】★内訳の列（送り込み元/利益源/通常商品）だけ左右の余白を詰める。
+  //   1指標が3列→4列になったので、そのままだと表が約55px横に伸びて横スクロールが増える。
+  //   合計列は今までの余白を残す（そこがいちばん読む列なので詰めない）。
+  const ZD_TD_PAD_G = '3px 4px', ZD_TH_PAD_G = '5px 4px';
+  const _zdThPad = (c) => (c && c.grp ? ZD_TH_PAD_G : ZD_TH_PAD);
+  const _zdTdPad = (c) => (c && c.grp ? ZD_TD_PAD_G : ZD_TD_PAD);
   // 【v1.0553】列と列の間にも細い縦罫線を入れる（横罫線だけだと横方向に目がすべるため）。
   //   ★ 次の列がブロック先頭（border-left が太い BLK）のときは、自分の右罫線を出さない。
   //     1px + 2px が並んで境界だけ太く見えるのを防ぐ。最終列の右は 送り込み売上 の太い区切りが来るので同様。
@@ -13944,12 +14021,16 @@ function renderGraphData() {
   //   thead ごと動かせば2段は必ずくっついたまま動くので、計算そのものが要らなくなる。
   const _thBase = 'padding:' + ZD_TH_PAD + ';border-bottom:2px solid var(--border);font-size:' + ZD_TH_FS + ';font-weight:700;color:var(--text2);white-space:nowrap;';
 
-  // 【v1.0568】見出しは3段。
-  //   1段目: 指標名（料率別の3列は colspan でまとめる）
-  //   2段目: 役割（送り込み元 / 利益源）。合計の上は空欄
-  //   3段目: 合計 / 7%超 / 7%
-  //   分けない列（月・総売上・広告売上ROAS）は rowspan=3 でぶち抜き。
-  const _ROWS = _twoRow ? 3 : 1;
+  // 【v1.0568/v1.0793】見出しの段数。
+  //   1段目: 指標名（分割列は colspan でまとめる）
+  //   2段目: 役割（role）。★v1.0793 で ZD_GRP_DEFS の role を空にしたので通常は出ない
+  //   3段目: 合計 / 送り込み元 / 利益源 / 通常商品
+  //   分けない列（月・総売上・広告売上ROAS）は rowspan で全段ぶち抜き。
+  // 【v1.0793】★role が1つも無いときは役割の段を作らない（空の段が1行ぶん縦を食っていた）。
+  //   rowspan を _ROWS から作っているので、ここを2にするだけで rowspan も自動で合う。
+  //   PR_SPLIT_DEFS（役割つき）を列に戻せば _hasRole が true になり3段に戻る。
+  const _hasRole = _zdCols.some(c => c.role);
+  const _ROWS = _twoRow ? (_hasRole ? 3 : 2) : 1;
   const _rs = _twoRow ? ' rowspan="' + _ROWS + '"' : '';
   let _h1 = '<th' + _rs + ' style="position:sticky;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:center;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3);vertical-align:middle">' + (_dayMode ? '日' : '月') + '</th>';   /* 【v1.0527】左固定だけ。上固定は thead 側【v1.0565】 */
   let _h2 = '';   // 役割（送り込み元 / 利益源）
@@ -13973,29 +14054,35 @@ function renderGraphData() {
     for (let k = 0; k < g.len; k++) {
       const sc = _zdCols[g.start + k];
       const bd = (k === 0 ? leftBd : 'border-left:' + VBD + ';') + _vb(g.start + k);
-      // 2段目＝役割。合計の上は空欄（スケッチどおり）。
-      _h2 += '<th style="' + _thBase + 'text-align:center;background:' + sc.hbg + ';' + bd
+      // 2段目＝役割。合計の上は空欄（スケッチどおり）。【v1.0793】_hasRole が false なら段ごと出さない
+      if (_hasRole) _h2 += '<th style="' + _thBase + 'text-align:center;background:' + sc.hbg + ';' + bd
         + 'font-size:0.92em;font-weight:700;color:' + (sc.role ? 'var(--text2)' : 'transparent') + '">'
         + escapeHtml(sc.role || '　') + '</th>';
       // 3段目＝合計 / 7%超 / 7%
       // 【v1.0563】文字色は「列の背景色に依存しない中立色」にする。
       //   7%超を緑(#15803d)にしていたが、広告実績額のピンク等の上では色が喧嘩して読みづらかった。
       //   グループの区別は背景の濃淡（ZD_GRP_DEFS）が既に担っているので、ここは濃さと太さだけで付ける。
-      const col = (sc.grp === 'low') ? 'var(--text3)' : 'var(--text)';
-      const wgt = (sc.grp === 'high') ? '800' : (sc.grp === 'low' ? '600' : '700');
-      _h3 += '<th class="zd-h2" style="' + _thBase + 'text-align:center;background:' + sc.hbg + ';' + bd
+      // 【v1.0793】並び順（合計→送り込み元→利益源→通常商品）どおりに濃さ・太さを段々落とす。
+      //   ★グループ名が「送り込み元」＝5文字になったので、この段の文字は少し小さく詰める。
+      //     ここを ZD_TH_FS のままにすると、値が短い列（広告ROAS の「543%」など）でも
+      //     見出しの5文字ぶんまで列幅が広がり、横スクロールが出る。
+      const _gi = ZD_GRP_KEYS.indexOf(sc.grp);
+      const col = _gi <= 0 ? 'var(--text)' : (_gi === 1 ? 'var(--text2)' : 'var(--text3)');
+      const wgt = sc.grp ? (_gi === 0 ? '800' : '600') : '700';
+      _h3 += '<th class="zd-h2" style="' + _thBase + 'padding:' + _zdThPad(sc) + ';text-align:center;background:' + sc.hbg + ';' + bd
+        + 'font-size:0.68rem;letter-spacing:-0.03em;'
         + 'color:' + col + ';font-weight:' + wgt + '">' + escapeHtml(sc.short || '') + '</th>';
     }
   });
   // 【v1.0562】送り込み売上の列は撤去（値は r.soikomi に残してある）
-  const HEAD = '<tr>' + _h1 + '</tr>' + (_twoRow ? '<tr>' + _h2 + '</tr><tr>' + _h3 + '</tr>' : '');
+  const HEAD = '<tr>' + _h1 + '</tr>' + (_twoRow ? ((_hasRole ? '<tr>' + _h2 + '</tr>' : '') + '<tr>' + _h3 + '</tr>') : '');
   const desc = asc.slice().reverse();
   // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
   const drows = (!_dayMode && _zdMode === 'yoy') ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   // 【v1.0551/v1.0555】1セルの中身。列（合計 / 7% / 7%超）ごとに、その列の母集団で色を付ける。
   // 【v1.0567】数字は中央揃え（見出しの「合計 / 7%超 / 7%」と縦のラインを合わせるため）
-  const TDBASE = 'padding:' + ZD_TD_PAD + ';text-align:center;font-size:' + ZD_TD_FS + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
+  const TDBASE0 = 'text-align:center;font-size:' + ZD_TD_FS + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
   // 【v1.0578】ツールチップ用の素の金額表記（fmtY はHTMLを返すので title 属性に入れられない）
   const _zdYen = (n) => (n == null) ? '—' : ('¥' + Math.round(n).toLocaleString());
   function _zdCellHtml(c, v, o) {
@@ -14054,7 +14141,7 @@ function renderGraphData() {
       inner += '<div style="font-size:0.86em;font-weight:700;line-height:1.2;margin-top:1px;color:'
         + pctBandColor(_pc) + '">' + (Math.round(_pc * 10) / 10) + '%</div>';
     }
-    return '<td style="' + TDBASE + 'background:' + c.bg + ';border-bottom:1px solid var(--border);'
+    return '<td style="padding:' + _zdTdPad(c) + ';' + TDBASE0 + 'background:' + c.bg + ';border-bottom:1px solid var(--border);'
       + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + (opt.vb || '')   /* 【v1.0553】縦罫線 */
       + 'white-space:nowrap;' + (opt.bT || '') + '">' + inner + '</td>';
   }
@@ -18684,7 +18771,9 @@ _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic
   document.querySelectorAll('.js-rowmode-bar').forEach(_rb => _rb.addEventListener('click', (e) => {
     const btn = e.target.closest && e.target.closest('.segf-btn');
     if (!btn || !_rb.contains(btn)) return;
-    setBasicRowMode(btn.getAttribute('data-rollup') || 'each');
+    // 【v1.0792】data-rollup が無いボタン（全表示）はモード切替ではない
+    if (!btn.hasAttribute('data-rollup')) { if (btn.classList.contains('js-showall')) basicShowAll(); return; }
+    setBasicRowMode(btn.getAttribute('data-rollup'));
   }));
 }
 _wireAdFilter('monthlyAdFilterBar', (v) => { monthlyAdFilter = v; }, renderMonthly);
