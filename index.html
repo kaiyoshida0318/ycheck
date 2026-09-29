@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0802 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0804 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1725,6 +1725,14 @@ tbody tr:hover td:first-child:last-child {
                 letter-spacing:-0.03em; overflow:hidden; text-overflow:ellipsis; }
 .mi-thumb-code { display:block; font-size:9.5px; color:var(--text3); white-space:nowrap;
                  overflow:hidden; text-overflow:ellipsis; font-family:'DM Mono',ui-monospace,monospace; }
+/* 【v1.0804】サムネの下の状態表示。★幅86pxに収まる文字数で作ること（はみ出すと帯がガタつく） */
+.mi-thumb-ad { display:block; margin-top:1px; font-size:9.5px; font-weight:800; line-height:1.35;
+               color:#b45309; background:#fef3c7; border-radius:4px; white-space:nowrap; }
+/* ★visibility:hidden にすること。display:none にすると高さが消えて行がずれる */
+.mi-thumb-ad.is-off { visibility:hidden; }
+.mi-thumb-pr { display:block; font-size:10px; font-weight:700; color:#0f766e; white-space:nowrap;
+               font-family:'DM Mono',ui-monospace,monospace; letter-spacing:-0.02em; }
+.mi-thumb-pr .mi-pr-k { color:var(--text3); font-weight:600; }
 /* 【v1.0799】選択中の商品を大きく出す帯（.mi-cur）は撤去。
    サムネの枠＋下の売上でどれを見ているか分かるので、縦を1段ぶん返した。
    商品名は表の上の1行（note）に出している。 */
@@ -4106,7 +4114,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0802</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0804</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13085,7 +13093,6 @@ function renderMonthly() {
       if (!hit) return;
     }
     const stats = selKeys.map(ym => _statForFamily(members, ym));   /* 【v1.0527】日別モードでは日、月別モードでは月 */
-    if (!q && !_miParentOnly && stats.every(s => s.totSales === 0 && s.spend === 0 && s.adSales === 0)) return;
     const repHasMaster = !!(typeof getMaster === 'function' && getMaster(key));
     const dispCode = repHasMaster ? key : (members.find(c => _mname(c)) || members[0] || key);
     let _dispName = _mname(dispCode) || key;
@@ -13104,7 +13111,37 @@ function renderMonthly() {
     }
     rows.push({ code: key, dispCode, name: _dispName, memberCount: members.length, members: members, stats });
   });
-  rows.sort((a, b) => b.stats.reduce((s, m) => s + (m.totSales || 0), 0) - a.stats.reduce((s, m) => s + (m.totSales || 0), 0));
+
+  // ============================================================
+  // 【v1.0803】サムネ帯に出す金額・並び順・出す商品は「最新月の売上」で決める。
+  //   月別モード … 表示中の窓のうち【いちばん新しい、データのある月】1ヶ月ぶん
+  //   日別モード … 対象月の全日ぶん（＝その月の売上。v1.0799から変更なし）
+  //   こうすると月別と日別で**同じ商品が同じ順に**並ぶ。
+  //
+  //   ★月別で「窓12ヶ月の合計」にしてはいけない（v1.0798〜v1.0802 がそうだった）。
+  //     桁も順位も日別と変わり、モードを切り替えるたびに別の画面に見える。
+  //   ★いちばん新しい月をそのまま使うのもダメ。当月の月次レポートをまだ取り込んでいないと
+  //     全商品が0円になり、一覧が丸ごと空になる。→ データのある月まで1つずつ遡る。
+  //   ★遡る判定は「全商品を合わせて0か」で行う。1商品だけで決めると、
+  //     その商品がたまたま売れていない月で基準がずれる。
+  let _miRankIdx = 0;
+  if (!_dayMode) {
+    for (let k = 0; k < selKeys.length; k++) {
+      if (rows.some(r => (+r.stats[k].totSales || 0) > 0 || (+r.stats[k].spend || 0) > 0)) { _miRankIdx = k; break; }
+    }
+  }
+  // ランキングに使う「期間ぶん」の数字。日別は全日の合計、月別は基準月の1ヶ月ぶん。
+  const _rankStats = (r) => (_dayMode ? r.stats : [r.stats[_miRankIdx]]);
+  const _sumOf = (r) => _rankStats(r).reduce((a, m) => a + (+((m || {}).totSales) || 0), 0);
+  // 空の商品を落とす条件も同じ期間で見る（v1.0802 までは窓全体で見ていた）。
+  //   ★検索中・親子のみのときは落とさない。名指しで探した商品が消えると探せなくなる。
+  if (!q && !_miParentOnly) {
+    for (let i2 = rows.length - 1; i2 >= 0; i2--) {
+      const st = _rankStats(rows[i2]);
+      if (st.every(m => !m || (m.totSales === 0 && m.spend === 0 && m.adSales === 0))) rows.splice(i2, 1);
+    }
+  }
+  rows.sort((a, b) => _sumOf(b) - _sumOf(a));
 
   // ============================================================
   // 【v1.0798】ここから下を「1商品ずつ・全-月別データと同じ並べ方」に作り替えた。
@@ -13132,7 +13169,6 @@ function renderMonthly() {
   // ---------- サムネ帯（売上上位20・クリックで切替） ----------
   const MI_THUMB_N = 20;
   const _esc = s2 => String(s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-  const _sumOf = (r) => r.stats.reduce((a, m) => a + (+m.totSales || 0), 0);
   // 【v1.0798】★選択中の商品が21位以下でも必ず帯に出す。
   //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
   const top = rows.slice(0, MI_THUMB_N);
@@ -13140,18 +13176,53 @@ function renderMonthly() {
   // 【v1.0799】サムネの下に出すのは「いま並べている期間の売上」。
   //   日別モードなら対象月の1日〜最新日ぶん＝**その月内の売上**になる。
   //   ★万・億に丸めない。¥151,140 のように出す（丸めると同じ「¥15万」が並んで順位が読めない）。
-  const _sumLabel = _dayMode ? (String(_miDayYm).replace('-', '/') + ' の売上') : (selKeys.length + 'ヶ月の売上');
+  // 【v1.0803】月別も「◯◯年◯月の売上」と出す（窓の合計ではないことが文字でも分かるように）
+  const _sumLabel = (_dayMode ? String(_miDayYm) : String(selKeys[_miRankIdx] || '')).replace('-', '/') + ' の売上';
+  // 【v1.0804】サムネの下に「広告出稿中」と「PRオプ料率」を出す。
+  //   ★出稿中の判定は _cbAdActive()（全-貢献度と同じ1本）。
+  //     「取り込んである最新日から直近3日（CB_ACTIVE_DAYS）に広告費が出ていれば出稿中」。
+  //     ここで別の式（例: 対象月の広告実績額>0）を書くと、同じ商品が画面によって
+  //     出稿中だったり出稿なしだったりする。
+  //   ★日別の広告データが無いと判定できない（null）。そのときは**何も出さない**。
+  //     「出稿なし」と書くと、判定できないだけなのに止めていると誤読される。
+  //   ★親子セットは全メンバーを見る（子だけ広告を回しているセットがある）。
+  const _adActiveOf = (r) => {
+    try { return _cbAdActive(r.members || [r.code]); } catch (e) { return null; }
+  };
+  // PRオプ料率。親30%・子7% のセットなら「30-7」。1種類なら「7」。
+  //   ★高い順（親→子）に並べる。低い順だと「7-30」になり、どちらが親か読めない。
+  //   ★料率が取れない商品しかないセットは null（0%扱いにしない）。
+  const _prRateOf = (r) => {
+    const mem = r.members || [r.code], vals = [];
+    mem.forEach(c => { const v = (typeof getProRate === 'function') ? getProRate(c) : null;
+      if (v != null && !isNaN(v) && Number(v) > 0) vals.push(Number(v)); });
+    if (!vals.length) return null;
+    const uniq = [...new Set(vals)].sort((a, b) => b - a);
+    return { text: uniq.join('-'), tip: mem.map(c => { const v = getProRate(c);
+      return c + ': ' + ((v == null || isNaN(v)) ? '—' : (v + '%')); }).join('\n') };
+  };
   if (thumbsEl) {
     thumbsEl.innerHTML = top.map((r, i2) => {
       const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(r.dispCode) : '';
       const on = r.code === sel.code;
       const rank = (i2 < MI_THUMB_N) ? (i2 + 1) : '—';
       const amt = Math.round(_sumOf(r));
+      const act = _adActiveOf(r);
+      const pr = _prRateOf(r);
+      const tip = _esc(r.code + ' ' + r.name) + '&#10;' + _sumLabel + ' ¥' + amt.toLocaleString()
+        + '&#10;広告: ' + (act === true ? ('出稿中（取込済みの最新日から直近' + CB_ACTIVE_DAYS + '日に広告費あり）')
+                         : act === false ? ('直近' + CB_ACTIVE_DAYS + '日は広告費なし') : '日別の広告データが無く判定できません')
+        + (pr ? '&#10;PRオプ料率 ' + _esc(pr.text) + '%&#10;' + _esc(pr.tip) : '&#10;PRオプ料率 未取得');
       return '<button type="button" class="mi-thumb' + (on ? ' is-on' : '') + '" onclick="_miPickCode(\'' + _esc(r.code).replace(/'/g, "\\'") + '\')"'
-        + ' title="' + _esc(r.code + ' ' + r.name) + '&#10;' + _sumLabel + ' ¥' + amt.toLocaleString() + '">'
+        + ' title="' + tip + '">'
         + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦')
         + '<span class="mi-thumb-rank">' + rank + '</span></div>'
         + '<span class="mi-thumb-amt">' + (amt ? '¥' + amt.toLocaleString() : '—') + '</span>'
+        // 【v1.0804】★出稿していない商品でも枠だけ出す（is-off で透明）。
+        //   出さないと下のPR・商品コードが1行ぶん上にずれ、サムネごとに行の位置が変わって
+        //   「同じ高さの情報を横に見比べる」ができなくなる（計算式の空スロットと同じ考え方・§143-4）。
+        + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
+        + '<span class="mi-thumb-pr"><span class="mi-pr-k">PR</span> ' + (pr ? _esc(pr.text) : '—') + '</span>'
         + '<span class="mi-thumb-code">' + _esc(r.code) + '</span>'
         + '</button>';
     }).join('');
