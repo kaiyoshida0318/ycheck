@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0811 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0812 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -103,22 +103,50 @@ body {
   line-height: 1;
   color: var(--text2);
 }
-.shop-selector select {
-  border: none;
-  background: transparent;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  padding: 2px 20px 2px 0;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%23666'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0 center;
+.shop-selector-name { font-size: 0.95rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+.shop-selector-caret { font-size: 0.7rem; color: var(--text3); line-height: 1; }
+/* ============================================================================
+   【v1.0812】ショップのドロップダウン。
+   ★position:fixed ＋ body直下へ移動して開く。ヘッダーに sticky / transform があると
+     stacking context が作られ、z-index をいくつにしてもヘッダーの下に潜る（設計ガイド §7）。
+   ============================================================================ */
+.shop-menu {
+  /* ★max-width が無いと、管理モードの説明文と入力欄で横に伸び切って
+     削除ボタンが画面外へ出る（v1.0812 で実際に踏んだ）。幅は必ず上限を決める。 */
+  display: none; position: fixed; z-index: 99999; min-width: 264px; max-width: 352px;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18); padding: 6px; overflow-y: auto;
 }
-.shop-selector select:focus { outline: none; }
+.shop-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 10px; border: none; border-radius: 7px; background: transparent;
+  cursor: pointer; text-align: left; font-size: 0.95rem; color: var(--text);
+}
+.shop-menu-item:hover { background: var(--bg3); }
+.shop-menu-check { width: 16px; flex: 0 0 16px; color: var(--accent); font-weight: 800; }
+.shop-menu-name { flex: 1 1 auto; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* IDは右端に小さく。★名前の横に（yukaiya）と書かない＝名前が読みにくくなる */
+.shop-menu-id { flex: 0 0 auto; font-size: 11px; color: var(--text3);
+                font-family: 'DM Mono', ui-monospace, monospace; }
+.shop-menu-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+.shop-menu-act { display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 9px 10px; border: none; border-radius: 7px; background: transparent;
+  cursor: pointer; text-align: left; font-size: 0.88rem; color: var(--text2); font-weight: 600; }
+.shop-menu-act:hover { background: var(--bg3); color: var(--text); }
+/* 管理モード: 各行を編集フォームにする */
+.shop-edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 6px; align-items: center;
+                 padding: 7px 6px; border-radius: 7px; }
+.shop-edit-row + .shop-edit-row { margin-top: 2px; border-top: 1px solid var(--border); }
+.shop-edit-row input { font-size: 0.85rem; padding: 5px 7px; border: 1px solid var(--border2);
+                       border-radius: 6px; background: var(--bg); color: var(--text); min-width: 0; }
+.shop-edit-row .shop-edit-id { font-size: 11px; color: var(--text3); align-self: center;
+                               font-family: 'DM Mono', ui-monospace, monospace; padding: 0 2px; }
+.shop-edit-del { border: 1px solid var(--border2); background: var(--bg2); color: #dc2626;
+                 border-radius: 6px; cursor: pointer; font-size: 0.78rem; padding: 3px 8px; justify-self: end; }
+.shop-edit-del[disabled] { opacity: .35; cursor: default; }
+.shop-edit-del:hover { background: #fee2e2; }
+.shop-menu-hint { font-size: 11px; color: var(--text3); padding: 4px 10px 6px; line-height: 1.5;
+                  word-break: break-word; }
 
 /* 【v95】GitHub同期ステータス表示 */
 .gh-sync-area {
@@ -4129,10 +4157,13 @@ th.col-sroas { background-color:#e7d5f5; }
     </a>
     <!-- 【v219】ADcheck同様の「新しいタブ」ボタン。商品-基本データを新しいタブで開く -->
     <a class="btn sm ghost" id="btnNewTab" href="https://kaiyoshida0318.github.io/ycheck/?view=basic" target="_blank" rel="noopener" title="商品-基本データを新しいタブで開く" style="text-decoration:none; white-space:nowrap;">↗ 新しいタブ</a>
-    <div class="shop-selector" id="shopSelector" title="表示するショップを切り替え">
+    <!-- 【v1.0812】<select> をやめ、ボタン＋自前のドロップダウンにした（中で編集できるようにするため） -->
+    <button type="button" class="shop-selector" id="shopSelectorBtn" title="表示するショップを切り替え">
       <span class="shop-selector-icon">🏪</span>
-      <select id="shopSelect"></select>
-    </div>
+      <span class="shop-selector-name" id="shopSelectorLabel">—</span>
+      <span class="shop-selector-caret">▼</span>
+    </button>
+    <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み）
          【v1.0582】ヘッダー右（.header-tools）から、ショップ選択のすぐ右へ移動。
          ★ボタンはこの1つだけ。右側に残したまま複製しないこと（openBunseki が2回走る） -->
@@ -4140,7 +4171,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0811</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0812</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6015,24 +6046,60 @@ th.col-sroas { background-color:#e7d5f5; }
 
 // ==================== Shops (マルチショップ対応 v93〜) ====================
 // 初期ショップ定義。ユーザーが編集する想定は無いため const で固定。
-// 将来ショップを追加する場合はこの SHOPS_INITIAL に追記 + 既存ユーザーの localStorage を意識すること。
+// 【v1.0812】SHOPS_INITIAL は【初回の種】だけ。実体は localStorage('ycheck_shops') にあり、
+//   画面（ショップ管理）から追加・変更・削除できる。
+//   ★コードから参照するときは必ず getShops() を通すこと。SHOPS_INITIAL を直接見ると
+//     ユーザーが追加したショップが存在しないことになる。
 const SHOPS_INITIAL = {
   yukaiya: { id: 'yukaiya', name: 'ゆかい屋', shopCode: 'yukaiya' },
   kairy:   { id: 'kairy',   name: 'KAIRY',   shopCode: 'burariya' }
 };
 const DEFAULT_SHOP_ID = 'yukaiya';
 const CURRENT_SHOP_STORAGE_KEY = 'ycheck_current_shop';  // 選択中のショップID（shopまたぎで共通）
+const SHOPS_STORAGE_KEY = 'ycheck_shops';                // ショップ定義（全ショップ共通・端末内）
 
-// 現在選択中のショップIDを取得（未設定ならデフォルト）
+// ショップ定義を読む。壊れていたら種に戻す（画面が真っ白になるのを防ぐ）。
+//   ★戻り値は毎回作り直したコピー。呼び出し側が書き換えても保存に影響しない。
+function getShops() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(SHOPS_STORAGE_KEY) || 'null'); } catch (e) { raw = null; }
+  const out = {};
+  if (raw && typeof raw === 'object') {
+    Object.keys(raw).forEach(function (k) {
+      const v = raw[k];
+      if (!v || !v.id) return;
+      const id = String(v.id).trim().toLowerCase().replace(/[^a-z0-9]/g, '');   // ★IDは英数字のみ
+      if (!id) return;
+      out[id] = { id: id, name: String(v.name || id), shopCode: String(v.shopCode || id) };
+    });
+  }
+  if (!Object.keys(out).length) {   // 未設定 or 全部壊れている → 種から復元
+    Object.keys(SHOPS_INITIAL).forEach(function (k) { out[k] = Object.assign({}, SHOPS_INITIAL[k]); });
+  }
+  return out;
+}
+function saveShops(map) {
+  try { localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(map || {})); } catch (e) {
+    console.warn('[Ycheck] ショップ定義の保存に失敗:', e);
+  }
+}
+// 初回だけ種を書き込む（以後はユーザーの編集が正）
+(function initShopsIfNeeded() {
+  try { if (!localStorage.getItem(SHOPS_STORAGE_KEY)) saveShops(getShops()); } catch (e) {}
+})();
+
+// 現在選択中のショップIDを取得（未設定・未登録ならデフォルト）
 function getCurrentShopId() {
   try {
     const v = localStorage.getItem(CURRENT_SHOP_STORAGE_KEY);
-    if (v && SHOPS_INITIAL[v]) return v;
+    if (v && getShops()[v]) return v;
   } catch (e) {}
-  return DEFAULT_SHOP_ID;
+  const all = getShops();
+  return all[DEFAULT_SHOP_ID] ? DEFAULT_SHOP_ID : (Object.keys(all)[0] || DEFAULT_SHOP_ID);
 }
 function getCurrentShop() {
-  return SHOPS_INITIAL[getCurrentShopId()] || SHOPS_INITIAL[DEFAULT_SHOP_ID];
+  const all = getShops();
+  return all[getCurrentShopId()] || all[DEFAULT_SHOP_ID] || { id: DEFAULT_SHOP_ID, name: DEFAULT_SHOP_ID, shopCode: DEFAULT_SHOP_ID };
 }
 
 // 【v316】URLパラメータでショップを指定して直接開けるように（スピードダイヤル／ブックマーク用）。
@@ -6059,15 +6126,16 @@ function getCurrentShop() {
     // 正規化: 小文字化＋空白/ハイフン/アンダースコア除去（"kai-ry"→"kairy" 等を吸収）
     var key = String(raw).trim().toLowerCase().replace(/[\s\-_]/g, '');
     var ALIAS = { 'ゆかい屋': 'yukaiya', 'yukai': 'yukaiya', 'y': 'yukaiya', 'k': 'kairy', 'kairyu': 'kairy' };
+    var _all = getShops();                                // 【v1.0812】ユーザーが追加したショップも対象
     var target = null;
-    if (SHOPS_INITIAL[key]) target = key;                 // 正規ID一致
-    else if (ALIAS[key]) target = ALIAS[key];             // 別名一致
+    if (_all[key]) target = key;                          // 正規ID一致
+    else if (ALIAS[key] && _all[ALIAS[key]]) target = ALIAS[key];   // 別名一致
     else {                                                // shopCode一致（burariya=kairy 等）
-      for (var id in SHOPS_INITIAL) {
-        if (SHOPS_INITIAL.hasOwnProperty(id) && String(SHOPS_INITIAL[id].shopCode || '').toLowerCase() === key) { target = id; break; }
+      for (var id in _all) {
+        if (_all.hasOwnProperty(id) && String(_all[id].shopCode || '').toLowerCase().replace(/[\s\-_]/g, '') === key) { target = id; break; }
       }
     }
-    if (target && SHOPS_INITIAL[target]) {
+    if (target && _all[target]) {
       localStorage.setItem(CURRENT_SHOP_STORAGE_KEY, target);  // 初期化前に確定
     }
   } catch (e) {}
@@ -6088,7 +6156,10 @@ function getCurrentShop() {
 // ============================================================================
 var _sessionShopId = (function () { try { return getCurrentShopId(); } catch (e) { return DEFAULT_SHOP_ID; } })();
 function getSessionShopId() { return _sessionShopId || DEFAULT_SHOP_ID; }
-function getSessionShop() { return SHOPS_INITIAL[getSessionShopId()] || SHOPS_INITIAL[DEFAULT_SHOP_ID]; }
+function getSessionShop() {
+  const all = getShops();
+  return all[getSessionShopId()] || all[DEFAULT_SHOP_ID] || { id: DEFAULT_SHOP_ID, name: DEFAULT_SHOP_ID, shopCode: DEFAULT_SHOP_ID };
+}
 window.getSessionShopId = getSessionShopId;
 
 // ============================================================================
@@ -6103,7 +6174,7 @@ window.getSessionShopId = getSessionShopId;
 // ============================================================================
 function switchShop(shopId) {
   try {
-    if (!shopId || !SHOPS_INITIAL[shopId]) return;
+    if (!shopId || !getShops()[shopId]) return;
     if (shopId === getSessionShopId()) return;   // 同じなら何もしない（無限リロード防止）
     localStorage.setItem(CURRENT_SHOP_STORAGE_KEY, shopId);
     const qs = new URLSearchParams(location.search);
@@ -23318,42 +23389,191 @@ async function _vpPushToGitHub() {
 })();
 
 // ==================== ショップ選択UI（マルチショップ v93〜） ====================
-function initShopSelector() {
-  const sel = $('#shopSelect');
-  if (!sel) return;
-  // 【v1.0810】★選択肢にIDも出す。URLに何を書けば直接開けるかが、この1行で分かる。
-  sel.innerHTML = Object.values(SHOPS_INITIAL).map(s =>
-    `<option value="${s.id}">${escapeHtml(s.name)}（${escapeHtml(s.id)}）</option>`
-  ).join('');
-  // 【v1.0810】★選択状態は getSessionShopId()（このタブが読み込んだショップ）で決める。
-  //   getCurrentShopId() は localStorage＝全タブ共有なので、別タブで切り替えられた瞬間に
-  //   **画面の中身はそのままでセレクタの表示だけ他店になる**。
+let _shopMenuEditMode = false;   // 【v1.0812】ドロップダウンを「管理（編集）」表示にしているか
+
+// ドロップダウンを閉じる
+function closeShopMenu() {
+  const m = document.getElementById('shopMenu');
+  if (m) m.style.display = 'none';
+  _shopMenuEditMode = false;
+}
+window.closeShopMenu = closeShopMenu;
+
+// 【v1.0812】ドロップダウンの中身を描く。通常＝一覧 / 管理＝その場で編集。
+function _renderShopMenu() {
+  const m = document.getElementById('shopMenu');
+  if (!m) return;
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const all = getShops();
   const cur = getSessionShopId();
-  sel.value = cur;
-  sel.title = '表示中: ' + ((SHOPS_INITIAL[cur] || {}).name || cur)
-    + '（このタブは ' + cur + ' に固定）\n直接開くURL: ?shop=' + cur;
-  sel.addEventListener('change', (e) => {
-    const newShopId = e.target.value;
-    if (newShopId === getSessionShopId()) return;
-    const newName = (SHOPS_INITIAL[newShopId] && SHOPS_INITIAL[newShopId].name) || newShopId;
-    if (!confirm(`ショップを「${newName}」に切り替えます。\n現在の画面データはリロードされて切り替わります。\n\n切り替えますか？`)) {
-      e.target.value = getSessionShopId();   // キャンセル時は元に戻す
+  const ids = Object.keys(all);
+  let h = '';
+  if (!_shopMenuEditMode) {
+    // ★名前の横に「（yukaiya）」と書かない。IDは右端に小さく置く＝名前が読みやすい。
+    h += ids.map((id) => {
+      const sp = all[id];
+      return '<button type="button" class="shop-menu-item" data-shop-pick="' + esc(id) + '">'
+        + '<span class="shop-menu-check">' + (id === cur ? '✓' : '') + '</span>'
+        + '<span class="shop-menu-name">' + esc(sp.name) + '</span>'
+        + '<span class="shop-menu-id">' + esc(id) + '</span>'
+        + '</button>';
+    }).join('');
+    h += '<div class="shop-menu-sep"></div>'
+      + '<button type="button" class="shop-menu-act" data-shop-act="add">＋ 新規ショップ追加</button>'
+      + '<button type="button" class="shop-menu-act" data-shop-act="manage">⚙ ショップ管理</button>';
+  } else {
+    h += '<div class="shop-menu-hint">名前と店舗コードはここで直せます。<b>IDは変更できません</b>'
+      + '（保存先 data/{ID}/ が変わって過去のデータが読めなくなるため）。</div>';
+    h += ids.map((id) => {
+      const sp = all[id];
+      return '<div class="shop-edit-row" data-shop-row="' + esc(id) + '">'
+        + '<input type="text" data-shop-f="name" value="' + esc(sp.name) + '" placeholder="表示名" title="画面に出る名前">'
+        + '<input type="text" data-shop-f="shopCode" value="' + esc(sp.shopCode) + '" placeholder="店舗コード" title="Yahooのストアアカウント（商品画像のURLに使います）">'
+        + '<div class="shop-edit-id">ID: ' + esc(id) + '</div>'
+        + '<button type="button" class="shop-edit-del" data-shop-act="del" data-shop-id="' + esc(id) + '"'
+        + (ids.length <= 1 ? ' disabled title="最後の1件は削除できません"' : ' title="このショップを一覧から消す（保存済みデータは残ります）"') + '>削除</button>'
+        + '</div>';
+    }).join('');
+    h += '<div class="shop-menu-sep"></div>'
+      + '<button type="button" class="shop-menu-act" data-shop-act="save">💾 変更を保存</button>'
+      + '<button type="button" class="shop-menu-act" data-shop-act="add">＋ 新規ショップ追加</button>'
+      + '<button type="button" class="shop-menu-act" data-shop-act="back">← 一覧に戻る</button>';
+  }
+  m.innerHTML = h;
+}
+
+// 【v1.0812】開閉。★body直下へ移し、位置は毎回実測する（設計ガイド §7）
+function toggleShopMenu(event) {
+  if (event) event.stopPropagation();
+  const m = document.getElementById('shopMenu');
+  const btn = document.getElementById('shopSelectorBtn');
+  if (!m || !btn) return;
+  // ★stacking context から解放する。ヘッダーの sticky/transform の下に潜るのを防ぐ。
+  if (m.parentElement !== document.body) document.body.appendChild(m);
+  if (m.style.display === 'block') { closeShopMenu(); return; }
+  _shopMenuEditMode = false;
+  _renderShopMenu();
+  const r = btn.getBoundingClientRect();
+  m.style.top = (r.bottom + 4) + 'px';
+  m.style.left = r.left + 'px';
+  // ★画面下端からはみ出さないよう高さを制限する（ショップが増えても押せる）
+  m.style.maxHeight = Math.max(200, window.innerHeight - r.bottom - 20) + 'px';
+  m.style.display = 'block';
+}
+window.toggleShopMenu = toggleShopMenu;
+
+// 管理モードの入力値を読んで保存する
+function _shopMenuSaveEdits() {
+  const m = document.getElementById('shopMenu');
+  if (!m) return;
+  const all = getShops();
+  m.querySelectorAll('[data-shop-row]').forEach((row) => {
+    const id = row.getAttribute('data-shop-row');
+    if (!all[id]) return;
+    const nm = (row.querySelector('[data-shop-f="name"]') || {}).value;
+    const sc = (row.querySelector('[data-shop-f="shopCode"]') || {}).value;
+    // ★空欄はIDで埋める。空のまま保存すると一覧に名前の無い行ができて選べなくなる。
+    all[id].name = String(nm || '').trim() || id;
+    all[id].shopCode = String(sc || '').trim() || id;
+  });
+  saveShops(all);
+  _shopMenuEditMode = false;
+  _renderShopMenu();
+  _syncShopSelectorLabel();
+  try { if (typeof showToast === 'function') showToast('ショップ設定を保存しました', 'ok'); } catch (e) {}
+}
+
+// 新規追加
+function _shopMenuAdd() {
+  const nm = (prompt('表示名（例: ゆかい屋）') || '').trim();
+  if (!nm) return;
+  const rawId = (prompt('ID（英数字のみ。保存先 data/{ID}/ になります。あとから変更できません）', '') || '').trim();
+  const id = rawId.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!id) { alert('IDは英数字で入力してください。'); return; }
+  const all = getShops();
+  if (all[id]) { alert('そのIDはすでに使われています: ' + id); return; }
+  const sc = ((prompt('店舗コード（Yahooのストアアカウント。画像URLに使います）', id) || '').trim()) || id;
+  all[id] = { id: id, name: nm, shopCode: sc };
+  saveShops(all);
+  _renderShopMenu();
+  _syncShopSelectorLabel();
+  try { if (typeof showToast === 'function') showToast('ショップ「' + nm + '」を追加しました（?shop=' + id + ' で直接開けます）', 'ok'); } catch (e) {}
+}
+
+// 削除（定義だけ。保存済みデータは残す）
+function _shopMenuDelete(id) {
+  const all = getShops();
+  if (!all[id]) return;
+  if (Object.keys(all).length <= 1) { alert('最後の1件は削除できません。'); return; }
+  if (id === getSessionShopId()) { alert('いま表示中のショップは削除できません。先に別のショップへ切り替えてください。'); return; }
+  if (!confirm('ショップ「' + all[id].name + '」を一覧から消します。\n\n※保存済みのデータ（data/' + id + '/）は消えません。\n　同じIDで追加し直せば元に戻ります。\n\n削除しますか？')) return;
+  delete all[id];
+  saveShops(all);
+  _renderShopMenu();
+}
+
+// ヘッダーのボタン表示を現在ショップに合わせる
+function _syncShopSelectorLabel() {
+  const lab = document.getElementById('shopSelectorLabel');
+  const btn = document.getElementById('shopSelectorBtn');
+  const cur = getSessionShopId();
+  const sp = getShops()[cur] || { name: cur };
+  if (lab) lab.textContent = sp.name || cur;
+  if (btn) btn.title = '表示中: ' + (sp.name || cur) + '（このタブは ' + cur + ' に固定）\n直接開くURL: ?shop=' + cur;
+}
+
+function initShopSelector() {
+  const btn = document.getElementById('shopSelectorBtn');
+  const menu = document.getElementById('shopMenu');
+  if (!btn || !menu) return;
+  const cur = getSessionShopId();
+  _syncShopSelectorLabel();
+  btn.addEventListener('click', toggleShopMenu);
+
+  // メニュー内のクリックは1か所で受ける（行が作り直されるたびにハンドラを付け直さない）
+  menu.addEventListener('click', (e) => {
+    e.stopPropagation();   // ★必須。下の「外クリックで閉じる」と干渉して即座に閉じてしまう
+    const pick = e.target.closest('[data-shop-pick]');
+    if (pick) {
+      const id = pick.getAttribute('data-shop-pick');
+      if (id === getSessionShopId()) { closeShopMenu(); return; }
+      const nm = (getShops()[id] || {}).name || id;
+      if (!confirm('ショップを「' + nm + '」に切り替えます。\n現在の画面データはリロードされて切り替わります。\n\n切り替えますか？')) return;
+      switchShop(id);
       return;
     }
-    // 【v1.0810】switchShop() が localStorage とURLの両方を更新して読み直す。
-    //   ★ここで location.reload() だけにしないこと。URLにショップが乗らないと
-    //     アドレスバー／ブックマーク／戻る進む が「いま見ているショップ」と食い違う。
-    switchShop(newShopId);
+    const act = e.target.closest('[data-shop-act]');
+    if (!act) return;
+    switch (act.getAttribute('data-shop-act')) {
+      case 'manage': _shopMenuEditMode = true;  _renderShopMenu(); break;
+      case 'back':   _shopMenuEditMode = false; _renderShopMenu(); break;
+      case 'save':   _shopMenuSaveEdits(); break;
+      case 'add':    _shopMenuAdd(); break;
+      case 'del':    _shopMenuDelete(act.getAttribute('data-shop-id')); break;
+    }
   });
-  // 【v1.0810】ヘッダーのリンクにもショップを引き継ぐ。付け忘れると、別タブで切り替えたあとに
-  //   「新しいタブ」やロゴから開いた画面だけ違うショップになる。
+
+  // 外クリック / Esc で閉じる。★document に付ける（body直下へ移動しても効く）
+  document.addEventListener('click', (e) => {
+    const m = document.getElementById('shopMenu');
+    if (!m || m.style.display !== 'block') return;
+    if (btn.contains(e.target) || m.contains(e.target)) return;
+    closeShopMenu();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeShopMenu(); });
+  // ★開いたまま画面が動くとボタンから離れてしまうので閉じる（位置は開くときに実測しているため）
+  window.addEventListener('resize', closeShopMenu);
+  window.addEventListener('scroll', closeShopMenu, true);
+
+  // 【v1.0810】ヘッダーのリンクにもショップを引き継ぐ。
   ['btnNewTab', 'logoHome'].forEach((id) => {
     const a = document.getElementById(id);
     if (a && a.getAttribute('href')) a.setAttribute('href', withShopParam(a.getAttribute('href')));
   });
   // 【v1.0810】タブを並べたとき見分けられるように、ショップ名をタイトルの先頭に出す。
   try {
-    const nm = (SHOPS_INITIAL[cur] || {}).name || cur;
+    const nm = (getShops()[cur] || {}).name || cur;
     if (document.title.indexOf(nm + ' | ') !== 0) document.title = nm + ' | ' + document.title;
   } catch (e) {}
 }
