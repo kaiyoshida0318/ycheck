@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0810 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0811 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4140,7 +4140,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0810</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0811</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6472,13 +6472,43 @@ function _vpWriteDeviceBackup() {
     }));
   } catch (e) {}
 }
+// 【v1.0811】表示設定の【中身】が同じかどうか。時刻ではなく実体で比べる。
+//   ★これが無いと「時刻だけ新しい／中身は同じ」でも "端末のほうが新しい" と判定され、
+//     起動のたびに未反映マークが立つ（＝何もしていないのに「⬆ 反映する（未反映）」が出る）。
+//   ★列幅は px の丸めで 1px 未満の差が出るので、必ず Math.round してから比べる。
+function _vpSameContent(a, b) {
+  try {
+    if (!a || !b) return false;
+    const fa = (a.fontScale > 0 ? a.fontScale : 1), fb = (b.fontScale > 0 ? b.fontScale : 1);
+    if (Math.abs(fa - fb) > 0.0001) return false;
+    const ca = a.colWidths || {}, cb = b.colWidths || {};
+    const ka = Object.keys(ca).sort(), kb = Object.keys(cb).sort();
+    if (ka.length !== kb.length) return false;
+    for (let i = 0; i < ka.length; i++) {
+      if (ka[i] !== kb[i]) return false;
+      if (Math.round(+ca[ka[i]] || 0) !== Math.round(+cb[kb[i]] || 0)) return false;
+    }
+    const ta = Array.isArray(a.itTrendSaved) ? a.itTrendSaved.slice().map(String).sort() : [];
+    const tb = Array.isArray(b.itTrendSaved) ? b.itTrendSaved.slice().map(String).sort() : [];
+    if (ta.length !== tb.length) return false;
+    for (let i = 0; i < ta.length; i++) if (ta[i] !== tb[i]) return false;
+    return true;
+  } catch (e) { return false; }
+}
 // 読み込んだ viewPrefs を採用する唯一の入口。★3つの読み込み経路は必ずこれを通すこと。
 function _vpAdoptIncoming(incoming) {
   const bk = _vpReadDeviceBackup();
   const inTs = Date.parse((incoming && incoming.updatedAt) || '') || 0;
   const bkTs = Date.parse((bk && bk.updatedAt) || '') || 0;
+  // 【v1.0811】★時刻が新しくても【中身が同じなら】素直に受け入れる。
+  //   受け入れれば端末バックアップの updatedAt も相手側の時刻で上書きされるので、
+  //   次回からは時刻も揃い、未反映マークが二度と立たない（＝自然に解消する）。
+  const _sameVp = _vpSameContent(bk, incoming);
+  if (bk && bkTs > inTs + 2000 && _sameVp) {
+    console.log('[Ycheck] 表示設定: 端末のほうが新しい時刻ですが中身は同じなので、受け入れて時刻をそろえます（未反映にしません）');
+  }
   // 【v1.0752】2秒の余裕。保存と書き戻しのわずかな時刻差で「端末が新しい」と誤判定しないため
-  if (bk && bkTs > inTs + 2000) {
+  if (bk && bkTs > inTs + 2000 && !_sameVp) {
     // 端末のほうが新しい＝まだ反映していない（or 誰かに古いデータで上書きされた）
     state.viewPrefs = {
       colWidths: Object.assign({}, bk.colWidths || {}),
@@ -6505,7 +6535,8 @@ function _vpAdoptIncoming(incoming) {
     // ★未反映マークは【毎回】立てる。ログだけを止める（ここまで一緒に止めると
     //   「⬆ 反映する」に気づく手がかりが無くなり、列幅がいつまでも他PCへ渡らない）。
     //   起動直後は _ycAutoSaveArmed で無視されるので少し遅らせる。
-    setTimeout(function () { try { if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave(); } catch (e) {} }, 3000);
+    setTimeout(function () { try { if (typeof scheduleGitHubSave === 'function')
+      scheduleGitHubSave('この端末の表示設定（列幅・文字サイズ）がGitHubより新しい'); } catch (e) {} }, 3000);
     return;
   }
   state.viewPrefs = incoming; ensureViewPrefs(); _vpLegacyMigrated = true;
@@ -6674,7 +6705,7 @@ function saveToStorage() {
     else localStorage.removeItem(ghPendingFlagKey());
   } catch (e) {}
   // localStorageの成否に関わらず、GitHub保存は必ずスケジュール（in-memoryの正しい値を確実に残す）
-  if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave();
+  if (typeof scheduleGitHubSave === 'function') scheduleGitHubSave('データの保存（saveToStorage）');
   return anyOk;
 }
 
@@ -7782,10 +7813,20 @@ try {
   window.addEventListener('keydown', _ycArmAutoSave, { once: true, capture: true });
 } catch (e) { _ycAutoSaveArmed = true; }
 
-function scheduleGitHubSave() {
+// 【v1.0811】いま「未反映」になっている理由。★「何もしていないのに未反映が出る」の調査用。
+//   ボタンのツールチップとコンソールに出す。false→true に変わった瞬間だけ記録する
+//   （同じ理由で何度も立つので、毎回記録すると最初の原因が流れてしまう）。
+let _ghDirtyReason = '';
+window._ghDirtyReason = function () { return _ghDirtyReason; };
+function scheduleGitHubSave(reason) {
   if (!ghIsEnabled()) return;
   if (!_ycAutoSaveArmed) return;   // 【v1.0353】起動直後の未操作は無視
   if (_ghQuiet > 0) return;        // 【v1.0361】自動処理(読込/同期/マイグレーション)中はユーザー変更ではないので未反映にしない
+  if (!_ghDirty) {
+    _ghDirtyReason = String(reason || 'データの変更');
+    console.log('[Ycheck] 未反映になりました: ' + _ghDirtyReason
+      + '（この行が身に覚えのない場面で出るときは、この理由をそのまま伝えてください）');
+  }
   // 【v1.0354】自動保存は廃止。ここでは「未反映（要・反映ボタン）」状態にするだけ。実際の保存は「反映する」ボタン。
   _ghDirty = true;
   ghSetSyncStatus('dirty');
@@ -7795,6 +7836,14 @@ function scheduleGitHubSave() {
 // 【v1.0354】========= 「反映する」ボタン + 保存中フルロック =========
 function _ycUpdateReflectBtn() {
   const editable = (typeof ghIsEnabled === 'function') && ghIsEnabled();
+  // 【v1.0811】未反映の理由をツールチップに出す（「なぜ出ているのか」をその場で確認できるように）
+  try {
+    document.querySelectorAll('.yc-reflect-btn').forEach(function (b0) {
+      b0.title = _ghDirty
+        ? ('未反映の変更があります\n理由: ' + (_ghDirtyReason || '（不明）') + '\n押すとGitHubへ保存します')
+        : 'GitHubへ反映済みです';
+    });
+  } catch (e) {}
   document.querySelectorAll('.yc-reflect-btn').forEach(b => {
     const wrap = b.closest('.yc-reflect-wrap');                               // 【v1.0455】ラッパーごと表示制御
     const cb = wrap ? wrap.querySelector('.yc-cancel-btn') : (b.parentElement ? b.parentElement.querySelector('.yc-cancel-btn') : null);
@@ -7886,7 +7935,7 @@ async function ycAutoPushNow() {
     ghSetSyncStatus('saving');
     const r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
     if (r && r.success) {
-      _ghDirty = false; ghSetSyncStatus('saved');
+      _ghDirty = false; _ghDirtyReason = ''; ghSetSyncStatus('saved');
       try { ycLog('save', 'GitHubへ反映しました（ドロップダウン変更）'); } catch (e) {}
       _ycAfterReflectRefresh();
     } else {
@@ -7964,7 +8013,7 @@ async function ycReflect() {
       r = await ghSaveToGitHub({ allowEmpty: false, manual: true, force: true });
     }
     if (r && r.success) {
-      _ghDirty = false; ghSetSyncStatus('saved');
+      _ghDirty = false; _ghDirtyReason = ''; ghSetSyncStatus('saved');
       ycLog('save', 'GitHubへ反映しました');   // 【v1.0604】
       _ycAfterReflectRefresh();   // 【v1.0739】反映したら一覧を作り直す（条件から外れた商品が消える）
       // 【v1.0600】保存した内容が別クライアントに上書きされていないか、15秒後に確認する
