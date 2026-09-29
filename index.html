@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0809 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0810 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4140,7 +4140,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0809</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0810</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6042,6 +6042,12 @@ function getCurrentShop() {
 (function applyShopFromUrl() {
   try {
     var qs = (location.search || '').replace(/^\?/, '');
+    // 【v1.0810】ハッシュ（#shop=kairy）でも受ける。手打ちや古いブックマークのブレを吸収する。
+    //   ★クエリが優先。両方あるときにハッシュで上書きすると、リンクで渡した指定が消える。
+    if (!qs && location.hash) {
+      var mh = location.hash.match(/shop=([a-zA-Z0-9_\-]+)/i);
+      if (mh) qs = 'shop=' + mh[1];
+    }
     if (!qs) return;
     var params = {};
     qs.split('&').forEach(function (kv) {
@@ -6067,20 +6073,77 @@ function getCurrentShop() {
   } catch (e) {}
 })();
 
+// ============================================================================
+// 【v1.0810】★このタブが読み込んだショップIDを「固定」する（セッション固定）。
+//
+//   ycheck_current_shop は localStorage ＝ **全タブ共有**。
+//   タブAでゆかい屋、タブBでKAIRYを開くと、タブBを開いた瞬間にタブAの「現在ショップ」も変わる。
+//   タブAはゆかい屋の数字を表示したまま、**保存先だけKAIRYになる**＝最悪の事故。
+//
+//   → パス生成・キー生成・画像URLは必ず getSessionShopId() を通す。
+//     この値は applyShopFromUrl() の直後に1回だけ取って以後動かないので、
+//     別タブでの切替に引きずられない。
+//   ★localStorage を見てよいのは「いまブラウザ全体でどれが選ばれているか」を知りたいときだけ
+//     （＝ショップ切替UIの初期選択）。データの読み書きでは絶対に使わないこと。
+// ============================================================================
+var _sessionShopId = (function () { try { return getCurrentShopId(); } catch (e) { return DEFAULT_SHOP_ID; } })();
+function getSessionShopId() { return _sessionShopId || DEFAULT_SHOP_ID; }
+function getSessionShop() { return SHOPS_INITIAL[getSessionShopId()] || SHOPS_INITIAL[DEFAULT_SHOP_ID]; }
+window.getSessionShopId = getSessionShopId;
+
+// ============================================================================
+// 【v1.0810】ショップ切替。
+//   ★URLを書き換えてからリロードする（localStorage だけ書き換えて reload しない）。
+//     ・アドレスバーとブックマークが「いま見ているショップ」と必ず一致する
+//     ・戻る/進むで元のショップに戻れる
+//     ・別タブで切り替えられても、このタブのURLは自分のショップを指したまま
+//   ★リロードする理由: 読み込み後に切り替えると state・キャッシュ・描画済みDOMを
+//     全部作り直すことになる。リロードのほうが確実で安い（ADcheck設計ガイド §4-2）。
+//   ★view など他のクエリは引き継ぐ。切り替えたら別の画面に飛ばされるのは事故に見える。
+// ============================================================================
+function switchShop(shopId) {
+  try {
+    if (!shopId || !SHOPS_INITIAL[shopId]) return;
+    if (shopId === getSessionShopId()) return;   // 同じなら何もしない（無限リロード防止）
+    localStorage.setItem(CURRENT_SHOP_STORAGE_KEY, shopId);
+    const qs = new URLSearchParams(location.search);
+    qs.set('shop', shopId);
+    location.href = location.origin + location.pathname + '?' + qs.toString();
+  } catch (e) { console.warn('[Ycheck] ショップ切替に失敗:', e); }
+}
+window.switchShop = switchShop;
+
+// 【v1.0810】自前で作るリンクにショップを引き継がせる。
+//   ★付け忘れると、別タブでショップを切り替えられていたとき【違うショップで開く】。
+function withShopParam(url) {
+  try {
+    const u = new URL(url, location.href);
+    u.searchParams.set('shop', getSessionShopId());
+    return u.toString();
+  } catch (e) { return url; }
+}
+window.withShopParam = withShopParam;
+
+// 【v1.0810】★ショップ切替UIの実体は【ページ末尾の initShopSelector()】1つだけ。
+//   ここに2つ目の function initShopSelector() を書くと、同じスコープの関数宣言なので
+//   **後ろに書いたほうが必ず勝ち**、前のものは一度も呼ばれない（v1.0810 開発中に実際に踏んだ）。
+//   直すときは末尾の1本を直すこと。
+
 // localStorageキーは必ずショップ依存にする（ドキュメント指示「2. localStorage キーをショップ非依存にしない」）
 const STORAGE_KEY_BASE = 'ycheck_data_v1';
-function getStorageKey() { return STORAGE_KEY_BASE + '_' + getCurrentShopId(); }
+function getStorageKey() { return STORAGE_KEY_BASE + '_' + getSessionShopId(); }
 // 互換: 既存コード内で STORAGE_KEY を参照している箇所を壊さないための動的プロパティ
 Object.defineProperty(window, 'STORAGE_KEY', { get: getStorageKey });
 
 // 画像URLも現在ショップの shopCode に従う
 function yahooImgUrl(code) {
-  return `https://item-shopping.c.yimg.jp/i/l/${getCurrentShop().shopCode}_${code}`;
+  // 【v1.0810】セッション固定のショップを使う（別タブの切替で画像だけ他店になるのを防ぐ）
+  return `https://item-shopping.c.yimg.jp/i/l/${getSessionShop().shopCode}_${code}`;
 }
 // 互換: 既存コードの YAHOO_IMG_URL() 呼び出しを壊さない（関数参照として維持）
 const YAHOO_IMG_URL = (code) => yahooImgUrl(code);
 // 互換: 既存コードの STORE_ACCOUNT 参照を現在ショップの shopCode で解決
-Object.defineProperty(window, 'STORE_ACCOUNT', { get: () => getCurrentShop().shopCode });
+Object.defineProperty(window, 'STORE_ACCOUNT', { get: () => getSessionShop().shopCode });   /* 【v1.0810】セッション固定 */
 
 // ==================== 旧データの自動マイグレーション（1度だけ） ====================
 // 旧キー「ycheck_data_v1」は yukaiya 固定運用だったので、「ycheck_data_v1_yukaiya」に移す。
@@ -6636,7 +6699,7 @@ const GH_PAT_KEY = 'ycheck_github_pat';   // ブラウザ毎・ショップ非�
 const GH_SAVE_DEBOUNCE_MS = 1000;          // 【v198】編集後1秒で自動保存（旧3秒。リロード消失リスク低減）
 // 【v199】GitHubに保存し切れていないローカル変更があることを示す永続フラグ（ショップ別）
 function ghPendingFlagKey() {
-  return 'ycheck_gh_pending_' + (typeof getCurrentShopId === 'function' ? getCurrentShopId() : 'default');
+  return 'ycheck_gh_pending_' + (typeof getSessionShopId === 'function' ? getSessionShopId() : 'default');   /* 【v1.0810】セッション固定 */
 }
 const GH_MAX_RETRY = 5;                    // 409 Conflict 時の最大リトライ回数
 
@@ -6652,10 +6715,17 @@ let _ghStaleWarnShown = false;             // 【v272】古い上書きガード
 function ghFilePath() {
   // 【v1.0356】保存先を新ファイルに分離。古い版のセッション(幽霊)は旧ファイルを書き続けるが、
   //   新版はこの新ファイルだけを読み書きするため、幽霊の巻き戻しと衝突しなくなる。
-  return `data/${getCurrentShopId()}/ycheck_data_v2.json`;
+  return `data/${getSessionShopId()}/ycheck_data_v2.json`;   /* 【v1.0810】セッション固定 */
 }
 function ghFilePathLegacy() {
-  return `data/${getCurrentShopId()}/ycheck_data.json`;
+  return `data/${getSessionShopId()}/ycheck_data.json`;      /* 【v1.0810】セッション固定 */
+}
+// 【v1.0810】順位データもショップ別にする。
+//   ★v1.0809 まで 'rank.json' 固定だった＝**全ショップで同じ順位を読んでいた**（データ混在）。
+//   まず data/{shop}/rank.json を見て、無ければ従来の rank.json にフォールバックする。
+//   （既定ショップぶんはリポジトリ直下に置いたままでも動くように）
+function rankJsonPaths() {
+  return [`data/${getSessionShopId()}/rank.json`, 'rank.json'];
 }
 // 【v1.0381】raw.githubusercontent.com の download_url はブランチ参照でCDNが約5分キャッシュするため、
 //   一意のクエリ(?t=…)を付けてCDNキャッシュを確実に回避する（cache:'no-store'はブラウザ自身のキャッシュのみ）。
@@ -6701,7 +6771,7 @@ function ghIsEnabled() {
 // ログ出力ヘルパー（設定モーダルのログエリアに追記）
 function ghLog(msg, level = 'info') {
   const colors = { info: '#0f0', warn: '#fb0', error: '#f66' };
-  const shopId = getCurrentShopId();
+  const shopId = getSessionShopId();
   console.log(`[${shopId}] [GH] ${msg}`);
   const logEl = document.getElementById('ghSettingsLog');
   if (logEl) {
@@ -6814,7 +6884,7 @@ async function ghPutFile(contentString, retryCount = 0) {
   }
 
   const body = {
-    message: `Ycheck data save (${getCurrentShopId()}) ${new Date().toISOString()}`,
+    message: `Ycheck data save (${getSessionShopId()}) ${new Date().toISOString()}`,
     content: base64,
     branch: GH_BRANCH
   };
@@ -6886,7 +6956,7 @@ async function ghPutFile(contentString, retryCount = 0) {
 //   （ログまで同期すると、別クライアントの上書きでログごと消えて意味を失うため）。
 // ============================================================================
 const YC_LOG_MAX = 300;
-function _ycLogKey() { return 'ycheck_oplog_' + ((typeof getCurrentShopId === 'function') ? getCurrentShopId() : 'default'); }
+function _ycLogKey() { return 'ycheck_oplog_' + ((typeof getSessionShopId === 'function') ? getSessionShopId() : 'default'); }   /* 【v1.0810】セッション固定 */
 function ycLogRead() { try { return JSON.parse(localStorage.getItem(_ycLogKey()) || '[]'); } catch (e) { return []; } }
 function ycLogWrite(arr) { try { localStorage.setItem(_ycLogKey(), JSON.stringify(arr.slice(-YC_LOG_MAX))); } catch (e) {} }
 function _ycMasterCount() { try { return Object.keys(state.master || {}).length; } catch (e) { return null; } }
@@ -6992,7 +7062,7 @@ function ghBuildDataString() {
     savedBy: _ycClientId(),
     savedByLabel: _ycClientLabel(),
     savedByVer: (function () { try { return document.querySelector('.logo-sub').textContent; } catch (e) { return ''; } })(),
-    shopId: getCurrentShopId(),
+    shopId: getSessionShopId(),
     schemaVersion: 1
   };
   _ycLastSavedAt = data.savedAt;
@@ -16145,11 +16215,19 @@ function mergeRankJson(json) {
 // rank.json を fetch して state に取り込む。成功時は対応月の表が自動更新される。
 async function fetchRankJson(options) {
   const silent = options && options.silent;
-  const url = 'rank.json?t=' + Date.now();  // キャッシュバスター
   try {
-    const res = await fetch(url, { cache: 'no-cache' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
+    // 【v1.0810】ショップ別 → 従来パス の順に試す。
+    //   ★1本目が404でも例外にせず次を試すこと。既定ショップは直下の rank.json のままでも動かす。
+    let json = null, usedPath = '';
+    for (const p of rankJsonPaths()) {
+      try {
+        const r = await fetch(p + '?t=' + Date.now(), { cache: 'no-cache' });
+        if (!r.ok) continue;
+        json = await r.json(); usedPath = p; break;
+      } catch (e1) { /* 次のパスへ */ }
+    }
+    if (!json) throw new Error('rank.json が見つかりません（' + rankJsonPaths().join(' / ') + '）');
+    if (!silent) console.log('[Ycheck] 順位データ読み込み:', usedPath);
     const result = mergeRankJson(json);
     saveToStorage();
     // 対応月の表が自動生成されるよう、広告順位/SEO順位の月プルダウンを最新月にセット
@@ -16158,7 +16236,7 @@ async function fetchRankJson(options) {
     renderAll();
     updateRankLastUpdatedDisplay();
     if (!silent) {
-      log(`✓ rank.json 取得: ${result.total}件の商品データを ${result.months.length}ヶ月分 更新`, 'ok');
+      log(`✓ 順位データ取得（${getSessionShopId()}）: ${result.total}件の商品データを ${result.months.length}ヶ月分 更新`, 'ok');
     } else {
       console.log(`rank.json fetched: ${result.total} products across ${result.months.length} month(s)`);
     }
@@ -23194,32 +23272,41 @@ async function _vpPushToGitHub() {
 function initShopSelector() {
   const sel = $('#shopSelect');
   if (!sel) return;
-  // 選択肢を生成
+  // 【v1.0810】★選択肢にIDも出す。URLに何を書けば直接開けるかが、この1行で分かる。
   sel.innerHTML = Object.values(SHOPS_INITIAL).map(s =>
-    `<option value="${s.id}">${escapeHtml(s.name)}</option>`
+    `<option value="${s.id}">${escapeHtml(s.name)}（${escapeHtml(s.id)}）</option>`
   ).join('');
-  const cur = getCurrentShopId();
+  // 【v1.0810】★選択状態は getSessionShopId()（このタブが読み込んだショップ）で決める。
+  //   getCurrentShopId() は localStorage＝全タブ共有なので、別タブで切り替えられた瞬間に
+  //   **画面の中身はそのままでセレクタの表示だけ他店になる**。
+  const cur = getSessionShopId();
   sel.value = cur;
-  // 切替時: location.reload() で完全リセット（ドキュメント指示）
+  sel.title = '表示中: ' + ((SHOPS_INITIAL[cur] || {}).name || cur)
+    + '（このタブは ' + cur + ' に固定）\n直接開くURL: ?shop=' + cur;
   sel.addEventListener('change', (e) => {
     const newShopId = e.target.value;
-    if (newShopId === getCurrentShopId()) return;
+    if (newShopId === getSessionShopId()) return;
     const newName = (SHOPS_INITIAL[newShopId] && SHOPS_INITIAL[newShopId].name) || newShopId;
     if (!confirm(`ショップを「${newName}」に切り替えます。\n現在の画面データはリロードされて切り替わります。\n\n切り替えますか？`)) {
-      // キャンセル時は元に戻す
-      e.target.value = getCurrentShopId();
+      e.target.value = getSessionShopId();   // キャンセル時は元に戻す
       return;
     }
-    try {
-      localStorage.setItem(CURRENT_SHOP_STORAGE_KEY, newShopId);
-    } catch (err) {
-      console.error('ショップ切替エラー:', err);
-      alert('ショップの切替に失敗しました: ' + err.message);
-      return;
-    }
-    // 完全リロードで前ショップのメモリ上データを完全に捨てる
-    location.reload();
+    // 【v1.0810】switchShop() が localStorage とURLの両方を更新して読み直す。
+    //   ★ここで location.reload() だけにしないこと。URLにショップが乗らないと
+    //     アドレスバー／ブックマーク／戻る進む が「いま見ているショップ」と食い違う。
+    switchShop(newShopId);
   });
+  // 【v1.0810】ヘッダーのリンクにもショップを引き継ぐ。付け忘れると、別タブで切り替えたあとに
+  //   「新しいタブ」やロゴから開いた画面だけ違うショップになる。
+  ['btnNewTab', 'logoHome'].forEach((id) => {
+    const a = document.getElementById(id);
+    if (a && a.getAttribute('href')) a.setAttribute('href', withShopParam(a.getAttribute('href')));
+  });
+  // 【v1.0810】タブを並べたとき見分けられるように、ショップ名をタイトルの先頭に出す。
+  try {
+    const nm = (SHOPS_INITIAL[cur] || {}).name || cur;
+    if (document.title.indexOf(nm + ' | ') !== 0) document.title = nm + ' | ' + document.title;
+  } catch (e) {}
 }
 
 // ==================== 初期化 ====================
