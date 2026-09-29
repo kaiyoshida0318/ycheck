@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0797 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0798 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1693,6 +1693,35 @@ tbody tr:hover td:first-child:last-child {
     inset -1.5px 0 0 var(--row-hover-border);
 }
 
+/* ============================================================
+   【v1.0798】商品-日月別データ：サムネ帯＋選択中の商品
+   ★帯は横スクロール1本にする（折り返すと縦に伸びて表が画面外へ落ちる）。
+   ============================================================ */
+.mi-thumbs { display:flex; gap:6px; overflow-x:auto; overflow-y:hidden; padding:6px 2px 8px; }
+.mi-thumb { flex:0 0 auto; width:84px; border:2px solid transparent; border-radius:9px; background:var(--bg2);
+            padding:4px; cursor:pointer; text-align:center; line-height:1.25; }
+.mi-thumb:hover { background:var(--bg3); }
+.mi-thumb.is-on { border-color:var(--accent); background:var(--bg3); }
+.mi-thumb-img { width:72px; height:72px; margin:0 auto; border-radius:6px; overflow:hidden; background:var(--bg3);
+                display:flex; align-items:center; justify-content:center; font-size:28px; }
+.mi-thumb-img img { width:100%; height:100%; object-fit:cover; }
+.mi-thumb-rank { display:inline-block; min-width:18px; font-size:11px; font-weight:800; color:var(--text3);
+                 font-family:'DM Mono',ui-monospace,monospace; }
+.mi-thumb.is-on .mi-thumb-rank { color:var(--accent); }
+.mi-thumb-amt { display:block; font-size:11px; font-weight:700; color:var(--text2);
+                font-family:'DM Mono',ui-monospace,monospace; white-space:nowrap; }
+.mi-thumb-code { display:block; font-size:10px; color:var(--text3); white-space:nowrap;
+                 overflow:hidden; text-overflow:ellipsis; font-family:'DM Mono',ui-monospace,monospace; }
+.mi-cur { display:flex; align-items:center; gap:12px; padding:8px 10px; margin:2px 0 8px;
+          background:var(--bg3); border:1px solid var(--border); border-radius:8px; }
+.mi-cur-img { width:56px; height:56px; flex:0 0 auto; border-radius:7px; overflow:hidden; background:var(--bg2);
+              display:flex; align-items:center; justify-content:center; font-size:24px; }
+.mi-cur-img img { width:100%; height:100%; object-fit:cover; }
+.mi-cur-code { font-size:12px; color:var(--text3); font-family:'DM Mono',ui-monospace,monospace; }
+.mi-cur-name { font-size:1rem; font-weight:700; line-height:1.3; }
+.mi-cur-sum  { margin-left:auto; text-align:right; font-size:12px; color:var(--text2); white-space:nowrap; }
+.mi-cur-sum b { display:block; font-size:1.05rem; color:var(--text);
+                font-family:'DM Mono',ui-monospace,monospace; }
 /* 【v140】列リサイズ機能：data-resize-key を持つthの右端にハンドル */
 /* 【v142】th だけでなく td(各行のセル)にもハンドルを設置できるよう拡張 */
 /* 【v159 真の根本修正】 元の `th[data-resize-key], td[data-resize-key] { position: relative }` は
@@ -4071,7 +4100,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0797</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0798</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4491,9 +4520,22 @@ th.col-sroas { background-color:#e7d5f5; }
           </span>
           <span class="filter-label" id="miRangeLabel" style="display:none">表示範囲</span>
           <select id="miRangeSel" onchange="_miSetRange(this.value)" style="display:none;font-size:15px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
+          <!-- 【v1.0798】全-月別データと同じ2つのトグル。比率表記は共通の _zdRatio を見る（画面ごとに別設定にしない） -->
+          <span style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
+            <span class="filter-label" title="SEO売上・広告売上・送り込み売上の金額の下に、総売上に対する構成比を表示します">比率表記</span>
+            <button type="button" id="miRatioOn" onclick="_zdSetRatio(true)">あり</button>
+            <button type="button" id="miRatioOff" onclick="_zdSetRatio(false)">なし</button>
+          </span>
+          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
+          <span style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
+            <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
+            <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
+          </span>
         </div>
-        <p class="dropzone-hint" style="margin:0 0 10px 0;font-size:13px;color:var(--text2);line-height:1.6;">各月を横に並べて比較。色は「同じ商品の月どうし」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。「表示」で<b>直近12ヶ月</b>（最新月から）か<b>年度（1〜12月）</b>を切り替え、それ以外の期間は「表示範囲」で選びます。</p>
-        <div id="mi-wrap" style="overflow:auto;max-height:76vh;border:1px solid var(--border);border-radius:8px"></div>
+        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位20）を押すか、商品コード・商品名で検索して切り替えます。</p>
+        <div id="mi-thumbs" class="mi-thumbs"></div>
+        <div id="mi-cur" class="mi-cur" style="display:none"></div>
+        <div id="mi-wrap" style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px"></div>
       </div>
     </div>
 
@@ -12152,6 +12194,12 @@ let monthlyAdFilter = 'all';   // 【v1.0322】広告あり/無し 絞り込み
 let _miRangePage = 0; // 【v1.0364】12ヶ月ページの現在位置（0=直近）
 let _miRangeMode = 'recent'; // 【v1.0392】'recent'=直近12ヶ月ずつ / 'year'=暦年(1〜12月)ごと
 let _miParentOnly = false;   // 【v1.0408】親子商品グループ(メンバー2件以上)だけに絞る
+// 【v1.0798】商品-日月別データは「1商品ずつ」表示する。いま選んでいる商品（家族の代表コード）。
+//   '' ＝ まだ選んでいない → 表示中の候補の**先頭（売上1位）**を自動で選ぶ。
+//   ★検索や絞り込みで候補から外れたら、選択を持ち越さずに先頭へ戻す（空の表を見せないため）。
+let _miCode = '';
+function _miPickCode(v) { _miCode = String(v || ''); renderMonthly(); }
+window._miPickCode = _miPickCode;
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
@@ -12785,11 +12833,20 @@ function _zdSetRatioUI() {
   const base = 'font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;';
   const on = 'border:1px solid #15803d;background:#15803d;color:#fff;';
   const off = 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
-  const a = document.getElementById('zdRatioOn'), c = document.getElementById('zdRatioOff');
-  if (a) a.style.cssText = base + (_zdRatio ? on : off);
-  if (c) c.style.cssText = base + (!_zdRatio ? on : off);
+  // 【v1.0798】★ボタンは全-月別データと商品-日月別データの2か所にある。両方そろえること。
+  //   片方だけ更新すると「押したのに色が変わらないボタン」ができる。
+  [['zdRatioOn', 'zdRatioOff'], ['miRatioOn', 'miRatioOff']].forEach(function (ids) {
+    const a = document.getElementById(ids[0]), c = document.getElementById(ids[1]);
+    if (a) a.style.cssText = base + (_zdRatio ? on : off);
+    if (c) c.style.cssText = base + (!_zdRatio ? on : off);
+  });
 }
-function _zdSetRatio(b) { _zdRatio = !!b; _zdSetRatioUI(); renderGraphData(); }
+function _zdSetRatio(b) {
+  _zdRatio = !!b; _zdSetRatioUI();
+  renderGraphData();
+  // 【v1.0798】商品-日月別データも同じ設定を見るので、そちらを開いているときは描き直す
+  if (typeof renderMonthly === 'function' && state.currentView === 'monthly') renderMonthly();
+}
 window._zdSetRatio = _zdSetRatio;
 
 // 【v1.0552】表の周りの説明文（送り込み売上／料率別の内訳／PR列／色の意味／注意書き）は
@@ -12977,75 +13034,140 @@ function renderMonthly() {
   });
   rows.sort((a, b) => b.stats.reduce((s, m) => s + (m.totSales || 0), 0) - a.stats.reduce((s, m) => s + (m.totSales || 0), 0));
 
-  const limit = _miParentOnly ? rows.length : (q ? 30 : 8);   // 【v1.0408】親子のみは上限なし（全件）
-  const shown = rows.slice(0, limit);
-  if (shown.length === 0) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">' + (_miParentOnly ? '親子設定された商品グループがありません' : '該当する商品がありません') + '</div>'; return; }
+  // ============================================================
+  // 【v1.0798】ここから下を「1商品ずつ・全-月別データと同じ並べ方」に作り替えた。
+  //   旧: 上位8件（検索時30件）を縦に積み、商品列を左に固定して月を行に出していた。
+  //       → 1商品ぶんが12行あるので、2商品目から下は必ずスクロールしないと見えなかった。
+  //   新: 売上上位20のサムネ帯から1商品を選び、その商品だけを 縦=月 × 横=指標 で出す。
+  // ============================================================
   // 【v1.0527】日別モードの見出し（何を並べているかを明示）
   const _dayNote = _dayMode
     ? '<div style="padding:7px 12px;font-size:13px;color:#1e4fbf;background:#eaf0fd;border-bottom:1px solid #b6d4fe">📅 <b>' + String(_miDayYm).replace('-', '/') + '</b> の日別推移（' + selKeys.length + '日分・新しい日が上）。日別データを取り込んだ日だけ並びます。</div>'
     : '';
-  const note = _miParentOnly
-    ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">親子商品グループ ' + rows.length + '件（親＋子の合計・総売上順）を表示中' + (q ? '（検索で絞り込み）' : '') + '</div>'
-    : (rows.length > limit
-      ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件中 上位' + limit + '件（総売上順）を表示。商品コード・商品名で検索すると特定商品を表示できます。</div>'
-      : (q ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">' + rows.length + '件 該当</div>' : ''));
-
-  const _rank5 = (val, allVals, hi) => {
-    if (!val || val === 0 || allVals.length === 0) return 'bk';
-    const sorted = allVals.slice().sort((a, b) => hi ? b - a : a - b);
-    let idx = sorted.indexOf(val); if (idx < 0) idx = 0;
-    const n = sorted.length;
-    if (idx < Math.ceil(n * 0.10)) return 'g1';
-    if (idx < Math.ceil(n * 0.20)) return 'g2';
-    if (idx >= Math.floor(n * 0.90)) return 'r';
-    if (idx >= Math.floor(n * 0.80)) return 'o';
-    return 'bk';
-  };
-  const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
   const fmtP = (v, dec) => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : fmtPctBy(v, dec);   /* 【v1.0794】桁は列の dec 任せ */
+  const thumbsEl = document.getElementById('mi-thumbs');
+  const curEl = document.getElementById('mi-cur');
+  if (rows.length === 0) {
+    if (thumbsEl) thumbsEl.innerHTML = '';
+    if (curEl) { curEl.innerHTML = ''; curEl.style.display = 'none'; }
+    wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">' + (_miParentOnly ? '親子設定された商品グループがありません' : '該当する商品がありません') + '</div>';
+    return;
+  }
+  // ★選択中の商品が候補から外れていたら先頭（売上1位）に戻す。
+  //   持ち越すと「検索した結果、表に出ているのは検索と関係ない商品」という状態になる。
+  let sel = rows.find(r => r.code === _miCode);
+  if (!sel) { sel = rows[0]; _miCode = sel.code; }
 
-  // 【v1.0366】全幅表示：table-layout:fixed で 月〜広告ROAS を広く（倍）、商品列は残り幅を全部使って広げ、商品名は省略せず全表示。数値サイズは基本表(0.90rem)に統一。
-  const DW = 160;   // データ各列の幅(px)＝従来比 約2倍
-  const MW = 128;   // 月列の幅(px)
-  const HEAD = '<th style="padding:9px 12px;text-align:center;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;left:0;background:var(--bg3);z-index:4;font-size:0.85rem;color:var(--text2)">商品</th>'
-    + '<th style="width:' + MW + 'px;padding:9px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;color:var(--text3);background:var(--bg3)">' + (_dayMode ? '日' : '月') + '</th>'   /* 【v1.0527】 */
-    + itemCols().map(c => '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap;font-size:0.82rem;font-weight:700;color:var(--text2);background:' + c.hbg + '">' + c.label + '</th>').join('')   /* 【v1.0537】PR列はストア全体の指標なので商品別には出さない */
-    + '<th style="width:' + DW + 'px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--border);border-left:2px solid #c4b5fd;white-space:nowrap;font-size:0.82rem;font-weight:700;color:#7c3aed;background:#ece0fb">送り込み売上</th>';
-
-  const body = shown.map(({ code, dispCode, name, memberCount, stats }) => {
-    const pool = {}; itemCols().forEach(c => { pool[c.key] = stats.map(s => s[c.key]).filter(v => v > 0); });
-    const soiPool = stats.map(s => s.soikomi).filter(v => v > 0);   // 【v1.0410】送り込み売上の色分け母集団
-    const _esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-    const safeFull = _esc(String(name));
-    const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(dispCode) : '';
-    const imgBox = '<div style="width:69px;height:69px;border-radius:7px;background:var(--bg3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'
-      + (src ? '<img loading="lazy" src="' + src + '" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">' : '<span style="font-size:30px">📦</span>')
-      + '</div>';
-    return stats.map((m, mi) => {
-      const first = mi === 0, last = mi === stats.length - 1;
-      const bT = first ? 'border-top:2px solid var(--border)' : 'border-top:1px dashed var(--border2)';
-      const bB = last ? 'border-bottom:2px solid var(--border)' : '';
-      const prod = first ? '<td rowspan="' + stats.length + '" style="padding:9px 12px;vertical-align:middle;border-top:2px solid var(--border);border-bottom:2px solid var(--border);background:var(--bg2);position:sticky;left:0;z-index:2"><div style="display:flex;align-items:center;justify-content:center;gap:10px">'
-        + imgBox
-        + '<div style="overflow:hidden;min-width:0;text-align:left"><div style="font-size:15.675px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace">' + code + '</div><div style="font-size:0.95rem;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + safeFull + '">' + safeFull + '</div></div></div></td>' : '';
-      const cells = itemCols().map(c => {
-        const v = m[c.key];
-        // 【v1.0524】広告売上ROASは月内相対ランクではなく絶対しきい値(800/500/200)で色付けする
-        const inner = (c.t === 'sr')
-          ? salesRoasCellHtml(v)
-          : (() => { const disp = c.t === 'y' ? fmtY(v) : fmtP(v, c.dec);
-                     return (!v || v === 0) ? disp : '<span class="c-' + _rank5(v, pool[c.key], c.hi) + '">' + disp + '</span>'; })();
-        return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;' + bT + ';' + bB + ';background:' + c.bg + ';white-space:nowrap">' + inner + '</td>';
-      }).join('');
-      // 【v1.0410】右端: 送り込み売上（子商品分）
-      const _sv = m.soikomi;
-      const _sinner = (!_sv || _sv === 0) ? fmtY(_sv) : '<span class="c-' + _rank5(_sv, soiPool, true) + '">' + fmtY(_sv) + '</span>';
-      const soiCell = '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;' + bT + ';' + bB + ';background:#f7f1fe;border-left:2px solid #c4b5fd;white-space:nowrap">' + _sinner + '</td>';
-      return '<tr>' + prod + '<td style="padding:6px 10px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);' + bT + ';' + bB + ';background:var(--bg3);font-family:\'DM Mono\',ui-monospace,monospace;white-space:nowrap">' + m.label + '</td>' + cells + soiCell + '</tr>';
+  // ---------- サムネ帯（売上上位20・クリックで切替） ----------
+  const MI_THUMB_N = 20;
+  const _esc = s2 => String(s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const _sumOf = (r) => r.stats.reduce((a, m) => a + (+m.totSales || 0), 0);
+  // 【v1.0798】★選択中の商品が21位以下でも必ず帯に出す。
+  //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
+  const top = rows.slice(0, MI_THUMB_N);
+  if (!top.some(r => r.code === sel.code)) top.push(sel);
+  const _man = (v) => {
+    const n = Math.round(+v || 0);
+    if (n >= 100000000) return '¥' + (Math.round(n / 10000000) / 10) + '億';
+    if (n >= 10000) return '¥' + Math.round(n / 10000).toLocaleString() + '万';
+    return n ? '¥' + n.toLocaleString() : '—';
+  };
+  if (thumbsEl) {
+    thumbsEl.innerHTML = top.map((r, i2) => {
+      const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(r.dispCode) : '';
+      const on = r.code === sel.code;
+      const rank = (i2 < MI_THUMB_N) ? (i2 + 1) : '—';
+      return '<button type="button" class="mi-thumb' + (on ? ' is-on' : '') + '" onclick="_miPickCode(\'' + _esc(r.code).replace(/'/g, "\\'") + '\')"'
+        + ' title="' + _esc(r.code + ' ' + r.name) + '&#10;期間合計 ¥' + Math.round(_sumOf(r)).toLocaleString() + '">'
+        + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦') + '</div>'
+        + '<span class="mi-thumb-rank">' + rank + '</span>'
+        + '<span class="mi-thumb-amt">' + _man(_sumOf(r)) + '</span>'
+        + '<span class="mi-thumb-code">' + _esc(r.code) + '</span>'
+        + '</button>';
     }).join('');
+  }
+
+  // ---------- 選択中の商品 ----------
+  if (curEl) {
+    const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(sel.dispCode) : '';
+    curEl.innerHTML = '<div class="mi-cur-img">' + (src ? '<img src="' + _esc(src) + '" onerror="this.remove()">' : '📦') + '</div>'
+      + '<div style="min-width:0"><div class="mi-cur-code">' + _esc(sel.code) + (sel.memberCount > 1 ? '（親子' + sel.memberCount + '件の合計）' : '') + '</div>'
+      + '<div class="mi-cur-name">' + _esc(sel.name) + '</div></div>'
+      + '<div class="mi-cur-sum">' + (_dayMode ? String(_miDayYm).replace('-', '/') + ' の合計' : selKeys.length + 'ヶ月の合計')
+      + '<b>¥' + Math.round(_sumOf(sel)).toLocaleString() + '</b></div>';
+    curEl.style.display = '';   // 【v1.0798】中身を入れてから出す（空の枠だけ先に出さない）
+  }
+
+  const note = (rows.length > 1)
+    ? '<div style="padding:7px 12px;font-size:13px;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border)">'
+      + (_miParentOnly ? '親子商品グループ ' : '対象商品 ') + rows.length + '件' + (q ? '（検索で絞り込み中）' : '')
+      + '。サムネを押すか検索して切り替えます。</div>'
+    : '';
+
+  // ============================================================
+  // 【v1.0798】表は全-月別データと同じ作り（ZD_TD_PAD 等の数値もそろえてある）。
+  //   ★分割列（送り込み元/利益源/通常商品）は出さない。1商品はどれか1グループにしか属さないので、
+  //     3列に割っても1列に全額が入って残りが空になるだけ。
+  //   ★列は itemCols()（＝MI_COLS から store:true を除いたもの）。
+  //     PR実績額など「ストア全体でしか取れない指標」は商品別には出せない（§1）。
+  // ============================================================
+  const MI_TD_PAD = '3px 8px', MI_TD_FS = '0.8rem';
+  const MI_TH_PAD = '5px 8px', MI_TH_FS = '0.74rem';
+  const cols = itemCols();
+  // 【v1.0798】比率表記の分母。SEO売上・広告売上・送り込み売上は「総売上の何%か」を出す。
+  //   ★率の列（広告CVR・広告ROAS・広告売上ROAS）は対象外。構成比に意味が無い。
+  const MI_RATIO_DEN = { seoSales: 'totSales', adSales: 'totSales' };
+  const stats = sel.stats;
+  const pool = {}; cols.forEach(c => { pool[c.key] = stats.map(m => m[c.key]).filter(v => v > 0); });
+  const soiPool = stats.map(m => m.soikomi).filter(v => v > 0);
+  const fmtY2 = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
+
+  const _thBase = 'padding:' + MI_TH_PAD + ';border-bottom:2px solid var(--border);font-size:' + MI_TH_FS
+    + ';font-weight:700;color:var(--text2);white-space:nowrap;text-align:center;vertical-align:top;height:1px;';
+  const BLK = '2px solid var(--border2)';
+  const VBD = '1px solid var(--border)';
+  const HEAD = '<th style="position:sticky;left:0;z-index:6;padding:' + MI_TH_PAD + ';text-align:center;background:var(--bg3);'
+      + 'border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + MI_TH_FS + ';color:var(--text3);vertical-align:middle">'
+      + (_dayMode ? '日' : '月') + '</th>'
+    + cols.map(c => '<th style="' + _thBase + 'background:' + c.hbg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + '">'
+        + '<div class="th-stack"><div class="th-lbl">' + (c.hLabel || escapeHtml(c.label)) + '</div>' + fxLine(c.fx) + '</div></th>').join('')
+    + '<th style="' + _thBase + 'background:#ece0fb;color:#7c3aed;border-left:2px solid #c4b5fd;">'
+      + '<div class="th-stack"><div class="th-lbl">送り込み売上</div>' + fxLine('') + '</div></th>';
+
+  const TDBASE = 'padding:' + MI_TD_PAD + ';text-align:center;font-size:' + MI_TD_FS
+    + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;border-bottom:1px solid var(--border);';
+  const _ratioLine = (v, den) => {
+    if (!_zdRatio || !(v > 0) || !(den > 0)) return '';
+    const pc = v / den * 100;
+    return '<div style="font-size:0.86em;font-weight:700;line-height:1.2;margin-top:1px;color:'
+      + pctBandColor(pc) + '">' + (Math.round(pc * 10) / 10) + '%</div>';
+  };
+  const body = stats.map(m => {
+    const cells = cols.map(c => {
+      const v = m[c.key];
+      let inner;
+      if (c.t === 'sr') inner = salesRoasCellHtml(v, c.th);
+      else {
+        const disp = c.t === 'y' ? fmtY2(v) : fmtP(v, c.dec);
+        inner = (!v || v === 0) ? disp : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
+        const denKey = MI_RATIO_DEN[c.key];
+        if (denKey && c.t === 'y') inner += _ratioLine(v, m[denKey]);
+      }
+      return '<td style="' + TDBASE + 'background:' + c.bg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + '">' + inner + '</td>';
+    }).join('');
+    const sv = m.soikomi;
+    const sInner = (!sv || sv === 0) ? fmtY2(sv)
+      : ('<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + fmtY2(sv) + '</span>' + _ratioLine(sv, m.totSales));
+    const soiCell = '<td style="' + TDBASE + 'background:#f7f1fe;border-left:2px solid #c4b5fd;">' + sInner + '</td>';
+    return '<tr><td style="padding:' + MI_TD_PAD + ';text-align:center;font-weight:700;font-size:' + MI_TD_FS
+      + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;'
+      + 'border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap">' + m.label + '</td>'
+      + cells + soiCell + '</tr>';
   }).join('');
 
-  wrap.innerHTML = _dayNote + note + '<table style="border-collapse:collapse;width:100%;table-layout:fixed"><thead><tr style="position:sticky;top:0;z-index:3">' + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+  wrap.innerHTML = _dayNote + note
+    + '<table style="border-collapse:collapse;width:100%"><thead><tr style="position:sticky;top:0;z-index:3">'
+    + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 // ==================== 【v203】商品-親子売上比率 ====================
