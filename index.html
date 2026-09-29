@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0821 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0822 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1750,8 +1750,25 @@ tbody tr:hover td:first-child:last-child {
    【v1.0798】商品-日月別データ：サムネ帯＋選択中の商品
    ★帯は横スクロール1本にする（折り返すと縦に伸びて表が画面外へ落ちる）。
    ============================================================ */
-.mi-thumbs { display:flex; gap:6px; overflow-x:auto; padding:6px 2px 10px; align-items:flex-start;
-              flex:0 0 auto; }
+.mi-thumbs { display:flex; gap:var(--mi-thumb-gap); overflow-x:auto; padding:6px 2px 10px; align-items:flex-start;
+              flex:0 0 auto;
+              /* 【v1.0822】サムネの大きさ・間隔・1行の最大列数はここだけで決める。
+                 ★.mi-thumb の width も「上下」の折り返し幅も、すべてこの変数から作る。
+                   別々に数字を書くと、幅を変えたとき片方だけ古いままになる。 */
+              --mi-thumb-w:86px; --mi-thumb-gap:6px; --mi-thumb-cols:20; }
+/* 【v1.0822】「上下」＝横スクロールをやめて折り返す。1行は最大 --mi-thumb-cols 件。
+   ★max-width で折り返し位置を決める。列数を固定する grid にしないのは、
+     画面が狭いときにサムネが潰れて文字が読めなくなるため（幅は 86px のまま、
+     入る数だけ並べて折り返す ＝ 最大20件）。
+   ★align-content:flex-start が要る。省くと2行目以降が縦に引き伸ばされる。
+   ★overflow-y:auto ＋ max-height にすること。無いと帯が画面いっぱいまで伸びて、
+     下の表が見えなくなる（「上下」は帯を縦に積む表示なので必ず高くなる）。
+   ★.mi-thumbs は .card（縦フレックス）の子。flex:0 0 auto は上の定義で付いているので
+     ここで打ち消さないこと（§185-4 で潰れた件）。 */
+.mi-thumbs.is-stack { flex-wrap:wrap; align-content:flex-start;
+              overflow-x:hidden; overflow-y:auto; max-height:46vh;
+              max-width:calc(var(--mi-thumb-cols) * var(--mi-thumb-w)
+                           + (var(--mi-thumb-cols) - 1) * var(--mi-thumb-gap)); }
 /* 【v1.0799】★flex:0 0 auto が必須。
    .card は display:flex;flex-direction:column の高さ固定レイアウトなので、この帯は【フレックスアイテム】。
    overflow-x:auto を付けると CSS の規定で overflow-y も auto になり＝スクロールコンテナになる。
@@ -1761,7 +1778,7 @@ tbody tr:hover td:first-child:last-child {
 /* 【v1.0799】★height を決め打ちしないこと。overflow-y:hidden と併せると
    横スクロールバーのぶん下が削られ、画像の下の売上・コードが消える（v1.0798で実際に起きた）。
    高さは中身（画像＋2行）に任せ、スクロールバーぶんは padding-bottom で確保する。 */
-.mi-thumb { flex:0 0 auto; width:86px; border:2px solid transparent; border-radius:9px; background:var(--bg2);
+.mi-thumb { flex:0 0 auto; width:var(--mi-thumb-w,86px); border:2px solid transparent; border-radius:9px; background:var(--bg2);
             padding:4px 3px 5px; cursor:pointer; text-align:center; line-height:1.3; }
 .mi-thumb:hover { background:var(--bg3); }
 .mi-thumb.is-on { border-color:var(--accent); background:var(--bg3); }
@@ -4241,7 +4258,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0821</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0822</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4668,7 +4685,7 @@ th.col-sroas { background-color:#e7d5f5; }
                  別のデザインにしない。 -->
           <button type="button" class="mi-mode-btn" id="miThumbAllBtn" onclick="_miToggleThumbAll()" style="margin-left:auto" title="サムネ帯に、売上上位だけでなく対象商品を全部並べます。件数が多いと少し重くなります。">全表示</button>
         </div>
-        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（<span id="miThumbNLabel">売上上位50</span>）を押すか、商品コード・商品名で検索して切り替えます（サムネは横スクロール）。</p>
+        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（<span id="miThumbNLabel">売上上位50</span>）を押すか、商品コード・商品名で検索して切り替えます（<span id="miThumbScrollNote">サムネは横スクロール</span>）。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
         <!-- 【v1.0817】★日別/月別・対象月・表示・表示範囲・比率表記は【サムネ帯と表の間】に置く。
              上の検索行に混ぜると、サムネ帯（横スクロールぶんの高さがある）を挟むので、
@@ -4712,6 +4729,13 @@ th.col-sroas { background-color:#e7d5f5; }
                「表の読み方を変える操作」だから（比率表記と同じ仲間）。検索・親子のみは
                【どの商品を出すか】の操作なので上のまま。軸が違うものを混ぜない。 -->
           <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
+          <!-- 【v1.0822】サムネ帯の並べ方。★3画面共通の1設定なので、どの画面で押しても同じ。
+               ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
+                 ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
+          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
+          </span>
         </div>
         <!-- 【v1.0801】商品名・日別の注記は表の【外】に置く。
              表の中に入れると、30日ぶんスクロールした時点で「どの商品を見ているか」が画面から消える。 -->
@@ -4795,6 +4819,13 @@ th.col-sroas { background-color:#e7d5f5; }
           <select id="igMonthFrom" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
           <span style="color:var(--text3)" id="igRangeTilde">〜</span>
           <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
+          <!-- 【v1.0822】サムネ帯の並べ方。★3画面共通の1設定なので、どの画面で押しても同じ。
+               ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
+                 ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
+          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
+          </span>
         </div>
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
@@ -13063,6 +13094,36 @@ window._miPickCode = _miPickCode;
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
+// ============================================================================
+// 【v1.0822】サムネ帯の並べ方（横並び / 上下）。
+//   横並び … 1行に並べて横スクロール（従来）
+//   上下   … 折り返して縦に積む（1行は最大 --mi-thumb-cols 件＝20件）
+//
+//   ★3画面（商品-日月別データ / 商品-グラフ / 商品-推移）で【共通の1つの設定】。
+//     比率表記（_zdRatio）と同じ考え方。画面ごとに別々の設定にすると、
+//     同じサムネ帯なのに画面によって並びが違う、という分かりにくい状態になる。
+//   ★切り替えは【CSSのクラスだけ】。描き直さない。
+//     描き直すと選択中の商品の位置や横スクロール位置がリセットされる。
+//   ★保存しない（_miThumbAll と同じ理由＝一時的な見方の切替）。
+// ============================================================================
+let _ycThumbStack = false;   // false = 横並び（既定）
+function _ycThumbLayoutApply() {
+  try {
+    document.querySelectorAll('.mi-thumbs').forEach(el => el.classList.toggle('is-stack', _ycThumbStack));
+    // ★ボタンは3画面ぶん全部そろえる。押した画面だけ .on にすると、
+    //   別の画面へ行ったとき「上下で表示されているのに横並びが選択状態」になる。
+    document.querySelectorAll('[data-thumblay]').forEach(b =>
+      b.classList.toggle('on', b.getAttribute('data-thumblay') === (_ycThumbStack ? 'stack' : 'row')));
+    // ★説明文の「横スクロール」も直す。並べ方を変えたのに案内が横スクロールのままだと、
+    //   下の行があることに気づけない（説明は状態から作る・直書きしない）。
+    { const e = document.getElementById('miThumbScrollNote');
+      if (e) e.textContent = _ycThumbStack ? 'サムネは折り返して縦スクロール' : 'サムネは横スクロール'; }
+  } catch (e) {}
+}
+function _ycThumbLayoutSet(v) { _ycThumbStack = (v === 'stack'); _ycThumbLayoutApply(); }
+window._ycThumbLayoutSet = _ycThumbLayoutSet;
+window._ycThumbLayoutApply = _ycThumbLayoutApply;
+
 // 【v1.0820】サムネ帯を全件表示にするか。★このタブの間だけの表示切替なので保存しない
 //   （列幅や文字サイズと違い「いま全部見たい」という一時的な操作。保存すると
 //    次に開いたとき勝手に重い状態で始まる）。
@@ -14083,6 +14144,7 @@ function renderMonthly() {
     //   v1.0813 で共通化したのに この画面だけ自前のコピーが残っていたため、
     //   v1.0815 のステータス選択を足しても【この画面にだけ出ない】という食い違いが起きた。
     //   期間ごとに違うのは金額とROASだけなので、そこだけ計算して渡す。
+    try { _ycThumbLayoutApply(); } catch (e) {}   /* 【v1.0822】並べ方（横並び/上下）を合わせる */
     thumbsEl.innerHTML = top.map((r, i2) => ycThumbHtml({
       code: r.code, dispCode: r.dispCode, name: r.name, members: r.members || [r.code],
       amt: _sumOf(r), roas: _prRoasOf(r)
@@ -18393,6 +18455,7 @@ function ycRenderThumbStrip(el, selectedKey, pickFn) {
   const selIdx = rows.findIndex(r => r.code === selectedKey);
   if (selIdx >= YC_THUMB_N) top.push(rows[selIdx]);
   const sumLabel = String(r0.ym || '').replace('-', '/') + ' の売上';
+  try { _ycThumbLayoutApply(); } catch (e) {}   /* 【v1.0822】並べ方を描き直しのたびに合わせる */
   el.innerHTML = top.map((r, i) => ycThumbHtml(r, {
     selected: r.code === selectedKey,
     rank: (i < YC_THUMB_N) ? (i + 1) : '—',
