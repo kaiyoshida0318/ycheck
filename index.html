@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0816 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0817 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1605,6 +1605,13 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   line-height: 1.4;
 }
 .filter-label { font-size: 0.8rem; color: var(--text3); font-weight: 500; }
+/* 【v1.0817】サムネ帯と表の間に置く操作行。
+   ★flex:0 0 auto（.filters が持つ flex-shrink:0 と同じ意図）。.card は
+     display:flex;flex-direction:column なので、縮む設定だと表が伸びたときに潰される（§185-4）。
+   ★margin-bottom は上の .filters の 14px より小さくする。表のすぐ上なので、
+     離れていると「どの表の操作なのか」が読めなくなる。 */
+.mi-mid-filters { margin:2px 0 6px; padding:6px 8px; flex:0 0 auto;
+                  border:1px solid var(--border); border-radius:8px; background:var(--bg2); }
 /* 【v1.0392】商品-月別データ：表示範囲・検索まわりの文字を少し大きく＋濃く（この画面のみ） */
 #view-monthly .filter-label { font-size: 0.95rem; color: var(--text2); font-weight: 600; }
 #view-monthly .filters input, #view-monthly .filters select { font-size: 0.95rem; color: var(--text); }
@@ -1786,14 +1793,31 @@ tbody tr:hover td:first-child:last-child {
 /* 【v1.0815】ステータスをサムネの中で直接変えられるドロップダウン。
    ★幅86pxに収めるため文字を小さく、矢印も出さない（クリックできることは色と枠で示す）。
    ★色は選ばれている値に合わせて JS 側で入れる（STATUS_LIFE_COLOR と同じ1本を使う）。 */
-.mi-thumb-st { display:block; width:100%; margin-top:1px; font-size:9.5px; font-weight:800;
-               line-height:1.35; border:1px solid transparent; border-radius:4px; padding:1px 2px;
-               background:transparent; cursor:pointer; text-align:center; text-align-last:center;
+/* 【v1.0817】★<select> の中身は必ず1行になる（option は改行できない）。
+   「リニューアル予定」を2行で見せるため、**透明にした select を上に重ね、
+   見た目は下に敷いた <span> のラベルで作る**。
+   ★操作は今までどおり select なので、保存・未反映・件数は既存ハンドラのまま動く
+     （見た目のためにJSで独自メニューを作らないこと。保存の経路が2本になる）。 */
+.mi-thumb-stw { position:relative; display:block; width:100%; margin-top:1px; height:25px; }
+/* ★高さは2行ぶん（9px×1.25×2＝22.5px）＋枠1pxずつ＝25px で固定。1行の値のときも縮めない。
+   縮めると「リニューアル予定」の商品だけ背が高くなり、帯の行がガタつく
+   （.mi-thumb-ad を visibility:hidden にしているのと同じ理由）。 */
+.mi-thumb-stl { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                font-size:9px; font-weight:800; line-height:1.25; text-align:center;
+                border:1px solid transparent; border-radius:4px; padding:0 1px;
+                pointer-events:none; overflow:hidden; word-break:keep-all; }
+.mi-thumb-stw:not(.is-ro):hover .mi-thumb-stl { border-color:var(--border2); background:var(--bg2); }
+.mi-thumb-st:focus-visible + .mi-thumb-stl { border-color:var(--accent); background:var(--bg2); }
+.mi-thumb-st[disabled] + .mi-thumb-stl { opacity:.6; }
+/* ★select は透明にするだけで消さない。display:none / visibility:hidden にすると
+   クリックもキーボード操作も効かなくなる。opacity:0 のままなら当たり判定は残る。 */
+.mi-thumb-st { position:absolute; inset:0; z-index:2; width:100%; height:100%;
+               margin:0; padding:0; border:0; background:transparent; opacity:0; cursor:pointer;
                appearance:none; -webkit-appearance:none; -moz-appearance:none;
-               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mi-thumb-st:hover { border-color:var(--border2); background:var(--bg2); }
-.mi-thumb-st:focus { outline:none; border-color:var(--accent); background:var(--bg2); }
-.mi-thumb-st[disabled] { cursor:default; opacity:.6; }
+               font-size:12px; }
+.mi-thumb-st[disabled] { cursor:default; }
+/* ★option の font-size は小さくしない。開いたリストの文字まで小さくなって読めなくなる
+   （小さくしたいのは閉じているときの表示で、それは .mi-thumb-stl 側でやる）。 */
 .mi-thumb-st option { font-size:12px; font-weight:600; color:var(--text); background:var(--bg2); }
 .mi-thumb-pr .mi-pr-k { color:var(--text3); font-weight:600; }
 /* 【v1.0799】選択中の商品を大きく出す帯（.mi-cur）は撤去。
@@ -4180,7 +4204,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0816</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0817</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4588,6 +4612,25 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label">検索</span>
           <input type="search" id="monthlySearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button type="button" class="mi-mode-btn" id="miParentOnlyBtn" onclick="_miToggleParentOnly()" title="親子設定された商品グループ（親＋子の合計）だけを表示。ONの間は上位件数の制限なしで全部出します。">親子のみ</button>
+          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
+          <span style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
+            <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
+            <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
+          </span>
+        </div>
+        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位<span id="miThumbNLabel">50</span>）を押すか、商品コード・商品名で検索して切り替えます（サムネは横スクロール）。</p>
+        <div id="mi-thumbs" class="mi-thumbs"></div>
+        <!-- 【v1.0817】★日別/月別・対象月・表示・表示範囲・比率表記は【サムネ帯と表の間】に置く。
+             上の検索行に混ぜると、サムネ帯（横スクロールぶんの高さがある）を挟むので、
+             表を見ながら切り替えたいときに画面の上端まで戻らないと押せない。
+             ★id は1つも変えないこと。_miSetGrain / _miSetMode / _miSetRange / _zdSetRatio と
+               renderMonthly の表示切替（style.display）が **すべて id で掴んでいる**。
+             ★【移す】のであって複製しない。同じ id が2つあると
+               document.getElementById が先に見つけたほうだけ更新され、
+               もう一方は押せるのに見た目が変わらない幽霊ボタンになる。
+             ★対象月（miDayYmLabel/miDayYmSel）と「日別データがまだありません」も一緒に連れてくる。
+               日別ボタンだけ移すと、1つの操作が上下2ヶ所に割れる。 -->
+        <div class="filters mi-mid-filters" id="miMidFilters">
           <!-- 【v1.0527】日別／月別トグル。日別＝対象月の1日ごとの推移、月別＝従来どおり月を横並び。 -->
           <span class="dm-seg" id="miDayMonthSeg" role="group" aria-label="日別/月別">
             <!-- 【v1.0800】★日別を左（＝先頭）に置く。v1.0799 で既定を日別にしたので、
@@ -4615,14 +4658,7 @@ th.col-sroas { background-color:#e7d5f5; }
             <button type="button" id="miRatioOn" onclick="_zdSetRatio(true)">あり</button>
             <button type="button" id="miRatioOff" onclick="_zdSetRatio(false)">なし</button>
           </span>
-          <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
-          <span style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
-            <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
-            <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
-          </span>
         </div>
-        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位<span id="miThumbNLabel">50</span>）を押すか、商品コード・商品名で検索して切り替えます（サムネは横スクロール）。</p>
-        <div id="mi-thumbs" class="mi-thumbs"></div>
         <!-- 【v1.0801】商品名・日別の注記は表の【外】に置く。
              表の中に入れると、30日ぶんスクロールした時点で「どの商品を見ているか」が画面から消える。 -->
         <div id="mi-note" style="flex:0 0 auto;border:1px solid var(--border);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden"></div>
@@ -17869,20 +17905,26 @@ function ycThumbStatusHtml(code) {
   const editable = (typeof ghIsEnabled === 'function') ? ghIsEnabled() : false;
   let color = 'var(--text3)';
   try { color = statusLifeColor(cur) || 'var(--text3)'; } catch (e) {}
-  // 【v1.0815】幅86pxに収まらない値だけ短い表記にする。
-  //   ★value は必ず正式な文字列のまま。ここを短くすると保存値が壊れる（表示だけ差し替える）。
-  const SHORT = { 'リニューアル予定': 'リニュ予定', 'リニューアル': 'リニュ', '子（親に追従）': '子-追従' };
+  // 【v1.0817】★短縮表記（リニュ予定 等）は廃止。文字を小さくして2行にできるようにしたので
+  //   正式な名前をそのまま出せる。開いたリスト（option）も正式名のまま。
   const opts = (typeof STATUS_LIFE_OPTIONS !== 'undefined' ? STATUS_LIFE_OPTIONS : []).map(v =>
     '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>'
-    + esc(SHORT[v] || v) + '</option>').join('');
+    + esc(v) + '</option>').join('');
+  // 【v1.0817】★2行で見せる値だけをここに書く。キーは STATUS_LIFE_OPTIONS の正式な文字列。
+  //   ★value ではなく【表示だけ】を分ける。保存値は触らない。
+  const LABEL_BR = { 'リニューアル予定': ['リニューアル', '予定'] };
+  const br = LABEL_BR[cur];
+  const labelHtml = br ? (esc(br[0]) + '<br>' + esc(br[1])) : esc(cur);
   // ★click / mousedown を止める。止めないと親の onclick（商品の切り替え）が走り、
   //   選ぼうとしただけで別の商品に飛ぶ。
-  return '<select class="status-select mi-thumb-st" data-code="' + esc(code) + '" data-kind="status"'
+  return '<span class="mi-thumb-stw' + (editable ? '' : ' is-ro') + '"'
+    + ' title="ステータスを変える（' + esc(cur) + '）">'
+    + '<select class="status-select mi-thumb-st" data-code="' + esc(code) + '" data-kind="status"'
     + (editable ? '' : ' disabled')
-    + ' style="color:' + color + '"'
-    + ' title="ステータスを変える（' + esc(cur) + '）"'
     + ' onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">'
-    + opts + '</select>';
+    + opts + '</select>'
+    + '<span class="mi-thumb-stl" style="color:' + color + '">' + labelHtml + '</span>'
+    + '</span>';
 }
 
 // 【v1.0815】ステータスを変えたら帯を描き直す（色とツールチップを合わせるため）。
