@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0800 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0801 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4106,7 +4106,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0800</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0801</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4546,7 +4546,10 @@ th.col-sroas { background-color:#e7d5f5; }
         </div>
         <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位20）を押すか、商品コード・商品名で検索して切り替えます。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
-        <div id="mi-wrap" style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px"></div>
+        <!-- 【v1.0801】商品名・日別の注記は表の【外】に置く。
+             表の中に入れると、30日ぶんスクロールした時点で「どの商品を見ているか」が画面から消える。 -->
+        <div id="mi-note" style="flex:0 0 auto;border:1px solid var(--border);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden"></div>
+        <div id="mi-wrap" style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:0 0 8px 8px"></div>
       </div>
     </div>
 
@@ -6280,6 +6283,7 @@ function _recalcStickyTops() {
     if (rb) { rb.style.top = t + 'px'; }
   } catch (e) {}
   _zdFitTableHeight();
+  try { if (typeof _miFitTableHeight === 'function') _miFitTableHeight(); } catch (e) {}   // 【v1.0801】
   // 【v1.0561】2段見出しの下段の固定位置も、文字サイズ・ウィンドウ幅の変化に追従させる
   try { if (typeof _zdFixHeadSticky === 'function') _zdFixHeadSticky(); } catch (e) {}
 }
@@ -13037,7 +13041,9 @@ function renderMonthly() {
     const _den = spend + (_prOverEst || 0);
     const prSalesRoas = (_prKnown && _den > 0) ? Math.round(totSales / _den * 100) : null;
     const prOnlyRoas  = (_prKnown && _prOverEst > 0) ? (totSales / _prOverEst * 100) : null;
-    return { label: _label, salesRoas, prSalesRoas, prOnlyRoas, prOver, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
+    // 【v1.0801】key＝元の 'YYYY-MM' / 'YYYY-MM-DD'。未満了（当月）の色抑制に使う。
+    //   label（9/1・2026/08）から月を逆算しないこと。日別ラベルには年が無い。
+    return { key: ym, label: _label, salesRoas, prSalesRoas, prOnlyRoas, prOver, totSales, seoSales, adSales, spend, cvr, roas, soikomi };
   };
 
   // 全コード → 家族(代表コード)ごとにメンバーをまとめる（撤退は除外）
@@ -13100,6 +13106,7 @@ function renderMonthly() {
   const thumbsEl = document.getElementById('mi-thumbs');
   if (rows.length === 0) {
     if (thumbsEl) thumbsEl.innerHTML = '';
+    { const n = document.getElementById('mi-note'); if (n) { n.innerHTML = ''; n.style.display = 'none'; } }
     wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">' + (_miParentOnly ? '親子設定された商品グループがありません' : '該当する商品がありません') + '</div>';
     return;
   }
@@ -13169,14 +13176,22 @@ function renderMonthly() {
     + ';font-weight:700;color:var(--text2);white-space:nowrap;text-align:center;vertical-align:top;height:1px;';
   const BLK = '2px solid var(--border2)';
   const VBD = '1px solid var(--border)';
-  const HEAD = '<th style="position:sticky;left:0;z-index:6;padding:' + MI_TH_PAD + ';text-align:center;background:var(--bg3);'
+  // 【v1.0801】列と列の間の細い縦罫線。全-月別/全-日別データ（_vb）とまったく同じ考え方:
+  //   ★次の列に太い左線（blockStart）が来るときは、自分の右罫線を出さない。
+  //     1px と 2px が並ぶと境界だけ太く見えてブロックの区切りがぼやける。
+  //   ★最後の指標列の次は「送り込み売上」＝紫の太い左線なので、ここも出さない。
+  const _miVb = (ci) => { const nx = cols[ci + 1]; return (nx ? !!nx.blockStart : true) ? '' : 'border-right:' + VBD + ';'; };
+  const _estTip = '商品別のPRオプ実績はYahooから取得できないため、設定PRオプ料率×税抜売上からの【推定値】です（実測ではありません）。&#10;料率は「いまの値」なので、過去の月に当てると当時の設定とズレます。';
+  const HEAD = '<tr>'
+    + '<th style="position:sticky;left:0;z-index:6;padding:' + MI_TH_PAD + ';text-align:center;background:var(--bg3);'
       + 'border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + MI_TH_FS + ';color:var(--text3);vertical-align:middle">'
       + (_dayMode ? '日' : '月') + '</th>'
-    + cols.map(c => '<th' + (c.est ? ' title="商品別のPRオプ実績はYahooから取得できないため、設定PRオプ料率×税抜売上からの【推定値】です（実測ではありません）。&#10;料率は「いまの値」なので、過去の月に当てると当時の設定とズレます。"' : '')
-        + ' style="' + _thBase + 'background:' + c.hbg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + '">'
+    + cols.map((c, ci) => '<th' + (c.est ? ' title="' + _estTip + '"' : '')
+        + ' style="' + _thBase + 'background:' + c.hbg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + _miVb(ci) + '">'
         + '<div class="th-stack"><div class="th-lbl">' + (c.hLabel || escapeHtml(c.label)) + '</div>' + fxLine(c.fx) + '</div></th>').join('')
     + '<th style="' + _thBase + 'background:#ece0fb;color:#7c3aed;border-left:2px solid #c4b5fd;">'
-      + '<div class="th-stack"><div class="th-lbl">送り込み売上</div>' + fxLine('') + '</div></th>';
+      + '<div class="th-stack"><div class="th-lbl">送り込み売上</div>' + fxLine('') + '</div></th>'
+    + '</tr>';
 
   const TDBASE = 'padding:' + MI_TD_PAD + ';text-align:center;font-size:' + MI_TD_FS
     + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;border-bottom:1px solid var(--border);';
@@ -13186,8 +13201,13 @@ function renderMonthly() {
     return '<div style="font-size:0.86em;font-weight:700;line-height:1.2;margin-top:1px;color:'
       + pctBandColor(pc) + '">' + (Math.round(pc * 10) / 10) + '%</div>';
   };
+  // 【v1.0801】未満了（当月）は色を付けない。全-月別データ（_unmatured）と同じ扱い。
+  //   まだ日数が残っている月を、満了した月と同じ物差しで「下位10%＝赤」と塗ると必ず悪く見える。
+  //   ★日別は抑制しない。取り込んだ日はすべて確定済みだから（全-日別データも同じ）。
+  const _curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   const body = stats.map(m => {
-    const cells = cols.map(c => {
+    const _unmatured = !_dayMode && !!(m.key && _curYm && m.key >= _curYm);
+    const cells = cols.map((c, ci) => {
       const v = m[c.key];
       let inner;
       if (c.t === 'sr') {
@@ -13198,17 +13218,17 @@ function renderMonthly() {
         const disp = c.t === 'y' ? fmtY2(v) : fmtP(v, c.dec);
         // 【v1.0799】norank の列（PR売上ROAS）は色を付けない。分母が小さく値が数百〜数千%になり、
         //   他の列と同じ「上位/下位◯%」で塗ると意味の無い色になる（全-月別データと同じ扱い）。
-        inner = (!v || v === 0 || c.norank) ? disp
+        inner = (!v || v === 0 || c.norank || _unmatured) ? disp
           : '<span class="c-' + _zenRank5(v, pool[c.key], c.hi) + '">' + disp + '</span>';
         const denKey = MI_RATIO_DEN[c.key];
         if (denKey && c.t === 'y') inner += _ratioLine(v, m[denKey]);
       }
       // 【v1.0799】推定列は斜体。ストア全体の実測値と同じ精度だと誤解させないための印（§5-B と同じ）。
-      return '<td style="' + TDBASE + 'background:' + c.bg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '')
+      return '<td style="' + TDBASE + 'background:' + c.bg + ';' + (c.blockStart ? 'border-left:' + BLK + ';' : '') + _miVb(ci)
         + (c.est ? 'font-style:italic;' : '') + '">' + inner + '</td>';
     }).join('');
     const sv = m.soikomi;
-    const sInner = (!sv || sv === 0) ? fmtY2(sv)
+    const sInner = (!sv || sv === 0 || _unmatured) ? fmtY2(sv)
       : ('<span class="c-' + _zenRank5(sv, soiPool, true) + '">' + fmtY2(sv) + '</span>' + _ratioLine(sv, m.totSales));
     const soiCell = '<td style="' + TDBASE + 'background:#f7f1fe;border-left:2px solid #c4b5fd;">' + sInner + '</td>';
     return '<tr><td style="padding:' + MI_TD_PAD + ';text-align:center;font-weight:700;font-size:' + MI_TD_FS
@@ -13217,10 +13237,31 @@ function renderMonthly() {
       + cells + soiCell + '</tr>';
   }).join('');
 
-  wrap.innerHTML = _dayNote + note
-    + '<table style="border-collapse:collapse;width:100%"><thead><tr style="position:sticky;top:0;z-index:3">'
-    + HEAD + '</tr></thead><tbody>' + body + '</tbody></table>';
+  // 【v1.0801】★表の組み方も全-月別データに合わせる。
+  //   border-collapse:collapse だと、見出しを固定したときに罫線が表側に残って**本文が透けて見える**
+  //   （§4 の sticky 事故と同じ）。separate + border-spacing:0 にして、罫線は各セルの border だけで描く。
+  //   ★見出しの固定は <thead> に掛ける。<tr> に position:sticky を掛けるのはブラウザ差が大きい。
+  { const n = document.getElementById('mi-note');
+    if (n) { n.innerHTML = _dayNote + note; n.style.display = ''; } }
+  wrap.innerHTML = '<table style="border-collapse:separate;border-spacing:0;width:100%">'
+    + '<thead style="position:sticky;top:0;z-index:5">' + HEAD + '</thead><tbody>' + body + '</tbody></table>';
+  requestAnimationFrame(_miFitTableHeight);   // 【v1.0801】表を画面下端まで伸ばす（全-月別データと同じ）
 }
+
+// 【v1.0801】商品-日月別データの表を画面の一番下まで伸ばす（_zdFitTableHeight と同じ作り）。
+//   ★CSSの max-height:70vh のままだと、ヘッダーを隠しても下が白く余る／
+//     逆にヘッダーを出すと表がはみ出す。実際の位置から毎回測る。
+function _miFitTableHeight() {
+  try {
+    const wrap = document.getElementById('mi-wrap');
+    if (!wrap) return;
+    const view = document.getElementById('view-monthly');
+    if (!view || !view.classList.contains('active')) return;
+    const top = wrap.getBoundingClientRect().top;
+    wrap.style.maxHeight = Math.max(200, Math.floor(window.innerHeight - top - 12)) + 'px';
+  } catch (e) {}
+}
+window._miFitTableHeight = _miFitTableHeight;
 
 // ==================== 【v203】商品-親子売上比率 ====================
 let _oyMode = 'monthly';   // 'monthly' | 'last3'
