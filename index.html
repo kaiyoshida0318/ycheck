@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0793 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0795 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4071,7 +4071,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0793</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0795</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6065,6 +6065,19 @@ const fmtRoas = (n) => {
   if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
   return (n).toFixed(0) + '%';
 };
+// 【v1.0794】率(%)の表示。小数何桁まで出すかを**列の定義側**（dec）で決める。
+//   dec 未指定＝従来どおり小数第1位（312.8%）／dec:0＝整数（313%）。
+//   ★「1000%を超える値に小数第1位まで出ても判断は変わらない」ので広告ROASだけ 0 にしている。
+//   ★末尾の 0 は出さない（toFixed を使わない）。400.0% ではなく 400% と出すため。
+//     ここで toFixed(d) にすると、従来 '400%' だった表示が全部 '400.0%' に変わってしまう。
+//   ★桁の指定は必ず列の定義（MI_COLS / _ZG_* / _IG_*）に1か所だけ書き、描画側では読むだけにする。
+//     描画側で条件分岐を書くと、同じ指標が画面ごとに違う桁数で出る。
+const PCT_DEC_DEFAULT = 1;
+function fmtPctBy(v, dec) {
+  const d = (dec == null) ? PCT_DEC_DEFAULT : dec;
+  const p = Math.pow(10, d);
+  return (Math.round(v * p) / p) + '%';
+}
 // 【v1.0337】SEO売上/広告売上の「構成比%」表示（seo_ad_ratio 仕様）。
 //   占有率の帯で色分け（大きいほど青／拮抗は黄土／小さいほど赤）。SEO%＋広告%＝100%。
 function pctBandColor(v){ if(v>=80)return'#0D47A1'; if(v>=60)return'#1E88E5'; if(v>=40)return'#C9A000'; if(v>=20)return'#E53935'; return'#8B1A1A'; }
@@ -12592,7 +12605,8 @@ const MI_COLS = [
   //   費用なので hi:false（小さいほど青）。前提が崩れた期間（超過分が負）は prOver が null ＝「—」。
   //   【v1.0575】見出しは hLabel で2行にする。
   { key:'prOver',    label:'PR実績額(7%超)', hLabel:'PR実績額<br>(7%超)', hbg:'#bfe3d8', bg:'#eef8f5', hi:false, t:'y', store:true, blockStart:true, fx:fxT('PR実績額','pr') + fxOp('−') + '<br>' + fxT('総売上','tot') + fxOp('÷1.1×7%') },
-  { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', split:true, fx:fxR(fxT('広告売上','adrev'), fxT('広告実績額','cost')) },
+  /* 【v1.0794】dec:0＝小数点以下を出さない（313%）。他の率は従来どおり小数第1位 */
+  { key:'roas',      label:'広告ROAS', hbg:'#d8d9f6', bg:'#f1f1fd', hi:true,  t:'p', dec:0, split:true, fx:fxR(fxT('広告売上','adrev'), fxT('広告実績額','cost')) },
 ];
 // 商品別画面（商品-日月別データ）で使う列＝ストア全体専用の列を除いたもの
 function itemCols() { return MI_COLS.filter(c => !c.store); }
@@ -12974,7 +12988,7 @@ function renderMonthly() {
     return 'bk';
   };
   const fmtY = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
-  const fmtP = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
+  const fmtP = (v, dec) => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : fmtPctBy(v, dec);   /* 【v1.0794】桁は列の dec 任せ */
 
   // 【v1.0366】全幅表示：table-layout:fixed で 月〜広告ROAS を広く（倍）、商品列は残り幅を全部使って広げ、商品名は省略せず全表示。数値サイズは基本表(0.90rem)に統一。
   const DW = 160;   // データ各列の幅(px)＝従来比 約2倍
@@ -13005,7 +13019,7 @@ function renderMonthly() {
         // 【v1.0524】広告売上ROASは月内相対ランクではなく絶対しきい値(800/500/200)で色付けする
         const inner = (c.t === 'sr')
           ? salesRoasCellHtml(v)
-          : (() => { const disp = c.t === 'y' ? fmtY(v) : fmtP(v);
+          : (() => { const disp = c.t === 'y' ? fmtY(v) : fmtP(v, c.dec);
                      return (!v || v === 0) ? disp : '<span class="c-' + _rank5(v, pool[c.key], c.hi) + '">' + disp + '</span>'; })();
         return '<td style="padding:6px 12px;text-align:right;font-size:0.9rem;font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;' + bT + ';' + bB + ';background:' + c.bg + ';white-space:nowrap">' + inner + '</td>';
       }).join('');
@@ -13750,7 +13764,10 @@ function downloadZenMonthlyCsv() {
     const drows = (_zdMode === 'yoy' && typeof _zenYoyOrder === 'function') ? _zenYoyOrder(desc) : desc;
     const esc = function (v) { let s = (v == null) ? '' : String(v); if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
     const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
-    const numP = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v * 10) / 10); };
+    // 【v1.0794】★CSVも画面と同じ桁で出す。ここだけ小数第1位のままにすると
+    //   「画面は313%なのにCSVは312.8%」になり、どちらが正しいのか分からなくなる。
+    const numP = function (v, dec) { if (v == null || isNaN(v) || v === 0) return '';
+      const d = (dec == null) ? PCT_DEC_DEFAULT : dec, p = Math.pow(10, d); return String(Math.round(v * p) / p); };
     // 【v1.0524】広告売上ROASは画面表示のみ。CSVの列構成は従来どおり据え置く（出力にも入れたくなったらこの filter を外すだけ）。
     // 【v1.0537】PR列は含める（この表はストア全体のため）／【v1.0547】検算列は画面の表示状態に合わせる
     const csvCols = zdCols().filter(function (c) { return c.key !== 'salesRoas'; });
@@ -13761,7 +13778,7 @@ function downloadZenMonthlyCsv() {
     drows.forEach(function (r) {
       // 【v1.0555】料率別の列も含めて1行で出す（画面と同じ並び）
       const row = [r.month || r.label];
-      csvCols.forEach(function (c) { const v = _zdValOf(r, c); row.push(c.t === 'p' ? numP(v) : numY(v)); });
+      csvCols.forEach(function (c) { const v = _zdValOf(r, c); row.push(c.t === 'p' ? numP(v, c.dec) : numY(v)); });
       lines.push(row.map(esc).join(','));
     });
     const csv = '﻿' + lines.join('\r\n');   // BOM付き＝Excelで文字化けしない
@@ -13943,10 +13960,20 @@ function renderGraphData() {
     if (fEl) { fEl.value = _zdDayFrom || minD; fEl.min = minD; fEl.max = maxD; }
     if (tEl) { tEl.value = _zdDayTo || maxD; tEl.min = minD; tEl.max = maxD; }
     _rangeDays = _zdDailyDatesInRange();
+    // 【v1.0795】通常時の「N日分を表示中（取込済みは 〜 の◯日分）」は撤去。
+    //   同じ情報が左の月ドロップダウン（「全期間（128日分）」「2026/09（27日分）」）と
+    //   日付の入力欄（min/max が取込済みの範囲）に既に出ていて、三重に出ていた。
+    //   ★「この期間に取り込んだ日がありません」は残す。これが無いと表が空のとき
+    //     「データが無い」のか「期間の指定を間違えた」のか画面から判断できない。
+    //   ★display も必ず切り替えること。textContent を空にしただけでは、
+    //     上の表示切替ループが day モードで display:'' に戻すので、
+    //     空の <span> ぶんの余白（margin-left:6px）が残る。
     const info = document.getElementById('zdDayRangeInfo');
-    if (info) info.textContent = _rangeDays.length
-      ? _rangeDays.length + '日分を表示中（取込済みは ' + minD + '〜' + maxD + ' の' + all.length + '日分）'
-      : 'この期間に取り込んだ日がありません';
+    if (info) {
+      const _noDay = !_rangeDays.length;
+      info.textContent = _noDay ? 'この期間に取り込んだ日がありません' : '';
+      info.style.display = _noDay ? '' : 'none';
+    }
   }
   _zdSetSeoShowUI();
   const _seoOn = _zdSeoShow && !_dayMode;   // SEO売上トップ15は月別のときだけ
@@ -13974,7 +14001,7 @@ function renderGraphData() {
   // 【v1.0555】色分けの母集団は「その列」ごと。合計列・7%列・7%超列はそれぞれ別の母集団で評価する。
   const pool = {}; _zdCols.forEach(c => { pool[c.id] = _rankPoolRows.map(r => _zdValOf(r, c)).filter(v => v > 0); });
   const fmtY = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
-  const fmtP = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (Math.round(v * 10) / 10) + '%';
+  const fmtP = (v, dec) => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : fmtPctBy(v, dec);   /* 【v1.0794】桁は列の dec 任せ */
   const fmtN = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   // 【v1.0537】回数系（表示回数・CL）
   const BLK = '2px solid var(--border2)';   // 【v1.0537】SEO / PRオプ / 広告 のブロック境界線
   // 【v1.0557】1画面に入る行数を増やすため、この表だけ文字と余白を詰める。
@@ -14119,9 +14146,9 @@ function renderGraphData() {
       }
     } else if (c.norank) {
       // 【v1.0537】良否を断定できない指標は表示のみ（ランク色分けなし）
-      inner = (c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v));
+      inner = (c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v, c.dec));
     } else {
-      const disp = c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v);
+      const disp = c.t === 'y' ? fmtY(v) : c.t === 'n' ? fmtN(v) : fmtP(v, c.dec);
       const _nc = opt.unmatured && c.t === 'y';   // 満了していない月の「額」は黒字（％は色付け維持）
       inner = (v == null || !v || v === 0 || _nc) ? disp : '<span class="c-' + _zenRank5(v, pool[c.id], c.hi) + '">' + disp + '</span>';
     }
@@ -14336,7 +14363,7 @@ const _ZG_METRICS = {
   seoSales: { label: 'SEO売上', unit: 'y', color: '#16a34a' },
   adSales: { label: '広告売上', unit: 'y', color: '#d97706' },
   spend: { label: '実績額', unit: 'y', color: '#b45309' },
-  roas: { label: '広告ROAS', unit: 'p', color: '#dc2626' },
+  roas: { label: '広告ROAS', unit: 'p', dec: 0, color: '#dc2626' },   /* 【v1.0794】小数点以下なし */
   cvr: { label: 'CVR', unit: 'p', color: '#7c3aed' },
   orders: { label: '広告個数', unit: 'n', color: '#0891b2' },
   avgPrice: { label: '平均単価', unit: 'y', color: '#db2777' }
@@ -14346,7 +14373,7 @@ const _ZG_TABLE_COLS = [
   { key: 'seoSales', label: 'SEO売上', unit: 'y', hbg: '#dff0e3', bg: '#f1faf4' },
   { key: 'adSales', label: '広告売上', unit: 'y', hbg: '#fae6ce', bg: '#fcf6ec' },
   { key: 'spend', label: '実績額', unit: 'y', hbg: '#fae6ce', bg: '#fcf6ec' },
-  { key: 'roas', label: '広告ROAS', unit: 'p', hbg: '#fae6ce', bg: '#fcf6ec' },
+  { key: 'roas', label: '広告ROAS', unit: 'p', dec: 0, hbg: '#fae6ce', bg: '#fcf6ec' },   /* 【v1.0794】小数点以下なし */
   { key: 'cvr', label: 'CVR', unit: 'p', hbg: '#fae6ce', bg: '#fcf6ec' },
   { key: 'orders', label: '広告個数', unit: 'n', hbg: '#e8eaed', bg: '#f7f8fa' },
   { key: 'avgPrice', label: '平均単価', unit: 'y', hbg: '#e8eaed', bg: '#f7f8fa' },
@@ -14460,7 +14487,7 @@ function renderGraphAll() {
       datasets = _SALES_SERIES.filter(s => !_zgSalesHidden.has(s.key)).map(s => ({ label: s.label, data: rows.map(r => r[s.key] || 0), borderColor: s.color, backgroundColor: s.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: s.color, tension: 0.25, fill: false }));
     } else {
       const md = _ZG_METRICS[_zgMetric] || _ZG_METRICS.totSales;
-      yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
+      yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => fmtPctBy(v, md.dec)) : (v => Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       datasets = [{ label: md.label, data: rows.map(r => r[_zgMetric] || 0), borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }];
     }
     // 【v1.0637】変更記録の縦線。x軸のキー配列（rows[].month = 'YYYY-MM-DD' or 'YYYY-MM'）を渡す
@@ -14482,7 +14509,7 @@ function renderGraphAll() {
   const body = rows.slice().reverse().map(r => {
     const tds = cols.map(c => {
       const v = r[c.key];
-      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
+      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
     }).join('');
     return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + r.label + '</td>' + tds + '</tr>';
@@ -16575,7 +16602,7 @@ const _IG_METRICS = {
   seoSales: { label:'SEO売上',  unit:'y', color:'#16a34a', calc:(it,ad)=> Math.max(0,(it.rev||0)-(ad.r||0)) },
   adSales:  { label:'広告売上', unit:'y', color:'#d97706', calc:(it,ad)=> ad.r||0 },
   spend:    { label:'実績額',   unit:'y', color:'#b45309', calc:(it,ad)=> ad.c||0 },
-  roas:     { label:'広告ROAS', unit:'p', color:'#dc2626', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },
+  roas:     { label:'広告ROAS', unit:'p', dec:0, color:'#dc2626', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },   /* 【v1.0794】小数点以下なし */
   cvr:      { label:'CVR',      unit:'p', color:'#7c3aed', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
   orders:   { label:'広告個数', unit:'n', color:'#0891b2', calc:(it,ad)=> ad.or||0 },
   avgPrice: { label:'平均単価', unit:'y', color:'#db2777', calc:(it,ad)=>{ var _d=(it.orders>0)?it.orders:(it.qty||0); return _d>0?Math.round((it.rev||0)/_d):0; } },  /* 【v1.0377】客単価＝総売上÷注文数(件数)。件数の無い月は点数(qty)で代替 */
@@ -16585,7 +16612,7 @@ const _IG_TABLE_COLS = [
   { label:'SEO売上',  unit:'y', hbg:'#dff0e3', bg:'#f1faf4', calc:(it,ad)=> Math.max(0,(it.rev||0)-(ad.r||0)) },
   { label:'広告売上', unit:'y', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.r||0 },
   { label:'実績額',   unit:'y', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.c||0 },
-  { label:'広告ROAS', unit:'p', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },
+  { label:'広告ROAS', unit:'p', dec:0, hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },   /* 【v1.0794】小数点以下なし */
   { label:'CVR',      unit:'p', hbg:'#fae6ce', bg:'#fcf6ec', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
   { label:'広告個数', unit:'n', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=> ad.or||0 },
   { label:'平均単価', unit:'y', hbg:'#e8eaed', bg:'#f7f8fa', calc:(it,ad)=>{ var _d=(it.orders>0)?it.orders:(it.qty||0); return _d>0?Math.round((it.rev||0)/_d):0; } },  /* 【v1.0377】客単価＝総売上÷注文数(件数)。件数の無い月は点数(qty)で代替 */
@@ -16843,7 +16870,7 @@ function renderItemGraph() {
       datasets = _SALES_SERIES.filter(s => !_igSalesHidden.has(s.key)).map(s => ({ label: s.label, data: range.map(m => _igSalesVal(m, s.key)), borderColor: s.color, backgroundColor: s.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: s.color, tension: 0.25, fill: false }));
     } else {
       const md = _IG_METRICS[_igMetric] || _IG_METRICS.totSales;
-      yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => (Math.round(v * 10) / 10) + '%') : (v => Math.round(v).toLocaleString()));
+      yFmt = md.unit === 'y' ? (v => '¥' + Math.round(v).toLocaleString()) : (md.unit === 'p' ? (v => fmtPctBy(v, md.dec)) : (v => Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       datasets = [{ label: md.label, data: range.map(m => md.calc(itemMap[m] || {}, adMap[m] || {})), borderColor: md.color, backgroundColor: md.color + '22', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: md.color, tension: 0.25, fill: true }];
     }
     // 【v1.0637】変更記録の縦線。range が x軸のキー配列（日別='YYYY-MM-DD' / 月別='YYYY-MM'）。
@@ -16872,7 +16899,7 @@ function renderItemGraph() {
     const it = itemMap[m] || {}, ad = adMap[m] || {};
     const tds = cols.map(c => {
       const v = c.calc(it, ad);
-      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? (Math.round(v * 10) / 10) + '%' : Math.round(v).toLocaleString()));
+      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
     }).join('');
     const sv = (childMap[m] || {}).rev || 0;
