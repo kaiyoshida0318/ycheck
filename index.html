@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0806 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0807 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1736,6 +1736,10 @@ tbody tr:hover td:first-child:last-child {
 .mi-thumb-roas { display:block; font-size:10.5px; font-weight:800; white-space:nowrap;
                  font-family:'DM Mono',ui-monospace,monospace; letter-spacing:-0.03em; font-style:italic; }
 .mi-thumb-roas .mi-roas-k { font-size:9px; font-weight:600; font-style:normal; color:var(--text3); }
+/* 【v1.0807】リニューアル予定。色はステータスの紫（STATUS_COLORS['リニューアル予定']＝#7c3aed）に合わせる */
+.mi-thumb-renew { display:block; font-size:9.5px; font-weight:800; line-height:1.35;
+                  color:#6d28d9; background:#ede9fe; border-radius:4px; white-space:nowrap; }
+.mi-thumb-renew.is-off { visibility:hidden; }
 .mi-thumb-pr .mi-pr-k { color:var(--text3); font-weight:600; }
 /* 【v1.0799】選択中の商品を大きく出す帯（.mi-cur）は撤去。
    サムネの枠＋下の売上でどれを見ているか分かるので、縦を1段ぶん返した。
@@ -4118,7 +4122,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0806</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0807</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4559,7 +4563,7 @@ th.col-sroas { background-color:#e7d5f5; }
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
           </span>
         </div>
-        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位20）を押すか、商品コード・商品名で検索して切り替えます。</p>
+        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位<span id="miThumbNLabel">50</span>）を押すか、商品コード・商品名で検索して切り替えます（サムネは横スクロール）。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
         <!-- 【v1.0801】商品名・日別の注記は表の【外】に置く。
              表の中に入れると、30日ぶんスクロールした時点で「どの商品を見ているか」が画面から消える。 -->
@@ -13154,7 +13158,7 @@ function renderMonthly() {
   // 【v1.0798】ここから下を「1商品ずつ・全-月別データと同じ並べ方」に作り替えた。
   //   旧: 上位8件（検索時30件）を縦に積み、商品列を左に固定して月を行に出していた。
   //       → 1商品ぶんが12行あるので、2商品目から下は必ずスクロールしないと見えなかった。
-  //   新: 売上上位20のサムネ帯から1商品を選び、その商品だけを 縦=月 × 横=指標 で出す。
+  //   新: 売上上位のサムネ帯（MI_THUMB_N 件）から1商品を選び、その商品だけを 縦=月 × 横=指標 で出す。
   // ============================================================
   // 【v1.0527】日別モードの見出し（何を並べているかを明示）
   const _dayNote = _dayMode
@@ -13173,8 +13177,13 @@ function renderMonthly() {
   let sel = rows.find(r => r.code === _miCode);
   if (!sel) { sel = rows[0]; _miCode = sel.code; }
 
-  // ---------- サムネ帯（売上上位20・クリックで切替） ----------
-  const MI_THUMB_N = 20;
+  // ---------- サムネ帯（売上上位 MI_THUMB_N 件・クリックで切替） ----------
+  // 【v1.0807】サムネ帯に出す件数。横スクロール1本なので件数を増やしても縦は伸びない。
+  //   ★増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がこの件数ぶん走る。
+  //     重くなるようならここを戻すだけでよい（他は何も触らなくていい）。
+  const MI_THUMB_N = 50;
+  // ★画面の説明文の件数はここから入れる（直書きしない）。数だけ変えて説明が古いまま、を防ぐ。
+  { const e = document.getElementById('miThumbNLabel'); if (e) e.textContent = String(MI_THUMB_N); }
   const _esc = s2 => String(s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   // 【v1.0798】★選択中の商品が21位以下でも必ず帯に出す。
   //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
@@ -13212,6 +13221,18 @@ function renderMonthly() {
     const den = spend + over;
     return (known && den > 0) ? Math.round(rev / den * 100) : null;
   };
+  // 【v1.0807】リニューアル予定かどうか。
+  //   ★判定は状態チップ 'status-renewal-plan' の match をそのまま使う（定義は1か所）。
+  //     ここで effectiveStatusOf(code) === '…' と書き直すと、チップの件数とサムネの印がずれる。
+  //   ★親子セットは1件でも該当すればマークを出す（セットごと作り直すため）。
+  const _renewOf = (r) => {
+    const f = (typeof STATE_FILTERS === 'object' && STATE_FILTERS) ? STATE_FILTERS['status-renewal-plan'] : null;
+    const mem = r.members || [r.code];
+    if (f && typeof f.match === 'function') {
+      return mem.some(c => { try { return !!f.match((state.productMeta || {})[c] || {}, c); } catch (e) { return false; } });
+    }
+    return mem.some(c => { try { return effectiveStatusOf(c) === 'リニューアル予定'; } catch (e) { return false; } });
+  };
   // PRオプ料率。親30%・子7% のセットなら「30-7」。1種類なら「7」。
   //   ★高い順（親→子）に並べる。低い順だと「7-30」になり、どちらが親か読めない。
   //   ★料率が取れない商品しかないセットは null（0%扱いにしない）。
@@ -13233,12 +13254,14 @@ function renderMonthly() {
       const act = _adActiveOf(r);
       const pr = _prRateOf(r);
       const roas = _prRoasOf(r);
+      const renew = _renewOf(r);
       const tip = _esc(r.code + ' ' + r.name) + '&#10;' + _sumLabel + ' ¥' + amt.toLocaleString()
         + '&#10;PR広告売上ROAS(推定) ' + (roas == null ? '—（広告実績額＋PR実績額(7%超)が0、または料率未取得）'
              : (roas.toLocaleString() + '%　＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）'))
         + '&#10;広告: ' + (act === true ? ('出稿中（取込済みの最新日から直近' + CB_ACTIVE_DAYS + '日に広告費あり）')
                          : act === false ? ('直近' + CB_ACTIVE_DAYS + '日は広告費なし') : '日別の広告データが無く判定できません')
-        + (pr ? '&#10;PRオプ料率 ' + _esc(pr.text) + '%&#10;' + _esc(pr.tip) : '&#10;PRオプ料率 未取得');
+        + (pr ? '&#10;PRオプ料率 ' + _esc(pr.text) + '%&#10;' + _esc(pr.tip) : '&#10;PRオプ料率 未取得')
+        + (renew ? '&#10;★ステータス: リニューアル予定（いったん止めて作り直す商品）' : '');
       return '<button type="button" class="mi-thumb' + (on ? ' is-on' : '') + '" onclick="_miPickCode(\'' + _esc(r.code).replace(/'/g, "\\'") + '\')"'
         + ' title="' + tip + '">'
         + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦')
@@ -13252,6 +13275,8 @@ function renderMonthly() {
         //   「同じ高さの情報を横に見比べる」ができなくなる（計算式の空スロットと同じ考え方・§143-4）。
         + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
         + '<span class="mi-thumb-pr"><span class="mi-pr-k">PR</span> ' + (pr ? _esc(pr.text) : '—') + '</span>'
+        // 【v1.0807】PRの下。該当しない商品は透明で枠だけ残す（下の商品コードの位置を揃えるため・§190-4）
+        + '<span class="mi-thumb-renew' + (renew ? '' : ' is-off') + '">リニュ予定</span>'
         + '<span class="mi-thumb-code">' + _esc(r.code) + '</span>'
         + '</button>';
     }).join('');
