@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0804 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0806 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1732,6 +1732,10 @@ tbody tr:hover td:first-child:last-child {
 .mi-thumb-ad.is-off { visibility:hidden; }
 .mi-thumb-pr { display:block; font-size:10px; font-weight:700; color:#0f766e; white-space:nowrap;
                font-family:'DM Mono',ui-monospace,monospace; letter-spacing:-0.02em; }
+/* 【v1.0806】PR広告売上ROAS（推定）。色はしきい値ぶんだけJS側で付ける（SALES_ROAS_COLORS） */
+.mi-thumb-roas { display:block; font-size:10.5px; font-weight:800; white-space:nowrap;
+                 font-family:'DM Mono',ui-monospace,monospace; letter-spacing:-0.03em; font-style:italic; }
+.mi-thumb-roas .mi-roas-k { font-size:9px; font-weight:600; font-style:normal; color:var(--text3); }
 .mi-thumb-pr .mi-pr-k { color:var(--text3); font-weight:600; }
 /* 【v1.0799】選択中の商品を大きく出す帯（.mi-cur）は撤去。
    サムネの枠＋下の売上でどれを見ているか分かるので、縦を1段ぶん返した。
@@ -4114,7 +4118,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0804</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0806</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4392,7 +4396,10 @@ th.col-sroas { background-color:#e7d5f5; }
                合算＝同じ代表コード(repCode)の親子を1行にまとめ、金額を合計してから指標を計算し直す
                      （親が広告費を出して子が売れる構成では、個別の広告売上ROASが実態とズレるため） -->
           <span class="seg-filter js-rowmode-bar" id="basicRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><!-- 【v1.0805】全表示ボタンは商品-基本データからは撤去（この画面では状態チップ側で解除できるため）。
+                 調整-入札価格／調整-PRオプ／商品-広告データ／商品-PRデータ の4画面には残してある。
+                 戻したくなったら、他画面と同じ <button class="segf-btn segf-act js-showall">全表示</button> を
+                 この位置（合算の左）に書き戻すだけでよい。クリック処理（basicShowAll）は共通なので無変更。 --><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <!-- 【v1.0619】送り込み元（親＝緑）／送り込み先（子＝黄）だけを表示するワンクリック絞り込み。
                マークは商品コード左の .rep-badge とまったく同じ見た目（同じSVG・同じ緑/黄）にしてある。
                ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
@@ -13189,6 +13196,22 @@ function renderMonthly() {
   const _adActiveOf = (r) => {
     try { return _cbAdActive(r.members || [r.code]); } catch (e) { return null; }
   };
+  // 【v1.0806】サムネに出す PR広告売上ROAS（推定）。
+  //   ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100
+  //   ★必ず**ランキング期間ぶんを足してから1回割る**こと（_rankStats と同じ期間）。
+  //     日別モードで「日ごとのROASの平均」を取ると、売上の小さい日が同じ重みで効いて実態とズレる。
+  //   ★PR実績額は商品別には取得できないので設定料率からの推定（§5-B）。斜体で出して実測と区別する。
+  //   ★分母が0、または料率が1件も取れない期間は null＝「—」。0円扱いにしない。
+  const _prRoasOf = (r) => {
+    let rev = 0, spend = 0, over = 0, known = false;
+    _rankStats(r).forEach(m => {
+      if (!m) return;
+      rev += +m.totSales || 0; spend += +m.spend || 0;
+      if (m.prOver != null) { over += +m.prOver || 0; known = true; }
+    });
+    const den = spend + over;
+    return (known && den > 0) ? Math.round(rev / den * 100) : null;
+  };
   // PRオプ料率。親30%・子7% のセットなら「30-7」。1種類なら「7」。
   //   ★高い順（親→子）に並べる。低い順だと「7-30」になり、どちらが親か読めない。
   //   ★料率が取れない商品しかないセットは null（0%扱いにしない）。
@@ -13209,7 +13232,10 @@ function renderMonthly() {
       const amt = Math.round(_sumOf(r));
       const act = _adActiveOf(r);
       const pr = _prRateOf(r);
+      const roas = _prRoasOf(r);
       const tip = _esc(r.code + ' ' + r.name) + '&#10;' + _sumLabel + ' ¥' + amt.toLocaleString()
+        + '&#10;PR広告売上ROAS(推定) ' + (roas == null ? '—（広告実績額＋PR実績額(7%超)が0、または料率未取得）'
+             : (roas.toLocaleString() + '%　＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）'))
         + '&#10;広告: ' + (act === true ? ('出稿中（取込済みの最新日から直近' + CB_ACTIVE_DAYS + '日に広告費あり）')
                          : act === false ? ('直近' + CB_ACTIVE_DAYS + '日は広告費なし') : '日別の広告データが無く判定できません')
         + (pr ? '&#10;PRオプ料率 ' + _esc(pr.text) + '%&#10;' + _esc(pr.tip) : '&#10;PRオプ料率 未取得');
@@ -13218,6 +13244,9 @@ function renderMonthly() {
         + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + _esc(src) + '" onerror="this.remove()">' : '📦')
         + '<span class="mi-thumb-rank">' + rank + '</span></div>'
         + '<span class="mi-thumb-amt">' + (amt ? '¥' + amt.toLocaleString() : '—') + '</span>'
+        // 【v1.0806】売上の直下にPR広告売上ROAS(推定)。★取れない商品も「ROAS —」で行を残す（下の行がずれる）
+        + '<span class="mi-thumb-roas" style="color:' + (roas == null ? SALES_ROAS_COLORS.n : SALES_ROAS_COLORS[salesRoasCat(roas, PR_SALES_ROAS_TH)]) + '">'
+        + '<span class="mi-roas-k">ROAS</span> ' + (roas == null ? '—' : (roas.toLocaleString() + '%')) + '</span>'
         // 【v1.0804】★出稿していない商品でも枠だけ出す（is-off で透明）。
         //   出さないと下のPR・商品コードが1行ぶん上にずれ、サムネごとに行の位置が変わって
         //   「同じ高さの情報を横に見比べる」ができなくなる（計算式の空スロットと同じ考え方・§143-4）。
