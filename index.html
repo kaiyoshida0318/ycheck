@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0795 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0796 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4071,7 +4071,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0795</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0796</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4758,7 +4758,12 @@ th.col-sroas { background-color:#e7d5f5; }
           <input type="date" id="zdDayFrom" onchange="_zdOnDayRangeInput()" style="display:none;font-size:0.86rem;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
           <span id="zdDayTilde" style="display:none;color:var(--text3)">〜</span>
           <input type="date" id="zdDayTo" onchange="_zdOnDayRangeInput()" style="display:none;font-size:0.86rem;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
-          <button type="button" class="btn sm ghost" id="zdDayAllBtn" onclick="_zdSetDailyRange('','','all')" style="display:none" title="取り込んだ全期間を表示">全期間</button>
+          <!-- 【v1.0796】「全期間」ボタンを撤去し、よく使う2つのプリセットに置き換えた。
+               全期間は月ドロップダウンの「全期間（◯日分）」に残してある（押す頻度が低いのでボタンからは外した）。 -->
+          <span id="zdDayPresetWrap" style="display:none;gap:4px;align-items:center">
+            <button type="button" class="ig-preset-btn zd-daypreset-btn" data-zdp="cur" onclick="_zdSetDayPreset('cur')" title="取り込んだ最新日が属する月の1日〜最新日を表示">今月</button>
+            <button type="button" class="ig-preset-btn zd-daypreset-btn" data-zdp="lt" onclick="_zdSetDayPreset('lt')" title="先月1日〜取り込んだ最新日を表示">先月-今月</button>
+          </span>
           <span class="zd-range-info" id="zdDayRangeInfo" style="display:none"></span>
           <span class="dm-nodata" id="zdDayNoData" style="display:none">日別データがまだありません</span>
           <span class="filter-label" id="zdModeLabel">表示</span>
@@ -13633,9 +13638,20 @@ function _resolveViewName(v) {
 let _zdDayFrom = '', _zdDayTo = '';
 // 【v1.0533】いまの絞り込みが「どういう意図で決まったか」を持つ。
 //   'auto'  … 先月-今月（新しい日を取り込んだら終了日が自動で伸びる）
+//   'cur'   … 【v1.0796】今月（同上。新しい日を取り込んだら終了日が伸びる）
 //   'range' … 月選択や日付入力で明示的に決めた範囲（勝手に伸ばさない）
-//   'all'   … 全期間
+//   'all'   … 全期間（月ドロップダウンからのみ）
 let _zdDayRangeMode = 'auto';
+// 【v1.0796】今月＝「取り込んだ最新日が属する月の1日 〜 最新日」。
+//   ★カレンダー上の今月ではなく**データの最新日が属する月**にする。
+//     月初でまだ今月ぶんを取り込んでいないときに「今月」を押すと表が空になるため。
+//     この表の他の「最新」（出稿中の直近3日など）も同じ考え方で最新取込日を起点にしている。
+function _zdDailyCurMonthRange() {
+  const dates = dailyAllDates();
+  if (!dates.length) return null;
+  const maxDate = dates[dates.length - 1];
+  return { from: maxDate.slice(0, 7) + '-01', to: maxDate };
+}
 // 既定の範囲＝「先月1日 〜 最新日」（開いてすぐ直近2ヶ月が見える）
 function _zdDailyDefaultRange() {
   const dates = dailyAllDates();
@@ -13653,8 +13669,11 @@ function _zdInitDailyRange() {
   const dates = dailyAllDates();
   if (!dates.length) return;
   if (_zdDayRangeMode === 'all') { _zdDayFrom = ''; _zdDayTo = ''; return; }
-  if (_zdDayRangeMode === 'auto') {
-    const def = _zdDailyDefaultRange();
+  if (_zdDayRangeMode === 'auto' || _zdDayRangeMode === 'cur') {
+    // 【v1.0796】★'cur'（今月）も 'auto' と同じく毎回計算し直す。
+    //   ここに足し忘れると、新しい日を取り込んでも終了日が古いままになり
+    //   「今月なのに最新日が出ない」ことになる（'range' と同じ挙動になってしまう）。
+    const def = (_zdDayRangeMode === 'cur') ? _zdDailyCurMonthRange() : _zdDailyDefaultRange();
     if (def) { _zdDayFrom = def.from; _zdDayTo = def.to; }
     return;
   }
@@ -13664,6 +13683,22 @@ function _zdSetDailyRange(from, to, mode) {
   _zdDayRangeMode = mode || 'range';
   _zdDayFrom = from || ''; _zdDayTo = to || '';
   renderGraphData();
+}
+// 【v1.0796】プリセットボタン（今月 / 先月-今月）。
+//   ★範囲の決め方は月ドロップダウンとまったく同じ関数を使う。
+//     ここで日付を別に組み立てると、同じ「先月-今月」がボタンとドロップダウンで違う範囲になる。
+function _zdSetDayPreset(kind) {
+  const r = (kind === 'cur') ? _zdDailyCurMonthRange() : _zdDailyDefaultRange();
+  if (!r) return;
+  _zdSetDailyRange(r.from, r.to, (kind === 'cur') ? 'cur' : 'auto');
+}
+// 押されているボタンに .on を付ける。判定は _zdDayRangeMode の1本だけ。
+function _zdSetDayPresetUI() {
+  document.querySelectorAll('.zd-daypreset-btn').forEach(b => {
+    const k = b.getAttribute('data-zdp');
+    const on = (k === 'cur' && _zdDayRangeMode === 'cur') || (k === 'lt' && _zdDayRangeMode === 'auto');
+    b.classList.toggle('on', on);
+  });
 }
 function _zdOnDayRangeInput() {
   const f = document.getElementById('zdDayFrom'), t = document.getElementById('zdDayTo');
@@ -13683,6 +13718,10 @@ function _zdOnMonthSel(v) {
 function _zdCurrentMonthSelValue() {
   if (_zdDayRangeMode === 'all') return '__all__';
   if (_zdDayRangeMode === 'auto') return '__lt__';
+  // 【v1.0796】今月は「その月」を選んだ状態として見せる。
+  //   ★終了日が月末とは限らない（最新取込日まで）ので、下の YYYY-MM 判定には引っかからない。
+  //     ここで返しておかないとドロップダウンが「期間を直接指定中」に落ちる。
+  if (_zdDayRangeMode === 'cur') return _zdDayFrom ? _zdDayFrom.slice(0, 7) : '__custom__';
   if (!_zdDayFrom && !_zdDayTo) return '__all__';
   if (_zdDayFrom && _zdDayTo && _zdDayFrom.slice(0, 7) === _zdDayTo.slice(0, 7)) {
     const ym = _zdDayFrom.slice(0, 7);
@@ -13933,8 +13972,11 @@ function renderGraphData() {
   }
   // 【v1.0546】日別タブでは SEO売上トップ15 のトグル自体を隠す（月別専用の機能。仕様書 §10）
   { const w = document.getElementById('zdSeoWrap'); if (w) w.style.display = _dayMode ? 'none' : ''; }
-  ['zdDayYmLabel', 'zdDayMonthSel', 'zdDayRangeLabel', 'zdDayFrom', 'zdDayTilde', 'zdDayTo', 'zdDayAllBtn', 'zdDayRangeInfo']
+  // 【v1.0796】★プリセットは <span> でまとめてある。display は '' ではなく 'inline-flex' を入れること。
+  //   '' に戻すとインライン要素になり、中のボタンの gap が効かずに詰まって表示される。
+  ['zdDayYmLabel', 'zdDayMonthSel', 'zdDayRangeLabel', 'zdDayFrom', 'zdDayTilde', 'zdDayTo', 'zdDayRangeInfo']
     .forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
+  { const e = document.getElementById('zdDayPresetWrap'); if (e) e.style.display = _dayMode ? 'inline-flex' : 'none'; }
   // 日別モードでは「前年同月比」とSEO売上トップ15は意味を持たないので隠す
   ['zdModeLabel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
   document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => { b.style.display = _dayMode ? 'none' : ''; });
@@ -13968,6 +14010,7 @@ function renderGraphData() {
     //   ★display も必ず切り替えること。textContent を空にしただけでは、
     //     上の表示切替ループが day モードで display:'' に戻すので、
     //     空の <span> ぶんの余白（margin-left:6px）が残る。
+    _zdSetDayPresetUI();   // 【v1.0796】プリセットの on/off を範囲モードに合わせる
     const info = document.getElementById('zdDayRangeInfo');
     if (info) {
       const _noDay = !_rangeDays.length;
