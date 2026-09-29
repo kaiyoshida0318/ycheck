@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0819 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0821 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2324,6 +2324,11 @@ th.col-adunk { background-color: #f8d9d3; }
 /* 【v1.0592】総売上の下に出す「セット内の売上比率」。送り込み＝紫の系統に合わせる */
 /* 【v1.0609】調整-基本のときだけ出す3列（ステータス/入札状態/PRオプ状態） */
 body:not(.basic-tune) #tableBasic .tune-col { display: none; }
+/* 【v1.0821】いちばん右のステータス列。
+   ★調整-基本のときは .tune-col 側に同じものが出るので、こちらを隠す。
+     両方出すと同じ商品のステータスが1行に2つ並び、どちらを触ったのか分からなくなる。
+   ★th と td の両方に .st-right が付いていること（片方だけだと列がずれる）。 */
+body.basic-tune #tableBasic .st-right { display: none; }
 body:not(.basic-tune) #view-basic .tune-only { display: none !important; }   /* 【v1.0651】順位取得CSV・反映場所を確認 は調整-基本だけ */
 body.basic-tune #view-basic .plain-only { display: none !important; }        /* 【v1.0672】このページをCSV出力 は商品-基本データだけ（調整-基本では出さない） */
 .fam-pct { color: #7c3aed; font-size: 11px !important; font-weight: 700; }
@@ -4236,7 +4241,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0819</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0821</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4624,6 +4629,11 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="status-col tune-col" data-sort="status">ステータス</th>
               <th class="status-col tune-col" data-sort="adStatus">入札状態</th>
               <th class="status-col tune-col" data-sort="proStatus">PR状態</th>
+              <!-- 【v1.0821】★いちばん右にステータス（調整-基本でなくても選べるように）。
+                   ★調整-基本のときは上の .tune-col 側に同じものが出るので、こちらは隠す
+                     （body.basic-tune #tableBasic .st-right）。
+                     両方出すと、同じ商品のステータスの入力欄が1行に2つ並ぶ。 -->
+              <th class="status-col st-right" data-sort="status">ステータス</th>
               <!-- 【v1.0592】送り込み売上の列は撤去。
                    ★データ（_soiByParent / CSVの列）は残してある。戻すときは、この th と
                      renderBasic の tr.innerHTML に col-soi の td を書き戻すだけ。
@@ -4648,8 +4658,17 @@ th.col-sroas { background-color:#e7d5f5; }
             <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
           </span>
+          <!-- 【v1.0820】サムネ帯を「売上上位50件」から「対象商品ぜんぶ」に切り替える。
+               ★この行の【最後の子】に置くこと。配色凡例より前に置くと、margin-left:auto で右へ寄っても
+                 凡例がさらに右に残り、一番右にならない（v1.0820 で実際に踏んだ）。
+                 ★反映するボタンは「margin-left:auto の要素の【手前】」に入る作りなので
+                   （_ycInjectReflectButtons）、このボタンが一番右、その左に反映する、になる。
+                   逆にしたいならボタン側ではなく _ycInjectReflectButtons を直すこと。
+               ★見た目は「親子のみ」と同じ .mi-mode-btn。同じ行の同じ種類（ON/OFFの切替）なので
+                 別のデザインにしない。 -->
+          <button type="button" class="mi-mode-btn" id="miThumbAllBtn" onclick="_miToggleThumbAll()" style="margin-left:auto" title="サムネ帯に、売上上位だけでなく対象商品を全部並べます。件数が多いと少し重くなります。">全表示</button>
         </div>
-        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（売上上位<span id="miThumbNLabel">50</span>）を押すか、商品コード・商品名で検索して切り替えます（サムネは横スクロール）。</p>
+        <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（<span id="miThumbNLabel">売上上位50</span>）を押すか、商品コード・商品名で検索して切り替えます（サムネは横スクロール）。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
         <!-- 【v1.0817】★日別/月別・対象月・表示・表示範囲・比率表記は【サムネ帯と表の間】に置く。
              上の検索行に混ぜると、サムネ帯（横スクロールぶんの高さがある）を挟むので、
@@ -4738,6 +4757,17 @@ th.col-sroas { background-color:#e7d5f5; }
           <span id="igLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span>
           <!-- 【v1.0637】変更記録の縦線の出し分け（商品ごとの記録は 商品情報を編集 から登録する） -->
           <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+        </div>
+        <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品のグラフに切り替わる（商品-日月別データと同じ見た目） -->
+        <div id="igThumbs" class="mi-thumbs"></div>
+        <!-- 【v1.0821】★期間プリセット・指標・月別/日別・対象月・期間は【サムネ帯とグラフの間】へ。
+             商品-日月別データ（§203）と同じ考え方で、切り替えの対象（グラフ）のすぐ上に置く。
+             上の行に残すのは「どの商品を見るか」（検索・商品名・変更記録の表示）だけ。
+             ★id は1つも変えない・複製しない。_igPreset / _igMetricChange / _igSetGrain /
+               _igSetDayYm / renderItemGraph が **すべて id で掴んでいる**。
+             ★#igSuggest（検索の候補）は position:absolute で上の .filters を基準にしているので
+               上の行に残すこと。こちらへ移すと候補が別の場所に出る。 -->
+        <div class="filters mi-mid-filters" id="igMidFilters">
           <!-- 【v1.0409】期間プリセットを指標の左へ移動 -->
           <span class="ig-presets" role="group" aria-label="期間プリセット">
             <button type="button" class="ig-preset-btn" data-igp="jan" onclick="_igPreset('jan')" title="今年の1月から当月まで">1月始まり</button>
@@ -4766,8 +4796,6 @@ th.col-sroas { background-color:#e7d5f5; }
           <span style="color:var(--text3)" id="igRangeTilde">〜</span>
           <select id="igMonthTo" onchange="_igClearPreset();renderItemGraph()" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer"></select>
         </div>
-        <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品のグラフに切り替わる（商品-日月別データと同じ見た目） -->
-        <div id="igThumbs" class="mi-thumbs"></div>
         <div id="igSalesToggles" style="display:none;flex-wrap:wrap;gap:6px;margin:0 0 10px"></div>
         <div id="igChartWrap" style="position:relative;height:420px;margin:6px 0 14px"><canvas id="igCanvas"></canvas></div>
         <div id="igTableWrap" style="border:1px solid var(--border);border-radius:8px"></div>
@@ -12539,6 +12567,7 @@ function renderBasic() {
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'status')}</td>
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'ad')}</td>
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col st-right">${statusSelectHtml(r.code, 'status')}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -13034,6 +13063,16 @@ window._miPickCode = _miPickCode;
 function _miSetRange(v){ _miRangePage = parseInt(v,10)||0; renderMonthly(); }
 function _miSetMode(m){ _miRangeMode = (m === 'year') ? 'year' : 'recent'; _miRangePage = 0; renderMonthly(); }
 function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0; renderMonthly(); }
+// 【v1.0820】サムネ帯を全件表示にするか。★このタブの間だけの表示切替なので保存しない
+//   （列幅や文字サイズと違い「いま全部見たい」という一時的な操作。保存すると
+//    次に開いたとき勝手に重い状態で始まる）。
+let _miThumbAll = false;
+// 【v1.0807/v1.0820】サムネ帯に出す既定の件数。★説明文もボタンの説明もここから作る（直書きしない）。
+//   ★増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がこの件数ぶん走る。
+//     重くなるようならここを戻すだけでよい（他は何も触らなくていい）。
+const MI_THUMB_N_MAX = 50;
+function _miToggleThumbAll(){ _miThumbAll = !_miThumbAll; renderMonthly(); }
+window._miToggleThumbAll = _miToggleThumbAll;
 // 【v1.0527】商品-日月別データの粒度切替。'month'=従来（月を並べる）／'day'=対象月の1日ごとを並べる。
 // 【v1.0799】既定は日別。対象月は _miDayYm 未設定 → 取込済みの最新月（＝今月）が入る（renderMonthly 内）。
 //   ★日別データが1日も無い環境では renderMonthly 側で 'month' に落とす（下の _hasAnyDaily 判定）。
@@ -13780,6 +13819,8 @@ function renderMonthly() {
   if (_seg) _seg.querySelectorAll('.mi-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === _miRangeMode));
   const _pBtn = document.getElementById('miParentOnlyBtn');   // 【v1.0408】親子のみボタンの選択状態
   if (_pBtn) _pBtn.classList.toggle('on', _miParentOnly);
+  { const _aBtn = document.getElementById('miThumbAllBtn');   // 【v1.0820】全表示ボタンの選択状態
+    if (_aBtn) _aBtn.classList.toggle('on', _miThumbAll); }
   const _rangeSel = document.getElementById('miRangeSel');
   const _rangeLbl = document.getElementById('miRangeLabel');
   if (_rangeSel && _rangeLbl) {
@@ -13951,6 +13992,15 @@ function renderMonthly() {
   }
   rows.sort((a, b) => _sumOf(b) - _sumOf(a));
 
+  // 【v1.0820】★説明文の件数は【0件の早期リターンより前】で更新する。
+  //   あとに置くと、親子のみ等で0件になったとき前回の「全60件」が残り、
+  //   帯が空なのに「全60件」と書いてある状態になる（v1.0820 で実際に踏んだ）。
+  // ★span の中身は「売上上位50」ごと差し替える。数字だけ差し替える作りだと、
+  //   全表示のとき「売上上位全123件」という日本語にならない文が出る。
+  { const e = document.getElementById('miThumbNLabel');
+    if (e) e.textContent = rows.length === 0 ? '0件'
+      : (_miThumbAll ? ('全' + rows.length + '件') : ('売上上位' + MI_THUMB_N_MAX)); }
+
   // ============================================================
   // 【v1.0798】ここから下を「1商品ずつ・全-月別データと同じ並べ方」に作り替えた。
   //   旧: 上位8件（検索時30件）を縦に積み、商品列を左に固定して月を行に出していた。
@@ -13982,13 +14032,15 @@ function renderMonthly() {
   // 【v1.0807】サムネ帯に出す件数。横スクロール1本なので件数を増やしても縦は伸びない。
   //   ★増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がこの件数ぶん走る。
   //     重くなるようならここを戻すだけでよい（他は何も触らなくていい）。
-  const MI_THUMB_N = 50;
-  // ★画面の説明文の件数はここから入れる（直書きしない）。数だけ変えて説明が古いまま、を防ぐ。
-  { const e = document.getElementById('miThumbNLabel'); if (e) e.textContent = String(MI_THUMB_N); }
+  const MI_THUMB_N = MI_THUMB_N_MAX;
+  // 【v1.0820】★実際に並べる件数。「全表示」ONなら対象商品ぜんぶ。
+  //   ★ここ1ヶ所で決めて、slice も順位も説明文もこの値を見る。
+  //     別々に書くと「51件目からは順位が — なのに帯には出ている」のようなズレが出る。
+  const _thumbN = _miThumbAll ? rows.length : MI_THUMB_N;
   const _esc = s2 => String(s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   // 【v1.0798】★選択中の商品が21位以下でも必ず帯に出す。
   //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
-  const top = rows.slice(0, MI_THUMB_N);
+  const top = rows.slice(0, _thumbN);
   if (!top.some(r => r.code === sel.code)) top.push(sel);
   // 【v1.0799】サムネの下に出すのは「いま並べている期間の売上」。
   //   日別モードなら対象月の1日〜最新日ぶん＝**その月内の売上**になる。
@@ -14036,7 +14088,7 @@ function renderMonthly() {
       amt: _sumOf(r), roas: _prRoasOf(r)
     }, {
       selected: r.code === sel.code,
-      rank: (i2 < MI_THUMB_N) ? (i2 + 1) : '—',
+      rank: (i2 < _thumbN) ? (i2 + 1) : '—',
       onclick: "_miPickCode('" + String(r.code).replace(/'/g, "\\'") + "')",
       sumLabel: _sumLabel
     })).join('');
@@ -20436,15 +20488,21 @@ document.addEventListener('change', (e) => {
     //   ★その場で描き直さないと、画面を切り替えるまで古い表示のままになる
     if (kind === 'ad') {
       const row = e.target.closest('tr');
-      const sSel = row && row.querySelector('select.status-select[data-kind="status"]');
-      const sFac = sSel && sSel.closest('.status-cell') && sSel.closest('.status-cell').querySelector('.status-facade');
-      if (sSel && sFac) {
-        const sv = meta.status || '';
+      // 【v1.0821】★querySelector（先頭1つ）ではなく querySelectorAll。
+      //   商品-基本データは v1.0821 から1行にステータスの入力欄を【2つ】持つ
+      //   （調整-基本用の .tune-col と、いちばん右の .st-right）。
+      //   先頭だけ直すと、表示されているほうが古い値のまま残る。
+      const sSels = row ? row.querySelectorAll('select.status-select[data-kind="status"]') : [];
+      const sv = meta.status || '';
+      const sc = statusLifeColor(sv);
+      sSels.forEach(sSel => {
         sSel.value = _statusLifeCoarseOf(sv);
-        const sc = statusLifeColor(sv);
+        const cell = sSel.closest('.status-cell');
+        const sFac = cell && cell.querySelector('.status-facade');
+        if (!sFac) return;
         sFac.style.color = sc; sFac.style.borderColor = sv ? sc : '#cbd5e1';
         sFac.innerHTML = statusLifeDisplayLabel(sv) + '<span class="status-chev">▾</span>';
-      }
+      });
     }
   } else {
     // 【v204】ステータスもファサード（2行略称の表示）を更新。selectは透明オーバーレイのまま。
