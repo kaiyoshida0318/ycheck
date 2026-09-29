@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0824 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0826 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,6 +18,11 @@
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 :root {
+  /* 【v1.0826】画面の左右の余白。★サムネ帯が1行20件（1834px）入るかはここで決まる。
+     1900px の画面で20件入るように詰めた（従来 main 20px / card 18px ＝ 合計76px → 44px）。
+     ★狭くしすぎると表が画面の端に貼り付いて読みにくくなる。減らすならここだけ。 */
+  --page-pad-x: 8px;    /* .main の左右 */
+  --card-pad-x: 14px;   /* .card の左右 */
   --bg: #f0f2f5;
   --bg2: #ffffff;
   --bg3: #e8eaed;
@@ -1509,7 +1514,7 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
 .tune-chip .chip-num { font-size: 0.78rem; opacity: 0.85; }
 
 .main {
-  padding: 18px 20px;
+  padding: 18px var(--page-pad-x);
   flex: 1;
   min-height: 0;
   display: flex;
@@ -1544,7 +1549,7 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 12px 18px 18px 18px;
+  padding: 12px var(--card-pad-x) 18px var(--card-pad-x);
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
@@ -1750,11 +1755,13 @@ tbody tr:hover td:first-child:last-child {
    【v1.0798】商品-日月別データ：サムネ帯＋選択中の商品
    ★帯は横スクロール1本にする（折り返すと縦に伸びて表が画面外へ落ちる）。
    ============================================================ */
-.mi-thumbs { display:flex; gap:var(--mi-thumb-gap); overflow-x:auto; padding:6px 2px 10px; align-items:flex-start;
+.mi-thumbs { display:flex; gap:var(--mi-thumb-gap); overflow-x:auto; padding:6px 0 10px; align-items:flex-start;
               flex:0 0 auto;
               /* 【v1.0822】サムネの大きさ・間隔・1行の最大列数はここだけで決める。
                  ★.mi-thumb の width も「上下」の折り返し幅も、すべてこの変数から作る。
                    別々に数字を書くと、幅を変えたとき片方だけ古いままになる。 */
+              /* 【v1.0825】--mi-thumb-cols は _ycThumbLayoutApply() が JS から入れる。
+                 ここの 20 は JSが走る前の保険（JS側の MI_THUMB_COLS が正）。 */
               --mi-thumb-w:86px; --mi-thumb-gap:6px; --mi-thumb-cols:20; }
 /* 【v1.0822】「上下」＝横スクロールをやめて折り返す。1行は最大 --mi-thumb-cols 件。
    ★max-width で折り返し位置を決める。列数を固定する grid にしないのは、
@@ -1782,7 +1789,10 @@ tbody tr:hover td:first-child:last-child {
             padding:4px 3px 5px; cursor:pointer; text-align:center; line-height:1.3; }
 .mi-thumb:hover { background:var(--bg3); }
 .mi-thumb.is-on { border-color:var(--accent); background:var(--bg3); }
-.mi-thumb-img { position:relative; width:76px; height:76px; margin:0 auto; border-radius:6px; overflow:hidden;
+/* 【v1.0826】★画像の大きさはサムネの枠から作る（width:100%）。
+   86px − 枠2px×2 − 余白3px×2 ＝ 76px で、従来の決め打ちとまったく同じ。
+   決め打ちを残すと --mi-thumb-w を変えたとき画像だけはみ出す。 */
+.mi-thumb-img { position:relative; width:100%; aspect-ratio:1/1; margin:0 auto; border-radius:6px; overflow:hidden;
                 background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:28px; }
 .mi-thumb-img img { width:100%; height:100%; object-fit:cover; }
 /* 順位は画像の角に重ねる（下の2行は売上とコードに使う） */
@@ -4258,7 +4268,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0824</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0826</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13120,7 +13130,11 @@ function _miToggleParentOnly(){ _miParentOnly = !_miParentOnly; _miRangePage = 0
 let _ycThumbStack = false;   // false = 横並び（既定）
 function _ycThumbLayoutApply() {
   try {
-    document.querySelectorAll('.mi-thumbs').forEach(el => el.classList.toggle('is-stack', _ycThumbStack));
+    document.querySelectorAll('.mi-thumbs').forEach(el => {
+      el.classList.toggle('is-stack', _ycThumbStack);
+      // ★1行の最大件数は JS を正とし、CSS の折り返し幅へ書き込む（§v1.0825）
+      try { el.style.setProperty('--mi-thumb-cols', String(MI_THUMB_COLS)); } catch (e) {}
+    });
     // ★ボタンは3画面ぶん全部そろえる。押した画面だけ .on にすると、
     //   別の画面へ行ったとき「上下で表示されているのに横並びが選択状態」になる。
     document.querySelectorAll('[data-thumblay]').forEach(b =>
@@ -13131,17 +13145,34 @@ function _ycThumbLayoutApply() {
       if (e) e.textContent = _ycThumbStack ? 'サムネは折り返して縦スクロール' : 'サムネは横スクロール'; }
   } catch (e) {}
 }
-function _ycThumbLayoutSet(v) { _ycThumbStack = (v === 'stack'); _ycThumbLayoutApply(); }
+function _ycThumbLayoutSet(v) {
+  _ycThumbStack = (v === 'stack');
+  _ycThumbLayoutApply();
+  // 【v1.0825】★商品-日月別データは並べ方で【件数】も変わる（20 ⇔ 40）ので描き直す。
+  //   v1.0824 まではCSSだけで済んでいたが、件数が変わる以上ここで作り直さないと
+  //   「上下にしたのに20件のまま」になる。
+  //   ★renderMonthly() の中からは呼ばないこと（_ycThumbLayoutApply は呼ぶ）。無限ループになる。
+  try { if (state.currentView === 'monthly' && typeof renderMonthly === 'function') renderMonthly(); } catch (e) {}
+}
 window._ycThumbLayoutSet = _ycThumbLayoutSet;
 window._ycThumbLayoutApply = _ycThumbLayoutApply;
 
-// 【v1.0807/v1.0820】サムネ帯に出す件数。★説明文もここから作る（直書きしない）。
-//   ★増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がこの件数ぶん走る。
-//     重くなるようならここを戻すだけでよい（他は何も触らなくていい）。
-//   【v1.0823】★v1.0820 の「全表示」（帯を全件にする）は撤去した。ボタンは
-//     「ヘッダー1・2を隠す」に作り替えている。たくさん見たいときは v1.0822 の
-//     「上下」（折り返して縦に積む）を使う。
-const MI_THUMB_N_MAX = 50;
+// 【v1.0825】商品-日月別データのサムネ帯に出す件数。★並べ方で変わる。
+//   横並び … MI_THUMB_COLS（20件）＝1行ぶん
+//   上下   … MI_THUMB_COLS × MI_THUMB_ROWS_STACK（20×2＝40件）＝2行ぶん
+//
+//   ★MI_THUMB_COLS は CSS の --mi-thumb-cols（折り返し幅）と【同じ値でなければならない】。
+//     ずれると「1行20件のつもりが18件で折り返して、2行に収まらず3行になる」といった
+//     食い違いが出る。そこで JS を正として _ycThumbLayoutApply() が
+//     el.style.setProperty('--mi-thumb-cols', …) で CSS 側へ書き込む。
+//     CSS の calc() に書いてある 20 は、JSが走る前の保険（フォールバック）。
+//   ★件数を増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がその件数ぶん走る。
+//   ★商品-グラフ／商品-推移の帯は YC_THUMB_N（50件）のまま。
+//     この2画面は「表の上に置く見出し」ではなく単独の帯なので、行数を決める意味が薄い。
+//     そろえたくなったら ycRenderThumbStrip の YC_THUMB_N を miThumbN() に変えるだけ。
+const MI_THUMB_COLS = 20;
+const MI_THUMB_ROWS_STACK = 2;
+function miThumbN() { return _ycThumbStack ? (MI_THUMB_COLS * MI_THUMB_ROWS_STACK) : MI_THUMB_COLS; }
 // 【v1.0527】商品-日月別データの粒度切替。'month'=従来（月を並べる）／'day'=対象月の1日ごとを並べる。
 // 【v1.0799】既定は日別。対象月は _miDayYm 未設定 → 取込済みの最新月（＝今月）が入る（renderMonthly 内）。
 //   ★日別データが1日も無い環境では renderMonthly 側で 'month' に落とす（下の _hasAnyDaily 判定）。
@@ -14066,7 +14097,7 @@ function renderMonthly() {
   //   全表示のとき「売上上位全123件」という日本語にならない文が出る。
   { const e = document.getElementById('miThumbNLabel');
     if (e) e.textContent = rows.length === 0 ? '0件'
-      : ('売上上位' + MI_THUMB_N_MAX); }
+      : ('売上上位' + miThumbN()); }
 
   // ============================================================
   // 【v1.0798】ここから下を「1商品ずつ・全-月別データと同じ並べ方」に作り替えた。
@@ -14095,15 +14126,11 @@ function renderMonthly() {
   let sel = rows.find(r => r.code === _miCode);
   if (!sel) { sel = rows[0]; _miCode = sel.code; }
 
-  // ---------- サムネ帯（売上上位 MI_THUMB_N 件・クリックで切替） ----------
-  // 【v1.0807】サムネ帯に出す件数。横スクロール1本なので件数を増やしても縦は伸びない。
-  //   ★増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がこの件数ぶん走る。
-  //     重くなるようならここを戻すだけでよい（他は何も触らなくていい）。
-  const MI_THUMB_N = MI_THUMB_N_MAX;
-  // 【v1.0820】★実際に並べる件数。「全表示」ONなら対象商品ぜんぶ。
-  //   ★ここ1ヶ所で決めて、slice も順位も説明文もこの値を見る。
-  //     別々に書くと「51件目からは順位が — なのに帯には出ている」のようなズレが出る。
-  const _thumbN = MI_THUMB_N;
+  // ---------- サムネ帯（クリックで切替） ----------
+  // 【v1.0825】★実際に並べる件数は miThumbN() の1ヶ所で決める（横並び20 / 上下40）。
+  //   slice も順位も説明文もこの値を見る。別々に書くと
+  //   「21件目からは順位が — なのに帯には出ている」のようなズレが出る。
+  const _thumbN = miThumbN();
   const _esc = s2 => String(s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   // 【v1.0798】★選択中の商品が21位以下でも必ず帯に出す。
   //   出さないと「選んでいる商品が帯のどこにも無い」状態になり、戻り方が分からなくなる。
