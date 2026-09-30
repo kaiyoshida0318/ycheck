@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0832 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0833 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1057,6 +1057,13 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
   gap: 8px;
 }
 .info-list li:last-child { border-bottom: none; }
+/* 【v1.0833】★説明文は必ずこの span で【1つの】フレックスアイテムにまとめること。
+   .info-list li は display:flex; gap:8px なので、裸で置くと
+   <b> や テキストの切れ目ごとに【別々のフレックスアイテム】になり、
+   ・太字の前後に 8px の隙間が入る
+   ・<b> の境目で勝手に改行される
+   という2つの症状が出る（v1.0832 まで実際に出ていた）。 */
+.info-list li .info-desc { flex: 1 1 0; min-width: 0; }
 .info-tag {
   display: inline-block;
   padding: 2px 10px;
@@ -4268,7 +4275,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0832</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0833</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -19972,9 +19979,9 @@ const INFO_LIFE_DESC = {
   '—': '未設定。まだ何も決めていないもの。',
   '新商品': '登録して間もない、<b>評価がまだ決まっていない</b>もの。',
   'リニューアル': '<b>作り直した直後</b>のもの。新商品と同じ枠（チップの【新リニュ】）にまとまります。',
-  '子（親に追従）': 'この商品のステータスは<b>親の値として読む</b>、という意思表示。入札状態は「入札なし」、PR状態は「PR◯-子-7％固定」として扱われます。',
+  '子（親に追従）': '<b>親のステータスをそのまま読む</b>という意思表示。入札状態は「入札なし」、PR状態は「PR◯-子-7％固定」として扱われます。',
   '健常◯': '<b>良好</b>。いまのところ手を入れなくてよいもの。',
-  '中立△': '<b>健常になりきれない微妙な</b>もの。数値でかっちり決めるものではなく、見ての判断です。',
+  '中立△': '悪くはないが<b>健常◯には届いていない</b>もの。<b>調整して健常◯へ引き上げる</b>対象です。',
   '撤退検討▲': '広告の採算が合わないため<b>広告を止め</b>、PRオプションだけで売れるかを<b>検証中</b>のもの。',
   '撤退予定': '在庫が無くなり次第、<b>販売を終了する</b>もの。',
   '撤退済み': '<b>販売を終了した</b>もの。',
@@ -19999,7 +20006,9 @@ function _infoFillList(elId, options, descMap, colorOf) {
     try { col = colorOf(v) || '#1a1a1a'; } catch (e) {}
     const d = descMap[v];
     if (d == null) console.warn('[Ycheck] 全体の説明に文が無い選択肢:', elId, JSON.stringify(v));
-    return '<li>' + _infoTagHtml(shown, col) + (d || '<span style="color:#dc2626">（説明が未記入）</span>') + '</li>';
+    // 【v1.0833】★説明文は .info-desc で1つにくるむ（上のCSSコメント参照）
+    return '<li>' + _infoTagHtml(shown, col)
+         + '<span class="info-desc">' + (d || '<span style="color:#dc2626">（説明が未記入）</span>') + '</span></li>';
   }).join('');
 }
 function _infoFillLists() {
