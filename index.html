@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0826 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0830 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2095,7 +2095,7 @@ td[data-resize-key] {
   text-align: center; gap: 2px; line-height: 1.18; white-space: nowrap;  /* 改行は<br>のみ。自動折返し・1文字折返しを禁止 */
   background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
   font-size: 12.6px; font-weight: 600; padding: 2px 6px;  /* 【v192】12.6px・太さ600 */
-  width: 112px; min-width: 0; min-height: 37px;   /* 【v1.0741】98→112px（入札◯の2行目「1-4位外 30円以下」が入る幅） */ box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
+  width: 112px; min-width: 0; min-height: 37px;   /* 【v1.0741】98→112px。【v1.0830】★ここは広げないこと。入札状態とPR状態で共通の幅なので、広げると2列ぶん太る（v1.0829 で124pxにしたが元に戻した） */ box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
   /* 【v1.0734】★min-height は「2行ぶん」。28px のままだと 1行の値（入札◯ など）だけ枠が低くなり、
      2行の値（入札△-調整中 など）と並んだときに行の高さがガタガタになる。
      計算: 12.6px × line-height1.18 × 2行 ＋ 上下padding4 ＋ 枠線3 ≒ 37px。
@@ -4268,7 +4268,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0826</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0830</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4688,9 +4688,12 @@ th.col-sroas { background-color:#e7d5f5; }
                ★3画面共通の1設定なので、どの画面で押しても同じ。
                ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
                  ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
-          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
-            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
-            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
+          <span class="dm-seg" role="group" aria-label="サムネに出す件数">
+            <!-- 【v1.0827】★ラベルと説明は _ycThumbLayoutApply() が定数から作る。
+                 ここに書いてある「20表示」「40表示」は、JSが走る前の保険。
+                 件数を変えるときは JS の MI_THUMB_COLS / MI_THUMB_ROWS_STACK だけ直す。 -->
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')">20表示</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')">40表示</button>
           </span>
           <span style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
             <span class="filter-label" title="同じ列の中で、この商品の月（日）どうしを比べた相対評価です">配色:</span>
@@ -4707,7 +4710,7 @@ th.col-sroas { background-color:#e7d5f5; }
                  ★反映するボタンは「margin-left:auto の要素の【手前】」に入る作りなので
                    （_ycInjectReflectButtons）、このボタンが一番右、その左に反映する、になる。
                ★ラベルは applyHeaderCollapse が状態から作る（ここに直書きしない）。 -->
-          <button type="button" class="mi-mode-btn" id="miHdr12Btn" onclick="_hdr12Toggle()" style="margin-left:auto" title="上部バー・【基本】【全体】【取得データ】の段（ヘッダー1）と、【一覧】【調整】のタブ行（ヘッダー2）をまとめて隠します。もう一度押すと戻ります。">🔼 ヘッダー1・2を隠す</button>
+          <button type="button" class="mi-mode-btn yc-hdr12-btn" id="miHdr12Btn" onclick="_hdr12Toggle()" style="margin-left:auto" title="上部バー・【基本】【全体】【取得データ】の段（ヘッダー1）と、【一覧】【調整】のタブ行（ヘッダー2）をまとめて隠します。もう一度押すと戻ります。">🔼 ヘッダー1・2を隠す</button>
         </div>
         <p class="dropzone-hint" style="margin:0 0 8px 0;font-size:13px;color:var(--text2);line-height:1.6;">1商品ずつ、縦＝月（日）／横＝指標で表示します（全-月別データと同じ並べ方）。色は「<b>同じ商品の月どうし</b>」の相対評価（<b style="color:#1565C0">青=良い</b>〜<b style="color:#A32D2D">赤=悪い</b>）。上＝新しい月／下＝古い月。下のサムネ（<span id="miThumbNLabel">売上上位50</span>）を押すか、商品コード・商品名で検索して切り替えます（<span id="miThumbScrollNote">サムネは横スクロール</span>）。</p>
         <div id="mi-thumbs" class="mi-thumbs"></div>
@@ -4805,10 +4808,17 @@ th.col-sroas { background-color:#e7d5f5; }
                ★3画面共通の1設定なので、どの画面で押しても同じ。
                ★静的な class="on" は既定（_ycThumbStack=false ＝ 横並び）と合わせること。
                  ずれていると、描き直しが走る前の一瞬だけ違うほうが選択状態に見える（§v1.0800）。 -->
-          <span class="dm-seg" role="group" aria-label="サムネの並べ方">
-            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')" title="サムネを1行に並べて横スクロールで見る（従来）">横並び</button>
-            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')" title="サムネを折り返して縦に積む（1行は最大20件）">上下</button>
+          <span class="dm-seg" role="group" aria-label="サムネに出す件数">
+            <!-- 【v1.0827】★ラベルと説明は _ycThumbLayoutApply() が定数から作る。
+                 ここに書いてある「20表示」「40表示」は、JSが走る前の保険。
+                 件数を変えるときは JS の MI_THUMB_COLS / MI_THUMB_ROWS_STACK だけ直す。 -->
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')">20表示</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')">40表示</button>
           </span>
+          <!-- 【v1.0828】商品-日月別データと同じ「ヘッダー1・2を隠す」。
+               ★class="yc-hdr12-btn" が目印。ラベルの同期と、上の復帰バーを出すかどうかの
+                 判定（applyHeaderCollapse）が【このクラス】を見ている。id ではない。 -->
+          <button type="button" class="mi-mode-btn yc-hdr12-btn" id="igHdr12Btn" onclick="_hdr12Toggle()" style="margin-left:auto" title="上部バー・【基本】【全体】【取得データ】の段（ヘッダー1）と、【一覧】【調整】のタブ行（ヘッダー2）をまとめて隠します。もう一度押すと戻ります。">🔼 ヘッダー1・2を隠す</button>
         </div>
         <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品のグラフに切り替わる（商品-日月別データと同じ見た目） -->
         <div id="igThumbs" class="mi-thumbs"></div>
@@ -4873,6 +4883,13 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="seg-filter" id="itScopeSeg" role="group" aria-label="親子の集計"
             title="合算＝送り込みセット（同じ代表コードの親子）の合計から率を出し直す&#10;個別＝選んだ商品1件だけ"><button type="button" class="segf-btn on" data-itscope="sum" onclick="_itSetScope('sum')">合算</button><button type="button" class="segf-btn" data-itscope="self" onclick="_itSetScope('self')">個別</button></span>
           <button type="button" class="cl-show-btn" onclick="clToggleShow()" title="グラフ上の縦線を出す/消す">📍 変更記録 表示あり</button>
+          <span class="dm-seg" role="group" aria-label="サムネに出す件数">
+            <!-- 【v1.0827】★ラベルと説明は _ycThumbLayoutApply() が定数から作る。
+                 ここに書いてある「20表示」「40表示」は、JSが走る前の保険。
+                 件数を変えるときは JS の MI_THUMB_COLS / MI_THUMB_ROWS_STACK だけ直す。 -->
+            <button type="button" class="dm-btn on" data-thumblay="row" onclick="_ycThumbLayoutSet('row')">20表示</button>
+            <button type="button" class="dm-btn" data-thumblay="stack" onclick="_ycThumbLayoutSet('stack')">40表示</button>
+          </span>
           <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
         </div>
         <!-- 【v1.0813】売上上位の商品サムネ帯。押すとその商品の推移に切り替わる -->
@@ -11659,39 +11676,68 @@ const STATUS_DISPLAY_LABEL = {
 const STATUS_OPTION_LABEL = {
   'PR×': 'PR✕-放置',                // 【v1.0716】見た目だけ改称（保存値は 'PR×' のまま）
   '撤退予定': '削除予定',            // 【v1.0737】★保存値は '撤退予定' のまま
-  '撤退済み': '削除済'               // 【v1.0733/v1.0737】★保存値は '撤退済み' のまま
+  '撤退済み': '削除済',              // 【v1.0733/v1.0737】★保存値は '撤退済み' のまま
+  'リニューアル': 'リニューアル済'    // 【v1.0828】「リニューアル予定」と紛らわしいので【済】を付ける。
+                                     //   ★保存値・判定式・STATUS_ORDER・チップは 'リニューアル' のまま。
+                                     //     ここを変えると isNewGroup（新商品グループ判定）から漏れる。
 };
 function statusOptionLabel(value) { return escapeHtml(STATUS_OPTION_LABEL[value] || value) || '—'; }
 // 【v1.0741】入札◯のときだけ、セルの2行目を「その商品の広告順位と入札価格」から自動で作る。
-//   ・30円より高い          → 「30円以上」
-//   ・30円以下 かつ 1-4位    → 「1-4位30円以下」
-//   ・30円以下 かつ それ以外 → 「1-4位外 30円以下」（5位以下・圏外・順位データ無しを含む）
-//   ・入札価格が未入力      → 2行目は出さない
+//   【v1.0829】★2つの軸（順位 / 価格）を必ず両方出す 2×2 にした。
+//     ・順位 … 1-4位 / 1-4位以外
+//     ・価格 … 30円以下 / 30円超
+//     「1-4位以外」には 5位以下・圏外・順位未取得 が入る
+//     （getLatestRankBucket は圏外と未取得をどちらも null で返すので区別できない）。
+//   ・入札価格が未入力 → 2行目は出さない（順位だけ出しても対応が決まらないため）
 //   ★ドロップダウンの選択肢は「入札◯」1つのまま。保存値も '入札◯' のまま。
 //     ここは【表示だけ】＝ 順位や価格が変われば勝手に追従する（人が選び直す必要がない）。
 //   ★順位は getLatestRankBucket(code,'ad') の 'top'（＝1〜4位）で判定する。
 //     この関数は「修正あり」判定（isTuneFix）でも使っている“唯一の順位判定”なので、
 //     ここで別の順位比較を書かないこと（画面ごとに1-4位の意味が変わってしまう）。
-const AD_CIRCLE_BID_BORDER = 30;   // 円。★この境界を変えるときはラベルの文字（30円内/30円以上）も一緒に直す
-// 【v1.0742】2行目は「良い＝青 / 悪い＝赤」で部分ごとに色分けする。
-//   30円以上      … 全部 赤（払いすぎ＝要対応）
-//   1-4位30円内   … 全部 青（順位も価格も良い＝対応不要）
-//   1-4位外 30円内 … 順位は赤・価格は青（片方だけ悪い）
-//   ★返すのは【HTML】。中身は下の固定文字だけで、商品名などの外部文字は入れない
-//     （入れるときは必ず escapeHtml を通すこと）。
+const AD_CIRCLE_BID_BORDER = 30;   // 円。【v1.0829】★ラベルの文字はこの値から作るので、ここだけ直せばよい
+// 【v1.0742/v1.0829】2行目は「良い＝青 / 悪い＝赤」で【軸ごとに】色分けする。
+//
+//   ★★言葉を軸ごとに分けること（v1.0829 で作り直した理由）。
+//     旧: 「30円以上」「1-4位30円内」「1-4位外 30円内」
+//       ① 判定は n > 30 なので **30円ちょうどは「30円内」側**。なのにラベルは
+//          「30円以上」＝30を含む言い方で、**文字と判定が食い違っていた**。
+//       ② 「内 / 外」を 価格と順位の【両方】に使っていて、どちらの話か読み取れない。
+//       ③ 価格が高いと順位が画面から消え、「35円で1位」と「35円で圏外」が同じ表示だった。
+//     新: 価格は 30円超 / 30円以下（数の言葉だけ）、順位は 1-4位 / 1-4位以外（順位の言葉だけ）。
+//         **2つの軸で同じ単語を1つも共有しない**。これが「被らない」の中身。
+//
+//   | 順位     | 価格     | 表示                | 色                |
+//   |----------|----------|---------------------|-------------------|
+//   | 1-4位    | 30円以下 | 1-4位 30円以下      | 両方 青           |
+//   | 1-4位以外| 30円以下 | 1-4位以外 30円以下  | 順位 赤 / 価格 青 |
+//   | 1-4位    | 30円超   | 1-4位 30円超        | 順位 青 / 価格 赤 |
+//   | 1-4位以外| 30円超   | 1-4位以外 30円超    | 両方 赤           |
+//
+//   ★返すのは【HTML】。中身は下の固定文字と AD_CIRCLE_BID_BORDER だけで、
+//     商品名などの外部文字は入れない（入れるときは必ず escapeHtml を通すこと）。
 const AD_SUB_RED = '#dc2626', AD_SUB_BLUE = '#2563eb';
 function _adSubPart(txt, color) { return '<span style="color:' + color + '">' + txt + '</span>'; }
+// 【v1.0829】順位・価格それぞれの「良い側の文字」。★境界値は定数から作る（直書きしない）。
+const AD_SUB_RANK_OK = '1-4位', AD_SUB_RANK_NG = '1-4位以外';
+function _adSubPriceLabel(over) {
+  return over ? (AD_CIRCLE_BID_BORDER + '円超') : (AD_CIRCLE_BID_BORDER + '円以下');
+}
 function _adCircleSubLabel(code) {
   let bid = null;
   try { bid = getBid(code); } catch (e) { bid = null; }
   const n = Number(bid);
   if (bid == null || !isFinite(n) || n <= 0) return '';                 // 未入力 → 2行目なし
-  if (n > AD_CIRCLE_BID_BORDER) return _adSubPart('30円以上', AD_SUB_RED);
+  const over = (n > AD_CIRCLE_BID_BORDER);                              // ★30円ちょうどは「30円以下」側
   let bucket = null;
   try { bucket = getLatestRankBucket(code, 'ad'); } catch (e) { bucket = null; }
-  return (bucket === 'top')
-    ? _adSubPart('1-4位30円内', AD_SUB_BLUE)
-    : _adSubPart('1-4位外', AD_SUB_RED) + ' ' + _adSubPart('30円内', AD_SUB_BLUE);
+  const top = (bucket === 'top');
+  // ★順位が先・価格が後。並びを入れ替えないこと（4通りを見比べるとき位置がずれる）。
+  // 【v1.0830】★区切りは【半角スペース1つ】。v1.0829 で入れた「・」は
+  //   全角1文字ぶん（約10px）幅を食い、枠を112→124pxに広げる羽目になった。
+  //   色分けで2つの軸はすでに見分けられるので、区切り文字は要らない。
+  return _adSubPart(top ? AD_SUB_RANK_OK : AD_SUB_RANK_NG, top ? AD_SUB_BLUE : AD_SUB_RED)
+       + ' '
+       + _adSubPart(_adSubPriceLabel(over), over ? AD_SUB_RED : AD_SUB_BLUE);
 }
 // 【v1.0745】入札価格の「最終更新日」＝ いまの金額になった日。
 //   ★日別履歴（state.rankEdits[ym][code].bid）は【変わらない日も前日の値をコピーして毎日入る】。
@@ -11885,6 +11931,7 @@ const STATUS_LIFE_DISPLAY_LABEL = {
   '撤退予定': '削除予定',            // 【v1.0737】見た目だけ。★保存値・判定式は '撤退予定' のまま
   '撤退済み': '削除済',              // 【v1.0733/v1.0737】見た目だけ。★保存値・判定式は '撤退済み' のまま
   'リニューアル予定': 'リニューアル<br>予定',   // 【v1.0734】2行にそろえる
+  'リニューアル': 'リニューアル済',             // 【v1.0828】見た目だけ。★保存値は 'リニューアル' のまま
   /* 【v1.0721】v1.0720でここに入れていた '新商品'→'新リニュ' / 'リニューアル'→'新リニュ' は取りやめ。
      ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
      まとめて1つに見せるのは【チップ】の役目（チップ名を「新リニュ」にした）。 */
@@ -13137,8 +13184,19 @@ function _ycThumbLayoutApply() {
     });
     // ★ボタンは3画面ぶん全部そろえる。押した画面だけ .on にすると、
     //   別の画面へ行ったとき「上下で表示されているのに横並びが選択状態」になる。
-    document.querySelectorAll('[data-thumblay]').forEach(b =>
-      b.classList.toggle('on', b.getAttribute('data-thumblay') === (_ycThumbStack ? 'stack' : 'row')));
+    document.querySelectorAll('[data-thumblay]').forEach(b => {
+      const k = b.getAttribute('data-thumblay');
+      b.classList.toggle('on', k === (_ycThumbStack ? 'stack' : 'row'));
+      // 【v1.0827】★ラベルは件数の定数から作る（直書きしない）。
+      //   件数と表示が食い違うと「40表示なのに20件しか出ない」になる。
+      try {
+        const n = (k === 'stack') ? (MI_THUMB_COLS * MI_THUMB_ROWS_STACK) : MI_THUMB_COLS;
+        b.textContent = n + '表示';
+        b.title = (k === 'stack')
+          ? ('売上上位' + n + '件を、折り返して縦に並べます（1行は最大' + MI_THUMB_COLS + '件）')
+          : ('売上上位' + n + '件を、1行に並べます（横スクロール）');
+      } catch (e) {}
+    });
     // ★説明文の「横スクロール」も直す。並べ方を変えたのに案内が横スクロールのままだと、
     //   下の行があることに気づけない（説明は状態から作る・直書きしない）。
     { const e = document.getElementById('miThumbScrollNote');
@@ -13148,11 +13206,16 @@ function _ycThumbLayoutApply() {
 function _ycThumbLayoutSet(v) {
   _ycThumbStack = (v === 'stack');
   _ycThumbLayoutApply();
-  // 【v1.0825】★商品-日月別データは並べ方で【件数】も変わる（20 ⇔ 40）ので描き直す。
-  //   v1.0824 まではCSSだけで済んでいたが、件数が変わる以上ここで作り直さないと
-  //   「上下にしたのに20件のまま」になる。
-  //   ★renderMonthly() の中からは呼ばないこと（_ycThumbLayoutApply は呼ぶ）。無限ループになる。
-  try { if (state.currentView === 'monthly' && typeof renderMonthly === 'function') renderMonthly(); } catch (e) {}
+  // 【v1.0825/v1.0827】★件数が変わる（20 ⇔ 40）ので、いま出ている帯を描き直す。
+  //   ★3画面ぶん必要。商品-日月別データだけ描き直していると、
+  //     商品-グラフ／商品-推移では「40表示にしたのに20件のまま」になる。
+  //   ★描き直し関数の中からは呼ばないこと（_ycThumbLayoutApply のほうは呼ぶ）。無限ループになる。
+  try {
+    const v = state.currentView;
+    if (v === 'monthly' && typeof renderMonthly === 'function') renderMonthly();
+    else if (v === 'itemgraph' && typeof renderItemGraph === 'function') renderItemGraph();
+    else if (v === 'itemtrend' && typeof renderItemTrend === 'function') renderItemTrend();
+  } catch (e) {}
 }
 window._ycThumbLayoutSet = _ycThumbLayoutSet;
 window._ycThumbLayoutApply = _ycThumbLayoutApply;
@@ -13167,9 +13230,9 @@ window._ycThumbLayoutApply = _ycThumbLayoutApply;
 //     el.style.setProperty('--mi-thumb-cols', …) で CSS 側へ書き込む。
 //     CSS の calc() に書いてある 20 は、JSが走る前の保険（フォールバック）。
 //   ★件数を増やすほど _cbAdActive（直近3日×メンバー）と _prRoasOf がその件数ぶん走る。
-//   ★商品-グラフ／商品-推移の帯は YC_THUMB_N（50件）のまま。
-//     この2画面は「表の上に置く見出し」ではなく単独の帯なので、行数を決める意味が薄い。
-//     そろえたくなったら ycRenderThumbStrip の YC_THUMB_N を miThumbN() に変えるだけ。
+//   【v1.0827】★商品-グラフ／商品-推移の帯も miThumbN() を見るようにした（v1.0826 までは50件固定）。
+//     ボタンのラベルを「20表示 / 40表示」にした以上、画面によって件数が違うと
+//     **ラベルが嘘になる**ため。3画面とも同じ件数・同じ並べ方になる。
 const MI_THUMB_COLS = 20;
 const MI_THUMB_ROWS_STACK = 2;
 function miThumbN() { return _ycThumbStack ? (MI_THUMB_COLS * MI_THUMB_ROWS_STACK) : MI_THUMB_COLS; }
@@ -18310,7 +18373,9 @@ let _itTrendYm    = '';        // 'YYYY-MM'
 //     PR料率の並び順・リニュ予定の判定・透明の枠で行をそろえる）が画面ごとにズレる。
 //   ★違ってよいのは「どの期間で順位を出すか」だけ。そこは呼び出し側が rows を作って渡す。
 // ============================================================================
-const YC_THUMB_N = 50;   // 帯に出す件数（横スクロール1本なので縦は伸びない）
+// 【v1.0827】帯に出す件数は miThumbN()（横並び20 / 上下40）に統一。
+//   ★この定数は残さない。残すと「グラフだけ50件」に戻せてしまい、
+//     ボタンのラベル（20表示/40表示）と食い違う。
 
 // 出稿中か。全-貢献度と同じ 1本（取込済みの最新日から直近 CB_ACTIVE_DAYS 日に広告費があるか）
 function ycThumbAdActive(members) {
@@ -18393,16 +18458,26 @@ function ycThumbStatusHtml(code) {
   const editable = (typeof ghIsEnabled === 'function') ? ghIsEnabled() : false;
   let color = 'var(--text3)';
   try { color = statusLifeColor(cur) || 'var(--text3)'; } catch (e) {}
-  // 【v1.0817】★短縮表記（リニュ予定 等）は廃止。文字を小さくして2行にできるようにしたので
-  //   正式な名前をそのまま出せる。開いたリスト（option）も正式名のまま。
+  // 【v1.0817/v1.0828】★ラベルは statusOptionLabel() を通す。
+  //   商品-基本データの表と同じ言い換え（削除予定 / 削除済 / リニューアル済）がここにも効く。
+  //   ★ここで自前の言い換え表を持たないこと。持つと表とサムネで名前が食い違う（§200-6）。
+  const _lbl = (v) => (typeof statusOptionLabel === 'function') ? statusOptionLabel(v) : esc(v);
   const opts = (typeof STATUS_LIFE_OPTIONS !== 'undefined' ? STATUS_LIFE_OPTIONS : []).map(v =>
     '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>'
-    + esc(v) + '</option>').join('');
+    + _lbl(v) + '</option>').join('');
   // 【v1.0817】★2行で見せる値だけをここに書く。キーは STATUS_LIFE_OPTIONS の正式な文字列。
   //   ★value ではなく【表示だけ】を分ける。保存値は触らない。
-  const LABEL_BR = { 'リニューアル予定': ['リニューアル', '予定'] };
+  // 【v1.0817/v1.0828】★幅86pxに収まらないものだけ2行に割る。
+  //   キーは【保存値】、中身は【表示ラベル(statusOptionLabel)を2行に割ったもの】。
+  //   ★STATUS_OPTION_LABEL の言い換えを変えたら、ここも直すこと
+  //     （'リニューアル' → 'リニューアル済' なので ['リニューアル','済']）。
+  //   ★ここに無い値は1行で出す。はみ出すなら足す（文字を削らない）。
+  const LABEL_BR = {
+    'リニューアル予定': ['リニューアル', '予定'],
+    'リニューアル':     ['リニューアル', '済']
+  };
   const br = LABEL_BR[cur];
-  const labelHtml = br ? (esc(br[0]) + '<br>' + esc(br[1])) : esc(cur);
+  const labelHtml = br ? (esc(br[0]) + '<br>' + esc(br[1])) : _lbl(cur);
   // ★click / mousedown を止める。止めないと親の onclick（商品の切り替え）が走り、
   //   選ぼうとしただけで別の商品に飛ぶ。
   return '<span class="mi-thumb-stw' + (editable ? '' : ' is-ro') + '"'
@@ -18484,14 +18559,15 @@ function ycRenderThumbStrip(el, selectedKey, pickFn) {
   const rows = r0.rows;
   if (!rows.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
   el.style.display = '';
-  const top = rows.slice(0, YC_THUMB_N);
+  const _n = miThumbN();   /* 【v1.0827】商品-日月別データと同じ件数 */
+  const top = rows.slice(0, _n);
   const selIdx = rows.findIndex(r => r.code === selectedKey);
-  if (selIdx >= YC_THUMB_N) top.push(rows[selIdx]);
+  if (selIdx >= _n) top.push(rows[selIdx]);
   const sumLabel = String(r0.ym || '').replace('-', '/') + ' の売上';
   try { _ycThumbLayoutApply(); } catch (e) {}   /* 【v1.0822】並べ方を描き直しのたびに合わせる */
   el.innerHTML = top.map((r, i) => ycThumbHtml(r, {
     selected: r.code === selectedKey,
-    rank: (i < YC_THUMB_N) ? (i + 1) : '—',
+    rank: (i < _n) ? (i + 1) : '—',
     onclick: pickFn + "('" + String(r.code).replace(/'/g, "\\'") + "')",
     sumLabel: sumLabel
   })).join('');
@@ -19440,6 +19516,10 @@ function renderContrib() {
 window.renderContrib = renderContrib;
 
 function renderAll() {
+  // 【v1.0828】★ビューが決まってから復帰バーの出し分けを掛け直す。
+  //   applyHeaderCollapse() の最初の呼び出し（スクリプト先頭）は state.currentView が
+  //   まだ無く、安全側（バーを出す）に倒れているため。
+  try { if (typeof applyHeaderCollapse === 'function') applyHeaderCollapse(); } catch (e) {}
   if (typeof fxSyncBtns === 'function') fxSyncBtns();   // 【v1.0756】計算式トグルの見た目を合わせる
   if (typeof syncLinkedChildrenStatus === 'function') syncLinkedChildrenStatus();  // 【v1.0437】追従中の子ステータスを親へ同期（表示・件数・撤退判定の整合）
   // 【v1.0604】★商品件数が減っていないか毎回見張る。減ったらログに⚠を1行残す
@@ -23259,8 +23339,19 @@ function applyHeaderCollapse() {
   const bar = document.getElementById('hdrRestoreBar');          // ナビの下
   const barTop = document.getElementById('hdrRestoreBarTop');    // いちばん上（ヘッダー1の位置）
   const barTabs = document.getElementById('hdrRestoreBarTabs');  // 【v1.0703】.top-nav-3 の先頭（ヘッダー3の上）
-  const show1 = !!_hdrCollapse.h1;
-  const show2 = !!_hdrCollapse.h2;
+  // 【v1.0828】★いま開いている画面に「ヘッダー1・2を表示」ボタンがあるなら、
+  //   いちばん上の復帰バーは出さない（＝1行ぶん表が広く使える）。
+  //   ★必ず「画面内に戻す手段があるとき【だけ】」にすること。
+  //     無条件に消すと、このボタンが無い画面（全-月別データ等）で
+  //     隠したヘッダーを戻す手段が画面から消える（§209 の大原則）。
+  //   ★判定は DOM を見る（class="yc-hdr12-btn" がいまのビューの中にあるか）。
+  //     state.currentView がまだ入っていない起動直後は null になり、
+  //     「バーを出す」＝安全側に倒れる。
+  const _vEl = document.getElementById('view-' + ((typeof state !== 'undefined' && state && state.currentView) || ''));
+  const _inCardRestore = !!(_vEl && _vEl.querySelector('.yc-hdr12-btn'))
+                         && !!_hdrCollapse.h1 && !!_hdrCollapse.h2;
+  const show1 = !!_hdrCollapse.h1 && !_inCardRestore;
+  const show2 = !!_hdrCollapse.h2 && !_inCardRestore;
   const show3 = !!_hdrCollapse.h3 && !autoHidden;
   if (r1) r1.style.display = show1 ? '' : 'none';
   if (r2) r2.style.display = show2 ? '' : 'none';
@@ -23290,12 +23381,13 @@ function applyHeaderCollapse() {
   // 【v1.0823】商品-日月別データのボタンのラベルと選択状態を【状態から】作る。
   //   ★上部の「ヘッダー1を隠す」「ヘッダー2を隠す」を個別に押しても必ずここを通るので、
   //     ラベルが食い違わない。ボタン側で書き換えないこと。
-  { const hb = document.getElementById('miHdr12Btn');
-    if (hb) {
-      const both = !!(_hdrCollapse.h1 && _hdrCollapse.h2);
-      hb.textContent = both ? '🔽 ヘッダー1・2を表示' : '🔼 ヘッダー1・2を隠す';
-      hb.classList.toggle('on', both);
-    } }
+  // 【v1.0828】★id ではなく class で全部そろえる。画面が増えるたびに id を足す作りだと、
+  //   足し忘れた画面でラベルが「隠す」のまま残る。
+  { const both12 = !!(_hdrCollapse.h1 && _hdrCollapse.h2);
+    document.querySelectorAll('.yc-hdr12-btn').forEach(hb => {
+      hb.textContent = both12 ? '🔽 ヘッダー1・2を表示' : '🔼 ヘッダー1・2を隠す';
+      hb.classList.toggle('on', both12);
+    }); }
   if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);  // 【v1.0512】段位置を再計算
   // 【v1.0451】ヘッダー開閉で表の上端位置が変わるので、商品-各比率の表高さを再計算し画面下端まで使う
   if (state.currentView === 'oyako' && typeof _oyFitHeight === 'function') _oyFitHeight();
