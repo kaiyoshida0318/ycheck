@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0830 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0832 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4268,7 +4268,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0830</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0832</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4282,7 +4282,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
     <!-- 【v206】title属性のラグ（OS標準ツールチップは0.5〜1秒遅延）を回避するため、data-tip属性＋CSSの即時ツールチップに変更。 -->
-    <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札価格・PRオプションの説明などを表示する"><span class="chip-label">💡 全体の説明</span></button>
+    <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札状態・PR状態・ステータスの説明を表示する"><span class="chip-label">💡 全体の説明</span></button>
     <!-- 【v1.0582】「分析」ボタンはここから .header-left（ショップ選択の右）へ移動した -->
     <!-- 【v1.0753】並びを「商品追加 → コード移行 → レポート追加」にした（作業の順番に合わせた）。
          ★ボタンの id とハンドラは変えていない。順番だけの入れ替え。 -->
@@ -5594,39 +5594,27 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="info-panel">
     <button class="info-close" id="stateInfoClose" type="button" aria-label="閉じる">×</button>
     <section class="info-section">
+      <!-- 【v1.0831】★中身は JS（_infoFillLists）が STATUS_*_OPTIONS と色の定数から作る。
+           ここに選択肢を直書きしないこと。選択肢や色を足したときに説明だけ古いまま残る
+           （v1.0830 まで「通常商品」「撤退■」など、もう存在しない値が説明に載っていた）。 -->
       <h3 class="info-heading">■ 状態の説明</h3>
-      <h4 class="info-subheading" style="margin:2px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">入札価格状態</h4>
-      <ul class="info-list">
-        <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">入札◯</b>広告の入札価格が最安値の <b>25円</b> かつ、広告順位が <b>1〜4位</b> のもの。</li>
-        <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">入札△-調整中</b><b>「入札25円かつ広告1〜4位」</b> を満たすよう調整中のもの。</li>
-        <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">入札△-飛ぶ手前固定</b>下げると広告が飛ぶ手前の金額で <b>固定完了</b>。月1チェック用に「未確認」に出ます（入札価格を変えると推移確認へ）。</li>
-        <li><b class="info-tag" style="color:#6b7280;background:#f1f3f5;border:1px solid var(--border2)">入札なし</b>広告を打っていないもの。</li>
-      </ul>
-      <h4 class="info-subheading" style="margin:12px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">PRオプ状態</h4>
-      <ul class="info-list">
-        <li><b class="info-tag" style="color:#2563eb;background:#eaf1fe;border:1px solid rgba(37,99,235,0.35)">PR◯</b>PRオプションが最安値の <b>7%</b> かつ、SEO順位が <b>1〜6位</b> のもの。</li>
-        <li><b class="info-tag" style="color:#c99700;background:#fbf3d9;border:1px solid rgba(201,151,0,0.4)">PR△-親-下げ挑戦中</b><b>親商品</b>。30%等で上位表示させ子へ送り込むが、料率の <b>下げに挑戦中</b> のもの。</li>
-        <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-親-飛ぶ手前固定</b><b>親商品</b>。下げ挑戦の結果、ギリギリの％で <b>固定完了</b>。月1チェック用に「未確認」に出ます（料率を変えると推移確認へ）。</li>
-        <li><b class="info-tag" style="color:#12a5c8;background:#e0f5fa;border:1px solid rgba(18,165,200,0.4)">PR△-子-7％固定</b><b>子商品</b>。PR◯条件は未達でも良し。<b>7%固定</b> で親から送り込むもの（対応不要）。</li>
-        <li><b class="info-tag" style="color:#ea7317;background:#fdeede;border:1px solid rgba(234,115,23,0.35)">PR×</b><b>「PRオプ7％かつSEO1〜6位」</b> を満たしていないもの。</li>
-      </ul>
+      <h4 class="info-subheading" style="margin:2px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">入札状態</h4>
+      <ul class="info-list" id="infoAdList"></ul>
+      <p class="info-note" id="infoAdNote" style="margin:8px 0 0;font-size:0.8rem;line-height:1.7;color:var(--text2);"></p>
+      <h4 class="info-subheading" style="margin:14px 0 6px;font-size:0.86rem;font-weight:700;color:var(--text2);">PR状態</h4>
+      <ul class="info-list" id="infoProList"></ul>
     </section>
     <section class="info-section">
       <h3 class="info-heading">■ ステータスの説明</h3>
-      <ul class="info-list">
-        <li><b class="info-tag ok">通常商品</b>通常どおり販売・運用している商品。</li>
-        <li><b class="info-tag info" style="color:#2563eb;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.3)">新商品</b>登録して間もない、運用を立ち上げ中の商品。</li>
-        <li><b class="info-tag warn">撤退検討▲</b>広告の採算が合わないため削除し、PRオプションのみで販売できるかを検証しているもの。</li>
-        <li><b class="info-tag ng">撤退■</b>在庫が無くなり次第、販売終了予定のもの。</li>
-        <li><b class="info-tag none">撤退済み</b>販売を終了した商品。</li>
-      </ul>
+      <ul class="info-list" id="infoLifeList"></ul>
+      <p class="info-note" id="infoLifeNote" style="margin:8px 0 0;font-size:0.8rem;line-height:1.7;color:var(--text2);"></p>
     </section>
     <section class="info-section">
-      <h3 class="info-heading">■ 撤退までの流れ</h3>
+      <h3 class="info-heading">■ 削除までの流れ</h3>
       <ol class="info-flow">
         <li><span class="flow-step">まずは広告を出して売っていく</span></li>
-        <li><span class="flow-step">採算が合わなくなったら広告を削除して、PRオプションだけで運用</span></li>
-        <li><span class="flow-step">それでも利益が出ない場合は撤退認定する</span></li>
+        <li><span class="flow-step">採算が合わなくなったら広告を止めて、PRオプションだけで運用（＝撤退検討▲）</span></li>
+        <li><span class="flow-step">それでも利益が出ない場合は削除を決める（＝削除予定 → 削除済）</span></li>
       </ol>
     </section>
   </div>
@@ -19934,10 +19922,105 @@ $$('.state-chip').forEach(chip => {
 // 【v205】全体の説明ポップアップ：ホバー表示を廃止。クリックで開き、
 // ×ボタン or オーバーレイ外部クリック or Esc で閉じる。
 // （以前のホバー方式はポップアップが画面より縦に長いと下が見切れ、pointer-events:noneでスクロール不可だった）
+
+// ============================================================================
+// 【v1.0831】「💡 全体の説明」の 状態／ステータス 一覧。
+//   ★並びも色もラベルも【実際に使っている定数】から作る。ここに選択肢を直書きしないこと。
+//     v1.0830 までは静的HTMLに直書きで、「通常商品」「撤退■」など
+//     もう選択肢に無い値が説明に残り、逆に「子（親に追従）」「リニューアル予定」などは
+//     載っていなかった（説明だけが古くなる典型）。
+//   ★ラベルは statusOptionLabel() を通す＝ドロップダウンとまったく同じ文字になる
+//     （削除予定 / 削除済 / リニューアル済 / PR✕-放置）。
+//   ★色は STATUS_TEXT_COLOR / STATUS_LIFE_COLOR。チップやセルと必ず同じ色になる。
+//   ★説明文だけがこの表の持ちもの。選択肢を足したらここに1行足す（足し忘れると空欄で出る）。
+// ============================================================================
+const INFO_AD_DESC = {
+  '': 'まだ選んでいないもの。チップの【選択前-入札】に入ります。',
+  '入札◯': '入札価格が <b>30円以下</b>、かつ <b>広告順位が1〜4位</b>。この形が基本です（入札価格の最安は25円）。',
+  '入札△': '◯の形へ持っていく<b>調整中</b>のもの、または「これ以上下げると広告が飛ぶ」<b>手前の金額で固定</b>したもの。固定したものは月1チェック用に「未確認」に出ます（価格を変えると推移確認へ）。',
+  '入札なし': '広告を打っていないもの。<b>親子設定の子</b>は、保存値が何であってもここに入ります（子は親に追従するため）。'
+};
+// ★入札◯の1行目（自動表示）と、そこから外れたときの運用。
+//   この運用は「赤＝即△」ではないので、そう読まれないように書くこと。
+const INFO_AD_NOTE =
+  '入札◯のセルの<b>1行目は自動表示</b>です（人が選ぶ項目ではありません）。'
+  + 'いまの<b>広告順位</b>と<b>入札価格</b>から「1-4位 / 1-4位以外」「30円以下 / 30円超」を出し、'
+  + '<b style="color:#2563eb">良い側は青</b>・<b style="color:#dc2626">悪い側は赤</b>で塗り分けます。'
+  + '<br>★<b>赤が出ても、そのまま△にするわけではありません。</b>'
+  + '広告ROAS・PR広告売上ROASを確認して、<b>採算が取れていれば◯のまま残します</b>'
+  + '（価格が高くても儲かっているなら直す必要がない）。'
+  + '<b>採算が悪ければ△に変えて</b>調整に回します。'
+  + 'つまり<b>1行目の赤は「直せ」ではなく「ROASを確認しろ」の合図</b>です。';
+
+const INFO_PRO_DESC = {
+  '': 'まだ選んでいないもの。チップの【選択前-PR】に入ります。',
+  'PR◯': 'PRオプ料率が最安の <b>7%</b>、かつ <b>SEO順位が1〜6位</b>。',
+  'PR◯-親-30％固定': '<b>送り込み元（親）</b>。7%まで下げず、上位表示を取るために<b>高い料率のまま固定</b>しているもの。対応不要。',
+  'PR◯-子-7％固定': '<b>送り込み先（子）</b>。最低料率の <b>7%から動かしようがない</b>もの。対応不要。',
+  'PR△-調整中': '◯の形へ持っていく<b>調整中</b>のもの。',
+  'PR△-親-下げ挑戦中': '<b>親</b>。30%等で上位表示させて子へ送り込みつつ、<b>料率を下げられるか試している</b>もの。',
+  'PR△-飛ぶ手前固定': '下げると上位表示が飛ぶ<b>手前の料率で固定完了</b>。月1チェック用に「未確認」に出ます（料率を変えると推移確認へ）。',
+  // 【v1.0832】★ステータス名は statusOptionLabel() を通して入れる（'撤退予定' → 「削除予定」）。
+  //   ここに「削除予定」と直書きすると、言い換え表（STATUS_OPTION_LABEL）を変えたときに
+  //   この文だけ古い呼び方のまま残る。
+  'PR×': '「7%かつSEO1〜6位」を満たしておらず、<b>当面は手を入れない</b>と決めたもの。'
+       + 'ステータスが<b>' + ((typeof statusOptionLabel === 'function') ? statusOptionLabel('撤退予定') : '撤退予定')
+       + '</b>の商品がこれに当たります。'
+};
+
+const INFO_LIFE_DESC = {
+  '—': '未設定。まだ何も決めていないもの。',
+  '新商品': '登録して間もない、<b>評価がまだ決まっていない</b>もの。',
+  'リニューアル': '<b>作り直した直後</b>のもの。新商品と同じ枠（チップの【新リニュ】）にまとまります。',
+  '子（親に追従）': 'この商品のステータスは<b>親の値として読む</b>、という意思表示。入札状態は「入札なし」、PR状態は「PR◯-子-7％固定」として扱われます。',
+  '健常◯': '<b>良好</b>。いまのところ手を入れなくてよいもの。',
+  '中立△': '<b>健常になりきれない微妙な</b>もの。数値でかっちり決めるものではなく、見ての判断です。',
+  '撤退検討▲': '広告の採算が合わないため<b>広告を止め</b>、PRオプションだけで売れるかを<b>検証中</b>のもの。',
+  '撤退予定': '在庫が無くなり次第、<b>販売を終了する</b>もの。',
+  '撤退済み': '<b>販売を終了した</b>もの。',
+  'リニューアル予定': '<b>いったん止めて作り直す</b>もの。削除とは別枠です。'
+};
+const INFO_LIFE_NOTE =
+  '★<b>健常◯・中立△</b>を選ぶと、そのときの入札状態から<b>「広告あり／広告なし」が自動で付きます</b>'
+  + '（例: 健常-広告あり◯）。あとで入札状態を変えても自動では書き換わらないので、選び直したときに付け直されます。'
+  + '<br>★<b>撤退済み（削除済）だけは親に追従しません</b>。親が削除済でも子が勝手に消えると事故になるため、商品ごとに持ちます。';
+
+function _infoTagHtml(label, color) {
+  return '<b class="info-tag" style="color:' + color + ';background:' + color + '14;border:1px solid ' + color + '59">'
+       + label + '</b>';
+}
+function _infoFillList(elId, options, descMap, colorOf) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = options.map(v => {
+    const label = (typeof statusOptionLabel === 'function') ? statusOptionLabel(v) : v;
+    const shown = (v === '') ? '—' : label;
+    let col = '#1a1a1a';
+    try { col = colorOf(v) || '#1a1a1a'; } catch (e) {}
+    const d = descMap[v];
+    if (d == null) console.warn('[Ycheck] 全体の説明に文が無い選択肢:', elId, JSON.stringify(v));
+    return '<li>' + _infoTagHtml(shown, col) + (d || '<span style="color:#dc2626">（説明が未記入）</span>') + '</li>';
+  }).join('');
+}
+function _infoFillLists() {
+  try {
+    _infoFillList('infoAdList',   AD_STATUS_OPTIONS,   INFO_AD_DESC,   statusTextColor);
+    _infoFillList('infoProList',  PRO_STATUS_OPTIONS,  INFO_PRO_DESC,  statusTextColor);
+    _infoFillList('infoLifeList', STATUS_LIFE_OPTIONS, INFO_LIFE_DESC, statusLifeColor);
+    const an = document.getElementById('infoAdNote');   if (an) an.innerHTML = INFO_AD_NOTE;
+    const ln = document.getElementById('infoLifeNote'); if (ln) ln.innerHTML = INFO_LIFE_NOTE;
+  } catch (e) { console.warn('[Ycheck] 全体の説明の組み立てに失敗:', e && e.message); }
+}
+window._infoFillLists = _infoFillLists;
+
 const infoBtn = $('#stateInfoBtn');
 const infoOverlay = $('#stateInfoOverlay');
 const infoClose = $('#stateInfoClose');
-function infoShow() { if (infoOverlay) infoOverlay.classList.add('show'); }
+function infoShow() {
+  // 【v1.0831】★開くたびに作り直す。選択肢や色が変わっても説明が古いまま残らない。
+  try { _infoFillLists(); } catch (e) {}
+  if (infoOverlay) infoOverlay.classList.add('show');
+}
 function infoHide() { if (infoOverlay) infoOverlay.classList.remove('show'); }
 if (infoBtn && infoOverlay) {
   infoBtn.addEventListener('click', infoShow);
