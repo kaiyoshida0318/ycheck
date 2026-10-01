@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0833 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0834 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3667,6 +3667,32 @@ table.rank-table td.rank-legend-col-row {
   display: flex; flex-direction: column; gap: 4px;
   min-height: 64px;
 }
+/* 【v1.0834】商品追加・更新モーダルのCSVドロップ領域。
+   ★v1.0833 まではここが .file-slot（小さなグレーの情報行）で、
+     「登録情報 / 未アップロード」としか読めず、**置き場所に見えなかった**。
+     しかも
+       ・.file-slot.dragover のCSSが【無く】、ドラッグ中に何の反応も出なかった
+       ・読込後に付けるクラスが .filled なのにCSSは .loaded で【名前が食い違い】、
+         成功しても見た目が変わらなかった
+     の2つの不具合が重なっていた。クラス名はここで .np-drop に統一した。 */
+.np-drop {
+  border: 2px dashed var(--border2); border-radius: 12px; background: var(--bg3);
+  padding: 20px 16px; text-align: center; cursor: pointer; user-select: none;
+  transition: border-color .12s, background .12s;
+}
+.np-drop:hover { border-color: var(--accent); background: rgba(37,99,235,0.05); }
+.np-drop:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.18); }
+/* ★ドラッグ中は【枠線を実線に変えて】背景も濃くする。色だけ変えても気づけない。 */
+.np-drop.dragover { border-style: solid; border-color: var(--accent); background: rgba(37,99,235,0.12); }
+.np-drop.loaded { border-style: solid; border-color: rgba(22,163,74,0.55); background: rgba(22,163,74,0.08); }
+.np-drop-icon { font-size: 30px; line-height: 1; margin-bottom: 6px; }
+.np-drop-main { font-size: 1rem; font-weight: 800; color: var(--text); line-height: 1.5; }
+.np-drop-sub  { font-size: 0.82rem; color: var(--text2); margin-top: 4px; }
+.np-drop-cols { font-size: 0.74rem; color: var(--text3); margin-top: 9px;
+                display: inline-block; background: var(--bg2); border: 1px solid var(--border);
+                border-radius: 999px; padding: 2px 10px; }
+.np-drop.loaded .np-drop-main { color: #15803d; }
+.np-drop.loaded .np-drop-cols { background: #fff; }
 .file-slot.loaded {
   background: rgba(22,163,74,0.08);
   border-color: rgba(22,163,74,0.3);
@@ -4275,7 +4301,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0833</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0834</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5997,16 +6023,22 @@ th.col-sroas { background-color:#e7d5f5; }
       <div style="display:flex; align-items:center; justify-content:space-between; gap: 10px; flex-wrap: wrap;">
         <div>
           <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;">📥 CSVテンプレート</div>
-          <div style="font-size: 0.78rem; color: var(--text3);">列：商品コード / 商品名 / メインKW / 検索URL</div>
+          <div style="font-size: 0.78rem; color: var(--text3);" id="npTplCols"></div>
         </div>
         <button class="btn sm" id="npDownloadTemplate" type="button">⬇ テンプレートをダウンロード</button>
       </div>
     </div>
 
-    <div class="file-slot" id="slot-newproduct">
-      <div class="file-slot-label"><span class="slot-badge"></span>登録情報</div>
-      <div class="file-slot-status">未アップロード</div>
-      <div class="file-slot-filename">CSVファイルをここにドロップ、またはクリックして選択</div>
+    <!-- 【v1.0834】★クリックとドロップは既存の配線のまま（id は変えていない）。
+         変えたのは見た目と、中の3行の役割分担だけ。
+         ・np-drop-main … いまの状態（未読込は誘導文、読込後は ✓ N件）
+         ・np-drop-sub  … 次にやること（読込後はファイル名）
+         ・np-drop-cols … 必要な列（NP_CSV_COLS から入れる。直書きしない） -->
+    <div class="np-drop" id="slot-newproduct" role="button" tabindex="0" aria-label="CSVファイルをアップロード">
+      <div class="np-drop-icon" id="npDropIcon">📄</div>
+      <div class="np-drop-main" id="npDropMain">CSVファイルをここにドロップ</div>
+      <div class="np-drop-sub" id="npDropSub">またはクリックしてファイルを選択（.csv）</div>
+      <div class="np-drop-cols" id="npDropCols"></div>
     </div>
 
     <div class="validation-box">
@@ -22957,9 +22989,18 @@ function downloadBasicCsv() {
   }
 }
 
+// 【v1.0834】★CSVの列はここ1ヶ所。テンプレート・テンプレート欄の説明・ドロップ領域の表示が
+//   すべてこれを見る。別々に書くと、列を増やしたときに説明だけ古いまま残る。
+const NP_CSV_COLS = ['商品コード', '商品名', 'メインKW', '検索URL'];
+function _npFillColLabels() {
+  const t = document.getElementById('npTplCols');
+  if (t) t.textContent = '列：' + NP_CSV_COLS.join(' / ');
+  const d = document.getElementById('npDropCols');
+  if (d) d.textContent = '必要な列：' + NP_CSV_COLS.join(' / ');
+}
 // CSVテンプレートをダウンロード
 function downloadNewProductTemplate() {
-  const header = '商品コード,商品名,メインKW,検索URL';
+  const header = NP_CSV_COLS.join(',');
   const example = 'sample-001,サンプル商品名,メインキーワード,https://shopping.yahoo.co.jp/search?p=...';
   const csv = '\uFEFF' + header + '\n' + example + '\n';  // UTF-8 BOM付き（Excel対応）
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -22977,21 +23018,27 @@ function downloadNewProductTemplate() {
 // スロット表示更新
 function npRefreshSlot() {
   const slot = $('#slot-newproduct');
-  const status = slot.querySelector('.file-slot-status');
-  const filename = slot.querySelector('.file-slot-filename');
+  const icon = $('#npDropIcon');
+  const main = $('#npDropMain');
+  const sub  = $('#npDropSub');
   const confirmBtn = $('#npConfirmUpload');
   const msg = $('#npValidationMsg');
+  _npFillColLabels();   // 【v1.0834】列の表示は毎回 NP_CSV_COLS から作り直す
   if (npBuffer) {
-    slot.classList.add('filled');
-    status.textContent = `✓ ${npBuffer.count}件 読込済`;
-    filename.textContent = npBuffer.filename;
+    // 【v1.0834】★クラス名は .loaded（CSSと同じ）。v1.0833 までは .filled を付けていて
+    //   対応するCSSが無く、読み込めても見た目が変わらなかった。
+    slot.classList.add('loaded');
+    icon.textContent = '✅';
+    main.textContent = `${npBuffer.count}件 読み込み済み`;
+    sub.textContent = `${npBuffer.filename} ／ 別のファイルに変えるには、もう一度ここにドロップ`;
     confirmBtn.disabled = false;
     msg.textContent = `✅ ${npBuffer.count}件の新商品データを読み込みました。「アップロード実行」を押してください。`;
     msg.style.color = 'var(--green)';
   } else {
-    slot.classList.remove('filled');
-    status.textContent = '未アップロード';
-    filename.textContent = 'CSVファイルをここにドロップ、またはクリックして選択';
+    slot.classList.remove('loaded');
+    icon.textContent = '📄';
+    main.textContent = 'CSVファイルをここにドロップ';
+    sub.textContent = 'またはクリックしてファイルを選択（.csv）';
     confirmBtn.disabled = true;
     msg.textContent = '📋 CSVファイルをアップロードしてください';
     msg.style.color = '';
@@ -23850,6 +23897,10 @@ npSlot.addEventListener('click', () => {
     if (f) npHandleFile(f);
   };
   input.click();
+});
+// 【v1.0834】role="button" にしたので、キーボードでも開けるようにする
+npSlot.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); npSlot.click(); }
 });
 npSlot.addEventListener('dragover', (e) => {
   e.preventDefault();
