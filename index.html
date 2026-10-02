@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0834 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0835 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4301,7 +4301,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0834</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0835</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -18850,14 +18850,25 @@ function _trendPaint(opt) {
   //   ★PR広告売上ROAS・PR売上ROAS が「—」になる理由をこの列で確かめられるようにするためのもの。
   //     「—」かつ この列が【—】 → 設定PRオプ料率が未取得（推定できない）
   //     「—」かつ この列が【¥0】 → 料率7%で上乗せ分0。その日の広告費も0なら分母0＝計算不能
+  // 【v1.0835】PR実績額の【左】に「広告実績額」（累積／日別）。
+  //   ★PR実績額と並べて、2つの費用の積み上がり方を見比べられるようにするためのもの。
+  //     各ROASグループの中にある「実績額」列は【その日ぶんだけ】で、累積が無かった。
+  //   ★色は広告ROAS（アンバー）とは別の茶系にする。隣り合うので同系色だと
+  //     どちらのグループの列か読み違える（2pxの区切り線だけでは足りない）。
+  const AO = { hbg: '#e8dcc8', bg: '#faf6ef', bg2: '#f3ebdd', color: '#8a6d3b' };
+  const grpAd = '<th colspan="2" style="' + thB + 'top:0;background:' + AO.hbg + ';text-align:center;color:' + AO.color + ';border-left:2px solid var(--border);vertical-align:top">'
+    + '<div class="th-stack"><div class="th-lbl">広告実績額</div>'
+    + fxLine(fxT('その日の広告費','plain') + fxOp('を足し上げ')) + '</div></th>';
+  const subAd = '<th style="' + th2 + 'background:' + AO.bg  + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
+              + '<th style="' + th2 + 'background:' + AO.bg2 + ';text-align:center">日別</th>';
   const PO = { hbg: '#bfe3d8', bg: '#eef8f5', bg2: '#e2f2ec', color: '#0f766e' };
   const grpPr = '<th colspan="2" style="' + thB + 'top:0;background:' + PO.hbg + ';text-align:center;color:' + PO.color + ';border-left:2px solid var(--border);vertical-align:top">'
     + '<div class="th-stack"><div class="th-lbl">PR実績額<br>(7%超)</div>'
     + fxLine(fxT('総売上','tot') + fxOp('÷1.1×(料率−7%)')) + '</div></th>';
   const subPr = '<th style="' + th2 + 'background:' + PO.bg  + ';text-align:center;border-left:2px solid var(--border)">累積</th>'
               + '<th style="' + th2 + 'background:' + PO.bg2 + ';text-align:center">日別</th>';
-  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + grpPr + '</tr>'
-             + '<tr>' + subRev + metrics.map(sub).join('') + subPr + '</tr>';
+  const head = '<tr><th rowspan="2" style="' + th + 'text-align:center;vertical-align:bottom">日</th>' + grpRev + metrics.map(grp).join('') + grpAd + grpPr + '</tr>'
+             + '<tr>' + subRev + metrics.map(sub).join('') + subAd + subPr + '</tr>';
   const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
   const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
   const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
@@ -18886,6 +18897,10 @@ function _trendPaint(opt) {
              + (m.amount ? '<td style="' + td + 'background:' + m.bg + '">' + fyen(r['a_' + m.k]) + '</td>' : '')
              + (m.revCol ? '<td style="' + td + 'background:' + (m.rbg || '#edf7f1') + ';color:#0f8a52">' + fyen(m.revOf ? m.revOf(r.raw) : r.raw.rev) + '</td>' : '');
     });
+    // 【v1.0835】広告実績額（累積／日別）。★こちらは「未取得」の概念が無いので 0円は ¥0 のまま出す
+    //   （PR実績額は料率未取得を「—」で区別する必要があるが、広告費は取り込めていれば必ず数字）。
+    cells += '<td style="' + td + 'background:' + AO.bg  + ';color:' + AO.color + ';border-left:2px solid var(--border)">' + fyen(r.cum.adCost) + '</td>'
+           + '<td style="' + td + 'background:' + AO.bg2 + ';color:' + AO.color + '">' + fyen(r.raw.adCost) + '</td>';
     // 【v1.0779】PR実績額(7%超)。★料率未取得の日は 0円ではなく「—」
     cells += '<td style="' + td + 'background:' + PO.bg  + ';color:' + PO.color + ';border-left:2px solid var(--border)">' + fyen(r.cum.prKnown ? r.cum.prOver : null) + '</td>'
            + '<td style="' + td + 'background:' + PO.bg2 + ';color:' + PO.color + '">' + fyen(r.raw.prKnown ? r.raw.prOver : null) + '</td>';
@@ -18897,6 +18912,7 @@ function _trendPaint(opt) {
     + '<b>累積は率の平均ではなく、分子と分母をそれぞれ足してから割っています。</b>'
     + '実績額＝当日の実費で、指標ごとに分母が違います（' + metrics.filter(m => m.amount).map(m => m.label + '＝' + m.amountFull).join(' / ') + '）。'
     + '最上段＝当月の着地見込み（累積）。棒＝日別で、線より先に動く<b>先行指標</b>として読みます。'
+    + '右の<b>広告実績額</b>・<b>PR実績額(7%超)</b>は、各ROASグループの中の「実績額」（その日ぶん）に<b>累積</b>を足したものです。'   /* 【v1.0835】 */
     + 'PR系は⑤の設定PRオプ料率からの<b>推定</b>です（実測ではありません）。'
     + '<br>★売上がある日でも<b>PR広告売上ROASが「—」</b>になることがあります。理由はいちばん右の<b>PR実績額(7%超)</b>で分かります: '
     + 'そこが<b>「—」</b>＝' + (opt.prSrc === 'store' ? 'その日のPRオプションレポート(④)が未取込' : '設定PRオプ料率(⑤)が未取得で推定できない') + '／'
