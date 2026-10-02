@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0837 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0839 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3844,6 +3844,35 @@ table.rank-table td.rank-legend-col-row {
   line-height: 1;
 }
 .tab-conflict-close:hover { background: rgba(0,0,0,0.12); }
+/* 【v1.0838】別のショップも同時に開いているときの帯。
+   ★同一ショップ2タブ（上の黄色＝保存が消える事故）とは【別の色・別の文言】にする。
+     同じ見た目にすると「またあれか」で読み飛ばされ、深刻なほうの警告まで効かなくなる。 */
+.tab-shopmix-bar {
+  /* ★sticky にしないこと。上の .tab-conflict-bar も top:0 の sticky なので、
+     2本とも貼り付くとスクロール時に重なって下の帯が読めなくなる。
+     こちらは「開いた時に気づけばいい」案内なので、スクロールで流す。 */
+  position: relative; z-index: 8990;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  /* 【v1.0839】★ベタ塗りの赤。上の同一ショップ帯（淡い黄色）とは明度から違うので、
+     2本同時に出ても「どっちの話か」を色だけで読み分けられる。 */
+  background: #dc2626; color: #fff;
+  border-bottom: 2px solid #7f1d1d;
+  font-size: 0.86rem; line-height: 1.45;
+  font-weight: 500;
+}
+.tab-shopmix-bar .tab-conflict-icon { font-size: 1.1rem; flex-shrink: 0; }
+.tab-shopmix-bar .tab-conflict-text { flex: 1; }
+/* ★赤ベタの上では「赤い太字」で強調できない。白のままにして、下線で強調する。 */
+/* ★赤ベタの上では「赤い太字」で強調できない。白の太字＋、効かせたい1ヶ所だけ下線。
+     全部に下線を引くと、どこが肝心なのか分からなくなる。 */
+.tab-shopmix-bar b { color: #fff; }
+.tab-shopmix-bar .sm-key { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.tab-shopmix-bar code { background: rgba(255,255,255,0.2); color: #fff; padding: 1px 5px; border-radius: 3px; }
+.tab-shopmix-bar .sm-me    { color: #fff;     background: rgba(255,255,255,0.26); padding: 1px 7px; border-radius: 4px; font-weight: 700; }
+.tab-shopmix-bar .sm-other { color: #b91c1c; background: #fff;                   padding: 1px 7px; border-radius: 4px; font-weight: 700; }
+.tab-shopmix-bar .tab-conflict-close { background: rgba(255,255,255,0.22); color: #fff; }
+.tab-shopmix-bar .tab-conflict-close:hover { background: rgba(255,255,255,0.4); }
 /* 【v228】再登録後のコード移行モーダル */
 .cm-body { display: flex; flex-direction: column; gap: 14px; padding: 2px; }
 .cm-desc { font-size: 0.88rem; color: var(--text2); line-height: 1.55; margin: 0; }
@@ -4264,6 +4293,15 @@ th.col-sroas { background-color:#e7d5f5; }
   <button type="button" class="tab-conflict-close" id="tabConflictClose" title="この警告を閉じる">✕</button>
 </div>
 
+<!-- 【v1.0838】別のショップを同時に開いているときの帯。
+     ツール側の保存先はタブごとに固定されている（§223-4）ので、データが混ざることはない。
+     混ざるのは【人が落としてくるCSV】のほう。だから「気をつけること」を具体的に書く。 -->
+<div id="tabShopMixBar" class="tab-shopmix-bar" style="display:none;" role="status">
+  <span class="tab-conflict-icon">🏬</span>
+  <span class="tab-conflict-text">別のショップを同時に開いています。 いま <span class="sm-me" id="smMe"></span> ／ 別のタブ <span class="sm-other" id="smOther"></span><br><b>落としてくるCSVの取り違えに注意。</b> とくに <b class="sm-key">⑤PRオプ料率（<code>data*.csv</code>）は店を判別できません</b>。ダウンロード先のフォルダを店ごとに分けてください。<span style="opacity:.85">（ツール側の保存先はタブごとに固定されているので、データ自体は混ざりません）</span></span>
+  <button type="button" class="tab-conflict-close" id="tabShopMixClose" title="この案内を閉じる">✕</button>
+</div>
+
 <!-- 【v1.0600】別クライアントによる上書き検知バー（§15-C）。
      自分の保存の直後に、自分以外が書いた新しいデータを見つけたときだけ出す。 -->
 <div id="ycOverwriteBar" class="yc-overwrite-bar" style="display:none;" role="alert">
@@ -4301,7 +4339,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0837</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0839</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -25193,6 +25231,11 @@ try {
   //   sessionStorageはタブを閉じるとクリアされるので、閉じて再度開いたら再表示される。
   let dismissed = false;
   try { dismissed = (sessionStorage.getItem('ycTabConflictDismissed') === '1'); } catch (e) {}
+  // 【v1.0838】★別ショップの帯は【別のフラグ】で閉じる。
+  //   1つのフラグにまとめると、「別ショップも開いてるよ」を閉じた人が、
+  //   そのあと起きた「同じショップ2タブ＝保存が消える」に気づけなくなる。
+  let dismissedMix = false;
+  try { dismissedMix = (sessionStorage.getItem('ycTabShopMixDismissed') === '1'); } catch (e) {}
 
   /* 【v1.0836】★このタブのショップを名乗る。localStorage 直読み（旧 getCurrentShopId）だと別タブの切替で全タブが同じ値を名乗り、
      「同じショップを2タブで開いている」の判定が丸ごと当てにならなくなる（出るべき警告が出ない／出なくてよい警告が出る）。 */
@@ -25211,6 +25254,22 @@ try {
     for (const [, info] of others) if (info.shopId === mine) return true;
     return false;
   }
+  // 【v1.0838】このタブ以外で開かれている【別の】ショップIDの一覧（重複なし）
+  function otherShopIds() {
+    prune();
+    const mine = myShop();
+    const set = new Set();
+    for (const [, info] of others) {
+      const id = String(info.shopId || '');
+      if (id && id !== mine) set.add(id);
+    }
+    return [...set];
+  }
+  // 表示名に直す。ショップ管理に無いIDはIDのまま出す（黙って消さない）
+  function shopLabel(id) {
+    try { const sh = (typeof getShops === 'function' ? getShops() : {})[id]; if (sh && sh.name) return sh.name + '（' + (sh.shopCode || id) + '）'; } catch (e) {}
+    return id;
+  }
   function updateBar() {
     const bar = document.getElementById('tabConflictBar');
     if (!bar) return;
@@ -25221,6 +25280,19 @@ try {
     } else {
       bar.style.display = 'none';
     }
+    updateShopMixBar();   /* 【v1.0838】 */
+  }
+  // 【v1.0838】別ショップ同時オープンの帯
+  function updateShopMixBar() {
+    const bar = document.getElementById('tabShopMixBar');
+    if (!bar) return;
+    const ids = otherShopIds();
+    if (!ids.length || dismissedMix) { bar.style.display = 'none'; return; }
+    const me = document.getElementById('smMe');
+    const ot = document.getElementById('smOther');
+    try { if (me) me.textContent = shopLabel(myShop()); } catch (e) {}
+    if (ot) ot.textContent = ids.map(shopLabel).join(' / ');
+    bar.style.display = '';
   }
 
   bc.onmessage = (e) => {
@@ -25238,6 +25310,14 @@ try {
     dismissed = true;
     try { sessionStorage.setItem('ycTabConflictDismissed', '1'); } catch (e) {}
     const bar = document.getElementById('tabConflictBar');
+    if (bar) bar.style.display = 'none';
+  });
+
+  const mixClose = document.getElementById('tabShopMixClose');
+  if (mixClose) mixClose.addEventListener('click', () => {
+    dismissedMix = true;
+    try { sessionStorage.setItem('ycTabShopMixDismissed', '1'); } catch (e) {}
+    const bar = document.getElementById('tabShopMixBar');
     if (bar) bar.style.display = 'none';
   });
 
