@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0835 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0836 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4301,7 +4301,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0835</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0836</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6339,6 +6339,12 @@ function saveShops(map) {
 })();
 
 // 現在選択中のショップIDを取得（未設定・未登録ならデフォルト）
+// 【v1.0836】★この2つ（getCurrentShopId / getCurrentShop）を呼んでよいのは
+//   「いまブラウザ全体でどれが選ばれているか」を知りたい初期化処理だけ（= 下の _sessionShopId の初期値）。
+//   localStorage は全タブ共有なので、別タブでショップを切り替えられると値が変わる。
+//   表示・保存キー・パス・URL・CSVの解釈は **すべて getSessionShopId() / getSessionShop()** を使うこと。
+//   v1.0836 で残っていた呼び出し（入札CSVのプレフィックス除去・スロットのファイル名例・商品ページURL・
+//   スポット更新キー・タブ競合判定・移行フラグ）はすべて session 側へ寄せた。増やさないこと。
 function getCurrentShopId() {
   try {
     const v = localStorage.getItem(CURRENT_SHOP_STORAGE_KEY);
@@ -7472,6 +7478,28 @@ function _ycClientLabel() {
   return os + ' / ' + br;
 }
 let _ycLastSavedAt = null;     // 直前に自分が書き込んだ savedAt
+// 【v1.0836】★読み込んだファイルが【この店のものか】を確かめる。
+//   保存時に shopId を書いているのに、読む時に見ていなかった（＝置き場所しか信じていなかった）。
+//   data/kairy/ の中身が shopId:'yukaiya' でも、警告なく読み込まれていた。
+//
+//   ★shopId が無いファイルは【通す】こと。v1.0600 より前のファイルや、
+//     手で置いたファイルには shopId が無い。ここで弾くと過去データが全部読めなくなる。
+//   ★不一致のときは【読み込みを中止する】。警告だけ出して読み込むと、
+//     画面が他店のデータになったうえに、次の保存でこの店のファイルを上書きしてしまう。
+function _ycShopIdGuard(data, where) {
+  const fileShop = String((data || {}).shopId || '').trim();
+  const mine = (typeof getSessionShopId === 'function') ? getSessionShopId() : '';
+  if (!fileShop || !mine) return { ok: true, unknown: true };
+  if (fileShop === mine) return { ok: true };
+  const msg = '⛔ 読み込みを中止しました: ' + (where || '') + ' のファイルは【' + fileShop + '】のものです'
+            + '（このタブは【' + mine + '】を開いています）。';
+  try { ghLog(msg + ' データは書き換えていません。', 'ng'); } catch (e) {}
+  try { console.error('[Ycheck] ' + msg); } catch (e) {}
+  try { if (typeof showToast === 'function') showToast(msg, 'warn'); } catch (e) {}
+  try { ycLog('warn', msg); } catch (e) {}
+  return { ok: false, found: fileShop, expect: mine };
+}
+
 function ghBuildDataString() {
   const data = {
     overall: state.overall, item: state.item, ad: state.ad, bid: state.bid,
@@ -7729,7 +7757,7 @@ function _ycShowMultiTabBanner() {
   return;
 }
 let _ycBc = null;
-try { _ycBc = new BroadcastChannel('ycheck-tabs-' + (typeof getCurrentShopId === 'function' ? getCurrentShopId() : '')); } catch (e) {}
+try { _ycBc = new BroadcastChannel('ycheck-tabs-' + (typeof getSessionShopId === 'function' ? getSessionShopId() : '')); } catch (e) {}   /* 【v1.0836】★このタブのショップで固定（別タブの切替に引きずられない） */
 if (_ycBc) {
   _ycBc.onmessage = (ev) => {
     const m = ev.data || {};
@@ -7990,6 +8018,17 @@ async function ghLoadFromGitHub(opts) {
       }, 800);
     }
     const data = JSON.parse(content);
+    // 【v1.0836】★他店のファイルなら、state を1つも触らずにここで降りる
+    {
+      const _g = _ycShopIdGuard(data, ghFilePath());
+      if (!_g.ok) {
+        ghSetSyncStatus('error', '別ショップのファイル');
+        alert('GitHub上の ' + ghFilePath() + ' は【' + _g.found + '】のデータでした。\n'
+            + 'このタブは【' + _g.expect + '】を開いているため、取り込みを中止しました。\n\n'
+            + '画面のデータは書き換えていません。ショップの選択とファイルの中身を確認してください。');
+        return { success: false, reason: 'shop-mismatch', found: _g.found, expect: _g.expect };
+      }
+    }
     console.log('[Ycheck診断] GitHubから取得: savedAt=', data.savedAt, '| bid件数=', Object.keys(data.bid||{}).length, '| eq-22-01=', (data.bid||{})['eq-22-01'], '（この値でローカルを上書きします）');
     // 【v287】起動時の自己修復マージ用に、GitHubで上書きする前のローカル値を退避。
     //   別セッション（古いタブ/端末）がGitHubを古い状態へ巻き戻していても、この端末のローカルに
@@ -8120,6 +8159,8 @@ async function ghLoadFromPublic() {
     const { content } = await ghGetFilePublic();
     if (!content) { ghLog('閲覧専用: 公開データがまだありません'); return false; }
     const data = JSON.parse(content);
+    // 【v1.0836】閲覧専用でも同じガードを通す（表示だけでも他店の数字を出さない）
+    if (!_ycShopIdGuard(data, '公開データ').ok) { ghLog('閲覧専用: 別ショップのファイルのため表示しません', 'ng'); return false; }
     if (data.overall) state.overall = data.overall;
     if (typeof ensureOldOverall === 'function') ensureOldOverall();
     if (data.item) state.item = data.item;
@@ -9323,6 +9364,10 @@ function reportDateFor(key, filename, rows) {
   return fileDateFromName(filename);            // ② はファイル名だけが頼り
 }
 
+// 【v1.0836】店を判別できなかったファイル。★「アップロード実行」の直前に確認ダイアログで出す。
+//   ④PRオプション・⑤PRオプ料率は、ファイル名にも中身にもストアアカウントが無く、
+//   どうやっても自動では判別できない。ここが最後の抜け穴なので、人に1枚確認させる。
+let _ycImportUnknown = [];
 // 【v1.0526】このバッチでドロップされた日別データの一時置き場（「アップロード実行」で state.daily へ反映）。
 //   ステージしただけでは保存されない＝取り込む前にカレンダーで過不足を目視できる。
 let _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };
@@ -9381,7 +9426,7 @@ function toggleReportTypesAcc() {
   if (!open) body.innerHTML = _reportTypeCardsHtml();   // ショップ切替に追従するため開くたびに作り直す
 }
 function _reportTypeCardsHtml() {
-  const shop = getCurrentShop().shopCode;
+  const shop = getSessionShop().shopCode;   /* 【v1.0836】★このタブのショップ。別タブで切り替えられてもこのタブの例は変わらない */
   // 1枚のカードを作る
   const card = (t) => {
     const pat = String(t.pat).replace('{shop}', shop);
@@ -10173,7 +10218,7 @@ function parseBid(rows) {
   // BID_ITEMファイルには大文字混じりのコード（IH-21-01等）があるが、
   // Ycheck内では小文字統一で扱う（同一商品として）
   // プレフィックスは現在選択中ショップのshopCode（例: yukaiya_ / burariya_）
-  const shopPrefix = getCurrentShop().shopCode + '_';
+  const shopPrefix = getSessionShop().shopCode + '_';   /* 【v1.0836】★別タブ切替で狂うと「burariya_ih-22-02」が丸ごとコード扱いになり、全商品が別物として入る */
   const prefixRegex = new RegExp('^' + shopPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
   const bidMap = {};
   rows.forEach(r => {
@@ -10408,6 +10453,7 @@ async function processFiles(files) {
   const csvFiles = await expandFiles(files);
   if (csvFiles.length === 0) { log('処理するCSVがありません', 'err'); validateBuffer(); return; }
   _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };   // 【v1.0537】prを追加
+  _ycImportUnknown = [];   // 【v1.0836】店を判別できなかったファイル（アップロード実行の前に確認する）
   for (const file of csvFiles) {
     try {
       log(`読み込み中: ${file.name}`);
@@ -10418,7 +10464,9 @@ async function processFiles(files) {
       //   ここで止めないと、他店の売上がそのまま混ざり、あとから分離できなくなる
       //   （実際にKAIRYがゆかい屋のデータで汚染された）。
       {
-        const _sc = ycFileShopCheck(file.name);
+        const _sc = ycShopCheck(file.name, rows);   /* 【v1.0836】中身も見る */
+        if (_sc.unknown) _ycImportUnknown.push({ name: file.name, badge: (reportTypeOf(kind) || {}).badge || '', label: (reportTypeOf(kind) || {}).label || kind });
+        else if (_sc.ok) log(`　（店の照合OK: ${_sc.found} / ${_sc.by === 'content' ? '中身のストアアカウント列' : 'ファイル名'}）`);
         if (!_sc.ok) {
           const _now = (typeof getSessionShop === 'function') ? getSessionShop() : {};
           log(`⛔ 別のショップのファイルです: ${file.name}`
@@ -10502,6 +10550,19 @@ async function processFiles(files) {
 async function commitUpload() {
   const buf = state.uploadBuffer;
   if (!validateBuffer()) return;
+  // 【v1.0836】★店を判別できないファイルが含まれていたら、取り込み先の店名を出して1枚確認する。
+  //   ★「判別できない＝危ない」ではない。正しいこともある。だから止めずに【確認】にする。
+  //     ここを警告だけにすると読み飛ばされ、確認を必須にすると毎回出て形骸化する。
+  //     判別できないファイルがあるときだけ出す、が落としどころ。
+  if (_ycImportUnknown.length) {
+    const sh = (typeof getSessionShop === 'function') ? getSessionShop() : {};
+    const list = _ycImportUnknown.map(x => '　・' + (x.badge ? x.badge + ' ' : '') + x.name).join('\n');
+    const ok = confirm('次のファイルは【どの店のものか自動で判別できません】。\n' + list
+      + '\n\nこれらを「' + (sh.name || '') + '（' + (sh.shopCode || '') + '）」のデータとして取り込みます。\n'
+      + '別の店のレポートだった場合、あとから選り分けることはできません。\n\nこのまま取り込みますか？');
+    if (!ok) { log('⛔ 取り込みを中止しました（店の確認でキャンセル）', 'err'); return; }
+    log('✓ 店の確認を受けて取り込みます（' + (sh.name || '') + '）');
+  }
   // 【v1.0526】日別データを state.daily へ反映（同じ日を再取込したら上書き＝入れ直しが効く）。
   //   月次は state.item / state.ad を書き換えず、表示時に日別合計から導出する（過去の月次データを壊さない）。
   {
@@ -10796,21 +10857,64 @@ else setTimeout(_ycSyncStoreLinks, 0);
 //   ★判定できないファイル（①④⑤⑥＝名前に店名が入らない）は通す。
 //     「分からない＝拒否」にすると、正しいファイルまで入らなくなる。
 // ============================================================================
-function ycFileShopCheck(filename) {
-  const expect = String((typeof getSessionShop === 'function' ? getSessionShop() : {}).shopCode || '').toLowerCase();
-  const n = String(filename || '').toLowerCase();
-  const m = n.match(/^(.+?)-(?:item_report|item-report|store-overall|store_overall)/);
-  if (!m || !expect) return { ok: true, unknown: true };
-  const found = m[1].replace(/^.*[\/\\]/, '').trim();
-  if (!found) return { ok: true, unknown: true };
-  // ★完全一致で見る。前方一致にすると yukaiya と yukaiya2 のような店を取り違える。
-  return (found === expect) ? { ok: true } : { ok: false, found: found, expect: expect };
+// 【v1.0836】★店の判定は【中身 → ファイル名】の順で見る。
+//   ・中身にストアアカウントを持つレポートがある（①広告詳細の「ストアアカウント」列、
+//     ⑥入札価格の「ストアアカウント_商品コード」列）。中身はリネームでは壊れないので最優先。
+//   ・②商品別売上・③ショップ売上はファイル名の先頭にアカウントが入る。
+//   ・④PRオプション・⑤PRオプ料率は【どちらにも手がかりが無い】→ unknown（§後述の確認ダイアログで拾う）。
+//
+//   ★★不一致にするのは「見つけた名前が、登録済みのどれかのショップのshopCodeと一致したとき」だけ。
+//     見覚えのない文字列で不一致にすると、正しいファイルを誤って弾いてしまう。
+//     （取り込めないほうが、取り違えより安全とは限らない。弾かれ続けると人は確認をやめる）
+function _ycShopCodesAll() {
+  try { return Object.keys(getShops()).map(k => String(getShops()[k].shopCode || '').toLowerCase()).filter(Boolean); }
+  catch (e) { return []; }
 }
+// 中身からストアアカウントを拾う。取れなければ ''。
+function _ycShopFromRows(rows) {
+  if (!Array.isArray(rows) || !rows.length) return '';
+  const k0 = Object.keys(rows[0] || {});
+  // ① 広告詳細レポート: 「ストアアカウント」列がそのままアカウント名
+  if (k0.indexOf('ストアアカウント') >= 0) {
+    for (const r of rows) { const v = String((r || {})['ストアアカウント'] || '').trim().toLowerCase(); if (v) return v; }
+  }
+  // ⑥ 入札価格: 「ストアアカウント_商品コード」＝ account_商品コード。最初の _ までがアカウント
+  if (k0.indexOf('ストアアカウント_商品コード') >= 0) {
+    for (const r of rows) {
+      const v = String((r || {})['ストアアカウント_商品コード'] || '').trim().toLowerCase();
+      const i = v.indexOf('_');
+      if (i > 0) return v.slice(0, i);
+    }
+  }
+  return '';
+}
+function _ycShopFromName(filename) {
+  const n = String(filename || '').toLowerCase();
+  // 【v1.0836】item-reach / total-report も見る（ファイル名に店名を付けて運用する場合に効く）
+  const m = n.match(/^(.+?)-(?:item_report|item-report|store-overall|store_overall|item-reach|item_reach|total-report|total_report)/);
+  if (!m) return '';
+  return m[1].replace(/^.*[\/\\]/, '').trim();
+}
+function ycShopCheck(filename, rows) {
+  const expect = String((typeof getSessionShop === 'function' ? getSessionShop() : {}).shopCode || '').toLowerCase();
+  if (!expect) return { ok: true, unknown: true, by: 'no-shop' };
+  let found = '', by = '';
+  try { found = _ycShopFromRows(rows); if (found) by = 'content'; } catch (e) {}
+  if (!found) { found = _ycShopFromName(filename); if (found) by = 'name'; }
+  if (!found) return { ok: true, unknown: true, by: 'none' };
+  // ★完全一致で見る。前方一致にすると yukaiya と yukaiya2 のような店を取り違える。
+  if (found === expect) return { ok: true, by: by, found: found };
+  // 見つけた名前が登録済みのどれかの店なら【不一致＝止める】。それ以外は判定材料にしない。
+  if (_ycShopCodesAll().indexOf(found) >= 0) return { ok: false, found: found, expect: expect, by: by };
+  return { ok: true, unknown: true, by: 'unmatched:' + found };
+}
+// 互換: 旧名（ファイル名だけで見る呼び出しが残っていても動くように）
+function ycFileShopCheck(filename) { return ycShopCheck(filename, null); }
 
 // ==================== Slot management ====================
 // パターン文字列はshopCode依存なので関数でその都度生成
 function buildSlotMap() {
-  const sc = getCurrentShop().shopCode;
+  const sc = getSessionShop().shopCode;   /* 【v1.0836】★このタブのショップ */
   return {
     // 【v1.0699】レポート名の変更に追従（表示用）。判定は fileTypeFromName 側で新旧どちらも通す
     overall: { slotId: 'slot-overall', pattern: `${sc}-store-overall*.csv` },
@@ -10831,7 +10935,7 @@ const slotMap = buildSlotMap();
 //   ファイル名パターン欄は読み込み後に「31日分（…）」へ置き換わってしまうため、
 //   例は専用の行に出して、読み込み後も消えないようにする（取り違えの確認用）。
 function refreshSlotExamples() {
-  const shop = getCurrentShop().shopCode;
+  const shop = getSessionShop().shopCode;   /* 【v1.0836】★このタブのショップ。ここが狂うと「取り違えの確認用」の例が他店を指す */
   REPORT_TYPES.forEach(t => {
     const slot = document.getElementById(t.slotId); if (!slot) return;
     const box = slot.querySelector('.file-slot-example'); if (!box) return;
@@ -11061,7 +11165,7 @@ function searchUrlCellHtml(code) {
 // 【v178】商品ページURL（store.shopping.yahoo.co.jp/{shopCode}/{code}.html）を生成
 // 【v226】商品編集で保存された productUrl があればそれを優先（手動URL対応）
 function defaultYahooProductUrl(code) {
-  return `https://store.shopping.yahoo.co.jp/${getCurrentShop().shopCode}/${encodeURIComponent(code)}.html`;
+  return `https://store.shopping.yahoo.co.jp/${getSessionShop().shopCode}/${encodeURIComponent(code)}.html`;   /* 【v1.0836】★このタブのショップ */
 }
 function yahooProductUrl(code) {
   const m = getMaster(code);
@@ -21041,7 +21145,7 @@ let _spotStaleAckedDate = '';  // 未更新のまま「続ける」を選んだ�
 //   「本日更新済み」→「本日未更新」へ後退する事故が起きうる。そこで本体データとは別の極小キー＋メモリに
 //   「最後に最新値を更新した日付」を単調保存し、判定・マージ双方で併用して当日中は絶対に後退させない。
 let _spotMarkMem = '';
-function _spotMarkKey() { return 'ycheck_spot_lastupdate_' + (typeof getCurrentShopId === 'function' ? getCurrentShopId() : 'default'); }
+function _spotMarkKey() { return 'ycheck_spot_lastupdate_' + (typeof getSessionShopId === 'function' ? getSessionShopId() : 'default'); }   /* 【v1.0836】★保存キーは必ずセッション固定側で作る */
 function _getSpotMark() {
   try { const v = localStorage.getItem(_spotMarkKey()) || ''; return (v > _spotMarkMem) ? v : _spotMarkMem; }
   catch (e) { return _spotMarkMem; }
@@ -24773,40 +24877,40 @@ try {
   // 結果として 4/23 と 4/24 が同じ値になる（案A＝変化なしの継続扱い）
   // v121: フラグキーを _v2_ に変更し、v119 で実行済みのユーザーも再度強制実行されるようにした
   try {
-    const seed0423Key = `ycheck_seed_0423_v2_${getCurrentShopId()}`;
+    const seed0423Key = `ycheck_seed_0423_v2_${getSessionShopId()}`;
     if (!localStorage.getItem(seed0423Key)) {
-      console.log(`[seed-0423] ${getCurrentShopId()}: 開始 - state.bid 件数=${Object.keys(state.bid || {}).length}, state.proRate 件数=${Object.keys(state.proRate || {}).length}, state.master 件数=${Object.keys(state.master || {}).length}`);
+      console.log(`[seed-0423] ${getSessionShopId()}: 開始 - state.bid 件数=${Object.keys(state.bid || {}).length}, state.proRate 件数=${Object.keys(state.proRate || {}).length}, state.master 件数=${Object.keys(state.master || {}).length}`);
       const overwritten = overwriteSpecificDayRankEdits('2026/04', 22);
       localStorage.setItem(seed0423Key, new Date().toISOString());
-      console.log(`[seed-0423-once-v2] ${getCurrentShopId()}: 4/23 に ${overwritten} 件を基本データ値で注入`);
+      console.log(`[seed-0423-once-v2] ${getSessionShopId()}: 4/23 に ${overwritten} 件を基本データ値で注入`);
       if (overwritten === 0) {
         console.warn(`[seed-0423] 注入件数が0件です。state.bid/state.proRate が空か、全商品が引退/広告無の可能性があります。`);
       }
     } else {
-      console.log(`[seed-0423-v2] ${getCurrentShopId()}: 既に実行済み（${localStorage.getItem(seed0423Key)}）`);
+      console.log(`[seed-0423-v2] ${getSessionShopId()}: 既に実行済み（${localStorage.getItem(seed0423Key)}）`);
     }
   } catch (e) { console.warn('4/23 seed エラー:', e); }
   // 【v107】起動時の自動補完：各商品の「今日」が空なら、直前の非空日の値をコピー
   autoFillTodayRankEdits();
   // 【v113】基本データの入札価格/PRオプ料率を、順位表の「今日」に初期値として注入（1度のみ）
   try {
-    const seedFlagKey = `ycheck_seeded_from_latest_v1_${getCurrentShopId()}`;
+    const seedFlagKey = `ycheck_seeded_from_latest_v1_${getSessionShopId()}`;
     if (!localStorage.getItem(seedFlagKey)) {
       const injected = seedRankEditsFromLatest();
       localStorage.setItem(seedFlagKey, new Date().toISOString());
       if (injected > 0) {
-        console.log(`[seed-once] ${getCurrentShopId()}: 基本データの入札価格/PRオプを ${injected} 件、順位表に初期注入`);
+        console.log(`[seed-once] ${getSessionShopId()}: 基本データの入札価格/PRオプを ${injected} 件、順位表に初期注入`);
       }
     }
   } catch (e) { console.warn('seedRankEditsFromLatest エラー:', e); }
   // 【v117】基本データの最新値で「今日」の値を強制上書き（1度のみ・過去日は触らない）
   try {
-    const owFlagKey = `ycheck_overwrite_today_v1_${getCurrentShopId()}`;
+    const owFlagKey = `ycheck_overwrite_today_v1_${getSessionShopId()}`;
     if (!localStorage.getItem(owFlagKey)) {
       const ow = overwriteTodayRankEditsFromLatest();
       localStorage.setItem(owFlagKey, new Date().toISOString());
       if (ow > 0) {
-        console.log(`[overwrite-once] ${getCurrentShopId()}: 今日の値を基本データの値で ${ow} 件、上書き`);
+        console.log(`[overwrite-once] ${getSessionShopId()}: 今日の値を基本データの値で ${ow} 件、上書き`);
       }
     }
   } catch (e) { console.warn('overwriteTodayRankEditsFromLatest エラー:', e); }
@@ -24867,7 +24971,7 @@ try {
       }
     }
   } catch (e) { console.warn('URL viewパラメータの反映に失敗:', e); }
-  const curShop = getCurrentShop();
+  const curShop = getSessionShop();   /* 【v1.0836】★起動ログもこのタブのショップを出す（ログと実データが食い違わないように） */
   console.log(`[${curShop.id}] Ycheck 起動 (shopCode=${curShop.shopCode})`);
   if (restored) console.log(`[${curShop.id}] 保存済みデータを復元`);
   if (migrated) console.log(`[${curShop.id}] 順位表記を新表記に移行しました`);
@@ -24948,12 +25052,12 @@ try {
       if (result && result.success) {
         // 【v122】GitHub取得後に seed-0423 を再度実行（GitHubデータで上書きされても値を注入）
         try {
-          const seed0423KeyV3 = `ycheck_seed_0423_v3_${getCurrentShopId()}`;
+          const seed0423KeyV3 = `ycheck_seed_0423_v3_${getSessionShopId()}`;
           if (!localStorage.getItem(seed0423KeyV3)) {
-            console.log(`[seed-0423-after-gh] ${getCurrentShopId()}: GitHub取得後の注入 - state.bid 件数=${Object.keys(state.bid || {}).length}, state.proRate 件数=${Object.keys(state.proRate || {}).length}`);
+            console.log(`[seed-0423-after-gh] ${getSessionShopId()}: GitHub取得後の注入 - state.bid 件数=${Object.keys(state.bid || {}).length}, state.proRate 件数=${Object.keys(state.proRate || {}).length}`);
             const ow = overwriteSpecificDayRankEdits('2026/04', 22);
             localStorage.setItem(seed0423KeyV3, new Date().toISOString());
-            console.log(`[seed-0423-after-gh] ${getCurrentShopId()}: 4/23 に ${ow} 件を注入（GitHub取得後）`);
+            console.log(`[seed-0423-after-gh] ${getSessionShopId()}: 4/23 に ${ow} 件を注入（GitHub取得後）`);
             // autoFillも再実行（今日が空なら前日を継承）
             autoFillTodayRankEdits();
           }
@@ -25048,7 +25152,9 @@ try {
   let dismissed = false;
   try { dismissed = (sessionStorage.getItem('ycTabConflictDismissed') === '1'); } catch (e) {}
 
-  const myShop = () => { try { return getCurrentShopId(); } catch (e) { return ''; } };
+  /* 【v1.0836】★このタブのショップを名乗る。localStorage 直読み（旧 getCurrentShopId）だと別タブの切替で全タブが同じ値を名乗り、
+     「同じショップを2タブで開いている」の判定が丸ごと当てにならなくなる（出るべき警告が出ない／出なくてよい警告が出る）。 */
+  const myShop = () => { try { return getSessionShopId(); } catch (e) { return ''; } };
 
   function send(type) {
     try { bc.postMessage({ type, tabId: TAB_ID, shopId: myShop(), ts: Date.now() }); } catch (e) {}
@@ -25068,7 +25174,7 @@ try {
     if (!bar) return;
     if (hasConflict() && !dismissed) {
       const shopEl = bar.querySelector('.tab-conflict-shop');
-      if (shopEl) { try { shopEl.textContent = getCurrentShop().name; } catch (e) { shopEl.textContent = myShop(); } }
+      if (shopEl) { try { shopEl.textContent = getSessionShop().name; } catch (e) { shopEl.textContent = myShop(); } }   /* 【v1.0836】 */
       bar.style.display = '';
     } else {
       bar.style.display = 'none';
