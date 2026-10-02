@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0836 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0837 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4301,7 +4301,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0836</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0837</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -14927,6 +14927,21 @@ function renderRetired() {
 // 取り込んでも GitHub に残らず「開き直すと消える」問題への恒久対策として、読み込みのたびに
 //   state.overall の不足月へ **非破壊で補完**（既存の月・値は上書きしない）。埋め込みなので
 //   GitHubのデータに手を入れずとも、どの端末でも全-月別データ/グラフに必ず表示される。
+// ============================================================================
+// 【v1.0837】★この13ヶ月は「ゆかい屋」の実績をソースに直書きしたもの。
+//   当時の月次レポートがもう落とせないので、取り込みでは復元できず、やむなく埋め込んである。
+//
+//   ★v1.0836まで、これを【店を見ずに】注入していた。
+//     結果、KAIRYを開いても 2024/06〜2025/06 にゆかい屋の売上が並び、
+//     しかも state.overall に書き込まれるので「⬆ 反映する」で
+//     data/kairy/ycheck_data_v2.json に【焼き付いた】。
+//     🧹で全消去しても、次に開いた瞬間に復活する＝消せないデータになっていた。
+//
+//   → 注入するのは OLD_OVERALL_SHOP_ID の店だけ。他店では逆に取り除く。
+//   ★新しい店を足すとき、ここに別の店の数字を足さないこと。
+//     増やすなら「店ID → 配列」の表にしてから。1つの配列を使い回すと同じ事故が起きる。
+// ============================================================================
+const OLD_OVERALL_SHOP_ID = 'yukaiya';
 var OLD_OVERALL_2406_2506 = [
   { month:'2024-06', revenue:1239740, adCost:46638,  adRevenue:146450 },
   { month:'2024-07', revenue:1305807, adCost:78964,  adRevenue:254520 },
@@ -14942,9 +14957,36 @@ var OLD_OVERALL_2406_2506 = [
   { month:'2025-05', revenue:1575280, adCost:120253, adRevenue:416480 },
   { month:'2025-06', revenue:1608000, adCost:119027, adRevenue:436158 }
 ];
+// 【v1.0837】他店に焼き付いてしまった直書き分を取り除く。
+//   ★「入れない」だけでは足りない。すでに保存されたファイルには残っているので、
+//     読み込んだあとに取り除かないと、画面からも GitHub からも消えない。
+//   ★消すのは【直書きと値が完全に一致する月】だけ。月だけで消すと、
+//     その店が同じ月の本物のデータを持っていたときに巻き添えで消える。
+function _ycPurgeOldOverall() {
+  if (!state.overall || !Array.isArray(state.overall.months)) return false;
+  var before = state.overall.months.length;
+  state.overall.months = state.overall.months.filter(function (x) {
+    if (!x) return false;
+    var o = OLD_OVERALL_2406_2506.find(function (y) { return y.month === x.month; });
+    if (!o) return true;
+    var same = (x.revenue === o.revenue) && (x.adCost === o.adCost) && (x.adRevenue === o.adRevenue);
+    return !same;   // 値まで一致 ＝ 直書きが焼き付いたもの → 取り除く
+  });
+  var n = before - state.overall.months.length;
+  if (n > 0) {
+    try { console.warn('[Ycheck] ' + (typeof getSessionShopId === 'function' ? getSessionShopId() : '')
+      + ': 他店（' + OLD_OVERALL_SHOP_ID + '）の直書き月次を ' + n + 'ヶ月ぶん取り除きました（v1.0837）'); } catch (e) {}
+  }
+  return n > 0;
+}
 function ensureOldOverall() {
   if (!state.overall) state.overall = { months: [] };
   if (!Array.isArray(state.overall.months)) state.overall.months = [];
+  // 【v1.0837】★自分の店でなければ注入しない。むしろ焼き付いた分を取り除く。
+  {
+    var _mine = (typeof getSessionShopId === 'function') ? getSessionShopId() : '';
+    if (_mine && _mine !== OLD_OVERALL_SHOP_ID) return _ycPurgeOldOverall();
+  }
   var changed = false;
   OLD_OVERALL_2406_2506.forEach(function (o) {
     var ex = state.overall.months.find(function (x) { return x && x.month === o.month; });
