@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0846 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0847 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4394,7 +4394,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0846</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0847</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9997,10 +9997,13 @@ function monthDayCoverage(ym) {
   if (!monthUsesDaily(ym, 'overall')) return null;          // 月次レポートを使っている月は対象外
   const have = dailyDayCountOf(ym, 'overall');
   if (!have) return null;
-  const dim = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
-  // ★当月は「今日まで」が満了。未来の日は存在しないので不足扱いしない（毎月1日に全月が赤くなる）
+  // ★【v1.0847】当月（と未来月）には出さない。
+  //   当月は途中なので「足りない」のが常態。毎日「4/5日」のように出ると、
+  //   本当に見てほしい【過去の欠けている月】と区別がつかなくなる。
+  //   v1.0846 は「今日まで」を満了としていたが、それでも取り込みが1日遅れるだけで出てしまう。
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
-  const need = (curYm && ym === curYm) ? Math.min(dim, new Date().getDate()) : dim;
+  if (curYm && ym >= curYm) return null;
+  const need = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();   // 終わった月なので「月の日数」が満了
   if (have >= need) return null;                            // 揃っている＝何も出さない
   return { have: have, need: need };
 }
