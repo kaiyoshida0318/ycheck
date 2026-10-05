@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0843 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0844 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3706,7 +3706,9 @@ table.rank-table td.rank-legend-col-row {
 .npv-chip.upd { background: #fef3c7; color: #b45309; }
 .npv-chip.warn{ background: #fee2e2; color: #b91c1c; }
 .npv-note { margin-left: auto; font-size: 0.74rem; color: var(--text3); }
-.npv-scroll { max-height: 320px; overflow-y: auto; overflow-x: hidden; }
+.npv-scroll { overflow-x: hidden; }   /* 【v1.0844】★表の中でスクロールさせない。
+   内部スクロールだと「下にまだ行がある」ことに気づきにくく、ボタンまでの距離も分からない。
+   モーダル(.modal: max-height 90vh / overflow-y auto)が全体をスクロールする。 */
 /* ★table-layout:fixed にすること。auto だと検索URLが横幅を食い尽くし、
    いちばん右の「区分（新規/更新）」が画面外へ押し出されて見えなくなる。 */
 .npv table { width: 100%; border-collapse: collapse; font-size: 0.78rem; table-layout: fixed; }
@@ -3739,6 +3741,8 @@ table.rank-table td.rank-legend-col-row {
 .npv-unret { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
   background: #dbeafe; color: #1d4ed8; font-weight: 700; font-size: 0.74rem; cursor: pointer; }
 .npv-unret input { accent-color: #1d4ed8; cursor: pointer; }
+/* 【v1.0844】いちばん下の実行ボタン。表の続きに見えないよう、線で区切る */
+.np-actions-bottom { margin-top: 16px; padding-top: 14px; border-top: 2px solid var(--border2); }
 .npv-badge.dup { background: #fee2e2; color: #b91c1c; margin-left: 4px; }
 .npv-more { padding: 8px 12px; font-size: 0.76rem; color: var(--text3); background: var(--bg3); border-top: 1px solid var(--border2); }
 .file-slot.loaded {
@@ -4387,7 +4391,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0843</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0844</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6134,12 +6138,17 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="validation-msg" id="npValidationMsg">📋 CSVファイルをアップロードしてください</div>
     </div>
 
-    <div class="upload-actions">
+    <div class="log-area" id="npLogArea"></div>
+
+    <!-- 【v1.0844】★実行ボタンはモーダルの【いちばん下】に置く。
+         プレビューの表が長くなるぶんスクロールは発生するが、
+         「中身を全部見てから押す」という順番のほうが取り違えに気づける。
+         ★sticky にはしないこと。表の途中で押せてしまうと、下の行を見ないまま押す導線に戻る。 -->
+    <div class="upload-actions np-actions-bottom">
       <button class="btn primary" id="npConfirmUpload" disabled title="上の内容で登録・更新して、そのままGitHubへの反映まで行います">⬆ この内容で登録・更新・反映</button>
       <button class="btn ghost" id="npToggleLog">ログ表示</button>
       <button class="btn" id="npCloseBottom" style="margin-left:auto;" type="button">閉じる</button>
     </div>
-    <div class="log-area" id="npLogArea"></div>
   </div>
 </div>
 
@@ -23450,7 +23459,7 @@ function npRefreshSlot() {
     main.textContent = `${npBuffer.count}件 読み込み済み`;
     sub.textContent = `${npBuffer.filename} ／ 別のファイルに変えるには、もう一度ここにドロップ`;
     confirmBtn.disabled = false;
-    msg.textContent = `✅ ${npBuffer.count}件を読み込みました。下の内容を確認して「この内容で登録・更新・反映」を押してください。`;
+    msg.textContent = `✅ ${npBuffer.count}件を読み込みました。下の一覧を最後まで確認して、いちばん下の「⬆ この内容で登録・更新・反映」を押してください。`;
     msg.style.color = 'var(--green)';
   } else {
     slot.classList.remove('loaded');
