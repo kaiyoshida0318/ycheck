@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0849 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0850 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4394,7 +4394,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0849</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0850</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -15275,10 +15275,31 @@ function monthHasAnyData(ym) {
   if (dailyDayCountOf(ym, 'pr') > 0) return true;   // ④PRオプション実績（日別しかない）
   return false;
 }
+// ============================================================================
+// 【v1.0850】★「データが無い月を全部消す」は撤回した（v1.0848）。
+//
+//   消したかったのは【いちばん古い側にぶら下がっている空の月】だけ。
+//   順位(rank.json)だけの 2026/05 が表の最下部に「全部 —」で並んでいて、
+//   「このショップは6月から始まっている」ことが読み取れなかった、というのが元の訴え。
+//
+//   ★途中の空月は【消してはいけない】。
+//     6月あり → 7月なし → 8月あり のとき、7月の行が無いと
+//     「7月は取り込んでいない」のか「7月が存在しない」のかが分からなくなる。
+//     空の行が1本あることが、そこに穴があるという情報そのもの。
+//
+//   → データのある最初の月より【前】だけを落とす。それ以降は空月も残す。
+//     当月が未取込でも残る（＝これから入れる月として見える）。
+// ============================================================================
+function _zenTrimLeadingEmptyMonths(months) {
+  let first = -1;
+  for (let i = 0; i < months.length; i++) { if (monthHasAnyData(months[i])) { first = i; break; } }
+  if (first < 0) return [];          // 1ヶ月もデータが無い＝表は空（取り込み前の素の状態）
+  return months.slice(first);        // ★以降は空月もそのまま残す
+}
 function _zenMonthlyRows() {
   if (typeof ensureOldOverall === 'function') ensureOldOverall();
-  // 【v1.0848】データが1つも無い月（順位だけの月／当月・前月の自動追加）は行にしない
-  const months = getAvailableMonths().filter(monthHasAnyData);  // 昇順 'YYYY-MM'
+  // 【v1.0850】データが始まる前の月だけ落とす（途中の空月は残す）
+  const months = _zenTrimLeadingEmptyMonths(getAvailableMonths());  // 昇順 'YYYY-MM'
   return months.map(m => {
     let rev = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, orders = 0, soikomi = 0;
     // 【v1.0526】日別データがある月は日別合計から作る。無い月は従来どおり月次データから。
