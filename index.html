@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0851 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0852 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4394,7 +4394,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0851</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0852</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10024,6 +10024,12 @@ function monthDayBadgeText(ym) {
   //   表示は赤バッジ側（monthDayBadgeHtml）と必ず同じ文言にする。片方だけ直さない。
   return c ? ' (' + c.have + '/' + c.need + '日)' : '';
 }
+// 【v1.0852】グラフのx軸に【赤バッジとして描く】ための文字だけ（カッコ無し）。
+//   ★Chart.js のticksはHTMLを置けないので、canvasに自分で角丸＋文字を描く（YC_SHORT_MONTH_BADGE）。
+function monthDayBadgeShort(ym) {
+  const c = monthDayCoverage(ym);
+  return c ? (c.have + '/' + c.need + '日') : '';
+}
 // 日別はあるが月次を守っている月（＝部分取込の月）。画面で注意書きを出すのに使う。
 function dailyPartialMonths(kind) {
   const out = [];
@@ -13123,6 +13129,59 @@ function clMarksForKeys(keys, code) {
 }
 // Chart.js のインラインプラグイン。★グローバル登録はしない（Chartの読み込み順に依存しないため）。
 //   使う側で plugins: [YC_CHANGE_LINES] と options.plugins.ycChangeLines = { marks } を渡す。
+// ============================================================================
+// 【v1.0852】x軸の月ラベルの下に「14/30日」の赤バッジを描くプラグイン。
+//   表（赤バッジ）とグラフ（素のテキスト）で見た目が違い、グラフ側だけ見落とす、という指摘から。
+//   ★Chart.js の ticks はただの文字列でHTMLを置けない。だからcanvasに直接描く。
+//   ★描く場所を作るのは scales.x.afterFit（軸の高さを広げる）。
+//     広げずに描くと、月ラベルの上に重なるか、チャート領域の外にはみ出て消える。
+// ============================================================================
+const YC_SHORT_MONTH_BADGE = {
+  id: 'ycShortMonthBadge',
+  afterDatasetsDraw: function (chart, args, opts) {
+    const badges = opts && opts.badges;
+    if (!badges) return;
+    const keys = Object.keys(badges);
+    if (!keys.length) return;
+    const sc = chart.scales && chart.scales.x;
+    if (!sc) return;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.font = '700 11px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    keys.forEach(function (k) {
+      const t = badges[k];
+      if (!t) return;
+      let x;
+      try { x = sc.getPixelForTick(+k); } catch (e) { x = NaN; }
+      if (!isFinite(x)) return;
+      const w = ctx.measureText(t).width + 10, h = 16, r = 4;
+      const y = sc.bottom - h / 2 - 2;          // ★広げた高さの中に描く
+      const x0 = x - w / 2, y0 = y - h / 2;
+      ctx.beginPath();
+      ctx.moveTo(x0 + r, y0); ctx.lineTo(x0 + w - r, y0); ctx.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + r);
+      ctx.lineTo(x0 + w, y0 + h - r); ctx.quadraticCurveTo(x0 + w, y0 + h, x0 + w - r, y0 + h);
+      ctx.lineTo(x0 + r, y0 + h); ctx.quadraticCurveTo(x0, y0 + h, x0, y0 + h - r);
+      ctx.lineTo(x0, y0 + r); ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+      ctx.closePath();
+      ctx.fillStyle = '#fee2e2'; ctx.fill();
+      ctx.fillStyle = '#b91c1c'; ctx.fillText(t, x, y);
+    });
+    ctx.restore();
+  }
+};
+// x軸に渡す { 位置: '14/30日' }。1件も無ければ {}（＝軸の高さも広げない）
+function _ycShortMonthBadges(keys) {
+  const out = {};
+  (keys || []).forEach(function (ym, i) { const t = monthDayBadgeShort(ym); if (t) out[i] = t; });
+  return out;
+}
+// 軸の高さを広げる関数（バッジがあるときだけ）
+function _ycBadgeAfterFit(badges) {
+  const n = Object.keys(badges || {}).length;
+  return function (sc) { if (n) sc.height += 20; };
+}
 const YC_CHANGE_LINES = {
   id: 'ycChangeLines',
   afterDatasetsDraw: function (chart, args, opts) {
@@ -16367,7 +16426,8 @@ function renderGraphAll() {
     const from = selF ? selF.value : '', to = selT ? selT.value : '';
     rows = all.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
   }
-  const labels = rows.map(r => r.label + monthDayBadgeText(r.month));   /* 【v1.0849】 */
+  const labels = rows.map(r => r.label);
+  const _shortB = _ycShortMonthBadges(rows.map(r => r.month));   /* 【v1.0852】x軸の赤バッジ */
   const isSales = (_zgMetric === 'sales');
   _renderSalesToggles('zgSalesToggles', _zgSalesHidden, '_zgToggleSales', isSales);
   if (state.charts.chartAll) { state.charts.chartAll.destroy(); state.charts.chartAll = null; }
@@ -16386,11 +16446,11 @@ function renderGraphAll() {
     state.charts.chartAll = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: { labels: labels, datasets: datasets },
-      plugins: [YC_CHANGE_LINES],
+      plugins: [YC_CHANGE_LINES, YC_SHORT_MONTH_BADGE],
       options: {
         responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
-        plugins: { ycChangeLines: { marks: _clMarks }, legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
-        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: v => yFmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
+        plugins: { ycChangeLines: { marks: _clMarks }, ycShortMonthBadge: { badges: _shortB }, legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: c => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: v => yFmt(v) } }, x: { afterFit: _ycBadgeAfterFit(_shortB), ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
   }
@@ -18753,7 +18813,8 @@ function renderItemGraph() {
     effMonthlyAdRows().forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
     const from = selF ? selF.value : '', to = selT ? selT.value : '';
     range = months.filter(m => (!from || m >= from) && (!to || m <= to));
-    labels = range.map(m => m.replace('-', '/') + monthDayBadgeText(m));   /* 【v1.0849】 */
+    labels = range.map(m => m.replace('-', '/'));
+    /* 【v1.0852】x軸の赤バッジ（日別モードの日付キーは自動的に空になる） */
   }
   // 【v1.0406】売上（複合）指標の月次値: 総売上/SEO/広告/送り込み。
   const _igSalesVal = (m, key) => {
@@ -18781,15 +18842,16 @@ function renderItemGraph() {
     // 【v1.0637】変更記録の縦線。range が x軸のキー配列（日別='YYYY-MM-DD' / 月別='YYYY-MM'）。
     //   ★選んでいる商品（親子セットなら代表）の記録も混ぜる。
     const _clMarksIg = (typeof clMarksForKeys === 'function') ? clMarksForKeys(range, _igSelected) : [];
+    const _igShortB = _ycShortMonthBadges(range);   /* 【v1.0852】x軸の赤バッジ（日別キーは自動で空） */
     _igChart = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: { labels, datasets: datasets },
-      plugins: [YC_CHANGE_LINES],
+      plugins: [YC_CHANGE_LINES, YC_SHORT_MONTH_BADGE],
       options: {
         responsive: true, maintainAspectRatio: false, animation: false,
         interaction: { mode: 'index', intersect: false },
-        plugins: { ycChangeLines: { marks: _clMarksIg }, legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
-        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: (v) => yFmt(v) } }, x: { ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
+        plugins: { ycChangeLines: { marks: _clMarksIg }, ycShortMonthBadge: { badges: _igShortB }, legend: { display: true, onClick: function(){}, labels: { font: { size: 15 } } }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 15 }, callbacks: { label: (c) => (c.dataset.label || '') + ': ' + yFmt(c.parsed.y) } } },
+        scales: { y: { beginAtZero: true, ticks: { font: { size: 14 }, callback: (v) => yFmt(v) } }, x: { afterFit: _ycBadgeAfterFit(_igShortB), ticks: { font: { size: 14 }, maxRotation: 0, autoSkip: true } } }
       }
     });
   }
