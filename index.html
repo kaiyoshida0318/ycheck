@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0845 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0846 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2945,6 +2945,9 @@ tr.row-child .code-cell-inner::before {
 /* 【v1.0533】全-日月別データ（日別）の期間情報 */
 .zd-range-info { font-size:0.8rem; color:var(--text3); margin-left:6px; }
 /* 【v1.0536】部分取込の月の注意書き */
+.ym-short { display:inline-block; margin-left:5px; padding:0 5px; border-radius:4px;
+  background:#fee2e2; color:#b91c1c; font-size:0.68rem; font-weight:700; font-family:system-ui,sans-serif;
+  vertical-align:middle; letter-spacing:0; }
 .zd-partial-note { margin:0 2px 10px; padding:9px 12px; border:1px solid #f0c26b; border-radius:7px; background:#fff8e6; color:#8a5a00; font-size:0.83rem; line-height:1.8; }
 /* 【v1.0541】PRオプションの列の説明 */
 .zd-pr-legend { margin:10px 2px 0; padding:10px 12px; border:1px solid #cfe6d8; border-radius:7px; background:#f7fcf9; font-size:0.82rem; line-height:1.8; color:var(--text2); }
@@ -4391,7 +4394,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0845</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0846</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9973,6 +9976,41 @@ function dailyUsableMonths(kind) {
   const out = new Set();
   dailyMonthsOf(kind).forEach(ym => { if (monthUsesDaily(ym, kind)) out.add(ym); });
   return out;
+}
+// ============================================================================
+// 【v1.0846】★「その月の数字が何日ぶんでできているか」を返す。
+//
+//   既存の dailyPartialMonths() は【月次レポートを持っている月】しか拾わない
+//   （＝「月次を守ったので数字は変わりません」という案内用）。
+//   ところが🧹全消去したショップは月次を1つも持っていないので、
+//   日別が14日分しか無くても monthUsesDaily() が true になり、
+//   **半月分の合計が「その月の総売上」として、他の月と同じ顔で並ぶ**。警告も出ない。
+//   これが v1.0845 までの穴（2026-10-05 にKAIRYの2026/06で表面化）。
+//
+//   → 月の行に「14/30日」を出す。満日数の月は何も出さない（うるさくしない）。
+//   ★「月次レポートを使っている月」は対象外。その月の数字は日数と関係ないので、
+//     日数バッジを出すとかえって誤解される（そちらは既存の注意書きが担当）。
+// ============================================================================
+function monthDayCoverage(ym) {
+  if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return null;
+  // 総売上の出どころ（overall）を基準にする。画面でいちばん大きく出る数字なので。
+  if (!monthUsesDaily(ym, 'overall')) return null;          // 月次レポートを使っている月は対象外
+  const have = dailyDayCountOf(ym, 'overall');
+  if (!have) return null;
+  const dim = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+  // ★当月は「今日まで」が満了。未来の日は存在しないので不足扱いしない（毎月1日に全月が赤くなる）
+  const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
+  const need = (curYm && ym === curYm) ? Math.min(dim, new Date().getDate()) : dim;
+  if (have >= need) return null;                            // 揃っている＝何も出さない
+  return { have: have, need: need };
+}
+// 月ラベルに付ける日数バッジ（足りない月だけ）
+function monthDayBadgeHtml(ym) {
+  const c = monthDayCoverage(ym);
+  if (!c) return '';
+  return '<span class="ym-short" title="この月は日別データが ' + c.have + '日分しかありません（' + c.need + '日中）。'
+    + '月の数字はその ' + c.have + '日分の合計です。他の月と絶対額で比べないでください">'
+    + c.have + '/' + c.need + '日</span>';
 }
 // 日別はあるが月次を守っている月（＝部分取込の月）。画面で注意書きを出すのに使う。
 function dailyPartialMonths(kind) {
@@ -15969,7 +16007,8 @@ function renderGraphData() {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
-    const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label + '</td>';
+    const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label
+      + (_dayMode ? '' : monthDayBadgeHtml(r.month)) + '</td>';   /* 【v1.0846】足りない月だけ「14/30日」 */
     const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key], row: r })).join('');   /* 【v1.0578】row＝分母の内訳ツールチップ／PR部分取込の⚠に使う */
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
