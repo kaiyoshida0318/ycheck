@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0842 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0843 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3713,10 +3713,11 @@ table.rank-table td.rank-legend-col-row {
 .npv col.c-n    { width: 36px; }
 .npv col.c-code { width: 148px; }
 .npv col.c-name { width: auto; }
-.npv col.c-kw   { width: 140px; }
-.npv col.c-url  { width: 112px; }
-/* ★「更新＋撤退済み」の2つが並ぶ行があるので、この列は狭くしすぎないこと（切れる） */
-.npv col.c-kind { width: 152px; }
+.npv col.c-kw   { width: 130px; }
+.npv col.c-url  { width: 96px; }
+/* ★「更新」＋「撤退済み→解除」の2つが並ぶ行があるので、この列は狭くしすぎないこと（切れる）。
+   v1.0842 は152pxで、解除バッジが出た途端にはみ出していた。 */
+.npv col.c-kind { width: 196px; }
 .npv th { position: sticky; top: 0; z-index: 1; background: var(--bg3); color: var(--text2);
   font-weight: 700; text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border2); white-space: nowrap; }
 .npv td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -3734,6 +3735,10 @@ table.rank-table td.rank-legend-col-row {
 .npv-badge.new { background: #dcfce7; color: #15803d; }
 .npv-badge.upd { background: #fef3c7; color: #b45309; }
 .npv-badge.ret { background: #e5e7eb; color: #6b7280; margin-left: 4px; }
+.npv-badge.unret { background: #dbeafe; color: #1d4ed8; margin-left: 4px; }
+.npv-unret { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+  background: #dbeafe; color: #1d4ed8; font-weight: 700; font-size: 0.74rem; cursor: pointer; }
+.npv-unret input { accent-color: #1d4ed8; cursor: pointer; }
 .npv-badge.dup { background: #fee2e2; color: #b91c1c; margin-left: 4px; }
 .npv-more { padding: 8px 12px; font-size: 0.76rem; color: var(--text3); background: var(--bg3); border-top: 1px solid var(--border2); }
 .file-slot.loaded {
@@ -4382,7 +4387,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0842</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0843</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9295,6 +9300,23 @@ function migrateBidKeysLowercase() {
 
 // 旧仕様（商品名なし=引退済み）の商品を、新仕様（proStatus=撤退済み）に自動変換
 function migrateRetiredByMissingName() {
+  // ============================================================================
+  // 【v1.0843】★商品マスタが1件も無いときは、この判定を【してはいけない】。
+  //
+  //   この関数は「商品マスタに商品名が無い商品＝Yahooから消えた＝撤退済み」と見なす。
+  //   ところが 🧹全消去の直後は master が空なので、
+  //   ①〜⑥を取り込んで（＝商品コードだけが日別・入札に入った状態で）リロードすると、
+  //   **取り込んだ全商品が撤退済みになる**。
+  //   そのあと「+商品追加・更新」で商品名を入れても、npApplyRows は master しか触らないので
+  //   撤退済みのまま残り、商品-基本データにも商品-日月別データにも出てこない。
+  //   （実際に 2026-10-05 にこれが起きた。KAIRYの9商品が全部消えた）
+  //
+  //   ★「判定材料が無い」と「撤退した」は違う。材料が無いときは何もしないのが正しい。
+  // ============================================================================
+  if (!state.master || Object.keys(state.master).length === 0) {
+    console.log('Ycheck: 商品マスタが空のため「商品名なし＝撤退」の判定は行いません（v1.0843）');
+    return;
+  }
   const allCodes = new Set();
   Object.keys(state.master || {}).forEach(c => allCodes.add(c));
   (state.item || []).forEach(i => allCodes.add(i.code));
@@ -23314,6 +23336,11 @@ function downloadNewProductTemplate() {
 //   ★新規/更新の判定と「空欄＝今の値を残す」は npApplyRows() と同じ規則で出すこと。
 //     ここに別の規則を書くと、プレビューと実際の反映が食い違う（いちばんやってはいけない）。
 const NPV_MAX_ROWS = 300;   // 表示の上限。件数のカウントは全行で行う
+// 【v1.0843】★既定は ON。
+//   このCSVに商品名を書いて入れ直す＝「この商品を使う」という意思表示なので、
+//   撤退済みのまま隠し続けるほうが驚かれる（実際に「入れたのに出てこない」が起きた）。
+//   ただし勝手にやらず、チェックとして見せて外せるようにする。
+let _npvUnretire = true;
 function _npvFields(r) {
   // ★列名の別名はここに集約。npApplyRows() と同じ対応表にすること
   return {
@@ -23342,7 +23369,7 @@ function npBuildPreview() {
   }
   const esc = (x) => (typeof escapeHtml === 'function') ? escapeHtml(String(x)) : String(x);
   const rows = npBuffer.rows;
-  let nNew = 0, nUpd = 0;
+  let nNew = 0, nUpd = 0, nRet = 0;
   const seen = Object.create(null);
   const dup = Object.create(null);
   rows.forEach(r => {
@@ -23352,7 +23379,7 @@ function npBuildPreview() {
   });
   const dupCount = Object.keys(dup).length;
   const body = [];
-  rows.forEach((r, i) => {
+  rows.forEach((r, i) => {   /* 件数は全行、表示は NPV_MAX_ROWS まで */
     const code = (r['商品コード'] || '').trim();
     const ex = (state.master || {})[code];
     const isNew = !ex;
@@ -23360,6 +23387,7 @@ function npBuildPreview() {
     if (i >= NPV_MAX_ROWS) return;
     const f = _npvFields(r);
     const retired = (!isNew && typeof isRetired === 'function' && isRetired(code));
+    if (retired) nRet++;
     body.push('<tr>'
       + '<td class="npv-n">' + (i + 1) + '</td>'
       + '<td class="npv-code">' + esc(code)
@@ -23369,7 +23397,9 @@ function npBuildPreview() {
       + '<td class="npv-cell">' + _npvCell(f.kw, ex && (ex.kw || ex.mainKw), isNew) + '</td>'
       + '<td class="npv-cell">' + _npvCell(f.url, ex && (ex.searchUrl || ex.url), isNew) + '</td>'
       + '<td><span class="npv-badge ' + (isNew ? 'new">新規' : 'upd">更新') + '</span>'
-        + (retired ? '<span class="npv-badge ret" title="いまは撤退済みです。この取り込みでは解除されません">撤退済み</span>' : '')
+        + (retired ? (_npvUnretire
+             ? '<span class="npv-badge unret" title="この取り込みで「撤退済み」を解除し、一覧に戻します">撤退済み→解除</span>'
+             : '<span class="npv-badge ret" title="撤退済みのままなので、商品-基本データには出ません">撤退済み（このまま）</span>') : '')
         + '</td>'
       + '</tr>');
   });
@@ -23379,6 +23409,9 @@ function npBuildPreview() {
     + '<span class="npv-chip new">新規 ' + nNew + '</span>'
     + '<span class="npv-chip upd">更新 ' + nUpd + '</span>'
     + (dupCount ? '<span class="npv-chip warn">コード重複 ' + dupCount + '</span>' : '')
+    + (nRet ? '<label class="npv-unret" title="「撤退済み」のままだと商品-基本データにも商品-日月別データにも出てきません">'
+        + '<input type="checkbox" id="npvUnretire"' + (_npvUnretire ? ' checked' : '') + '>'
+        + '撤退済み ' + nRet + '件を解除して一覧に戻す</label>' : '')
     + '<span class="npv-note">空欄の項目は今の値をそのまま残します</span>'
     + '</div>';
   const more = rows.length > NPV_MAX_ROWS
@@ -23386,6 +23419,11 @@ function npBuildPreview() {
     : '';
   // ★列幅は colgroup で固定する（検索URLに押し出されて「区分」が消えるのを防ぐ）
   const cols = '<colgroup><col class="c-n"><col class="c-code"><col class="c-name"><col class="c-kw"><col class="c-url"><col class="c-kind"></colgroup>';
+  // ★チェックを変えたら表を作り直す（バッジの文言が「→解除」と「このまま」で変わる）
+  setTimeout(function () {
+    const cb = document.getElementById('npvUnretire');
+    if (cb) cb.addEventListener('change', function () { _npvUnretire = cb.checked; npBuildPreview(); });
+  }, 0);
   box.innerHTML = head
     + '<div class="npv-scroll"><table>' + cols + '<thead><tr>'
     + '<th class="npv-n">#</th><th>商品コード</th>'
@@ -23494,11 +23532,28 @@ function npApplyRows(rows) {
 }
 function npConfirmUpload() {
   if (!npBuffer) return;
+  // 【v1.0843】★撤退済みの解除は npApplyRows() の【外】でやる。
+  //   npApplyRows は直接入力とも共用で、あちらには専用の解除ボタン（npqUnretire）がある。
+  //   共用側に入れると「1件入力しただけで勝手に解除された」が起きる。
+  let unretired = [];
+  if (_npvUnretire) {
+    npBuffer.rows.forEach(r => {
+      const code = (r['商品コード'] || '').trim();
+      if (!code || !(r['商品名'] || '').trim()) return;   // ★商品名が無い行では解除しない（前提が戻っていない）
+      if (typeof isRetired === 'function' && isRetired(code)) {
+        (state.productMeta[code] = state.productMeta[code] || {}).status = '新商品';
+        unretired.push(code);
+      }
+    });
+  }
   const { added, updated } = npApplyRows(npBuffer.rows);
   const ok = saveToStorage();
   if (!afterSaveOk(ok)) return;   // 【v313】GitHub連携ありなら続行（GitHubへ保存）
-  ycLog('item', 'CSV取込: 新規追加 ' + added + '件 / 既存更新 ' + updated + '件');   // 【v1.0604】
-  npLog(`✅ 反映完了：新規追加 ${added}件 / 既存更新 ${updated}件`, 'ok');
+  ycLog('item', 'CSV取込: 新規追加 ' + added + '件 / 既存更新 ' + updated + '件'
+    + (unretired.length ? ' / 撤退済み解除 ' + unretired.length + '件' : ''));   // 【v1.0604】
+  npLog(`✅ 反映完了：新規追加 ${added}件 / 既存更新 ${updated}件`
+    + (unretired.length ? ` / 撤退済みを解除 ${unretired.length}件` : ''), 'ok');
+  if (unretired.length) npLog(`　↩ 一覧に戻した商品：${unretired.join(', ')}`, 'ok');
   npLog(ok ? `💾 ブラウザに保存しました` : `💾 GitHubへ保存します（端末キャッシュは容量超過のため省略）`, 'ok');
   npBuffer = null;
   npRefreshSlot();
