@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0839 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0842 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3693,6 +3693,49 @@ table.rank-table td.rank-legend-col-row {
                 border-radius: 999px; padding: 2px 10px; }
 .np-drop.loaded .np-drop-main { color: #15803d; }
 .np-drop.loaded .np-drop-cols { background: #fff; }
+/* 【v1.0842】ドロップしたCSVの中身をそのまま見せる表。
+   ★「何件読めた」だけでは、取り違えても気づけない。商品コードと商品名が並んでいれば
+     「違う店のファイルだ」「違う日のファイルだ」が目で分かる。 */
+.npv { margin: 10px 0 12px; border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; background: var(--bg2); }
+.npv-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 9px 12px; background: var(--bg3); border-bottom: 1px solid var(--border2); font-size: 0.8rem; }
+.npv-file { font-weight: 800; color: var(--text); }
+.npv-chip { padding: 1px 8px; border-radius: 999px; font-weight: 700; font-size: 0.74rem; }
+.npv-chip.all { background: #e5e7eb; color: #374151; }
+.npv-chip.new { background: #dcfce7; color: #15803d; }
+.npv-chip.upd { background: #fef3c7; color: #b45309; }
+.npv-chip.warn{ background: #fee2e2; color: #b91c1c; }
+.npv-note { margin-left: auto; font-size: 0.74rem; color: var(--text3); }
+.npv-scroll { max-height: 320px; overflow-y: auto; overflow-x: hidden; }
+/* ★table-layout:fixed にすること。auto だと検索URLが横幅を食い尽くし、
+   いちばん右の「区分（新規/更新）」が画面外へ押し出されて見えなくなる。 */
+.npv table { width: 100%; border-collapse: collapse; font-size: 0.78rem; table-layout: fixed; }
+.npv col.c-n    { width: 36px; }
+.npv col.c-code { width: 148px; }
+.npv col.c-name { width: auto; }
+.npv col.c-kw   { width: 140px; }
+.npv col.c-url  { width: 112px; }
+/* ★「更新＋撤退済み」の2つが並ぶ行があるので、この列は狭くしすぎないこと（切れる） */
+.npv col.c-kind { width: 152px; }
+.npv th { position: sticky; top: 0; z-index: 1; background: var(--bg3); color: var(--text2);
+  font-weight: 700; text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+.npv td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.npv tr:last-child td { border-bottom: none; }
+.npv .npv-n { color: var(--text3); text-align: right; width: 38px; white-space: nowrap; }
+.npv .npv-code { font-family: 'DM Mono', ui-monospace, monospace; font-weight: 700; white-space: nowrap; }
+.npv .npv-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.npv .npv-code { overflow: hidden; text-overflow: ellipsis; }
+/* ★「空欄＝今の値を残す」が、この表の一番大事な情報。薄い字で必ず出す。 */
+.npv-keep  { color: var(--text3); font-style: italic; }
+.npv-empty { color: var(--text3); }
+.npv-chg   { color: #b45309; font-weight: 700; }
+.npv-same  { color: var(--text3); }
+.npv-badge { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+.npv-badge.new { background: #dcfce7; color: #15803d; }
+.npv-badge.upd { background: #fef3c7; color: #b45309; }
+.npv-badge.ret { background: #e5e7eb; color: #6b7280; margin-left: 4px; }
+.npv-badge.dup { background: #fee2e2; color: #b91c1c; margin-left: 4px; }
+.npv-more { padding: 8px 12px; font-size: 0.76rem; color: var(--text3); background: var(--bg3); border-top: 1px solid var(--border2); }
 .file-slot.loaded {
   background: rgba(22,163,74,0.08);
   border-color: rgba(22,163,74,0.3);
@@ -4298,7 +4341,7 @@ th.col-sroas { background-color:#e7d5f5; }
      混ざるのは【人が落としてくるCSV】のほう。だから「気をつけること」を具体的に書く。 -->
 <div id="tabShopMixBar" class="tab-shopmix-bar" style="display:none;" role="status">
   <span class="tab-conflict-icon">🏬</span>
-  <span class="tab-conflict-text">別のショップを同時に開いています。 いま <span class="sm-me" id="smMe"></span> ／ 別のタブ <span class="sm-other" id="smOther"></span><br><b>落としてくるCSVの取り違えに注意。</b> とくに <b class="sm-key">⑤PRオプ料率（<code>data*.csv</code>）は店を判別できません</b>。ダウンロード先のフォルダを店ごとに分けてください。<span style="opacity:.85">（ツール側の保存先はタブごとに固定されているので、データ自体は混ざりません）</span></span>
+  <span class="tab-conflict-text">別のショップを同時に開いています。 いま <span class="sm-me" id="smMe"></span> ／ 別のタブ <span class="sm-other" id="smOther"></span><br><b>落としてくるCSVの取り違えに注意。</b> とくに <b class="sm-key">⑤PRオプ料率（<code>data*.csv</code>）は、中身に店の手がかりが無いと判別できません</b>。ダウンロード先のフォルダを店ごとに分けてください。<span style="opacity:.85">（ツール側の保存先はタブごとに固定されているので、データ自体は混ざりません）</span></span>
   <button type="button" class="tab-conflict-close" id="tabShopMixClose" title="この案内を閉じる">✕</button>
 </div>
 
@@ -4339,7 +4382,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0839</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0842</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6079,12 +6122,15 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="np-drop-cols" id="npDropCols"></div>
     </div>
 
+    <!-- 【v1.0842】ドロップした中身のプレビュー。ここが埋まってから下の反映ボタンを押す -->
+    <div class="npv" id="npPreview" style="display:none;"></div>
+
     <div class="validation-box">
       <div class="validation-msg" id="npValidationMsg">📋 CSVファイルをアップロードしてください</div>
     </div>
 
     <div class="upload-actions">
-      <button class="btn primary" id="npConfirmUpload" disabled>⬆ アップロード実行</button>
+      <button class="btn primary" id="npConfirmUpload" disabled title="上の内容で登録・更新して、そのままGitHubへの反映まで行います">⬆ この内容で登録・更新・反映</button>
       <button class="btn ghost" id="npToggleLog">ログ表示</button>
       <button class="btn" id="npCloseBottom" style="margin-left:auto;" type="button">閉じる</button>
     </div>
@@ -10924,14 +10970,61 @@ function _ycShopFromRows(rows) {
       if (i > 0) return v.slice(0, i);
     }
   }
-  return '';
+  // 【v1.0840】⑤PRオプ料率（data*.csv）など、店の専用列が無いファイル用。
+  //   商品説明に貼られた画像URL（shopping.c.yimg.jp/lib/{店コード}/…）と
+  //   店舗ページURL（store.shopping.yahoo.co.jp/{店コード}/…）から店コードを拾う。
+  return _ycShopFromUrls(rows);
+}
+// 【v1.0840】本文中のYahoo系URLに含まれる店コードを数えて、いちばん多いものを返す。
+//   ★URLはASCIIなので、CSVの文字コード判定が外れて日本語が化けていても拾える。
+function _ycShopFromUrls(rows) {
+  const codes = _ycShopCodesAll();
+  if (!codes.length || !Array.isArray(rows) || !rows.length) return '';
+  const re = /(?:shopping\.c\.yimg\.jp\/lib|store\.shopping\.yahoo\.co\.jp)\/([a-z0-9_-]+)\//gi;
+  const cnt = {};
+  let total = 0;
+  const LIMIT_ROWS = 2000, ENOUGH = 50;   // ★5000行のCSVで全文走査して固まらせない
+  for (let i = 0; i < rows.length && i < LIMIT_ROWS; i++) {
+    const r = rows[i]; if (!r) continue;
+    for (const k in r) {
+      const v = r[k];
+      if (!v || typeof v !== 'string') continue;
+      if (v.indexOf('yimg') < 0 && v.indexOf('yahoo') < 0) continue;   // ほぼ全セルがここで落ちる
+      let m; re.lastIndex = 0;
+      while ((m = re.exec(v))) {
+        const c = String(m[1]).toLowerCase();
+        if (codes.indexOf(c) < 0) continue;   // ★Ycheckに登録済みの店コードだけ数える
+        cnt[c] = (cnt[c] || 0) + 1; total++;
+      }
+    }
+    if (total >= ENOUGH) break;
+  }
+  const found = Object.keys(cnt);
+  if (!found.length) return '';
+  found.sort(function (a, b) { return cnt[b] - cnt[a]; });
+  // ★2店が混ざっていたら決めないこと。他店の商品ページを参照しているだけ、という可能性がある。
+  //   9割以上を1店が占めるときだけ採用し、そうでなければ「判別できず」＝取込前の確認に倒す。
+  if (cnt[found[0]] < total * 0.9) return '';
+  return found[0];
 }
 function _ycShopFromName(filename) {
-  const n = String(filename || '').toLowerCase();
-  // 【v1.0836】item-reach / total-report も見る（ファイル名に店名を付けて運用する場合に効く）
+  const n = String(filename || '').toLowerCase().replace(/^.*[\/\\]/, '');
+  // 【v1.0841】★まず「登録済みの店コード + - または _」で始まるかを見る。
+  //   これだけが【全6種に効く】判定。②③はレポート名に店コードが入るが、
+  //   ①広告・④PR・⑤料率・⑥入札価格は入らないので、人が手で前置したときに
+  //   ここで拾えないと「リネームしたのに効かない」ことになる。
+  //   例: yukaiya-data202610021541.csv / burariya-BID_ITEM (59).csv
+  const codes = _ycShopCodesAll();
+  for (let i = 0; i < codes.length; i++) {
+    const c = codes[i];
+    // ★完全一致で見ること。前方一致にすると yukaiya と yukaiya2 を取り違える。
+    //   区切りは - と _ のみ。これが無いと「data…」の d と店コードの途中一致を拾いかねない。
+    if (c && (n.indexOf(c + '-') === 0 || n.indexOf(c + '_') === 0)) return c;
+  }
+  // 【v1.0836】レポート名からの判定（店コードが未登録でも「別店らしい」と分かる）
   const m = n.match(/^(.+?)-(?:item_report|item-report|store-overall|store_overall|item-reach|item_reach|total-report|total_report)/);
   if (!m) return '';
-  return m[1].replace(/^.*[\/\\]/, '').trim();
+  return m[1].trim();
 }
 function ycShopCheck(filename, rows) {
   const expect = String((typeof getSessionShop === 'function' ? getSessionShop() : {}).shopCode || '').toLowerCase();
@@ -23215,6 +23308,93 @@ function downloadNewProductTemplate() {
   npLog('📥 テンプレートをダウンロードしました', 'ok');
 }
 
+// 【v1.0842】ドロップしたCSVの中身をそのまま表に出す。
+//   ★「N件読み込みました」だけでは、違う店・違う日のファイルを掴んでいても気づけない。
+//     商品コードと商品名が並んでいれば、押す前に目で気づける。
+//   ★新規/更新の判定と「空欄＝今の値を残す」は npApplyRows() と同じ規則で出すこと。
+//     ここに別の規則を書くと、プレビューと実際の反映が食い違う（いちばんやってはいけない）。
+const NPV_MAX_ROWS = 300;   // 表示の上限。件数のカウントは全行で行う
+function _npvFields(r) {
+  // ★列名の別名はここに集約。npApplyRows() と同じ対応表にすること
+  return {
+    name: (r['商品名'] || '').trim(),
+    kw:   (r['メインKW'] || r['主要KW'] || '').trim(),
+    url:  (r['検索URL'] || r['検索画面URL'] || '').trim()
+  };
+}
+function _npvCell(val, cur, isNew) {
+  const esc = (x) => (typeof escapeHtml === 'function') ? escapeHtml(String(x)) : String(x);
+  if (val === '') {
+    // ★空欄の意味を必ず書く。新規は「空のまま」、既存は「今の値を残す」で意味が違う
+    return isNew
+      ? '<span class="npv-empty">（空のまま）</span>'
+      : '<span class="npv-keep">今の値のまま' + (cur ? '：' + esc(cur) : '') + '</span>';
+  }
+  if (!isNew && cur && cur === val) return '<span class="npv-same">' + esc(val) + '（変更なし）</span>';
+  if (!isNew && cur && cur !== val) return '<span class="npv-chg" title="いまの値：' + esc(cur) + '">' + esc(val) + '</span>';
+  return esc(val);
+}
+function npBuildPreview() {
+  const box = document.getElementById('npPreview');
+  if (!box) return;
+  if (!npBuffer || !Array.isArray(npBuffer.rows) || !npBuffer.rows.length) {
+    box.style.display = 'none'; box.innerHTML = ''; return;
+  }
+  const esc = (x) => (typeof escapeHtml === 'function') ? escapeHtml(String(x)) : String(x);
+  const rows = npBuffer.rows;
+  let nNew = 0, nUpd = 0;
+  const seen = Object.create(null);
+  const dup = Object.create(null);
+  rows.forEach(r => {
+    const c = (r['商品コード'] || '').trim();
+    if (!c) return;
+    if (seen[c]) dup[c] = true; else seen[c] = true;
+  });
+  const dupCount = Object.keys(dup).length;
+  const body = [];
+  rows.forEach((r, i) => {
+    const code = (r['商品コード'] || '').trim();
+    const ex = (state.master || {})[code];
+    const isNew = !ex;
+    if (isNew) nNew++; else nUpd++;
+    if (i >= NPV_MAX_ROWS) return;
+    const f = _npvFields(r);
+    const retired = (!isNew && typeof isRetired === 'function' && isRetired(code));
+    body.push('<tr>'
+      + '<td class="npv-n">' + (i + 1) + '</td>'
+      + '<td class="npv-code">' + esc(code)
+        + (dup[code] ? '<span class="npv-badge dup" title="このCSVの中に同じ商品コードが複数あります。あとの行が勝ちます">重複</span>' : '')
+        + '</td>'
+      + '<td class="npv-cell">' + _npvCell(f.name, ex && ex.name, isNew) + '</td>'
+      + '<td class="npv-cell">' + _npvCell(f.kw, ex && (ex.kw || ex.mainKw), isNew) + '</td>'
+      + '<td class="npv-cell">' + _npvCell(f.url, ex && (ex.searchUrl || ex.url), isNew) + '</td>'
+      + '<td><span class="npv-badge ' + (isNew ? 'new">新規' : 'upd">更新') + '</span>'
+        + (retired ? '<span class="npv-badge ret" title="いまは撤退済みです。この取り込みでは解除されません">撤退済み</span>' : '')
+        + '</td>'
+      + '</tr>');
+  });
+  const head = '<div class="npv-head">'
+    + '<span class="npv-file">📄 ' + esc(npBuffer.filename) + '</span>'
+    + '<span class="npv-chip all">' + rows.length + '件</span>'
+    + '<span class="npv-chip new">新規 ' + nNew + '</span>'
+    + '<span class="npv-chip upd">更新 ' + nUpd + '</span>'
+    + (dupCount ? '<span class="npv-chip warn">コード重複 ' + dupCount + '</span>' : '')
+    + '<span class="npv-note">空欄の項目は今の値をそのまま残します</span>'
+    + '</div>';
+  const more = rows.length > NPV_MAX_ROWS
+    ? '<div class="npv-more">…ほか ' + (rows.length - NPV_MAX_ROWS) + ' 件（表示は先頭' + NPV_MAX_ROWS + '件まで。反映は全' + rows.length + '件に対して行われます）</div>'
+    : '';
+  // ★列幅は colgroup で固定する（検索URLに押し出されて「区分」が消えるのを防ぐ）
+  const cols = '<colgroup><col class="c-n"><col class="c-code"><col class="c-name"><col class="c-kw"><col class="c-url"><col class="c-kind"></colgroup>';
+  box.innerHTML = head
+    + '<div class="npv-scroll"><table>' + cols + '<thead><tr>'
+    + '<th class="npv-n">#</th><th>商品コード</th>'
+    + NP_CSV_COLS.slice(1).map(c => '<th>' + esc(c) + '</th>').join('')
+    + '<th>区分</th></tr></thead><tbody>' + body.join('') + '</tbody></table></div>'
+    + more;
+  box.style.display = '';
+}
+
 // スロット表示更新
 function npRefreshSlot() {
   const slot = $('#slot-newproduct');
@@ -23232,7 +23412,7 @@ function npRefreshSlot() {
     main.textContent = `${npBuffer.count}件 読み込み済み`;
     sub.textContent = `${npBuffer.filename} ／ 別のファイルに変えるには、もう一度ここにドロップ`;
     confirmBtn.disabled = false;
-    msg.textContent = `✅ ${npBuffer.count}件の新商品データを読み込みました。「アップロード実行」を押してください。`;
+    msg.textContent = `✅ ${npBuffer.count}件を読み込みました。下の内容を確認して「この内容で登録・更新・反映」を押してください。`;
     msg.style.color = 'var(--green)';
   } else {
     slot.classList.remove('loaded');
@@ -23243,6 +23423,7 @@ function npRefreshSlot() {
     msg.textContent = '📋 CSVファイルをアップロードしてください';
     msg.style.color = '';
   }
+  npBuildPreview();   /* 【v1.0842】★読み込み時も解除時もここ1ヶ所から呼ぶ（消し忘れを防ぐ） */
 }
 
 // CSVファイル受け取り
