@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0850 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0851 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4394,7 +4394,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0850</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0851</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10020,7 +10020,9 @@ function monthDayBadgeHtml(ym) {
 //     呼び出し側で日/月を出し分けなくてよい＝出し忘れが起きない。
 function monthDayBadgeText(ym) {
   const c = monthDayCoverage(ym);
-  return c ? ' (' + c.have + '/' + c.need + ')' : '';
+  // 【v1.0851】★「日」を省かないこと。(14/30) だけだと「14件中30」等とも読めて意味が立たない。
+  //   表示は赤バッジ側（monthDayBadgeHtml）と必ず同じ文言にする。片方だけ直さない。
+  return c ? ' (' + c.have + '/' + c.need + '日)' : '';
 }
 // 日別はあるが月次を守っている月（＝部分取込の月）。画面で注意書きを出すのに使う。
 function dailyPartialMonths(kind) {
