@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0848 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0849 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4394,7 +4394,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0848</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0849</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10015,6 +10015,13 @@ function monthDayBadgeHtml(ym) {
     + '月の数字はその ' + c.have + '日分の合計です。他の月と絶対額で比べないでください">'
     + c.have + '/' + c.need + '日</span>';
 }
+// 【v1.0849】グラフのx軸ラベル用（Chart.js はHTMLを置けないのでテキストで返す）。
+//   ★引数が 'YYYY-MM-DD'（日別）のときは monthDayCoverage が null を返すので自動的に空になる。
+//     呼び出し側で日/月を出し分けなくてよい＝出し忘れが起きない。
+function monthDayBadgeText(ym) {
+  const c = monthDayCoverage(ym);
+  return c ? ' (' + c.have + '/' + c.need + ')' : '';
+}
 // 日別はあるが月次を守っている月（＝部分取込の月）。画面で注意書きを出すのに使う。
 function dailyPartialMonths(kind) {
   const out = [];
@@ -14761,7 +14768,7 @@ function renderMonthly() {
     }).join('');
     return '<tr><td style="padding:' + MI_TD_PAD + ';text-align:center;font-weight:700;font-size:' + MI_TD_FS
       + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;'
-      + 'border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap">' + m.label + '</td>'
+      + 'border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap">' + m.label + monthDayBadgeHtml(m.key) + '</td>'   /* 【v1.0849】日別キーのときは自動で空 */
       + cells + '</tr>';
   }).join('');
 
@@ -16337,7 +16344,7 @@ function renderGraphAll() {
     const from = selF ? selF.value : '', to = selT ? selT.value : '';
     rows = all.filter(r => (!from || r.month >= from) && (!to || r.month <= to));
   }
-  const labels = rows.map(r => r.label);
+  const labels = rows.map(r => r.label + monthDayBadgeText(r.month));   /* 【v1.0849】 */
   const isSales = (_zgMetric === 'sales');
   _renderSalesToggles('zgSalesToggles', _zgSalesHidden, '_zgToggleSales', isSales);
   if (state.charts.chartAll) { state.charts.chartAll.destroy(); state.charts.chartAll = null; }
@@ -16373,7 +16380,7 @@ function renderGraphAll() {
       const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
     }).join('');
-    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + r.label + '</td>' + tds + '</tr>';
+    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + r.label + monthDayBadgeHtml(r.month) + '</td>' + tds + '</tr>';   /* 【v1.0849】 */
   }).join('');
   tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
@@ -18723,7 +18730,7 @@ function renderItemGraph() {
     effMonthlyAdRows().forEach(a => { if (members.indexOf(a.code) < 0) return; (adMap[a.month] || (adMap[a.month] = { c: 0, r: 0, cl: 0, or: 0 })); adMap[a.month].c += a.adCost || 0; adMap[a.month].r += a.adRevenue || 0; adMap[a.month].cl += a.adClicks || 0; adMap[a.month].or += a.adOrders || 0; });
     const from = selF ? selF.value : '', to = selT ? selT.value : '';
     range = months.filter(m => (!from || m >= from) && (!to || m <= to));
-    labels = range.map(m => m.replace('-', '/'));
+    labels = range.map(m => m.replace('-', '/') + monthDayBadgeText(m));   /* 【v1.0849】 */
   }
   // 【v1.0406】売上（複合）指標の月次値: 総売上/SEO/広告/送り込み。
   const _igSalesVal = (m, key) => {
@@ -18780,7 +18787,7 @@ function renderItemGraph() {
     const sv = (childMap[m] || {}).rev || 0;
     const sdisp = (!sv || sv === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(sv).toLocaleString();
     const soiTd = '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + _SOI_BG + ';border-left:' + _SOI_BD + ';border-bottom:1px solid var(--border);white-space:nowrap">' + sdisp + '</td>';
-    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + '</td>' + tds + soiTd + '</tr>';
+    return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + monthDayBadgeHtml(m) + '</td>' + tds + soiTd + '</tr>';   /* 【v1.0849】 */
   }).join('');
   tableWrap.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.9rem">\n<thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
