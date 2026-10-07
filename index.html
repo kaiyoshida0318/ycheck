@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0853 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0854 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3716,10 +3716,11 @@ table.rank-table td.rank-legend-col-row {
    いちばん右の「区分（新規/更新）」が画面外へ押し出されて見えなくなる。 */
 .npv table { width: 100%; border-collapse: collapse; font-size: 0.78rem; table-layout: fixed; }
 .npv col.c-n    { width: 36px; }
-.npv col.c-code { width: 148px; }
+.npv col.c-code { width: 170px; }
 .npv col.c-name { width: auto; }
-.npv col.c-kw   { width: 130px; }
-.npv col.c-url  { width: 96px; }
+.npv col.c-kw   { width: 220px; }
+.npv col.c-url  { width: 230px; }
+.npv col.c-del  { width: 34px; }
 /* ★「更新」＋「撤退済み→解除」の2つが並ぶ行があるので、この列は狭くしすぎないこと（切れる）。
    v1.0842 は152pxで、解除バッジが出た途端にはみ出していた。 */
 .npv col.c-kind { width: 196px; }
@@ -3749,7 +3750,27 @@ table.rank-table td.rank-legend-col-row {
 /* 【v1.0853】右側の候補パネル。開いたときだけモーダルを広げる（閉じている間は従来の幅のまま） */
 .np-cols { display: flex; gap: 16px; align-items: flex-start; }
 .np-main { flex: 1 1 auto; min-width: 0; }
-#npModal.np-open { max-width: min(1340px, 96vw); }
+/* 【v1.0854】★このモーダルだけ広く・高くする。
+   中が「直接入力 ＋ CSVテンプレ ＋ ドロップ ＋ 全行のプレビュー表 ＋ 候補パネル」と多く、
+   既定の 900px では表の1行が折り返して、かえって読みにくかった。 */
+#npModal { max-width: min(1180px, 96vw); max-height: 92vh; }
+#npModal.np-open { max-width: min(1680px, 97vw); }
+/* 【v1.0854】プレビュー表のセルをその場で直せるようにする（API取得は商品コードと商品名しか来ないため） */
+.npv-in {
+  width: 100%; box-sizing: border-box; padding: 3px 6px;
+  border: 1px solid transparent; border-radius: 5px; background: transparent;
+  font: inherit; font-size: 0.78rem; color: var(--text);
+}
+.npv-in:hover { border-color: var(--border2); background: var(--bg2); }
+.npv-in:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+.npv-in::placeholder { color: var(--text3); font-style: italic; }
+.npv-in.chg  { color: #b45309; font-weight: 700; }
+.npv-in.same { color: var(--text3); }
+.npv-del {
+  border: none; background: transparent; color: var(--text3); cursor: pointer;
+  width: 22px; height: 22px; border-radius: 5px; font-size: 0.8rem; line-height: 1;
+}
+.npv-del:hover { background: #fee2e2; color: #b91c1c; }
 .np-api {
   flex: 0 0 420px; width: 420px; align-self: stretch;
   display: flex; flex-direction: column;
@@ -4435,7 +4456,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0853</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0854</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -23617,17 +23638,30 @@ function _npvFields(r) {
     url:  (r['検索URL'] || r['検索画面URL'] || '').trim()
   };
 }
-function _npvCell(val, cur, isNew) {
+// 【v1.0854】★表示専用だったセルを入力欄にした。
+//   「APIから取得」で入るのは商品コードと商品名だけなので、メインKWと検索URLは必ず手で足すことになる。
+//   そのたびに直接入力欄へ1件ずつ入れ直すのは現実的でない。
+//   ★空欄の意味（新規＝空のまま／既存＝今の値を残す）は placeholder に移した。消さないこと。
+function _npvCell(val, cur, isNew, i, field) {
   const esc = (x) => (typeof escapeHtml === 'function') ? escapeHtml(String(x)) : String(x);
-  if (val === '') {
-    // ★空欄の意味を必ず書く。新規は「空のまま」、既存は「今の値を残す」で意味が違う
-    return isNew
-      ? '<span class="npv-empty">（空のまま）</span>'
-      : '<span class="npv-keep">今の値のまま' + (cur ? '：' + esc(cur) : '') + '</span>';
-  }
-  if (!isNew && cur && cur === val) return '<span class="npv-same">' + esc(val) + '（変更なし）</span>';
-  if (!isNew && cur && cur !== val) return '<span class="npv-chg" title="いまの値：' + esc(cur) + '">' + esc(val) + '</span>';
-  return esc(val);
+  const ph = (val === '')
+    ? (isNew ? '（空のまま）' : ('今の値のまま' + (cur ? '：' + cur : '')))
+    : '';
+  let cls = '';
+  if (val !== '' && !isNew && cur) cls = (cur === val) ? ' same' : ' chg';
+  return '<input class="npv-in' + cls + '" type="text" spellcheck="false" autocomplete="off" data-lpignore="true"'
+    + ' data-i="' + i + '" data-f="' + esc(field) + '" data-cur="' + esc(cur || '') + '" data-new="' + (isNew ? '1' : '') + '"'
+    + ' value="' + esc(val) + '" placeholder="' + esc(ph) + '"'
+    + (cls === ' chg' ? ' title="いまの値：' + esc(cur) + '"' : '') + '>';
+}
+// 入力中に色だけ切り替える（表を作り直さない＝入力中にフォーカスが飛ばない）
+function _npvMarkInput(inp) {
+  if (!inp) return;
+  const cur = inp.getAttribute('data-cur') || '';
+  const isNew = !!inp.getAttribute('data-new');
+  const v = String(inp.value || '').trim();
+  inp.classList.toggle('chg', !!v && !isNew && !!cur && v !== cur);
+  inp.classList.toggle('same', !!v && !isNew && !!cur && v === cur);
 }
 function npBuildPreview() {
   const box = document.getElementById('npPreview');
@@ -23661,14 +23695,15 @@ function npBuildPreview() {
       + '<td class="npv-code">' + esc(code)
         + (dup[code] ? '<span class="npv-badge dup" title="このCSVの中に同じ商品コードが複数あります。あとの行が勝ちます">重複</span>' : '')
         + '</td>'
-      + '<td class="npv-cell">' + _npvCell(f.name, ex && ex.name, isNew) + '</td>'
-      + '<td class="npv-cell">' + _npvCell(f.kw, ex && (ex.kw || ex.mainKw), isNew) + '</td>'
-      + '<td class="npv-cell">' + _npvCell(f.url, ex && (ex.searchUrl || ex.url), isNew) + '</td>'
+      + '<td class="npv-cell">' + _npvCell(f.name, ex && ex.name, isNew, i, '商品名') + '</td>'
+      + '<td class="npv-cell">' + _npvCell(f.kw, ex && (ex.kw || ex.mainKw), isNew, i, 'メインKW') + '</td>'
+      + '<td class="npv-cell">' + _npvCell(f.url, ex && (ex.searchUrl || ex.url), isNew, i, '検索URL') + '</td>'
       + '<td><span class="npv-badge ' + (isNew ? 'new">新規' : 'upd">更新') + '</span>'
         + (retired ? (_npvUnretire
              ? '<span class="npv-badge unret" title="この取り込みで「撤退済み」を解除し、一覧に戻します">撤退済み→解除</span>'
              : '<span class="npv-badge ret" title="撤退済みのままなので、商品-基本データには出ません">撤退済み（このまま）</span>') : '')
         + '</td>'
+      + '<td style="text-align:center"><button type="button" class="npv-del" data-del="' + i + '" title="この行を一覧から外す">✕</button></td>'
       + '</tr>');
   });
   const head = '<div class="npv-head">'
@@ -23686,7 +23721,7 @@ function npBuildPreview() {
     ? '<div class="npv-more">…ほか ' + (rows.length - NPV_MAX_ROWS) + ' 件（表示は先頭' + NPV_MAX_ROWS + '件まで。反映は全' + rows.length + '件に対して行われます）</div>'
     : '';
   // ★列幅は colgroup で固定する（検索URLに押し出されて「区分」が消えるのを防ぐ）
-  const cols = '<colgroup><col class="c-n"><col class="c-code"><col class="c-name"><col class="c-kw"><col class="c-url"><col class="c-kind"></colgroup>';
+  const cols = '<colgroup><col class="c-n"><col class="c-code"><col class="c-name"><col class="c-kw"><col class="c-url"><col class="c-kind"><col class="c-del"></colgroup>';
   // ★チェックを変えたら表を作り直す（バッジの文言が「→解除」と「このまま」で変わる）
   setTimeout(function () {
     const cb = document.getElementById('npvUnretire');
@@ -23696,7 +23731,7 @@ function npBuildPreview() {
     + '<div class="npv-scroll"><table>' + cols + '<thead><tr>'
     + '<th class="npv-n">#</th><th>商品コード</th>'
     + NP_CSV_COLS.slice(1).map(c => '<th>' + esc(c) + '</th>').join('')
-    + '<th>区分</th></tr></thead><tbody>' + body.join('') + '</tbody></table></div>'
+    + '<th>区分</th><th></th></tr></thead><tbody>' + body.join('') + '</tbody></table></div>'
     + more;
   box.style.display = '';
 }
@@ -24743,6 +24778,31 @@ if ($('#npqCode')) {
   $('#npqClear').addEventListener('click', npqClear);
   $('#npqReveal').addEventListener('click', (ev) => npqReveal(ev.currentTarget.dataset.code || ''));
   $('#npqUnretire').addEventListener('click', (ev) => npqUnretire(ev.currentTarget.dataset.code || ''));
+  // 【v1.0854】プレビュー表の編集と行削除。★表は作り直されるので、親に1回だけ付ける（委譲）
+  { const box = document.getElementById('npPreview');
+    if (box) {
+      // 入力中は表を作り直さない（作り直すとフォーカスが飛んで、続けて打てない）
+      box.addEventListener('input', (ev) => {
+        const inp = ev.target;
+        if (!inp || !inp.classList || !inp.classList.contains('npv-in')) return;
+        const i = +inp.getAttribute('data-i'), f = inp.getAttribute('data-f');
+        if (!npBuffer || !npBuffer.rows || !npBuffer.rows[i]) return;
+        npBuffer.rows[i][f] = inp.value;
+        _npvMarkInput(inp);
+      });
+      box.addEventListener('click', (ev) => {
+        const btn = ev.target && ev.target.closest && ev.target.closest('.npv-del');
+        if (!btn) return;
+        const i = +btn.getAttribute('data-del');
+        if (!npBuffer || !npBuffer.rows || !npBuffer.rows[i]) return;
+        const code = (npBuffer.rows[i]['商品コード'] || '').trim();
+        npBuffer.rows.splice(i, 1);
+        npBuffer.count = npBuffer.rows.length;
+        if (!npBuffer.rows.length) npBuffer = null;   // ★0件になったら未読込に戻す（空の表を残さない）
+        npRefreshSlot();
+        try { npLog('　（' + code + ' を一覧から外しました）'); } catch (e) {}
+      });
+    } }
   // 【v1.0853】Yahooの商品一覧（候補パネル）
   { const b = document.getElementById('npApiBtn');
     if (b) b.addEventListener('click', () => {
