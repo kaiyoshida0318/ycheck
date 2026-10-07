@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0855 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0856 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -640,7 +640,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .top-nav-3 .nav-row-tabs .nav-tab { padding-left: 7px; padding-right: 7px; }
 .top-nav-3 .nav-row-tabs .nav-tab .chip-num { margin-left: 2px; }
 .top-nav-3 .nav-row-tabs .nav-group-tune .nav-group-label { padding-right: 3px; }
-.nav-row-tabs > #btnToggleTabs { margin-left: auto; white-space: nowrap; align-self: center; flex: 0 0 auto; }   /* 【v1.0700/v1.0735】ヘッダー2を隠すボタン（縮まない席を確保） */
+.nav-row-tabs > #btnToggleChrome { margin-left: auto; white-space: nowrap; align-self: center; flex: 0 0 auto; }   /* 【v1.0856】上部を隠すボタン（縮まない席を確保） */
 /* 【v1.0703】ヘッダー3の上に出すヘッダー2の復帰口。隠すボタンと同じ右端にそろえる */
 .hdr-restore-inline { width: 100%; display: flex; justify-content: flex-end; padding: 0 0 3px; }
 .top-nav-3 .xf-row { margin-top: 7px; }   /* 【v1.0668】【一覧】【調整】の行とバッジ群の間を少し空ける（.top-nav-3 の gap 6px ＋ 7px） */
@@ -797,7 +797,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 /* 【v202/v1.0549/v1.0550】ヘッダー開閉ボタンの位置。
    ヘッダー1 …【v1.0607】1段目（.top-nav）の右端
    ヘッダー2 … いちばん下の行（.nav-states-lastrow）の右端【v1.0634】 */
-.top-nav > #btnToggleChrome { margin-left: auto; white-space: nowrap; align-self: center; }
+/* 【v1.0856】#btnToggleChrome は .nav-row-tabs へ移動（上の .nav-row-tabs > #btnToggleChrome） */
 /* 【v1.0550/v1.0634】いちばん下の行のグループと開閉ボタンを必ず同じ1行（全幅）に置くためのラッパー。
    .nav-row-states は flex-wrap なので、ラッパー無しだとボタンだけ別行に落ちることがある。
    ★v1.0634 で並びを ステータス→PR状態→入札状態 に変えたので、中身は【入札状態】になった
@@ -3988,6 +3988,9 @@ table.rank-table td.rank-legend-col-row {
 .tab-shopmix-bar code { background: rgba(255,255,255,0.2); color: #fff; padding: 1px 5px; border-radius: 3px; }
 .tab-shopmix-bar .sm-me    { color: #fff;     background: rgba(255,255,255,0.26); padding: 1px 7px; border-radius: 4px; font-weight: 700; }
 .tab-shopmix-bar .sm-other { color: #b91c1c; background: #fff;                   padding: 1px 7px; border-radius: 4px; font-weight: 700; }
+.gh-auto { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 700; color: var(--text2);
+  padding: 4px 10px; border: 1px solid var(--border2); border-radius: 6px; cursor: pointer; margin-right: auto; }
+.gh-auto input { accent-color: var(--accent); cursor: pointer; }
 .tab-shopmix-bar .tab-conflict-close { background: rgba(255,255,255,0.22); color: #fff; }
 .tab-shopmix-bar .tab-conflict-close:hover { background: rgba(255,255,255,0.4); }
 /* 【v228】再登録後のコード移行モーダル */
@@ -4456,7 +4459,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0855</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0856</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4529,7 +4532,7 @@ th.col-sroas { background-color:#e7d5f5; }
   <!-- 【v1.0550/v1.0607】ヘッダー1（上部バー＋タブ段）の開閉。
        v1.0606までは .top-nav-2 の右端にあったが、その段ごと撤去したのでこの行の右端へ移した。
        ★隠している間はこのボタンごと消えるので、復帰は #hdrRestoreBarTop が受け持つ（§18-14）。 -->
-  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーと【基本】【全体】【取得データ】の段を隠します">🔼 上部を隠す</button>
+  <!-- 【v1.0856】「上部を隠す」はタブ行の右端へ移した（下の .nav-row-tabs を見ること） -->
 </nav>
 
 <!-- 【v1.0607】2段目（.top-nav-2）は撤去。
@@ -4585,10 +4588,13 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="nav-group-label g-renew">【リニューアル】</span>
     <a class="nav-tab nav-tab-link" data-view="withdraw" data-wdmode="renewal" href="?view=withdraw-renewal">リニュ-予定<span class="chip-num" id="cntWdRenewal"></span></a>
   </div>
-  <!-- 【v1.0700】ヘッダー2（【一覧】【調整】のタブ行）の開閉。この行の右端に置く -->
   <!-- 【v1.0855】「ヘッダー2を隠す」は撤去（タブ行は常に出す）。
        ★要素ごと消すこと。display:none で残すと、復帰バーの出し分け（applyHeaderCollapse）に
          「押せないのに存在する」ボタンが残り、次に触る人が混乱する。 -->
+  <!-- 【v1.0856】「上部を隠す」はこの行の右端。
+       ★この行（.nav-row-tabs）は【隠れない行】なので、ここに置けば押したあとも同じ位置に残る。
+         1段目に置いていたときは、押した瞬間にボタンごと消えて、復帰バーに飛んでいた。 -->
+  <button class="btn sm ghost" id="btnToggleChrome" type="button" title="上部バーと【基本】【全体】【取得データ】の段を隠します">🔼 上部を隠す</button>
   </div><!-- /.nav-row-tabs 【v1.0661】 -->
 
   <div class="xf-row">
@@ -5930,6 +5936,8 @@ th.col-sroas { background-color:#e7d5f5; }
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <label class="gh-auto" title="このタブで変更したあと、数秒おいて自動でGitHubへ保存します。開いただけ・読み込んだだけでは保存しません">
+          <input type="checkbox" id="ghAutoSave" checked>自動で反映する</label>
         <button class="btn sm primary" id="ghBtnSave" type="button">💾 PATを保存</button>
         <button class="btn sm" id="ghBtnTest" type="button">🔌 接続テスト</button>
         <button class="btn sm" id="ghBtnManualSave" type="button">⬆ 今すぐGitHub保存</button>
@@ -8068,10 +8076,28 @@ async function ghSaveToGitHub(options = {}) {
           const _rItems = Array.isArray(_remote.item) ? _remote.item.length : 0;
           const _lItems = Array.isArray(dataObj.item) ? dataObj.item.length : 0;
           const _bigShrink = _rItems >= 50 && _lItems < _rItems * 0.8;
-          if (_dropped.length > 0 || _bigShrink) {
+          // ============================================================================
+          // 【v1.0856】★日別（state.daily）も見る。
+          //   v1.0855までのガードは item/ad の【月次配列】しか見ていなかった。
+          //   いまデータの本体は日別（state.daily）で、月次配列は昔の経路でしか増えない。
+          //   つまり「古いタブが今日取り込んだ1ヶ月ぶんの日別を消す」保存は、
+          //   このガードを素通りしていた（2026-10-05 の事故と同じ形）。
+          //   ★自動保存を入れる前に、ここを塞ぐのが先。
+          // ============================================================================
+          const _daysOf = (o) => {
+            const s2 = new Set();
+            const d = (o && o.daily) || {};
+            ['overall', 'item', 'ad', 'pr'].forEach(k => Object.keys(d[k] || {}).forEach(x => s2.add(k + ':' + x)));
+            return s2;
+          };
+          const _rDays = _daysOf(_remote), _lDays = _daysOf(dataObj);
+          const _dropDays = [..._rDays].filter(x => !_lDays.has(x));
+          if (_dropped.length > 0 || _bigShrink || _dropDays.length > 0) {
             const _detail = _dropped.length
               ? `GitHubにある月が消えます（${_dropped.sort().join(', ')}）`
-              : `件数が大きく減っています（GitHub ${_rItems}件 → この画面 ${_lItems}件）`;
+              : (_dropDays.length
+                  ? `GitHubにある日別データが ${_dropDays.length} 件ぶん消えます（例: ${_dropDays.slice(0, 3).map(x => x.split(':')[1]).join(', ')}）`
+                  : `件数が大きく減っています（GitHub ${_rItems}件 → この画面 ${_lItems}件）`);
             _ghDirty = true;
             ghSetSyncStatus('error', '保存中止(古い可能性)');
             ghLog('⚠ 古いデータの可能性のため保存を中止しました: ' + _detail, 'warn');
@@ -8761,7 +8787,6 @@ function scheduleGitHubSave(reason) {
     console.log('[Ycheck] 未反映になりました: ' + _ghDirtyReason
       + '（この行が身に覚えのない場面で出るときは、この理由をそのまま伝えてください）');
   }
-  // 【v1.0354】自動保存は廃止。ここでは「未反映（要・反映ボタン）」状態にするだけ。実際の保存は「反映する」ボタン。
   _ghDirty = true;
   ghSetSyncStatus('dirty');
   if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
@@ -8769,7 +8794,75 @@ function scheduleGitHubSave(reason) {
   //   順番を逆にしない（確認に失敗したときに立たない＝変更が消える）。
   try { _ycUpLogPush(reason || 'データの変更'); } catch (e) {}
   try { _ycUpVerifySoon(); } catch (e) {}
+  _ycAutoSaveSchedule(reason);   /* 【v1.0856】 */
 }
+
+// ============================================================================
+// 【v1.0856】自動保存。
+//
+//   v1.0354 で自動保存を全廃したのは「**開いただけでGitHubに書く**」のが事故の元だったから。
+//   そこは今も守る。自動保存が走る条件は、それより手前の scheduleGitHubSave() が持っている:
+//     ・ghIsEnabled()        … PATがある（閲覧専用の端末は書かない）
+//     ・_ycAutoSaveArmed     … ★このタブで一度でもクリック/キー入力をした後だけ
+//                              （開いただけ・裏で読み込んだだけでは絶対に立たない）
+//     ・_ghQuiet === 0       … 読込・同期・マイグレーション中ではない（＝人の変更だけ）
+//   つまり「人がこのタブで何かを変えたとき【だけ】」自動保存が動く。
+//
+//   ★上書き防止ガード（empty / rank-empty / stale-overwrite）は手動保存と同じものを必ず通す。
+//     自動だからと force や allowEmpty を付けないこと。付けた瞬間に事故が戻る。
+//   ★画面はロックしない（ycLockUI を呼ばない）。手動の「⬆ 反映する」は操作を止めてよいが、
+//     自動が勝手に画面を止めると、入力中に固まったように見える。
+//   ★失敗・中止のときは _ghDirty を下ろさない。「⬆ 反映する（未反映）」が残るので、
+//     自動が通らなかったことに人が気づけて、手で押せる。
+// ============================================================================
+const YC_AUTOSAVE_KEY = 'ycheck_autosave_v1';            // ブラウザ毎（ショップ非依存）
+const YC_AUTOSAVE_DEBOUNCE_MS = 4000;                    // 入力が止まってから保存するまで
+let _ycAutoSaveTimer = null;
+let _ycAutoSaveBusy = false;
+function ycAutoSaveOn() {
+  try { const v = localStorage.getItem(YC_AUTOSAVE_KEY); return v === null ? true : v === '1'; } catch (e) { return true; }
+}
+function ycAutoSaveSet(on) {
+  try { localStorage.setItem(YC_AUTOSAVE_KEY, on ? '1' : '0'); } catch (e) {}
+  if (!on && _ycAutoSaveTimer) { clearTimeout(_ycAutoSaveTimer); _ycAutoSaveTimer = null; }
+  try { _ycAutoSaveSyncUI(); } catch (e) {}
+}
+function _ycAutoSaveSyncUI() {
+  const cb = document.getElementById('ghAutoSave');
+  if (cb) cb.checked = ycAutoSaveOn();
+}
+function _ycAutoSaveSchedule(reason) {
+  if (!ycAutoSaveOn()) return;
+  if (!ghIsEnabled()) return;
+  if (!_ycAutoSaveArmed) return;   // ★開いただけでは書かない（v1.0354の約束）
+  if (_ghQuiet > 0) return;
+  if (_ycAutoSaveTimer) clearTimeout(_ycAutoSaveTimer);
+  _ycAutoSaveTimer = setTimeout(() => { _ycAutoSaveTimer = null; _ycAutoSaveRun(reason); }, YC_AUTOSAVE_DEBOUNCE_MS);
+}
+async function _ycAutoSaveRun(reason) {
+  if (_ycAutoSaveBusy || !_ghDirty) return;
+  if (!ycAutoSaveOn() || !ghIsEnabled() || !_ycAutoSaveArmed || _ghQuiet > 0) return;
+  _ycAutoSaveBusy = true;
+  try {
+    // ★manual:true は「明示操作のときだけ保存する」関門を通すためのもので、
+    //   ガード（empty / rank-empty / stale-overwrite）はこのあと全部そのまま走る。
+    const r = await ghSaveToGitHub({ manual: true });
+    if (r && r.success) {
+      console.log('[Ycheck] 自動保存しました（' + (reason || '変更') + '）');
+    } else {
+      const why = (r && (r.reason || r.detail)) || '不明';
+      console.warn('[Ycheck] 自動保存は行いませんでした: ' + why + ' → 「⬆ 反映する」は出たままです');
+    }
+  } catch (e) {
+    console.warn('[Ycheck] 自動保存に失敗:', e);
+  } finally { _ycAutoSaveBusy = false; }
+}
+// ★タブを閉じる直前に待ちがあるなら、待たずに1回出す（間に合わないこともあるので保険）
+try {
+  window.addEventListener('beforeunload', () => {
+    if (_ycAutoSaveTimer) { clearTimeout(_ycAutoSaveTimer); _ycAutoSaveTimer = null; _ycAutoSaveRun('タブを閉じる前'); }
+  });
+} catch (e) {}
 
 // 【v1.0354】========= 「反映する」ボタン + 保存中フルロック =========
 function _ycUpdateReflectBtn() {
@@ -24810,6 +24903,8 @@ if ($('#npqCode')) {
       });
     } }
   // 【v1.0853】Yahooの商品一覧（候補パネル）
+  { const cb = document.getElementById('ghAutoSave');
+    if (cb) { cb.checked = ycAutoSaveOn(); cb.addEventListener('change', () => ycAutoSaveSet(cb.checked)); } }
   { const b = document.getElementById('npApiBtn');
     if (b) b.addEventListener('click', () => {
       const pane = document.getElementById('npApiPane');
