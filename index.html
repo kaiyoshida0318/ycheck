@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0856 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0857 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4459,7 +4459,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0856</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0857</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7286,6 +7286,47 @@ function rankJsonPaths() {
 // 【v1.0381】raw.githubusercontent.com の download_url はブランチ参照でCDNが約5分キャッシュするため、
 //   一意のクエリ(?t=…)を付けてCDNキャッシュを確実に回避する（cache:'no-store'はブラウザ自身のキャッシュのみ）。
 function _ghCacheBust(u) { if (!u) return u; return u + (u.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(); }
+// ============================================================================
+// 【v1.0857】★GitHubのデータ本体は「sha（中身のハッシュ）」を指定して読む。
+//   v1.0381 の「?t=… を付ければ raw のCDNキャッシュを避けられる」は【効いていなかった】。
+//   raw.githubusercontent.com は ?t= が毎回違っても x-cache: HIT で古いコピーを返す（max-age=300）。
+//   データは 1MB を超えている（ゆかい屋 2.6MB）ので、読み込みは毎回この raw を通っていた。
+//   → 保存の直後（5分以内）に開き直すと、1つ前の版を読み、画面を巻き戻していた。
+//      2026-10-07 11:21 に 265件で保存 → 11:23 に開き直したら 263件（前の版）に戻った、が実例。
+//   ★Blob API は sha で引くので、その sha の中身しか返らない＝古い版が混ざりようがない。
+//   ★download_url は予備としてだけ使い、中身の sha が一致しないときは【使わない】（例外にする）。
+// ============================================================================
+async function _ghReadBlobBySha(sha) {
+  const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/git/blobs/${sha}`;
+  const res = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${ghGetPat()}`, 'Accept': 'application/vnd.github.raw+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    cache: 'no-store'
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`Blob取得失敗: ${res.status} ${t.slice(0, 200)}`); }
+  const txt = await res.text();
+  // raw が効かず JSON（base64）で返ってきた場合にも対応する
+  try {
+    if (txt.charAt(0) === '{' && txt.indexOf('"encoding"') >= 0 && txt.indexOf('"sha"') >= 0) {
+      const b = JSON.parse(txt);
+      if (b && b.encoding === 'base64' && typeof b.content === 'string' && b.sha === sha) {
+        const raw = atob(b.content.replace(/\s/g, ''));
+        return new TextDecoder('utf-8').decode(Uint8Array.from(raw, c => c.charCodeAt(0)));
+      }
+    }
+  } catch (e) { /* 生データとして扱う */ }
+  return txt;
+}
+// git の blob sha（sha1("blob <バイト数>\0" + 中身)）を計算する。使えない環境では null。
+async function _ghGitBlobSha(text) {
+  try {
+    if (!(window.crypto && crypto.subtle)) return null;
+    const body = new TextEncoder().encode(text);
+    const head = new TextEncoder().encode('blob ' + body.length + '\0');
+    const all = new Uint8Array(head.length + body.length); all.set(head, 0); all.set(body, head.length);
+    const h = await crypto.subtle.digest('SHA-1', all);
+    return Array.from(new Uint8Array(h)).map(x => x.toString(16).padStart(2, '0')).join('');
+  } catch (e) { return null; }
+}
 // 【v1.0356】読み込み用: 新ファイルがまだ無ければ旧ファイルから読む（初回移行）。保存(PUT)は常に新ファイル。
 async function ghGetFileForLoad() {
   const r = await ghGetFile();                 // 新ファイル
@@ -7300,9 +7341,8 @@ async function ghGetFileForLoad() {
     if (json.content && json.content.replace(/\s/g, '').length > 0) {
       const raw = atob(json.content.replace(/\s/g, ''));
       decoded = new TextDecoder('utf-8').decode(Uint8Array.from(raw, c => c.charCodeAt(0)));
-    } else if (json.download_url) {   // 1MB超は download_url から取得
-      const r2 = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
-      decoded = await r2.text();
+    } else if (json.sha) {   // 1MB超【v1.0857】sha 指定で読む（raw のCDNキャッシュを通さない）
+      decoded = await ghFetchLargeContent(json);
     }
     return { sha: null, content: decoded, fromLegacy: true };   // sha:null → 次のPUTは新ファイルを新規作成
   } catch (e) { return { sha: null, content: null, fromLegacy: false }; }
@@ -7457,19 +7497,32 @@ async function ghGetFile() {
 // 【v187】1MB超ファイルの中身を取得するフォールバック。
 // まず download_url（一時署名付きraw URL）を試し、ダメなら Blob API（git/blobs/{sha}）で取得。
 async function ghFetchLargeContent(json) {
-  // 1) download_url: 署名付きの一時URL。認証ヘッダ不要で raw を返す
-  if (json.download_url) {
+  // 【v1.0857】1) Blob API を sha 指定で（古い版が返らない）。raw 形式で受け取る（上限100MB）
+  if (json.sha) {
     try {
-      const r = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
-      if (r.ok) {
-        const txt = await r.text();
-        if (txt && txt.length > 0) return txt;
-      }
+      const txt = await _ghReadBlobBySha(json.sha);
+      if (txt && txt.length > 0) return txt;
     } catch (e) {
-      ghLog('download_url 取得失敗、Blob APIにフォールバック: ' + e.message, 'warn');
+      ghLog('Blob(sha)取得失敗、download_url を試します: ' + e.message, 'warn');
     }
   }
-  // 2) Blob API: base64で返る。サイズ上限100MBまで対応
+  // 2) download_url（予備）。★CDNが古い版を返すことがあるので、中身の sha を照合してから使う
+  if (json.download_url) {
+    let txt = '';
+    try {
+      const r = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
+      if (r.ok) txt = await r.text();
+    } catch (e) {
+      ghLog('download_url 取得失敗、Blob API(base64)にフォールバック: ' + e.message, 'warn');
+    }
+    if (txt && txt.length > 0) {
+      const got = await _ghGitBlobSha(txt);
+      if (!json.sha || !got || got === json.sha) return txt;
+      ghLog('⚠ download_url が古い版を返しました（sha不一致）。この中身は使いません', 'warn');
+      throw new Error('GitHubの配信キャッシュが古い版を返しました（sha不一致）。少し待ってから読み直してください');
+    }
+  }
+  // 3) Blob API: base64で返る。サイズ上限100MBまで対応
   const blobUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/git/blobs/${json.sha}`;
   const res = await fetch(blobUrl, {
     headers: {
@@ -7729,10 +7782,9 @@ async function _ycFetchRemoteMeta() {
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${ghGetPat()}`, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, cache: 'no-store' });
   if (!res.ok) return null;
   const json = await res.json();
-  if (!json.download_url) return null;
-  const r2 = await fetch(_ghCacheBust(json.download_url), { cache: 'no-store' });
-  if (!r2.ok) return null;
-  const d = await r2.json();
+  if (!json.sha) return null;
+  // 【v1.0857】download_url（CDNキャッシュ）ではなく sha で読む。古い版だと「上書きされた」を見逃す
+  const d = JSON.parse(await ghFetchLargeContent(json));
   return { savedAt: d.savedAt || '', savedBy: d.savedBy || '', savedByLabel: d.savedByLabel || '',
            savedByVer: d.savedByVer || '', masterCount: Object.keys(d.master || {}).length };
 }
@@ -8092,12 +8144,26 @@ async function ghSaveToGitHub(options = {}) {
           };
           const _rDays = _daysOf(_remote), _lDays = _daysOf(dataObj);
           const _dropDays = [..._rDays].filter(x => !_lDays.has(x));
-          if (_dropped.length > 0 || _bigShrink || _dropDays.length > 0) {
+          // ============================================================================
+          // 【v1.0857】★商品（master）が減る保存も止める。
+          //   master は読み込み時に丸ごと置き換わるので、古い版を読んだタブは商品を失ったまま動く。
+          //   そこで保存（v1.0856からは自動反映）が走ると、GitHubからも商品が消える。
+          //   ★「GitHubにあって画面に無いコードがある」かつ「件数が減る」ときだけ止める。
+          //     商品コードの変更（migrateProductCode）は件数が変わらないので通る。
+          //   ★全消去（ycResetShopData）は force:true なのでここには来ない。
+          // ============================================================================
+          const _rMaster = (_remote && _remote.master) || {}, _lMaster = dataObj.master || {};
+          const _dropCodes = Object.keys(_rMaster).filter(c => !(c in _lMaster));
+          const _masterShrink = _dropCodes.length > 0 && Object.keys(_lMaster).length < Object.keys(_rMaster).length;
+          if (_dropped.length > 0 || _bigShrink || _dropDays.length > 0 || _masterShrink) {
             const _detail = _dropped.length
               ? `GitHubにある月が消えます（${_dropped.sort().join(', ')}）`
               : (_dropDays.length
                   ? `GitHubにある日別データが ${_dropDays.length} 件ぶん消えます（例: ${_dropDays.slice(0, 3).map(x => x.split(':')[1]).join(', ')}）`
-                  : `件数が大きく減っています（GitHub ${_rItems}件 → この画面 ${_lItems}件）`);
+                  : (_masterShrink
+                      ? `GitHubにある商品が ${_dropCodes.length} 件消えます（GitHub ${Object.keys(_rMaster).length}件 → この画面 ${Object.keys(_lMaster).length}件／例: ${_dropCodes.slice(0, 3).join(', ')}）`
+                      : `件数が大きく減っています（GitHub ${_rItems}件 → この画面 ${_lItems}件）`));
+            try { if (typeof ycLog === 'function') ycLog('warn', '⛔ 保存を止めました: ' + _detail); } catch (eL) {}
             _ghDirty = true;
             ghSetSyncStatus('error', '保存中止(古い可能性)');
             ghLog('⚠ 古いデータの可能性のため保存を中止しました: ' + _detail, 'warn');
@@ -8277,6 +8343,14 @@ async function ghLoadFromGitHub(opts) {
     const _localBid = state.bid || {};
     const _localPro = state.proRate || {};
     const _remotePM = data.productMeta || {};
+    // 【v1.0857】読み込みで商品件数が減るときは「どの版を読んだか」をログに残す（原因の切り分け用）
+    try {
+      const _ln = Object.keys(state.master || {}).length, _rn = Object.keys(data.master || {}).length;
+      if (data.master && _rn < _ln && typeof ycLog === 'function') {
+        ycLog('warn', 'GitHubから読込: 商品 ' + _ln + '件 → ' + _rn + '件（GitHubの版: ' + (data.savedAt || '?') + ' / '
+          + (data.savedByVer || '?') + ' / sha ' + String(_loaded.sha || '?').slice(0, 7) + '）');
+      }
+    } catch (eLg) {}
     if (data.overall) state.overall = data.overall;
     if (typeof ensureOldOverall === 'function') ensureOldOverall();   // 【v315】GitHub読込後に旧データを補完
     // 【v1.0845】★日別は丸ごと置き換えない。日付キー単位で合成する。
