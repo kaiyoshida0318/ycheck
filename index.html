@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0852 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0853 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3746,6 +3746,47 @@ table.rank-table td.rank-legend-col-row {
 .npv-unret input { accent-color: #1d4ed8; cursor: pointer; }
 /* 【v1.0844】いちばん下の実行ボタン。表の続きに見えないよう、線で区切る */
 .np-actions-bottom { margin-top: 16px; padding-top: 14px; border-top: 2px solid var(--border2); }
+/* 【v1.0853】右側の候補パネル。開いたときだけモーダルを広げる（閉じている間は従来の幅のまま） */
+.np-cols { display: flex; gap: 16px; align-items: flex-start; }
+.np-main { flex: 1 1 auto; min-width: 0; }
+#npModal.np-open { max-width: min(1340px, 96vw); }
+.np-api {
+  flex: 0 0 420px; width: 420px; align-self: stretch;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border2); border-radius: 10px; background: var(--bg3); overflow: hidden;
+  /* ★モーダル自体がスクロールするので、パネルは「見えている高さ」に貼り付ける。
+     そうしないと左の表が長いときにパネルの下半分が画面外に行き、一覧が読めない。 */
+  position: sticky; top: 0; max-height: 78vh;
+}
+.np-api-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--bg2); border-bottom: 1px solid var(--border2); }
+.np-api-title { font-weight: 800; font-size: 0.9rem; }
+.np-api-x { margin-left: auto; border: none; background: rgba(0,0,0,0.06); width: 22px; height: 22px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; line-height: 1; }
+.np-api-x:hover { background: rgba(0,0,0,0.12); }
+.np-api-meta { padding: 7px 12px; font-size: 0.74rem; color: var(--text3); line-height: 1.5; border-bottom: 1px solid var(--border); background: var(--bg2); }
+.np-api-meta.err { color: #b91c1c; }
+.np-api-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border2); }
+.np-api-bar input[type=search] { flex: 1 1 auto; min-width: 0; padding: 6px 9px; border: 1px solid var(--border2); border-radius: 6px; font-size: 0.8rem; }
+.np-api-chk { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text2); white-space: nowrap; cursor: pointer; }
+.np-api-list { flex: 1 1 auto; overflow-y: auto; min-height: 120px; }
+.np-api-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.np-api-row:hover { background: rgba(37,99,235,0.07); }
+.np-api-row.known { opacity: 0.62; }
+.np-api-row input { margin-top: 3px; flex: 0 0 auto; cursor: pointer; }
+.np-api-txt { min-width: 0; flex: 1 1 auto; }
+.np-api-code { font-family: 'DM Mono', ui-monospace, monospace; font-weight: 700; font-size: 0.78rem; }
+.np-api-name { font-size: 0.75rem; color: var(--text2); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.np-api-tag { font-size: 0.66rem; font-weight: 700; padding: 0 5px; border-radius: 4px; margin-left: 5px; }
+.np-api-tag.known { background: #e5e7eb; color: #6b7280; }
+.np-api-tag.new { background: #dcfce7; color: #15803d; }
+.np-api-foot { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-top: 1px solid var(--border2); background: var(--bg2); }
+.np-api-sel { font-size: 0.76rem; color: var(--text3); margin-right: auto; }
+.np-api-empty { padding: 18px 12px; font-size: 0.8rem; color: var(--text3); text-align: center; line-height: 1.7; }
+.np-api-manual { padding: 10px 12px; font-size: 0.78rem; line-height: 1.7; }
+.np-api-manual input { width: 100%; padding: 6px 9px; border: 1px solid var(--border2); border-radius: 6px; font-size: 0.78rem; margin-top: 6px; }
+@media (max-width: 1100px) {
+  .np-cols { flex-direction: column; }
+  .np-api { flex: 1 1 auto; width: 100%; position: static; max-height: 60vh; }
+}
 .npv-badge.dup { background: #fee2e2; color: #b91c1c; margin-left: 4px; }
 .npv-more { padding: 8px 12px; font-size: 0.76rem; color: var(--text3); background: var(--bg3); border-top: 1px solid var(--border2); }
 .file-slot.loaded {
@@ -4394,7 +4435,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0852</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0853</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6070,11 +6111,16 @@ th.col-sroas { background-color:#e7d5f5; }
 
 <!-- 新商品追加モーダル -->
 <div class="modal-overlay" id="newProductModal">
-  <div class="modal">
+  <div class="modal" id="npModal">
     <div class="modal-header">
       <h2 class="modal-title">+ 商品追加・更新</h2>
+      <!-- 【v1.0853】右上。押すと右側に候補パネルが開く -->
+      <button class="btn sm" id="npApiBtn" type="button" style="margin-left:auto;margin-right:10px"
+        title="imagegallery-yahoo が Yahoo商品検索API で取得した商品一覧（yahoo-products.json）を読み込みます">🔎 APIから取得</button>
       <button class="modal-close" id="npClose" type="button">×</button>
     </div>
+    <div class="np-cols">
+    <div class="np-main">
     <p class="dropzone-hint" style="margin:0 0 12px 0;">
       <!-- 【v1.0594】直接入力を足したので文言も両方に -->
       1件ずつ直接入力するか、CSVでまとめてアップロードできます。
@@ -6152,6 +6198,27 @@ th.col-sroas { background-color:#e7d5f5; }
       <button class="btn ghost" id="npToggleLog">ログ表示</button>
       <button class="btn" id="npCloseBottom" style="margin-left:auto;" type="button">閉じる</button>
     </div>
+    </div><!-- /np-main -->
+
+    <!-- 【v1.0853】Yahooの商品一覧（候補）。モーダルの右側に出る -->
+    <aside class="np-api" id="npApiPane" style="display:none">
+      <div class="np-api-head">
+        <span class="np-api-title">Yahooの商品一覧</span>
+        <button class="np-api-x" id="npApiClose" type="button" title="閉じる">✕</button>
+      </div>
+      <div class="np-api-meta" id="npApiMeta">読み込み中…</div>
+      <div class="np-api-bar">
+        <input type="search" id="npApiSearch" placeholder="商品コード・商品名で絞り込み" autocomplete="off" data-lpignore="true">
+        <label class="np-api-chk" title="Ycheckの商品マスタにまだ無いものだけ出します"><input type="checkbox" id="npApiOnlyNew" checked>未登録だけ</label>
+      </div>
+      <div class="np-api-list" id="npApiList"></div>
+      <div class="np-api-foot">
+        <span class="np-api-sel" id="npApiSel">0件 選択中</span>
+        <button class="btn sm ghost" id="npApiNone" type="button">選択解除</button>
+        <button class="btn sm primary" id="npApiAdd" type="button" disabled>選んだ分を下の一覧へ</button>
+      </div>
+    </aside>
+    </div><!-- /np-cols -->
   </div>
 </div>
 
@@ -23634,6 +23701,173 @@ function npBuildPreview() {
   box.style.display = '';
 }
 
+// ============================================================================
+// 【v1.0853】「🔎 APIから取得」＝ imagegallery-yahoo が GitHub Actions で取得した
+//   Yahoo商品検索API の結果（data/{ギャラリーのshopId}/yahoo-products.json）を読むだけ。
+//
+//   ★Ycheck 自身は Yahoo API を呼ばない。
+//     Yahoo の Client ID は imagegallery-yahoo の GitHub Secrets にあり、
+//     ブラウザに置くものではない。CORSの問題も、こちらが読むだけなら起きない。
+//   ★リポジトリは公開なので、PATは要らない（ycheck 用のPATとは無関係に動く）。
+//
+//   ★フォルダ名が「Ycheckのショップ名」ではないことに注意。
+//     ギャラリー側の内部ID（shop_1790000000000_ab12 のような文字列）なので、
+//     data/ を一覧して JSON の中の sellerId が このショップの shopCode と一致するものを探す。
+//     見つけたら localStorage に覚える（毎回探し直すと重い）。
+// ============================================================================
+const NP_GAL = { owner: 'kaiyoshida0318', repo: 'imagegallery-yahoo', branch: 'main' };
+function _galRawUrl(path) {
+  return 'https://raw.githubusercontent.com/' + NP_GAL.owner + '/' + NP_GAL.repo + '/' + NP_GAL.branch + '/' + path + '?t=' + Date.now();
+}
+function _galIdKey() { return 'ycheck_gallery_shopid_' + (typeof getSessionShopId === 'function' ? getSessionShopId() : 'default'); }
+function _galIdGet() { try { return localStorage.getItem(_galIdKey()) || ''; } catch (e) { return ''; } }
+function _galIdSet(v) { try { if (v) localStorage.setItem(_galIdKey(), v); else localStorage.removeItem(_galIdKey()); } catch (e) {} }
+
+let _npApi = { items: [], meta: null, sel: null, q: '', onlyNew: true, loading: false, error: '' };
+function _npApiSel() { if (!_npApi.sel) _npApi.sel = {}; return _npApi.sel; }
+
+async function _galFetchJson(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+  return await res.json();
+}
+// ★sellerId が一致する JSON を探す。見つかったらそのデータ自体も返す（二度読みしない）
+async function _galLoadForShop(sellerId, onProgress) {
+  const known = _galIdGet();
+  if (known) {
+    try {
+      const j = await _galFetchJson(_galRawUrl('data/' + known + '/yahoo-products.json'));
+      if (String(j.sellerId || '').toLowerCase() === sellerId) return j;
+      _galIdSet('');   // ★店コードが変わった等で食い違ったら覚え直す
+    } catch (e) { _galIdSet(''); }
+  }
+  if (onProgress) onProgress('ギャラリーのフォルダを探しています…');
+  const list = await _galFetchJson('https://api.github.com/repos/' + NP_GAL.owner + '/' + NP_GAL.repo + '/contents/data?ref=' + NP_GAL.branch);
+  const dirs = (Array.isArray(list) ? list : []).filter(x => x && x.type === 'dir').map(x => x.name);
+  if (!dirs.length) throw new Error('ギャラリー側に data/ のフォルダがありません');
+  for (let i = 0; i < dirs.length; i++) {
+    if (onProgress) onProgress('照合中… (' + (i + 1) + '/' + dirs.length + ')');
+    try {
+      const j = await _galFetchJson(_galRawUrl('data/' + dirs[i] + '/yahoo-products.json'));
+      if (String(j.sellerId || '').toLowerCase() === sellerId) { _galIdSet(dirs[i]); return j; }
+    } catch (e) { /* そのフォルダには取得結果が無い。次へ */ }
+  }
+  throw new Error('ストアID「' + sellerId + '」の取得結果が見つかりませんでした');
+}
+
+function npApiOpen() {
+  const pane = document.getElementById('npApiPane');
+  const modal = document.getElementById('npModal');
+  if (!pane) return;
+  pane.style.display = '';
+  if (modal) modal.classList.add('np-open');
+  if (!_npApi.items.length && !_npApi.loading) npApiLoad();
+  else npApiRender();
+}
+function npApiClose() {
+  const pane = document.getElementById('npApiPane');
+  const modal = document.getElementById('npModal');
+  if (pane) pane.style.display = 'none';
+  if (modal) modal.classList.remove('np-open');
+}
+function _npApiMeta(msg, isErr) {
+  const el = document.getElementById('npApiMeta');
+  if (!el) return;
+  el.innerHTML = msg;
+  el.classList.toggle('err', !!isErr);
+}
+async function npApiLoad() {
+  const sh = (typeof getSessionShop === 'function') ? getSessionShop() : {};
+  const sellerId = String(sh.shopCode || '').toLowerCase();
+  if (!sellerId) { _npApiMeta('このショップの shopCode が未設定です', true); return; }
+  _npApi.loading = true; _npApi.error = '';
+  _npApiMeta('読み込み中…');
+  const list = document.getElementById('npApiList');
+  if (list) list.innerHTML = '<div class="np-api-empty">読み込み中…</div>';
+  try {
+    const j = await _galLoadForShop(sellerId, m => _npApiMeta(m));
+    const items = (j.items || []).filter(x => x && x.code).map(x => ({ code: String(x.code).trim(), name: String(x.name || '').trim() }));
+    items.sort((a, b) => a.code.localeCompare(b.code));
+    _npApi.items = items; _npApi.meta = j; _npApi.sel = {};
+    npApiRender();
+  } catch (e) {
+    _npApi.error = (e && e.message) || String(e);
+    _npApiMeta('取得できませんでした：' + _npApi.error, true);
+    if (list) {
+      list.innerHTML = '<div class="np-api-manual">ギャラリー側の<b>ショップID</b>が分かれば直接指定できます'
+        + '（ImageGallery の診断ログに出る <code>shop_…</code>）。'
+        + '<input type="text" id="npApiManual" placeholder="shop_1790000000000_ab12">'
+        + '<div style="margin-top:8px"><button class="btn sm" type="button" id="npApiManualGo">このIDで読む</button></div>'
+        + '<div style="margin-top:10px;color:var(--text3)">まだ一度も同期していない場合は、先に ImageGallery 側で「Yahooから同期」を実行してください。</div></div>';
+      const go = document.getElementById('npApiManualGo');
+      if (go) go.addEventListener('click', () => {
+        const v = (document.getElementById('npApiManual') || {}).value || '';
+        if (!v.trim()) return;
+        _galIdSet(v.trim()); _npApi.items = []; npApiLoad();
+      });
+    }
+  } finally { _npApi.loading = false; }
+}
+function _npApiVisible() {
+  const q = String(_npApi.q || '').trim().toLowerCase();
+  const master = state.master || {};
+  return _npApi.items.filter(it => {
+    if (_npApi.onlyNew && master[it.code]) return false;
+    if (!q) return true;
+    return (it.code + ' ' + it.name).toLowerCase().indexOf(q) >= 0;
+  });
+}
+function npApiRender() {
+  const list = document.getElementById('npApiList');
+  if (!list) return;
+  const esc = (x) => (typeof escapeHtml === 'function') ? escapeHtml(String(x)) : String(x);
+  const j = _npApi.meta || {};
+  const when = j.fetchedAt ? String(j.fetchedAt).replace('T', ' ').slice(0, 16) : '不明';
+  const master = state.master || {};
+  const nNew = _npApi.items.filter(it => !master[it.code]).length;
+  _npApiMeta('ストアID <b>' + esc(j.sellerId || '') + '</b>　取得日時 <b>' + esc(when) + '</b>（Yahooから取り直すには ImageGallery 側で同期）<br>'
+    + '全 <b>' + _npApi.items.length + '</b> 件　/　Ycheckに未登録 <b>' + nNew + '</b> 件');
+  const vis = _npApiVisible();
+  if (!vis.length) {
+    list.innerHTML = '<div class="np-api-empty">' + (_npApi.items.length ? '条件に合う商品がありません' : '商品がありません') + '</div>';
+  } else {
+    const sel = _npApiSel();
+    list.innerHTML = vis.slice(0, 500).map(it => {
+      const known = !!master[it.code];
+      return '<div class="np-api-row' + (known ? ' known' : '') + '" data-code="' + esc(it.code) + '">'
+        + '<input type="checkbox"' + (sel[it.code] ? ' checked' : '') + '>'
+        + '<div class="np-api-txt"><div class="np-api-code">' + esc(it.code)
+        + '<span class="np-api-tag ' + (known ? 'known">登録済' : 'new">未登録') + '</span></div>'
+        + '<div class="np-api-name">' + esc(it.name) + '</div></div></div>';
+    }).join('') + (vis.length > 500 ? '<div class="np-api-empty">…ほか ' + (vis.length - 500) + ' 件（絞り込んでください）</div>' : '');
+  }
+  _npApiSyncFoot();
+}
+function _npApiSyncFoot() {
+  const sel = _npApiSel();
+  const n = Object.keys(sel).filter(k => sel[k]).length;
+  const el = document.getElementById('npApiSel'); if (el) el.textContent = n + '件 選択中';
+  const btn = document.getElementById('npApiAdd'); if (btn) btn.disabled = !n;
+}
+// 選んだ分を npBuffer（下のプレビュー表）に積む
+// ★CSVをドロップ済みなら【置き換えずに足す】。同じ商品コードはAPI側を採用（あとの行が勝つ既存仕様と同じ）。
+function npApiAddSelected() {
+  const sel = _npApiSel();
+  const codes = Object.keys(sel).filter(k => sel[k]);
+  if (!codes.length) return;
+  const byCode = {}; _npApi.items.forEach(it => { byCode[it.code] = it; });
+  const add = codes.map(c => ({ '商品コード': c, '商品名': (byCode[c] || {}).name || '', 'メインKW': '', '検索URL': '' }));
+  const prev = (npBuffer && Array.isArray(npBuffer.rows)) ? npBuffer.rows.slice() : [];
+  const seen = {}; add.forEach(r => { seen[r['商品コード']] = true; });
+  const merged = prev.filter(r => !seen[(r['商品コード'] || '').trim()]).concat(add);
+  npBuffer = { rows: merged, count: merged.length, filename: 'Yahooの商品一覧から ' + add.length + '件' + (prev.length ? '（＋ドロップ済み）' : '') };
+  _npApi.sel = {};
+  npRefreshSlot();
+  _npApiSyncFoot();
+  try { if (typeof showToast === 'function') showToast(add.length + '件を下の一覧に追加しました', 'ok'); } catch (e) {}
+  try { npLog('🔎 Yahooの商品一覧から ' + add.length + '件を下の一覧に追加しました', 'ok'); } catch (e) {}
+}
+
 // スロット表示更新
 function npRefreshSlot() {
   const slot = $('#slot-newproduct');
@@ -24509,6 +24743,41 @@ if ($('#npqCode')) {
   $('#npqClear').addEventListener('click', npqClear);
   $('#npqReveal').addEventListener('click', (ev) => npqReveal(ev.currentTarget.dataset.code || ''));
   $('#npqUnretire').addEventListener('click', (ev) => npqUnretire(ev.currentTarget.dataset.code || ''));
+  // 【v1.0853】Yahooの商品一覧（候補パネル）
+  { const b = document.getElementById('npApiBtn');
+    if (b) b.addEventListener('click', () => {
+      const pane = document.getElementById('npApiPane');
+      if (pane && pane.style.display !== 'none') npApiClose(); else npApiOpen();
+    }); }
+  { const b = document.getElementById('npApiClose'); if (b) b.addEventListener('click', npApiClose); }
+  { const b = document.getElementById('npApiAdd'); if (b) b.addEventListener('click', npApiAddSelected); }
+  { const b = document.getElementById('npApiNone');
+    if (b) b.addEventListener('click', () => { _npApi.sel = {}; npApiRender(); }); }
+  { const e = document.getElementById('npApiSearch');
+    if (e) e.addEventListener('input', () => { _npApi.q = e.value; npApiRender(); }); }
+  { const e = document.getElementById('npApiOnlyNew');
+    if (e) e.addEventListener('change', () => { _npApi.onlyNew = e.checked; npApiRender(); }); }
+  // ★行のクリック＝直接入力欄へ／チェックボックス＝一括追加用の選択。両方できるようにする
+  { const list = document.getElementById('npApiList');
+    if (list) list.addEventListener('click', (ev) => {
+      const row = ev.target.closest && ev.target.closest('.np-api-row');
+      if (!row) return;
+      const code = row.getAttribute('data-code') || '';
+      if (!code) return;
+      const it = _npApi.items.find(x => x.code === code) || { code: code, name: '' };
+      if (ev.target && ev.target.tagName === 'INPUT') {
+        const sel = _npApiSel();
+        sel[code] = ev.target.checked;
+        _npApiSyncFoot();
+        return;
+      }
+      // 行クリック → 直接入力欄に入れる（1件ずつ確認して登録する流れ）
+      const c = document.getElementById('npqCode'), n = document.getElementById('npqName');
+      if (c) c.value = it.code;
+      if (n) n.value = it.name;
+      try { if (typeof npqSync === 'function') npqSync(); } catch (e) {}
+      if (c) { try { c.focus(); } catch (e) {} }
+    }); }
   $('#npqReflect').addEventListener('click', npqReflect);
   $('#npqApply').addEventListener('click', npqApply);
   // どの欄でも Enter で登録できるようにする（1件ずつ続けて入れる使い方が多いため）
