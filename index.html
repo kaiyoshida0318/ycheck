@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0862 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0863 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2495,6 +2495,14 @@ td.share-cell .mom-pct.down { color: #dc2626; }
 td.share-cell .mom-pct.na { color: #94a3b8; font-weight: 500; }
 td.share-cell .share-pct.fam-top { top: -15px; bottom: auto; }
 .segf-btn.mom-btn.on { background: #16a34a; color: #fff; border-color: #16a34a; }
+/* 【v1.0863】前月比の列（総売上と同じ青の系統） */
+th.col-mom { background-color: #d6e1fa; white-space: nowrap; }
+td.col-mom { background-color: #f0f3fd; white-space: nowrap; font-variant-numeric: tabular-nums; }
+tr.row-child td.col-mom, tr.row-child:hover td.col-mom { background-color: #f0f3fd; }
+td.col-mom .mom-v { font-weight: 700; }
+td.col-mom .mom-v.up { color: #16a34a; }
+td.col-mom .mom-v.down { color: #dc2626; }
+td.col-mom .mom-na { color: var(--text3); }
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
 .status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
@@ -4504,7 +4512,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0862</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0863</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4804,8 +4812,7 @@ th.col-sroas { background-color:#e7d5f5; }
                  調整-入札価格／調整-PRオプ／商品-広告データ／商品-PRデータ の4画面には残してある。
                  戻したくなったら、他画面と同じ <button class="segf-btn segf-act js-showall">全表示</button> を
                  この位置（合算の左）に書き戻すだけでよい。クリック処理（basicShowAll）は共通なので無変更。 --><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
-          <!-- 【v1.0862】前月比 ON/OFF。ON のとき総売上の下に前月比（%）を出す。経過日数で前月をならしてから比べる -->
-          <span class="seg-filter" role="group" aria-label="前月比"><button type="button" class="segf-btn mom-btn" id="basicMomBtn" onclick="_momToggle()">前月比 OFF</button></span>
+          <!-- 【v1.0863】v1.0862 の「前月比 ON/OFF」ボタンは撤去。前月比は総売上の右の【列】で常に出す（本人指定） -->
           <!-- 【v1.0619】送り込み元（親＝緑）／送り込み先（子＝黄）だけを表示するワンクリック絞り込み。
                マークは商品コード左の .rep-badge とまったく同じ見た目（同じSVG・同じ緑/黄）にしてある。
                ★state.repFilter を '*P' / '*C' で動かす（新しい状態変数は作らない）。
@@ -4883,6 +4890,8 @@ th.col-sroas { background-color:#e7d5f5; }
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
               <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総売上</th>
+              <!-- 【v1.0863】前月比。総売上の右に常に出す。クリックで降順⇄昇順（出せない行は常に一番下） -->
+              <th class="num col-mom" data-sort="mom" title="前月比 ＝ 今月の総売上 ÷ 前月の総売上&#10;月の途中は、前月を【同じ日数ぶん】にならしてから比べます&#10;（例: 10月が7日分なら 前月 × 7/31 と比べる）&#10;経過日数＝日別データがある日数。前月が欠けていれば1ヶ月分に引き伸ばしてから比べます&#10;100%以上＝緑 / 100%未満＝赤。前月の売上が無い・日選択中は —">前月比</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
               <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、広告売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR・広告費</span></span></th>
               <!-- 【v1.0524/v1.0577】広告売上ROAS＝総売上÷広告実績額×100。【v1.0678】PR広告売上ROASの右へ移動 -->
@@ -12990,7 +12999,6 @@ function renderWithdrawConsider() {
 }
 
 function renderBasic() {
-  try { _momSyncBtn(); } catch (e) {}   // 【v1.0862】
   // 【v1.0609】タブ2本（商品-基本データ / 調整-基本）は data-view が同じなので、
   //   .active の付け外しは必ずここに任せる（§18-16 と同じ理由）
   if (typeof _basicSyncNavTabs === 'function') _basicSyncNavTabs();
@@ -13062,7 +13070,7 @@ function renderBasic() {
   // 【v1.0591】広告売上(不明分)の分母に使うセット総売上。★こちらも その月の全商品から作る
   const _famMap = buildFamilyRevMap(agg, _key);
   // 【v1.0862】前月比。★日選択中は出さない（1日だけの数字と1ヶ月を比べる意味が無い）
-  const _momCtxB = (_momShow && !basicDayMode) ? _momCtx(targetMonth) : null;
+  const _momCtxB = !basicDayMode ? _momCtx(targetMonth) : null;   /* 【v1.0863】常に（列で出す） */
   const _momPrevRev = {};
   if (_momCtxB) {
     let _momAgg = agg;
@@ -13184,10 +13192,13 @@ function renderBasic() {
     if (k === 'adStatus')  { return adStatusOrder(effectiveAdStatusOf(r.code)); }   /* 【v1.0658】 */
     if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
+    if (k === 'mom')       { return _momRatio(r.rev, _momPrevOf(r), _momCtxB); }   /* 【v1.0863】null＝出せない */
     return r[k] || 0;
   };
   list.sort((a, b) => {
     const va = sortGet(a, basicSortKey), vb = sortGet(b, basicSortKey);
+    // 【v1.0863】前月比が出せない行（前月0円・日選択中）は、昇順でも降順でも一番下
+    if (basicSortKey === 'mom' && (va == null || vb == null)) return (va == null) - (vb == null);
     if (typeof va === 'string') return basicSortDir * va.localeCompare(vb);
     return basicSortDir * (va - vb);
   });
@@ -13269,7 +13280,7 @@ function renderBasic() {
     } else if (state.activeStateFilter && state.activeStateFilter.label) {
       _emptyMsg = state.activeStateFilter.label + 'の商品はありません';
     }
-    tbody.innerHTML = '<tr><td colspan="18" class="empty-state">' + _emptyMsg + '</td></tr>';   // 【v1.0609/v1.0676】調整-基本の3列＋PR売上ROAS を含めて 18
+    tbody.innerHTML = '<tr><td colspan="19" class="empty-state">' + _emptyMsg + '</td></tr>';   // 【v1.0609/v1.0676】調整-基本の3列＋PR売上ROAS を含めて 18 → 【v1.0863】前月比で 19
     { const _b = document.getElementById('basicClearFiltersBtn');
       if (_b) _b.addEventListener('click', () => {
         const _kw = $('#basicSearch').value;   // 検索語は残したまま、絞り込みだけ落とす
@@ -13367,17 +13378,12 @@ function renderBasic() {
       const _k = r._rollup ? null : _basicRepKeyOf(r.code);
       const _famTot = _k ? (+(_famMap.rev[_k]) || 0) : 0;
       const _famN   = _k ? ((_famMap.size[_k]) || 0) : 0;
-      const _mom = _momCtxB ? _momHtml(r.rev, _momPrevOf(r), _momCtxB) : '';   // 【v1.0862】
-      if (!_k || _famN < 2 || !(_famTot > 0)) {
-        if (_mom) return `<td class="num col-total share-cell"><span class="amt">${fmt(r.rev)}${_mom}</span></td>`;
-        return `<td class="num col-total">${fmt(r.rev)}</td>`;
-      }
+      if (!_k || _famN < 2 || !(_famTot > 0)) return `<td class="num col-total">${fmt(r.rev)}</td>`;
       const _p = Math.round((+r.rev || 0) / _famTot * 1000) / 10;
       const _t = 'このセット（代表コード「' + _k + '」・' + _famN + '件）の中での売上比率\n'
         + '  ' + fmt(r.rev) + ' ÷ セット総売上 ' + fmt(_famTot) + ' = ' + _p + '%\n'
         + 'メンバーの合計が100%になります。';
-      // 【v1.0862】前月比を出すときは、セット内の比率%を金額の【上】に逃がす（下は前月比）
-      return `<td class="num col-total share-cell" title="${escapeHtml(_t)}"><span class="amt">${fmt(r.rev)}<span class="share-pct fam-pct${_mom ? ' fam-top' : ''}">${Math.round(_p)}%</span>${_mom}</span></td>`;
+      return `<td class="num col-total share-cell" title="${escapeHtml(_t)}"><span class="amt">${fmt(r.rev)}<span class="share-pct fam-pct">${Math.round(_p)}%</span></span></td>`;
     })();
     // 【v1.0590/v1.0591】広告売上(不明分)。親子があるときは引く相手をセット総売上にする
     const _adUnk = adUnknownOf(r, _famMap);
@@ -13429,6 +13435,7 @@ function renderBasic() {
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       ${_revCell}
+      ${_momCellHtml(r.rev, _momPrevOf(r), _momCtxB)}
       <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
       <td class="num col-sroas">${salesRoasCellHtml(salesRoasPct(r.rev, r.adCost, 0))}</td>
       <td class="num col-sroas est-val" title="${escapeHtml(_prOnlyTip)}">${_prOnly == null ? '<span style="color:var(--text3)">—</span>' : Number(_prOnly).toLocaleString('ja-JP') + '%'}</td>
@@ -14436,22 +14443,7 @@ function _syncSroasFilterUI() {
 //   ・日選択中（1日だけの表示）は出さない。前月が0円の商品は「—」。
 //   ★月の日数は daysInMonth() を使わない。あれは 'YYYY/MM' 専用で、'YYYY-MM' を渡すと常に31を返す。
 // ============================================================================
-const MOM_KEY = 'ycheck_mom_show_v1';   // ブラウザ毎（列幅などと同じ見た目の設定）
-let _momShow = (function () { try { return localStorage.getItem(MOM_KEY) === '1'; } catch (e) { return false; } })();
-function _momToggle() {
-  _momShow = !_momShow;
-  try { localStorage.setItem(MOM_KEY, _momShow ? '1' : '0'); } catch (e) {}
-  _momSyncBtn();
-  if (typeof renderBasic === 'function') renderBasic();
-}
-function _momSyncBtn() {
-  const b = document.getElementById('basicMomBtn');
-  if (!b) return;
-  b.classList.toggle('on', _momShow);
-  b.textContent = _momShow ? '前月比 ON' : '前月比 OFF';
-  b.title = _momShow ? '総売上の下に前月比を表示中（押すと隠す）'
-                     : '押すと総売上の下に前月比（%）を出します。月の途中は、前月を同じ日数ぶんにならしてから比べます';
-}
+// 【v1.0863】ON/OFF（_momShow / localStorage 'ycheck_mom_show_v1'）は撤去。前月比は総売上の右の列で常に出す。
 function _momDim(ym) { return new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate(); }
 function _momPrevYm(ym) {
   let y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1;
@@ -14479,6 +14471,23 @@ function _momRatio(rev, prevRev, c) {
   if (!c || !(prevRev > 0) || !(c.t.have > 0) || !(c.q.have > 0)) return null;
   const expected = prevRev * (c.q.need / c.q.have) * (c.t.have / c.t.need);
   return expected > 0 ? (+rev || 0) / expected * 100 : null;
+}
+// 【v1.0863】総売上の右の「前月比」列のセル。c が null（日選択中）なら「—」
+function _momCellHtml(rev, prevRev, c) {
+  if (!c) return '<td class="num col-mom"><span class="mom-na" title="日選択中（1日だけの表示）は前月比を出しません">—</span></td>';
+  const p = _momRatio(rev, prevRev, c);
+  if (p == null) {
+    const why = !(prevRev > 0) ? '前月（' + c.prev + '）の売上がありません' : 'この月のデータがありません';
+    return '<td class="num col-mom"><span class="mom-na" title="' + escapeHtml(why) + '">—</span></td>';
+  }
+  const r = Math.round(p);
+  const lines = ['前月比 ' + r + '%（' + c.prev + ' と比べて）'];
+  if (c.t.have < c.t.need) lines.push('今月は ' + c.t.have + '/' + c.t.need + '日分なので、前月を同じ割合にならして比べています');
+  lines.push('  今月 ' + fmt(rev) + ' ÷（前月 ' + fmt(prevRev)
+    + (c.q.have < c.q.need ? ' × ' + c.q.need + '/' + c.q.have + '日（前月の欠けを補正）' : '')
+    + (c.t.have < c.t.need ? ' × ' + c.t.have + '/' + c.t.need + '日' : '') + '）');
+  return '<td class="num col-mom" title="' + escapeHtml(lines.join('\n')) + '"><span class="mom-v ' + (r >= 100 ? 'up' : 'down') + '">'
+    + r.toLocaleString('ja-JP') + '%</span></td>';
 }
 function _momHtml(rev, prevRev, c) {
   const p = _momRatio(rev, prevRev, c);
