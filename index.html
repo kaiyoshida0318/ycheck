@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0857 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0858 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -222,6 +222,30 @@ body {
 }
 
 .header-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+/* 【v1.0858】「+ 商品追加 ▾」メニュー */
+.yc-addmenu-wrap { position: relative; display: inline-flex; }
+/* ★.btn（白背景）がこのあと（343行付近）で定義されるので、.btn.yc-addmenu-btn と2クラスにして勝たせる */
+.btn.yc-addmenu-btn { background: var(--green); color: #fff; border-color: var(--green); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.btn.yc-addmenu-btn:hover { filter: brightness(1.06); }
+.yc-addmenu-caret { font-size: 0.7rem; margin-left: 2px; opacity: 0.9; }
+.yc-addmenu-gh { margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #fff; font-size: 0.66rem; font-weight: 700; line-height: 1.6; color: var(--text2); }
+.yc-addmenu-gh.gh-saved { color: var(--green); }
+.yc-addmenu-gh.gh-dirty { color: #d97706; animation: ghDirtyPulseChip 1.2s ease-in-out infinite; }
+@keyframes ghDirtyPulseChip { 0%,100% { background: #fff; } 50% { background: #fde68a; } }
+.yc-addmenu-gh.gh-saving { color: var(--blue); }
+.yc-addmenu-gh.gh-error { color: #fff; background: var(--red); }
+.yc-addmenu-gh.gh-disabled { color: var(--text3); }
+.yc-addmenu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000; min-width: 260px;
+  display: flex; flex-direction: column; gap: 2px; padding: 6px;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
+.yc-addmenu[hidden] { display: none; }
+.yc-addmenu > .btn { width: 100%; justify-content: flex-start; text-align: left; display: flex; align-items: center;
+  padding: 8px 10px; border-color: transparent; background: transparent; color: var(--text); font-weight: 600; }
+.yc-addmenu > .btn:hover:not(:disabled) { background: var(--bg3); }
+.yc-addmenu > #btnJumpNewProduct { color: var(--green); }
+.yc-addmenu > #btnJumpCodeMigrate { color: #7c3aed; }
+.yc-addmenu > .gh-sync-area { width: 100%; box-sizing: border-box; justify-content: space-between; margin-top: 4px; }
+.yc-addmenu > .gh-sync-area:focus-visible, .yc-addmenu > .btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
 
 /* Font size controls */
 .font-controls {
@@ -4459,7 +4483,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0857</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0858</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4477,17 +4501,27 @@ th.col-sroas { background-color:#e7d5f5; }
     <!-- 【v1.0582】「分析」ボタンはここから .header-left（ショップ選択の右）へ移動した -->
     <!-- 【v1.0753】並びを「商品追加 → コード移行 → レポート追加」にした（作業の順番に合わせた）。
          ★ボタンの id とハンドラは変えていない。順番だけの入れ替え。 -->
-    <button class="btn sm" id="btnJumpNewProduct" style="background: var(--green); color: white; border-color: var(--green);">+ 商品追加・更新・反映</button>
-    <button class="btn sm" id="btnJumpCodeMigrate" type="button" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）" style="background: #7c3aed; color: white; border-color: #7c3aed;">🔁 再登録後のコード移行</button>
+    <!-- 【v1.0858】「商品追加・更新・反映 / 再登録後のコード移行 / ログ / GitHub連携」を「+ 商品追加 ▾」1つにまとめた。
+         ★中のボタンは id もハンドラも【そのまま】移しただけ（btnJumpNewProduct / btnJumpCodeMigrate / btnOpLog / ghSyncArea）。
+           ghSetSyncStatus・_ycLogBadge・閲覧専用の無効化は従来どおりこれらの id を触る。
+         ★閉じたメニューの中では「✓ 最新 / ● 未反映 / ⚠ エラー」とログの警告数が見えなくなるので、
+           親ボタンの上に写して出す（_ycAddMenuSync）。 -->
+    <div class="yc-addmenu-wrap" id="ycAddMenuWrap">
+      <button class="btn sm yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="商品追加・更新・反映 / 再登録後のコード移行 / ログ / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
+      <div class="yc-addmenu" id="ycAddMenu" role="menu" hidden>
+        <button class="btn sm" id="btnJumpNewProduct" type="button" role="menuitem">+ 商品追加・更新・反映</button>
+        <button class="btn sm" id="btnJumpCodeMigrate" type="button" role="menuitem" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）">🔁 再登録後のコード移行</button>
+        <!-- 【v1.0604】操作ログ。商品の追加/更新・GitHubへの反映・別クライアントの上書き・商品件数の増減を記録する。
+             「追加したのに消えた」をその場で見せられるようにするのが目的（§20）。 -->
+        <button class="btn sm" id="btnOpLog" type="button" role="menuitem" title="操作ログ（商品の追加・更新 / GitHubへの反映 / 上書き検知 / 商品件数の増減）を表示します">🧾 ログ<span class="oplog-badge" id="opLogBadge" style="display:none">0</span></button>
+        <div class="gh-sync-area" id="ghSyncArea" role="menuitem" tabindex="0" title="クリックでGitHub連携設定を開く">
+          <span class="gh-sync-label">⚙️ GitHub連携</span>
+          <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
+        </div>
+      </div>
+    </div>
     <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
     <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
-    <!-- 【v1.0604】操作ログ。商品の追加/更新・GitHubへの反映・別クライアントの上書き・商品件数の増減を記録する。
-         「追加したのに消えた」をその場で見せられるようにするのが目的（§20）。 -->
-    <button class="btn sm ghost" id="btnOpLog" type="button" title="操作ログ（商品の追加・更新 / GitHubへの反映 / 上書き検知 / 商品件数の増減）を表示します">🧾 ログ<span class="oplog-badge" id="opLogBadge" style="display:none">0</span></button>
-    <div class="gh-sync-area" id="ghSyncArea" title="クリックでGitHub連携設定を開く">
-      <span class="gh-sync-label">⚙️ GitHub連携</span>
-      <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
-    </div>
   </div>
 </div>
 
@@ -7673,6 +7707,7 @@ function _ycLogBadge() {
   const w = ycLogRead().filter(e => e.type === 'warn').length;
   b.textContent = String(w);
   b.style.display = w > 0 ? '' : 'none';
+  if (typeof _ycAddMenuSync === 'function') _ycAddMenuSync();   // 【v1.0858】
 }
 let _ycLogFilter = 'all';
 function _ycLogRender() {
@@ -9195,8 +9230,50 @@ function ghSetSyncStatus(state, detail) {
       el.title = detail || '保存エラー\nクリックで詳細';
       break;
   }
+  if (typeof _ycAddMenuSync === 'function') _ycAddMenuSync();   // 【v1.0858】閉じたメニューの外にも状態を出す
   if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
 }
+// 【v1.0858】「+ 商品追加 ▾」の上に、中にある GitHub 状態とログの警告数を写す。
+//   ★写すだけ。元（#ghSyncStatus / #opLogBadge）が正で、こちらは毎回そこから作り直す。
+//   ★「未設定」「✓ 最新」「✓ 反映済み」の平常時は出さない（出すと常に何か付いていて目に入らなくなる）。
+//     ● 未反映 / 保存中 / 読込中 / ⚠ エラー / 👁 閲覧専用 のときだけ出す。
+function _ycAddMenuSync() {
+  try {
+    const area = document.getElementById('ghSyncArea'), st = document.getElementById('ghSyncStatus');
+    const chip = document.getElementById('ycAddMenuGh');
+    if (area && st && chip) {
+      const cls = ['gh-disabled', 'gh-saved', 'gh-dirty', 'gh-saving', 'gh-error'].filter(c => area.classList.contains(c));
+      const txt = (st.textContent || '').trim();
+      const quiet = (cls.indexOf('gh-saved') >= 0) || txt === '未設定' || txt === '';
+      chip.className = 'yc-addmenu-gh ' + cls.join(' ');
+      chip.textContent = txt;
+      chip.hidden = quiet;
+      chip.title = 'GitHub連携: ' + txt;
+    }
+    const src = document.getElementById('opLogBadge'), dst = document.getElementById('ycAddMenuWarn');
+    if (src && dst) {
+      dst.textContent = src.textContent;
+      dst.style.display = src.style.display;
+      dst.title = 'ログに警告が ' + src.textContent + ' 件あります';
+    }
+  } catch (e) {}
+}
+// 【v1.0858】メニューの開閉。外側クリック・Esc で閉じる。中の項目を押したら閉じる（各項目の処理は従来どおり先に走る）
+(function () {
+  const btn = document.getElementById('btnAddMenu'), menu = document.getElementById('ycAddMenu');
+  if (!btn || !menu) return;
+  const setOpen = (on) => { menu.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+  btn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(menu.hidden); });
+  menu.addEventListener('click', (e) => {
+    const it = e.target.closest && e.target.closest('.btn, .gh-sync-area');
+    if (it && !it.disabled) setTimeout(() => setOpen(false), 0);
+  });
+  // GitHub連携は div なので、キーボード（Enter / Space）でも開けるようにする
+  const gh = document.getElementById('ghSyncArea');
+  if (gh) gh.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); gh.click(); } });
+  document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('#ycAddMenuWrap')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+})();
 
 // 設定モーダル関連のイベント
 function initGitHubSettings() {
