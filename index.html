@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0859 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0861 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3611,6 +3611,15 @@ table.rank-table td.rank-legend-col-row {
   padding-top: 12px;
   background: var(--bg2);
 }
+/* 【v1.0860】★v236 の「保存ボタンを最初から常に表示」が、v1.0606 のタブ化で効かなくなっていた。
+   タブ化で .pe-grid と .pe-actions が #peTabEdit（.pe-panel＝overflow-y:auto の普通のブロック）の中に入ったため、
+   スクロールするのがパネル全体になり、保存ボタンはその一番下（画面外）に押し出されていた。
+   → #peTabEdit 自身を縦flexにし、スクロールは .pe-grid だけ、.pe-actions は右下に固定する。
+   ★表示/非表示は peSetTab が style.display を '' / 'none' で切り替える。'' のときにこの display:flex が効く。
+     ここで display を書かないと block に戻り、また保存ボタンが下へ押し出される。 */
+#productEditModal #peTabEdit { display: flex; flex-direction: column; overflow: hidden; padding-top: 0; }
+#productEditModal #peTabEdit > .pe-grid { padding-top: 12px; }
+#productEditModal #peTabEdit > .pe-actions { justify-content: flex-end; margin-top: 0; border-top: 1px solid var(--border); }
 /* 画像まわりをコンパクトに（初期表示で収まりやすく） */
 #productEditModal .pe-image-wrap { min-height: 104px; padding: 8px; }
 #productEditModal .pe-image { max-width: 130px; max-height: 120px; }
@@ -4488,7 +4497,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0859</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0861</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4684,8 +4693,8 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="states-grid">
 
     <span class="sg-label g-status">【ステータス】</span>
-    <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 新商品（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
-    <button class="state-chip" data-state="new-product" title="新リニュ＝新商品 ＋ リニューアル（一覧のセルには選んだ方がそのまま出ます）"><span class="chip-label">新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 選択前-新リニュ（選択前・新商品・リニューアル済）（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <button class="state-chip" data-state="new-product" title="選択前-新リニュ＝選択前 ＋ 新商品 ＋ リニューアル済（一覧のセルには選んだ値がそのまま出ます）"><span class="chip-label">選択前-新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
@@ -9497,7 +9506,7 @@ function migrateProStatusToStatus() {
   let migrated = 0;
   allCodes.forEach(code => {
     if (!state.productMeta[code]) {
-      state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '新商品' };
+      state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前' };   // 【v1.0861】新しく増えた商品は選択前から
       return;
     }
     const meta = state.productMeta[code];
@@ -9591,6 +9600,7 @@ function migrateStatusResetV195() {
     const m = state.productMeta[code];
     if (!m) return;
     if (m.status === '—') return;   // 【v1.0614】明示的に「—（未設定）」にしたものは潰さない
+    if (m.status === '選択前') return;   // 【v1.0861】選択前は新スキームの値。潰さない
     if (m.status !== '撤退済み' && m.status !== '新商品') { m.status = '新商品'; m.statusTs = ts; m._ts = ts; n++; }
   });
   state.rankMeta = state.rankMeta || {};
@@ -11672,9 +11682,9 @@ async function runRetireCheck(file) {
 }
 function getMeta(code) {
   if (!state.productMeta[code]) {
-    state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '新商品' };
+    state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前' };   // 【v1.0861】新しく増えた商品は選択前から
   }
-  // statusが未定義の既存データは「新商品」で補完
+  // statusが未定義の既存データは「新商品」で補完（★ここは '新商品' のまま。古いデータの意味を変えない）
   if (!state.productMeta[code].status) {
     state.productMeta[code].status = '新商品';
   }
@@ -12173,7 +12183,7 @@ const PRO_STATUS_ORDER = {
   'PR◯': 1, 'PR◯-親-30％固定': 1.2, 'PR◯-子-7％固定': 1.4, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR△-飛ぶ手前固定': 2, 'PR×': 3,
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
-const STATUS_ORDER = { '新商品': 0, 'リニューアル': 0.5,   /* 【v1.0720】新商品の直後 */ 'リニューアル予定': 8,   /* 【v1.0726】撤退済みの直後 */ '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
+const STATUS_ORDER = { '選択前': -0.5,   /* 【v1.0861】新商品の前 */ '新商品': 0, 'リニューアル': 0.5,   /* 【v1.0720】新商品の直後 */ 'リニューアル予定': 8,   /* 【v1.0726】撤退済みの直後 */ '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
   '通常商品': 1, '現役商品': 1, '撤退■': 6, '撤退予定-out記入済': 6, '': 0,
   '—': -1, '子（親に追従）': 0.5 };  // 互換用（旧値。out記入済は撤退予定へ統合）／【v1.0614】未設定(—)は先頭／【v1.0626】子は新商品の直後
 function adStatusOrder(v)  { const k = v || ''; return AD_STATUS_ORDER[k] != null ? AD_STATUS_ORDER[k] : 99; }
@@ -12550,6 +12560,7 @@ function statusDisplayLabel(value) {
 // 【v195】ステータス（商品ライフサイクル）の値ごとの文字色。背景は白、文字色のみ着色。
 // 【v1.0710】★チップ（§94）と同じ色に統一。広告あり／なしは同じ色にする（チップが「健常◯」「中立△」で1つだから）
 const STATUS_LIFE_COLOR = {
+  '選択前': '#16a34a',              // 【v1.0861】緑。選択前-入札 / 選択前-PR と同じ「これから決める枠」の色（v1.0707）
   '新商品': '#16a34a',              // 緑（これから決める）
   'リニューアル': '#16a34a',         // 【v1.0720】新商品と同じ緑（一覧では「新リニュ」とまとめて表示）
   'リニューアル予定': '#7c3aed',   // 【v1.0726】紫。★「リニューアル」（緑・新リニュ枠）とは別物。こちらは作り直し待ち
@@ -12580,7 +12591,13 @@ const STATUS_LIFE_CHILD = '子（親に追従）';
 //   保存値は従来どおり '健常-広告あり◯' 等の細かい値のまま（件数・絞り込み・チップはすべてそのまま動く）。
 //   選択肢からだけ外し、選ばれたら _statusLifeResolve() で細かい値へ変換して保存する。
 const STATUS_LIFE_COARSE = { '健常◯': ['健常-広告あり◯', '健常-広告なし◯'], '中立△': ['中立-広告あり□', '中立-広告なし□'] };
-const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, '新商品', 'リニューアル', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み', 'リニューアル予定'];   /* 【v1.0726】リニューアル予定を追加（チップと同じ並び＝撤退済みの右） */   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
+// 【v1.0861】★「選択前」＝ 追加されたばかりで、まだステータスを選んでいない商品。新しく増えた商品はここから始まる。
+//   ★「新商品」とは別の値（保存値 '選択前'）。ただし「まだ決めていない枠」なのでチップは同じ【選択前-新リニュ】にまとめる。
+//   ★未設定（status なし）は従来どおり '新商品' 扱いのまま（`meta.status || '新商品'` は変えない）。
+//     ここを '選択前' に変えると、既存の商品（status を持たない古いデータ）まで一斉に選択前に化ける。
+//     「選択前」になるのは、新しく productMeta を作るとき（＝新しく増えた商品）だけ。
+const STATUS_SENTAKUMAE = '選択前';
+const STATUS_LIFE_OPTIONS = [STATUS_LIFE_NONE, STATUS_SENTAKUMAE, '新商品', 'リニューアル', STATUS_LIFE_CHILD, '健常◯', '中立△', '撤退検討▲', '撤退予定', '撤退済み', 'リニューアル予定'];   /* 【v1.0726】リニューアル予定を追加（チップと同じ並び＝撤退済みの右） */   // 【v1.0445】撤退予定-out記入済を廃止／【v1.0714】健常・中立はまとめた1つに
 // 保存値（細かい値）→ ドロップダウンで選択状態にする値（まとめ）
 function _statusLifeCoarseOf(v) {
   for (const k in STATUS_LIFE_COARSE) if (STATUS_LIFE_COARSE[k].indexOf(v) >= 0) return k;
@@ -12616,7 +12633,8 @@ function isProNgValue(p) { return p === 'PR×' || p === 'PRオプ×' || p === 'P
 //   一覧のセルではどちらも「新リニュ」と表示し、チップ new-product・件数・中立以上でも同じ1グループとして扱う。
 //   ★未設定（status なし）は '新商品' 扱い（あちこちの `meta.status || '新商品'` と合わせる）
 function isShinRenew(st) {
-  return (st || '新商品') === '新商品' || st === 'リニューアル' || st === '通常商品' || st === '現役商品';
+  return (st || '新商品') === '新商品' || st === 'リニューアル' || st === '通常商品' || st === '現役商品'
+      || st === '選択前';   // 【v1.0861】選択前も同じ「まだ決めていない枠」。チップ【選択前-新リニュ】・件数・中立以上に入る
 }
 // 【v1.0719】PR「△以上」＝ PR◯系 ＋ PR△系 ＋ 選択前（未選択）。PR✕ と 撤退済み だけ外す。
 //   ★ステータスの「中立以上」が新商品（＝まだ決めていない枠）を含むのと同じ考え方で、
@@ -17142,7 +17160,7 @@ function tuneIsToday(s) { return !!s && s === tuneTodayStr(); }
 function tuneIsThisMonth(s) { return !!s && String(s).slice(0, 7) === tuneTodayStr().slice(0, 7); }
 function markTuneAction(code, kind) {
   if (!code) return;
-  if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+  if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
   const today = tuneTodayStr();
   const nowTs = Date.now();
   // 【v301】対応時刻(ミリ秒)も記録。推移確認/未確認は「最新値更新サイクル」内で対応済みかを
@@ -20574,7 +20592,7 @@ const STATE_FILTERS = {
   'pro-all':       { label: '△以上',     targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProTriIjou(code) },   /* 【v1.0719】現役全体 → △以上（PR◯＋PR△＋選択前。PR✕は外す）。★キー 'pro-all' は保存され得るので変えない */
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
-  'new-product':      { label: '新リニュ',         targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenew(effectiveStatusOf(code)) },   /* 【v1.0721】チップ名＝新リニュ（新商品＋リニューアル） */   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
+  'new-product':      { label: '選択前-新リニュ',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenew(effectiveStatusOf(code)) },   /* 【v1.0721】チップ名＝新リニュ（新商品＋リニューアル） */   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
   // 【v1.0696】広告あり／なしをまとめた親チップ。★判定は「前方一致」ではなく2値の列挙にする
   //   （'健常' で startsWith にすると、将来「健常-〇〇」を足したとき黙って混ざる）
   'status-kenzen':    { label: '健常',             targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const st = effectiveStatusOf(code); return st === '健常-広告あり◯' || st === '健常-広告なし◯'; } },
@@ -20876,8 +20894,9 @@ const INFO_PRO_DESC = {
 
 const INFO_LIFE_DESC = {
   '—': '未設定。まだ何も決めていないもの。',
+  '選択前': '<b>追加されたばかりで、まだステータスを選んでいない</b>もの。新しく追加された商品は最初これになります。チップの【選択前-新リニュ】にまとまります。',
   '新商品': '登録して間もない、<b>評価がまだ決まっていない</b>もの。',
-  'リニューアル': '<b>作り直した直後</b>のもの。新商品と同じ枠（チップの【新リニュ】）にまとまります。',
+  'リニューアル': '<b>作り直した直後</b>のもの。新商品と同じ枠（チップの【選択前-新リニュ】）にまとまります。',
   '子（親に追従）': '<b>親のステータスをそのまま読む</b>という意思表示。入札状態は「入札なし」、PR状態は「PR◯-子-7％固定」として扱われます。',
   '健常◯': '<b>良好</b>。いまのところ手を入れなくてよいもの。',
   '中立△': '悪くはないが<b>健常◯には届いていない</b>もの。<b>調整して健常◯へ引き上げる</b>対象です。',
@@ -21332,7 +21351,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
   const dd = String(now.getDate()).padStart(2, '0');
   const stamp = `更新日時-${yy}-${mm}${dd}`;
   codes.forEach(code => {
-    if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+    if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
     const meta = state.productMeta[code];
     const note = (meta[field] || '').trim();
     if (note === '' || isAutoTimestamp(note)) meta[field] = stamp;  // 空欄/更新日時のみ→本日の更新日時
@@ -21996,7 +22015,7 @@ function startBidEdit(cell) {
       const oldBid = (currentBid === '' || currentBid == null) ? '' : currentBid;
       const newBid = (state.bid[code] == null) ? '' : state.bid[code];
       if (String(oldBid) !== String(newBid)) {
-        if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+        if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
         state.productMeta[code].adNote = buildPriceChangeNote(state.productMeta[code].adNote, 'bid', oldBid, newBid);
         markTuneAction(code, 'ad');  // 【v249】入札価格の値変更＝対応済み
         _setTuneReviewed(code, 'ad', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
@@ -22104,7 +22123,7 @@ function startProRateEdit(cell) {
       const oldRate = (currentRaw == null || isNaN(currentRaw)) ? '' : Math.floor(Number(currentRaw));
       const newRate = (state.proRate[codeLower] == null) ? '' : Math.floor(Number(state.proRate[codeLower]));
       if (String(oldRate) !== String(newRate)) {
-        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
         state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldRate, newRate);
         markTuneAction(codeLower, 'pro');  // 【v249】PRオプ料率の値変更＝対応済み
         _setTuneReviewed(codeLower, 'pro', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
@@ -22267,7 +22286,7 @@ function startRankEditCell(cell) {
       const oldNum = (currentVal == null || isNaN(Number(currentVal)) || Number(currentVal) === 0) ? '' : Math.floor(Number(currentVal));
       const newNum = (newVal == null) ? '' : Math.floor(Number(newVal));
       if (String(oldNum) !== String(newNum)) {
-        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'新商品' };
+        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
         if (isBid) {
           state.productMeta[codeLower].adNote = buildPriceChangeNote(state.productMeta[codeLower].adNote, 'bid', oldNum, newNum);
           markTuneAction(codeLower, 'ad');  // 【v249】
@@ -22451,6 +22470,13 @@ function peSetTab(t) {
   if (i)  i.style.display  = (_peTab === 'info')  ? '' : 'none';
   if (tr) tr.style.display = (_peTab === 'trend') ? '' : 'none';
   if (e)  e.style.display  = (_peTab === 'edit')  ? '' : 'none';
+  // 【v1.0860】★タブを出すたびに一番上から見せる。
+  //   パネルは商品をまたいで使い回すので、前の商品でスクロールした位置が残り、
+  //   次に開いたときに途中（変更記録や画像のあたり）から表示されていた。
+  try {
+    [i, tr, e].forEach(el => { if (el) el.scrollTop = 0; });
+    const g = document.querySelector('#productEditModal .pe-grid'); if (g) g.scrollTop = 0;
+  } catch (eS) {}
   if (_peTab === 'info')  peRenderInfo();
   if (_peTab === 'trend') peRenderTrend();
 }
@@ -24262,6 +24288,14 @@ function npApplyRows(rows) {
         kw: kwVal,
         editedKw: !!kwVal
       };
+      // 【v1.0861】★新しく追加した商品はステータス「選択前」から始める。
+      //   すでに productMeta があっても、人が選んだ形跡（statusTs）が無い '新商品'／未設定なら選択前にする。
+      //   （レポート取込で先に自動で作られた meta は '新商品' だったことがあるため。v1.0860 まで）
+      //   ★人が選んだステータス（statusTs あり）や、撤退済み・リニューアル等は触らない。
+      {
+        const pm = (state.productMeta[code] = state.productMeta[code] || { adStatus: '', proStatus: '', adNote: '', proNote: '' });
+        if (!pm.status || (pm.status === '新商品' && !pm.statusTs)) { pm.status = STATUS_SENTAKUMAE; pm._ts = Date.now(); }
+      }
       added++;
     }
   });
