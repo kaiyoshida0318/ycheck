@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0858 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0859 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -226,7 +226,8 @@ body {
 .yc-addmenu-wrap { position: relative; display: inline-flex; }
 /* ★.btn（白背景）がこのあと（343行付近）で定義されるので、.btn.yc-addmenu-btn と2クラスにして勝たせる */
 .btn.yc-addmenu-btn { background: var(--green); color: #fff; border-color: var(--green); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.btn.yc-addmenu-btn:hover { filter: brightness(1.06); }
+/* 【v1.0859】★.btn:hover（灰色・385行付近）も後ろにあって同じ詳細度。:hover を付けて3つにして勝たせる */
+.btn.yc-addmenu-btn:hover, .btn.yc-addmenu-btn[aria-expanded="true"] { background: #15803d; border-color: #15803d; color: #fff; }
 .yc-addmenu-caret { font-size: 0.7rem; margin-left: 2px; opacity: 0.9; }
 .yc-addmenu-gh { margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #fff; font-size: 0.66rem; font-weight: 700; line-height: 1.6; color: var(--text2); }
 .yc-addmenu-gh.gh-saved { color: var(--green); }
@@ -244,6 +245,10 @@ body {
 .yc-addmenu > .btn:hover:not(:disabled) { background: var(--bg3); }
 .yc-addmenu > #btnJumpNewProduct { color: var(--green); }
 .yc-addmenu > #btnJumpCodeMigrate { color: #7c3aed; }
+.yc-addmenu > #btnJumpUploadMonthly { color: var(--blue); }
+.yc-addmenu > #btnJumpUploadMonthly.report-due { animation: none; }   /* メニュー内では光らせない（親ボタンが光る） */
+.yc-addmenu > #btnJumpUploadMonthly.report-due::after { content: '先月分が未追加'; margin-left: auto; padding: 0 6px; border-radius: 999px;
+  font-size: 0.66rem; font-weight: 700; color: #fff; background: var(--blue); }
 .yc-addmenu > .gh-sync-area { width: 100%; box-sizing: border-box; justify-content: space-between; margin-top: 4px; }
 .yc-addmenu > .gh-sync-area:focus-visible, .yc-addmenu > .btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
 
@@ -4483,7 +4488,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0858</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0859</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4507,21 +4512,25 @@ th.col-sroas { background-color:#e7d5f5; }
          ★閉じたメニューの中では「✓ 最新 / ● 未反映 / ⚠ エラー」とログの警告数が見えなくなるので、
            親ボタンの上に写して出す（_ycAddMenuSync）。 -->
     <div class="yc-addmenu-wrap" id="ycAddMenuWrap">
-      <button class="btn sm yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="商品追加・更新・反映 / 再登録後のコード移行 / ログ / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
+      <button class="btn sm yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="再登録後のコード移行 / レポート追加 / ログ / 商品追加・更新・反映 / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
+      <!-- 【v1.0859】並びを「コード移行 → レポート追加 → ログ → 商品追加・更新・反映」に（本人指定）。GitHub連携は末尾に残す。
+           「+ レポート追加」も外からこの中へ移した（外は「🔎 APIから取得」だけにするため）。 -->
       <div class="yc-addmenu" id="ycAddMenu" role="menu" hidden>
-        <button class="btn sm" id="btnJumpNewProduct" type="button" role="menuitem">+ 商品追加・更新・反映</button>
         <button class="btn sm" id="btnJumpCodeMigrate" type="button" role="menuitem" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）">🔁 再登録後のコード移行</button>
+        <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
+        <button class="btn sm" id="btnJumpUploadMonthly" type="button" role="menuitem" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
         <!-- 【v1.0604】操作ログ。商品の追加/更新・GitHubへの反映・別クライアントの上書き・商品件数の増減を記録する。
              「追加したのに消えた」をその場で見せられるようにするのが目的（§20）。 -->
         <button class="btn sm" id="btnOpLog" type="button" role="menuitem" title="操作ログ（商品の追加・更新 / GitHubへの反映 / 上書き検知 / 商品件数の増減）を表示します">🧾 ログ<span class="oplog-badge" id="opLogBadge" style="display:none">0</span></button>
+        <button class="btn sm" id="btnJumpNewProduct" type="button" role="menuitem">+ 商品追加・更新・反映</button>
         <div class="gh-sync-area" id="ghSyncArea" role="menuitem" tabindex="0" title="クリックでGitHub連携設定を開く">
           <span class="gh-sync-label">⚙️ GitHub連携</span>
           <span class="gh-sync-status" id="ghSyncStatus">未設定</span>
         </div>
       </div>
     </div>
-    <!-- 【v1.0526】「+ レポート追加(月次)」と「+ 最新値を更新」を1つに統合。日別5ファイルをまとめて取り込む。 -->
-    <button class="btn sm primary" id="btnJumpUploadMonthly" type="button" onclick="window.openUploadModal && window.openUploadModal()">+ レポート追加</button>
+    <!-- 【v1.0859】右上は「🔎 APIから取得」だけ。商品追加・更新モーダルを、右の「Yahooの商品一覧」を開いた状態で開く。 -->
+    <button class="btn sm primary" id="btnHdrApi" type="button" title="Yahooの商品一覧（imagegallery-yahoo の取得結果）を開いて、未登録の商品を追加します">🔎 APIから取得</button>
   </div>
 </div>
 
@@ -8571,7 +8580,7 @@ function ghApplyViewerMode() {
   try { document.body.classList.add('viewer-mode'); } catch (e) {}
   ghSetSyncStatus('viewer');
   // 主要な編集ボタンを無効化（閲覧端末では使えないことを明示）
-  ['btnJumpUploadMonthly', 'btnJumpUploadSpot', 'btnJumpNewProduct', 'btnJumpCodeMigrate'].forEach(id => {
+  ['btnJumpUploadMonthly', 'btnJumpUploadSpot', 'btnJumpNewProduct', 'btnJumpCodeMigrate', 'btnHdrApi'].forEach(id => {   /* 【v1.0859】btnHdrApi */
     const b = document.getElementById(id);
     if (b) { b.disabled = true; b.title = '閲覧専用モードでは使用できません（編集はトークンを設定した端末のみ）'; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed'; }
   });
@@ -9249,6 +9258,14 @@ function _ycAddMenuSync() {
       chip.textContent = txt;
       chip.hidden = quiet;
       chip.title = 'GitHub連携: ' + txt;
+    }
+    // 【v1.0859】「先月分のレポートが未追加」の光り（.report-due）も親ボタンに写す
+    const rb = document.getElementById('btnJumpUploadMonthly'), pb = document.getElementById('btnAddMenu');
+    if (rb && pb) {
+      const due = rb.classList.contains('report-due');
+      pb.classList.toggle('report-due', due);
+      pb.title = due ? (rb.title || '先月の月次レポートがまだ追加されていません') + '\n（メニューの「+ レポート追加」から）'
+                     : '再登録後のコード移行 / レポート追加 / ログ / 商品追加・更新・反映 / GitHub連携';
     }
     const src = document.getElementById('opLogBadge'), dst = document.getElementById('ycAddMenuWarn');
     if (src && dst) {
@@ -11821,6 +11838,7 @@ function _updateReportDueGlow() {
   btn.classList.toggle('report-due', due);
   if (due) btn.title = '月が変わりました。先月（' + prev + '）の月次レポートがまだ追加されていません。';
   else btn.removeAttribute('title');
+  if (typeof _ycAddMenuSync === 'function') _ycAddMenuSync();   // 【v1.0859】メニューの中に入ったので親ボタンに写す
 }
 // 【v173】ショップ売上(月次)CSVで取り込まれた最新月を返す（YYYY-MM）。基本データ・月次タブのデフォルト用
 function getLatestOverallMonth() {
@@ -23465,6 +23483,10 @@ function openNewProductModal() {
   if (typeof npqClear === 'function') { try { npqClear(); } catch (e) {} }
   // 【v1.0598】開いた時点で未反映の変更があるなら、その場で反映できるようにしておく
   if (typeof _npqSyncReflect === 'function') { try { _npqSyncReflect('📋 CSVファイルをアップロード、または上の欄に直接入力してください'); } catch (e) {} }
+  // 【v1.0859】★右の「Yahooの商品一覧」を最初から開いた状態にする（本人指定：基本はこの見た目）。
+  //   ×で閉じてもよい。次に開いたときはまた開いた状態から始まる（閉じた状態は覚えない）。
+  //   一覧は1回読んだらメモリに残る（_npApi.items）ので、開くたびに取り直すことはしない。
+  if (typeof npApiOpen === 'function') { try { npApiOpen(); } catch (e) {} }
 }
 
 function closeNewProductModal() {
@@ -24462,6 +24484,12 @@ function npClearAll() {
 
 // イベントバインド
 $('#btnJumpNewProduct').addEventListener('click', openNewProductModal);
+// 【v1.0859】右上「🔎 APIから取得」＝商品追加・更新を開き（一覧は既定で開く）、一覧の絞り込み欄にカーソルを置く
+{ const b = document.getElementById('btnHdrApi');
+  if (b) b.addEventListener('click', () => {
+    openNewProductModal();
+    setTimeout(() => { const q = document.getElementById('npApiSearch'); if (q) { try { q.focus(); } catch (e) {} } }, 0);
+  }); }
 
 // 【v228】再登録後のコード移行モーダル（ヘッダーから開く・検索付き旧コード選択）
 const codeMigrateModal = $('#codeMigrateModal');
