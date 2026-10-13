@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0867 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0869 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -715,6 +715,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid .state-chip.active { color: #fff !important; }
 /* 【v1.0706】件数の () は桁が増えても幅が変わらないようにする。
    ★min-width ＋ tabular-nums の両方が要る。tabular-nums だけだと (1) と (12) で幅が変わる。 */
+.states-grid .state-chip.is-rollup-count .chip-num { font-weight: 700; }   /* 【v1.0868】合算・両表示＝セットの数 */
 .states-grid .chip-num {
   display: inline-block; min-width: 34px; text-align: left;
   font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;
@@ -4537,7 +4538,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0867</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0869</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -12001,7 +12002,43 @@ document.addEventListener('click', (e) => {
   setTimeout(ycRefreshStaleStateCounts, 0);
 }, true);
 
+// 【v1.0868】★合算・両表示のときは、チップの（件数）を【表に出るセットの数】にする（本人指定：「14じゃなくて5」）。
+//   合算では親子を1行（セット）にまとめ、チップの絞り込みは【セット行の代表コード】で判定している
+//   （renderBasic: list.filter(r => f.match(state.productMeta[r.code] || {}, r.code))）。
+//   → 件数も同じ判定・同じ単位で数え直す。STATE_FILTERS[..].match をそのまま使うので、件数と表の行数が必ず一致する。
+//   ★個別のときは従来どおり商品の数（_updateStateCountsRaw の結果をそのまま使う）。
+//   ★targetView が basic でないチップ（削除済＝撤退済み商品ビュー）は商品の数のまま。
 function updateStateCounts() {
+  _updateStateCountsRaw();
+  try { _rollupChipCounts(); } catch (e) { console.warn('[Ycheck] 合算の件数の数え直しに失敗:', e && e.message); }
+}
+function _rollupChipCounts() {
+  const on = (typeof _basicIsRollup === 'function') && _basicIsRollup();
+  const chips = Array.from(document.querySelectorAll('.states-grid .state-chip[data-state]'));
+  if (!on) { chips.forEach(ch => ch.classList.remove('is-rollup-count')); return; }
+  // 表の母集団と同じ：現役（撤退済み・引退済みを除く）の商品を代表コードでまとめる
+  const codes = new Set();
+  (state.item || []).forEach(i => codes.add(i.code));
+  dailyCodes().forEach(c => codes.add(c));
+  Object.keys(state.master || {}).forEach(c => codes.add(c));
+  const keys = new Set();
+  codes.forEach(c => {
+    if (((state.productMeta[c] || {}).status || '') === '撤退済み') return;
+    if (isRetired(c)) return;
+    keys.add(_basicRepKeyOf(c));
+  });
+  const pm = state.productMeta || {};
+  chips.forEach(ch => {
+    const f = STATE_FILTERS[ch.dataset.state];
+    const num = ch.querySelector('.chip-num');
+    if (!f || f.targetView !== 'basic' || typeof f.match !== 'function' || !num) { ch.classList.remove('is-rollup-count'); return; }
+    let n = 0;
+    keys.forEach(k => { try { if (f.match(pm[k] || {}, k)) n++; } catch (e) {} });
+    num.textContent = '(' + n + ')';
+    ch.classList.add('is-rollup-count');
+  });
+}
+function _updateStateCountsRaw() {
   _stateCountsStale = false;   // 【v1.0645】数え直したので未反映フラグを下ろす
   const allCodes = new Set();
   (state.item || []).forEach(i => allCodes.add(i.code));
@@ -22822,8 +22859,8 @@ function peRenderInfo() {
       {
         const _lg = document.getElementById('peLegend');
         if (_lg) _lg.innerHTML = (_peSplit
-          ? [['#6d28d9','SEO売上-親'],['#c4b5fd','SEO売上-子'],['#ea580c','広告売上-親'],['#fdba74','広告売上-子'],['#10b981','PR広告売上ROAS？']]
-          : [['#7c3aed','SEO売上'],['#f97316','広告売上'],['#10b981','PR広告売上ROAS？']]
+          ? [['#6d28d9','SEO売上-親'],['#c4b5fd','SEO売上-子'],['#ea580c','広告売上-親'],['#fdba74','広告売上-子'],['#3b82f6','広告実績額'],['#ec4899','PR実績額？'],['#10b981','PR広告売上ROAS？']]
+          : [['#7c3aed','SEO売上'],['#f97316','広告売上'],['#3b82f6','広告実績額'],['#ec4899','PR実績額？'],['#10b981','PR広告売上ROAS？']]
         ).map(x => '<span><i style="background:' + x[0] + '"></i>' + x[1] + '</span>').join('');
       }
       const _peBars = _peSplit
@@ -22837,6 +22874,14 @@ function peRenderInfo() {
             { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: '#7c3aed', stack: 's', yAxisID: 'y', order: 2 },
             { type: 'bar', label: '広告売上', data: rows.map(r => r.adRev), backgroundColor: '#f97316', stack: 's', yAxisID: 'y', order: 2 }
           ];
+      // 【v1.0869】★売上の棒（左）の右に、費用の棒（広告実績額＋PR実績額(7%超・推定)の積み上げ）を並べる（本人指定）。
+      //   stack を 's'（売上）と 'c'（費用）に分けると、Chart.js は同じ日の中で2本を左右に並べる（x/y とも stacked:true のまま）。
+      //   ★色は下の表と同じ：広告実績額＝青（広告売上ROAS の列）／PR実績額＝桃（PR売上ROAS の列）。
+      //   ★PR実績額は⑤の料率からの推定（表の「？」と同じ）。料率が未設定の日は 0 として描く（表では —）。
+      _peBars.push(
+        { type: 'bar', label: '広告実績額', data: rows.map(r => +r.adCost || 0), backgroundColor: '#3b82f6', stack: 'c', yAxisID: 'y', order: 2 },
+        { type: 'bar', label: 'PR実績額',   data: rows.map(r => (r.prOver > 0 ? +r.prOver : 0)), backgroundColor: '#ec4899', stack: 'c', yAxisID: 'y', order: 2 }
+      );
       _peChart = new Chart(cv.getContext('2d'), {
         plugins: [YC_CHANGE_LINES],
         data: {
@@ -22859,6 +22904,7 @@ function peRenderInfo() {
             tooltip: { callbacks: { label: (c) => {
               const v = c.parsed.y;
               if (c.dataset.label === 'PR広告売上ROAS') return 'PR広告売上ROAS(推定): ' + (v == null ? '—' : Math.round(v).toLocaleString('ja-JP') + '%');
+              if (c.dataset.label === 'PR実績額') return 'PR実績額(7%超・推定): ¥' + Math.round(v || 0).toLocaleString('ja-JP');   // 【v1.0869】
               return c.dataset.label + ': ¥' + Math.round(v || 0).toLocaleString('ja-JP');
             } } }
           },
