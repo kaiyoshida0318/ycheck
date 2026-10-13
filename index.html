@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0869 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0870 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2049,6 +2049,7 @@ td[data-resize-key] {
   background: rgba(37,99,235,0.08);
   border-bottom-color: var(--accent);
 }
+.bid-price .bid-multi-mark { display: inline-block; margin-left: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.62rem; font-weight: 700; color: #92400e; background: #fdf3d8; vertical-align: 1px; }   /* 【v1.0870】セット行：子にも入札価格あり */
 .bid-price-input,
 .pro-rate-input {
   width: 80px;
@@ -4538,7 +4539,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0869</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0870</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13509,8 +13510,7 @@ function renderBasic() {
                  return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
       : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="${escapeHtml(_prRateTip)}">${_prRateHtml}</td>`;
     const _bidCell = _isSet
-      ? (() => { const v = _basicMultiVal(_mem, c => getBid(c), x => '¥' + x);
-                 return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
+      ? _bidSetCellHtml(r.code, _mem)   /* 【v1.0870】セット行も代表（親）の入札価格を手入力できる */
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}</td>
@@ -14450,6 +14450,21 @@ function basicPrSalesRoasOf(r) {
   return itemPrSalesRoasPct(r.code, r.rev, r.adCost);
 }
 // 合算行のメンバーで値が割れる列（PRオプ料率・入札価格）の表示。1種類なら普通に、複数なら範囲で。
+// 【v1.0870】★合算のセット行の入札価格セルも、クリックで手入力できるようにする（本人指定：「全てクリックしたら手入力できるように」）。
+//   v1.0587〜 セット行は「セット内の範囲（¥25〜¥40）」の表示だけで編集できなかった。
+//   広告を出すのはセットの代表（親）なので、セット行では【代表（親）の入札価格】を表示・編集する（startBidEdit をそのまま使う）。
+//   ★子にも入札価格が入っているときは「＋子」の小札を付け、ツールチップにセット内の内訳を出す（子の分は「個別」で編集）。
+//   ★商品-基本データ／調整-入札価格／商品-広告データ の3か所のセット行がこれを使う。
+function _bidSetCellHtml(rep, members) {
+  const v = _basicMultiVal(members, c => getBid(c), x => '¥' + x);
+  const own = getBid(rep);
+  const others = (members || []).filter(c => c !== rep && getBid(c) > 0);
+  const tip = 'クリックで編集（セットの代表＝親「' + rep + '」の入札価格）'
+    + (v.tip ? '\n\nセット内の入札価格\n' + v.tip : '')
+    + (others.length ? '\n\n★子にも入札価格が入っています（' + others.join(', ') + '）。子の分は「個別」で編集できます' : '');
+  return '<td class="num col-bidonly bid-price" data-code="' + escapeHtml(rep) + '" title="' + escapeHtml(tip) + '">'
+    + bidCellInnerHtml(rep, own) + (others.length ? '<span class="bid-multi-mark">＋子</span>' : '') + '</td>';
+}
 function _basicMultiVal(members, getter, fmtOne) {
   const vals = [];
   (members || []).forEach(c => { const v = getter(c); if (v != null && !isNaN(v) && Number(v) > 0) vals.push(Number(v)); });
@@ -17689,8 +17704,7 @@ function renderAdAdjust(cfg) {
     if (r._setMember) tr.className = 'row-setmember';
     if (_isSetT && basicRowMode === 'both') tr.className = 'row-setparent';
     const _bidCellT = _isSetT
-      ? (() => { const v = _basicMultiVal(r._members, c => getBid(c), x => '¥' + x);
-                 return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
+      ? _bidSetCellHtml(r.code, r._members)   /* 【v1.0870】 */
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     // 【v1.0647】色を商品-基本データに合わせた: 広告実績額＝ピンク(col-spend) / 広告ROAS＝藍(col-aroas)。広告売上はアンバー(col-ad)のまま
@@ -17706,8 +17720,7 @@ function renderAdAdjust(cfg) {
       if (r._setMember) tr.className = 'row-setmember';
       if (_isSetD && basicRowMode === 'both') tr.className = 'row-setparent';
       const _bidCellD = _isSetD
-        ? (() => { const v = _basicMultiVal(r._members, c => getBid(c), x => '¥' + x);
-                   return `<td class="num col-bidonly cell-multi" title="${escapeHtml('セット内の入札価格\n' + v.tip)}">${v.html}</td>`; })()
+        ? _bidSetCellHtml(r.code, r._members)   /* 【v1.0870】 */
         : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
       tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
