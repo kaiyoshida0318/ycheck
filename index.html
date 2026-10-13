@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0872 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0874 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2049,6 +2049,7 @@ td[data-resize-key] {
   background: rgba(37,99,235,0.08);
   border-bottom-color: var(--accent);
 }
+.pro-rate-cell .bid-multi-mark,   /* 【v1.0874】 */
 .bid-price .bid-multi-mark { display: inline-block; margin-left: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.62rem; font-weight: 700; color: #92400e; background: #fdf3d8; vertical-align: 1px; }   /* 【v1.0870】セット行：子にも入札価格あり */
 .bid-price-input,
 .pro-rate-input {
@@ -3881,8 +3882,9 @@ table.rank-table td.rank-legend-col-row {
 .np-api-tag { font-size: 0.66rem; font-weight: 700; padding: 0 5px; border-radius: 4px; margin-left: 5px; }
 .np-api-tag.known { background: #e5e7eb; color: #6b7280; }
 .np-api-tag.new { background: #dcfce7; color: #15803d; }
-.np-api-foot { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-top: 1px solid var(--border2); background: var(--bg2); }
+.np-api-foot { display: flex; align-items: center; gap: 6px; padding: 9px 10px; border-top: 1px solid var(--border2); background: var(--bg2); }
 .np-api-sel { font-size: 0.76rem; color: var(--text3); margin-right: auto; }
+.np-api-foot .btn, .np-api-foot .np-api-sel { white-space: nowrap; }   /* 【v1.0873】ボタンが3つ並ぶので折り返さない */
 .np-api-empty { padding: 18px 12px; font-size: 0.8rem; color: var(--text3); text-align: center; line-height: 1.7; }
 .np-api-manual { padding: 10px 12px; font-size: 0.78rem; line-height: 1.7; }
 .np-api-manual input { width: 100%; padding: 6px 9px; border: 1px solid var(--border2); border-radius: 6px; font-size: 0.78rem; margin-top: 6px; }
@@ -4541,7 +4543,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0872</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0874</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6349,8 +6351,10 @@ th.col-sroas { background-color:#e7d5f5; }
       <div class="np-api-list" id="npApiList"></div>
       <div class="np-api-foot">
         <span class="np-api-sel" id="npApiSel">0件 選択中</span>
+        <!-- 【v1.0873】一括選択：いま一覧に出ている商品（検索・未登録だけ の絞り込み後）を全部チェック -->
+        <button class="btn sm ghost" id="npApiAll" type="button" title="いま一覧に出ている商品（検索・「未登録だけ」で絞り込んだ後）を全部選びます">全て選択</button>
         <button class="btn sm ghost" id="npApiNone" type="button">選択解除</button>
-        <button class="btn sm primary" id="npApiAdd" type="button" disabled>選んだ分を下の一覧へ</button>
+        <button class="btn sm primary" id="npApiAdd" type="button" disabled title="チェックした商品を、下の一覧（登録・更新する内容）に入れます">下の一覧へ追加</button>
       </div>
     </aside>
     </div><!-- /np-cols -->
@@ -13510,8 +13514,7 @@ function renderBasic() {
     }
     // 料率・入札価格はメンバーで値が割れるので、セット行では範囲表示＋編集不可にする
     const _proCell = _isSet
-      ? (() => { const v = _basicMultiVal(_mem, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
-                 return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
+      ? _proSetCellHtml(r.code, _mem)   /* 【v1.0874】セット行も代表（親）のPRオプ料率を手入力できる */
       : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="${escapeHtml(_prRateTip)}">${_prRateHtml}</td>`;
     const _bidCell = _isSet
       ? _bidSetCellHtml(r.code, _mem)   /* 【v1.0870】セット行も代表（親）の入札価格を手入力できる */
@@ -14468,6 +14471,24 @@ function _bidSetCellHtml(rep, members) {
     + (others.length ? '\n\n★子にも入札価格が入っています（' + others.join(', ') + '）。子の分は「個別」で編集できます' : '');
   return '<td class="num col-bidonly bid-price" data-code="' + escapeHtml(rep) + '" title="' + escapeHtml(tip) + '">'
     + bidCellInnerHtml(rep, own) + (others.length ? '<span class="bid-multi-mark">＋子</span>' : '') + '</td>';
+}
+// 【v1.0874】★合算のセット行の PRオプ料率セルも、クリックで手入力できるようにする（入札価格 v1.0870 と同じ考え方）。
+//   v1.0873 までは「メンバーで値が割れる」ので範囲表示＋編集不可（cell-multi）だった。
+//   → 新商品のセット（例 eq-24-02-toilet-01set）は料率が誰にも入っていないので「—」のまま、どこを押しても入力できなかった。
+//   ・表示も編集も【代表（親）＝rep の料率】。PR◯-親-30％固定 / PR◯-子-7％固定 のように親子で料率が違うのが普通なので、
+//     子の料率は「個別」「両表示」の内訳行で編集する。
+//   ・子にも料率が入っていれば「＋子」を付け、ツールチップにメンバー全員の料率を出す。
+function _proSetCellHtml(rep, members) {
+  const v = _basicMultiVal(members, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
+  const own = getProRate(rep);
+  const others = (members || []).filter(c => c !== rep && getProRate(c) > 0);
+  const tip = 'クリックで編集（セットの代表＝親「' + rep + '」のPRオプ料率）'
+    + (v.tip ? '\n\nセット内の設定PRオプ料率\n' + v.tip : '')
+    + (others.length ? '\n\n★子にも料率が入っています（' + others.join(', ') + '）。子の分は「個別」「両表示」で編集できます' : '');
+  const val = (own == null || isNaN(own)) ? fmtProRate(own)
+    : '<span class="pro-rate-val ' + (Number(own) > PR_BASE_RATE_PCT ? 'over' : 'base') + '">' + fmtProRate(own) + '</span>';
+  return '<td class="num col-pro pro-rate-cell" data-code="' + escapeHtml(rep) + '" title="' + escapeHtml(tip) + '">'
+    + val + (others.length ? '<span class="bid-multi-mark">＋子</span>' : '') + '</td>';
 }
 function _basicMultiVal(members, getter, fmtOne) {
   const vals = [];
@@ -17980,8 +18001,7 @@ function renderProAdjust(cfg) {
       if (r._setMember) tr.className = 'row-setmember';
       if (_isSetD && basicRowMode === 'both') tr.className = 'row-setparent';
       const _proCellD = _isSetD
-        ? (() => { const v = _basicMultiVal(r._members, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
-                   return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
+        ? _proSetCellHtml(r.code, r._members)   /* 【v1.0874】 */
         : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
       tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
@@ -18001,8 +18021,7 @@ function renderProAdjust(cfg) {
     if (r._setMember) tr.className = 'row-setmember';
     if (_isSetT && basicRowMode === 'both') tr.className = 'row-setparent';
     const _proCellT = _isSetT
-      ? (() => { const v = _basicMultiVal(r._members, c => getProRate(c), x => (Math.round(x * 10) / 10) + '%');
-                 return `<td class="num col-pro cell-multi" title="${escapeHtml('セット内の設定PRオプ料率\n' + v.tip)}">${v.html}</td>`; })()
+      ? _proSetCellHtml(r.code, r._members)   /* 【v1.0874】 */
       : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
@@ -24559,6 +24578,15 @@ function _npApiSyncFoot() {
   const n = Object.keys(sel).filter(k => sel[k]).length;
   const el = document.getElementById('npApiSel'); if (el) el.textContent = n + '件 選択中';
   const btn = document.getElementById('npApiAdd'); if (btn) btn.disabled = !n;
+  // 【v1.0873】全て選択：表示中が0件 or 表示中がすでに全部選ばれていれば押せない
+  const all = document.getElementById('npApiAll');
+  if (all) { const vis = _npApiVisible(); all.disabled = !vis.length || vis.every(it => sel[it.code]); }
+}
+// 【v1.0873】いま一覧に出ている商品（絞り込み後）を全部選ぶ。★既に選んでいた分（絞り込みで隠れている分も）は残す
+function npApiSelectAll() {
+  const sel = _npApiSel();
+  _npApiVisible().forEach(it => { sel[it.code] = true; });
+  npApiRender();
 }
 // 選んだ分を npBuffer（下のプレビュー表）に積む
 // ★CSVをドロップ済みなら【置き換えずに足す】。同じ商品コードはAPI側を採用（あとの行が勝つ既存仕様と同じ）。
@@ -24574,7 +24602,7 @@ function npApiAddSelected() {
   npBuffer = { rows: merged, count: merged.length, filename: 'Yahooの商品一覧から ' + add.length + '件' + (prev.length ? '（＋ドロップ済み）' : '') };
   _npApi.sel = {};
   npRefreshSlot();
-  _npApiSyncFoot();
+  npApiRender();   // 【v1.0873】★v1.0872 までは件数だけ0に戻り、チェック✓は付いたまま残っていた
   try { if (typeof showToast === 'function') showToast(add.length + '件を下の一覧に追加しました', 'ok'); } catch (e) {}
   try { npLog('🔎 Yahooの商品一覧から ' + add.length + '件を下の一覧に追加しました', 'ok'); } catch (e) {}
 }
@@ -25545,6 +25573,7 @@ if ($('#npqCode')) {
   { const b = document.getElementById('npApiAdd'); if (b) b.addEventListener('click', npApiAddSelected); }
   { const b = document.getElementById('npApiNone');
     if (b) b.addEventListener('click', () => { _npApi.sel = {}; npApiRender(); }); }
+  { const b = document.getElementById('npApiAll'); if (b) b.addEventListener('click', npApiSelectAll); }   // 【v1.0873】
   { const e = document.getElementById('npApiSearch');
     if (e) e.addEventListener('input', () => { _npApi.q = e.value; npApiRender(); }); }
   { const e = document.getElementById('npApiOnlyNew');
