@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0866 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0867 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -692,7 +692,7 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid {
   display: grid;
   grid-auto-flow: row;
-  grid-template-columns: auto auto auto auto auto auto auto auto auto;   /* 【v1.0726】9列（リニューアル予定を追加。§90-2の意味づけ） */
+  grid-template-columns: auto auto auto auto auto auto auto auto auto auto;   /* 【v1.0726】9列 → 【v1.0867】10列（選択前と新リニュを分けた） */
   column-gap: 0;
   row-gap: 3px;
   flex: 0 1 auto;
@@ -721,14 +721,14 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 }
 /* 【v1.0706】罫線は【縦線だけ】。表の枠（横線・外枠）は出さない。
    ★列の左に線を引く＝1列目（行ラベル）以外。9列なので「9n+1 ではないセル」が対象。
-     ★列数を変えたらこの 9n+1 と grid-template-columns の両方を必ず直す。
+     ★列数を変えたらこの 10n+1 と grid-template-columns の両方を必ず直す（v1.0867 で 9→10）。
        片方だけだと線が1本ずつずれていく（v1.0726 で 8→9 に変更）。
    ★この指定は .states-grid .state-chip { border:none } より【後ろ】に書くこと。
      セレクタの強さが同じなので、前に書くと border:none に負けて線が消える（実際に踏んだ）。 */
 /* 【v1.0709】★縦線の色は !important で固定する。
    チップの配色ルール（.top-nav-3 .state-chip[data-state=…]）が border-color を持っていて、
    そちらが後ろに書かれているため、!important が無いと線が【チップの色】になってバラバラに見える。 */
-.states-grid > *:not(:nth-child(9n+1)) { border-left: 2px solid #c3cad6 !important; }   /* 【v1.0726】8n+1 → 9n+1 */
+.states-grid > *:not(:nth-child(10n+1)) { border-left: 2px solid #c3cad6 !important; }   /* 【v1.0726】8n+1 → 9n+1 → 【v1.0867】10n+1（列数と必ずセットで直す） */
 .top-nav-3 .nav-group { flex-wrap: wrap; align-items: center; row-gap: 3px; }
 
 /* ============================================================================
@@ -954,7 +954,8 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 .states-grid .state-chip[data-state="status-withdraw-plan"].active{ background: #8b5a2b !important; }   /* 【v1.0725】撤退3種は同色 */
 .states-grid .state-chip[data-state="status-withdrawn"].active    { background: #8b5a2b !important; }
 .states-grid .state-chip[data-state="status-renewal-plan"].active { background: #8b5cf6 !important; }   /* 【v1.0726】 */
-.states-grid .state-chip[data-state="new-product"].active         { background: #16a34a !important; }
+.states-grid .state-chip[data-state="new-product"].active,
+.states-grid .state-chip[data-state="status-sentakumae"].active   { background: #16a34a !important; }   /* 【v1.0867】選択前も同じ緑 */
 .states-grid .state-chip[data-state="all-basic"].active,
 .states-grid .state-chip[data-state="ad-all"].active,
 .states-grid .state-chip[data-state="pro-all"].active             { background: #0d9488 !important; }
@@ -964,7 +965,8 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
 /* 【v1.0707】「選択前」は 新商品 と同じ緑。3行とも2列目＝「これから決める枠」なので色をそろえる */
 .top-nav-3 .state-chip[data-state="unselected-ad"],
 .top-nav-3 .state-chip[data-state="unselected-pro"] { color: #16a34a; }
-.top-nav-3 .state-chip[data-state="new-product"] { color: #16a34a; }
+.top-nav-3 .state-chip[data-state="new-product"],
+.top-nav-3 .state-chip[data-state="status-sentakumae"] { color: #16a34a; }   /* 【v1.0867】 */
 .top-nav-3 .state-chip[data-state="status-kenzen"] { color: #1e40af; }      /* 【v1.0696】まとめ＝濃い青 */
 .top-nav-3 .state-chip[data-state="status-kenzen-ad"] { color: #2563eb; }
 .top-nav-3 .state-chip[data-state="status-kenzen-noad"] { color: #12a5c8; }  /* 【v207】水色 */
@@ -4535,7 +4537,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0866</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0867</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4731,8 +4733,10 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="states-grid">
 
     <span class="sg-label g-status">【ステータス】</span>
-    <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 選択前-新リニュ（選択前・新商品・リニューアル済）（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
-    <button class="state-chip" data-state="new-product" title="選択前-新リニュ＝選択前 ＋ 新商品 ＋ リニューアル済（一覧のセルには選んだ値がそのまま出ます）"><span class="chip-label">選択前-新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 選択前 ＋ 新リニュ（新商品・リニューアル済）（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <!-- 【v1.0867】「選択前-新リニュ」を2つに分けた（本人指定）。3列目＝選択前（入札・PRの選択前と縦にそろう）、4列目＝新リニュ -->
+    <button class="state-chip" data-state="status-sentakumae" title="選択前＝追加されたばかりで、まだステータスを選んでいない商品"><span class="chip-label">選択前</span><span class="chip-num" id="cntStatusSentakumae">(0)</span></button>
+    <button class="state-chip" data-state="new-product" title="新リニュ＝新商品 ＋ リニューアル済（一覧のセルには選んだ値がそのまま出ます）"><span class="chip-label">新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
@@ -4744,6 +4748,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="sg-label g-nyusatsu">【入札状態】</span>
     <button class="state-chip chip-all" data-state="ad-all" title="入札中＝入札価格が記入されている商品（撤退済み・入札なしは含みません）※中身はv1.0718までの「現役全体」と同じ"><span class="chip-label">入札中</span><span class="chip-num" id="cntAllAd">(0)</span></button>
     <button class="state-chip" data-state="unselected-ad"><span class="chip-label">選択前-入札</span><span class="chip-num" id="cntUnselectedAd">(0)</span></button>
+    <span class="sg-empty"></span>   <!-- 【v1.0867】4列目（新リニュ）の空き -->
     <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <!-- 【v1.0715】入札△＝調整中＋飛ぶ手前固定。✕のチップは廃止（✕の値そのものが無くなったため） -->
     <button class="state-chip" data-state="ad-tri" title="入札△（入札△-調整中 ＋ 入札△-飛ぶ手前固定）"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdTri">(0)</span></button>
@@ -4755,6 +4760,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="sg-label g-pr">【PR状態】</span>
     <button class="state-chip chip-all" data-state="pro-all" title="△以上＝PR◯ ＋ PR△ ＋ 選択前-PR（PR✕・撤退済みは含みません）"><span class="chip-label">△以上</span><span class="chip-num" id="cntAllPr">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
+    <span class="sg-empty"></span>   <!-- 【v1.0867】4列目（新リニュ）の空き -->
     <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
     <button class="state-chip" data-state="pro-tri" title="PR△（PR△-調整中 ＋ PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
     <span class="sg-empty"></span>
@@ -12011,6 +12017,7 @@ function updateStateCounts() {
   let churitsuIjouCount = 0;  // 【v1.0718】中立以上（健常◯＋中立△＋新商品）。★判定は isChuritsuIjou() を使い回す
   let proTriIjouCount = 0;    // 【v1.0719】PR△以上（PR◯＋PR△＋選択前）。★判定は isProTriIjou() を使い回す
   let newProductCount = 0;  // 【v229】ステータス=新商品（未設定も新商品扱い）
+  let sentakumaeCount = 0;  // 【v1.0867】ステータス=選択前
   // 【v195】新ステータス別カウント
   let sKenzenAd = 0, sKenzenNoad = 0, sChuritsuAd = 0, sChuritsuNoad = 0, sWithdrawConsider = 0, sWithdrawPlan = 0, withdrawnCount = 0;
   let sRenewalPlan = 0;   // 【v1.0726】リニューアル予定
@@ -12063,7 +12070,8 @@ function updateStateCounts() {
     const st = effectiveStatusOf(code);
     if (isChuritsuIjou(code)) churitsuIjouCount++;   // 【v1.0718】★絞り込みとまったく同じ関数で数える
     if (isProTriIjou(code))   proTriIjouCount++;    // 【v1.0719】同上
-    if (isShinRenew(st)) newProductCount++;   // 【v1.0720】新商品＋リニューアル
+    if (st === '選択前') sentakumaeCount++;   // 【v1.0867】選択前は別チップ
+    else if (isShinRenewOnly(st)) newProductCount++;   // 【v1.0720】新商品＋リニューアル（v1.0867〜 選択前を除く）
     else if (st === '健常-広告あり◯') sKenzenAd++;
     else if (st === '健常-広告なし◯') sKenzenNoad++;
     else if (st === '中立-広告あり□') sChuritsuAd++;
@@ -12194,6 +12202,7 @@ function updateStateCounts() {
   const cntAllAd = $('#cntAllAd'); if (cntAllAd) cntAllAd.textContent = `(${bidEnteredCount})`;   // 【v208】入札状態側の全体＝入札価格記入ありの数
   const cntAllPr = $('#cntAllPr'); if (cntAllPr) cntAllPr.textContent = `(${proTriIjouCount})`;   // 【v199/v1.0719】PR状態側の先頭＝△以上（現役全体ではない）
   const cntNew = $('#cntNewProduct'); if (cntNew) cntNew.textContent = `(${newProductCount})`;
+  { const _cs = $('#cntStatusSentakumae'); if (_cs) _cs.textContent = `(${sentakumaeCount})`; }   // 【v1.0867】
   // 【子タイプ未選択】各比率タブのバッジは【v1.0763】でタブごと撤去。
   //   ★タブを戻すときは、ここの計算も一緒に戻すこと（バッジだけ出ない状態になる）。
 }
@@ -12680,6 +12689,9 @@ function isProNgValue(p) { return p === 'PR×' || p === 'PRオプ×' || p === 'P
 // 【v1.0720】「新商品グループ」＝ 新商品 ＋ リニューアル（＋旧値 通常商品/現役商品）。
 //   一覧のセルではどちらも「新リニュ」と表示し、チップ new-product・件数・中立以上でも同じ1グループとして扱う。
 //   ★未設定（status なし）は '新商品' 扱い（あちこちの `meta.status || '新商品'` と合わせる）
+// 【v1.0867】チップ【新リニュ】用＝新商品＋リニューアル（＋旧値）。選択前は【別チップ】なので含めない。
+//   ★isShinRenew（選択前を含む）は「中立以上」の判定に残す。中立以上は従来どおり選択前も含む。
+function isShinRenewOnly(st) { return isShinRenew(st) && st !== '選択前'; }
 function isShinRenew(st) {
   return (st || '新商品') === '新商品' || st === 'リニューアル' || st === '通常商品' || st === '現役商品'
       || st === '選択前';   // 【v1.0861】選択前も同じ「まだ決めていない枠」。チップ【選択前-新リニュ】・件数・中立以上に入る
@@ -20755,7 +20767,8 @@ const STATE_FILTERS = {
   'pro-all':       { label: '△以上',     targetView: 'basic', basicMode: 'tune', match: (meta, code) => isProTriIjou(code) },   /* 【v1.0719】現役全体 → △以上（PR◯＋PR△＋選択前。PR✕は外す）。★キー 'pro-all' は保存され得るので変えない */
   // 【v1.0626】ステータス系の判定は effectiveStatusOf(code) を通す＝「子（親に追従）」は親として判定される。
   //   ★件数バッジ(updateStateCounts)も同じ関数を使っている。片方だけ直すと数と中身が合わなくなる。
-  'new-product':      { label: '選択前-新リニュ',  targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenew(effectiveStatusOf(code)) },   /* 【v1.0721】チップ名＝新リニュ（新商品＋リニューアル） */   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
+  'new-product':      { label: '新リニュ',         targetView: 'basic', basicMode: 'tune', match: (meta, code) => isShinRenewOnly(effectiveStatusOf(code)) },   /* 【v1.0867】選択前は別チップへ */
+  'status-sentakumae':{ label: '選択前',           targetView: 'basic', basicMode: 'tune', match: (meta, code) => effectiveStatusOf(code) === '選択前' },   /* 【v1.0867】 */   /* 【v1.0721】チップ名＝新リニュ（新商品＋リニューアル） */   // 【v1.0720】新商品＋リニューアル（＋旧値）。★件数(updateStateCounts)とまったく同じ関数で判定する
   // 【v1.0696】広告あり／なしをまとめた親チップ。★判定は「前方一致」ではなく2値の列挙にする
   //   （'健常' で startsWith にすると、将来「健常-〇〇」を足したとき黙って混ざる）
   'status-kenzen':    { label: '健常',             targetView: 'basic', basicMode: 'tune', match: (meta, code) => { const st = effectiveStatusOf(code); return st === '健常-広告あり◯' || st === '健常-広告なし◯'; } },
