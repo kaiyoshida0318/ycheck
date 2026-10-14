@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0874 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0875 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2531,6 +2531,16 @@ td.col-mom .up { color: #16a34a; }
 td.col-mom .down { color: #dc2626; }
 td.col-mom .flat { color: var(--text3); }
 td.col-mom .mom-na { color: var(--text3); }
+/* 【v1.0875】前月比の下段（増減率%）を6段階で色分け（本人指定）。上段の差額（円）は緑／赤のまま。
+   +40%以上＝青 / +20〜+40＝緑 / 0〜+20＝オレンジ / 0〜−20＝ピンク / −20〜−40＝赤 / −40以下＝エンジ。
+   ★境目ちょうど（+40 / +20 / −20 / −40）は「大きい側」の段に入れる。±0% はオレンジ。 */
+td.col-mom .mom-v[class*="mb-"] { opacity: 1; }
+td.col-mom .mom-v.mb-p40 { color: #1d4ed8; }
+td.col-mom .mom-v.mb-p20 { color: #15803d; }
+td.col-mom .mom-v.mb-p0  { color: #d97706; }
+td.col-mom .mom-v.mb-m0  { color: #db2777; }
+td.col-mom .mom-v.mb-m20 { color: #dc2626; }
+td.col-mom .mom-v.mb-m40 { color: #881337; }
 .status-select:focus { outline: none; border-color: var(--accent); }
 .status-select.ok { background: rgba(22,163,74,0.08); color: var(--green); border-color: rgba(22,163,74,0.3); }
 .status-select.ng { background: rgba(220,38,38,0.06); color: var(--red); border-color: rgba(220,38,38,0.3); }
@@ -4543,7 +4553,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0874</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0875</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4926,7 +4936,7 @@ th.col-sroas { background-color:#e7d5f5; }
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
               <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総売上</th>
               <!-- 【v1.0863】前月比。総売上の右に常に出す。クリックで降順⇄昇順（出せない行は常に一番下） -->
-              <th class="num col-mom" data-sort="mom" title="上＝差額（円）＝ 今月の総売上 − 前月を同じ日数にならした額&#10;下＝前月比（増減率）＝ 今月の総売上 ÷ 前月を同じ日数にならした額 − 100%（例: +15% / −6%）&#10;月の途中は、前月を【同じ日数ぶん】にならしてから比べます（例: 10月が7日分なら 前月 × 7/31）&#10;経過日数＝日別データがある日数。前月が欠けていれば1ヶ月分に引き伸ばしてから比べます&#10;★並べ替えは【差額（円）】で行います。増えた＝緑 / 減った＝赤&#10;前月の売上が0円の商品は 差額＝今月の売上、%は —／日選択中は —">前月比</th>
+              <th class="num col-mom" data-sort="mom" title="上＝差額（円）＝ 今月の総売上 − 前月を同じ日数にならした額&#10;下＝前月比（増減率）＝ 今月の総売上 ÷ 前月を同じ日数にならした額 − 100%（例: +15% / −6%）&#10;月の途中は、前月を【同じ日数ぶん】にならしてから比べます（例: 10月が7日分なら 前月 × 7/31）&#10;経過日数＝日別データがある日数。前月が欠けていれば1ヶ月分に引き伸ばしてから比べます&#10;★並べ替えは【差額（円）】で行います。差額（円）は 増えた＝緑 / 減った＝赤&#10;%の色：+40%以上＝青 / +20〜+40%＝緑 / 0〜+20%＝オレンジ / 0〜−20%＝ピンク / −20〜−40%＝赤 / −40%以下＝エンジ&#10;前月の売上が0円の商品は 差額＝今月の売上、%は —／日選択中は —">前月比</th>
               <!-- 【v1.0580】★推定列。商品別のPR実績額はYahooから取れないので、⑤の設定料率から推定している -->
               <th class="num col-sroas" data-sort="prsroas" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;PR広告売上ROAS(推定) ＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★商品別のPRオプ実績はYahooから取得できないため、⑤の設定PRオプ料率からの推定です（実測ではありません）。&#10;最低料率7％ぶんは必ず発生する固定費として分母から外しています。&#10;料率7％の商品は上乗せ分が0なので、広告売上ROASと同じ値になります。">PR広告<br>売上ROAS<span class="th-est">？</span><span class="th-sub"><span class="ts-rev">売上</span><span class="ts-sl">/</span><span class="ts-cost">PR・広告費</span></span></th>
               <!-- 【v1.0524/v1.0577】広告売上ROAS＝総売上÷広告実績額×100。【v1.0678】PR広告売上ROASの右へ移動 -->
@@ -14614,6 +14624,17 @@ function _momPctSigned(p) {
   if (v === 0) return '±0%';
   return (v > 0 ? '+' : '−') + Math.abs(v).toLocaleString('ja-JP') + '%';
 }
+// 【v1.0875】増減率（丸めた値）→ 色の段のクラス。境目ちょうどは大きい側（+40→青、−20→赤、−40→エンジ）。
+function _momBandCls(p) {
+  if (p == null || !isFinite(p)) return '';
+  const v = Math.round((+p || 0) - 100);
+  if (v >= 40)  return 'mb-p40';
+  if (v >= 20)  return 'mb-p20';
+  if (v >= 0)   return 'mb-p0';
+  if (v > -20)  return 'mb-m0';
+  if (v > -40)  return 'mb-m20';
+  return 'mb-m40';
+}
 function _momYen(d) {
   const v = Math.round(d);
   if (v === 0) return '±¥0';
@@ -14640,7 +14661,7 @@ function _momCellHtml(rev, prevRev, c) {
   const pct = (p != null) ? _momPctSigned(p) : '—';   /* 【v1.0871】94% → −6%（増減率。＋／−を付ける） */
   return '<td class="num col-mom" title="' + escapeHtml(lines.join('\n')) + '">'
     + '<span class="mom-yen ' + cls + '">' + _momYen(d) + '</span>'
-    + '<span class="mom-v ' + cls + '">' + pct + '</span></td>';
+    + '<span class="mom-v ' + (p != null ? _momBandCls(p) : cls) + '">' + pct + '</span></td>';   /* 【v1.0875】%は6段階の色 */
 }
 function _momHtml(rev, prevRev, c) {
   const p = _momRatio(rev, prevRev, c);
