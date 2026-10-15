@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0879 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0880 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4571,7 +4571,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0879</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0880</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5423,13 +5423,13 @@ th.col-sroas { background-color:#e7d5f5; }
           <!-- 【v1.0756】列見出しの下に計算式を出す/消す（1クリック） -->
           <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
           <span id="zdColorLegend" style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
-            <span class="filter-label" title="同じ列の中で月（日）どうしを比べた相対評価です。詳しくは「❓ 説明」の「色の意味」を参照">配色:</span>
+            <span class="filter-label" title="同じ列の中で月（日）どうしを比べた相対評価です。詳しくは「❓ 下部説明」の「色の意味」を参照">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
             <span id="zdColorScope" style="color:var(--text3)">（直近1年）</span>
           </span>
           <!-- 【v1.0521】この表の表示内容をCSV出力（右端配置） -->
           <!-- 【v1.0552】表の周りの説明文はここを押したときだけ出す（既定は畳む） -->
-          <button type="button" id="zdHelpBtn" onclick="_zdSetHelp(!_zdHelp)">❓ 説明</button>
+          <button type="button" id="zdHelpBtn" onclick="_zdSetHelp(!_zdHelp)">❓ 下部説明</button>
           <button class="btn sm ghost" id="btnDownloadZenMonthlyCsv" type="button" onclick="downloadZenMonthlyCsv()" data-tooltip="この表の表示内容（月×各指標＋送り込み売上）を、今の並び順（通常／前年同月比）のままCSV出力します">⬇ この表をCSV</button>
         </div>
         <!-- 【v1.0521/v1.0552】送り込み売上の説明は「❓ 説明」パネルへ移動（常時表示をやめた） -->
@@ -15066,14 +15066,15 @@ let _zdHelpWarn = false;
 function _zdSetHelpUI() {
   const b = document.getElementById('zdHelpBtn');
   if (!b) return;
-  b.textContent = (_zdHelpWarn ? '⚠ ' : '❓ ') + (_zdHelp ? '説明を閉じる' : '説明');
+  // 【v1.0880】ボタン名「説明」→「下部説明」（本人指定。押すと表の下に出ることが分かる名前に）
+  b.textContent = (_zdHelpWarn ? '⚠ ' : '❓ ') + (_zdHelp ? '下部説明を閉じる' : '下部説明');
   b.style.cssText = 'font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;margin-left:auto;'
     + (_zdHelp ? 'border:1px solid #1565C0;background:#1565C0;color:#fff;'
       : (_zdHelpWarn ? 'border:1px solid #d97706;background:#fffbeb;color:#b45309;'
         : 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);'));
   b.title = _zdHelpWarn
-    ? 'データの欠けについての注意があります。押すと注意書きと各列の説明を表示します'
-    : '各列の意味・色分けルール・料率別の内訳の説明を表示します';
+    ? 'データの欠けについての注意があります。押すと表の下に注意書きと各列の説明を表示します'
+    : '表の下に、各列の意味・色分けルール・料率別の内訳の説明を表示します';
 }
 function _zdSetHelp(b) { _zdHelp = !!b; _zdSetHelpUI(); renderGraphData(); }
 window._zdSetHelp = _zdSetHelp;
