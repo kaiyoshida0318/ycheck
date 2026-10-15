@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0882 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0884 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1634,8 +1634,8 @@ body.basic-tune #view-basic .filters { overflow: visible; flex-wrap: wrap; row-g
 /* 【v1.0882】調整-PRオプにも「順位取得CSV(GitHub反映)」を置いた → 調整-基本と同じ理由（ボタンの data-tooltip が下へはみ出し、
    overflow-x:auto の行だと Windows の Chrome で縦横のスクロールバーが出る §250）で、スクロール容器にせず、入りきらないときだけ折り返す。
    ★折り返す行では、ボタンは縮めずに次の段へ送る（縮めると「対応内容-全更新…」のように文字が切れる）。 */
-#view-pro-tune .filters { overflow: visible; flex-wrap: wrap; row-gap: 8px; }
-#view-pro-tune .filters .btn { flex-shrink: 0; }
+#view-pro-tune .filters, #view-ad-tune .filters { overflow: visible; flex-wrap: wrap; row-gap: 8px; }   /* 【v1.0884】調整-入札価格も（表示ボタンで幅が増えたため） */
+#view-pro-tune .filters .btn, #view-ad-tune .filters .btn { flex-shrink: 0; }
 #view-ad-tune .filters input[type="search"], #view-pro-tune .filters input[type="search"],
 #view-ad-data .filters input[type="search"], #view-pr-data .filters input[type="search"],
 #view-basic .filters input[type="search"] { flex: 0 1 auto; min-width: 110px; }
@@ -4426,6 +4426,17 @@ tr.np-flash > td { animation: npFlash 2.2s ease; }
    ★合算・両表示では行がセット単位なので、親か子かで絞る意味が無い。
      ボタンを消さずに薄くするのは、「いま押せない」ことと「そもそも無い」ことを区別するため。 */
 .soi-pc-seg.is-off .soi-pc-btn { opacity: 0.3; pointer-events: none; filter: grayscale(0.5); }
+/* 【v1.0884】調整-入札価格／調整-PRオプの「表示」（全表示／通常商品のみ／親商品のみ／子商品のみ）。ラジオ式。
+   色は送り込みの印と同じ（親＝緑・子＝黄）。選んでいるものだけ塗る。 */
+.tune-show-bar .tsb-btn { display: inline-flex; align-items: center; gap: 4px; }
+.tune-show-bar .tsb-btn .rep-icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.tune-show-bar .tsb-n { font-size: 0.72rem; font-weight: 700; opacity: .75; font-variant-numeric: tabular-nums; }
+.tune-show-bar .tsb-btn.on { background: #475569; color: #fff; }
+.tune-show-bar .tsb-parent { color: #15803d; }
+.tune-show-bar .tsb-parent.on { background: var(--green); color: #fff; }
+.tune-show-bar .tsb-child { color: #92400e; }
+.tune-show-bar .tsb-child.on { background: #fcd34d; color: #92400e; }
+.tsb-lbl { margin-right: -4px; }
 /* 【v1.0792】「全表示」は絞り込み解除のボタン。段（合算/個別/両表示）とは別物なので
    .on は付かない。色も分けて「モードではない」ことを示す。 */
 .segf-btn.segf-act { background: var(--bg2); color: var(--text2); font-weight: 700; }
@@ -4577,7 +4588,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0882</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0884</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5608,18 +5619,16 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label">検索</span>
           <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
+<!-- 【v1.0884】本人指定：「表示」（全表示／通常商品のみ／親商品のみ）と「まとめ方」（合算／個別／両表示）を分けた。
+               ・表示＝state.repFilter（'' / '!' / '*P'）。必ずどれか1つが選ばれている（ラジオ式）。全表示は送り込みの絞り込みだけを外す（他の絞り込みは残す）。
+               ・まとめ方＝basicRowMode。表示とは独立で、いつでも選べる（v1.0792 の「親／子は個別のときだけ」はこの2画面では使わない）。 -->
+          <span class="filter-label tsb-lbl">表示</span>
+          <span class="seg-filter tune-show-bar" data-kind="ad" role="group" aria-label="表示する商品"><button type="button" class="segf-btn tsb-btn" data-repf="" title="送り込みの絞り込みなし（通常商品も親子も全部）">全表示<span class="tsb-n" data-tsbn="all"></span></button><button type="button" class="segf-btn tsb-btn" data-repf="!" title="送り込み（親子設定）が無い商品だけ">通常商品のみ<span class="tsb-n" data-tsbn="normal"></span></button><button type="button" class="segf-btn tsb-btn tsb-parent" data-repf="*P" title="送り込み元（親）だけ。合算・両表示では親のセット行"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>親商品のみ<span class="tsb-n" data-tsbn="parent"></span></button></span>
+          <span class="filter-label tsb-lbl">まとめ方</span>
           <span class="seg-filter js-rowmode-bar" id="adTuneRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
-          <span class="soi-pc-seg" id="adTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
-            <button type="button" class="soi-pc-btn both" data-repf="*A"
-              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
-            <button type="button" class="soi-pc-btn parent" data-repf="*P"
-              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="parent"></span></button>
-            <button type="button" class="soi-pc-btn child" data-repf="*C"
-              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
-          </span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
+          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。入札価格の全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteAdTuneNoteAll" title="入札価格の対応内容欄をすべて空白に（メモ書きも含めて全削除）。入札価格の全商品が対象">🗑 対応内容-全削除</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
@@ -5715,20 +5724,18 @@ th.col-sroas { background-color:#e7d5f5; }
           <span class="filter-label">検索</span>
           <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
+<!-- 【v1.0884】本人指定：「表示」（全表示／通常商品のみ／親商品のみ／子商品のみ）と「まとめ方」（合算／個別／両表示）を分けた。
+               ・表示＝state.repFilter（'' / '!' / '*P' / '*C'）。必ずどれか1つが選ばれている（ラジオ式）。全表示は送り込みの絞り込みだけを外す（他の絞り込みは残す）。
+               ・まとめ方＝basicRowMode。表示とは独立で、いつでも選べる（v1.0792 の「親／子は個別のときだけ」はこの2画面では使わない）。 -->
+          <span class="filter-label tsb-lbl">表示</span>
+          <span class="seg-filter tune-show-bar" data-kind="pro" role="group" aria-label="表示する商品"><button type="button" class="segf-btn tsb-btn" data-repf="" title="送り込みの絞り込みなし（通常商品も親子も全部）">全表示<span class="tsb-n" data-tsbn="all"></span></button><button type="button" class="segf-btn tsb-btn" data-repf="!" title="送り込み（親子設定）が無い商品だけ">通常商品のみ<span class="tsb-n" data-tsbn="normal"></span></button><button type="button" class="segf-btn tsb-btn tsb-parent" data-repf="*P" title="送り込み元（親）だけ。合算・両表示では親のセット行"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>親商品のみ<span class="tsb-n" data-tsbn="parent"></span></button><button type="button" class="segf-btn tsb-btn tsb-child" data-repf="*C" title="送り込み先（子）だけ。合算・両表示では子を含むセット行"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>子商品のみ<span class="tsb-n" data-tsbn="child"></span></button></span>
+          <span class="filter-label tsb-lbl">まとめ方</span>
           <span class="seg-filter js-rowmode-bar" id="proTuneRollupBar" role="group" aria-label="個別/合算"
-            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn segf-act js-showall" title="ステータス・広告・送り込み・ROAS帯・検索の絞り込みをすべて解除して、商品を全部表示します（行のまとめ方は変えません）">全表示</button><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
-          <span class="soi-pc-seg" id="proTuneSoiPcBar" role="group" aria-label="親／子で絞り込み">
-            <button type="button" class="soi-pc-btn both" data-repf="*A"
-              title="送り込みがある商品を全部表示する（親＋子の両方）。もう一度押すと解除。&#10;※商品コードの左に緑か黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="both"></span></button>
-            <button type="button" class="soi-pc-btn parent" data-repf="*P"
-              title="送り込み元（親）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に緑のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="parent"></span></button>
-            <button type="button" class="soi-pc-btn child" data-repf="*C"
-              title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
-          </span>
+            title="合算＝同じ代表コードの親子を1セットにまとめ、合計してから広告売上ROAS等を計算し直す&#10;個別＝送り込み元と送り込み先を別々の行で表示（従来）&#10;両表示＝合算の行の下に、その内訳（親子1件ずつ）をぶら下げて表示"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <!-- 【v1.0882】調整-基本と同じ「順位取得CSV(GitHub反映)」を調整-PRオプにも（本人指定）。中身・変動アラートは共通（updateCsvDownloadButtonState が両方を更新） -->
           <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
-          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
+          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
@@ -14366,13 +14373,16 @@ function _basicSyncNavTabs() {
 }
 let basicRowMode = 'sum';   // 【v1.0680】既定を「合算」に変更（v1.0679までは 'each'＝個別）
 function _basicIsRollup() { return basicRowMode !== 'each'; }   // 合算の集計をかけるか
+// 【v1.0884】「表示（全表示／通常商品のみ／親商品のみ／子商品のみ）」を持つ画面か
+function _isTuneShowView(v) { v = v || state.currentView; return v === 'ad-tune' || v === 'pro-tune'; }
 function setBasicRowMode(mode) {
   const v = (mode === 'sum' || mode === 'both') ? mode : 'each';
   if (basicRowMode === v) return;
   basicRowMode = v;
   // 【v1.0792】★合算・両表示では親／子の絞り込みが使えなくなるので、掛かっていたら外す。
   //   押せないボタンの絞り込みが残ると、件数が減った理由が画面から分からなくなる。
-  if (v !== 'each' && ['*A', '*P', '*C'].indexOf(state.repFilter) >= 0) {
+  // 【v1.0884】★調整-入札価格／調整-PRオプでは外さない（「表示」と「まとめ方」は独立。親商品のみ＋合算 等を選べるようにした）
+  if (v !== 'each' && ['*A', '*P', '*C'].indexOf(state.repFilter) >= 0 && !_isTuneShowView()) {
     state.repFilter = null;
     if (typeof updateRepFilterUI === 'function') { try { updateRepFilterUI(); } catch (e) {} }
     if (typeof updateFilterBanners === 'function') { try { updateFilterBanners(); } catch (e) {} }
@@ -17306,6 +17316,26 @@ let _editPinnedCodes = new Set();
 function clearEditPins() { _editPinnedCodes.clear(); }
 function pinEditedCode(code) { if (code) _editPinnedCodes.add(code); }
 function resetTuneMembers() { tuneFrozenMembers = null; _editPinnedCodes.clear(); }
+// 【v1.0883】★「全体」から外す商品＝「対応内容-全更新処理」で今サイクル確認済みにした商品（adReviewed / proReviewed）。
+//   本人：「全更新処理を押したのにまだ全体に残ってる。絞って押したら、その絞ったものだけ消えるようにして」。
+//   ・v1.0882 までは「全体」＝対象商品すべて（絞り込みなし）だったので、全更新処理をしても何も消えなかった。
+//   ・確認済みの印は「最新値を更新」（新しい確認サイクル）で全解除される（commitUpload）→ そこで「全体」にも戻る。
+//     値を再調整した商品もその場で印が外れて戻る（_setTuneReviewed(…, false)）。
+//   ★修正ありに入っている商品でも、確認済みなら「全体」からは外す（押したものが必ず消える、を優先）。
+//     最初は「全体＝各グループを含む」を守って修正ありの商品は残していたが、調整-PRオプの合算では
+//     セットの子（PR◯-子-7％固定・SEO上位でない＝修正あり）が残るせいでセット行ごと消えなかった。
+//     修正ありの商品は「修正あり」ボタンの方には出続ける（当日対応した代表は当日だけ外れる＝従来どおり）。
+function _tuneShowInAll(code, kind) {
+  const m = (state.productMeta || {})[code] || {};
+  return !((kind === 'ad') ? m.adReviewed : m.proReviewed);
+}
+// 【v1.0883】いま表に出している商品（表ごと）。全更新処理はこれを対象にする（合算のセット行はメンバー全員）。
+const _tuneShownByTable = {};
+function _tuneRecordShown(tableSel, list) {
+  const set = new Set();
+  (list || []).forEach(r => { _rfMembersOf(r).forEach(c => { if (c) set.add(c); }); });
+  _tuneShownByTable[tableSel] = set;
+}
 function ensureTuneMembers(kind) {
   if (tuneFrozenMembers) return;  // 既に凍結済みなら作り直さない
   const set = new Set();
@@ -17316,7 +17346,7 @@ function ensureTuneMembers(kind) {
   codes.forEach(code => {
     if (isRetired(code)) return;
     if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return;   // 【v1.0658】子は入札なし扱い
-    const inGroup = (tuneGroup === 'all') ? true : (getTuneGroup(code, kind) === tuneGroup);
+    const inGroup = (tuneGroup === 'all') ? _tuneShowInAll(code, kind) : (getTuneGroup(code, kind) === tuneGroup);   // 【v1.0883】全体も確認済みを外す
     if (inGroup) set.add(code);
   });
   tuneFrozenMembers = set;
@@ -17623,7 +17653,7 @@ function updateTuneBar() {
       if (_adAxisOn && !(_xfInScope(code) && _xfHasAd(code) === _wantAd)) return;   // 広告軸
     }
     if (_chip && typeof _chip.match === 'function' && !_chip.match(state.productMeta[code] || {}, code)) return;   // 状態チップ
-    cAll++;  // この調整タブの対象商品（全体ボタンの対象）
+    if (_tuneShowInAll(code, kind)) cAll++;  // この調整タブの対象商品（全体ボタンの対象）【v1.0883】全更新処理で確認済みにした商品は数えない
     const g = getTuneGroup(code, kind);
     if (g === 'fix') cFix++;
     else if (g === 'watch') cWatch++;
@@ -17805,6 +17835,7 @@ function renderAdAdjust(cfg) {
   if (!_dataRoll) list = applyRepGrouping(list);
   if (_dataRoll && basicRowMode === 'both') list = _dataExpandBoth(list, _preByCode);   // 【v1.0650】
   // 【v134】親子表示のための分類
+  _tuneRecordShown(tableSel, list);   // 【v1.0883】全更新処理の対象＝いま表示している商品（合算のセット行はメンバー全員）
   const _pcSetsAdAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
     const bid = getBid(r.code);   // 【v1.0587】小文字フォールバック付き（renderBasic / renderAdAdjust 共通）
@@ -18066,6 +18097,7 @@ function renderProAdjust(cfg) {
   if (!_dataRoll) list = applyRepGrouping(list);
   if (_dataRoll && basicRowMode === 'both') list = _dataExpandBoth(list, _preByCode);   // 【v1.0650】
   // 【v134】親子表示のための分類
+  _tuneRecordShown(tableSel, list);   // 【v1.0883】
   const _pcSetsProAdj = buildParentChildSets(list);
   list.slice(0, 2000).forEach(r => {
     const pr = getProRate(r.code);
@@ -21022,6 +21054,12 @@ function switchToView(viewName) {
   // 【v208】プログラム経由のビュー切替でも凍結を解除
   adAdjustFrozenOrder = null;
   proAdjustFrozenOrder = null;
+  // 【v1.0884】調整-入札価格／調整-PRオプで「親商品のみ／子商品のみ」＋合算・両表示にしたまま他の画面へ移ったら、親／子の絞り込みを外す。
+  //   他の画面は v1.0792 のまま（親／子ボタンは「個別」のときだけ押せる）なので、押せないボタンの絞り込みが残ると件数が減った理由が分からなくなる。
+  if (!_isTuneShowView(viewName) && basicRowMode !== 'each' && ['*A', '*P', '*C'].indexOf(state.repFilter) >= 0) {
+    state.repFilter = null;
+    try { updateRepFilterUI(); } catch (e) {}
+  }
 }
 
 function applyStateFilter(filterKey) {
@@ -21312,8 +21350,8 @@ function buildTuneCondHtml(kind) {
   const ngName   = isAd ? '入札×' : 'PRオプ×';
   const upName   = isAd ? '広告' : 'SEO';
   const allText  = isAd
-    ? 'この調整タブの対象商品<b>すべて</b>（入札○・×の全商品。入札なしは除外）。絞り込みなし。'
-    : 'この調整タブの対象商品<b>すべて</b>（PRオプ○・×の全商品）。絞り込みなし。';
+    ? 'この調整タブの対象商品<b>すべて</b>（入札○・×の全商品。入札なしは除外）。<small>※「対応内容-全更新処理」で確認済みにした商品は外れ、「最新値を更新」で再表示されます。</small>'
+    : 'この調整タブの対象商品<b>すべて</b>（PRオプ○・×の全商品）。<small>※「対応内容-全更新処理」で確認済みにした商品は外れ、「最新値を更新」で再表示されます。</small>';
   const sortFoot = isAd
     ? '表の実績額・広告ROASは当月を除いた完了3ヶ月、最新完了月で降順。'
     : '表のSEO売上は当月を除いた完了3ヶ月、最新完了月で降順。';
@@ -21672,6 +21710,11 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
     const cd = c.dataset.code;
     if (cd && !seen[cd]) { seen[cd] = 1; codes.push(cd); }
   });
+  // 【v1.0883】合算のセット行は、対応内容の欄が代表（親）の1つしか無い。行を消すには、行に入っている他のメンバーも
+  //   確認済みにする必要がある（しないと、子が「全体」に残っているせいでセット行ごと残る）。
+  //   ★メンバーは「確認済み」の印だけ付ける（対応内容・対応日は書かない＝画面に出ていない欄を書き換えない）。
+  const _shown = _tuneShownByTable[tableSel] || new Set();
+  const extraMembers = [..._shown].filter(c => !seen[c]);
   if (!codes.length) { alert(`${label}：ここに表示されている商品がありません。`); return; }
   // 内訳（更新日時を記入する件数 / メモを維持する件数）
   let stampCount = 0, keepCount = 0;
@@ -21682,7 +21725,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
   const msg = `${label}：今ここに表示されている【${codes.length}件】をすべて「対応済み」にします。\n\n`
     + `・空欄／更新日時のみ … ${stampCount}件 → 本日の更新日時を記入\n`
     + `・メモが入っている行 … ${keepCount}件 → 対応内容はそのまま維持\n\n`
-    + `いずれも本日対応済みとなり、この一覧（修正あり・推移確認・未確認）からは消えます。\n実行してよろしいですか？`;
+    + `いずれも本日対応済みとなり、この一覧（全体・修正あり・推移確認・未確認）からは消えます（次に「最新値を更新」すると再表示）。\n実行してよろしいですか？`;
   if (!confirm(msg)) return;
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
@@ -21696,8 +21739,9 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
     if (note === '' || isAutoTimestamp(note)) meta[field] = stamp;  // 空欄/更新日時のみ→本日の更新日時
     // 【v1.0461】メモが入っている行は対応内容を変更しない（そのまま維持）
     markTuneAction(code, kind);  // 当日「対応済み」＝修正あり等から外れる
-    _setTuneReviewed(code, kind, true);  // 【v1.0398】レビュー済み→推移確認/未確認から外して全体のみに
+    _setTuneReviewed(code, kind, true);  // 【v1.0398】レビュー済み→推移確認/未確認から外す／【v1.0883】全体からも外す
   });
+  extraMembers.forEach(code => { if (state.productMeta[code]) _setTuneReviewed(code, kind, true); });   // 【v1.0883】セット行のメンバー
   resetTuneMembers();  // 凍結解除→再分類で対応済みを一覧から外す
   saveToStorage();
   renderAll();
@@ -25318,6 +25362,7 @@ function updateRepFilterUI() {
     if (f && b.dataset.rep === f) b.classList.add('active');
     else b.classList.remove('active');
   });
+  try { _tuneShowSync(); } catch (e) {}   // 【v1.0884】
   // 【v1.0619/v1.0621】親＋子 / 親 / 子 ボタンの選択表示と件数（撤退済みは数えない＝一覧の母集団に合わせる）
   //   ★ボタンは data-repf に state.repFilter の値そのもの（'*' / '*P' / '*C'）を持っている。
   document.querySelectorAll('.soi-pc-btn').forEach(b => {
@@ -25346,6 +25391,46 @@ function updateRepFilterUI() {
     document.querySelectorAll('#cntSoiChild, [data-soicnt="child"]').forEach(e => { e.textContent = nC; });
   } catch (e) {}
 }
+// 【v1.0884】調整-入札価格／調整-PRオプの「表示」ボタン（ラジオ式）。選択表示と件数。
+//   件数＝その画面の対象商品（撤退を除く。調整-入札価格は入札なしも除く＝ensureTuneMembers と同じ母集団）の商品数。
+//   ★🔗バッジのグループ絞り込み（repFilter＝商品コード）のときは、どれも選ばれていない表示になる（全表示を押せば外れる）。
+function _tuneShowSync() {
+  const bars = document.querySelectorAll('.tune-show-bar');
+  if (!bars.length) return;
+  const f = state.repFilter || '';
+  bars.forEach(bar => bar.querySelectorAll('.tsb-btn').forEach(b => b.classList.toggle('on', (b.dataset.repf || '') === f)));
+  try {
+    const referenced = getReferencedRepCodes();
+    const pm = state.productMeta || {};
+    const codes = new Set(Object.keys(state.master || {}));
+    (state.item || []).forEach(i => codes.add(i.code));
+    (state.ad || []).forEach(a => codes.add(a.code));
+    try { dailyCodes().forEach(c => codes.add(c)); } catch (e) {}
+    bars.forEach(bar => {
+      const kind = bar.dataset.kind;
+      const n = { all: 0, normal: 0, parent: 0, child: 0 };
+      codes.forEach(code => {
+        if (isRetired(code)) return;
+        if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return;
+        n.all++;
+        if (!_repHasSoikomi(code, referenced)) n.normal++;
+        if (_isSoiParent(code, referenced)) n.parent++;
+        if (_isSoiChild(code, ((pm[code] || {}).repCode || '').trim())) n.child++;
+      });
+      bar.querySelectorAll('[data-tsbn]').forEach(e => { e.textContent = n[e.dataset.tsbn]; });
+    });
+  } catch (e) {}
+}
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest && e.target.closest('.tune-show-bar .tsb-btn');
+  if (!btn) return;
+  e.preventDefault();
+  const v = btn.dataset.repf || '';
+  if ((state.repFilter || '') === v) return;   // ラジオ式：同じボタンでは外さない
+  state.repFilter = v || null;
+  updateRepFilterUI();
+  renderAll();
+});
 // 絞り込み解除
 function clearRepFilter() {
   state.repFilter = null;
