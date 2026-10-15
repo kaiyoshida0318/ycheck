@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0875 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0876 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4553,7 +4553,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0875</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0876</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4767,7 +4767,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <span class="sg-empty"></span>   <!-- 【v1.0867】4列目（新リニュ）の空き -->
     <button class="state-chip" data-state="ad-ok" title="入札◯"><span class="chip-label">入札◯</span><span class="chip-num" id="cntAdOk">(0)</span></button>
     <!-- 【v1.0715】入札△＝調整中＋飛ぶ手前固定。✕のチップは廃止（✕の値そのものが無くなったため） -->
-    <button class="state-chip" data-state="ad-tri" title="入札△（入札△-調整中 ＋ 入札△-飛ぶ手前固定）"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdTri">(0)</span></button>
+    <button class="state-chip" data-state="ad-tri" title="入札△（◯の形へ調整中のもの ＋ 飛ぶ手前の金額で固定したもの）"><span class="chip-label">入札△</span><span class="chip-num" id="cntAdTri">(0)</span></button>
     <span class="sg-empty"></span>
     <span class="sg-empty"></span>
     <button class="state-chip" data-state="ad-none" title="入札なし（子商品は親に追従するので全て入札なし）"><span class="chip-label">入札なし</span><span class="chip-num" id="cntAdNone">(0)</span></button>
@@ -4778,7 +4778,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     <span class="sg-empty"></span>   <!-- 【v1.0867】4列目（新リニュ）の空き -->
     <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
-    <button class="state-chip" data-state="pro-tri" title="PR△（PR△-調整中 ＋ PR△-親-下げ挑戦中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
+    <button class="state-chip" data-state="pro-tri" title="PR△（PR△-調整中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
     <span class="sg-empty"></span>
     <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
     <span class="sg-empty"></span>
@@ -8543,6 +8543,7 @@ async function ghLoadFromGitHub(opts) {
       migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
       migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
       migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
+      migrateProStatusV1876();   // 【v1.0876】PR△-親-下げ挑戦中 の廃止（一度きり）
     } catch (eMig) { console.warn('[Ycheck診断-load] マイグレーションで例外（読込は継続）:', eMig && eMig.message); }
     // 【v1.0384】localStorageへ書き戻し。容量超過でも critical(productMeta/bid/proRate) は必ず残るよう、
     //   rank→item→ad の順に段階的に落として最小構成でも書き切る。従来は「フル→rank無し」で失敗すると
@@ -8640,6 +8641,7 @@ async function ghLoadFromPublic() {
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
     migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
     migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
+    migrateProStatusV1876();   // 【v1.0876】PR△-親-下げ挑戦中 の廃止（一度きり）
     ghLog(`閲覧専用: 公開データ取得成功 (${(content.length / 1024).toFixed(1)} KB)`);
     return true;
   } catch (err) {
@@ -9561,6 +9563,7 @@ function loadFromStorage() {
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
     migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
     migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
+    migrateProStatusV1876();   // 【v1.0876】PR△-親-下げ挑戦中 の廃止（一度きり）
     return data.savedAt || true;
   } catch (err) { console.error(err); return false; }
 }
@@ -9750,6 +9753,34 @@ function migrateProStatusV1636() {
   if (nMerge || nDrop) {
     console.log('Ycheck: 【v1.0636】PRオプ状態を整理: 親固定→飛ぶ手前固定 ' + nMerge + '件 / 子-7％固定→未設定 ' + nDrop + '件');
     try { ycLog('edit', '【v1.0636】PRオプ状態を整理: 「PR△-親-飛ぶ手前固定」→「PR△-飛ぶ手前固定」' + nMerge + '件 ／ 「PR△-子-7％固定」→未設定 ' + nDrop + '件（一度きり・元の値は _proStatusBeforeV1636 に保存）'); } catch (e) {}
+    saveToStorage();
+  }
+}
+
+// 【v1.0876】PRオプ状態「PR△-親-下げ挑戦中」の廃止（一度きり）。
+//   → 'PR△-調整中' に寄せる。v1.0713 以来どちらも「いま動かしている最中」で同じ扱い
+//     （proStatusIsCross・PR△チップ・調整グループ）なので、件数や絞り込みの結果は変わらない。
+//   ★元の値は meta._proStatusBeforeV1876 に控える。フラグは rankMeta（GitHub同期）と localStorage の両方。
+function migrateProStatusV1876() {
+  if (!state.productMeta) return;
+  let done = false;
+  try { if (localStorage.getItem('ycheck_proStatusV1876')) done = true; } catch (e) {}
+  if (state.rankMeta && state.rankMeta.proStatusV1876) done = true;
+  if (done) return;
+  const ts = Date.now();
+  let n = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const m = state.productMeta[code];
+    if (!m || m.proStatus !== 'PR△-親-下げ挑戦中') return;
+    m._proStatusBeforeV1876 = m.proStatus; m.proStatus = 'PR△-調整中';
+    m.proStatusTs = ts; m._ts = ts; n++;
+  });
+  state.rankMeta = state.rankMeta || {};
+  state.rankMeta.proStatusV1876 = true;
+  try { localStorage.setItem('ycheck_proStatusV1876', '1'); } catch (e) {}
+  if (n) {
+    console.log('Ycheck: 【v1.0876】PR△-親-下げ挑戦中 → PR△-調整中 ' + n + '件');
+    try { ycLog('edit', '【v1.0876】PRオプ状態「PR△-親-下げ挑戦中」を廃止 → 「PR△-調整中」へ ' + n + '件（一度きり・元の値は _proStatusBeforeV1876 に保存）'); } catch (e) {}
     saveToStorage();
   }
 }
@@ -12828,7 +12859,10 @@ const AD_STATUS_OPTIONS  = ['', '入札◯', '入札△', '入札なし'];
 //   ★色（STATUS_TEXT_COLOR）・略称（STATUS_DISPLAY_LABEL）・並び順（PRO_STATUS_ORDER）の
 //     旧キーは残してある。移行前のデータや他端末の古い保存値が来ても表示が崩れないようにするため。
 // 【v1.0713】'PR△-調整中' を追加。◯系（青）と△系（黄）の境目＝△グループの先頭に置く
-const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR◯-親-30％固定', 'PR◯-子-7％固定', 'PR△-調整中', 'PR△-親-下げ挑戦中', 'PR△-飛ぶ手前固定', 'PR×'];
+// 【v1.0876】'PR△-親-下げ挑戦中' を選択肢から外す（本人：「もう無くなっているステータス」）。
+//   保存済みの値は migrateProStatusV1876 が一度だけ 'PR△-調整中' に寄せる（判定はどちらも同じ＝調整中・PR△チップ）。
+//   ★色・略称・並び順・proStatusIsCross などの旧キーは残す（他端末の古い保存値が来ても崩れないように）。
+const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR◯-親-30％固定', 'PR◯-子-7％固定', 'PR△-調整中', 'PR△-飛ぶ手前固定', 'PR×'];
 // 【v1.0658】◯系を2つ追加（どちらも「いま直すことはない」＝対応不要）。
 //   PR◯-親-30％固定 … 送り込み元。7％まで下げず、上位表示を取るために高い料率のまま固定している
 //   PR◯-子-7％固定  … 送り込み先。最低料率7％から動かしようがない（v1.0636で廃止した 'PR△-子-7％固定' の置き換え）
@@ -21159,8 +21193,7 @@ const INFO_PRO_DESC = {
   'PR◯': 'PRオプ料率が最安の <b>7%</b>、かつ <b>SEO順位が1〜6位</b>。',
   'PR◯-親-30％固定': '<b>送り込み元（親）</b>。7%まで下げず、上位表示を取るために<b>高い料率のまま固定</b>しているもの。対応不要。',
   'PR◯-子-7％固定': '<b>送り込み先（子）</b>。最低料率の <b>7%から動かしようがない</b>もの。対応不要。',
-  'PR△-調整中': '◯の形へ持っていく<b>調整中</b>のもの。',
-  'PR△-親-下げ挑戦中': '<b>親</b>。30%等で上位表示させて子へ送り込みつつ、<b>料率を下げられるか試している</b>もの。',
+  'PR△-調整中': '◯の形へ持っていく<b>調整中</b>のもの（親の料率をどこまで下げられるか試しているものも、ここに入れます）。',
   'PR△-飛ぶ手前固定': '下げると上位表示が飛ぶ<b>手前の料率で固定完了</b>。月1チェック用に「未確認」に出ます（料率を変えると推移確認へ）。',
   // 【v1.0832】★ステータス名は statusOptionLabel() を通して入れる（'撤退予定' → 「削除予定」）。
   //   ここに「削除予定」と直書きすると、言い換え表（STATUS_OPTION_LABEL）を変えたときに
@@ -21172,9 +21205,9 @@ const INFO_PRO_DESC = {
 
 const INFO_LIFE_DESC = {
   '—': '未設定。まだ何も決めていないもの。',
-  '選択前': '<b>追加されたばかりで、まだステータスを選んでいない</b>もの。新しく追加された商品は最初これになります。チップの【選択前-新リニュ】にまとまります。',
-  '新商品': '登録して間もない、<b>評価がまだ決まっていない</b>もの。',
-  'リニューアル': '<b>作り直した直後</b>のもの。新商品と同じ枠（チップの【選択前-新リニュ】）にまとまります。',
+  '選択前': '<b>追加されたばかりで、まだステータスを選んでいない</b>もの。新しく追加された商品は最初これになります。チップの【選択前】に入ります。',
+  '新商品': '登録して間もない、<b>評価がまだ決まっていない</b>もの。チップの【新リニュ】に入ります。',
+  'リニューアル': '<b>作り直した直後</b>のもの。新商品と同じ枠（チップの【新リニュ】）に入ります。',
   '子（親に追従）': '<b>親のステータスをそのまま読む</b>という意思表示。入札状態は「入札なし」、PR状態は「PR◯-子-7％固定」として扱われます。',
   '健常◯': '<b>良好</b>。いまのところ手を入れなくてよいもの。',
   '中立△': '悪くはないが<b>健常◯には届いていない</b>もの。<b>調整して健常◯へ引き上げる</b>対象です。',
