@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0880 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0881 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4571,7 +4571,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0880</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0881</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -25766,13 +25766,19 @@ function _vpPreviewColWidth(key, px) {
 //   目的: auto-layoutではthのwidth/max-widthが content幅より小さくならず、メインKW等を「ギリギリまで左に」縮められない。
 //   対策: 表示済み(幅測定可能)かつ行がある時点で全列の自然幅を採寸し、その幅でfixed化。以後は各列を保存幅まで自由に縮小可。
 //   見た目: キャプチャした自然幅をそのまま採用するので、変換直後の既定表示は従来と同じ。
+const FIXED_LAYOUT_TABLES = ['tableBasic', 'tableAdTune', 'tableProTune', 'tableWithdraw'];   // 【v1.0881】
 function _ensureFixedLayout() {
   document.querySelectorAll('table').forEach(table => {
     // 【v1.0382】固定レイアウト化は商品-基本データ(#tableBasic)のみに限定。入札価格調整/PRオプ調整等は固定列・色付き列があり自然幅キャプチャで列崩れ(かぶり/隙間)が出たため対象外に戻す。
-    if (table.id !== 'tableBasic') return;
+    // 【v1.0881】調整-入札価格／調整-PRオプ／撤退 も固定レイアウトにする（本人：調整-入札価格の商品コードが 207px より狭くならない）。
+    //   自動レイアウトのままだと列は中身（一番長い商品コード）より狭くできない。v1.0865 で「隠れた列を測らない」
+    //   「まだ触っていない列は残りを比率で分ける（_colFitFixedTables）」を入れたので、v1.0382 の崩れは起きないことを確認済み。
+    if (FIXED_LAYOUT_TABLES.indexOf(table.id) < 0) return;
     if (table.dataset.fixedInit === '1') return;                 // 変換済みはスキップ
     if (!table.querySelector('th[data-resize-key]')) return;     // リサイズ対象の表のみ
     if (!table.querySelector('tbody tr')) return;                // 行がまだ無い（データ前）なら見送り
+    // 【v1.0881】「この区分の商品はありません」だけ（colspan の1セル）の表は、見出しだけの幅で固まってしまうので見送る
+    if (!table.querySelector('tbody tr td:not([colspan])')) return;
     if (!table.getBoundingClientRect().width) return;            // 非表示（幅0）の表は測れないので見送り
     const ths = Array.from(table.querySelectorAll('thead th'));
     if (!ths.length) return;
