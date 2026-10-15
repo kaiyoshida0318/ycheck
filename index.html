@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0876 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0877 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1958,12 +1958,27 @@ body.col-resize-on .data-grid thead th { box-shadow: inset -1px 0 0 rgba(37,99,2
 tfoot.yc-wrow-foot td.yc-wrow-td { position: sticky; bottom: 0; z-index: 4; background: #fff7e0 !important;
   border-top: 2px solid #f59e0b; padding: 4px 3px !important; text-align: center; overflow: hidden; }
 tfoot.yc-wrow-foot td.yc-wrow-td.is-locked { background: #e0ecff !important; }
-.yc-wrow { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; }
+.yc-wrow { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; max-width: 100%; }   /* 【v1.0877】数値の下に「ロック」の文字ボタン */
 .yc-wrow-in { width: 52px; min-width: 0; flex: 0 1 auto; font: inherit; font-size: 12px; padding: 2px 3px; text-align: right;
   border: 1px solid #f59e0b; border-radius: 4px; background: #fff; -moz-appearance: textfield; }
 .yc-wrow-in::-webkit-inner-spin-button, .yc-wrow-in::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .yc-wrow-in:disabled { border-color: #93c5fd; color: #1e40af; background: #f1f6ff; font-weight: 700; }
-.yc-wrow-lock { flex: 0 0 auto; border: none; background: transparent; cursor: pointer; font-size: 13px; padding: 0 1px; line-height: 1; }
+/* 【v1.0877】🔓/🔒 の記号は分かりにくい（本人）→ 文字にする。未固定＝「ロック」（白地・灰枠）／固定中＝「ロック中」（青地・白文字） */
+.yc-wrow-lock { flex: 0 0 auto; max-width: 100%; overflow: hidden; text-overflow: clip; white-space: nowrap; cursor: pointer;
+  font: inherit; font-size: 10.5px; font-weight: 700; line-height: 1.3; padding: 1px 5px; border-radius: 4px;
+  border: 1px solid #cbd5e1; background: #fff; color: #64748b; }
+.yc-wrow-lock:hover { border-color: #2563eb; color: #2563eb; }
+.yc-wrow-lock.is-locked { background: #2563eb; border-color: #1d4ed8; color: #fff; }
+/* 【v1.0877】幅調整モードの「表の下」の帯：使える幅・表の幅・残り（右の空き） */
+.yc-wrow-sum { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  margin-top: 4px; padding: 5px 10px; border: 1px solid #f59e0b; border-radius: 6px; background: #fff7e0;
+  font-size: 12px; color: #78350f; font-variant-numeric: tabular-nums; }
+.yc-wrow-sum b { font-weight: 800; }
+.yc-wrow-sum .ws-rest { color: #15803d; }
+.yc-wrow-sum .ws-rest.is-over { color: #dc2626; }
+.yc-wrow-sum .ws-note { color: #92400e; opacity: .8; }
+/* 右の空きを斜線で見せる（表のセルは不透明なので、空いているところだけ見える） */
+body.col-resize-on .table-wrap.yc-has-rest { background-image: repeating-linear-gradient(135deg, rgba(245,158,11,.10) 0 6px, transparent 6px 12px); }
 .font-btn.is-on { background: #2563eb !important; color: #fff !important; border-color: #1d4ed8; }
 /* リサイズ中はテキスト選択を全画面で無効化 */
 body.is-col-resizing,
@@ -4553,7 +4568,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0876</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0877</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -25928,6 +25943,27 @@ function _colPlanWiden(ownerTh, wantW) {
 function _colApplyWidth(th, w) {
   th.style.width = w + 'px'; th.style.minWidth = w + 'px'; th.style.maxWidth = w + 'px';
 }
+// 【v1.0877】見えている列の幅の合計（th.style.width ＝ 固定レイアウトで実際に効いている幅）
+function _colVisibleSum(table) {
+  const row = table.querySelector('thead tr'); if (!row) return 0;
+  return Array.from(row.children).filter(th => getComputedStyle(th).display !== 'none')
+    .reduce((a, th) => a + (parseFloat(th.style.width) || th.getBoundingClientRect().width || 0), 0);
+}
+// 【v1.0877】★1列の幅を変えるとき、他の列（まだ触っていない列も）をいまの幅で止める。
+//   本人の指定：「ある列を狭くしたら、空いた分は右端の空きとして残す（他の列は動かさない）」。
+//   固定レイアウトの表（#tableBasic）だけ。自動レイアウトの表は画面幅に合わせてブラウザが配るので対象外。
+function _colPinOthers(table, exceptKey) {
+  if (!table || table.dataset.fixedInit !== '1') return;
+  const widths = loadColWidths();
+  const row = table.querySelector('thead tr'); if (!row) return;
+  Array.from(row.children).forEach(th => {
+    const k = th.dataset.resizeKey;
+    if (!k || k === exceptKey || widths[k] != null) return;
+    if (getComputedStyle(th).display === 'none') return;      // 隠れている列（調整-基本だけの列など）は触らない
+    const w = Math.round(parseFloat(th.style.width) || th.getBoundingClientRect().width || 0);
+    if (w > 0) saveColWidth(k, w);
+  });
+}
 // 【v1.0865】幅を固定した列か
 function _colIsLocked(key) {
   try { return !!(key && ensureViewPrefs().colLocks[key]); } catch (e) { return false; }
@@ -25953,7 +25989,7 @@ function installColResizeHandles() {
       e.stopPropagation();  // 行hover/ソートクリックに波及させない
       // 【v1.0865】幅を固定した列は動かさない（解除は一番下の 🔒 を押す）
       if (_colIsLocked(key)) {
-        try { showToast('この列は幅を固定しています（一番下の 🔒 を押すと解除できます）', 'warn'); } catch (e2) {}
+        try { showToast('この列は幅をロック中です（一番下の「ロック中」を押すと解除できます）', 'warn'); } catch (e2) {}
         return;
       }
       const startX = e.clientX;
@@ -25963,6 +25999,8 @@ function installColResizeHandles() {
       let moved = false;   // 【v278】ドラッグしたか（誤ソート抑止用）
 
       let _shrunk = null;   // 【v1.0751】このドラッグで縮めた他の列（mouseupでまとめて保存する）
+      const _tbl = ownerTh.closest('table');
+      const _isFixedTbl = !!(_tbl && _tbl.dataset.fixedInit === '1');
       const onMove = (ev) => {
         moved = true;
         const dx = ev.clientX - startX;
@@ -25974,6 +26012,8 @@ function installColResizeHandles() {
           if (!_shrunk) _shrunk = new Map();
           plan.others.forEach((w, t) => { _colApplyWidth(t, w); _shrunk.set(t, w); });
         }
+        // 【v1.0877】★縮めたとき、他の列に配り直させない（表の幅＝列の合計にする）→ 空いた分は右の空きになる
+        if (_isFixedTbl) { try { _tbl.style.width = Math.ceil(_colVisibleSum(_tbl)) + 'px'; } catch (e) {} }
         // 【v1.0751】★仕上げの実測補正。
         //   計算だけでは 数px ずれて横スクロールが出ることがある
         //   （セルのpadding/border・最小幅に達した列・小数の丸めなど、計算では読み切れない要素があるため）。
@@ -25996,6 +26036,9 @@ function installColResizeHandles() {
         handle.classList.remove('is-resizing');
         document.body.classList.remove('is-col-resizing');
         const finalW = parseFloat(ownerTh.style.width) || COL_RESIZE_MIN_PX;
+        // 【v1.0877】★動かした列以外は、いまの幅のまま止める（まだ触っていない列も保存値にする）。
+        //   しないと applyColWidths → _colFitFixedTables が「まだ触っていない列」に空きを配り直し、他の列が動く。
+        if (moved && _isFixedTbl) _colPinOthers(_tbl, key);
         saveColWidth(key, finalW);
         // 【v1.0751】★他の列からもらった結果も保存する。しないと再描画で元の幅に戻り、
         //   横スクロールがまた出る（見た目とデータが食い違う）。
@@ -26092,6 +26135,35 @@ function _wrowTables() {
 }
 function _wrowRemoveAll() {
   document.querySelectorAll('tfoot.yc-wrow-foot').forEach(f => f.remove());
+  document.querySelectorAll('.yc-wrow-sum').forEach(f => f.remove());   // 【v1.0877】
+  document.querySelectorAll('.table-wrap.yc-has-rest').forEach(w => w.classList.remove('yc-has-rest'));
+}
+// 【v1.0877】表の下の帯：使える幅・表の幅・残り（右の空き）・ロック中の列数
+function _wrowSumUpdate(table) {
+  const wrap = table.closest('.table-wrap');
+  if (!wrap || !wrap.parentNode) return;
+  let bar = wrap.nextElementSibling;
+  if (!bar || !bar.classList.contains('yc-wrow-sum')) {
+    bar = document.createElement('div'); bar.className = 'yc-wrow-sum';
+    wrap.parentNode.insertBefore(bar, wrap.nextSibling);
+  }
+  const avail = Math.round(wrap.clientWidth - 2);
+  const used = Math.round(table.getBoundingClientRect().width);
+  const rest = avail - used;
+  const fixed = table.dataset.fixedInit === '1';
+  const ths = Array.from(table.querySelectorAll('thead tr')[0].children).filter(th => th.dataset.resizeKey && getComputedStyle(th).display !== 'none');
+  const nLock = ths.filter(th => _colIsLocked(th.dataset.resizeKey)).length;
+  const yen = (n) => Math.abs(n).toLocaleString('ja-JP');
+  let restHtml;
+  if (!fixed) restHtml = '<span class="ws-note">この表は画面の幅に合わせて自動で配分されるため、右の空きは出ません</span>';
+  else if (rest >= 0) restHtml = '<span class="ws-rest">残り（右の空き）<b>' + yen(rest) + 'px</b></span>';
+  else restHtml = '<span class="ws-rest is-over">はみ出し <b>' + yen(rest) + 'px</b>（横スクロール）</span>';
+  bar.innerHTML = '<span>使える幅 <b>' + yen(avail) + 'px</b></span>'
+    + '<span>表の幅 <b>' + yen(used) + 'px</b></span>'
+    + restHtml
+    + '<span>ロック中 <b>' + nLock + '</b> / ' + ths.length + '列</span>'
+    + (fixed ? '<span class="ws-note">列を狭くすると、空いた分は右の空きになります（他の列は動きません）</span>' : '');
+  wrap.classList.toggle('yc-has-rest', fixed && rest > 0);
 }
 function _wrowBuild(table) {
   const ths = Array.from(table.querySelectorAll('thead tr')[0].children);
@@ -26103,11 +26175,12 @@ function _wrowBuild(table) {
     const key = th.dataset.resizeKey;
     if (!key) return '<td class="' + cls(th) + ' yc-wrow-td"></td>';
     const lk = _colIsLocked(key);
+    // 【v1.0877】🔓/🔒 → 文字（未固定「ロック」／固定中「ロック中」）。数値の下に置く
     return '<td class="' + cls(th) + ' yc-wrow-td' + (lk ? ' is-locked' : '') + '"><span class="yc-wrow">'
       + '<input type="number" class="yc-wrow-in" min="' + COL_RESIZE_MIN_PX + '" max="' + COL_RESIZE_MAX_PX + '" step="1"'
       + ' data-key="' + escapeHtml(key) + '"' + (lk ? ' disabled' : '') + ' title="この列の幅（px）。入力して Enter か欄の外をクリックで反映">'
-      + '<button type="button" class="yc-wrow-lock" data-key="' + escapeHtml(key) + '" title="'
-      + (lk ? '幅を固定中（押すと解除）' : '押すとこの幅で固定（ドラッグや他の列の調整で変わらなくなります）') + '">' + (lk ? '🔒' : '🔓') + '</button>'
+      + '<button type="button" class="yc-wrow-lock' + (lk ? ' is-locked' : '') + '" data-key="' + escapeHtml(key) + '" title="'
+      + (lk ? 'この列の幅をロック中（押すと解除）' : '押すとこの幅でロック（ドラッグや他の列の調整で変わらなくなります）') + '">' + (lk ? 'ロック中' : 'ロック') + '</button>'
       + '</span></td>';
   }).join('') + '</tr>';
   _wrowRefresh(table);
@@ -26124,6 +26197,7 @@ function _wrowRefresh(table) {
       const w = th.getBoundingClientRect().width;
       inp.value = w ? Math.round(w) : '';
     });
+    try { _wrowSumUpdate(t); } catch (e) {}   // 【v1.0877】表の下の「残り」も合わせる
   });
 }
 function _wrowSyncAll() {
@@ -26134,6 +26208,8 @@ function _wrowSetWidth(key, px) {
   if (!key || _colIsLocked(key)) return;
   const v = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, Math.round(+px || 0)));
   if (!(v > 0)) return;
+  // 【v1.0877】★他の列はいまの幅のまま止める（狭くした分は右の空きになる）
+  try { _wrowTables().forEach(t => { if (t.querySelector('thead th[data-resize-key="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]')) _colPinOthers(t, key); }); } catch (e) {}
   saveColWidth(key, v);
   applyColWidths();
   _wrowRefresh();
@@ -26344,7 +26420,7 @@ function setColResizeMode(on) {
   if (b) {
     b.classList.toggle('is-on', _colResizeOn);
     b.title = _colResizeOn
-      ? '幅調整モード中：列の境目をドラッグで幅変更／境目をダブルクリックで既定に戻す／表の一番下で数値入力・🔒固定（もう一度押すと終了）'
+      ? '幅調整モード中：列の境目をドラッグで幅変更（狭くした分は右の空きに）／境目をダブルクリックで既定に戻す／表の一番下で数値入力・ロック（もう一度押すと終了）'
       : '幅調整モード：押すと列の境目をドラッグして列幅を変えられます';
   }
   try { ycLog('info', _colResizeOn ? '幅調整モード: ON（列の境目をドラッグできます）' : '幅調整モード: OFF'); } catch (e) {}
@@ -26362,6 +26438,9 @@ function setColResizeMode(on) {
   if (_colResizeOn) _colResizeDirty = false;   // ONにした時点で印をリセット
   // 【v1.0865】一番下の「幅の数値入力」行を出す／消す
   try { applyColWidths(); _wrowSyncAll(); } catch (e) {}
+  // 【v1.0877】★一番下の行を足すと表が高くなり、縦スクロールバーが出て使える幅が数px減る
+  //   （そのままだと開いた瞬間に「はみ出し 9px」の横スクロール）。行を足した後に合わせ直す。
+  try { _colFitFixedTables(); if (_colResizeOn) _wrowRefresh(); } catch (e) {}
 }
 window.setColResizeMode = setColResizeMode;
 
