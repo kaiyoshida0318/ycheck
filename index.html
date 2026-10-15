@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0881 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0882 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1631,6 +1631,11 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
      ここを #view-basic 全体にすると、商品-基本データで未反映のとき「このページをCSV出力」が2段目に落ちる（v1.0670 で1段に保った所）。
    ★吹き出し（反映場所・ボタンの data-tooltip）も、これで行の外へ正しく出るようになる。 */
 body.basic-tune #view-basic .filters { overflow: visible; flex-wrap: wrap; row-gap: 8px; }
+/* 【v1.0882】調整-PRオプにも「順位取得CSV(GitHub反映)」を置いた → 調整-基本と同じ理由（ボタンの data-tooltip が下へはみ出し、
+   overflow-x:auto の行だと Windows の Chrome で縦横のスクロールバーが出る §250）で、スクロール容器にせず、入りきらないときだけ折り返す。
+   ★折り返す行では、ボタンは縮めずに次の段へ送る（縮めると「対応内容-全更新…」のように文字が切れる）。 */
+#view-pro-tune .filters { overflow: visible; flex-wrap: wrap; row-gap: 8px; }
+#view-pro-tune .filters .btn { flex-shrink: 0; }
 #view-ad-tune .filters input[type="search"], #view-pro-tune .filters input[type="search"],
 #view-ad-data .filters input[type="search"], #view-pr-data .filters input[type="search"],
 #view-basic .filters input[type="search"] { flex: 0 1 auto; min-width: 110px; }
@@ -3157,14 +3162,15 @@ tr.row-child .code-cell-inner::before {
 .dc-legend { font-size:0.8rem; }
 
 /* 順位取得CSV(GitHub反映)ボタン: 未反映の変動がある場合のアラート表示 */
-#btnDownloadBasicCsv.drift-alert {
+/* 【v1.0882】調整-基本（#btnDownloadBasicCsv）と調整-PRオプ（#btnDownloadRankCsvPro）の2つに出すので、id ではなく .rank-csv-btn で指定 */
+.rank-csv-btn.drift-alert {
   background: #b91c1c;           /* 濃い赤地 */
   border-color: #b91c1c;
   color: #fff;                    /* 白い字 */
   font-weight: 700;
   animation: drift-pulse 1.6s ease-in-out infinite;
 }
-#btnDownloadBasicCsv.drift-alert:hover {
+.rank-csv-btn.drift-alert:hover {
   background: #991b1b;            /* hover時はさらに濃く */
   border-color: #991b1b;
   color: #fff;
@@ -3175,10 +3181,10 @@ tr.row-child .code-cell-inner::before {
 }
 
 /* カスタムツールチップ（ホバー瞬時表示・data-tooltip属性に内容を入れる） */
-#btnDownloadBasicCsv {
+.rank-csv-btn {
   position: relative;
 }
-#btnDownloadBasicCsv[data-tooltip]::after {
+.rank-csv-btn[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   top: calc(100% + 6px);
@@ -3199,7 +3205,7 @@ tr.row-child .code-cell-inner::before {
   pointer-events: none;
   max-width: 480px;
 }
-#btnDownloadBasicCsv[data-tooltip]:hover::after {
+.rank-csv-btn[data-tooltip]:hover::after {
   opacity: 1;
   visibility: visible;
 }
@@ -4571,7 +4577,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0881</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0882</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4904,7 +4910,7 @@ th.col-sroas { background-color:#e7d5f5; }
           <!-- 【v1.0620】一括変更。押すと選択モードに入り、商品コードの左にチェックボックスが出る。 -->
           <button class="btn sm ghost js-bulk-btn" id="btnBasicBulk" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <!-- 【v1.0651】一括変更を 順位取得CSV の左へ。順位取得CSV と 反映場所を確認 は 商品-基本データ では出さない（.tune-only＝調整-基本だけに出す） -->
-          <button class="btn sm ghost tune-only" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
+          <button class="btn sm ghost tune-only rank-csv-btn" id="btnDownloadBasicCsv" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <span class="gh-reflect-hover tune-only" id="btnShowGhReflectGuide" tabindex="0">
             <button class="btn sm ghost" type="button">📍 反映場所を確認</button>
             <span class="gh-reflect-tooltip" role="tooltip">
@@ -5720,6 +5726,8 @@ th.col-sroas { background-color:#e7d5f5; }
               title="送り込み先（子）の商品だけ表示する。もう一度押すと解除。&#10;※商品コードの左に黄色のマークが付いている商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg><span class="soi-pc-num" data-soicnt="child"></span></button>
           </span>
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
+          <!-- 【v1.0882】調整-基本と同じ「順位取得CSV(GitHub反映)」を調整-PRオプにも（本人指定）。中身・変動アラートは共通（updateCsvDownloadButtonState が両方を更新） -->
+          <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品を「対応済み」にして一覧から消す。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteStamps" title="対応内容が「（YY-MMDD）」など日付スタンプのみの行を一括空白化（メモ書きは残す）。PRオプの全商品が対象">🗑 対応内容-更新日時削除</button>
           <button class="btn sm ghost" id="btnDeleteProTuneNoteAll" title="PRオプの対応内容欄をすべて空白に（メモ書きも含めて全削除）。PRオプの全商品が対象">🗑 対応内容-全削除</button>
@@ -21802,6 +21810,7 @@ _wireAdFilter('basicAdFilterBar',   (v) => { basicAdFilter = v; },   renderBasic
 }
 _wireAdFilter('monthlyAdFilterBar', (v) => { monthlyAdFilter = v; }, renderMonthly);
 if ($('#btnDownloadBasicCsv')) $('#btnDownloadBasicCsv').addEventListener('click', downloadBasicCsv);
+if ($('#btnDownloadRankCsvPro')) $('#btnDownloadRankCsvPro').addEventListener('click', downloadBasicCsv);   // 【v1.0882】調整-PRオプ
 if ($('#btnDownloadBasicAllCsv')) $('#btnDownloadBasicAllCsv').addEventListener('click', downloadBasicAllCsv);   // 【v1.0521】月別全件CSV
 // 【v168】「📥 商品コード+KW CSV」ボタン: 既存のdownloadBasicCsvと同じCSV(code,keyword)を出力。
 // 機能は完全に同じだが、ユーザーから見て「順位取得用」と「単純なKW一覧」を別UIとして提供したい意図のためボタンを分離。
@@ -23931,8 +23940,11 @@ function reconcileCsvSnapshotToMasterBasis() {
 }
 
 // 「順位取得CSV(GitHub反映)」ボタンの視覚表示を差分に応じて更新
+// 【v1.0882】ボタンが2つ（調整-基本・調整-PRオプ）になったので、全部に同じ状態を写す
 function updateCsvDownloadButtonState() {
-  const btn = $('#btnDownloadBasicCsv');
+  document.querySelectorAll('.rank-csv-btn').forEach(_updateCsvDownloadButtonOne);
+}
+function _updateCsvDownloadButtonOne(btn) {
   if (!btn) return;
   reconcileCsvSnapshotToMasterBasis();  // 【v317】旧基準スナップショットを新基準へ無害移行（撤退商品の一時赤を防ぐ）
   const diff = computeProductsCsvDiff();
