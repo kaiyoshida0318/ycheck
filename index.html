@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0877 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0878 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2064,8 +2064,11 @@ td[data-resize-key] {
   background: rgba(37,99,235,0.08);
   border-bottom-color: var(--accent);
 }
-.pro-rate-cell .bid-multi-mark,   /* 【v1.0874】 */
 .bid-price .bid-multi-mark { display: inline-block; margin-left: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.62rem; font-weight: 700; color: #92400e; background: #fdf3d8; vertical-align: 1px; }   /* 【v1.0870】セット行：子にも入札価格あり */
+/* 【v1.0878】PRオプ料率のセット行は「30%」の下に「＋子」の2行（本人：横に並ぶと列が広がる → 2行にして幅を狭く）。
+   入札価格のほうは金額の下に日付（.bid-upd）が既に出るので、＋子はその行の右に付いたまま（変えていない）。 */
+.pro-rate-cell .bid-multi-mark { display: block; width: max-content; margin: 2px auto 0; padding: 0 4px; border-radius: 3px;
+  font-size: 0.62rem; font-weight: 700; line-height: 1.35; color: #92400e; background: #fdf3d8; }
 .bid-price-input,
 .pro-rate-input {
   width: 80px;
@@ -4568,7 +4571,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0877</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0878</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
