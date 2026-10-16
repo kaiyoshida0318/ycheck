@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0900 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0901 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2387,6 +2387,10 @@ td[data-resize-key] {
 /* 【v1.0659】狭い列でも中身が隣へはみ出さないように（重なって見える原因） */
 .data-grid td.status-col, .data-grid th.status-col { overflow: hidden; }
 th.status-col,
+/* 【v1.0901】「なぜ修正ありか」（調整-入札価格／調整-PRオプの状態セルの下） */
+td.status-col .fix-why { margin-top: 3px; font-size: 0.64rem; font-weight: 700; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: 5px; padding: 1px 3px; line-height: 1.25; white-space: normal; word-break: keep-all; overflow-wrap: anywhere;
+  letter-spacing: -0.02em; cursor: help; text-align: center; }
 td.status-col {
   padding-left: 4px;
   padding-right: 4px;
@@ -4741,7 +4745,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0900</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0901</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17635,19 +17639,90 @@ function getLatestRankBucket(code, kind) {
 //  seo: (PRオプ○ かつ SEOが上位でない[1〜6位でない=7位以下/圏外]) または (PRオプ× かつ SEOが上位[1〜6位])
 //       【v260】上位=1〜6位に是正。rank.jsonの生順位を numericRankToCategory(1-6◯/7-14△/15+✕)で
 //       分類するため、6/7位境界で正しく判定される（旧v259までは誤って8/9境界だった）。
-function isTuneFix(code, kind) {
-  const meta = state.productMeta[code] || {};
-  if (kind === 'ad') {
-    const bucket = getLatestRankBucket(code, 'ad');   // null=圏外
-    if (adStatusIsCircle(meta.adStatus)) return bucket !== 'top';        // 上位でない（圏外含む）
-    if (adStatusIsCross(meta.adStatus))  return bucket === 'top';        // 上位（圏外は含めない）
-    return false;
-  } else {
-    const bucket = getLatestRankBucket(code, 'seo');
-    if (proStatusIsCircle(effectiveProStatusOf(code))) return bucket !== 'top';   // 【v1.0660】
-    if (proStatusIsCross(effectiveProStatusOf(code)))  return bucket === 'top';
-    return false;
+// 【v1.0901】本人指定で「修正あり」の条件を作り直した（Ycheck 引き継ぎ仕様書 §287）。
+//   考え方：「状態の名前と実際（順位・価格）が食い違っていて、自分が何か操作する必要があるもの」だけを出す。
+//   ★順位の条件は【直近2回の順位取得がどちらも】満たしたときだけ（1日だけのぶれで出さない）。取得が1回しか無ければその1回で判定。
+//   ★価格の条件（◯なのに30円超）は自分で決めた値なので1回で出す。
+//   ★理由（短い文＋説明）を tuneFixInfo が返し、調整-入札価格／調整-PRオプの状態セルの下に出す（_tuneFixWhyHtml）。
+//
+//   調整-入札価格（広告順位。上位＝1〜4位）
+//     入札◯           … 5位以下・圏外が2回続いた → 修正あり（価格を上げる or △に）
+//     入札◯           … 1-4位でも入札価格が30円超 → 修正あり（価格を下げてみる）
+//     入札△(調整中)   … 1-4位が2回続き、かつ入札価格30円以下 → 修正あり（◯に変える）
+//                        ※1-4位でも30円超はまだ下げている途中＝修正ありにしない。入札価格が未入力なら1-4位だけで出す
+//     入札△-飛ぶ手前固定・入札なし … 出さない
+//   調整-PRオプ（SEO順位。上位＝1〜6位）
+//     PR◯ / PR◯-親-30％固定 … 7位以下・圏外が2回続いた → 修正あり
+//     PR◯-子-7％固定       … 出さない（料率を7％より下げられず、打つ手がない）
+//     PR△-調整中 / PR×      … 1-6位が2回続いた → 修正あり（状態を合わせる）
+//     PR△-飛ぶ手前固定       … 出さない
+const TUNE_FIX_RANK_RUN = 2;   // 何回続いたら出すか（順位の条件）
+// 直近 n 回の順位取得の分類（新しい順）。値の無い日は飛ばす。1件も無ければ []。
+function _rankRecentBuckets(code, kind, n) {
+  const field = (kind === 'ad') ? 'adRank' : 'seoRank';
+  const monthsSet = new Set();
+  if (state.rank) Object.keys(state.rank).forEach(m => monthsSet.add(m));
+  if (state.rankEdits) Object.keys(state.rankEdits).forEach(m => monthsSet.add(m));
+  const months = [...monthsSet].sort().reverse();
+  const out = [];
+  for (const ym of months) {
+    const days = getDaysInMonth(ym);
+    for (let d = days - 1; d >= 0; d--) {
+      const eff = getEffectiveRankValue(ym, code, field, d);
+      if (eff && eff.value != null && eff.value !== '') {
+        out.push(classifyRankBucket(eff.value, kind));
+        if (out.length >= n) return out;
+      }
+    }
   }
+  return out;
+}
+function tuneFixInfo(code, kind) {
+  const meta = state.productMeta[code] || {};
+  const rec = _rankRecentBuckets(code, kind, TUNE_FIX_RANK_RUN);
+  const allTop = rec.length > 0 && rec.every(b => b === 'top');
+  const noneTop = rec.every(b => b !== 'top');          // 順位データが無い（[]）も「上位でない」＝従来どおり
+  const lastNull = !rec.length || rec[0] == null;
+  const runTxt = (rec.length >= 2) ? '（直近' + rec.length + '回の順位取得で続けて）' : '（直近の順位取得で）';
+  if (kind === 'ad') {
+    const st = meta.adStatus;
+    let bid = null; try { bid = Number(getBid(code)); } catch (e) { bid = null; }
+    const hasBid = (bid != null && isFinite(bid) && bid > 0);
+    const over = hasBid && bid > AD_CIRCLE_BID_BORDER;
+    if (adStatusIsCircle(st)) {
+      if (noneTop) return { short: '◯なのに' + (lastNull ? '圏外' : '5位以下'),
+        tip: '入札◯なのに広告順位が' + (lastNull ? '圏外（順位なし）' : '5位以下') + runTxt + '。\n→ 入札価格を上げる、または入札△にする' };
+      if (over) return { short: '◯なのに' + AD_CIRCLE_BID_BORDER + '円超',
+        tip: '入札◯で1-4位だが、入札価格が ' + bid + '円（' + AD_CIRCLE_BID_BORDER + '円超）。\n→ 入札価格を下げてみる' };
+      return null;
+    }
+    if (adStatusIsCross(st)) {   // 入札△（調整中）。飛ぶ手前固定は adStatusIsCross に入らない
+      if (allTop && !over) return { short: '△→◯にできる',
+        tip: '入札△（調整中）だが、広告順位が1-4位' + runTxt + (hasBid ? '、入札価格も ' + bid + '円（' + AD_CIRCLE_BID_BORDER + '円以下）' : '') + '。\n→ 入札状態を入札◯に変える' };
+      return null;
+    }
+    return null;
+  }
+  const st = effectiveProStatusOf(code);
+  if (_proIsC7(st)) return null;                                  // 子は7％から動かせない
+  if (proStatusIsCircle(st)) {
+    if (noneTop) return { short: '◯なのに' + (lastNull ? '圏外' : '7位以下'),
+      tip: st + ' なのにSEO順位が' + (lastNull ? '圏外（順位なし）' : '7位以下') + runTxt + '。\n→ ' + (_proIsP30(st) ? '30％でも取れていないので見直す' : 'PRオプ料率を上げる、またはPR△にする') };
+    return null;
+  }
+  if (proStatusIsCross(st)) {
+    if (allTop) return { short: (st === 'PR×' ? '×' : '△') + 'なのに1-6位',
+      tip: st + ' なのにSEO順位が1-6位' + runTxt + '。\n→ ' + (st === 'PR×' ? 'PRなしで取れているので、状態を合わせる' : 'PR◯に変える、または料率をさらに下げてみる') };
+    return null;
+  }
+  return null;
+}
+function isTuneFix(code, kind) { return !!tuneFixInfo(code, kind); }
+// 調整-入札価格／調整-PRオプの状態セルの下に出す「なぜ修正ありか」
+function _tuneFixWhyHtml(code, kind) {
+  const f = tuneFixInfo(code, kind);
+  if (!f) return '';
+  return '<div class="fix-why" title="' + escapeHtml(f.tip) + '">' + escapeHtml(f.short) + '</div>';   // 幅が狭い列なので印は付けない（赤い枠で目立たせる）
 }
 
 // 対応内容(note)の分類。isAutoTimestamp（更新日時スタンプ単独判定）を流用。
@@ -18040,7 +18115,7 @@ function renderAdAdjust(cfg) {
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'ad')}${(tableSel === '#tableAdTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'ad') : ''}</td>
       ${_bidCellT}
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
@@ -18282,7 +18357,7 @@ function renderProAdjust(cfg) {
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}</td>
+      <td class="status-col">${statusSelectHtml(r.code, 'pro')}${(tableSel === '#tableProTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'pro') : ''}</td>
       ${_proCellT}
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
@@ -22134,10 +22209,18 @@ function buildTuneCondHtml(kind) {
     '<div class="tc-sub">上位の定義：' + rankName + 'が <span class="tc-hi">' + topRange + '</span>（◯）。' +
     '<span class="tc-hi">' + (isAd ? '5位以下' : '7位以下') + '</span>（△×）と圏外（順位なし）は「上位でない」扱い。</div>';
   const rows =
+    // 【v1.0901】修正ありの条件を作り直した（§287）。順位の条件は直近2回の順位取得で続けて満たしたときだけ。
     '<tr class="tc-row-fix"><td><span class="tc-badge tc-b-fix">修正あり</span></td><td>' +
-      '順位が状態と<b>合っていない</b>商品。' +
-      '<span class="tc-li"><span class="tc-num">1</span><span class="tc-ok">' + okName + '</span> なのに ' + upName + 'が<span class="tc-neg">上位でない</span>（<span class="tc-hi">' + notTop + '</span>）</span>' +
-      '<span class="tc-li"><span class="tc-num">2</span><span class="tc-ng">' + ngName + '</span> なのに ' + upName + 'が<b>上位</b>（<span class="tc-hi">' + topRange + '</span>）</span>' +
+      '状態と実際（順位・価格）が<b>食い違っていて、操作が必要</b>な商品。行の状態セルの下に <b style="color:#b91c1c">赤い枠で理由</b> が出ます（マウスを乗せると、やることも出ます）。' +
+      (isAd
+        ? '<span class="tc-li"><span class="tc-num">1</span><span class="tc-ok">入札◯</span> なのに 広告が<span class="tc-neg">5位以下・圏外</span>（2回続けて）→ 価格を上げる／△にする</span>' +
+          '<span class="tc-li"><span class="tc-num">2</span><span class="tc-ok">入札◯</span> で1-4位でも 入札価格が<span class="tc-neg">30円超</span> → 価格を下げてみる</span>' +
+          '<span class="tc-li"><span class="tc-num">3</span><span class="tc-ng">入札△（調整中）</span> なのに 広告が<b>1-4位</b>（2回続けて）かつ 入札価格<b>30円以下</b> → ◯に変える</span>' +
+          '<small>※1-4位でも30円超の△は、まだ下げている途中なので修正ありにしません。入札△-飛ぶ手前固定・入札なしは出しません。</small>'
+        : '<span class="tc-li"><span class="tc-num">1</span><span class="tc-ok">PR◯／PR◯-親-30％固定</span> なのに SEOが<span class="tc-neg">7位以下・圏外</span>（2回続けて）→ 料率を上げる／△にする／見直す</span>' +
+          '<span class="tc-li"><span class="tc-num">2</span><span class="tc-ng">PR△-調整中／PR×</span> なのに SEOが<b>1-6位</b>（2回続けて）→ 状態を合わせる</span>' +
+          '<small>※<b>PR◯-子-7％固定は出しません</b>（料率を7％より下げられず、打つ手がないため）。PR△-飛ぶ手前固定も出しません。</small>') +
+      '<small>※「2回続けて」＝直近2回の順位取得のどちらも。1日だけのぶれでは出しません（取得が1回しか無い商品はその1回で判定）。</small>' +
       '<small>※その日に対応（値変更・状態変更・対応内容更新）すると当日だけ外れ、翌日また表示。</small></td></tr>' +
     '<tr class="tc-row-watch"><td><span class="tc-badge tc-b-watch">推移確認</span></td><td>' +
       '修正ありに該当せず、状態が<span class="tc-ng">×</span>で、対応内容に<b>メモ（更新日時以外）</b>が入っている商品。' +
@@ -22149,7 +22232,7 @@ function buildTuneCondHtml(kind) {
   // 【v193】固定系（△-飛ぶ手前固定 等）は対応不要のため「全体」のみに出る、という説明を追記。
   const fixedText = isAd
     ? '固定系（<span class="tc-hi">入札△-飛ぶ手前固定</span>）は月1チェック用に「未確認」に表示。入札価格を変更すると「推移確認」に移ります。'
-    : '固定系のうち親（<span class="tc-hi">PR△-親-飛ぶ手前固定</span>）は月1チェック用に「未確認」に表示（料率を変更すると推移確認へ）。子（<span class="tc-hi">PR△-子-7％固定</span>）は「全体」のみに表示。';
+    : '固定系のうち <span class="tc-hi">PR△-飛ぶ手前固定</span> は月1チェック用に「未確認」に表示（料率を変更すると推移確認へ）。<span class="tc-hi">PR◯-子-7％固定</span> は「全体」のみに表示。';
   const foot =
     '<div class="tc-foot">共通：状態が<span class="tc-ok">○</span>で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
     fixedText + '<br>' +
