@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0889 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0890 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4360,7 +4360,12 @@ th[data-sort].sort-desc::after { content: '\25BC'; }       /* ▼ 降順 */
 .yt-mname { width:130px; flex:0 0 130px; box-sizing:border-box; padding:10px 12px; border-right:1px solid var(--border2); display:flex; flex-direction:column;
   justify-content:center; align-items:center; text-align:center; position:sticky; left:0; z-index:4; }
 .yt-mname > div { font-size:15px; font-weight:800; }
-.yt-mname small { font-size:9px; color:var(--text3); margin-top:6px; line-height:1.4; }
+.yt-mname small { margin-top:7px; line-height:1.45; display:flex; flex-direction:column; gap:5px; align-items:center; }
+.yt-mname small .fx { font-size:11px; font-weight:700; color:var(--text2); }
+.yt-mname small .gd { font-size:10px; color:var(--text3); }
+.yt-mname .yt-op { font-size:13px; font-weight:900; color:var(--text); margin:0 1px; }
+.yt-mname em { font-style:normal; font-weight:800; } .yt-mname em.up { color:#16a34a; } .yt-mname em.dn { color:#dc2626; }
+.yt-lbltop { height:80px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:700; color:#94a3b8; line-height:1.3; }
 .yt-rows { flex:1 0 auto; display:flex; flex-direction:column; }
 .yt-row { display:flex; align-items:stretch; }
 .yt-row.sub { border-top:1px dashed var(--border2); }
@@ -4377,11 +4382,11 @@ th[data-sort].sort-desc::after { content: '\25BC'; }       /* ▼ 降順 */
 .yt-mex { font-size:9px; color:#b45309; margin-top:2px; line-height:1.3; }
 .yt-tiles { display:flex; gap:4px; padding:8px 10px; flex:0 0 auto; flex-wrap:nowrap; align-items:flex-start; }
 .yt-nodata { padding:18px; color:var(--text3); font-size:12px; white-space:nowrap; }
-.yt-lblcol { flex:0 0 72px; width:72px; box-sizing:border-box; text-align:center; padding:6px 2px 4px 0; border-right:1px dashed var(--border2); margin-right:2px;
+.yt-lblcol { flex:0 0 86px; width:86px; box-sizing:border-box; text-align:center; padding:6px 2px 4px 0; border-right:1px dashed var(--border2); margin-right:2px;
   position:sticky; left:218px; z-index:5; background:#fff; align-self:stretch; box-shadow:5px 0 6px -5px rgba(0,0,0,.18); }
 .yt-lbl { font-size:10px; font-weight:700; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .yt-lbl.h14 { line-height:16px; height:16px; } .yt-lbl.h15 { line-height:18px; height:18px; } .yt-lbl.mt3 { margin-top:4px; }
-.yt-tile { cursor:pointer; flex:0 0 98px; width:98px; box-sizing:border-box; text-align:center; position:relative; padding:6px 1px 4px; border-radius:8px; }
+.yt-tile { cursor:pointer; flex:0 0 96px; width:96px; box-sizing:border-box; text-align:center; position:relative; padding:6px 1px 4px; border-radius:8px; }
 .yt-imgbox { position:relative; width:80px; height:80px; margin:0 auto; }
 .yt-img, .yt-noimg { width:80px; height:80px; box-sizing:border-box; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto; }
 .yt-img { object-fit:cover; background:#fff; }
@@ -4706,7 +4711,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0889</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0890</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -19755,10 +19760,13 @@ function _ytTotTxt(mt, r) {
   if (mt.type === 'cvr') return r.total.toFixed(2) + '%';
   return _ytYen(r.total);
 }
+// 【v1.0890】左端（指標名の下）＝その指標の計算式＋「％」「±」が何かを1行で。
+//   旧：「数字＝商品の○○／全体の○○を動かしている幅」を指標ごとに繰り返していて読み取れなかった（本人）。
 function _ytNote(mt) {
-  if (mt.type === 'amt') return '数字＝金額／全体に占める割合';
-  if (mt.type === 'cpa') return '数字＝商品の獲得単価／全体の獲得単価を動かしている幅（+高くしている・−安くしている）';
-  return '数字＝商品の' + mt.label + '／全体の' + mt.label + 'を動かしている幅（+押し上げ・−押し下げ）';
+  const g = (mt.type === 'amt') ? '％＝店全体に占める割合'
+    : (mt.type === 'cpa') ? '±＝店全体の単価を動かした幅（＋は高くしている＝悪い）'
+    : '±＝店全体の値を動かした幅（<em class="up">＋押し上げ</em>・<em class="dn">−押し下げ</em>）';
+  return '<span class="fx">' + _ytFxHtml(mt.fx) + '</span><span class="gd">' + g + '</span>';
 }
 function _ytTile(mt, x, i, parentSet) {
   const code = x.code, name = _ytName(code), img = _ytImg(code), ec = escapeHtml(code), focused = (_ytFocus === code);
@@ -19775,11 +19783,14 @@ function _ytTile(mt, x, i, parentSet) {
     + (mt.type === 'roas' ? '<div class="yt-v3">' + _ytYen(x.sp || 0) + '</div>' : '')
     + '</div>';
 }
+// 【v1.0890】タイルの各行が何かを、指標の種類ごとに具体的に（旧：商品名／指標名／全体への影響 の繰り返し）
 function _ytLabelCol(mt) {
-  const ln = (t, cls, st) => '<div class="yt-lbl ' + (cls || '') + '"' + (st ? ' style="' + st + '"' : '') + '>' + t + '</div>';
+  const ln = (t, cls, st, tip) => '<div class="yt-lbl ' + (cls || '') + '"' + (st ? ' style="' + st + '"' : '') + (tip ? ' title="' + tip + '"' : '') + '>' + t + '</div>';
+  const v = (mt.type === 'amt') ? '金額' : (mt.type === 'cpa') ? '獲得単価' : (mt.type === 'cvr') ? 'CVR' : 'ROAS';
+  const w = (mt.type === 'amt') ? '全体に占める%' : '全体を動かす幅';
   return '<div class="yt-lblcol"><div style="height:80px"></div>'
-    + ln('商品名', 'h14 mt3') + ln(mt.label, 'h15') + ln(mt.type === 'amt' ? '構成比' : '全体への影響', 'h15', 'color:' + mt.col)
-    + (mt.type === 'roas' ? ln(YT_DEN_LABEL[mt.den] || '実績額', 'h14') : '') + '</div>';
+    + ln('商品名', 'h14 mt3') + ln(v, 'h15') + ln(w, 'h15', 'color:' + mt.col)
+    + (mt.type === 'roas' ? ln(YT_DEN_LABEL[mt.den] || '実績額', 'h14', '', 'この商品の分母（' + (YT_DEN_LABEL[mt.den] || '実績額') + '）') : '') + '</div>';
 }
 function _ytMonthCell(m, mt, r, isTop) {
   const t = m.has ? _ytTotTxt(mt, r) : '—';
