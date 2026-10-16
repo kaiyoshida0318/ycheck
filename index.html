@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0903 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0904 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4751,7 +4751,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0903</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0904</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17890,6 +17890,37 @@ function _tuneIsDone(meta, kind) {
 }
 
 // tuneFilterBar の表示/非表示・アクティブ表示・件数を更新する。
+// 【v1.0904】調整-入札価格／調整-PRオプの件数で使う「いま効いている絞り込み」の判定（v1.0673 の中身をそのまま切り出し）。
+//   skipRep=true のときは送り込み軸（repFilter＝全表示／通常商品のみ／親商品のみ）を通さない
+//   ＝「表示」ボタンそれぞれの件数を数えるとき用（ボタン自身の絞り込みで数が減らないように）。
+function _tuneCountFilter(kind, codes, skipRep) {
+  const _tgt = (kind === 'ad') ? 'ad-adjust' : 'pro-adjust';
+  const _chip = (state.activeStateFilter && state.activeStateFilter.targetView === _tgt)
+    ? STATE_FILTERS[state.activeStateFilter.type] : null;
+  const _searchEl = document.getElementById(kind === 'ad' ? 'adTuneSearch' : 'proTuneSearch');
+  const _q = (_searchEl ? _searchEl.value : '').trim().toLowerCase();
+  const _wantAd = (basicAdFilter === 'ad');
+  const _adAxisOn = (basicAdFilter && basicAdFilter !== 'all' && !_xfAdBypassed());
+  // 送り込み軸は applyRepFilter / _xfScopeFilter をそのまま通す（'*' '!' '*P' '*C' '*A' とグループ絞り込みの全部に対応）
+  const _repOk = (() => {
+    if (skipRep || !state.repFilter) return null;
+    const kept = new Set(_xfScopeFilter(applyRepFilter([...codes].map(c => ({ code: c })))).map(x => x.code));
+    return (c) => kept.has(c);
+  })();
+  return (code) => {
+    if (isRetired(code)) return false;
+    if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return false;   // 【v1.0658】子は入札なし扱い
+    if (_q) {
+      const m = getMaster(code);
+      if (![code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(_q)) return false;
+    } else {
+      if (_repOk && !_repOk(code)) return false;                                    // 送り込み軸（検索中はバイパス＝表と同じ）
+      if (_adAxisOn && !(_xfInScope(code) && _xfHasAd(code) === _wantAd)) return false;   // 広告軸
+    }
+    if (_chip && typeof _chip.match === 'function' && !_chip.match(state.productMeta[code] || {}, code)) return false;   // 状態チップ
+    return true;
+  };
+}
 function updateTuneBar() {
   const bar = document.getElementById('tuneFilterBar');
   if (!bar) return;
@@ -17915,32 +17946,11 @@ function updateTuneBar() {
   // 【v1.0673】★いま効いている絞り込み（クロス絞り込み・状態チップ・検索）を通したあとの件数にする。
   //   ＝分類表のマスを押したら、その条件に該当する商品での内訳が 全体/修正あり/推移確認/未確認 に出る。
   //   ★判定式は表の描画（renderAdAdjust / renderProAdjust）と同じ関数を使い回す。二重に書かない。
-  const _tgt = (kind === 'ad') ? 'ad-adjust' : 'pro-adjust';
-  const _chip = (state.activeStateFilter && state.activeStateFilter.targetView === _tgt)
-    ? STATE_FILTERS[state.activeStateFilter.type] : null;
-  const _searchEl = document.getElementById(kind === 'ad' ? 'adTuneSearch' : 'proTuneSearch');
-  const _q = (_searchEl ? _searchEl.value : '').trim().toLowerCase();
-  const _wantAd = (basicAdFilter === 'ad');
-  const _adAxisOn = (basicAdFilter && basicAdFilter !== 'all' && !_xfAdBypassed());
-  // 送り込み軸は applyRepFilter / _xfScopeFilter をそのまま通す（'*' '!' '*P' '*C' '*A' とグループ絞り込みの全部に対応）
-  const _repOk = (() => {
-    if (!state.repFilter) return null;
-    const kept = new Set(_xfScopeFilter(applyRepFilter([...codes].map(c => ({ code: c })))).map(x => x.code));
-    return (c) => kept.has(c);
-  })();
+  // 【v1.0904】判定を _tuneCountFilter に切り出した（「表示」ボタンの件数 _tuneShowSync でも同じものを使う）
+  const _pass = _tuneCountFilter(kind, codes, false);
   let cFix = 0, cWatch = 0, cUnchecked = 0, cAll = 0;
   [...codes].forEach(code => {
-    if (isRetired(code)) return;
-    if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return;   // 【v1.0658】子は入札なし扱い
-    // 【v1.0673】いまの絞り込みを反映
-    if (_q) {
-      const m = getMaster(code);
-      if (![code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(_q)) return;
-    } else {
-      if (_repOk && !_repOk(code)) return;                                    // 送り込み軸（検索中はバイパス＝表と同じ）
-      if (_adAxisOn && !(_xfInScope(code) && _xfHasAd(code) === _wantAd)) return;   // 広告軸
-    }
-    if (_chip && typeof _chip.match === 'function' && !_chip.match(state.productMeta[code] || {}, code)) return;   // 状態チップ
+    if (!_pass(code)) return;
     if (_tuneShowInAll(code, kind)) cAll++;  // この調整タブの対象商品（全体ボタンの対象）【v1.0883】全更新処理で確認済みにした商品は数えない
     const g = getTuneGroup(code, kind);
     if (g === 'fix') cFix++;
@@ -17949,6 +17959,7 @@ function updateTuneBar() {
   });
   const setNum = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? `(${n})` : ''; };
   setNum('cntTuneFix', cFix); setNum('cntTuneWatch', cWatch); setNum('cntTuneUnchecked', cUnchecked); setNum('cntTuneAll', cAll);
+  try { _tuneShowSync(); } catch (e) {}   // 【v1.0904】「表示」ボタンの件数も、いま選んでいるグループで数え直す
   // 【v292】最新値の本日更新チップ（修正ありの左）。未更新=アンバー警告＋更新ボタン / 更新済み=緑の確認。
   const fresh = document.getElementById('tuneFreshChip');
   if (fresh) {
@@ -26388,6 +26399,11 @@ function _tuneShowSync() {
   if (!bars.length) return;
   const f = state.repFilter || '';
   bars.forEach(bar => bar.querySelectorAll('.tsb-btn').forEach(b => b.classList.toggle('on', (b.dataset.repf || '') === f)));
+  // 【v1.0904】本人指定：件数は「いま選んでいるグループ（全体／修正あり／推移確認／未確認）」の中で数える。
+  //   ＝修正ありを選んでいれば、全表示＝修正ありの件数、通常商品のみ＝そのうち通常商品、親商品のみ＝そのうち親。
+  //   ★グループの判定は表と同じ：表を描いたときに凍結したメンバー（tuneFrozenMembers）があればそれ、無ければ今の分類。
+  //   ★検索・状態チップ・広告軸の絞り込みも表と同じに通す（_tuneCountFilter）。送り込み軸（このボタン自身）だけは通さない。
+  //   ★全表示の件数＝表の行数（その画面の表示が全表示のとき）。
   try {
     const referenced = getReferencedRepCodes();
     const pm = state.productMeta || {};
@@ -26397,16 +26413,24 @@ function _tuneShowSync() {
     try { dailyCodes().forEach(c => codes.add(c)); } catch (e) {}
     bars.forEach(bar => {
       const kind = bar.dataset.kind;
+      const onView = (state.currentView === (kind === 'ad' ? 'ad-tune' : 'pro-tune'));
+      const pass = _tuneCountFilter(kind, codes, true);
+      const inGroup = (code) => {
+        if (onView && tuneFrozenMembers) return tuneFrozenMembers.has(code);
+        return (tuneGroup === 'all') ? _tuneShowInAll(code, kind) : (getTuneGroup(code, kind) === tuneGroup);
+      };
       const n = { all: 0, normal: 0, parent: 0, child: 0 };
       codes.forEach(code => {
-        if (isRetired(code)) return;
-        if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return;
+        if (!pass(code) || !inGroup(code)) return;
         n.all++;
-        if (!_repHasSoikomi(code, referenced)) n.normal++;
+        // ★通常商品のみ（'!'）は表と同じく _xfScopeFilter も通る＝ステータス未設定（—）・撤退予定は入らない
+        if (!_repHasSoikomi(code, referenced) && (_editPinnedCodes.has(code) || _xfInScope(code))) n.normal++;
         if (_isSoiParent(code, referenced)) n.parent++;
         if (_isSoiChild(code, ((pm[code] || {}).repCode || '').trim())) n.child++;
       });
       bar.querySelectorAll('[data-tsbn]').forEach(e => { e.textContent = n[e.dataset.tsbn]; });
+      const gName = { all: '全体', fix: '修正あり', watch: '推移確認', unchecked: '未確認' }[tuneGroup] || '';
+      bar.title = gName ? ('件数は「' + gName + '」の中の数です') : '';
     });
   } catch (e) {}
 }
