@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0905 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0906 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4751,7 +4751,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0905</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0906</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5959,6 +5959,8 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-spend" data-sort="adCost2" id="hAdDataAdRev2">広告実績額<br>(前月)</th>
               <!-- 【v1.0652】入札価格は一番右へ -->
 <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <!-- 【v1.0906】本人指定：右端にステータス（調整-入札価格／調整-PRオプと同じドロップダウン） -->
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -6011,6 +6013,8 @@ th.col-sroas { background-color:#e7d5f5; }
               <th class="num col-prov" data-sort="prov2" id="hPrDataProv2" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。">PR<br>実績額<span class="th-est">？</span><br>(前月)</th>
               <!-- 【v1.0652】PRオプ料率は一番右へ -->
 <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
+              <!-- 【v1.0906】本人指定：右端にステータス（調整-入札価格／調整-PRオプと同じドロップダウン） -->
+              <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -18183,6 +18187,7 @@ function renderAdAdjust(cfg) {
       ${_roasCells}
       ${_revCells}
       ${_bidCellD}
+      ${_tdStatus}
     `;
       tbody.appendChild(tr);
       return;
@@ -18431,6 +18436,7 @@ function renderProAdjust(cfg) {
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? _dash : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${r.provs.map(v => '<td class="num col-prov est-val">' + ((v != null && v > 0) ? fmt(Math.round(v)) : _dash) + '</td>').join('')}
       ${_proCellD}
+      ${_tdStatus}
     `;
       tbody.appendChild(tr);
       return;
