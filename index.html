@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0890 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0891 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4711,7 +4711,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0890</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0891</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -19410,7 +19410,7 @@ let _ytView = (function () { try { return localStorage.getItem('ycheck_cmp_view'
 let _ytMode = 'mom';            // 'mom' 前月比較 / 'yoy' 前年同月比 / 'pick' 特定月比較 / 'y1' 直近1年（絞込中だけ）
 let _ytMonth = '';              // 'YYYY-MM' または 'YYYY-MM#full'
 let _ytPickA = '', _ytPickB = '';   // 特定月比較：A＝上の段（比較される側）、B＝下の段
-let _ytImp = 'all';             // 'all' +-両方 / 'neg' ROAS寄与度- / 'pos' ROAS寄与度+
+let _ytImp = 'all';             // 'all' +-両方 / 'neg' ROAS系寄与度- / 'pos' ROAS系寄与度+（【v1.0891】名前だけ変更。動きは同じ）
 let _ytPins = [null, null];     // 選択枠（黄・青）
 let _ytHover = null;
 let _ytFocus = null;            // 絞込中の代表コード
@@ -19672,8 +19672,8 @@ function _ytRenderBar(P) {
   }
   const ib = (v, lbl, col, tip) => '<button type="button" class="ytb" data-ytact="imp" data-v="' + v + '" title="' + tip + '"' + (_ytImp === v ? ' style="background:' + col + ';border-color:' + col + ';color:#fff"' : '') + '>' + lbl + '</button>';
   h += '<span class="yt-grp">' + ib('all', '+-両方', '#475569', '影響の大きい順（＋も−も）')
-    + ib('neg', 'ROAS寄与度-', '#dc2626', '全体のROASを下げている商品だけ、影響の大きい順（−pt）。ROAS系の指標だけ出します')
-    + ib('pos', 'ROAS寄与度+', '#16a34a', '全体のROASを上げている商品だけ、影響の大きい順（＋pt）。ROAS系の指標だけ出します') + '</span>';
+    + ib('neg', 'ROAS系寄与度-', '#dc2626', 'ROAS系の4つ（PR広告売上ROAS・広告売上ROAS・PR売上ROAS・広告ROAS）の段だけを出し、それぞれの段で、その指標の店全体の値を【下げている】商品だけを影響の大きい順（−pt）に並べます')
+    + ib('pos', 'ROAS系寄与度+', '#16a34a', 'ROAS系の4つ（PR広告売上ROAS・広告売上ROAS・PR売上ROAS・広告ROAS）の段だけを出し、それぞれの段で、その指標の店全体の値を【上げている】商品だけを影響の大きい順（＋pt）に並べます') + '</span>';
   let chips = '';
   if (!_ytFocus) {
     for (let i = 0; i < 2; i++) {
