@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0885 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0886 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4317,6 +4317,113 @@ th[data-sort].sort-desc::after { content: '\25BC'; }       /* ▼ 降順 */
   background:var(--bg2); color:var(--text); cursor:pointer; font-family:inherit;
 }
 #view-compare .cmp-legend { margin-left:auto; display:flex; align-items:center; gap:12px; font-size:13px; color:var(--text2); flex-wrap:wrap; }
+/* ==================== 【v1.0886】全-比較 ＞ 寄与度トップ20（ADcheck v1.1435 から移植） ==================== */
+#view-compare.yt-on .cmp-list-only { display:none !important; }
+#view-compare:not(.yt-on) .yt-only { display:none !important; }
+#view-compare.yt-on .cmp-toolbar { gap:6px; margin-bottom:10px; flex-wrap:nowrap; }
+.yt-viewseg { display:inline-flex; border:1px solid #475569; border-radius:7px; overflow:hidden; flex:0 0 auto; margin-right:4px; }
+.yt-viewseg button { font-size:12.5px; padding:6px 10px; border:none; cursor:pointer; font-weight:700; background:var(--bg2); color:#475569; font-family:inherit; white-space:nowrap; }
+.yt-viewseg button.on { background:#475569; color:#fff; }
+/* 商品一覧のときは従来の大きさに合わせる */
+#view-compare:not(.yt-on) .yt-viewseg button { font-size:15px; padding:9px 14px; }
+.yt-bar { display:flex; align-items:center; gap:6px; flex:1 1 auto; min-width:0; flex-wrap:nowrap; }
+.yt-grp { display:inline-flex; align-items:center; gap:4px; flex:0 0 auto; }
+.ytb { font-size:12.5px; padding:6px 9px; border-radius:6px; cursor:pointer; white-space:nowrap; font-weight:600; font-family:inherit;
+  border:1px solid var(--border2); background:#f1f5f9; color:var(--text3); line-height:1.2; }
+.ytb:hover { border-color:#94a3b8; color:var(--text2); }
+.ytb.on { border-color:#3b82f6; background:#3b82f6; color:#fff; }
+.ytb.yt-swap { padding:5px 7px; border-color:#3b82f6; background:#eff6ff; color:#2563eb; }
+.ytb.yt-swap:hover { background:#3b82f6; color:#fff; }
+#view-compare .yt-bar select.yt-sel { font-size:12.5px; padding:6px 4px; border-radius:6px; flex:0 0 auto; }
+.yt-right { margin-left:auto; display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:1 1 0; min-width:230px; }
+.yt-pins { display:flex; gap:6px; min-width:0; flex:0 1 auto; }
+.yt-pin { display:inline-flex; align-items:center; justify-content:space-between; gap:4px; flex:0 1 130px; width:130px; min-width:52px; box-sizing:border-box;
+  height:28px; padding:0 8px; border-radius:6px; border:2px solid; background:var(--bg2); font-size:11px; font-weight:700; color:var(--text3); }
+.yt-pin.has { color:var(--text); cursor:pointer; }
+.yt-pin-nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.yt-pin-x { color:var(--text3); flex:0 0 auto; }
+.ytb.yt-export { flex:0 0 auto; border-color:#0f766e; background:#0f766e; color:#fff; font-weight:700; }
+.ytb.yt-export:hover { background:#115e59; color:#fff; }
+/* 指標ボタン（2段目） */
+.yt-nav { display:flex; align-items:center; gap:10px; margin:0 0 10px; flex-wrap:wrap; }
+.yt-navbtns { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.yt-navbtn { font-size:12px; padding:5px 12px; border-radius:999px; cursor:pointer; font-weight:700; white-space:nowrap; border:1.5px solid; font-family:inherit; }
+.yt-navsep { align-self:stretch; width:2px; margin:2px 3px; background:#cbd5e1; border-radius:1px; }
+.yt-navnote { margin-left:auto; font-size:11px; color:var(--text3); white-space:nowrap; cursor:help; }
+/* 表 */
+.yt-area { overflow:auto; max-height:76vh; overscroll-behavior:contain; }
+.yt-empty { padding:40px; text-align:center; color:var(--text3); }
+.yt-wrap { border:1px solid var(--border2); border-radius:10px; background:#fff; width:max-content; min-width:100%; }
+.yt-blk { display:flex; align-items:stretch; }
+.yt-blk.bt { border-top:1px solid var(--border2); }
+.yt-blk.gs { border-top:3px solid #64748b; }
+.yt-mname { width:130px; flex:0 0 130px; box-sizing:border-box; padding:10px 12px; border-right:1px solid var(--border2); display:flex; flex-direction:column;
+  justify-content:center; align-items:center; text-align:center; position:sticky; left:0; z-index:4; }
+.yt-mname > div { font-size:15px; font-weight:800; }
+.yt-mname small { font-size:9px; color:var(--text3); margin-top:6px; line-height:1.4; }
+.yt-rows { flex:1 0 auto; display:flex; flex-direction:column; }
+.yt-row { display:flex; align-items:stretch; }
+.yt-row.sub { border-top:1px dashed var(--border2); }
+.yt-mcell { width:88px; flex:0 0 88px; box-sizing:border-box; padding:8px 4px; border-right:1px solid var(--border2); background:#f1f5f9; display:flex; flex-direction:column;
+  justify-content:center; align-items:center; text-align:center; position:sticky; left:130px; z-index:3; }
+.yt-mcell.top { background:#f8fafc; }
+.yt-mtag { display:inline-block; font-size:10px; font-weight:700; color:#fff; background:#64748b; border-radius:4px; padding:1px 6px; white-space:nowrap; }
+.yt-mcell.top .yt-mtag, tr.top .yt-mtag { background:#334155; }
+.yt-mym { font-family:'DM Mono',ui-monospace,monospace; font-size:14px; font-weight:700; color:var(--text); margin-top:3px; white-space:nowrap; }
+.yt-mday { font-size:10px; color:var(--text2); white-space:nowrap; }
+.yt-mnod { font-size:9px; color:#b45309; font-weight:700; line-height:1.3; margin-top:2px; }
+.yt-mtl { font-size:10px; color:var(--text3); margin-top:4px; }
+.yt-mtv { font-family:'DM Mono',ui-monospace,monospace; font-weight:700; white-space:nowrap; }
+.yt-mex { font-size:9px; color:#b45309; margin-top:2px; line-height:1.3; }
+.yt-tiles { display:flex; gap:4px; padding:8px 10px; flex:0 0 auto; flex-wrap:nowrap; align-items:flex-start; }
+.yt-nodata { padding:18px; color:var(--text3); font-size:12px; white-space:nowrap; }
+.yt-lblcol { flex:0 0 66px; width:66px; box-sizing:border-box; text-align:center; padding:6px 2px 4px 0; border-right:1px dashed var(--border2); margin-right:2px;
+  position:sticky; left:218px; z-index:5; background:#fff; align-self:stretch; box-shadow:5px 0 6px -5px rgba(0,0,0,.18); }
+.yt-lbl { font-size:9px; font-weight:700; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.yt-lbl.h14 { line-height:14px; height:14px; } .yt-lbl.h15 { line-height:15px; height:15px; } .yt-lbl.mt3 { margin-top:3px; }
+.yt-tile { cursor:pointer; flex:0 0 74px; width:74px; box-sizing:border-box; text-align:center; position:relative; padding:6px 1px 4px; border-radius:8px; }
+.yt-imgbox { position:relative; width:58px; height:58px; margin:0 auto; }
+.yt-img, .yt-noimg { width:58px; height:58px; box-sizing:border-box; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto; }
+.yt-img { object-fit:cover; background:#fff; }
+.yt-noimg { background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--text3); }
+.yt-rank { position:absolute; top:-5px; left:-7px; min-width:18px; height:18px; padding:0 3px; box-sizing:border-box; border-radius:9px; color:#fff; font-size:10px;
+  font-weight:800; display:flex; align-items:center; justify-content:center; z-index:1; box-shadow:0 0 0 2px #fff; }
+.yt-oya { position:absolute; top:-5px; right:-6px; width:16px; height:16px; border-radius:4px; background:#16a34a; display:flex; align-items:center; justify-content:center; z-index:1; box-shadow:0 0 0 2px #fff; }
+.yt-oya svg { width:11px; height:11px; fill:none; stroke:#fff; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+.yt-focus-btn { position:absolute; right:-6px; bottom:0; z-index:2; height:16px; padding:0 5px; font-size:9px; line-height:13px; font-weight:800; border-radius:5px; cursor:pointer;
+  box-shadow:0 1px 3px rgba(15,118,110,.35); border:1.5px solid #0f766e; background:#ecfdf5; color:#0f766e; font-family:inherit; }
+.yt-focus-btn:hover, .yt-focus-btn.on { background:#0f766e; color:#fff; }
+.yt-nm { font-size:10px; color:var(--text2); margin-top:3px; line-height:14px; height:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.yt-v1, .yt-v2 { font-family:'DM Mono',ui-monospace,monospace; font-weight:700; font-size:11px; line-height:15px; height:15px; white-space:nowrap; }
+.yt-v1 { color:var(--text); }
+.yt-v3 { font-family:'DM Mono',ui-monospace,monospace; font-size:10px; color:var(--text2); line-height:14px; height:14px; white-space:nowrap; }
+.yt-noad { display:inline-block; font-size:10px; font-weight:800; line-height:13px; padding:0 7px; border-radius:9px; background:#fff7ed; color:#c2410c; border:1px solid #fb923c;
+  letter-spacing:.05em; vertical-align:middle; font-family:inherit; }
+.yt-noad.big { font-size:11px; line-height:16px; padding:0 8px; }
+/* 絞込（商品1つ・直近1年） */
+.yt-focusbar { position:sticky; top:0; left:0; z-index:6; display:flex; align-items:center; gap:10px; padding:4px 12px 4px 4px; margin-bottom:8px; background:#ecfdf5;
+  border:1px solid #0f766e; border-radius:8px; font-size:12px; font-weight:700; color:#0f766e; width:max-content; }
+.yt-focusbar img { width:34px; height:34px; object-fit:cover; border-radius:6px; border:1px solid var(--border2); background:#fff; }
+.yt-focusbar .nm { color:var(--text); }
+.yt-focusbar .cd { font-family:'DM Mono',ui-monospace,monospace; color:var(--text3); font-weight:400; }
+.yt-focus-off { font-size:11px; padding:3px 10px; border-radius:5px; border:1px solid #0f766e; background:#0f766e; color:#fff; cursor:pointer; font-weight:700; font-family:inherit; }
+.yt-ftable { border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--border2); border-radius:10px; }
+.yt-ftable th { padding:8px 5px; font-size:12px; font-weight:800; white-space:nowrap; min-width:84px; border-left:1px solid var(--border2); position:sticky; top:44px; z-index:2; }
+.yt-ftable th div { font-size:9px; font-weight:600; color:var(--text3); margin-top:2px; }
+.yt-ftable .yt-fm { position:sticky; left:0; z-index:3; background:#f1f5f9; padding:8px 12px; white-space:nowrap; text-align:center; border-left:none; border-right:1px solid var(--border2); }
+.yt-ftable th.yt-fm { z-index:4; color:var(--text3); font-size:11px; background:#f1f5f9; }
+.yt-ftable tr.top .yt-fm { background:#f8fafc; }
+.yt-ftable tbody tr + tr td { border-top:1px dashed var(--border2); }
+.yt-ftable .yt-gs { border-left:3px solid #64748b !important; }
+.yt-fc { padding:8px 4px; border-left:1px solid var(--border2); text-align:center; vertical-align:middle; white-space:nowrap; }
+.yt-fc.none { color:var(--text3); font-size:11px; } .yt-fc.none div { font-size:9px; margin-top:2px; }
+.yt-frk { display:inline-flex; align-items:baseline; gap:3px; }
+.yt-frk span { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 5px; border-radius:10px; color:#fff; font-size:11px; font-weight:800; }
+.yt-frk small { font-size:9px; color:var(--text3); }
+.yt-fv1 { font-family:'DM Mono',ui-monospace,monospace; font-weight:700; font-size:13px; color:var(--text); margin-top:4px; }
+.yt-fv2 { font-family:'DM Mono',ui-monospace,monospace; font-weight:700; font-size:12px; }
+.yt-fv3 { font-family:'DM Mono',ui-monospace,monospace; font-size:10px; color:var(--text2); margin-top:1px; }
+.yt-fv4 { font-size:9px; color:var(--text3); margin-top:2px; }
 #view-compare .cmp-legend .sw { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:4px; vertical-align:middle; }
 #view-compare .cmp-area { position:relative; overflow-x:auto; }
 /* 【v314】分析ボタン(ADcheck風・確認メモを開く) */
@@ -4588,7 +4695,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0885</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0886</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5486,8 +5593,13 @@ th.col-sroas { background-color:#e7d5f5; }
 
     <div class="view" id="view-compare">
       <div class="card">
-        <h3 class="card-title">全-比較（売上ランキング比較）</h3>
+        <h3 class="card-title" id="cmpTitle">全-比較（売上ランキング比較）</h3>
         <div class="cmp-toolbar" id="cmpToolbar">
+          <!-- 【v1.0886】寄与度トップ20（ADcheck v1.1435 から移植）。［寄与度トップ20｜商品一覧］の切替。
+               寄与度トップ20のツールバー（#ytBar）は JS（_ytRenderBar）が作る。従来の要素は .cmp-list-only にまとめ、商品一覧のときだけ出す。 -->
+          <span class="yt-viewseg" id="ytViewSeg" role="group" aria-label="表示"><button type="button" data-ytv="top" onclick="ytSetView('top')" title="どの商品が店全体の数字を動かしたかを、指標ごとに上位20商品で見る">寄与度トップ20</button><button type="button" data-ytv="list" onclick="ytSetView('list')" title="売上ランキングの比較（従来の全-比較）">商品一覧</button></span>
+          <span class="yt-bar yt-only" id="ytBar"></span>
+          <span class="cmp-list-only" style="display:contents">
           <button id="cmpMYoy"  class="mbtn"    type="button" onclick="cmpSetMode('yoy')">前年同月比</button>
           <button id="cmpMMom"  class="mbtn on" type="button" onclick="cmpSetMode('mom')">前月比較</button>
           <button id="cmpMPick" class="mbtn"    type="button" onclick="cmpSetMode('pick')">特定月比較</button>
@@ -5509,8 +5621,11 @@ th.col-sroas { background-color:#e7d5f5; }
             <span><span class="sw" style="background:#dc2626"></span>2割超の減少</span>
             <span style="border-left:1px solid var(--border);padding-left:12px"><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#16a34a;margin-right:4px;vertical-align:middle"><svg viewBox="0 0 20 20" style="width:10px;height:10px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>親子商品（親＝子の合計）</span>
           </div>
+          </span>
         </div>
-        <div class="cmp-area" id="cmpArea"></div>
+        <div class="yt-nav yt-only" id="ytNav"></div>
+        <div class="yt-area yt-only" id="ytArea" onscroll="_ytNavSpy()"></div>
+        <div class="cmp-area cmp-list-only" id="cmpArea"></div>
       </div>
     </div>
 
@@ -7061,6 +7176,7 @@ function _recalcStickyTops() {
   } catch (e) {}
   _zdFitTableHeight();
   try { if (typeof _miFitTableHeight === 'function') _miFitTableHeight(); } catch (e) {}   // 【v1.0801】
+  try { if (state.currentView === 'compare' && typeof _ytFit === 'function') _ytFit(); } catch (e) {}   // 【v1.0886】寄与度トップ20
   // 【v1.0561】2段見出しの下段の固定位置も、文字サイズ・ウィンドウ幅の変化に追従させる
   try { if (typeof _zdFixHeadSticky === 'function') _zdFixHeadSticky(); } catch (e) {}
 }
@@ -19097,6 +19213,9 @@ function cmpSyncUI(){
   Object.keys(map).forEach(function(c){ const el=document.getElementById(map[c][0]); if(!el) return; const col=map[c][1]; const ml=(c==='blue')?'margin-left:12px;':''; el.style.cssText=ml+base+(cmpColorFilter.has(c)?('border:1px solid '+col+';background:'+col+';color:#fff;'):off); });
 }
 function renderCompare(){
+  // 【v1.0886】［寄与度トップ20｜商品一覧］。寄与度トップ20ならそちらを描いて終わり（従来の商品一覧の処理は通らない）
+  try { _ytSyncViewUI(); } catch (e) {}
+  if (_ytView === 'top') { renderYtTop(); return; }
   cmpSyncUI();
   const area = document.getElementById('cmpArea');
   const sel = document.getElementById('cmpSelMonth');
@@ -19289,6 +19408,552 @@ window.ycGetNavGroups=function(){
     return out;
   }catch(e){ return []; }
 };
+
+// ============================================================================
+// 【v1.0886】全-比較 ＞ 寄与度トップ20（ADcheck v1.1435 から移植）
+//   「どの商品が店全体の数字を動かしたか」を、指標ごとに上位20商品のタイルで並べる。
+//   ★商品は代表コード（repCode）で親子を合算する（全-比較・全-貢献度と同じ）。撤退済みも含める。
+//   ★「全体」は【商品別データの合計】。全-月別データ（店全体のレポート）とは少しずれることがある（注記を出す）。
+//   ★PR系（PR広告売上ROAS・PR実績額(7%超)）は設定料率からの推定。料率未取得の商品は PR系の計算から外して件数を注記。
+//   ★今月(途中)は、比較する月も同じ日数で切る。比較月に1日からの日別データが無いときは月全体のまま「日別なし」と出す。
+//   用語: ym＝'YYYY-MM'。md＝何日まで（null＝月全体）。
+// ============================================================================
+const YT_N = 20;
+let _ytView = (function () { try { return localStorage.getItem('ycheck_cmp_view') || 'top'; } catch (e) { return 'top'; } })();
+let _ytMode = 'mom';            // 'mom' 前月比較 / 'yoy' 前年同月比 / 'pick' 特定月比較 / 'y1' 直近1年（絞込中だけ）
+let _ytMonth = '';              // 'YYYY-MM' または 'YYYY-MM#full'
+let _ytPickA = '', _ytPickB = '';   // 特定月比較：A＝上の段（比較される側）、B＝下の段
+let _ytImp = 'all';             // 'all' +-両方 / 'neg' ROAS寄与度- / 'pos' ROAS寄与度+
+let _ytPins = [null, null];     // 選択枠（黄・青）
+let _ytHover = null;
+let _ytFocus = null;            // 絞込中の代表コード
+let _ytModeBeforeFocus = null;
+let _ytLast = null;             // エクスポート用（直近の描画結果）
+
+// 指標。bg＝全-月別データ（MI_COLS）の見出し色、col＝同系の濃い色。g＝まとまり（境目に太線）。
+//   roas型: num ÷ den。pr:true の指標は料率が分かる商品だけで計算する。
+const YT_METRICS = [
+  { k:'sroas',   g:'eff',   label:'広告売上ROAS',   col:'#7e22ce', bg:'#e7d5f5', type:'roas', num:'tot', den:'sp' },
+  { k:'prsroas', g:'eff',   label:'PR広告売上ROAS', col:'#6b21a8', bg:'#dbc3f0', type:'roas', num:'tot', den:'spPr', pr:true },
+  { k:'roas',    g:'roas',  label:'広告ROAS',       col:'#4338ca', bg:'#d8d9f6', type:'roas', num:'ad',  den:'sp' },
+  { k:'tot',     g:'sales', label:'総売上',         col:'#1d4ed8', bg:'#d6e1fa', type:'amt' },
+  { k:'seo',     g:'sales', label:'SEO売上',        col:'#15803d', bg:'#d3edd9', type:'amt' },
+  { k:'ad',      g:'ad',    label:'広告売上',       col:'#b45309', bg:'#fbe3c4', type:'amt' },
+  { k:'sp',      g:'cost',  label:'広告実績額',     col:'#be185d', bg:'#f6c9d7', type:'amt' },
+  { k:'prOver',  g:'cost',  label:'PR実績額(7%超)', col:'#0f766e', bg:'#bfe3d8', type:'amt', pr:true },
+  { k:'cpa',     g:'cpa',   label:'獲得単価',       col:'#6d28d9', bg:'#ddd6fe', type:'cpa' },
+];
+// 絞込中だけ出す指標
+const YT_FOCUS_EXTRA = [
+  { k:'cvr',     g:'cvr',   label:'広告CVR',        col:'#c2410c', bg:'#fdeacd', type:'cvr', num:'od', den:'cl' },
+];
+const YT_DEN_LABEL = { sp:'広告実績額', spPr:'広告+PR費' };   // spPr＝広告実績額＋PR実績額(7%超)
+function _ytAllMetrics() { return YT_METRICS.concat(YT_FOCUS_EXTRA); }
+function _ytShownMetrics(focus) {
+  const L = focus ? _ytAllMetrics() : YT_METRICS;
+  return L.filter(mt => focus || _ytImp === 'all' || mt.type === 'roas');
+}
+function _ytGroupStarts(list) { const s = new Set(); list.forEach((mt, i) => { if (i > 0 && mt.g !== list[i - 1].g) s.add(mt.k); }); return s; }
+
+function _ytYmAdd(ym, d) { let y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + d; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + String(m + 1).padStart(2, '0'); }
+function _ytYmLbl(ym) { return ym.slice(0, 4) + '/' + ym.slice(5, 7); }
+// その月の日別（商品）データの日（数字）の一覧
+function _ytItemDays(ym) {
+  return (typeof dailyDates === 'function' ? dailyDates('item') : []).filter(d => d.slice(0, 7) === ym).map(d => +d.slice(8, 10));
+}
+// その月の「取り込み済みの最後の日」（今月(途中)の締め日）
+function _ytCutoff(ym) { const ds = _ytItemDays(ym); return ds.length ? Math.max.apply(null, ds) : null; }
+// 1日〜md日がすべて日別でそろっているか（＝日数で切れるか）
+function _ytCanCut(ym, md) { const s = new Set(_ytItemDays(ym)); for (let d = 1; d <= md; d++) { if (!s.has(d)) return false; } return true; }
+
+// ---- 集計：代表コードごとの合計 ----
+//   rows は buildFullAggregate() の結果（描画1回につき1度だけ作る）。md があれば日別の 1〜md日 だけを足す。
+function _ytAgg(ym, md, faRows) {
+  const m = {};
+  const en = (code) => {
+    const rep = cmpRepCode(code);
+    return m[rep] || (m[rep] = { tot: 0, ad: 0, sp: 0, od: 0, cl: 0, prOver: 0, rateKnown: true, _rev: {} });
+  };
+  if (md) {
+    const d = ensureDaily();
+    Object.keys(d.item || {}).forEach(date => {
+      if (date.slice(0, 7) !== ym || +date.slice(8, 10) > md) return;
+      const src = d.item[date] || {};
+      Object.keys(src).forEach(code => { const a = src[code] || []; const x = en(code); x.tot += +a[0] || 0; x._rev[code] = (x._rev[code] || 0) + (+a[0] || 0); });
+    });
+    Object.keys(d.ad || {}).forEach(date => {
+      if (date.slice(0, 7) !== ym || +date.slice(8, 10) > md) return;
+      const src = d.ad[date] || {};
+      Object.keys(src).forEach(code => { const a = src[code] || []; const x = en(code); x.sp += +a[0] || 0; x.ad += +a[1] || 0; x.cl += +a[2] || 0; x.od += +a[3] || 0; });
+    });
+  } else {
+    (faRows || []).forEach(r => {
+      if (String(r.month) !== ym) return;
+      const x = en(r.code);
+      x.tot += +r.rev || 0; x.ad += +r.adRev || 0; x.sp += +r.adCost || 0; x.od += +r.adOrders || 0; x.cl += +r.adClicks || 0;
+      x._rev[r.code] = (x._rev[r.code] || 0) + (+r.rev || 0);
+    });
+  }
+  // PR実績額(7%超)：★商品ごとに出してから足す（親子の合計売上に代表の料率を掛けない＝全-貢献度と同じ）
+  Object.keys(m).forEach(rep => {
+    const x = m[rep];
+    Object.keys(x._rev).forEach(code => {
+      const rev = x._rev[code];
+      if (!(rev > 0)) return;
+      const e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(code, rev) : null;
+      if (!e) x.rateKnown = false; else x.prOver += +e.over || 0;
+    });
+    delete x._rev;
+    x.seo = Math.max(0, x.tot - x.ad);
+    x.spPr = x.sp + x.prOver;
+    if (!(x.tot || x.ad || x.sp || x.od || x.cl)) delete m[rep];
+  });
+  return m;
+}
+
+// ---- 1か月分：指標ごとに並べる ----
+function _ytImpPick(list, isCpa) {
+  if (_ytImp === 'all') return list;
+  const bad = x => isCpa ? x.imp > 0 : x.imp < 0;
+  return list.filter(x => _ytImp === 'neg' ? bad(x) : (!bad(x) && x.imp !== 0));
+}
+function _ytCalc(agg) {
+  const all = Object.keys(agg);
+  const known = all.filter(c => agg[c].rateKnown);
+  const excludedPr = all.filter(c => !agg[c].rateKnown && (agg[c].tot > 0)).length;
+  const sumOf = (codes, k) => codes.reduce((t, c) => t + (agg[c][k] || 0), 0);
+  const out = {};
+  _ytAllMetrics().forEach(mt => {
+    const codes = mt.pr ? known : all;
+    const ex = mt.pr ? excludedPr : 0;
+    if (mt.type === 'amt') {
+      const tot = sumOf(codes, mt.k);
+      const L = codes.map(c => ({ code: c, v: agg[c][mt.k] || 0 })).filter(x => x.v > 0).sort((a, b) => b.v - a.v)
+        .map(x => Object.assign(x, { share: tot > 0 ? x.v / tot * 100 : 0 }));
+      out[mt.k] = { total: tot, list: L.slice(0, YT_N), all: L, ex: ex };
+    } else if (mt.type === 'roas' || mt.type === 'cvr') {
+      const N = mt.num, D = mt.den;
+      const TN = sumOf(codes, N), TD = sumOf(codes, D);
+      const R = TD > 0 ? TN / TD * 100 : null;
+      let L = [];
+      if (R != null) {
+        L = codes.filter(c => { const d = agg[c][D] || 0, n = agg[c][N] || 0; return (mt.type === 'cvr' ? d > 0 : (d > 0 || n > 0)) && TD - d > 0; }).map(c => {
+          const d = agg[c][D] || 0, n = agg[c][N] || 0;
+          return { code: c, v: d > 0 ? n / d * 100 : null, imp: R - (TN - n) / (TD - d) * 100, sp: d };
+        }).sort((a, b) => Math.abs(b.imp) - Math.abs(a.imp));
+      }
+      out[mt.k] = { total: R, list: _ytImpPick(L, false).slice(0, YT_N), all: L, ex: ex };
+    } else if (mt.type === 'cpa') {
+      const SP = sumOf(codes, 'sp'), OD = sumOf(codes, 'od');
+      const C = OD > 0 ? SP / OD : null;
+      let L = [];
+      if (C != null) {
+        L = codes.filter(c => (agg[c].sp || 0) > 0 && OD - (agg[c].od || 0) > 0).map(c => {
+          const a = agg[c];
+          return { code: c, v: a.od > 0 ? a.sp / a.od : null, imp: C - (SP - a.sp) / (OD - (a.od || 0)) };
+        }).sort((a, b) => Math.abs(b.imp) - Math.abs(a.imp));
+      }
+      out[mt.k] = { total: C, list: _ytImpPick(L, true).slice(0, YT_N), all: L, ex: ex };
+    }
+  });
+  return out;
+}
+
+// ---- 比べる月と締め日 ----
+function _ytPeriods(faRows) {
+  const yms = [...new Set((faRows || []).map(r => String(r.month)))].filter(m => /^\d{4}-\d{2}$/.test(m)).sort();
+  if (!yms.length) return null;
+  const curYm = getCurrentYm();
+  const parse = (v) => { v = v || ''; const full = v.slice(-5) === '#full'; return { ym: full ? v.slice(0, -5) : v, full: full }; };
+  let top, cmp, partial = false, cutoff = null, af = false, bf = false;
+  if (_ytMode === 'pick') {
+    const a = parse(_ytPickA), b = parse(_ytPickB); af = a.full; bf = b.full;
+    top = yms.includes(a.ym) ? a.ym : yms[yms.length - 1];
+    cmp = yms.includes(b.ym) ? b.ym : (yms[yms.length - 2] || yms[0]);
+    const tp = top >= curYm && !af, cp = cmp >= curYm && !bf;
+    partial = tp || cp;
+    if (partial) cutoff = _ytCutoff(tp ? top : cmp);
+    if (!cutoff) partial = false;
+  } else {
+    const s = parse(_ytMonth); af = s.full;
+    top = yms.includes(s.ym) ? s.ym : yms[yms.length - 1];
+    partial = top >= curYm && !af;
+    if (partial) cutoff = _ytCutoff(top);
+    if (!cutoff) partial = false;
+    cmp = (_ytMode === 'yoy') ? _ytYmAdd(top, -12) : _ytYmAdd(top, -1);
+  }
+  const modeLbl = (_ytMode === 'mom') ? '前月' : (_ytMode === 'pick' ? '比較する月' : '前年同月');
+  let months;
+  if (_ytMode === 'y1') {
+    months = [];
+    for (let i = 0; i < 12; i++) { const m = _ytYmAdd(top, -i); if (m < yms[0]) break; months.push({ ym: m, title: i === 0 ? '今月' : (i + 'か月前'), md: (i === 0 && partial) ? cutoff : null }); }
+  } else {
+    months = [{ ym: top, title: '今月', md: partial ? cutoff : null }, { ym: cmp, title: modeLbl, md: partial ? cutoff : null }];
+  }
+  // 日別で切れない月（日別が1日からそろっていない）は月全体のまま。noDaily で画面に出す。
+  months.forEach(m => { if (m.md && !_ytCanCut(m.ym, m.md)) { m.md = null; m.noDaily = true; } m.has = yms.includes(m.ym); });
+  return { yms, curYm, top, cmp, partial, cutoff, af, bf, months };
+}
+
+// ---- 表示の切り替え（寄与度トップ20 ｜ 商品一覧） ----
+function ytSetView(v) {
+  _ytView = (v === 'list') ? 'list' : 'top';
+  try { localStorage.setItem('ycheck_cmp_view', _ytView); } catch (e) {}
+  renderCompare();
+}
+function _ytSyncViewUI() {
+  const top = (_ytView === 'top');
+  const vw = document.getElementById('view-compare'); if (vw) vw.classList.toggle('yt-on', top);
+  document.querySelectorAll('#ytViewSeg [data-ytv]').forEach(b => b.classList.toggle('on', b.dataset.ytv === _ytView));
+  const t = document.getElementById('cmpTitle'); if (t) t.textContent = top ? '全-比較（寄与度トップ20）' : '全-比較（売上ランキング比較）';
+  _ytPageLock(top && state.currentView === 'compare');
+}
+function ytSetMode(m) { _ytMode = m; renderCompare(); }
+function ytSetMonth(v) { _ytMonth = v; renderCompare(); }
+function ytSetPick(w, v) { if (w === 'a') _ytPickA = v; else _ytPickB = v; renderCompare(); }
+function ytSwapPick() {
+  const sa = document.getElementById('ytSelA'), sb = document.getElementById('ytSelB');
+  const a = (sa && sa.value) || _ytPickA, b = (sb && sb.value) || _ytPickB;
+  _ytPickA = b; _ytPickB = a; renderCompare();
+}
+function ytSetImp(m) { _ytImp = m; const a = document.getElementById('ytArea'); if (a) a.scrollLeft = 0; renderCompare(); }
+function ytSetFocus(code) {
+  const was = _ytFocus;
+  _ytFocus = (_ytFocus === code) ? null : (code || null);
+  if (!was && _ytFocus) { _ytModeBeforeFocus = _ytMode; _ytMode = 'y1'; }                 // 絞り込んだら「直近1年」
+  else if (was && !_ytFocus) { if (_ytMode === 'y1') _ytMode = _ytModeBeforeFocus || 'mom'; _ytModeBeforeFocus = null; }   // 解除で元の比較に戻す
+  const a = document.getElementById('ytArea'); if (a) { a.scrollTop = 0; a.scrollLeft = 0; }
+  renderCompare();
+}
+
+// ---- 選択枠（黄・青）。クリックで空いている枠へ、もう一度で外す。全段で同じ商品を色枠で囲む ----
+const YT_PIN_COL = ['#f59e0b', '#2563eb'];
+const YT_PIN_BG = ['#fffbeb', '#eff6ff'];
+function _ytPaint(code) {
+  const slot = _ytPins.indexOf(code), hov = (_ytHover === code);
+  document.querySelectorAll('#ytArea .yt-tile').forEach(el => {
+    if (el.dataset.code !== code) return;
+    if (slot >= 0) { el.style.outline = '2px solid ' + YT_PIN_COL[slot]; el.style.background = YT_PIN_BG[slot]; }
+    else if (hov) { el.style.outline = '2px dashed #94a3b8'; el.style.background = '#f8fafc'; }
+    else { el.style.outline = ''; el.style.background = ''; }
+  });
+}
+function ytPin(code) {
+  const k = _ytPins.indexOf(code);
+  if (k >= 0) { _ytPins[k] = null; _ytPaint(code); _ytRenderBar(); return; }
+  for (let i = 0; i < 2; i++) { if (!_ytPins[i]) { _ytPins[i] = code; _ytPaint(code); _ytRenderBar(); return; } }
+  // 枠がいっぱい → 何もしない
+}
+function _ytName(code) { const m = (typeof getMaster === 'function' ? getMaster(code) : null) || {}; return m.name || code; }
+function _ytImg(code) { try { return getProductImageSrc(code) || ''; } catch (e) { return ''; } }
+function _ytImgErr(el) {
+  try { const d = document.createElement('div'); d.className = 'yt-noimg'; d.textContent = '画像'; el.replaceWith(d); } catch (e) {}
+}
+window._ytImgErr = _ytImgErr;
+
+// ---- ツールバー（1段目：比較・月・寄与度の向き・選択枠・エクスポート） ----
+const _YT_SWAP_SVG = '<svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M1.5 4h12M10.5 1l3 3-3 3"/><path d="M14.5 10h-12M5.5 7l-3 3 3 3"/></svg>';
+function _ytMonthOptions(yms, curYm, sel, full) {
+  return [...yms].reverse().map(m => {
+    const l = _ytYmLbl(m);
+    if (m >= curYm) return '<option value="' + m + '"' + ((m === sel && !full) ? ' selected' : '') + '>' + l + '(途中)</option>'
+                         + '<option value="' + m + '#full"' + ((m === sel && full) ? ' selected' : '') + '>' + l + '(フル)</option>';
+    return '<option value="' + m + '"' + (m === sel ? ' selected' : '') + '>' + l + '</option>';
+  }).join('');
+}
+function _ytRenderBar(P) {
+  const bar = document.getElementById('ytBar'); if (!bar) return;
+  P = P || (_ytLast && _ytLast.P);
+  const mb = (m, lbl, show) => show ? '<button type="button" class="ytb' + (_ytMode === m ? ' on' : '') + '" data-ytact="mode" data-v="' + m + '">' + lbl + '</button>' : '';
+  let h = '<span class="yt-grp">'
+    + mb('y1', '直近1年', !!_ytFocus) + mb('mom', '前月比較', true) + mb('yoy', '前年同月比', true) + mb('pick', '特定月比較', true) + '</span>';
+  if (P) {
+    if (_ytMode === 'pick') {
+      h += '<span class="yt-grp"><select id="ytSelA" class="yt-sel" data-ytsel="a" title="上の段（比較される側）">' + _ytMonthOptions(P.yms, P.curYm, P.top, P.af) + '</select>'
+        + '<button type="button" class="ytb yt-swap" data-ytact="swap" title="左右の月を入れ替える">' + _YT_SWAP_SVG + '</button>'
+        + '<select id="ytSelB" class="yt-sel" data-ytsel="b" title="下の段（比較する月）">' + _ytMonthOptions(P.yms, P.curYm, P.cmp, P.bf) + '</select></span>';
+    } else {
+      h += '<select id="ytSelMonth" class="yt-sel" data-ytsel="m">' + _ytMonthOptions(P.yms, P.curYm, P.top, P.af) + '</select>';
+    }
+  }
+  const ib = (v, lbl, col, tip) => '<button type="button" class="ytb" data-ytact="imp" data-v="' + v + '" title="' + tip + '"' + (_ytImp === v ? ' style="background:' + col + ';border-color:' + col + ';color:#fff"' : '') + '>' + lbl + '</button>';
+  h += '<span class="yt-grp">' + ib('all', '+-両方', '#475569', '影響の大きい順（＋も−も）')
+    + ib('neg', 'ROAS寄与度-', '#dc2626', '全体のROASを下げている商品だけ、影響の大きい順（−pt）。ROAS系の指標だけ出します')
+    + ib('pos', 'ROAS寄与度+', '#16a34a', '全体のROASを上げている商品だけ、影響の大きい順（＋pt）。ROAS系の指標だけ出します') + '</span>';
+  let chips = '';
+  if (!_ytFocus) {
+    for (let i = 0; i < 2; i++) {
+      const c = _ytPins[i], nm = c ? _ytName(c) : '未選択';
+      chips += '<span class="yt-pin' + (c ? ' has' : '') + '" data-ytact="' + (c ? 'unpin' : '') + '" data-code="' + escapeHtml(c || '') + '" title="' + escapeHtml(c ? (nm + '（クリックで外す）') : 'タイルをクリックすると、ここに入って全段で同じ商品を色枠で囲みます') + '"'
+        + ' style="border-color:' + YT_PIN_COL[i] + ';' + (c ? 'background:' + YT_PIN_BG[i] : '') + '"><span class="yt-pin-nm">' + escapeHtml(nm) + '</span>' + (c ? '<span class="yt-pin-x">✕</span>' : '') + '</span>';
+    }
+  }
+  h += '<span class="yt-right">' + (chips ? '<span class="yt-pins">' + chips + '</span>' : '')
+    + '<button type="button" class="ytb yt-export" data-ytact="export" title="今表示している寄与度トップ（指標・今月と比較月・20位まで）をCSVで保存">⬇ エクスポート</button></span>';
+  bar.innerHTML = h;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('#ytBar [data-ytact]');
+  if (!b) return;
+  const act = b.dataset.ytact;
+  if (act === 'mode') ytSetMode(b.dataset.v);
+  else if (act === 'imp') ytSetImp(b.dataset.v);
+  else if (act === 'swap') ytSwapPick();
+  else if (act === 'export') ytExport();
+  else if (act === 'unpin' && b.dataset.code) ytPin(b.dataset.code);
+});
+document.addEventListener('change', (e) => {
+  const s = e.target.closest && e.target.closest('#ytBar [data-ytsel]');
+  if (!s) return;
+  if (s.dataset.ytsel === 'm') ytSetMonth(s.value); else ytSetPick(s.dataset.ytsel, s.value);
+});
+
+// ---- 指標ボタン（2段目）：押すとその段まで表をスクロール。今見ている段のボタンを塗る ----
+function _ytRenderNav() {
+  const nav = document.getElementById('ytNav'); if (!nav) return;
+  const L = _ytShownMetrics(!!_ytFocus), GS = _ytGroupStarts(L);
+  nav.innerHTML = '<span class="yt-navbtns">' + L.map(mt => (GS.has(mt.k) ? '<span class="yt-navsep"></span>' : '')
+      + '<button type="button" class="yt-navbtn" data-mk="' + mt.k + '" style="border-color:' + mt.col + ';background:' + mt.bg + ';color:' + mt.col + '">' + mt.label + '</button>').join('') + '</span>'
+    + '<span class="yt-navnote" title="寄与度トップ20の「全体」は商品別データの合計です。店全体のレポート（全-月別データ）とは少しずれることがあります。&#10;PR広告売上ROAS・PR実績額(7%超)は、設定PRオプ料率からの推定です（実測ではありません）。料率が分からない商品はPR系の計算から外しています。">ⓘ 全体＝商品別の合計（全-月別データと少しずれることがあります）／PR系は料率からの推定</span>';
+  _ytNavSpy();
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('#ytNav .yt-navbtn');
+  if (!b) return;
+  const a = document.getElementById('ytArea'); if (!a) return;
+  const k = b.dataset.mk;
+  const el = document.getElementById(_ytFocus ? 'yt-col-' + k : 'yt-blk-' + k); if (!el) return;
+  const ar = a.getBoundingClientRect(), er = el.getBoundingClientRect();
+  if (_ytFocus) a.scrollTo({ left: Math.max(0, a.scrollLeft + (er.left - ar.left) - 140), behavior: 'smooth' });
+  else a.scrollTo({ top: Math.max(0, a.scrollTop + (er.top - ar.top)), behavior: 'smooth' });
+  _ytNavMark(k);
+});
+function _ytNavMark(k) {
+  document.querySelectorAll('#ytNav .yt-navbtn').forEach(b => {
+    const mt = _ytAllMetrics().find(m => m.k === b.dataset.mk); if (!mt) return;
+    const on = (b.dataset.mk === k);
+    b.style.background = on ? mt.col : mt.bg; b.style.color = on ? '#fff' : mt.col;
+  });
+}
+function _ytNavSpy() {
+  if (_ytFocus) return;
+  const a = document.getElementById('ytArea'); if (!a || a.offsetParent === null) return;
+  const SM = _ytShownMetrics(false); if (!SM.length) return;
+  const top = a.getBoundingClientRect().top + 4; let cur = SM[0].k;
+  SM.forEach(mt => { const el = document.getElementById('yt-blk-' + mt.k); if (el && el.getBoundingClientRect().top <= top) cur = mt.k; });
+  if (a.scrollTop + a.clientHeight >= a.scrollHeight - 2) cur = SM[SM.length - 1].k;
+  _ytNavMark(cur);
+}
+
+// ---- 表 ----
+function _ytYen(v) { return '¥' + Math.round(v).toLocaleString('ja-JP'); }
+function _ytNoAdBadge(big) { return '<span class="yt-noad' + (big ? ' big' : '') + '" title="この期間は広告費0円（売上だけある）">広告なし</span>'; }
+function _ytImpTxt(mt, x) {
+  if (mt.type === 'cpa') { const bad = x.imp > 0; return '<span style="color:' + (bad ? '#dc2626' : '#16a34a') + '">' + (x.imp >= 0 ? '+' : '−') + '¥' + Math.round(Math.abs(x.imp)).toLocaleString('ja-JP') + '</span>'; }
+  const dec = mt.type === 'cvr' ? 2 : 1, up = x.imp >= 0;
+  return '<span style="color:' + (up ? '#16a34a' : '#dc2626') + '">' + (up ? '+' : '−') + Math.abs(x.imp).toFixed(dec) + 'pt</span>';
+}
+function _ytValTxt(mt, x, big) {
+  if (mt.type === 'amt') return _ytYen(x.v);
+  if (mt.type === 'roas') return (x.v == null) ? _ytNoAdBadge(big) : Math.round(x.v) + '%';
+  if (mt.type === 'cvr') return x.v.toFixed(2) + '%';
+  return (x.v == null) ? '注文0' : _ytYen(x.v);
+}
+function _ytTotTxt(mt, r) {
+  if (!r || r.total == null) return '—';
+  if (mt.type === 'amt') return _ytYen(r.total);
+  if (mt.type === 'roas') return Math.round(r.total) + '%';
+  if (mt.type === 'cvr') return r.total.toFixed(2) + '%';
+  return _ytYen(r.total);
+}
+function _ytNote(mt) {
+  if (mt.type === 'amt') return '数字＝金額／全体に占める割合';
+  if (mt.type === 'cpa') return '数字＝商品の獲得単価／全体の獲得単価を動かしている幅（+高くしている・−安くしている）';
+  return '数字＝商品の' + mt.label + '／全体の' + mt.label + 'を動かしている幅（+押し上げ・−押し下げ）';
+}
+function _ytTile(mt, x, i, parentSet) {
+  const code = x.code, name = _ytName(code), img = _ytImg(code), ec = escapeHtml(code), focused = (_ytFocus === code);
+  const imgEl = img ? '<img loading="lazy" src="' + escapeHtml(img) + '" onerror="_ytImgErr(this)" class="yt-img">' : '<div class="yt-noimg">画像</div>';
+  return '<div class="yt-tile" data-code="' + ec + '" title="' + escapeHtml(name + '（' + code + '）') + '&#10;クリック：選択枠に入れる・もう一度で外す／ダブルクリック：商品-グラフ">'
+    + '<div class="yt-imgbox">' + imgEl
+    +   '<div class="yt-rank" style="background:' + (i < 3 ? mt.col : '#94a3b8') + '">' + (i + 1) + '</div>'
+    +   (parentSet && parentSet.has(code) ? '<div class="yt-oya" title="親子商品（親＝子の合計）"><svg viewBox="0 0 20 20"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/></svg></div>' : '')
+    +   '<button type="button" class="yt-focus-btn' + (focused ? ' on' : '') + '" data-code="' + ec + '" title="' + (focused ? '絞り込みを解除' : 'この商品だけを表示（直近1年）') + '">' + (focused ? '解除' : '絞込') + '</button>'
+    + '</div>'
+    + '<div class="yt-nm">' + escapeHtml(name) + '</div>'
+    + '<div class="yt-v1">' + _ytValTxt(mt, x, false) + '</div>'
+    + '<div class="yt-v2" style="color:' + mt.col + '">' + (mt.type === 'amt' ? x.share.toFixed(1) + '%' : _ytImpTxt(mt, x)) + '</div>'
+    + (mt.type === 'roas' ? '<div class="yt-v3">' + _ytYen(x.sp || 0) + '</div>' : '')
+    + '</div>';
+}
+function _ytLabelCol(mt) {
+  const ln = (t, cls, st) => '<div class="yt-lbl ' + (cls || '') + '"' + (st ? ' style="' + st + '"' : '') + '>' + t + '</div>';
+  return '<div class="yt-lblcol"><div style="height:58px"></div>'
+    + ln('商品名', 'h14 mt3') + ln(mt.label, 'h15') + ln(mt.type === 'amt' ? '構成比' : '全体への影響', 'h15', 'color:' + mt.col)
+    + (mt.type === 'roas' ? ln(YT_DEN_LABEL[mt.den] || '実績額', 'h14') : '') + '</div>';
+}
+function _ytMonthCell(m, mt, r, isTop) {
+  const t = m.has ? _ytTotTxt(mt, r) : '—';
+  return '<div class="yt-mcell' + (isTop ? ' top' : '') + '">'
+    + '<div class="yt-mtag">' + m.title + '</div>'
+    + '<div class="yt-mym">' + _ytYmLbl(m.ym) + '</div>'
+    + (m.md ? '<div class="yt-mday">1〜' + m.md + '日</div>' : '')
+    + (m.noDaily ? '<div class="yt-mnod" title="この月は1日からの日別データが無いので、日数をそろえずに月全体で出しています">月全体（日別なし）</div>' : '')
+    + '<div class="yt-mtl">' + (mt.type === 'amt' ? '合計' : '全体') + '</div>'
+    + '<div class="yt-mtv" style="color:' + mt.col + ';font-size:' + (t.length > 9 ? 11 : 13) + 'px">' + t + '</div>'
+    + (r && r.ex ? '<div class="yt-mex" title="設定PRオプ料率が分からない商品は、PR系の計算から外しています">料率未取得' + r.ex + '件を除外</div>' : '')
+    + '</div>';
+}
+function renderYtTop() {
+  const area = document.getElementById('ytArea'); if (!area) return;
+  if (_ytMode === 'y1' && !_ytFocus) _ytMode = _ytModeBeforeFocus || 'mom';   // 直近1年は絞込中だけ
+  const fa = buildFullAggregate();
+  const P = _ytPeriods(fa);
+  _ytRenderBar(P);
+  if (!P) { area.innerHTML = '<div class="yt-empty">データがありません（レポートを取り込んでください）</div>'; _ytLast = null; _ytRenderNav(); return; }
+  const M = P.months.map(m => Object.assign({}, m, { res: m.has ? _ytCalc(_ytAgg(m.ym, m.md, fa)) : null }));
+  _ytLast = { P, M };
+  let parentSet = null; try { parentSet = _zdSeoParentSet(); } catch (e) {}
+  let html = '';
+  if (_ytFocus) {
+    const fimg = _ytImg(_ytFocus);
+    html += '<div class="yt-focusbar">'
+      + (fimg ? '<img src="' + escapeHtml(fimg) + '" onerror="this.style.display=\'none\'">' : '')
+      + '<span>絞り込み中：</span><span class="nm">' + escapeHtml(_ytName(_ytFocus)) + '</span><span class="cd">' + escapeHtml(_ytFocus) + '</span>'
+      + '<button type="button" class="yt-focus-off" data-code="' + escapeHtml(_ytFocus) + '">解除してトップ' + YT_N + 'に戻る</button></div>';
+    const SM = _ytShownMetrics(true), GS = _ytGroupStarts(SM);
+    const bl = mt => GS.has(mt.k) ? ' yt-gs' : '';
+    const cell = (mt, r) => {
+      const all = (r && r.all) || [], k = all.findIndex(y => y.code === _ytFocus);
+      if (k < 0) return '<td class="yt-fc' + bl(mt) + ' none">—<div>数字なし</div></td>';
+      const x = all[k];
+      return '<td class="yt-fc' + bl(mt) + '">'
+        + '<div class="yt-frk"><span style="background:' + (k < 3 ? mt.col : '#94a3b8') + '">' + (k + 1) + '</span><small>位／' + all.length + '</small></div>'
+        + '<div class="yt-fv1">' + _ytValTxt(mt, x, true) + '</div>'
+        + '<div class="yt-fv2" style="color:' + mt.col + '">' + (mt.type === 'amt' ? x.share.toFixed(1) + '%' : _ytImpTxt(mt, x)) + '</div>'
+        + (mt.type === 'roas' ? '<div class="yt-fv3">' + (YT_DEN_LABEL[mt.den] || '実績額') + ' ' + _ytYen(x.sp || 0) + '</div>' : '')
+        + '<div class="yt-fv4">' + (mt.type === 'amt' ? '合計 ' : '全体 ') + _ytTotTxt(mt, r) + '</div></td>';
+    };
+    const head = SM.map(mt => '<th id="yt-col-' + mt.k + '" class="' + bl(mt).trim() + '" style="background:' + mt.bg + ';color:' + mt.col + '">' + mt.label + '<div>' + (mt.type === 'amt' ? '金額／構成比' : '値／全体への影響') + '</div></th>').join('');
+    const rows = M.map((m, i) => '<tr class="' + (i === 0 ? 'top' : '') + '"><td class="yt-fm">'
+      + '<div class="yt-mtag">' + m.title + '</div><div class="yt-mym">' + _ytYmLbl(m.ym) + '</div>'
+      + (m.md ? '<div class="yt-mday">1〜' + m.md + '日</div>' : '') + (m.noDaily ? '<div class="yt-mnod">月全体（日別なし）</div>' : '')
+      + '</td>' + SM.map(mt => cell(mt, m.res && m.res[mt.k])).join('') + '</tr>').join('');
+    html += '<table class="yt-ftable"><thead><tr><th class="yt-fm">月</th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>';
+    area.innerHTML = html;
+  } else {
+    const SM = _ytShownMetrics(false), GS = _ytGroupStarts(SM);
+    html += '<div class="yt-wrap">';
+    SM.forEach((mt, mi) => {
+      html += '<div id="yt-blk-' + mt.k + '" class="yt-blk' + (mi ? (GS.has(mt.k) ? ' gs' : ' bt') : '') + '">'
+        + '<div class="yt-mname" style="background:' + mt.bg + '"><div style="color:' + mt.col + '">' + mt.label + '</div><small>' + _ytNote(mt) + '</small></div>'
+        + '<div class="yt-rows">'
+        + M.map((m, i) => {
+            const r = m.res ? m.res[mt.k] : null;
+            const body = !m.has ? '<div class="yt-nodata">この月のデータがありません</div>'
+              : (r && r.list.length ? _ytLabelCol(mt) + r.list.map((x, j) => _ytTile(mt, x, j, parentSet)).join('') : '<div class="yt-nodata">該当する商品がありません</div>');
+            return '<div class="yt-row' + (i ? ' sub' : '') + '">' + _ytMonthCell(m, mt, r, i === 0) + '<div class="yt-tiles">' + body + '</div></div>';
+          }).join('')
+        + '</div></div>';
+    });
+    area.innerHTML = html + '</div>';
+    _ytPins.forEach(c => { if (c) _ytPaint(c); });
+  }
+  _ytRenderNav();
+  if (_ytFocus) _ytNavMark('');
+  _ytFit();
+}
+// タイル：クリック＝選択枠／ダブルクリック＝商品-グラフ／絞込ボタン
+document.addEventListener('click', (e) => {
+  const fb = e.target.closest && e.target.closest('#ytArea .yt-focus-btn, #ytArea .yt-focus-off');
+  if (fb) { e.stopPropagation(); ytSetFocus(fb.classList.contains('yt-focus-off') ? null : fb.dataset.code); return; }
+  const t = e.target.closest && e.target.closest('#ytArea .yt-tile');
+  if (t && !_ytFocus) ytPin(t.dataset.code);
+});
+document.addEventListener('dblclick', (e) => {
+  if (e.target.closest && e.target.closest('#ytArea .yt-focus-btn')) return;
+  const t = e.target.closest && e.target.closest('#ytArea .yt-tile');
+  if (t) { try { _zdSeoOpenGraph(t.dataset.code); } catch (er) {} }
+});
+document.addEventListener('mouseover', (e) => {
+  const t = e.target.closest && e.target.closest('#ytArea .yt-tile');
+  const code = t ? t.dataset.code : null;
+  if (code === _ytHover) return;
+  const prev = _ytHover; _ytHover = code;
+  if (prev) _ytPaint(prev);
+  if (code) _ytPaint(code);
+});
+
+// ---- 高さ合わせ・スクロール ----
+//   表の高さを画面の下端に合わせる（ページと表の二重スクロールにしない）。全-比較を開いている間はページを止め、ホイールは表へ流す。
+function _ytFit() {
+  const a = document.getElementById('ytArea');
+  if (!a) return;
+  const apply = () => {
+    if (!a.offsetParent) return;
+    const top = a.getBoundingClientRect().top;
+    const h = Math.floor(window.innerHeight - top - 12);
+    if (h > 200) a.style.maxHeight = h + 'px';
+  };
+  requestAnimationFrame(() => requestAnimationFrame(apply));
+  setTimeout(apply, 150); setTimeout(apply, 900);
+}
+window._ytFit = _ytFit;
+function _ytPageLock(on) {
+  const de = document.documentElement;
+  if (on) { if (de.style.overflow !== 'hidden') { de.style.overflow = 'hidden'; de.dataset.ytLock = '1'; try { window.scrollTo(0, 0); } catch (e) {} } }
+  else if (de.dataset.ytLock === '1') { de.style.overflow = ''; delete de.dataset.ytLock; }
+}
+document.addEventListener('wheel', function (e) {
+  if (state.currentView !== 'compare' || _ytView !== 'top') return;
+  const box = document.getElementById('ytArea');
+  if (!box || !box.offsetParent || box.contains(e.target)) return;
+  const vw = document.getElementById('view-compare');
+  if (!vw || !vw.contains(e.target)) return;
+  if (e.target.closest && e.target.closest('select')) return;
+  let dy = e.deltaY; if (e.deltaMode === 1) dy *= 16; else if (e.deltaMode === 2) dy *= box.clientHeight;
+  box.scrollTop += dy; e.preventDefault();
+}, { passive: false });
+window.addEventListener('resize', () => { if (state.currentView === 'compare' && _ytView === 'top') _ytFit(); });
+
+// ---- エクスポート（表示中の内容をCSV・BOM付き） ----
+function ytExport() {
+  if (!_ytLast) { try { renderYtTop(); } catch (e) {} }
+  const L = _ytLast; if (!L) { alert('エクスポートできるデータがありません'); return; }
+  const { P, M } = L;
+  const q = v => { const t = (v == null) ? '' : String(v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const rows = [['指標', '区分', '年月', '期間', '全体(合計)', '順位', '商品コード(代表)', '商品名', '値', '値の単位', '構成比(%)', '全体への影響', '影響の単位', '分母(実績額)', '注記']];
+  const totCsv = (mt, r) => (!r || r.total == null) ? '' : (mt.type === 'amt' || mt.type === 'cpa' ? Math.round(r.total) : r.total.toFixed(mt.type === 'cvr' ? 2 : 1));
+  _ytShownMetrics(!!_ytFocus).forEach(mt => {
+    M.forEach(m => {
+      const r = m.res ? m.res[mt.k] : null;
+      const period = m.md ? ('1〜' + m.md + '日') : (m.noDaily ? '月全体（日別なし）' : '月全体');
+      const note = (r && r.ex) ? ('料率未取得' + r.ex + '件を除外') : '';
+      if (!r) { rows.push([mt.label, m.title, _ytYmLbl(m.ym), period, '', '', '', '', '', '', '', '', '', '', 'データなし']); return; }
+      let list = r.list;
+      if (_ytFocus) { const k = r.all.findIndex(y => y.code === _ytFocus); list = k >= 0 ? [Object.assign({ _rank: k + 1 }, r.all[k])] : []; }
+      list.forEach((x, i) => {
+        let v = '', vu = '', sh = '', im = '', iu = '', den = '';
+        if (mt.type === 'amt') { v = Math.round(x.v); vu = '円'; sh = x.share.toFixed(1); }
+        else if (mt.type === 'roas') { v = x.v == null ? '' : x.v.toFixed(1); vu = x.v == null ? '広告なし' : '%'; im = x.imp.toFixed(1); iu = 'pt'; den = Math.round(x.sp || 0); }
+        else if (mt.type === 'cvr') { v = x.v.toFixed(2); vu = '%'; im = x.imp.toFixed(2); iu = 'pt'; }
+        else { v = x.v == null ? '' : Math.round(x.v); vu = x.v == null ? '注文0' : '円'; im = Math.round(x.imp); iu = '円'; }
+        rows.push([mt.label, m.title, _ytYmLbl(m.ym), period, totCsv(mt, r), x._rank || (i + 1), x.code, _ytName(x.code), v, vu, sh, im, iu, den, note]);
+      });
+    });
+  });
+  const csv = '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n');
+  let shop = ''; try { shop = (typeof getCurrentShopId === 'function' ? getCurrentShopId() : '') || (state.shopId || ''); } catch (e) {}
+  const ymc = m => m.replace('-', '');
+  const fn = 'ycheck_寄与度トップ' + YT_N + '_' + (shop ? shop + '_' : '')
+    + (_ytMode === 'y1' ? ('直近1年_' + ymc(M[M.length - 1].ym) + '-' + ymc(P.top)) : (ymc(P.top) + (M[0].md ? '(1-' + M[0].md + ')' : '') + '_vs_' + ymc(P.cmp)))
+    + (_ytFocus ? '_' + _ytFocus : '') + '.csv';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+window.ytExport = ytExport;
+window.ytSetView = ytSetView;
 
 // ==================== Render All ====================
 // ==================== 【v1.0373】商品-グラフ（ADcheck「商品-グラフ」をYcheck向けに簡略移植：1種広告・月別・親子合算・項目調整/日別なし） ====================
@@ -21055,6 +21720,8 @@ function switchToView(viewName) {
   // 【v208】プログラム経由のビュー切替でも凍結を解除
   adAdjustFrozenOrder = null;
   proAdjustFrozenOrder = null;
+  // 【v1.0886】寄与度トップ20を開いている間だけページのスクロールを止める（表の中だけ動かす）
+  try { _ytPageLock(viewName === 'compare' && _ytView === 'top'); } catch (e) {}
   // 【v1.0884】調整-入札価格／調整-PRオプで「親商品のみ／子商品のみ」＋合算・両表示にしたまま他の画面へ移ったら、親／子の絞り込みを外す。
   //   他の画面は v1.0792 のまま（親／子ボタンは「個別」のときだけ押せる）なので、押せないボタンの絞り込みが残ると件数が減った理由が分からなくなる。
   if (!_isTuneShowView(viewName) && basicRowMode !== 'each' && ['*A', '*P', '*C'].indexOf(state.repFilter) >= 0) {
