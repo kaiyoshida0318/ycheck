@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0906 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0907 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4211,6 +4211,16 @@ table.rank-table td.rank-legend-col-row {
 }
 .tc-foot b { color: var(--text); }
 /* 【v273】必要ページ一括オープン ボタン */
+/* 【v1.0907】日別データ欠け通知（ADcheck v1.1438 と同じ見た目・同じ光り方） */
+#dailyGapBtn { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 6px; border: 1px solid #b71c1c; background: #b71c1c;
+  color: #fff; cursor: pointer; white-space: nowrap; margin-left: 10px; font-family: inherit; line-height: 1.3;
+  animation: ycGapAlarm 1.3s ease-in-out infinite; }
+#dailyGapBtn:hover { background: #9a1515; }
+@keyframes ycGapAlarm {
+  0%,100% { box-shadow: 0 0 0 0 rgba(183,28,28,.55); }
+  50%     { box-shadow: 0 0 0 6px rgba(183,28,28,0); }
+}
+@media (prefers-reduced-motion: reduce) { #dailyGapBtn { animation: none; } }
 .tune-openpages-btn {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 5px 14px; margin-left: 8px;
@@ -4748,10 +4758,12 @@ th.col-sroas { background-color:#e7d5f5; }
          【v1.0582】ヘッダー右（.header-tools）から、ショップ選択のすぐ右へ移動。
          ★ボタンはこの1つだけ。右側に残したまま複製しないこと（openBunseki が2回走る） -->
     <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
+    <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
+    <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0906</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0907</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10309,7 +10321,7 @@ function checkMissingDays() {
         }).join('');
         return '<div class="md-month"><div class="md-month-label">' + ym.replace('-', '/') + '</div><div class="md-chips">' + chips + '</div></div>';
       }).join('')
-    + '<div class="md-legend">赤＝3種すべて不足／橙＝一部不足（丸数字が不足している種別）</div>';
+    + '<div class="md-legend">赤＝4種すべて不足／橙＝一部不足（丸数字が不足している種別）</div>';
 }
 function _buildMissingCalMonths(first, last) {
   const sel = document.getElementById('missingCalMonth'); if (!sel) return;
@@ -10338,15 +10350,85 @@ function renderMissingCal(ym) {
     if (!inRange) { mark = '·'; cls = 'mc-out'; title = ds + '（取込期間外）'; }
     else {
       const miss = DAILY_TYPE_KEYS.filter(function (k) { return !_mcSets[k].has(ds); });
-      if (!miss.length) { mark = '◯'; cls = 'mc-ok'; title = ds + '：3種そろっています'; }
-      else if (miss.length === DAILY_TYPE_KEYS.length) { mark = '×'; cls = 'mc-none'; title = ds + '：3種すべて不足'; }
+      if (!miss.length) { mark = '◯'; cls = 'mc-ok'; title = ds + '：4種そろっています'; }
+      else if (miss.length === DAILY_TYPE_KEYS.length) { mark = '×'; cls = 'mc-none'; title = ds + '：4種すべて不足'; }
       else { mark = '×'; cls = 'mc-part'; title = ds + '：' + miss.map(_typeLabel).join('・') + ' が不足'; }
     }
     h += '<div class="mc-cell ' + cls + '" title="' + escapeHtml(title) + '"><div class="mc-d">' + d + '</div><div class="mc-m">' + mark + '</div></div>';
   }
-  h += '</div><div class="mc-legend">◯＝3種そろっている／×赤＝3種すべて不足／×橙＝一部不足／·＝取込期間外</div>';
+  h += '</div><div class="mc-legend">◯＝4種そろっている／×赤＝4種すべて不足／×橙＝一部不足／·＝取込期間外</div>';
   grid.innerHTML = h;
 }
+
+// ---------- 【v1.0907】日別データ欠け通知（ADcheck v1.1438 の移植） ----------
+//   欠け＝取り込み済みの最初の日〜最新日の【前日】までで、日別4種（①全体 ②商品 ③広告 ④PR）のどれかが入っていない日。
+//   ★「不足日を確認する」（checkMissingDays）と同じ見方。ただし【最新日は数えない】
+//     （今日まだ一部しか取り込んでいない／昨日分を取り込む前、は欠けではない。翌日の分が入って初めて欠けになる）。
+//   ★日付はローカル時刻で進める（new Date(年, 月-1, 日) ＋ setDate。toISOString は使わない＝ADcheck §6-4 の罠）。
+//   ★判定し直しは 1.5秒ごとに「種別ごとの日数＋最初と最後の日」が変わったかだけを見る（取り込み・削除・GitHub読込・ショップ切替のどこを通っても拾える）。
+function _dailyGapDays() {
+  let all = [];
+  try { all = dailyAllDates(); } catch (e) { return []; }
+  if (all.length < 2) return [];
+  const sets = {};
+  DAILY_TYPE_KEYS.forEach(k => { sets[k] = new Set(dailyDates(k)); });
+  const pad = n => String(n).padStart(2, '0');
+  const a = all[0].split('-').map(Number);
+  const d = new Date(a[0], a[1] - 1, a[2]);
+  const end = all[all.length - 1];
+  const out = [];
+  for (let i = 0; i < 4000; i++) {
+    const ds = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    if (ds >= end) break;                                   // 最新日以降は見ない
+    const miss = DAILY_TYPE_KEYS.filter(k => !sets[k].has(ds));
+    if (miss.length) out.push({ ds: ds, miss: miss });
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+let _dailyGapLast = [];
+function renderDailyGapAlert() {
+  const b = document.getElementById('dailyGapBtn'); if (!b) return;
+  const gaps = _dailyGapDays(); _dailyGapLast = gaps;
+  if (!gaps.length) { b.style.display = 'none'; b.textContent = ''; b.title = ''; return; }
+  const slash = s => s.replace(/-/g, '/');
+  b.style.display = '';
+  b.textContent = '🚨 日別データ欠け（' + slash(gaps[0].ds) + (gaps.length > 1 ? ' ほか' + (gaps.length - 1) + '日' : '') + '）';
+  const all4 = DAILY_TYPE_KEYS.length;
+  b.title = '次の日のレポートは取り込まれているのに、この日の日別レポートが入っていません。\n'
+    + '欠けている日（' + gaps.length + '日）：\n'
+    + gaps.slice(0, 31).map(g => slash(g.ds) + '　' + (g.miss.length === all4 ? '4種すべて' : g.miss.map(k => { const t = reportTypeOf(k); return t ? t.badge : k; }).join('') + ' が無い')).join('\n')
+    + (gaps.length > 31 ? '\n…' : '')
+    + '\n\nその日のレポートを取り込むと、このボタンは消えます。\nクリックで「+ レポート追加」の「📅 不足日を確認する」を開きます';
+}
+// 押したら「+ レポート追加」を開き、「不足日を確認する」を開いた状態にして、欠けた最初の日の月のカレンダーを出す
+function _dailyGapOpen() {
+  try { openUploadModal('all'); } catch (e) { return; }
+  try { checkMissingDays(); } catch (e) {}
+  const g = (_dailyGapLast && _dailyGapLast[0]) ? _dailyGapLast[0].ds : '';
+  const ym = g ? g.slice(0, 7) : '';
+  const sel = document.getElementById('missingCalMonth');
+  if (ym && sel && [...sel.options].some(o => o.value === ym)) { sel.value = ym; try { renderMissingCal(ym); } catch (e) {} }
+  setTimeout(() => {
+    const bar = document.querySelector('#uploadModal .md-bar') || document.getElementById('missingDayPanel');
+    if (!bar) return;
+    try {
+      bar.scrollIntoView({ block: 'start' });
+      // 見出しの上に少し余白を残す（スクロールしている枠を探して 16px 戻す）
+      let p = bar.parentElement;
+      while (p && p !== document.body && !(p.scrollHeight > p.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(p).overflowY))) p = p.parentElement;
+      if (p && p !== document.body) p.scrollTop = Math.max(0, p.scrollTop - 16);
+    } catch (e) {}
+  }, 80);
+}
+let _dailyGapSig = null;
+function _dailyGapWatch() {
+  try {
+    const sig = DAILY_TYPE_KEYS.map(k => { const ds = dailyDates(k); return ds.length + ':' + (ds[0] || '') + ':' + (ds[ds.length - 1] || ''); }).join('|');
+    if (sig !== _dailyGapSig) { _dailyGapSig = sig; renderDailyGapAlert(); }
+  } catch (e) {}
+}
+setInterval(_dailyGapWatch, 1500);
 
 // ---------- ③ ドロップしたファイルのカレンダー（行=種別／列=日） ----------
 let _dropCal = {};   // { 'YYYY-MM': { type: { day: {n, files:[]} } } }
