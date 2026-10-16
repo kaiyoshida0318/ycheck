@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0901 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0902 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4745,7 +4745,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0901</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0902</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -9300,7 +9300,7 @@ function _ycInjectReflectButtons() {
 // 【v1.0739/v1.0740】反映が成功したあとの共通処理。★ycReflect（手動）と自動pushの両方から呼ぶ。
 //   編集ピン（v253/v276）を外して描き直す＝いま選んでいる絞り込みから外れた商品が消える。
 //   ★ピンを外すのは「反映が成功したとき」だけ。編集のたびに外すと1行直すごとに表が飛ぶ。
-function _ycAfterReflectRefresh() {
+function _ycAfterReflectRefresh(opt) {
   // 【v1.0750】★反映できた＝もう「端末だけが新しい」状態ではない。
   //   端末バックアップを書き直して比較の基準をそろえ、パネルの⚠注記も消す。
   //   これをしないと、保存できているのに「未反映」の注記が残り続ける。
@@ -9310,6 +9310,15 @@ function _ycAfterReflectRefresh() {
     if (typeof _vpSetNotifiedKey === 'function') _vpSetNotifiedKey('');
     if (typeof _vpRenderPanel === 'function') _vpRenderPanel();
   } catch (e) {}
+  // 【v1.0902】本人指定：調整-入札価格／調整-PRオプでは、ドロップダウン（ステータス・入札状態・PR状態）を変えたあとの
+  //   自動反映（ycAutoPushNow）では一覧を作り直さない＝変えた行はその場に残す。
+  //   消えるのは「ページを更新（再読み込み）」「別のページへ移動」（switchToView → resetTuneMembers）のとき。
+  //   ★GitHub への保存はいつもどおりする（保存だけして、表は触らない）。件数は次の描画で数え直す（_stateCountsStale）。
+  //   ★手動の「⬆ 反映する」（ycReflect）は opt なし＝従来どおり作り直す（自分で押した＝更新の意思がある）。
+  if (opt && opt.auto && typeof _isTuneShowView === 'function' && _isTuneShowView()) {
+    _stateCountsStale = true;
+    return;
+  }
   try {
     if (typeof clearEditPins === 'function') clearEditPins();
     if (typeof resetTuneMembers === 'function') resetTuneMembers();   // 調整ビューの凍結メンバーも作り直す
@@ -9343,7 +9352,7 @@ async function ycAutoPushNow() {
     if (r && r.success) {
       _ghDirty = false; _ghDirtyReason = ''; ghSetSyncStatus('saved');
       try { ycLog('save', 'GitHubへ反映しました（ドロップダウン変更）'); } catch (e) {}
-      _ycAfterReflectRefresh();
+      _ycAfterReflectRefresh({ auto: true });   // 【v1.0902】調整-入札価格／調整-PRオプでは一覧を作り直さない
     } else {
       // ★上書きガード等でスキップされたときは【未反映のまま】にして手動の「⬆ 反映する」に委ねる。
       //   ここで force 保存してはいけない（他PCの新しいデータを黙って消す可能性がある）。
