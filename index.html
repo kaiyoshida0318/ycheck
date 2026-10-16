@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0896 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0897 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3627,6 +3627,18 @@ table.rank-table td.rank-legend-col-row {
 .pe-chart-wrap { position: relative; height: 300px; }
 .pe-legend { display: flex; gap: 14px; justify-content: center; margin: 8px 0 12px; font-size: 0.74rem; color: var(--text2); }
 .pe-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+/* 【v1.0897】商品モーダル「商品-日別」のグラフを大きく・見やすく（ADcheck 商品モーダル §3-4・§8 を参考） */
+.pe-chart-wrap.pe-chart-big { height: clamp(360px, 50vh, 480px); margin-bottom: 14px; }   /* 画面の高さに合わせて 360〜480px */
+.pe-sw-bar { justify-content: flex-start; flex-wrap: wrap; gap: 7px; margin: 2px 0 10px; align-items: center; }
+.pe-sw { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 2px solid var(--c); border-radius: 7px;
+         background: var(--c); color: #fff; font: inherit; font-size: 0.74rem; font-weight: 700; line-height: 1.2; cursor: pointer; white-space: nowrap; }
+.pe-sw::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #fff; flex: 0 0 auto; }
+.pe-sw.pe-sw-line::before { width: 14px; height: 3px; border-radius: 2px; }
+.pe-sw.off { background: transparent; color: var(--text3); text-decoration: line-through; opacity: 0.55; }
+.pe-sw.off::before { background: var(--c); }
+.pe-sw:hover { filter: brightness(1.06); }
+.pe-sw-sep { width: 1px; align-self: stretch; background: var(--border2); margin: 2px 4px; }
+.pe-sw-hint { font-size: 0.7rem; color: var(--text3); margin-left: 6px; }
 .pe-table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; overflow-x: auto; }  /* 【v1.0642】合算で列が増えるので横スクロール可 */
 .pe-table-wrap th i.pe-sw { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:0; }
 /* 【v1.0674】合算のときの親／子の帯。親＝緑・子＝黄（商品コード左の .rep-badge と同じ色の考え方）。
@@ -4721,7 +4733,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0896</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0897</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6255,13 +6267,10 @@ th.col-sroas { background-color:#e7d5f5; }
         <span class="seg-filter" id="peMSpanSeg" style="display:none"><button type="button" class="segf-btn on" data-pemspan="may">5月始まり</button><button type="button" class="segf-btn" data-pemspan="12">1年</button><button type="button" class="segf-btn" data-pemspan="24">2年</button></span>
         <span class="pe-ctl-note" id="peCtlNote"></span>
       </div>
-      <div class="pe-chart-wrap"><canvas id="peChart"></canvas></div>
-      <!-- 【v1.0639】合算のときは4系列に割るので、凡例は peRenderInfo() で描き替える -->
-      <div class="pe-legend" id="peLegend">
-        <span><i style="background:#7c3aed"></i>SEO売上</span>
-        <span><i style="background:#f97316"></i>広告売上</span>
-        <span><i style="background:#10b981"></i>広告売上ROAS</span>
-      </div>
+      <!-- 【v1.0897】凡例 → 押すと消える／戻る「系列ボタン」に（ADcheck の商品モーダルと同じ形）。グラフの上に置く。
+           中身は peRenderInfo() が描く。グラフも 300px → 440px に。 -->
+      <div class="pe-legend pe-sw-bar" id="peLegend"></div>
+      <div class="pe-chart-wrap pe-chart-big"><canvas id="peChart"></canvas></div>
       <div class="pe-table-wrap" id="peTableWrap"></div>
     </div>
 
@@ -6273,7 +6282,7 @@ th.col-sroas { background-color:#e7d5f5; }
         <select id="peTrendYm" onchange="_peTrendSetYm(this.value)" style="font-size:0.84rem;padding:5px 9px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:700"></select>
         <span class="pe-ctl-note" id="peTrendNote"></span>
       </div>
-      <div class="pe-chart-wrap" id="peTrendWrap"><canvas id="peTrendCanvas"></canvas></div>
+      <div class="pe-chart-wrap pe-chart-big" id="peTrendWrap"><canvas id="peTrendCanvas"></canvas></div>
       <div id="peTrendEmpty" style="display:none;padding:32px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
       <div class="pe-table-wrap" id="peTrendTable"></div>
       <p class="note" id="peTrendFoot" style="margin:10px 2px 0;font-size:0.72rem;line-height:1.7;color:var(--text3)"></p>
@@ -17729,6 +17738,11 @@ function updateTuneBar() {
   bar.style.display = isTune ? 'flex' : 'none';
   if (!isTune) return;
   const kind = (view === 'ad-tune') ? 'ad' : 'pro';
+  // 【v1.0897】一括オープンで開くページを、ボタンにマウスを乗せると分かるように
+  { const ob = document.getElementById('tuneOpenPagesBtn');
+    if (ob) ob.title = '新しいタブで次のページをまとめて開きます\n'
+      + (kind === 'ad' ? '① コマースアドマネージャー（アイテムマッチ 商品一覧）' : '① ストアクリエイター（ページ編集）')
+      + '\n② Ycheck の「調整-基本」'; }
   // アクティブ表示
   bar.querySelectorAll('.tune-chip').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tune === tuneGroup);
@@ -22151,30 +22165,34 @@ if (tuneCondBtn && tuneCondModal) {
 
 // 【v273】「必要ページ一括オープン」：調整ビューごとに必要な作業ページを新しいタブで一括で開く。
 // 【v1.0502】v1.0483で除外したYcheckの順位ページ(取得データ＝広告順位/SEO順位)を復活。
-//   入札価格調整→広告順位、PRオプ調整→SEO順位のページも一緒に新しいタブで開く。
+// 【v1.0897】本人指定で中身を変更：広告順位・SEO順位はやめて、Ycheckの「調整-基本」を開く。
+//   調整-入札価格 → コマースアドマネージャー（商品一覧）＋ 調整-基本
+//   調整-PRオプ   → ストアクリエイター（ページ編集）  ＋ 調整-基本
+//   ★開く順＝ここに書いた順（タブもこの順に並ぶ）。外部ページを先、Ycheckのページを後。
+//   ★Ycheckのページは「ナビのタブの href」を使う（調整-基本は data-view="basic" なので id で引く）。
 const TUNE_OPEN_PAGES = {
-  'ad-tune': {
-    urls: ['https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629'],
-    views: ['ad-rank']    // Ycheckの「広告順位」ページ
-  },
-  'pro-tune': {
-    urls: ['https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/'],
-    views: ['seo-rank']   // Ycheckの「SEO順位」ページ
-  }
+  'ad-tune': [
+    { url: 'https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629' },
+    { tab: '#navTuneBasic', fallback: '?view=basic-tune' }   // Ycheckの「調整-基本」
+  ],
+  'pro-tune': [
+    { url: 'https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/' },
+    { tab: '#navTuneBasic', fallback: '?view=basic-tune' }   // Ycheckの「調整-基本」
+  ]
 };
 const tuneOpenPagesBtn = $('#tuneOpenPagesBtn');
 if (tuneOpenPagesBtn) {
   tuneOpenPagesBtn.addEventListener('click', () => {
-    const cfg = TUNE_OPEN_PAGES[state.currentView];
-    if (!cfg) return;
-    // Ycheckの順位ページ（取得データ）を先に開く
-    (cfg.views || []).forEach(v => {
-      const tab = document.querySelector('.nav-tab[data-view="' + v + '"]');
-      const href = tab ? tab.href : (location.pathname + '?view=' + v);
+    const list = TUNE_OPEN_PAGES[state.currentView];
+    if (!list) return;
+    list.forEach(p => {
+      let href = p.url;
+      if (!href) {
+        const a = p.tab ? document.querySelector(p.tab) : null;
+        href = (a && a.href) ? a.href : (location.pathname + p.fallback);
+      }
       window.open(href, '_blank', 'noopener');
     });
-    // 外部（ストクリ／コマースアドマネージャー）のページを開く
-    (cfg.urls || []).forEach(u => window.open(u, '_blank', 'noopener'));
   });
 }
 
@@ -23584,6 +23602,16 @@ let _peGrain = 'day';         // 'day' | 'month'
 let _peSpan = 60;             // 日別のとき何日ぶん見るか（0＝全期間）
 let _peMSpan = 'may';         // 【v1.0641】月別のときの期間: 'may'(直近の5月から) | '12'(1年) | '24'(2年)
 let _peChart = null;
+// 【v1.0897】系列ボタンで消している系列（label の集合）。モーダルを開いている間・商品を∧∨で移っても保つ（保存はしない）
+const _peHidden = new Set();
+function _peToggleSeries(label) {
+  if (_peHidden.has(label)) _peHidden.delete(label); else _peHidden.add(label);
+  if (_peChart) {
+    _peChart.data.datasets.forEach((d, i) => { if (d.label === label) _peChart.setDatasetVisibility(i, !_peHidden.has(label)); });
+    _peChart.update('none');
+  }
+  document.querySelectorAll('#peLegend .pe-sw').forEach(b => b.classList.toggle('off', _peHidden.has(b.getAttribute('data-ser'))));
+}
 // 【v1.0638/v1.0688】全体情報タブの集計範囲: 'set'(親子合算) | 'self'(個別)
 //   ★'parent' / 'child' は v1.0688 でUIから撤去したが、_peScopeCodes の分岐は残してある
 //     （他から _peScope に入れられても壊れないように。peRenderInfo が 'set' へ倒す）
@@ -23771,12 +23799,23 @@ function peRenderInfo() {
       //   ★積む順は 親→子 で、SEOのあと広告。積み上げの見た目が毎回同じになるようにする。
       const _peSplit = (_peScope === 'set');
       // 【v1.0639】凡例も系列に合わせて描き替える（4系列のとき「親＝濃い／子＝淡い」が分かるように）
+      // 【v1.0897】凡例 → 押すと消える／戻るボタン（ADcheck §3-4）。棒＝丸、線＝横棒の印。
+      //   ★label は下の datasets の label と完全に同じ文字にすること（_peToggleSeries は label で引く）
       {
         const _lg = document.getElementById('peLegend');
-        if (_lg) _lg.innerHTML = (_peSplit
-          ? [['#6d28d9','SEO売上-親'],['#c4b5fd','SEO売上-子'],['#ea580c','広告売上-親'],['#fdba74','広告売上-子'],['#3b82f6','広告実績額'],['#ec4899','PR実績額？'],['#10b981','PR広告売上ROAS？']]
-          : [['#7c3aed','SEO売上'],['#f97316','広告売上'],['#3b82f6','広告実績額'],['#ec4899','PR実績額？'],['#10b981','PR広告売上ROAS？']]
-        ).map(x => '<span><i style="background:' + x[0] + '"></i>' + x[1] + '</span>').join('');
+        const _sw = (c, l, tip, line) => '<button type="button" class="pe-sw' + (line ? ' pe-sw-line' : '') + (_peHidden.has(l) ? ' off' : '')
+          + '" style="--c:' + c + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'))">' + l + '</button>';
+        const _rev = _peSplit
+          ? [['#6d28d9','SEO売上-親','親商品のSEO売上（総売上−広告売上）'],['#c4b5fd','SEO売上-子','子商品のSEO売上'],
+             ['#ea580c','広告売上-親','親商品の広告売上'],['#fdba74','広告売上-子','子商品の広告売上']]
+          : [['#7c3aed','SEO売上','SEO売上（総売上−広告売上）'],['#f97316','広告売上','広告売上']];
+        if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
+          + '<span class="pe-sw-sep"></span>'
+          + _sw('#3b82f6', '広告実績額', '右の棒（費用）: 広告実績額')
+          + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・⑤の料率からの推定）')
+          + '<span class="pe-sw-sep"></span>'
+          + _sw('#10b981', 'PR広告売上ROAS', '線（右の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額）× 100', true)
+          + '<span class="pe-sw-hint">ボタンを押すと、その項目を消す／戻す</span>';
       }
       const _peBars = _peSplit
         ? [
@@ -23797,6 +23836,8 @@ function peRenderInfo() {
         { type: 'bar', label: '広告実績額', data: rows.map(r => +r.adCost || 0), backgroundColor: '#3b82f6', stack: 'c', yAxisID: 'y', order: 2 },
         { type: 'bar', label: 'PR実績額',   data: rows.map(r => (r.prOver > 0 ? +r.prOver : 0)), backgroundColor: '#ec4899', stack: 'c', yAxisID: 'y', order: 2 }
       );
+      // 【v1.0897】棒を太く（Chart.js 既定 0.9×0.8 → 0.92×0.86）
+      _peBars.forEach(d => { d.barPercentage = 0.92; d.categoryPercentage = 0.86; d.borderRadius = 2; });
       _peChart = new Chart(cv.getContext('2d'), {
         plugins: [YC_CHANGE_LINES],
         data: {
@@ -23805,33 +23846,61 @@ function peRenderInfo() {
             ..._peBars,
             // 【v1.0693】折れ線を 広告売上ROAS → PR広告売上ROAS(推定) に変更（表の列の並びと同じく、こちらを主に見る）
             //   ★色は緑のまま。SEO売上の紫（#7c3aed）とぶつかるので、表の紫には合わせない
+            // 【v1.0897】線を太く・点を大きく（ADcheck §5-1：太さ2.6・点3px・ホバー6px・tension 0.3）
             { type: 'line', label: 'PR広告売上ROAS', data: rows.map(r => r.prsr), borderColor: '#10b981', backgroundColor: '#10b981',
-              borderWidth: 2, pointRadius: 2.5, tension: 0.25, spanGaps: true, yAxisID: 'y1', order: 1 }
+              borderWidth: 2.6, pointRadius: (rows.length > 45 ? 2.5 : 3.5), pointHoverRadius: 6, pointBackgroundColor: '#10b981',
+              tension: 0.3, spanGaps: true, yAxisID: 'y1', order: 1 }
           ]
         },
         options: {
           responsive: true, maintainAspectRatio: false, animation: false,
           interaction: { mode: 'index', intersect: false },
+          // 【v1.0897】文字を大きく（目盛り 10px → 12px、ツールチップ 13px）。色・線は ADcheck §5-1 に合わせる
+          layout: { padding: { top: 4, right: 4 } },
           plugins: {
             ycChangeLines: { marks: _clMarksPe },
-            // 【v1.0639】凡例はグラフ下の .pe-legend（#peLegend）側で出すので、Chart.js のものは使わない
+            // 【v1.0639】凡例はグラフ上の #peLegend（v1.0897〜押せるボタン）で出すので、Chart.js のものは使わない
             legend: { display: false },
-            tooltip: { callbacks: { label: (c) => {
-              const v = c.parsed.y;
-              if (c.dataset.label === 'PR広告売上ROAS') return 'PR広告売上ROAS(推定): ' + (v == null ? '—' : Math.round(v).toLocaleString('ja-JP') + '%');
-              if (c.dataset.label === 'PR実績額') return 'PR実績額(7%超・推定): ¥' + Math.round(v || 0).toLocaleString('ja-JP');   // 【v1.0869】
-              return c.dataset.label + ': ¥' + Math.round(v || 0).toLocaleString('ja-JP');
-            } } }
+            tooltip: {
+              padding: 11, boxPadding: 4, titleFont: { size: 13, weight: '700' }, bodyFont: { size: 12.5 }, footerFont: { size: 12, weight: '700' },
+              filter: (c) => !(c.dataset.type === 'bar' && !(+c.parsed.y)),   // 0円の棒は出さない（行が多くて読みにくいため）
+              callbacks: {
+                title: (items) => {
+                  const r = items.length ? rows[items[0].dataIndex] : null;
+                  return r ? (_peGrain === 'day' ? String(r.key).replace(/-/g, '/') : String(r.key).replace('-', '/')) : '';
+                },
+                label: (c) => {
+                  const v = c.parsed.y;
+                  if (c.dataset.label === 'PR広告売上ROAS') return 'PR広告売上ROAS(推定): ' + (v == null ? '—' : Math.round(v).toLocaleString('ja-JP') + '%');
+                  if (c.dataset.label === 'PR実績額') return 'PR実績額(7%超・推定): ¥' + Math.round(v || 0).toLocaleString('ja-JP');   // 【v1.0869】
+                  return c.dataset.label + ': ¥' + Math.round(v || 0).toLocaleString('ja-JP');
+                },
+                // 【v1.0897】下に合計（売上の棒・費用の棒それぞれ）
+                footer: (items) => {
+                  const r = items.length ? rows[items[0].dataIndex] : null;
+                  if (!r) return '';
+                  const rev = +r.rev || 0;   // 総売上（表の「総売上」と同じ）
+                  const cost = (+r.adCost || 0) + (r.prOver > 0 ? +r.prOver : 0);
+                  return '総売上 ¥' + Math.round(rev).toLocaleString('ja-JP') + '　／　費用 ¥' + Math.round(cost).toLocaleString('ja-JP');
+                }
+              }
+            }
           },
           scales: {
-            x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true } },
-            y: { stacked: true, position: 'left', beginAtZero: true,
-                 ticks: { font: { size: 10 }, callback: (v) => '¥' + Number(v).toLocaleString('ja-JP') } },
+            x: { stacked: true, grid: { color: 'rgba(0,0,0,0.05)' },
+                 ticks: { font: { size: 12 }, color: '#64748b', maxRotation: 0, autoSkip: true, autoSkipPadding: 10 } },
+            y: { stacked: true, position: 'left', beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' },
+                 title: { display: true, text: '金額（売上・費用）', font: { size: 12, weight: '700' }, color: '#64748b' },
+                 ticks: { font: { size: 12 }, color: '#64748b', callback: (v) => '¥' + Number(v).toLocaleString('ja-JP') } },
             y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false },
-                 ticks: { font: { size: 10 }, callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } }
+                 title: { display: true, text: 'PR広告売上ROAS', font: { size: 12, weight: '700' }, color: '#10b981' },
+                 ticks: { font: { size: 12 }, color: '#0f9f6e', callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } }
           }
         }
       });
+      // 【v1.0897】消している系列を引き継ぐ
+      _peChart.data.datasets.forEach((d, i) => { if (_peHidden.has(d.label)) _peChart.setDatasetVisibility(i, false); });
+      _peChart.update('none');
     }
   } catch (e) { console.warn('[Ycheck] 商品モーダルのグラフ描画に失敗', e); }
 
