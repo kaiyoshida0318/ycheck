@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0888 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0889 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4410,7 +4410,13 @@ th[data-sort].sort-desc::after { content: '\25BC'; }       /* ▼ 降順 */
 .yt-focus-off { font-size:14px; padding:5px 14px; border-radius:6px; border:1px solid #0f766e; background:#0f766e; color:#fff; cursor:pointer; font-weight:700; font-family:inherit; }
 .yt-ftable { border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--border2); border-radius:10px; }
 .yt-ftable th { padding:10px 6px; text-align:center; font-size:15px; font-weight:800; white-space:nowrap; min-width:104px; border-left:1px solid var(--border2); position:sticky; top:62px; z-index:2; }
-.yt-ftable th div { font-size:11px; font-weight:600; color:var(--text3); margin-top:3px; }
+.yt-ftable th div { font-size:11.5px; font-weight:600; color:var(--text2); margin-top:3px; text-align:center; white-space:nowrap; }
+.yt-flegend { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; margin-left:6px; padding-left:14px; border-left:1px solid #99d5c9; font-size:12.5px; font-weight:600; color:var(--text2); max-width:980px; }
+.yt-flegend b { color:#0f766e; }
+.yt-ftable th .yt-op { font-size:15px; font-weight:900; color:var(--text); margin:0 2px; vertical-align:-1px; }
+.yt-flegend span { white-space:nowrap; }
+.yt-flegend i { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; border-radius:50%; background:#0f766e; color:#fff; font-style:normal; font-size:11px; margin-right:4px; }
+.yt-flegend em { font-style:normal; font-weight:800; } .yt-flegend em.up { color:#16a34a; } .yt-flegend em.dn { color:#dc2626; }
 .yt-ftable .yt-fm { position:sticky; left:0; z-index:3; background:#f1f5f9; padding:10px 14px; white-space:nowrap; text-align:center; border-left:none; border-right:1px solid var(--border2); }
 .yt-ftable th.yt-fm { z-index:4; color:var(--text3); font-size:14px; background:#f1f5f9; }
 .yt-ftable tr.top .yt-fm { background:#f8fafc; }
@@ -4700,7 +4706,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0888</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0889</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4773,7 +4779,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <a class="nav-tab nav-tab-link" data-view="zentrend" href="?view=zentrend">全-推移</a>
     <a class="nav-tab nav-tab-link" data-view="compare" href="?view=compare">全-比較</a>
     <!-- 【v1.0764】全-貢献度＝その月の売上・広告費を、商品ごとのシェア(%)で見る -->
-    <a class="nav-tab nav-tab-link" data-view="contrib" href="?view=contrib">全-貢献度</a>
+    <!-- 【v1.0889】全-貢献度は撤去（本人：「消しちゃっていいや」。寄与度トップ20で足りる）。描画関数 renderContrib などは残置（呼ばれない） -->
     <!-- 【v1.0405】入札価格全体/PRオプ全体のタブは撤去（ビュー実体 #view-ad-adjust / #view-pro-adjust と件数span はデータ互換のため残置） -->
     <span id="cntAdAdjustActive" style="display:none"></span><span id="cntProAdjustActive" style="display:none"></span>
   </div>
@@ -5567,35 +5573,6 @@ th.col-sroas { background-color:#e7d5f5; }
     </div>
 
     <!-- View: 全-比較（売上ランキング比較 / バンプチャート。ADcheck「全-比較」を転用） -->
-    <!-- 【v1.0764】View: 全-貢献度。その月の商品別売上・広告実績額を100%として、各商品のシェアを出す。 -->
-    <div class="view" id="view-contrib">
-      <div class="card">
-        <h3 class="card-title">全-貢献度</h3>
-        <div class="filters" style="flex-wrap:wrap;gap:8px 12px;align-items:center">
-          <!-- 【v1.0770】ツールバーは月のドロップダウン2つだけ。
-               ★説明文はここに置かない。選択肢が26か月ぶん並ぶので、横に長い文が付くと
-                 ツールバーが2段になって表が下がる。説明は表の下の注記（#cbNote）に集約する。 -->
-          <span class="filter-label">（左）</span>
-          <select id="cbMonthSelL" onchange="_cbSetYmL(this.value)" title="左側に出す月。既定は対象月の1つ前" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
-          <span class="filter-label" style="color:var(--text3);font-weight:500">→</span>
-          <span class="filter-label">（右）</span>
-          <select id="cbMonthSel" onchange="_cbSetYm(this.value)" title="右側に出す月。既定は最新月" style="font-size:0.86rem;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;font-weight:600"></select>
-          <!-- 【v1.0772】増減の色の凡例。★色を変えたら .c-g1/.c-g2/.c-o/.c-r 側と一緒に直すこと（ここは同じクラスを使う） -->
-          <span class="cb-legend" title="増減・最新月変動に付く色。その列の中での順位で決まります。&#10;★売上・PR広告売上ROAS は【増えたほう】が上位＝青。&#10;★広告費・PR実績額（費用）は【減ったほう】が上位＝青（費用は少ないほうが良いため）。&#10;★売上3万円未満の商品には色を付けません（少額だと変化率が大きく振れて、順位が誤差で埋まるため）">
-            <span class="cb-lg-ttl">増減の色<span class="cb-lg-cond">売上3万円以上のみ／費用は減＝上位</span></span>
-            <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
-            <b class="cb-new" title="比較月に無かった商品。増減や変動率は出せません">新規</b>
-          </span>
-        </div>
-        <div id="cbEmpty" style="display:none;padding:40px 12px;text-align:center;color:var(--text3);font-size:0.9rem"></div>
-        <!-- 【v1.0791】★この枠が縦横スクロールのコンテナ。見出しの position:sticky は
-             「いちばん近いスクロール容器」を基準にするので、高さを決めてここでスクロールさせないと
-             見出しがページと一緒に流れて固定されない。 -->
-        <div id="cbTableWrap" style="border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:calc(100vh - 190px)"></div>
-        <p class="note" id="cbNote" style="margin:10px 2px 0;font-size:0.74rem;line-height:1.7;color:var(--text3)"></p>
-      </div>
-    </div>
-
     <div class="view" id="view-compare">
       <div class="card">
         <h3 class="card-title" id="cmpTitle">全-比較（売上ランキング比較）</h3>
@@ -19442,22 +19419,24 @@ let _ytLast = null;             // エクスポート用（直近の描画結果
 //   bg＝その見出しの色、col＝同系の濃い色（文字・枠）。g が変わる所に太線（見出しのブロックの区切りと同じ）。
 //   zero＝分母が0で分子だけある商品のバッジの文字。
 const YT_METRICS = [
-  { k:'tot',     g:'sales', label:'総売上',               col:'#1d4ed8', bg:'#d6e1fa', type:'amt' },
-  { k:'prsroas', g:'eff',   label:'PR広告売上ROAS(推定)', col:'#6b21a8', bg:'#dbc3f0', type:'roas', num:'tot', den:'spPr', pr:true, zero:'費用なし' },
-  { k:'sroas',   g:'eff',   label:'広告売上ROAS',         col:'#7e22ce', bg:'#e7d5f5', type:'roas', num:'tot', den:'sp', zero:'広告なし' },
-  { k:'proas',   g:'eff',   label:'PR売上ROAS(推定)',     col:'#6b21a8', bg:'#dbc3f0', type:'roas', num:'tot', den:'prOver', pr:true, zero:'7%のみ' },
-  { k:'seo',     g:'seo',   label:'SEO売上',              col:'#15803d', bg:'#d3edd9', type:'amt' },
-  { k:'prOver',  g:'pr',    label:'PR実績額(7%超・推定)', col:'#0f766e', bg:'#bfe3d8', type:'amt', pr:true },
-  { k:'ad',      g:'ad',    label:'広告売上',             col:'#b45309', bg:'#fbe3c4', type:'amt' },
-  { k:'sp',      g:'sp',    label:'広告実績額',           col:'#be185d', bg:'#f6c9d7', type:'amt' },
-  { k:'roas',    g:'roas',  label:'広告ROAS',             col:'#4338ca', bg:'#d8d9f6', type:'roas', num:'ad', den:'sp', zero:'広告なし' },
-  { k:'cpa',     g:'cpa',   label:'獲得単価',             col:'#6d28d9', bg:'#ddd6fe', type:'cpa' },
+  { fx:'商品の売上（税込）', k:'tot',     g:'sales', label:'総売上',               col:'#1d4ed8', bg:'#d6e1fa', type:'amt' },
+  { fx:'総売上 ÷（広告実績額＋PR費7%超）', k:'prsroas', g:'eff',   label:'PR広告売上ROAS(推定)', col:'#6b21a8', bg:'#dbc3f0', type:'roas', num:'tot', den:'spPr', pr:true, zero:'費用なし' },
+  { fx:'総売上 ÷ 広告実績額', k:'sroas',   g:'eff',   label:'広告売上ROAS',         col:'#7e22ce', bg:'#e7d5f5', type:'roas', num:'tot', den:'sp', zero:'広告なし' },
+  { fx:'総売上 ÷ PR費(7%超)', k:'proas',   g:'eff',   label:'PR売上ROAS(推定)',     col:'#6b21a8', bg:'#dbc3f0', type:'roas', num:'tot', den:'prOver', pr:true, zero:'7%のみ' },
+  { fx:'総売上 − 広告売上', k:'seo',     g:'seo',   label:'SEO売上',              col:'#15803d', bg:'#d3edd9', type:'amt' },
+  { fx:'総売上÷1.1×(料率−7%)', k:'prOver',  g:'pr',    label:'PR実績額(7%超・推定)', col:'#0f766e', bg:'#bfe3d8', type:'amt', pr:true },
+  { fx:'アイテムマッチ経由の売上', k:'ad',      g:'ad',    label:'広告売上',             col:'#b45309', bg:'#fbe3c4', type:'amt' },
+  { fx:'アイテムマッチの広告費', k:'sp',      g:'sp',    label:'広告実績額',           col:'#be185d', bg:'#f6c9d7', type:'amt' },
+  { fx:'広告売上 ÷ 広告実績額', k:'roas',    g:'roas',  label:'広告ROAS',             col:'#4338ca', bg:'#d8d9f6', type:'roas', num:'ad', den:'sp', zero:'広告なし' },
+  { fx:'広告実績額 ÷ 広告注文数', k:'cpa',     g:'cpa',   label:'獲得単価',             col:'#6d28d9', bg:'#ddd6fe', type:'cpa' },
 ];
 // 絞込中だけ出す指標
 const YT_FOCUS_EXTRA = [
-  { k:'cvr',     g:'cvr',   label:'広告CVR',        col:'#c2410c', bg:'#fdeacd', type:'cvr', num:'od', den:'cl' },
+  { fx:'広告注文数 ÷ クリック数', k:'cvr',     g:'cvr',   label:'広告CVR',        col:'#c2410c', bg:'#fdeacd', type:'cvr', num:'od', den:'cl' },
 ];
 const YT_DEN_LABEL = { sp:'広告実績額', spPr:'広告+PR費', prOver:'PR(7%超)' };   // spPr＝広告実績額＋PR実績額(7%超)
+// 【v1.0889】計算式の演算子（÷ − ＋ ×）を太く大きく。小さい字だと「÷」が「+」に見えるため
+function _ytFxHtml(fx) { return escapeHtml(fx || '').replace(/([÷−＋×])/g, '<b class="yt-op">$1</b>'); }
 function _ytAllMetrics() { return YT_METRICS.concat(YT_FOCUS_EXTRA); }
 function _ytShownMetrics(focus) {
   const L = focus ? _ytAllMetrics() : YT_METRICS;
@@ -19830,7 +19809,14 @@ function renderYtTop() {
     html += '<div class="yt-focusbar">'
       + (fimg ? '<img src="' + escapeHtml(fimg) + '" onerror="this.style.display=\'none\'">' : '')
       + '<span>絞り込み中：</span><span class="nm">' + escapeHtml(_ytName(_ytFocus)) + '</span><span class="cd">' + escapeHtml(_ytFocus) + '</span>'
-      + '<button type="button" class="yt-focus-off" data-code="' + escapeHtml(_ytFocus) + '">解除してトップ' + YT_N + 'に戻る</button></div>';
+      + '<button type="button" class="yt-focus-off" data-code="' + escapeHtml(_ytFocus) + '">解除してトップ' + YT_N + 'に戻る</button>'
+      + '<span class="yt-flegend"><b>セルの見方（上から）</b>'
+      +   '<span><i>1</i>全商品の中での順位</span>'
+      +   '<span><i>2</i>この商品の値</span>'
+      +   '<span><i>3</i>金額の列＝店全体に占める割合／比率・単価の列＝店全体を動かした幅（<em class="up">＋押し上げ</em>・<em class="dn">−押し下げ</em>。獲得単価は＋が悪い）</span>'
+      +   '<span><i>4</i>ROAS系だけ：この商品の分母（実績額）</span>'
+      +   '<span><i>5</i>店全体の値</span></span>'
+      + '</div>';
     const SM = _ytShownMetrics(true), GS = _ytGroupStarts(SM);
     const bl = mt => GS.has(mt.k) ? ' yt-gs' : '';
     const cell = (mt, r) => {
@@ -19844,7 +19830,8 @@ function renderYtTop() {
         + (mt.type === 'roas' ? '<div class="yt-fv3" title="' + (YT_DEN_LABEL[mt.den] || '実績額') + '">' + ({ sp:'実績', spPr:'広告+PR', prOver:'PR' }[mt.den] || '実績') + ' ' + _ytYen(x.sp || 0) + '</div>' : '')
         + '<div class="yt-fv4">' + (mt.type === 'amt' ? '合計 ' : '全体 ') + _ytTotTxt(mt, r) + '</div></td>';
     };
-    const head = SM.map(mt => '<th id="yt-col-' + mt.k + '" class="' + bl(mt).trim() + '" style="background:' + mt.bg + ';color:' + mt.col + '">' + mt.label + '<div>' + (mt.type === 'amt' ? '金額／構成比' : '値／全体への影響') + '</div></th>').join('');
+    // 【v1.0889】見出しの2行目は列ごとの中身（計算式）。「金額／構成比」「値／全体への影響」の繰り返しはやめ、セルの見方は帯の中に1回だけ書く
+    const head = SM.map(mt => '<th id="yt-col-' + mt.k + '" class="' + bl(mt).trim() + '" style="background:' + mt.bg + ';color:' + mt.col + '">' + mt.label + '<div>' + _ytFxHtml(mt.fx) + '</div></th>').join('');
     const rows = M.map((m, i) => '<tr class="' + (i === 0 ? 'top' : '') + '"><td class="yt-fm">'
       + '<div class="yt-mtag">' + m.title + '</div><div class="yt-mym">' + _ytYmLbl(m.ym) + '</div>'
       + (m.md ? '<div class="yt-mday">1〜' + m.md + '日</div>' : '') + (m.noDaily ? '<div class="yt-mnod">月全体（日別なし）</div>' : '')
@@ -21494,7 +21481,7 @@ function renderAll() {
   else if (state.currentView === 'graph') renderGraphAll();
   else if (state.currentView === 'graphdata') renderGraphData();
   else if (state.currentView === 'zentrend') renderZenTrend();   // 【v1.0754】
-  else if (state.currentView === 'contrib') renderContrib();   // 【v1.0764】
+  // 【v1.0889】全-貢献度（contrib）は撤去
   else if (state.currentView === 'compare') renderCompare();
   else if (state.currentView === 'ad-adjust') renderAdAdjust();
   else if (state.currentView === 'pro-adjust') renderProAdjust();
@@ -21719,6 +21706,8 @@ function switchToView(viewName) {
   $$('.nav-tab').forEach(i => i.classList.remove('active'));
   const tab = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
   if (tab) tab.classList.add('active');
+  // 【v1.0889】★無いビュー（撤去した全-貢献度など）を開こうとしたら 商品-基本データ にする（古いリンク・保存値で落ちないように）
+  if (!document.getElementById('view-' + viewName)) { viewName = 'basic'; _basicMode = 'plain'; }
   state.currentView = viewName;
   $$('.view').forEach(v => v.classList.remove('active'));
   $('#view-' + viewName).classList.add('active');
