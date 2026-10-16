@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0902 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0903 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2582,6 +2582,12 @@ td.col-mom .mom-v.mb-m40 { color: #881337; }
 .status-facade-childmanual { cursor: pointer; }
 
 /* Note cell (対応内容) */
+/* 【v1.0903】対応内容の右下の「確認 10/16」（最後に確認した日）。文章とは別。クリックは下の文章へ通す */
+.note-wrap { position: relative; }
+.note-wrap.has-chk .note-cell { padding-bottom: 15px; }
+.note-chk { position: absolute; right: 6px; bottom: 2px; font-size: 0.62rem; font-weight: 600; color: #94a3b8; line-height: 1.2;
+            pointer-events: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.note-chk.is-today { color: #0f766e; }
 .note-cell {
   min-width: 180px;
   max-width: 280px;
@@ -4745,7 +4751,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0902</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0903</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8147,7 +8153,8 @@ function pmEntryRecency(meta) {
   if (typeof meta._ts === 'number' && isFinite(meta._ts)) r = meta._ts;
   const ymds = [
     _ycActionAtYmd(meta.adActionAt), _ycActionAtYmd(meta.proActionAt),
-    _ycNoteStampYmd(meta.adNote), _ycNoteStampYmd(meta.proNote)
+    _ycNoteStampYmd(meta.adNote), _ycNoteStampYmd(meta.proNote),
+    _ycActionAtYmd(meta.adCheckAt), _ycActionAtYmd(meta.proCheckAt)   // 【v1.0903】確認日
   ].filter(Boolean);
   for (const y of ymds) { const e = _ycNormYmdToEpoch(y); if (e > r) r = e; }
   return r;
@@ -8197,6 +8204,9 @@ function mergeProductMetaForSave(localPM, remotePM) {
     const aTs = _newerTs(L.adActionTs,   R.adActionTs);   if (aTs != null) w.adActionTs  = aTs;
     const pTs = _newerTs(L.proActionTs,  R.proActionTs);  if (pTs != null) w.proActionTs = pTs;
     // 【v1.0335】値変更時刻(adChgTs/proChgTs)も新しい方を残す（案A: 値変更ベース再分類の判定に使うため）
+    // 【v1.0903】確認日（adCheckAt/proCheckAt）も新しい方を残す
+    const aCk = _newerYmd(L.adCheckAt,  R.adCheckAt);     if (aCk) w.adCheckAt  = aCk;
+    const pCk = _newerYmd(L.proCheckAt, R.proCheckAt);    if (pCk) w.proCheckAt = pCk;
     const aCg = _newerTs(L.adChgTs,      R.adChgTs);      if (aCg != null) w.adChgTs     = aCg;
     const pCg = _newerTs(L.proChgTs,     R.proChgTs);     if (pCg != null) w.proChgTs    = pCg;
     // 【v1.0346】対応内容(adNote/proNote)は「直近に対応した側（＝対応時刻adActionTs/proActionTsが新しい側）」の
@@ -13128,11 +13138,66 @@ function noteChangeColor(note, kind) {
   if (n < o) return '#2563eb';   // 下げた → 青
   return '';                     // 変化なし等 → 既定(黒)
 }
+// 【v1.0903】本人指定：対応内容をクリックして何も書かずに離れたら、その日を「確認日」として残す。
+//   ★確認日は対応内容の文章には書かない（値の変化の記録「￥35-30（26-1015）」等をそのまま残すため）。
+//     meta.adCheckAt / meta.proCheckAt（'YYYY-MM-DD'）に持ち、セルの右下に小さく「確認 10/16」と出す。
+//   ★文章の最後の日付（（26-1016）や 更新日時-26-1016）が確認日と同じか新しいときは出さない（二重になるため）。
+//   ★旧来の「更新日時-YY-MMDD」だけのメモ（空セルで離れたときのスタンプ）は、文章を空として表示し、その日付を確認日として出す。
+//     データは書き換えない（次にそのセルで確認したときに 文章＝空・確認日＝今日 に置き換わる）。
+function _noteYmdKey(meta, kind) {   // 文章の中の【いちばん新しい】日付（YYYYMMDD。無ければ ''）
+  const note = String(((kind === 'ad') ? meta.adNote : meta.proNote) || '');
+  let best = '';
+  // （YY-MMDD） / (YY-MMDD) / 更新日時-YY-MMDD / 更新日時-YY/MMDD / -YY/MMDD
+  const re = /[（(](\d{2})-(\d{2})(\d{2})[）)]|更新日時-(\d{2})[-\/](\d{2})(\d{2})|-(\d{2})\/(\d{2})(\d{2})(?!\d)/g;
+  let m;
+  while ((m = re.exec(note))) {
+    const yy = m[1] || m[4] || m[7], mm = m[2] || m[5] || m[8], dd = m[3] || m[6] || m[9];
+    const k = '20' + yy + mm + dd;
+    if (k > best) best = k;
+  }
+  return best;
+}
+function _noteCheckYmd(meta, kind) {   // 表示する確認日（YYYY-MM-DD。出さないときは ''）
+  let at = String(((kind === 'ad') ? meta.adCheckAt : meta.proCheckAt) || '');
+  const note = String(((kind === 'ad') ? meta.adNote : meta.proNote) || '').trim();
+  if (note && isAutoTimestamp(note)) {   // 旧スタンプだけのメモ → その日付も確認日として扱う
+    const y = _noteYmdKey(meta, kind);
+    const ys = y ? (y.slice(0, 4) + '-' + y.slice(4, 6) + '-' + y.slice(6, 8)) : '';
+    if (ys > at) at = ys;
+    return at;
+  }
+  if (!at) return '';
+  const nk = _noteYmdKey(meta, kind);
+  if (nk && nk >= at.replace(/-/g, '')) return '';   // 文章の日付が同じか新しい → 出さない
+  return at;
+}
+function _noteChkHtml(code, kind) {
+  const at = _noteCheckYmd(getMeta(code), kind);
+  if (!at) return '';
+  const [y, m, d] = at.split('-');
+  const thisYear = String(new Date().getFullYear());
+  const lbl = (y === thisYear ? '' : y.slice(2) + '/') + (+m) + '/' + (+d);
+  const today = (typeof tuneTodayStr === 'function') ? tuneTodayStr() : '';
+  return '<span class="note-chk' + (at === today ? ' is-today' : '') + '" title="最後に確認した日：' + at + '&#10;（対応内容をクリックして、何も書かずに離れた日）">確認 ' + lbl + '</span>';
+}
 function noteCellHtml(code, kind /* 'ad' | 'pro' */) {
   const meta = getMeta(code);
-  const value = kind === 'ad' ? meta.adNote : meta.proNote;
+  let value = kind === 'ad' ? meta.adNote : meta.proNote;
+  if (value && isAutoTimestamp(String(value).trim())) value = '';   // 【v1.0903】旧スタンプだけ → 文章は空で表示（日付は右下の確認日へ）
   const col = noteChangeColor(value, kind);
-  return `<div class="note-cell" contenteditable="${ghIsEnabled() ? 'true' : 'false'}" data-code="${escapeHtml(code)}" data-kind="${kind}"${col ? ` style="color:${col}"` : ''}>${escapeHtml(value || '')}</div>`;
+  const chk = _noteChkHtml(code, kind);
+  return `<div class="note-wrap${chk ? ' has-chk' : ''}"><div class="note-cell" contenteditable="${ghIsEnabled() ? 'true' : 'false'}" data-code="${escapeHtml(code)}" data-kind="${kind}"${col ? ` style="color:${col}"` : ''}>${escapeHtml(value || '')}</div>${chk}</div>`;
+}
+// セルの確認日だけ描き直す（文章を書き換えた直後などに呼ぶ）
+function _noteChkRefresh(cell) {
+  if (!cell) return;
+  const wrap = cell.closest('.note-wrap');
+  if (!wrap) return;
+  const old = wrap.querySelector('.note-chk');
+  if (old) old.remove();
+  const html = _noteChkHtml(cell.dataset.code, cell.dataset.kind);
+  wrap.classList.toggle('has-chk', !!html);
+  if (html) wrap.insertAdjacentHTML('beforeend', html);
 }
 
 // ==================== KW Cell editable ====================
@@ -22594,7 +22659,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
     if (note === '' || isAutoTimestamp(note)) stampCount++; else keepCount++;
   });
   const msg = `${label}：今ここに表示されている【${codes.length}件】をすべて「対応済み」にします。\n\n`
-    + `・空欄／更新日時のみ … ${stampCount}件 → 本日の更新日時を記入\n`
+    + `・空欄／更新日時のみ … ${stampCount}件 → 本日を確認日に（対応内容の文章は空のまま）\n`
     + `・メモが入っている行 … ${keepCount}件 → 対応内容はそのまま維持\n\n`
     + `いずれも本日対応済みとなり、この一覧（全体・修正あり・推移確認・未確認）からは消えます（次に「最新値を更新」すると再表示）。\n実行してよろしいですか？`;
   if (!confirm(msg)) return;
@@ -22607,7 +22672,9 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
     if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
     const meta = state.productMeta[code];
     const note = (meta[field] || '').trim();
-    if (note === '' || isAutoTimestamp(note)) meta[field] = stamp;  // 空欄/更新日時のみ→本日の更新日時
+    // 【v1.0903】空欄/更新日時のみ → 文章は空にして、確認日（右下）を今日に。メモがある行も確認日は今日にする
+    if (note === '' || isAutoTimestamp(note)) meta[field] = '';
+    { const _cf = (kind === 'ad') ? 'adCheckAt' : 'proCheckAt'; meta[_cf] = tuneTodayStr(); meta[_cf.replace('At', 'Ts')] = Date.now(); meta._ts = Date.now(); }
     // 【v1.0461】メモが入っている行は対応内容を変更しない（そのまま維持）
     markTuneAction(code, kind);  // 当日「対応済み」＝修正あり等から外れる
     _setTuneReviewed(code, kind, true);  // 【v1.0398】レビュー済み→推移確認/未確認から外す／【v1.0883】全体からも外す
@@ -22616,7 +22683,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
   resetTuneMembers();  // 凍結解除→再分類で対応済みを一覧から外す
   saveToStorage();
   renderAll();
-  alert(`${label}：${codes.length}件を対応済みにしました（更新日時を記入 ${stampCount}件／メモ維持 ${keepCount}件）。`);
+  alert(`${label}：${codes.length}件を対応済みにしました（確認日を記入 ${stampCount}件／メモ維持 ${keepCount}件）。`);
 }
 
 // 【v1.0387】対応メモに記録した「変更後の値」と、現在の入札価格/PRオプ料率が食い違う商品を、メモの値へ復元する修復。
@@ -23052,16 +23119,17 @@ document.addEventListener('blur', (e) => {
   // 「未入力離脱で付くスタンプ単独」かどうかの判定（v186新形式 / v179以前の旧形式の両方を許容）
   const isJustBlankLeaveStamp = (s) => /^更新日時-\d{2}-\d{2}\d{2}$/.test(s) || /^更新日時-\d{2}\/\d{2}\d{2}$/.test(s) || /^更新日時-\d{2}\/\d{4}$/.test(s);
 
+  // 【v1.0903】確認日（文章とは別に持つ）。クリックして離れたら、書いた・書かないに関わらず今日にする
+  const _chkField = (kind === 'ad') ? 'adCheckAt' : 'proCheckAt';
+  const _todayYmd = tuneTodayStr();
+  const _chkChanged = (meta[_chkField] !== _todayYmd);
   if (!edited) {
     // 未編集離脱
-    if (isJustOldStamp(rawTrimmed) || isJustBlankLeaveStamp(rawTrimmed)) {
-      // 既にスタンプのみの状態でフォーカスしただけで離脱 → 今日のスタンプに更新
-      newValue = blankLeaveStamp;
-    } else if (rawTrimmed === '') {
-      // 【v186】空セルにフォーカスして何も入力せず離脱 → 今日のスタンプを付与
-      newValue = blankLeaveStamp;
+    // 【v1.0903】文章には何も足さない（v186〜v1.0902 は空セルに「更新日時-YY-MMDD」を書いていた）。
+    //   空セル／旧スタンプだけのセル → 文章は空。内容があるセル → そのまま。日付は確認日（右下）に出す。
+    if (rawTrimmed === '' || isJustOldStamp(rawTrimmed) || isJustBlankLeaveStamp(rawTrimmed)) {
+      newValue = '';
     } else {
-      // 既に内容がある状態でフォーカスしただけで離脱 → そのまま維持
       newValue = rawTrimmed;
     }
   } else {
@@ -23085,15 +23153,20 @@ document.addEventListener('blur', (e) => {
   // 価格の上げ/下げで対応内容の文字色を即時反映（上げ=赤/下げ=青/その他=黒）
   { const _col = noteChangeColor(newValue, kind); e.target.style.color = _col || ''; }
   // 【v1.0395】実際に内容が変わったときだけ保存＝「反映する（未反映）」を出す。
-  //   メモ欄にフォーカスして無編集で離脱（例: 検索欄をクリック）した場合は変更なし＝未反映にしない。
-  if (newValue !== originalValue) {
+  // 【v1.0903】確認日が今日に変わったときも保存する（＝その日初めてクリックして離れたとき）。同じ日の2回目以降は保存しない。
+  const _storedNote = String(((kind === 'ad') ? meta.adNote : meta.proNote) || '').trim();
+  if (newValue !== originalValue || newValue !== _storedNote || _chkChanged) {
     if (kind === 'ad') meta.adNote = newValue;
     else meta.proNote = newValue;
+    meta[_chkField] = _todayYmd;
+    meta[_chkField.replace('At', 'Ts')] = Date.now();
+    meta._ts = Date.now();
     pinEditedCode(code);  // 【fix】メモ編集でも“その場では消さない”
     // 【v249】対応内容欄の更新は「対応済み」として日時記録
     markTuneAction(code, (kind === 'ad') ? 'ad' : 'pro');
     saveToStorage();
   }
+  _noteChkRefresh(e.target);   // 【v1.0903】右下の確認日を描き直す
   // 【v276】対応内容を書いても、その場では修正あり等から外さない（凍結）。次の更新/ビュー移動で反映。
 }, true);
 
@@ -23384,6 +23457,7 @@ function startProRateEdit(cell) {
           //   textContentだけ差し替えると旧色（黒）が残り、青字にならない不具合の修正。
           const _noteCol = noteChangeColor(state.productMeta[codeLower].proNote, 'pro');
           noteCell.style.color = _noteCol || '';
+          try { _noteChkRefresh(noteCell); } catch (e) {}   // 【v1.0903】文章に今日の日付が付いたので確認日の表示を見直す
         }
       }
     }
