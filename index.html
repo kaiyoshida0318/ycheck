@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0904 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0905 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4751,7 +4751,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0904</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0905</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4975,7 +4975,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <button class="state-chip chip-all" data-state="pro-all" title="△以上＝PR◯ ＋ PR△ ＋ 選択前-PR（PR✕・撤退済みは含みません）"><span class="chip-label">△以上</span><span class="chip-num" id="cntAllPr">(0)</span></button>
     <button class="state-chip" data-state="unselected-pro"><span class="chip-label">選択前-PR</span><span class="chip-num" id="cntUnselectedPro">(0)</span></button>
     <span class="sg-empty"></span>   <!-- 【v1.0867】4列目（新リニュ）の空き -->
-    <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
+    <button class="state-chip" data-state="pro-ok-all" title="PR◯（PR◯ ＋ PR◯-親-30％固定 ＋ PR◯-子-7％固定 ＋ PR◯-通常-7％固定）&#10;どれも「対応不要」の状態"><span class="chip-label">PR◯</span><span class="chip-num" id="cntProOkAll">(0)</span></button>
     <button class="state-chip" data-state="pro-tri" title="PR△（PR△-調整中 ＋ PR△-飛ぶ手前固定）"><span class="chip-label">PR△</span><span class="chip-num" id="cntProTri">(0)</span></button>
     <span class="sg-empty"></span>
     <button class="state-chip" data-state="pro-ng" title="PR×"><span class="chip-label">PR✕</span><span class="chip-num" id="cntProNg">(0)</span></button>
@@ -12506,7 +12506,7 @@ const AD_STATUS_ORDER = {
 // 【v186】PRオプ状態の新ラベル
 const PRO_STATUS_ORDER = {
   '': 0,
-  'PR◯': 1, 'PR◯-親-30％固定': 1.2, 'PR◯-子-7％固定': 1.4, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR△-飛ぶ手前固定': 2, 'PR×': 3,
+  'PR◯': 1, 'PR◯-親-30％固定': 1.2, 'PR◯-子-7％固定': 1.4, 'PR◯-通常-7％固定': 1.5, 'PR△-親-下げ挑戦中': 2, 'PR△-親-飛ぶ手前固定': 2, 'PR△-子-7％固定': 2, 'PR△-飛ぶ手前固定': 2, 'PR×': 3,
   'PRオプ○': 1, 'PRオプ×': 3, 'PRO○': 1, 'PRO×': 3   // 互換用（旧ラベル）
 };
 const STATUS_ORDER = { '選択前': -0.5,   /* 【v1.0861】新商品の前 */ '新商品': 0, 'リニューアル': 0.5,   /* 【v1.0720】新商品の直後 */ 'リニューアル予定': 8,   /* 【v1.0726】撤退済みの直後 */ '健常-広告あり◯': 1, '健常-広告なし◯': 2, '中立-広告あり□': 3, '中立-広告なし□': 4, '撤退検討▲': 5, '撤退予定': 6, '撤退済み': 7,
@@ -12710,6 +12710,7 @@ const STATUS_TEXT_COLOR = {
   'PR◯': '#2563eb',                // 青（◯）
   'PR◯-親-30％固定': '#2563eb',     // 【v1.0710】◯はまとめて青（親子の別は .rep-badge とラベルで分かる）
   'PR◯-子-7％固定': '#2563eb',      // 【v1.0710】同上
+  'PR◯-通常-7％固定': '#2563eb',    // 【v1.0905】同上
   'PR△-調整中': '#ea580c',          // 【v1.0713】黄（△）
   'PR△-親-下げ挑戦中': '#ea580c',   // 黄（△）
   'PR△-親-飛ぶ手前固定': '#ea580c', // 【v1.0710】水色 → 黄（△）
@@ -12727,6 +12728,7 @@ function statusTextColor(value) { return STATUS_TEXT_COLOR[value] || '#1a1a1a'; 
 const STATUS_DISPLAY_LABEL = {
   'PR◯-親-30％固定':     'PR◯-親<br>30％固定',      /* 【v1.0658】 */
   'PR◯-子-7％固定':      'PR◯-子<br>7％固定',       /* 【v1.0658】 */
+  'PR◯-通常-7％固定':    'PR◯-通常<br>7％固定',     /* 【v1.0905】 */
   'PR△-調整中':          'PR△<br>調整中',           /* 【v1.0734】 */
   'PR△-親-下げ挑戦中':   'PR△-親<br>下げ挑戦中',
   'PR△-親-飛ぶ手前固定': 'PR△-親<br>飛ぶ手前固定',   /* 【v1.0734】'PRオプ△-親' → 'PR△-親'（他とそろえた） */
@@ -13045,7 +13047,10 @@ const AD_STATUS_OPTIONS  = ['', '入札◯', '入札△', '入札なし'];
 // 【v1.0876】'PR△-親-下げ挑戦中' を選択肢から外す（本人：「もう無くなっているステータス」）。
 //   保存済みの値は migrateProStatusV1876 が一度だけ 'PR△-調整中' に寄せる（判定はどちらも同じ＝調整中・PR△チップ）。
 //   ★色・略称・並び順・proStatusIsCross などの旧キーは残す（他端末の古い保存値が来ても崩れないように）。
-const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR◯-親-30％固定', 'PR◯-子-7％固定', 'PR△-調整中', 'PR△-飛ぶ手前固定', 'PR×'];
+const PRO_STATUS_OPTIONS = ['', 'PR◯', 'PR◯-親-30％固定', 'PR◯-子-7％固定', 'PR◯-通常-7％固定', 'PR△-調整中', 'PR△-飛ぶ手前固定', 'PR×'];
+// 【v1.0905】'PR◯-通常-7％固定' を追加（本人指定）。送り込みの無い通常商品で、PRオプ料率を7％のまま広告を出すもの。
+//   料率で順位を取りにいかない＝SEO順位がどうでも直すことはない → PR◯-子-7％固定 と同じ扱い
+//   （◯系＝PR◯チップに入る／修正あり・推移確認・未確認には出さず「全体」のみ）。判定は _proIsN7。
 // 【v1.0658】◯系を2つ追加（どちらも「いま直すことはない」＝対応不要）。
 //   PR◯-親-30％固定 … 送り込み元。7％まで下げず、上位表示を取るために高い料率のまま固定している
 //   PR◯-子-7％固定  … 送り込み先。最低料率7％から動かしようがない（v1.0636で廃止した 'PR△-子-7％固定' の置き換え）
@@ -17640,7 +17645,8 @@ function adStoppedBadge(code) {
 //   ★旧値 'PR△-子-7％固定'（v1.0636で廃止）も子の固定として受ける。まだ移行していない端末のデータ対策。
 function _proIsP30(s){ return s === 'PR◯-親-30％固定'; }
 function _proIsC7(s) { return s === 'PR◯-子-7％固定' || s === 'PR△-子-7％固定'; }
-function proStatusIsCircle(s){ return s === 'PR◯' || s === 'PRオプ○' || s === 'PRO○' || _proIsP30(s) || _proIsC7(s); }
+function _proIsN7(s) { return s === 'PR◯-通常-7％固定'; }   // 【v1.0905】通常商品の7％固定
+function proStatusIsCircle(s){ return s === 'PR◯' || s === 'PRオプ○' || s === 'PRO○' || _proIsP30(s) || _proIsC7(s) || _proIsN7(s); }
 // 【v1.0713】'PR△-調整中' も「いま動かしている最中」なので 下げ挑戦中 と同じ扱いにする
 //   （SEOが上位なのに調整中のままなら「修正あり」に出したい。isTuneFix がこの関数を見る）
 function proStatusIsCross(s) { return s === 'PR×' || s === 'PR△-調整中' || s === 'PR△-親-下げ挑戦中' || s === 'PRオプ×' || s === 'PRO×'; }
@@ -17728,6 +17734,7 @@ function getLatestRankBucket(code, kind) {
 //   調整-PRオプ（SEO順位。上位＝1〜6位）
 //     PR◯ / PR◯-親-30％固定 … 7位以下・圏外が2回続いた → 修正あり
 //     PR◯-子-7％固定       … 出さない（料率を7％より下げられず、打つ手がない）
+//     PR◯-通常-7％固定     … 出さない（【v1.0905】通常商品で7％のまま固定。料率で順位を取りにいかない）
 //     PR△-調整中 / PR×      … 1-6位が2回続いた → 修正あり（状態を合わせる）
 //     PR△-飛ぶ手前固定       … 出さない
 const TUNE_FIX_RANK_RUN = 2;   // 何回続いたら出すか（順位の条件）
@@ -17778,7 +17785,7 @@ function tuneFixInfo(code, kind) {
     return null;
   }
   const st = effectiveProStatusOf(code);
-  if (_proIsC7(st)) return null;                                  // 子は7％から動かせない
+  if (_proIsC7(st) || _proIsN7(st)) return null;                 // 子は7％から動かせない／【v1.0905】通常-7％固定は料率で順位を取りにいかない
   if (proStatusIsCircle(st)) {
     if (noneTop) return { short: '◯なのに' + (lastNull ? '圏外' : '7位以下'),
       tip: st + ' なのにSEO順位が' + (lastNull ? '圏外（順位なし）' : '7位以下') + runTxt + '。\n→ ' + (_proIsP30(st) ? '30％でも取れていないので見直す' : 'PRオプ料率を上げる、またはPR△にする') };
@@ -22194,6 +22201,7 @@ const INFO_PRO_DESC = {
   'PR◯': 'PRオプ料率が最安の <b>7%</b>、かつ <b>SEO順位が1〜6位</b>。',
   'PR◯-親-30％固定': '<b>送り込み元（親）</b>。7%まで下げず、上位表示を取るために<b>高い料率のまま固定</b>しているもの。対応不要。',
   'PR◯-子-7％固定': '<b>送り込み先（子）</b>。最低料率の <b>7%から動かしようがない</b>もの。対応不要。',
+  'PR◯-通常-7％固定': '<b>通常商品</b>（送り込みなし）で、PRオプ料率を <b>7%のまま固定</b>して広告を出すもの。料率で順位を取りにいかないので、SEO順位に関係なく対応不要（修正ありに出ません）。',
   'PR△-調整中': '◯の形へ持っていく<b>調整中</b>のもの（親の料率をどこまで下げられるか試しているものも、ここに入れます）。',
   'PR△-飛ぶ手前固定': '下げると上位表示が飛ぶ<b>手前の料率で固定完了</b>。月1チェック用に「未確認」に出ます（料率を変えると推移確認へ）。',
   // 【v1.0832】★ステータス名は statusOptionLabel() を通して入れる（'撤退予定' → 「削除予定」）。
@@ -22304,7 +22312,7 @@ function buildTuneCondHtml(kind) {
           '<small>※1-4位でも30円超の△は、まだ下げている途中なので修正ありにしません。入札△-飛ぶ手前固定・入札なしは出しません。</small>'
         : '<span class="tc-li"><span class="tc-num">1</span><span class="tc-ok">PR◯／PR◯-親-30％固定</span> なのに SEOが<span class="tc-neg">7位以下・圏外</span>（2回続けて）→ 料率を上げる／△にする／見直す</span>' +
           '<span class="tc-li"><span class="tc-num">2</span><span class="tc-ng">PR△-調整中／PR×</span> なのに SEOが<b>1-6位</b>（2回続けて）→ 状態を合わせる</span>' +
-          '<small>※<b>PR◯-子-7％固定は出しません</b>（料率を7％より下げられず、打つ手がないため）。PR△-飛ぶ手前固定も出しません。</small>') +
+          '<small>※<b>PR◯-子-7％固定・PR◯-通常-7％固定は出しません</b>（7％のまま動かさない＝料率で順位を取りにいかないため）。PR△-飛ぶ手前固定も出しません。</small>') +
       '<small>※「2回続けて」＝直近2回の順位取得のどちらも。1日だけのぶれでは出しません（取得が1回しか無い商品はその1回で判定）。</small>' +
       '<small>※その日に対応（値変更・状態変更・対応内容更新）すると当日だけ外れ、翌日また表示。</small></td></tr>' +
     '<tr class="tc-row-watch"><td><span class="tc-badge tc-b-watch">推移確認</span></td><td>' +
@@ -22317,7 +22325,7 @@ function buildTuneCondHtml(kind) {
   // 【v193】固定系（△-飛ぶ手前固定 等）は対応不要のため「全体」のみに出る、という説明を追記。
   const fixedText = isAd
     ? '固定系（<span class="tc-hi">入札△-飛ぶ手前固定</span>）は月1チェック用に「未確認」に表示。入札価格を変更すると「推移確認」に移ります。'
-    : '固定系のうち <span class="tc-hi">PR△-飛ぶ手前固定</span> は月1チェック用に「未確認」に表示（料率を変更すると推移確認へ）。<span class="tc-hi">PR◯-子-7％固定</span> は「全体」のみに表示。';
+    : '固定系のうち <span class="tc-hi">PR△-飛ぶ手前固定</span> は月1チェック用に「未確認」に表示（料率を変更すると推移確認へ）。<span class="tc-hi">PR◯-子-7％固定</span>・<span class="tc-hi">PR◯-通常-7％固定</span> は「全体」のみに表示。';
   const foot =
     '<div class="tc-foot">共通：状態が<span class="tc-ok">○</span>で修正ありに該当しない商品（○かつ上位＝問題なし）は、推移確認・未確認には出さず「全体」のみに表示。<br>' +
     fixedText + '<br>' +
@@ -22996,6 +23004,14 @@ document.addEventListener('change', (e) => {
       fac.style.borderColor = bd;
       fac.innerHTML = ((kind === 'ad') ? adStatusFacadeLabel(code, value) : statusDisplayLabel(value)) + '<span class="status-chev">▾</span>';   // 【v1.0741】
     }
+    // 【v1.0905】状態セルの下の「修正ありの理由」（§287）も、変えた状態で描き直す（行はその場に残るので古い理由が残らないように）
+    try {
+      const _td = e.target.closest('td.status-col');
+      if (_td && _td.closest('#tableAdTune, #tableProTune')) {
+        const _old = _td.querySelector('.fix-why'); if (_old) _old.remove();
+        const _w = _tuneFixWhyHtml(code, kind); if (_w) _td.insertAdjacentHTML('beforeend', _w);
+      }
+    } catch (e2) {}
     // 【v1.0714】入札状態を変えると同じ行のステータス（健常/中立の あり/なし）も変わる。
     //   ★その場で描き直さないと、画面を切り替えるまで古い表示のままになる
     if (kind === 'ad') {
