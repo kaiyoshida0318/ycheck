@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0891 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0892 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4711,7 +4711,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0891</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0892</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -19439,6 +19439,8 @@ const YT_METRICS = [
 const YT_FOCUS_EXTRA = [
   { fx:'広告注文数 ÷ クリック数', k:'cvr',     g:'cvr',   label:'広告CVR',        col:'#c2410c', bg:'#fdeacd', type:'cvr', num:'od', den:'cl' },
 ];
+// 【v1.0892】ROAS系の分子（売上）の呼び名。広告ROAS だけ分子が広告売上
+const YT_NUM_LABEL = { tot:'売上', ad:'広告売上' };
 const YT_DEN_LABEL = { sp:'広告実績額', spPr:'広告+PR費', prOver:'PR(7%超)' };   // spPr＝広告実績額＋PR実績額(7%超)
 // 【v1.0889】計算式の演算子（÷ − ＋ ×）を太く大きく。小さい字だと「÷」が「+」に見えるため
 function _ytFxHtml(fx) { return escapeHtml(fx || '').replace(/([÷−＋×])/g, '<b class="yt-op">$1</b>'); }
@@ -19533,7 +19535,7 @@ function _ytCalc(agg) {
       if (R != null) {
         L = codes.filter(c => { const d = agg[c][D] || 0, n = agg[c][N] || 0; return (mt.type === 'cvr' ? d > 0 : (d > 0 || n > 0)) && TD - d > 0; }).map(c => {
           const d = agg[c][D] || 0, n = agg[c][N] || 0;
-          return { code: c, v: d > 0 ? n / d * 100 : null, imp: R - (TN - n) / (TD - d) * 100, sp: d };
+          return { code: c, v: d > 0 ? n / d * 100 : null, imp: R - (TN - n) / (TD - d) * 100, sp: d, n: n };   // 【v1.0892】n＝分子（売上）
         }).sort((a, b) => Math.abs(b.imp) - Math.abs(a.imp));
       }
       out[mt.k] = { total: R, list: _ytImpPick(L, false).slice(0, YT_N), all: L, ex: ex };
@@ -19780,7 +19782,7 @@ function _ytTile(mt, x, i, parentSet) {
     + '<div class="yt-nm">' + escapeHtml(name) + '</div>'
     + '<div class="yt-v1">' + _ytValTxt(mt, x, false) + '</div>'
     + '<div class="yt-v2" style="color:' + mt.col + '">' + (mt.type === 'amt' ? x.share.toFixed(1) + '%' : _ytImpTxt(mt, x)) + '</div>'
-    + (mt.type === 'roas' ? '<div class="yt-v3">' + _ytYen(x.sp || 0) + '</div>' : '')
+    + (mt.type === 'roas' ? '<div class="yt-v3">' + _ytYen(x.n || 0) + '</div><div class="yt-v3">' + _ytYen(x.sp || 0) + '</div>' : '')   // 【v1.0892】売上 → 分母
     + '</div>';
 }
 // 【v1.0890】タイルの各行が何かを、指標の種類ごとに具体的に（旧：商品名／指標名／全体への影響 の繰り返し）
@@ -19790,7 +19792,7 @@ function _ytLabelCol(mt) {
   const w = (mt.type === 'amt') ? '全体に占める%' : '全体を動かす幅';
   return '<div class="yt-lblcol"><div style="height:80px"></div>'
     + ln('商品名', 'h14 mt3') + ln(v, 'h15') + ln(w, 'h15', 'color:' + mt.col)
-    + (mt.type === 'roas' ? ln(YT_DEN_LABEL[mt.den] || '実績額', 'h14', '', 'この商品の分母（' + (YT_DEN_LABEL[mt.den] || '実績額') + '）') : '') + '</div>';
+    + (mt.type === 'roas' ? ln(YT_NUM_LABEL[mt.num] || '売上', 'h14', '', 'この商品の分子（' + (YT_NUM_LABEL[mt.num] || '売上') + '）') + ln(YT_DEN_LABEL[mt.den] || '実績額', 'h14', '', 'この商品の分母（' + (YT_DEN_LABEL[mt.den] || '実績額') + '）') : '') + '</div>';
 }
 function _ytMonthCell(m, mt, r, isTop) {
   const t = m.has ? _ytTotTxt(mt, r) : '—';
@@ -19825,7 +19827,7 @@ function renderYtTop() {
       +   '<span><i>1</i>全商品の中での順位</span>'
       +   '<span><i>2</i>この商品の値</span>'
       +   '<span><i>3</i>金額の列＝店全体に占める割合／比率・単価の列＝店全体を動かした幅（<em class="up">＋押し上げ</em>・<em class="dn">−押し下げ</em>。獲得単価は＋が悪い）</span>'
-      +   '<span><i>4</i>ROAS系だけ：この商品の分母（実績額）</span>'
+      +   '<span><i>4</i>ROAS系だけ：この商品の売上（分子）と実績額（分母）</span>'
       +   '<span><i>5</i>店全体の値</span></span>'
       + '</div>';
     const SM = _ytShownMetrics(true), GS = _ytGroupStarts(SM);
@@ -19838,7 +19840,8 @@ function renderYtTop() {
         + '<div class="yt-frk"><span style="background:' + (k < 3 ? mt.col : '#94a3b8') + '">' + (k + 1) + '</span><small>位／' + all.length + '</small></div>'
         + '<div class="yt-fv1">' + _ytValTxt(mt, x, true) + '</div>'
         + '<div class="yt-fv2" style="color:' + mt.col + '">' + (mt.type === 'amt' ? x.share.toFixed(1) + '%' : _ytImpTxt(mt, x)) + '</div>'
-        + (mt.type === 'roas' ? '<div class="yt-fv3" title="' + (YT_DEN_LABEL[mt.den] || '実績額') + '">' + ({ sp:'実績', spPr:'広告+PR', prOver:'PR' }[mt.den] || '実績') + ' ' + _ytYen(x.sp || 0) + '</div>' : '')
+        + (mt.type === 'roas' ? '<div class="yt-fv3" title="' + (YT_NUM_LABEL[mt.num] || '売上') + '">' + (YT_NUM_LABEL[mt.num] || '売上') + ' ' + _ytYen(x.n || 0) + '</div>'   // 【v1.0892】売上（分子）
+            + '<div class="yt-fv3" title="' + (YT_DEN_LABEL[mt.den] || '実績額') + '">' + ({ sp:'実績', spPr:'広告+PR', prOver:'PR' }[mt.den] || '実績') + ' ' + _ytYen(x.sp || 0) + '</div>' : '')
         + '<div class="yt-fv4">' + (mt.type === 'amt' ? '合計 ' : '全体 ') + _ytTotTxt(mt, r) + '</div></td>';
     };
     // 【v1.0889】見出しの2行目は列ごとの中身（計算式）。「金額／構成比」「値／全体への影響」の繰り返しはやめ、セルの見方は帯の中に1回だけ書く
@@ -19931,23 +19934,23 @@ function ytExport() {
   const L = _ytLast; if (!L) { alert('エクスポートできるデータがありません'); return; }
   const { P, M } = L;
   const q = v => { const t = (v == null) ? '' : String(v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
-  const rows = [['指標', '区分', '年月', '期間', '全体(合計)', '順位', '商品コード(代表)', '商品名', '値', '値の単位', '構成比(%)', '全体への影響', '影響の単位', '分母(実績額)', '注記']];
+  const rows = [['指標', '区分', '年月', '期間', '全体(合計)', '順位', '商品コード(代表)', '商品名', '値', '値の単位', '構成比(%)', '全体への影響', '影響の単位', '分子(売上)', '分母(実績額)', '注記']];
   const totCsv = (mt, r) => (!r || r.total == null) ? '' : (mt.type === 'amt' || mt.type === 'cpa' ? Math.round(r.total) : r.total.toFixed(mt.type === 'cvr' ? 2 : 1));
   _ytShownMetrics(!!_ytFocus).forEach(mt => {
     M.forEach(m => {
       const r = m.res ? m.res[mt.k] : null;
       const period = m.md ? ('1〜' + m.md + '日') : (m.noDaily ? '月全体（日別なし）' : '月全体');
       const note = (r && r.ex) ? ('料率未取得' + r.ex + '件を除外') : '';
-      if (!r) { rows.push([mt.label, m.title, _ytYmLbl(m.ym), period, '', '', '', '', '', '', '', '', '', '', 'データなし']); return; }
+      if (!r) { rows.push([mt.label, m.title, _ytYmLbl(m.ym), period, '', '', '', '', '', '', '', '', '', '', '', 'データなし']); return; }
       let list = r.list;
       if (_ytFocus) { const k = r.all.findIndex(y => y.code === _ytFocus); list = k >= 0 ? [Object.assign({ _rank: k + 1 }, r.all[k])] : []; }
       list.forEach((x, i) => {
-        let v = '', vu = '', sh = '', im = '', iu = '', den = '';
+        let v = '', vu = '', sh = '', im = '', iu = '', den = '', num = '';
         if (mt.type === 'amt') { v = Math.round(x.v); vu = '円'; sh = x.share.toFixed(1); }
-        else if (mt.type === 'roas') { v = x.v == null ? '' : x.v.toFixed(1); vu = x.v == null ? (mt.zero || '広告なし') : '%'; im = x.imp.toFixed(1); iu = 'pt'; den = Math.round(x.sp || 0); }
+        else if (mt.type === 'roas') { v = x.v == null ? '' : x.v.toFixed(1); vu = x.v == null ? (mt.zero || '広告なし') : '%'; im = x.imp.toFixed(1); iu = 'pt'; den = Math.round(x.sp || 0); num = Math.round(x.n || 0); }
         else if (mt.type === 'cvr') { v = x.v.toFixed(2); vu = '%'; im = x.imp.toFixed(2); iu = 'pt'; }
         else { v = x.v == null ? '' : Math.round(x.v); vu = x.v == null ? '注文0' : '円'; im = Math.round(x.imp); iu = '円'; }
-        rows.push([mt.label, m.title, _ytYmLbl(m.ym), period, totCsv(mt, r), x._rank || (i + 1), x.code, _ytName(x.code), v, vu, sh, im, iu, den, note]);
+        rows.push([mt.label, m.title, _ytYmLbl(m.ym), period, totCsv(mt, r), x._rank || (i + 1), x.code, _ytName(x.code), v, vu, sh, im, iu, num, den, note]);
       });
     });
   });
