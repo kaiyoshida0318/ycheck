@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0933 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0935 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4799,7 +4799,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0933</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0935</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -18033,6 +18033,9 @@ function getTuneGroup(code, kind) {
   //   ★判定は WD_MODES.plan.match（【撤退】削除予定タブと同じ列挙）＋ effectiveStatusOf（子は親に追従＝親が削除予定なら子も外す）。
   //   ★_wdMatch は子を false にする（タブで親1行にまとめるため）ので、ここでは使わない。
   if (WD_MODES.plan.match(effectiveStatusOf(code))) return null;
+  // 【v1.0934】調整-PRオプでは「PR✕-放置」（保存値 'PR×'・旧値 'PRオプ×' 'PRO×'）も修正あり／推移確認／未確認に出さない＝「全体」だけ（本人指定）。
+  //   ★「×なのに1-6位」（tuneFixInfo）で修正ありに入っていたものも外れる。放置と決めた商品は調整の対象にしない。
+  if (kind === 'pro' && isProNgValue(effectiveProStatusOf(code))) return null;
   const meta = state.productMeta[code] || {};
   const note = (kind === 'ad') ? meta.adNote : meta.proNote;
   const actionAt = (kind === 'ad') ? meta.adActionAt : meta.proActionAt;
@@ -18252,7 +18255,16 @@ function renderAdAdjust(cfg) {
   // 【v1.0722】撤退ビューは「入札なし除外」ではなく、ステータス（撤退検討▲/撤退予定/撤退済み）で絞る。
   //   ★判定は cfg.statusPick（＝_wdIs）1本。ここに文字列比較を書き足さないこと（タブと件数がズレる）
   if (_wd) list = list.filter(r => _rfMembersOf(r).some(c => cfg.statusPick(c)) || _editPinnedCodes.has(r.code));
-  else list = list.filter(r => _rfMembersOf(r).some(c => !adStatusIsNone(effectiveAdStatusOf(c))) || _editPinnedCodes.has(r.code));   // 【v1.0658】子は入札なし扱い
+  else {
+    // 【v1.0935】商品-広告データの「個別」では、親が入札中の子商品も残す（本人指定：個別で親しか出ない商品があった）。
+    //   子は入札なし扱い（v1.0658）なので、個別（1商品1行）にすると子の行だけが落ちていた。合算はセット単位の判定なので出ていた。
+    //   ★商品-広告データ（layout:'data'）だけ。調整-入札価格は従来どおり子を出さない（子は入札を持たない＝調整の対象ではない）。
+    const _keepKid = (cfg.layout === 'data' && !_dataRoll) ? (c => {
+      const rep = String(((state.productMeta || {})[c] || {}).repCode || '').trim();
+      return !!rep && rep !== c && !isRetired(c) && !adStatusIsNone(effectiveAdStatusOf(rep));
+    }) : null;
+    list = list.filter(r => _rfMembersOf(r).some(c => !adStatusIsNone(effectiveAdStatusOf(c)) || (_keepKid && _keepKid(c))) || _editPinnedCodes.has(r.code));   // 【v1.0658】子は入札なし扱い
+  }
 
   const _adSearchEl = $(searchSel);
   const q = (_adSearchEl ? _adSearchEl.value : '').trim().toLowerCase();
