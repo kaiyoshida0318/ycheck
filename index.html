@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0922 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0925 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4796,7 +4796,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0922</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0925</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10951,8 +10951,10 @@ function prMonthAgg(ym) {
 //      → 画面では列名に「(推定)」を付け、数字を斜体にして実測列と区別する。
 //   ★ 料率が取得できない商品は null を返す（0%扱いにしない）。
 // ============================================================================
-function itemPrEstimate(code, rev) {
-  const rate = (typeof getProRate === 'function') ? getProRate(code) : null;
+// 【v1.0925】第3引数 rateOverride を渡すと、その料率で計算する（商品モーダルの「その日の料率」用。_pePrRateOn）。
+//   省略時は従来どおり ⑤ のいまの料率（getProRate）。商品モーダル以外の画面は従来どおり。
+function itemPrEstimate(code, rev, rateOverride) {
+  const rate = (rateOverride != null && isFinite(rateOverride)) ? Number(rateOverride) : ((typeof getProRate === 'function') ? getProRate(code) : null);
   if (rate == null || isNaN(rate)) return null;
   const r = Number(rate);
   const taxEx = (+rev || 0) / PR_TAX_DIV;
@@ -24033,6 +24035,35 @@ function _peScopeCodes(code) {
   if (_peScope === 'child')  return f.members.filter(c => c !== f.key);
   return f.members;   // 'set'
 }
+// 【v1.0925】商品モーダルの PR実績額（7%超・推定）は「その日の料率」で計算する（本人指定）。
+//   料率は調整-PRオプ（SEO順位）の日別履歴 state.rankEdits[YYYY/MM][code].proRate（空の日は前の値を引き継ぐ）。
+//   ★商品ごとに自分の料率で計算する（親子合算でも、子は子の料率）。グラフの料率の線（親の料率）とは別。
+//   履歴が無い商品・日は ⑤ のいまの料率（getProRate）にフォールバック。どちらも無ければ null（＝計算できない）。
+function _pePrRateOn(code, ds) {
+  let v = null;
+  try { v = getDisplayRankEditValue(ds.slice(0, 4) + '/' + ds.slice(5, 7), code, 'proRate', (+ds.slice(8, 10)) - 1); } catch (e) { v = null; }
+  const n = Number(v);
+  if (v != null && v !== '' && isFinite(n) && n >= 0) return n;
+  return (typeof getProRate === 'function') ? getProRate(code) : null;
+}
+// 月別：その月の料率を「日別の売上で重みを付けた平均」にする（料率を月の途中で変えた月も、売れた日の料率で効く）。
+//   その月に日別の売上が無ければ、月末（今月は今日）の料率。
+function _pePrRateMonth(code, ym /* 'YYYY-MM' */) {
+  let w = 0, sum = 0;
+  try {
+    dailyAllDates().forEach(d => {
+      if (d.slice(0, 7) !== ym) return;
+      const rv = +(dayAgg(code, d).rev) || 0; if (!(rv > 0)) return;
+      const rt = _pePrRateOn(code, d); if (rt == null) return;
+      w += rv; sum += rv * rt;
+    });
+  } catch (e) {}
+  if (w > 0) return sum / w;
+  const td = (typeof getTodayYmAndIndex === 'function') ? getTodayYmAndIndex() : null;
+  const ymS = ym.replace('-', '/');
+  const di = (td && td.ym === ymS) ? td.dayIndex : (getDaysInMonth(ymS) - 1);
+  return _pePrRateOn(code, ym + '-' + String(di + 1).padStart(2, '0'));
+}
 function _peRows(code) {
   const out = [];
   const codes = _peScopeCodes(code);
@@ -24048,7 +24079,7 @@ function _peRows(code) {
       const prParts = [];   // 【v1.0682】商品ごとの内訳（料率・その日の売上・上乗せ分）。「なぜ¥0なのか」を出すため
       codes.forEach(c => {
         const a = dayAgg(c, d);
-        { const e = itemPrEstimate(c, a.rev || 0); if (e) { prKnown = true; prOver += Math.max(0, +e.over || 0); }
+        { const e = itemPrEstimate(c, a.rev || 0, _pePrRateOn(c, d)); if (e) { prKnown = true; prOver += Math.max(0, +e.over || 0); }   // 【v1.0925】その日の料率
           prParts.push({ code: c, rate: e ? e.rate : null, rev: a.rev || 0, over: e ? Math.max(0, +e.over || 0) : null }); }
         rev += a.rev || 0; seoRev += a.seoRev || 0; adRev += a.adRev || 0; adCost += a.adCost || 0;
         // 【v1.0639】合算グラフを「SEO×親子 / 広告×親子」の4系列に割るための内訳
@@ -24071,7 +24102,7 @@ function _peRows(code) {
       if (codes.indexOf(r.code) < 0) return;
       const e = (byMonth[r.month] || (byMonth[r.month] = { rev: 0, seoRev: 0, adRev: 0, adCost: 0, seoP: 0, seoC: 0, adP: 0, adC: 0, revP: 0, revC: 0, prOver: 0, prKnown: false, prParts: [] }));
       e.rev += r.rev || 0; e.seoRev += r.seoRev || 0; e.adRev += r.adRev || 0; e.adCost += r.adCost || 0;
-      { const pe = itemPrEstimate(r.code, r.rev || 0); if (pe) { e.prKnown = true; e.prOver += Math.max(0, +pe.over || 0); }
+      { const pe = itemPrEstimate(r.code, r.rev || 0, _pePrRateMonth(r.code, r.month)); if (pe) { e.prKnown = true; e.prOver += Math.max(0, +pe.over || 0); }   // 【v1.0925】その月の料率（売上で重み付け）
         e.prParts.push({ code: r.code, rate: pe ? pe.rate : null, rev: r.rev || 0, over: pe ? Math.max(0, +pe.over || 0) : null }); }   // 【v1.0675/v1.0682】
       // 【v1.0639】4系列用の内訳（親＝代表キーの商品／子＝それ以外）
       if (r.code === _famKey) { e.seoP += r.seoRev || 0; e.adP += r.adRev || 0; e.revP += r.rev || 0; }
@@ -24106,6 +24137,23 @@ function _peRows(code) {
 //   ・親子合算のときは代表（親）の入札価格（子は入札なし扱い §v1.0658）。
 //   ・月別は「その月の最後の日（今月は今日）」の値。★足さない（Amacheck §10-7）。
 function _peBidCode(code) { return (_peScope === 'set') ? _peFamily(code).key : code; }
+// 【v1.0924】PRオプ料率の推移（商品-調整のピンクの階段）。入札価格と同じ作り：
+//   ・値は SEO順位（調整-PRオプ）の料率の日別履歴（state.rankEdits[YYYY/MM][code].proRate）を getDisplayRankEditValue で読む（空の日は前の値を引き継ぐ）。
+//   ・親子合算のときは代表（親）の料率（入札価格と同じ）。子は「PR△-子-7％固定」などで別の料率のことがあるが、セットの動きを決めるのは親。
+//   ・日別だけ（月別のグラフには出さない＝入札価格と同じ）。0% は「PRオプなし」として 0 のまま描く。
+function _peProRateSeries(code, rows) {
+  const bc = _peBidCode(code);
+  const out = rows.map(r => {
+    const k = String(r.key);
+    if (k.length !== 10) return null;
+    const ym = k.slice(0, 4) + '/' + k.slice(5, 7);
+    let v = null;
+    try { v = getDisplayRankEditValue(ym, bc, 'proRate', (+k.slice(8, 10)) - 1); } catch (e) { v = null; }
+    const n = Number(v);
+    return (v == null || v === '' || !isFinite(n) || n < 0) ? null : n;
+  });
+  return out.some(v => v != null) ? out : null;
+}
 function _peBidSeries(code, rows) {
   const bc = _peBidCode(code);
   const td = (typeof getTodayYmAndIndex === 'function') ? getTodayYmAndIndex() : null;
@@ -24142,8 +24190,15 @@ function _peRoasCap(vals) {
   return { max: Math.ceil(base / step) * step, step };
 }
 // ROAS の系列(ds)と目盛り(y1)に上限を当てる。上限を付けたら true
-function _peApplyRoasCap(ds, y1, layout) {
-  const cap = _peRoasCap(ds.data);
+// 【v1.0924】fixedMax を渡すと「最大がそれを超えたら、その値で止める」（商品-調整の広告ROAS＝1,000%）。
+//   §301 の自動（上から9割の値×1.3）は「1日だけ飛び抜けた日」しか抑えられない。広告費が1日¥25〜¥75 の商品は
+//   売れた日が全部 2,000〜10,000% になり、上限が付かずに目盛りが 9,000〜12,000% まで伸びていた（本人指摘）。
+function _peApplyRoasCap(ds, y1, layout, fixedMax) {
+  let cap;
+  if (fixedMax) {
+    const hi = Math.max(0, ...(ds.data || []).filter(x => x != null && isFinite(x)));
+    cap = (hi > fixedMax) ? { max: fixedMax, step: [50, 100, 200, 250, 500, 1000, 2000, 5000].find(st => fixedMax / st <= 6) || 10000 } : null;
+  } else cap = _peRoasCap(ds.data);
   if (!cap) return false;
   ds._raw = ds.data.slice(); ds._capMax = cap.max;
   ds.data = ds._raw.map(x => (x == null ? null : Math.min(x, cap.max)));
@@ -24223,12 +24278,14 @@ const PE_SALE_BAND = {
     ctx.restore();
   }
 };
+// 【v1.0924】PRオプ料率（y3・%）の変わり目にも同じ札（「30%→28%」）を付ける
 const PE_BID_LABELS = {
   id: 'peBidLabels',
   afterDatasetsDraw(chart, args, opts) {
-    const ds = chart.data.datasets.findIndex(d => d.label === '入札価格');
+    [['入札価格', 'y2', v => '¥' + v], ['PRオプ料率', 'y3', v => v + '%']].forEach(([lab, yid, fmt]) => {
+    const ds = chart.data.datasets.findIndex(d => d.label === lab);
     if (ds < 0 || !chart.isDatasetVisible(ds)) return;
-    const data = chart.data.datasets[ds].data, xs = chart.scales.x, ys = chart.scales.y2, area = chart.chartArea;
+    const data = chart.data.datasets[ds].data, xs = chart.scales.x, ys = chart.scales[yid], area = chart.chartArea;
     if (!xs || !ys) return;
     const ctx = chart.ctx; ctx.save();
     ctx.font = '700 11.5px "Noto Sans JP", sans-serif'; ctx.textBaseline = 'middle';
@@ -24237,7 +24294,7 @@ const PE_BID_LABELS = {
       if (v == null) return;
       if (prev != null && v !== prev) {
         const x = xs.getPixelForValue(i), yc = ys.getPixelForValue(prev);
-        const txt = '¥' + prev + '→¥' + v;
+        const txt = fmt(prev) + '→' + fmt(v);
         const w = ctx.measureText(txt).width + 10, h = 18;
         let lx = Math.min(Math.max(x - w / 2, area.left + 2), area.right - w - 2);
         let ly = (v < prev) ? (yc - h - 6) : (yc + 6);
@@ -24249,6 +24306,7 @@ const PE_BID_LABELS = {
       prev = v;
     });
     ctx.restore();
+    });
   }
 };
 // 【v1.0914】日別のグラフにセールの印を付ける（x軸の日付をピンクに・帯・ツールチップに名前）。月別（keys が YYYY-MM）では何もしない
@@ -24293,9 +24351,9 @@ function _peStickyHead(wrap) {
 // ============================================================================
 // 【v1.0911→v1.0912】商品モーダル「調整-日月別」タブ＝調整用。その日（月）の細かい数字の動きを見る（本人指定）。
 //   v1.0911 では「売上・ROAS」タブの日別をこれに差し替えていたが、日別と月別で項目が変わるのは分かりにくいので、別のタブに分けた。
-//   表：日付｜入札価格｜表示｜クリック数｜CTR｜CPC｜実績額｜PR実績額｜広告個数｜広告売上｜広告ROAS｜CVR｜平均獲得単価｜総売上｜SEO売上（v1.0921〜。本人の並び＋PR実績額）
+//   表：日付｜入札価格｜表示｜クリック数｜CTR｜CPC｜実績額｜PR実績額｜広告個数｜広告売上｜広告ROAS｜CVR｜平均獲得単価｜SEO売上｜総売上（v1.0923〜。本人の並び＋PR実績額）
 //   【v1.0918】平均単価（総売上÷注文数）の列をやめて、平均獲得単価（実績額÷広告個数）に置き換えた（本人指定）
-//   グラフ：SEO売上の上に広告売上を積む（＝総売上）｜実績額（右隣の棒）｜広告ROAS（線・右の%）｜入札価格（紫の階段・右端の¥）｜PR実績額（ピンクの階段・左の¥）
+//   グラフ：SEO売上の上に広告売上を積む（＝総売上）｜広告実績額（右隣の棒）｜広告ROAS（線・右の%・1,000%で上限）｜入札価格（こげ茶の階段・右の¥）｜PRオプ料率（ピンクの階段・右端の%）（v1.0924〜）
 //   ・広告個数＝広告詳細レポートの「注文数」（商品-グラフ／商品-日月別データの「広告個数」と同じ。v218「注文個数ではなく注文数」）
 //   ・表示回数は v1.0911 から取り込む（item-reach の「表示回数」）。それより前に取り込んだ日は「—」（取り込み直すと出る）
 //   ・CTR＝クリック÷表示、CPC＝実績額÷クリック、CVR＝広告個数÷クリック、広告ROAS＝広告売上÷実績額、平均単価＝総売上÷注文数（SEO経由も含む全体の注文）
@@ -24304,6 +24362,8 @@ function _peStickyHead(wrap) {
 //   ★集計範囲（親子合算/個別）と期間（30日・60日・全期間／5月始まり・1年・2年）は「売上・ROAS」タブと共有。日別/月別だけは別（_peAdjGrain）
 // ============================================================================
 let _peAdjGrain = 'day';
+// 【v1.0924】商品-調整の広告ROAS の目盛りの上限（これを超えた日は上端に▲＋本当の値）。商品-日月別は §301 の自動のまま
+const PE_ADJ_ROAS_MAX = 1000;
 // 【v1.0915】商品-調整の日別の期間は 商品-日月別 と分けた。開くたびに30日から（本人指定）
 let _peAdjSpan = 30;
 // _peRows / _peBidSeries は _peGrain を見るので、一時的に切り替えて呼ぶ
@@ -24404,7 +24464,8 @@ function peRenderAdj() {
   const isDay = (grain === 'day');
   const labels = rows.map(r => isDay ? ((+String(r.key).slice(5, 7)) + '/' + (+String(r.key).slice(8, 10))) : String(r.key).replace('-', '/'));
   const hasBid = isDay && rows.some(r => r.bid != null);   // 【v1.0916】月別のグラフには入札価格を出さない（表の列はそのまま）
-  const hasPr = rows.some(r => r.prKnown && r.prOver > 0);
+  const prRates = isDay ? _peProRateSeries(code, rows) : null;   // 【v1.0924】ピンクの階段＝PRオプ料率（%）。前は PR実績額（¥・推定）
+  const hasPr = !!prRates;
   const C = { seo: '#7c3aed', ad: '#f97316', cost: '#3b82f6', pr: '#ec4899', roas: '#10b981', bid: '#7c2d12' };   // 【v1.0916】入札価格は紫→こげ茶（SEO売上の紫とまぎれるため。広告の橙の仲間）
   // ---- 系列ボタン（押すと消える／戻る） ----
   {
@@ -24413,10 +24474,10 @@ function peRenderAdj() {
       + '" style="--c:' + c + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'), \'adj\')">' + l + '</button>';
     if (_lg) _lg.innerHTML = _sw(C.seo, 'SEO売上', '左の棒（下）: SEO売上（総売上−広告売上）') + _sw(C.ad, '広告売上', '左の棒（上に積む）: 広告売上。SEO売上と合わせた高さ＝総売上')
       + '<span class="pe-sw-sep"></span>'
-      + _sw(C.cost, '実績額', '右の棒: 広告の実績額（広告費）')
-      + (hasPr ? _sw(C.pr, 'PR実績額', 'ピンクの階段の線（左の目盛り ¥）: PR実績額（7%超・⑤の料率からの推定）', true) : '')
+      + _sw(C.cost, '広告実績額', '右の棒: 広告実績額（広告費）')   /* 【v1.0924】実績額 → 広告実績額 */
+      + (hasPr ? _sw(C.pr, 'PRオプ料率', 'ピンクの階段の線（右端の目盛り %）: PRオプの料率。調整-PRオプで入れた日別の料率。変えた所に「30%→28%」の札（日別だけ）', true) : '')
       + '<span class="pe-sw-sep"></span>'
-      + _sw(C.roas, '広告ROAS', '線（右の目盛り %）: 広告ROAS ＝ 広告売上 ÷ 実績額 × 100&#10;飛び抜けた日は上端で止めて▲と本当の値を書く', true)
+      + _sw(C.roas, '広告ROAS', '線（右の目盛り %）: 広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100&#10;1,000% を超えた日は上端で止めて▲と本当の値を書く', true)
       + (hasBid ? _sw(C.bid, '入札価格', 'こげ茶の階段の線（右端の目盛り ¥）: 入札価格。変えた所に「¥30→¥25」の札（日別だけ）', true) : '')
       + '<span class="pe-sw-hint">ボタンを押すと、その項目を消す／戻す</span>';
   }
@@ -24435,13 +24496,20 @@ function peRenderAdj() {
       const ds = [
         bar('SEO売上', rows.map(r => r.seoRev || 0), C.seo, 's'),
         bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's'),
-        bar('実績額', rows.map(r => r.adCost || 0), C.cost, 'c'),
+        bar('広告実績額', rows.map(r => r.adCost || 0), C.cost, 'c'),
         { type: 'line', label: '広告ROAS', data: rows.map(r => r.aroas == null ? null : Math.round(r.aroas)), borderColor: C.roas, backgroundColor: C.roas,
           borderWidth: 2.6, pointRadius: (rows.length > 45 ? 2.5 : 3.5), pointHoverRadius: 6, tension: 0.3, yAxisID: 'y1', order: 1,
           spanGaps: false }   // ★広告費0の日（ROASなし）はつながない。つなぐと広告を出していない期間に線が引かれてしまう
       ];
-      if (hasPr) ds.push({ type: 'line', label: 'PR実績額', data: rows.map(r => r.prKnown ? Math.round(r.prOver || 0) : null), borderColor: C.pr, backgroundColor: C.pr,
-        borderWidth: 2.4, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y', stack: 'pr', order: 0 });   // ★stack を分けて棒と積まない
+      // 【v1.0924】ピンクの階段は PRオプ料率（%・右端の目盛り y3）。PR実績額（¥・推定）はグラフから外した（表には残す）
+      let pMin = 0, pMax = 0;
+      if (hasPr) {
+        const vs = prRates.filter(v => v != null);
+        const lo = Math.min(...vs), hi = Math.max(...vs), pad = Math.max(2, (hi - lo) * 0.25);
+        pMin = Math.max(0, Math.floor((lo - pad * 2) / 2) * 2); pMax = Math.ceil((hi + pad) / 2) * 2;
+        ds.push({ type: 'line', label: 'PRオプ料率', data: prRates, borderColor: C.pr, backgroundColor: C.pr,
+          borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y3', order: 0 });
+      }
       if (hasBid) ds.push({ type: 'line', label: '入札価格', data: rows.map(r => r.bid), borderColor: C.bid, backgroundColor: C.bid,
         borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y2', order: 0 });
       const _adjCfg = {
@@ -24463,7 +24531,7 @@ function peRenderAdj() {
                   const v = c.parsed.y, l = c.dataset.label;
                   if (l === '広告ROAS') { const rv = c.dataset._raw ? c.dataset._raw[c.dataIndex] : v; return '広告ROAS: ' + (rv == null ? '—' : Math.round(rv).toLocaleString('ja-JP') + '%'); }   // 【v1.0915】上限で止めても本当の値
                   if (l === '入札価格') return '入札価格: ' + (v == null ? '—' : '¥' + v);
-                  if (l === 'PR実績額') return 'PR実績額(7%超・推定): ' + (v == null ? '—' : yen(v));
+                  if (l === 'PRオプ料率') return 'PRオプ料率: ' + (v == null ? '—' : v + '%');   // 【v1.0924】
                   return l + ': ' + yen(v);
                 },
                 footer: (items) => { const r = items.length ? rows[items[0].dataIndex] : null; return r ? ('総売上 ' + yen(r.rev)) : ''; }
@@ -24474,18 +24542,22 @@ function peRenderAdj() {
             x: { stacked: true, grid: { color: 'rgba(0,0,0,0.05)' },
                  ticks: { font: { size: (rows.length > 45 ? 11.5 : 13) }, color: '#64748b', autoSkip: rows.length > 62, autoSkipPadding: 8, maxRotation: 55, minRotation: 0 } },
             y: { stacked: true, position: 'left', beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' },
-                 title: { display: true, text: '金額（売上・実績額）', font: { size: 12, weight: '700' }, color: '#64748b' },
+                 title: { display: true, text: '金額（売上・広告実績額）', font: { size: 12, weight: '700' }, color: '#64748b' },
                  ticks: { font: { size: 12 }, color: '#64748b', callback: (v) => '¥' + Number(v).toLocaleString('ja-JP') } },
             y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false },
                  title: { display: true, text: '広告ROAS', font: { size: 12, weight: '700' }, color: C.roas },
                  ticks: { font: { size: 12 }, color: '#0f9f6e', callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } },
             y2: { display: hasBid, position: 'right', min: bMin, max: bMax, grid: { drawOnChartArea: false },
                  title: { display: true, text: '入札価格', font: { size: 12, weight: '700' }, color: C.bid },
-                 ticks: { font: { size: 12 }, color: C.bid, stepSize: 5, callback: (v) => '¥' + v } }
+                 ticks: { font: { size: 12 }, color: C.bid, stepSize: 5, callback: (v) => '¥' + v } },
+            // 【v1.0924】PRオプ料率（%）。入札価格の目盛りのさらに右
+            y3: { display: hasPr, position: 'right', min: pMin, max: pMax, grid: { drawOnChartArea: false },
+                 title: { display: true, text: 'PRオプ料率', font: { size: 12, weight: '700' }, color: '#db2777' },
+                 ticks: { font: { size: 12 }, color: '#db2777', stepSize: 2, callback: (v) => v + '%' } }
           }
         }
       };
-      _peApplyRoasCap(ds[3], _adjCfg.options.scales.y1, _adjCfg.options.layout);   // 【v1.0915】広告ROAS の目盛りに上限
+      _peApplyRoasCap(ds[3], _adjCfg.options.scales.y1, _adjCfg.options.layout, PE_ADJ_ROAS_MAX);   // 【v1.0915】広告ROAS の目盛りに上限 →【v1.0924】1,000% で固定
       _peAdjChart = new Chart(cv.getContext('2d'), _adjCfg);
       _peAdjChart.data.datasets.forEach((d, i) => { if (_peAdjHidden.has(d.label)) _peAdjChart.setDatasetVisibility(i, false); });
       _peAdjChart.update('none');
@@ -24508,16 +24580,16 @@ function peRenderAdj() {
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
     { t: 'クリック数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
     { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
-    { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '実績額 ÷ クリック数' },
-    { t: '実績額',   g: 'ad',  f: r => y0(r.adCost), strong: true },
-    { t: 'PR実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）。⑤の料率からの推定' },
+    { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '広告実績額 ÷ クリック数' },
+    { t: '広告実績額', g: 'ad', f: r => y0(r.adCost), strong: true },   // 【v1.0924】実績額 → 広告実績額（本人指定）
+    { t: 'PR実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
     { t: '広告個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）' },
     { t: '広告売上', g: 'ad',  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
-    { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 実績額 × 100', strong: true },
+    { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
     { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
-    { t: '平均獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
-    { t: '総売上',   g: 'rev', f: r => y0(r.rev) },   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ移動（本人指定）
-    { t: 'SEO売上',  g: 'rev', f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' }
+    { t: '平均獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '広告実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
+    { t: 'SEO売上',  g: 'rev', f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
+    { t: '総売上',   g: 'rev', f: r => y0(r.rev) }   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
   ];
   const wk = ['日', '月', '火', '水', '木', '金', '土'];
   const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + G[c.g].c + '"'
@@ -24543,7 +24615,7 @@ function peRenderAdj() {
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
     + '<div class="pe-day-foot">' + (isDay ? 'こげ茶の破線＝入札価格を変えた日。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
-    + '。広告個数＝広告経由の注文数。平均獲得単価＝実績額 ÷ 広告個数（0件の日は —）。PR実績額は⑤の料率からの推定。</div>';
+    + '。広告個数＝広告経由の注文数。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
   requestAnimationFrame(() => _peStickyHead(wrap));
 }
 function peRenderInfo() {
@@ -24628,7 +24700,7 @@ function peRenderInfo() {
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
           + '<span class="pe-sw-sep"></span>'
           + _sw('#3b82f6', '広告実績額', '右の棒（費用）: 広告実績額')
-          + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・⑤の料率からの推定）')
+          + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・その日のPRオプ料率からの推定）')
           + '<span class="pe-sw-sep"></span>'
           + _sw('#10b981', 'PR広告売上ROAS', '線（右の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額）× 100', true)
           /* 【v1.0911】入札価格は日別だけ（月別のボタンは出さない） */
@@ -24755,7 +24827,7 @@ function peRenderInfo() {
   //     売れたのが子（7％固定）なら上乗せ分は発生しない＝¥0。そのことが1行で分かるようにする。
   const _unit = () => (_peGrain === 'day' ? 'この日' : 'この月');
   const _prPartsTip = (r) => (r.prParts || []).map(x =>
-      x.code + '（' + (x.rate == null ? '料率未設定' : x.rate + '％') + '）: 売上' + (x.rev > 0 ? '¥' + Math.round(x.rev).toLocaleString('ja-JP') : '¥0')
+      x.code + '（' + (x.rate == null ? '料率未設定' : (Math.round(x.rate * 10) / 10) + '％') + '）: 売上' + (x.rev > 0 ? '¥' + Math.round(x.rev).toLocaleString('ja-JP') : '¥0')
       + ' → 上乗せ ' + (x.over == null ? '不明' : '¥' + Math.round(x.over).toLocaleString('ja-JP'))
       + (x.rate != null && x.rate <= PR_BASE_RATE_PCT ? '（7％固定なので上乗せなし）' : (x.rev > 0 ? '' : '（売上0なので0）'))
     ).join('\n');
@@ -24804,7 +24876,7 @@ function peRenderInfo() {
   const head = '<tr>'
     + '<th rowspan="2" style="' + thB + 'background:var(--bg3);vertical-align:bottom">' + (_peGrain === 'day' ? '日付' : '月') + '</th>'
     + '<th colspan="' + _revCols + '" style="' + thB + BD + 'background:' + G.rev.hbg  + ';color:' + G.rev.color  + '">売上</th>'
-    + '<th colspan="2" style="' + thB + BD + 'background:' + G.prsr.hbg + ';color:' + G.prsr.color + '" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th>'
+    + '<th colspan="2" style="' + thB + BD + 'background:' + G.prsr.hbg + ';color:' + G.prsr.color + '" title="PR広告 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★その日のPRオプ料率（調整-PRオプの履歴）からの推定です（実測ではありません）。合算では合計から計算し直しています。">PR広告売上ROAS<span class="th-est">？</span></th>'
     + '<th colspan="2" style="' + thB + BD + 'background:' + G.sr.hbg   + ';color:' + G.sr.color   + '" title="広告売上ROAS ＝ 総売上 ÷ 広告実績額 × 100&#10;PRオプ料率は考慮しません（広告費だけで見た効率）。">広告売上ROAS</th>'
     + '<th colspan="2" style="' + thB + BD + 'background:' + G.pron.hbg + ';color:' + G.pron.color + '" title="PR 売上ROAS（？＝推定値の印）&#10;＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れず、PRオプ料率を7％より上げている分だけで見た効率です。&#10;★同じ料率なら同じ値になります（料率の裏返し）。料率7％だけのときは「—」。">PR売上ROAS<span class="th-est">？</span></th>'
     + '</tr><tr>'
