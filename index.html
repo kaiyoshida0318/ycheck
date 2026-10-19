@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0926 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0930 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4796,7 +4796,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0926</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0930</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -10843,7 +10843,7 @@ function dailyItemOf(date) {   // { code: {revenue, orders} }
 function dailyAdOf(date) {     // { code: {adCost, adRevenue, adClicks, adOrders} }
   const src = (ensureDaily().ad || {})[date] || {};
   const out = {};
-  Object.keys(src).forEach(c => { const a = src[c] || []; out[c] = { adCost: +a[0] || 0, adRevenue: +a[1] || 0, adClicks: +a[2] || 0, adOrders: +a[3] || 0 }; });
+  Object.keys(src).forEach(c => { const a = src[c] || []; out[c] = { adCost: +a[0] || 0, adRevenue: +a[1] || 0, adClicks: _adUnmaskClicks(a[0], a[2]), adOrders: _adUnmaskOrders(a[1], a[3]) }; });   // 【v1.0927】
   return out;
 }
 function dailyOverallOf(date) { return +((ensureDaily().overall || {})[date]) || 0; }
@@ -11076,11 +11076,29 @@ function prWeightedSetRatePct(pairs) {
 }
 
 // 1商品・1日ぶんを、月集計と同じ形（buildFullAggregate の1レコード相当）で返す
+// ============================================================================
+// 【v1.0927】Yahoo の広告レポート（item-reach 日別・月次とも）は、件数が「1」のとき 0 と出す（個人情報保護の隠し）。
+//   実データで確認：注文数・注文個数・クリック数に「1」が1件も無い（最小が2）。表示回数も 5 未満が無い。
+//   一方 売上金額・実績額は隠されない。→「売上があるのに注文数0」＝注文1件、「実績額があるのにクリック数0」＝クリック1回
+//   （アイテムリーチはクリック課金なので、実績額>0 ならクリックは1回以上。2回以上なら隠されない）。
+//   ★本人指定で、読み出すときに 1 に戻す（保存データは書き換えない＝元の値は state.daily.ad / state.ad にそのまま残る）。
+//   ★表示回数（1〜4 が 0）は何回か分からないので戻さない。
+//   入口：dayAgg / dailyAdOf / dailyRollup / _ytAgg / _peAdjRows（日別）、effMonthlyAdRows / buildFullAggregate / 全-月別の行（月次）。
+//   ★新しく日別・月次の広告データを読む処理を足すときは、必ずこの2つを通すこと（通さないと画面ごとに広告個数・CVR が食い違う）。
+// ============================================================================
+function _adUnmaskClicks(cost, clicks) { return (+cost > 0 && !(+clicks > 0)) ? 1 : (+clicks || 0); }
+function _adUnmaskOrders(rev, orders)  { return (+rev  > 0 && !(+orders > 0)) ? 1 : (+orders || 0); }
+// 月次の行（{adCost, adRevenue, adClicks, adOrders}）。戻したときだけ写しを返す（state.ad の行そのものは書き換えない）
+function _adRowUnmask(a) {
+  if (!a) return a;
+  const cl = _adUnmaskClicks(a.adCost, a.adClicks), od = _adUnmaskOrders(a.adRevenue, a.adOrders);
+  return (cl === (+a.adClicks || 0) && od === (+a.adOrders || 0)) ? a : Object.assign({}, a, { adClicks: cl, adOrders: od });
+}
 function dayAgg(code, date) {
   const it = ((ensureDaily().item || {})[date] || {})[code] || [];
   const ad = ((ensureDaily().ad || {})[date] || {})[code] || [];
   const rev = +it[0] || 0, orders = +it[1] || 0;
-  const adCost = +ad[0] || 0, adRev = +ad[1] || 0, adClicks = +ad[2] || 0, adOrders = +ad[3] || 0;
+  const adCost = +ad[0] || 0, adRev = +ad[1] || 0, adClicks = _adUnmaskClicks(ad[0], ad[2]), adOrders = _adUnmaskOrders(ad[1], ad[3]);   // 【v1.0927】隠された1を戻す
   return {
     code, date, rev, orders, adCost, adRev, adClicks, adOrders,
     seoRev: Math.max(0, rev - adRev),
@@ -11115,7 +11133,7 @@ function dailyRollup() {
     Object.keys(src).forEach(c => {
       const a = src[c] || [];
       const t = g.ads[c] || (g.ads[c] = { adCost: 0, adRevenue: 0, adClicks: 0, adOrders: 0 });
-      t.adCost += +a[0] || 0; t.adRevenue += +a[1] || 0; t.adClicks += +a[2] || 0; t.adOrders += +a[3] || 0;
+      t.adCost += +a[0] || 0; t.adRevenue += +a[1] || 0; t.adClicks += _adUnmaskClicks(a[0], a[2]); t.adOrders += _adUnmaskOrders(a[1], a[3]);   // 【v1.0927】
     });
   });
   Object.keys(d.overall || {}).forEach(date => {
@@ -11147,7 +11165,7 @@ function effMonthlyItemRows() {
 }
 function effMonthlyAdRows() {
   const dm = dailyUsableMonths('ad');     // 【v1.0536】日別で月次を作ってよい月だけ置き換える
-  const out = (state.ad || []).filter(r => !dm.has(r.month));
+  const out = (state.ad || []).filter(r => !dm.has(r.month)).map(_adRowUnmask);   // 【v1.0927】月次レポートの隠された1を戻す
   dm.forEach(ym => { (dailyAdRowsForMonth(ym) || []).forEach(r => out.push(r)); });
   return out;
 }
@@ -12318,8 +12336,9 @@ function buildFullAggregate() {
     agg[key].rev += i.revenue;
     agg[key].orders += (+i.orders || 0);
   });
-  (state.ad || []).forEach(a => {
-    if (_dmAd.has(a.month)) return;     // この月の広告は日別合計で作る
+  (state.ad || []).forEach(a0 => {
+    if (_dmAd.has(a0.month)) return;     // この月の広告は日別合計で作る
+    const a = _adRowUnmask(a0);          // 【v1.0927】月次レポートの隠された1を戻す
     const key = a.code + '|' + a.month;
     if (!agg[key]) agg[key] = _mk(a.code, a.month);
     agg[key].adCost += a.adCost;
@@ -16452,7 +16471,7 @@ function _zenMonthlyRows() {
     const _hasDailyAd   = monthUsesDaily(m, 'ad');
     const _hasDailyOv   = monthUsesDaily(m, 'overall');
     const _itemRows = _hasDailyItem ? (dailyItemRowsForMonth(m) || []) : (state.item || []).filter(i => i.month === m);
-    const _adRows   = _hasDailyAd   ? (dailyAdRowsForMonth(m)   || []) : (state.ad   || []).filter(a => a.month === m);
+    const _adRows   = _hasDailyAd   ? (dailyAdRowsForMonth(m)   || []) : (state.ad   || []).filter(a => a.month === m).map(_adRowUnmask);   /* 【v1.0927】 */
     _itemRows.forEach(i => {
       rev += i.revenue || 0; orders += i.orders || 0;
       // 【v1.0405】送り込み売上＝子商品（黄色バッジ＝repCodeが設定され自コードと異なる）の売上合計
@@ -19858,7 +19877,7 @@ function _ytAgg(ym, md, faRows) {
     Object.keys(d.ad || {}).forEach(date => {
       if (date.slice(0, 7) !== ym || +date.slice(8, 10) > md) return;
       const src = d.ad[date] || {};
-      Object.keys(src).forEach(code => { const a = src[code] || []; const x = en(code); x.sp += +a[0] || 0; x.ad += +a[1] || 0; x.cl += +a[2] || 0; x.od += +a[3] || 0; });
+      Object.keys(src).forEach(code => { const a = src[code] || []; const x = en(code); x.sp += +a[0] || 0; x.ad += +a[1] || 0; x.cl += _adUnmaskClicks(a[0], a[2]); x.od += _adUnmaskOrders(a[1], a[3]); });   // 【v1.0927】
     });
   } else {
     (faRows || []).forEach(r => {
@@ -24059,10 +24078,10 @@ function _pePrRateMonth(code, ym /* 'YYYY-MM' */) {
     });
   } catch (e) {}
   if (w > 0) return sum / w;
-  const td = (typeof getTodayYmAndIndex === 'function') ? getTodayYmAndIndex() : null;
-  const ymS = ym.replace('-', '/');
-  const di = (td && td.ym === ymS) ? td.dayIndex : (getDaysInMonth(ymS) - 1);
-  return _pePrRateOn(code, ym + '-' + String(di + 1).padStart(2, '0'));
+  // 【v1.0929】売上が無い月は、毎日の料率の単純平均（今月は今日まで）。前は月末の料率
+  let n = 0, s2 = 0;
+  _peMonthDays(ym).forEach(d => { const rt = _pePrRateOn(code, d); if (rt != null && isFinite(rt)) { n++; s2 += Number(rt); } });
+  return n ? s2 / n : null;
 }
 function _peRows(code) {
   const out = [];
@@ -24368,6 +24387,36 @@ const PE_ADJ_ROAS_MAX = 1000;
 let _peAdjSpan = 30;
 // _peRows / _peBidSeries は _peGrain を見るので、一時的に切り替えて呼ぶ
 function _peWithGrain(grain, fn) { const g = _peGrain; _peGrain = grain; try { return fn(); } finally { _peGrain = g; } }
+// 【v1.0928】表の「PR」列：その日（月別は月末＝今月は今日）の PRオプ料率。親子合算は親（代表）の料率（入札価格・グラフの線と同じ）。
+//   値は _pePrRateOn（調整-PRオプの日別履歴。無ければ ⑤ のいまの料率）＝PR実績額の計算と同じ出どころ。
+// 【v1.0929】月別は「平均」（本人指定）。PR＝_pePrRateMonth（売れた日の売上で重みを付けた平均＝PR実績額の計算と同じ。売上が無い月は毎日の料率の単純平均）
+function _pePrRateForRow(code, key, grain) {
+  const bc = _peBidCode(code);
+  const ds = String(key);
+  const v = (grain === 'day') ? _pePrRateOn(bc, ds) : _pePrRateMonth(bc, ds);
+  return (v == null || !isFinite(v)) ? null : Number(v);
+}
+// 【v1.0929】その月の日の一覧（今月は今日まで）
+function _peMonthDays(ym /* 'YYYY-MM' */) {
+  const ymS = ym.replace('-', '/');
+  const td = (typeof getTodayYmAndIndex === 'function') ? getTodayYmAndIndex() : null;
+  const last = (td && td.ym === ymS) ? td.dayIndex : (getDaysInMonth(ymS) - 1);
+  const out = [];
+  for (let i = 0; i <= last; i++) out.push(ym + '-' + String(i + 1).padStart(2, '0'));
+  return out;
+}
+// 【v1.0929】月別の入札価格＝その月の毎日の入札価格の平均（値がある日だけ。今月は今日まで）。親子合算は親の値
+function _peBidAvgMonth(code, ym) {
+  const bc = _peBidCode(code);
+  let n = 0, sum = 0;
+  _peMonthDays(ym).forEach(d => {
+    let v = null;
+    try { v = getDisplayRankEditValue(d.slice(0, 4) + '/' + d.slice(5, 7), bc, 'bid', (+d.slice(8, 10)) - 1); } catch (e) { v = null; }
+    const x = Number(v);
+    if (v != null && v !== '' && isFinite(x) && x > 0) { n++; sum += x; }
+  });
+  return n ? sum / n : null;
+}
 function _peAdjRows(code, grain) {
   return _peWithGrain(grain, () => {
     const _spKeep = _peSpan; _peSpan = _peAdjSpan;   // 【v1.0915】_peRows は _peSpan を見るので、商品-調整の期間に一時的に差し替える
@@ -24393,7 +24442,7 @@ function _peAdjRows(code, grain) {
         let dayAd = false, dayKnown = false;
         codes.forEach(c => {
           const ad = ((D.ad || {})[d] || {})[c];
-          if (ad) { hasAd = true; dayAd = true; if (grain === 'day') { clicks += +ad[2] || 0; adOrders += +ad[3] || 0; }
+          if (ad) { hasAd = true; dayAd = true; if (grain === 'day') { clicks += _adUnmaskClicks(ad[0], ad[2]); adOrders += _adUnmaskOrders(ad[1], ad[3]); }   // 【v1.0927】
                     if (ad.length >= 5) { dayKnown = true; imp += +ad[4] || 0; } }
           if (grain === 'day') { const it = ((D.item || {})[d] || {})[c]; if (it) orders += +it[1] || 0; }
         });
@@ -24407,17 +24456,17 @@ function _peAdjRows(code, grain) {
       let ctrClicks = clicks;
       if (grain === 'month' && impPartial) {
         ctrClicks = 0;
-        days.forEach(d => codes.forEach(c => { const ad = ((D.ad || {})[d] || {})[c]; if (ad && ad.length >= 5) ctrClicks += +ad[2] || 0; }));
+        days.forEach(d => codes.forEach(c => { const ad = ((D.ad || {})[d] || {})[c]; if (ad && ad.length >= 5) ctrClicks += _adUnmaskClicks(ad[0], ad[2]); }));
       }
       return Object.assign({}, r, {
-        bid: bids[i], imp: impKnown ? imp : null, impPartial, impDays, adDays, clicks, adOrders, orders, hasAd,
+        bid: (grain === 'day') ? bids[i] : _peBidAvgMonth(code, k) /* 【v1.0929】月別の入札価格は平均 */, prRate: _pePrRateForRow(code, k, grain), imp: impKnown ? imp : null, impPartial, impDays, adDays, clicks, adOrders, orders, hasAd,
         dayHasAdFile: (grain === 'day') ? !!(D.ad && D.ad[k]) : true,
         ctr: (impKnown && imp > 0) ? ctrClicks / imp * 100 : null,
         cpc: clicks > 0 ? r.adCost / clicks : null,
         cvr: clicks > 0 ? adOrders / clicks * 100 : null,
         aroas: r.adCost > 0 ? r.adRev / r.adCost * 100 : null,
         avg: orders > 0 ? r.rev / orders : null,
-        cpa: adOrders > 0 ? r.adCost / adOrders : null   // 【v1.0918】平均獲得単価＝実績額÷広告個数（広告で1件取るのにかかった広告費）
+        cpa: (adOrders > 0 && r.adCost > 0) ? r.adCost / adOrders : null   // 【v1.0928】広告費0の日（前の日のクリックからの注文など）は ¥0 ではなく「—」／【v1.0918】平均獲得単価＝実績額÷広告個数（広告で1件取るのにかかった広告費）
       });
     });
   });
@@ -24580,14 +24629,15 @@ function peRenderAdj() {
   const G = { ad: { h: '#fae6ce', b: '#fdf8f1', c: '#b45309' }, bid: { h: '#ecdccd', b: '#faf5f0', c: '#7c2d12' },   /* 【v1.0916】こげ茶 */
               pr: { h: '#fbd4e6', b: '#fdf2f8', c: '#db2777' }, rev: { h: '#cfe9dc', b: '#f1faf5', c: '#0f8a52' } };
   const COLS = [
-    { t: '入札価格', g: 'bid', f: r => (r.bid == null ? dash : '¥' + r.bid), tip: isDay ? 'その日の入札価格' : 'その月の最後の日（今月は今日）の入札価格' },
+    { t: isDay ? '入札価格' : '入札価格(平均)', g: 'bid', f: r => (r.bid == null ? dash : '¥' + (Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
     { t: 'クリック数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
     { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
     { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '広告実績額 ÷ クリック数' },
     { t: '広告実績額', g: 'ad', f: r => y0(r.adCost), strong: true },   // 【v1.0924】実績額 → 広告実績額（本人指定）
+    { t: isDay ? 'PR' : 'PR(平均)', g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
     { t: 'PR実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
-    { t: '広告個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）' },
+    { t: '広告個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）。Yahoo のレポートは1件を0と出すので、売上があって0の日は1に戻しています' },
     { t: '広告売上', g: 'ad',  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
     { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
     { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
@@ -24601,7 +24651,7 @@ function peRenderAdj() {
   const desc = rows.slice().reverse();
   const body = desc.map((r, i) => {
     const older = desc[i + 1];   // 1つ前（1日前／前月）
-    const chg = (r.bid != null && older && older.bid != null && older.bid !== r.bid);
+    const chg = isDay && (r.bid != null && older && older.bid != null && older.bid !== r.bid);   // 【v1.0929】月別は平均なので「変わりました」は出さない
     let first;
     if (isDay) {
       const dt = new Date(+r.key.slice(0, 4), +r.key.slice(5, 7) - 1, +r.key.slice(8, 10));
@@ -24619,7 +24669,7 @@ function peRenderAdj() {
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
     + '<div class="pe-day-foot">' + (isDay ? 'こげ茶の破線＝入札価格を変えた日。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
-    + '。広告個数＝広告経由の注文数。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
+    + '。広告個数＝広告経由の注文数。広告個数・クリック数は、Yahoo のレポートが1件を0と出す分を1に戻しています（売上・実績額がある日）。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
   requestAnimationFrame(() => _peStickyHead(wrap));
 }
 function peRenderInfo() {
