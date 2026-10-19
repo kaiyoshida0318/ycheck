@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0912 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0913 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4791,7 +4791,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0912</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0913</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6297,10 +6297,10 @@ th.col-sroas { background-color:#e7d5f5; }
          「商品情報を編集」は一番右。編集フォームの中身は従来のまま。 -->
     <div class="pe-tabs" id="peTabs" role="tablist">
       <!-- 【v1.0689】全体情報 → 商品-日別 に改称。その右に 商品-推移（累積×日別）を追加 -->
-      <!-- 【v1.0912】タブ名を中身に合わせた（商品-日別→売上・ROAS／商品-推移→月内累積）。調整用の「調整-日月別」を2番目に新設 -->
-      <button type="button" class="pe-tab on" data-petab="info" title="売上・PR広告売上ROAS などの大きな流れ（日別／月別）">売上・ROAS</button>
-      <button type="button" class="pe-tab" data-petab="adj" title="入札価格・表示・クリック・CTR・CPC…の細かい数字（調整用。日別／月別）">調整-日月別</button>
-      <button type="button" class="pe-tab" data-petab="trend" title="1か月を累積×日別で見る（ROAS 3種）">月内累積</button>
+      <!-- 【v1.0912】調整用のタブを2番目に新設。【v1.0913】本人指定で名前を 商品-日月別／商品-調整／商品-推移 に（v1.0912 は 売上・ROAS／調整-日月別／月内累積） -->
+      <button type="button" class="pe-tab on" data-petab="info" title="売上・PR広告売上ROAS などの大きな流れ（日別／月別）">商品-日月別</button>
+      <button type="button" class="pe-tab" data-petab="adj" title="入札価格・表示・クリック・CTR・CPC…の細かい数字（調整用。日別／月別）">商品-調整</button>
+      <button type="button" class="pe-tab" data-petab="trend" title="1か月を累積×日別で見る（ROAS 3種）">商品-推移</button>
       <button type="button" class="pe-tab" data-petab="edit">商品情報を編集</button>
       <div class="pe-nav-mini">
         <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
