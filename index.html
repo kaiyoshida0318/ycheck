@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0913 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0914 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3618,9 +3618,9 @@ table.rank-table td.rank-legend-col-row {
 /* 【v1.0910】本人指定：Amacheck の推移モーダル（v3.28 §1-1）と同じ大きさ。幅 79vw（最小 min(1100px,96vw)・最大 1560px）× 高さ 96vh 固定。
    ★高さは中身に関係なく常に同じ（タブ・期間・指標を変えても箱が伸び縮みしない）。上に 2vh あけて左右中央。 */
 #productEditModal { padding: 2vh 0 0 !important; align-items: flex-start; }
-#productEditModal .modal.pe-modal-wide { width: 79vw !important; min-width: min(1100px, 96vw); max-width: 1560px !important;
-  height: 96vh; max-height: 96vh !important; padding: 20px 30px 0; }
-#productEditModal .modal.pe-modal-wide .pe-tabs { margin: -20px -30px 0; padding: 0 26px; }
+#productEditModal .modal.pe-modal-wide { width: 94vw !important; min-width: min(1100px, 96vw); max-width: 1840px !important;
+  height: 96vh; max-height: 96vh !important; padding: 20px 24px 0; }   /* 【v1.0914】本人指定で横幅を広げた 79vw/1560px → 94vw/1840px（棒が細く窮屈だったため） */
+#productEditModal .modal.pe-modal-wide .pe-tabs { margin: -20px -24px 0; padding: 0 20px; }
 /* 【v1.0683/v1.0686】タブ（全体情報 / 商品情報を編集）は左寄せ（v1.0683で中央にしたが左に戻した）。
    ★∧∨（商品送り）と ✕ は position:absolute のまま右端に固定しておく。
      並びに戻すと、あとで中央寄せに変えたくなったときにまた同じ問題（右ボタンぶんずれる）が出る。 */
@@ -3659,6 +3659,8 @@ table.rank-table td.rank-legend-col-row {
 .pe-day-tbl tr.pe-bidchg td:last-child { border-right: 2px dashed #9333ea; }
 .pe-day-tbl tr.pe-mon-edge td { border-bottom: 2px solid #cbd5e1; }
 .pe-day-foot { font-size: 0.72rem; color: var(--text3); line-height: 1.7; padding: 8px 4px 0; }
+.pe-table-wrap td.pe-date.pe-sale { position: relative; cursor: help; }
+.pe-table-wrap td.pe-date.pe-sale::before { content: ''; position: absolute; left: 0; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: #ec4899; }   /* 【v1.0914】セールの日 */
 .pe-imp-part { color: #d97706; font-weight: 700; margin-left: 2px; cursor: help; }
 #productEditModal .pe-table-wrap table { border-collapse: separate !important; border-spacing: 0; }
 #productEditModal .pe-table-wrap thead th { position: sticky; z-index: 2; }
@@ -4791,7 +4793,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0913</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0914</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24101,6 +24103,51 @@ function _peBidSeries(code, rows) {
   return out.some(v => v != null) ? out : null;
 }
 // 入札価格を変えた所に「¥30→¥25」の札（階段の角＝前の値の高さ。下げたら角の上・上げたら角の下）。Amacheck v3.25 と同じ置き方
+// 【v1.0914】セール期間の印（商品モーダルの日別グラフ・表）。本人指定：「セールが設定されている日の日付にそれと分かる表記を。場所は取らずコンパクトに」
+//   ・期間は _ycSaleRanges()＝state.saleRanges（[{ start:'YYYY-MM-DD', end:'YYYY-MM-DD', label:'超PayPay祭' }]）。無ければ []＝何も出ない。
+//   ・グラフ：x軸の日付をピンク文字に＋目盛りのすぐ上に細いピンクの帯（4px）＋帯の左端に小さく名前。期間の列をごく薄くピンクで塗る。
+//   ・表：日付セルの左にピンクの縦線（3px）＋セルを薄ピンク。名前はマウスで。
+function _ycSaleRanges() { return Array.isArray(state.saleRanges) ? state.saleRanges.filter(r => r && r.start && r.end) : []; }
+function _ycSaleOf(ds) {   // ds='YYYY-MM-DD' → その日のセール（無ければ null）
+  const k = String(ds || '').slice(0, 10);
+  return _ycSaleRanges().find(r => k >= r.start && k <= r.end) || null;
+}
+const PE_SALE_BAND = {
+  id: 'peSaleBand',
+  beforeDatasetsDraw(chart, args, opts) {
+    const keys = opts && opts.keys; if (!keys || !keys.length) return;
+    const xs = chart.scales.x, area = chart.chartArea; if (!xs || !area) return;
+    const n = keys.length, w = (area.right - area.left) / n;
+    const ctx = chart.ctx; ctx.save();
+    _ycSaleRanges().forEach(sr => {
+      const idx = keys.map((k, i) => (k >= sr.start && k <= sr.end) ? i : -1).filter(i => i >= 0);
+      if (!idx.length) return;
+      const x0 = xs.getPixelForValue(idx[0]) - w / 2, x1 = xs.getPixelForValue(idx[idx.length - 1]) + w / 2;
+      ctx.fillStyle = 'rgba(236,72,153,0.07)'; ctx.fillRect(x0, area.top, x1 - x0, area.bottom - area.top);   // 期間の列をごく薄く
+      ctx.fillStyle = '#ec4899'; ctx.fillRect(x0 + 1, area.bottom - 4, x1 - x0 - 2, 4);                         // 目盛りのすぐ上に細い帯
+    });
+    ctx.restore();
+  },
+  // 名前は棒の上に重ねて、グラフの上端に小さな札で（棒に隠れないように afterDatasetsDraw）
+  afterDatasetsDraw(chart, args, opts) {
+    const keys = opts && opts.keys; if (!keys || !keys.length) return;
+    const xs = chart.scales.x, area = chart.chartArea; if (!xs || !area) return;
+    const w = (area.right - area.left) / keys.length;
+    const ctx = chart.ctx; ctx.save();
+    ctx.font = '700 10.5px "Noto Sans JP", sans-serif'; ctx.textBaseline = 'middle';
+    _ycSaleRanges().forEach(sr => {
+      const idx = keys.map((k, i) => (k >= sr.start && k <= sr.end) ? i : -1).filter(i => i >= 0);
+      if (!idx.length) return;
+      const x0 = xs.getPixelForValue(idx[0]) - w / 2;
+      const t = String(sr.label || 'セール'); const tw = ctx.measureText(t).width + 8, h = 16;
+      const lx = Math.min(Math.max(x0, area.left), area.right - tw);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.strokeStyle = '#ec4899'; ctx.lineWidth = 1;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(lx, area.top + 2, tw, h, 4); ctx.fill(); ctx.stroke(); } else { ctx.fillRect(lx, area.top + 2, tw, h); }
+      ctx.fillStyle = '#db2777'; ctx.fillText(t, lx + 4, area.top + 2 + h / 2 + 0.5);
+    });
+    ctx.restore();
+  }
+};
 const PE_BID_LABELS = {
   id: 'peBidLabels',
   afterDatasetsDraw(chart, args, opts) {
@@ -24129,6 +24176,30 @@ const PE_BID_LABELS = {
     ctx.restore();
   }
 };
+// 【v1.0914】日別のグラフにセールの印を付ける（x軸の日付をピンクに・帯・ツールチップに名前）。月別（keys が YYYY-MM）では何もしない
+function _peApplySale(chart, keys) {
+  try {
+    if (!chart || !keys || !keys.length || String(keys[0]).length !== 10) return;
+    if (!_ycSaleRanges().length) return;
+    const on = keys.map(k => !!_ycSaleOf(k));
+    if (!on.some(Boolean)) return;
+    chart.options.plugins.peSaleBand = { keys };
+    const t = chart.options.scales.x.ticks;
+    const fs = (t.font && t.font.size) || 12;
+    t.color = (c) => (on[c.index] ? '#db2777' : '#64748b');
+    t.font = (c) => ({ size: fs, weight: (on[c.index] ? '700' : '400') });
+    const tt = chart.options.plugins.tooltip, cb = tt.callbacks || (tt.callbacks = {});
+    const ft = cb.footer;
+    cb.footer = (items) => { const base = ft ? ft(items) : ''; const sr = items.length ? _ycSaleOf(keys[items[0].dataIndex]) : null;
+      return sr ? ((base ? base + '\n' : '') + '🏷 ' + (sr.label || 'セール') + '（' + sr.start.slice(5).replace('-', '/') + '〜' + sr.end.slice(5).replace('-', '/') + '）') : base; };
+    chart.update('none');
+  } catch (e) {}
+}
+// 表の日付セルにセールの印（左のピンクの縦線＋薄ピンク。名前はマウスで）
+function _peSaleCellAttr(ds) {
+  const sr = _ycSaleOf(ds); if (!sr) return { cls: '', title: '' };
+  return { cls: ' pe-sale', title: ' title="' + escapeHtml('🏷 ' + (sr.label || 'セール') + '（' + sr.start + ' 〜 ' + sr.end + '）') + '"' };
+}
 // 表の見出し（thead の各段）を、スクロールする本文（.pe-panel）の上で止める位置に置く（Amacheck §5-1・§10-3）
 function _peStickyHead(wrap) {
   try {
@@ -24294,7 +24365,7 @@ function peRenderAdj() {
       if (hasBid) ds.push({ type: 'line', label: '入札価格', data: rows.map(r => r.bid), borderColor: C.bid, backgroundColor: C.bid,
         borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y2', order: 0 });
       _peAdjChart = new Chart(cv.getContext('2d'), {
-        plugins: [YC_CHANGE_LINES, PE_BID_LABELS],
+        plugins: [YC_CHANGE_LINES, PE_BID_LABELS, PE_SALE_BAND],   /* 【v1.0914】PE_SALE_BAND はセールが無ければ何もしない */
         data: { labels, datasets: ds },
         options: {
           responsive: true, maintainAspectRatio: false, animation: false,
@@ -24336,6 +24407,7 @@ function peRenderAdj() {
       });
       _peAdjChart.data.datasets.forEach((d, i) => { if (_peAdjHidden.has(d.label)) _peAdjChart.setDatasetVisibility(i, false); });
       _peAdjChart.update('none');
+      _peApplySale(_peAdjChart, rows.map(r => String(r.key)));   // 【v1.0914】セールの印（日別だけ）
     }
   } catch (e) { console.warn('[Ycheck] 商品モーダル（調整-日月別）のグラフ描画に失敗', e); }
 
@@ -24377,7 +24449,8 @@ function peRenderAdj() {
       const dt = new Date(+r.key.slice(0, 4), +r.key.slice(5, 7) - 1, +r.key.slice(8, 10));
       const dw = dt.getDay();
       const dcol = dw === 0 ? '#dc2626' : dw === 6 ? '#2563eb' : 'var(--text)';
-      first = '<td style="font-weight:700;color:' + dcol + ';text-align:center">' + r.key.slice(5, 7) + '/' + r.key.slice(8, 10) + '(' + wk[dw] + ')</td>';
+      const sa = _peSaleCellAttr(r.key);   // 【v1.0914】セールの印
+      first = '<td class="pe-date' + sa.cls + '"' + sa.title + ' style="font-weight:700;color:' + dcol + ';text-align:center;' + (sa.cls ? 'background:#fdf2f8;' : '') + '">' + r.key.slice(5, 7) + '/' + r.key.slice(8, 10) + '(' + wk[dw] + ')</td>';
     } else {
       first = '<td style="font-weight:700;text-align:center">' + r.key.replace('-', '/') + '</td>';
     }
@@ -24511,7 +24584,7 @@ function peRenderInfo() {
         _bidMin = Math.max(0, Math.floor((lo - pad * 2) / 5) * 5); _bidMax = Math.ceil((hi + pad) / 5) * 5;
       }
       _peChart = new Chart(cv.getContext('2d'), {
-        plugins: [YC_CHANGE_LINES, PE_BID_LABELS],
+        plugins: [YC_CHANGE_LINES, PE_BID_LABELS, PE_SALE_BAND],   /* 【v1.0914】PE_SALE_BAND はセールが無ければ何もしない */
         data: {
           labels,
           datasets: [
@@ -24583,6 +24656,7 @@ function peRenderInfo() {
       // 【v1.0897】消している系列を引き継ぐ
       _peChart.data.datasets.forEach((d, i) => { if (_peHidden.has(d.label)) _peChart.setDatasetVisibility(i, false); });
       _peChart.update('none');
+      _peApplySale(_peChart, rows.map(r => String(r.key)));   // 【v1.0914】セールの印（日別だけ）
     }
   } catch (e) { console.warn('[Ycheck] 商品モーダルのグラフ描画に失敗', e); }
 
@@ -24667,7 +24741,7 @@ function peRenderInfo() {
     const _prAmt = r.prKnown ? ((+r.adCost || 0) + (+r.prOver || 0)) : null;   // PR広告売上ROASの分母
     const gap = _adGap(r);
     return '<tr>'
-      + '<td style="' + tdB + 'background:var(--bg3);font-weight:700;color:var(--accent)">' + escapeHtml(String(r.key)) + '</td>'
+      + (() => { const sa = _peSaleCellAttr(String(r.key)); return '<td class="pe-date' + sa.cls + '"' + sa.title + ' style="' + tdB + 'background:' + (sa.cls ? '#fdf2f8' : 'var(--bg3)') + ';font-weight:700;color:var(--accent)">' + escapeHtml(String(r.key)) + '</td>'; })()   /* 【v1.0914】セールの印 */
       + '<td style="' + tdB + BD + 'background:' + G.rev.bg + ';color:' + G.rev.color + '">' + _yen0(r.rev) + '</td>'
       + (_tblSplit
           ? '<td style="' + tdB + 'background:' + OYA.bg + '">' + _yen0(r.revP || 0) + '</td><td style="' + tdB + 'background:' + KO.bg + '">' + _yen0(r.revC || 0) + '</td>'
