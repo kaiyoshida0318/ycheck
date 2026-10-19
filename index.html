@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0910 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0912 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3651,6 +3651,15 @@ table.rank-table td.rank-legend-col-row {
    ★表を包む枠に overflow:auto / hidden があるとそちらが基準になって止まらない → overflow:clip（角丸の切り抜きだけ残す）。
    ★top は描画後に JS（_peStickyHead）で入れる：1段目＝−本文の padding-top、2段目＝1段目の高さ−padding-top。 */
 #productEditModal .pe-table-wrap { overflow: clip; }
+/* 【v1.0911】日別の表（調整用）。入札価格を変えた日＝紫の破線で囲む／月の境目に薄い線（Amacheck §5） */
+.pe-day-tbl th { font-size: 0.74rem; padding: 8px 10px; white-space: nowrap; text-align: right; }
+.pe-day-tbl td { font-size: 0.8rem; padding: 6px 10px; white-space: nowrap; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--border); }
+.pe-day-tbl tr.pe-bidchg td { border-top: 2px dashed #9333ea; border-bottom: 2px dashed #9333ea; }
+.pe-day-tbl tr.pe-bidchg td:first-child { border-left: 2px dashed #9333ea; }
+.pe-day-tbl tr.pe-bidchg td:last-child { border-right: 2px dashed #9333ea; }
+.pe-day-tbl tr.pe-mon-edge td { border-bottom: 2px solid #cbd5e1; }
+.pe-day-foot { font-size: 0.72rem; color: var(--text3); line-height: 1.7; padding: 8px 4px 0; }
+.pe-imp-part { color: #d97706; font-weight: 700; margin-left: 2px; cursor: help; }
 #productEditModal .pe-table-wrap table { border-collapse: separate !important; border-spacing: 0; }
 #productEditModal .pe-table-wrap thead th { position: sticky; z-index: 2; }
 #productEditModal .pe-table-wrap thead tr:last-child th { box-shadow: 0 1px 0 var(--border2); }
@@ -4782,7 +4791,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0910</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0912</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6288,8 +6297,10 @@ th.col-sroas { background-color:#e7d5f5; }
          「商品情報を編集」は一番右。編集フォームの中身は従来のまま。 -->
     <div class="pe-tabs" id="peTabs" role="tablist">
       <!-- 【v1.0689】全体情報 → 商品-日別 に改称。その右に 商品-推移（累積×日別）を追加 -->
-      <button type="button" class="pe-tab on" data-petab="info">商品-日別</button>
-      <button type="button" class="pe-tab" data-petab="trend">商品-推移</button>
+      <!-- 【v1.0912】タブ名を中身に合わせた（商品-日別→売上・ROAS／商品-推移→月内累積）。調整用の「調整-日月別」を2番目に新設 -->
+      <button type="button" class="pe-tab on" data-petab="info" title="売上・PR広告売上ROAS などの大きな流れ（日別／月別）">売上・ROAS</button>
+      <button type="button" class="pe-tab" data-petab="adj" title="入札価格・表示・クリック・CTR・CPC…の細かい数字（調整用。日別／月別）">調整-日月別</button>
+      <button type="button" class="pe-tab" data-petab="trend" title="1か月を累積×日別で見る（ROAS 3種）">月内累積</button>
       <button type="button" class="pe-tab" data-petab="edit">商品情報を編集</button>
       <div class="pe-nav-mini">
         <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
@@ -6326,6 +6337,20 @@ th.col-sroas { background-color:#e7d5f5; }
     </div>
 
     <!-- ===== タブ2: 商品-推移（1か月を「累積×日別」で見る。ROAS3種類） ===== -->
+    <!-- ===== 【v1.0912】タブ: 調整-日月別（調整用。入札価格・表示・クリック・CTR・CPC・実績額・PR実績額・広告個数・総売上・広告売上・広告ROAS・CVR・平均単価・SEO売上） ===== -->
+    <div class="pe-panel" id="peTabAdj" style="display:none">
+      <div class="pe-ctl">
+        <span class="seg-filter" id="peAdjScopeSeg"><button type="button" class="segf-btn" data-pescope="set">親子合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button></span>
+        <span class="seg-filter" id="peAdjGrainSeg"><button type="button" class="segf-btn on" data-peadjgrain="day">日別</button><button type="button" class="segf-btn" data-peadjgrain="month">月別</button></span>
+        <span class="seg-filter" id="peAdjSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
+        <span class="seg-filter" id="peAdjMSpanSeg" style="display:none"><button type="button" class="segf-btn on" data-pemspan="may">5月始まり</button><button type="button" class="segf-btn" data-pemspan="12">1年</button><button type="button" class="segf-btn" data-pemspan="24">2年</button></span>
+        <span class="pe-ctl-note" id="peAdjNote"></span>
+      </div>
+      <div class="pe-legend pe-sw-bar" id="peAdjLegend"></div>
+      <div class="pe-chart-wrap pe-chart-big"><canvas id="peAdjChart"></canvas></div>
+      <div class="pe-table-wrap" id="peAdjTable"></div>
+    </div>
+
     <div class="pe-panel" id="peTabTrend" style="display:none">
       <div class="pe-ctl">
         <span class="seg-filter" id="peTrendScopeSeg"><button type="button" class="segf-btn" data-pescope="set">親子合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button></span>
@@ -11163,10 +11188,15 @@ function parseAdDaily(rows) {
     const adRevenue = toNum(r['売上金額'] || r['売上金額（税込）'] || r['売上金額(税込)'] || r['広告経由売上'] || r['売上'] || 0);
     const adClicks = toNum(r['クリック数'] || r['クリック'] || 0);
     const adOrders = toNum(r['注文数'] || 0);
+    // 【v1.0911】表示回数・注文個数も持つ（商品モーダル「日別」の 表示 / CTR 用）。配列の5番目・6番目に足しただけ＝[0]〜[3] の意味は変えない。
+    //   ★v1.0910 までに取り込んだ日は4つしか無い（＝表示回数が不明）。item-reach を取り込み直すと、その日が6つになる。
+    const adImp = toNum(r['表示回数'] || r['インプレッション数'] || r['インプレッション'] || 0);
+    const adUnits = toNum(r['注文個数'] || 0);
     if (adCost === 0 && adRevenue === 0 && adClicks === 0 && adOrders === 0) return;   // 全ゼロ行は保存しない
     const day = out[date] || (out[date] = {});
-    const t = day[code] || (day[code] = [0, 0, 0, 0]);
+    const t = day[code] || (day[code] = [0, 0, 0, 0, 0, 0]);
     t[0] += adCost; t[1] += adRevenue; t[2] += adClicks; t[3] += adOrders;
+    t[4] = (+t[4] || 0) + adImp; t[5] = (+t[5] || 0) + adUnits;
   });
   return out;
 }
@@ -23914,13 +23944,18 @@ let _peMSpan = 'may';         // 【v1.0641】月別のときの期間: 'may'(�
 let _peChart = null;
 // 【v1.0897】系列ボタンで消している系列（label の集合）。モーダルを開いている間・商品を∧∨で移っても保つ（保存はしない）
 const _peHidden = new Set();
-function _peToggleSeries(label) {
-  if (_peHidden.has(label)) _peHidden.delete(label); else _peHidden.add(label);
-  if (_peChart) {
-    _peChart.data.datasets.forEach((d, i) => { if (d.label === label) _peChart.setDatasetVisibility(i, !_peHidden.has(label)); });
-    _peChart.update('none');
+// 【v1.0912】調整-日月別タブは別の集合・別のチャート（同じ名前の系列でもタブごとに出し入れを覚える）
+const _peAdjHidden = new Set();
+let _peAdjChart = null;
+function _peToggleSeries(label, where) {
+  const adj = (where === 'adj');
+  const H = adj ? _peAdjHidden : _peHidden, ch = adj ? _peAdjChart : _peChart;
+  if (H.has(label)) H.delete(label); else H.add(label);
+  if (ch) {
+    ch.data.datasets.forEach((d, i) => { if (d.label === label) ch.setDatasetVisibility(i, !H.has(label)); });
+    ch.update('none');
   }
-  document.querySelectorAll('#peLegend .pe-sw').forEach(b => b.classList.toggle('off', _peHidden.has(b.getAttribute('data-ser'))));
+  document.querySelectorAll((adj ? '#peAdjLegend' : '#peLegend') + ' .pe-sw').forEach(b => b.classList.toggle('off', H.has(b.getAttribute('data-ser'))));
 }
 // 【v1.0638/v1.0688】全体情報タブの集計範囲: 'set'(親子合算) | 'self'(個別)
 //   ★'parent' / 'child' は v1.0688 でUIから撤去したが、_peScopeCodes の分岐は残してある
@@ -23929,10 +23964,12 @@ function _peToggleSeries(label) {
 let _peScope = 'self';
 function peSetTab(t) {
   // 【v1.0689】タブは3つ: 'info'（商品-日別）/ 'trend'（商品-推移）/ 'edit'（商品情報を編集）
-  _peTab = (t === 'edit' || t === 'trend') ? t : 'info';
+  _peTab = (t === 'edit' || t === 'trend' || t === 'adj') ? t : 'info';   // 【v1.0912】'adj'（調整-日月別）を追加
   const tabs = document.getElementById('peTabs');
   if (tabs) tabs.querySelectorAll('.pe-tab').forEach(b => b.classList.toggle('on', b.getAttribute('data-petab') === _peTab));
   const i = document.getElementById('peTabInfo'), e = document.getElementById('peTabEdit'), tr = document.getElementById('peTabTrend');
+  const aj = document.getElementById('peTabAdj');
+  if (aj) aj.style.display = (_peTab === 'adj') ? '' : 'none';
   if (i)  i.style.display  = (_peTab === 'info')  ? '' : 'none';
   if (tr) tr.style.display = (_peTab === 'trend') ? '' : 'none';
   if (e)  e.style.display  = (_peTab === 'edit')  ? '' : 'none';
@@ -23940,11 +23977,12 @@ function peSetTab(t) {
   //   パネルは商品をまたいで使い回すので、前の商品でスクロールした位置が残り、
   //   次に開いたときに途中（変更記録や画像のあたり）から表示されていた。
   try {
-    [i, tr, e].forEach(el => { if (el) el.scrollTop = 0; });
+    [i, tr, e, aj].forEach(el => { if (el) el.scrollTop = 0; });
     const g = document.querySelector('#productEditModal .pe-grid'); if (g) g.scrollTop = 0;
   } catch (eS) {}
   if (_peTab === 'info')  peRenderInfo();
   if (_peTab === 'trend') peRenderTrend();
+  if (_peTab === 'adj')   peRenderAdj();
 }
 // この商品1件ぶんの行を作る（日別 or 月別）。行の形は共通:
 //   { key, rev, seoRev, adRev, adCost, sroas }
@@ -24106,6 +24144,253 @@ function _peStickyHead(wrap) {
     });
   } catch (e) {}
 }
+// ============================================================================
+// 【v1.0911→v1.0912】商品モーダル「調整-日月別」タブ＝調整用。その日（月）の細かい数字の動きを見る（本人指定）。
+//   v1.0911 では「売上・ROAS」タブの日別をこれに差し替えていたが、日別と月別で項目が変わるのは分かりにくいので、別のタブに分けた。
+//   表：日付｜入札価格｜表示｜クリック｜CTR｜CPC｜実績額｜PR実績額｜広告個数｜総売上｜広告売上｜広告ROAS｜CVR｜平均単価｜SEO売上（本人の並び＋PR実績額）
+//   グラフ：SEO売上の上に広告売上を積む（＝総売上）｜実績額（右隣の棒）｜広告ROAS（線・右の%）｜入札価格（紫の階段・右端の¥）｜PR実績額（ピンクの階段・左の¥）
+//   ・広告個数＝広告詳細レポートの「注文数」（商品-グラフ／商品-日月別データの「広告個数」と同じ。v218「注文個数ではなく注文数」）
+//   ・表示回数は v1.0911 から取り込む（item-reach の「表示回数」）。それより前に取り込んだ日は「—」（取り込み直すと出る）
+//   ・CTR＝クリック÷表示、CPC＝実績額÷クリック、CVR＝広告個数÷クリック、広告ROAS＝広告売上÷実績額、平均単価＝総売上÷注文数（SEO経由も含む全体の注文）
+//   ・親子合算は合計してから計算し直す。入札価格は親（代表）の値。月別の入札価格はその月の最後の日（今月は今日）の値
+//   ・月別：クリック・広告個数・注文数は月次の集計（buildFullAggregate）。表示回数は日別データの合計で、表示回数がある日だけの合計なら「※」
+//   ★集計範囲（親子合算/個別）と期間（30日・60日・全期間／5月始まり・1年・2年）は「売上・ROAS」タブと共有。日別/月別だけは別（_peAdjGrain）
+// ============================================================================
+let _peAdjGrain = 'day';
+// _peRows / _peBidSeries は _peGrain を見るので、一時的に切り替えて呼ぶ
+function _peWithGrain(grain, fn) { const g = _peGrain; _peGrain = grain; try { return fn(); } finally { _peGrain = g; } }
+function _peAdjRows(code, grain) {
+  return _peWithGrain(grain, () => {
+    const baseRows = _peRows(code);
+    const codes = _peScopeCodes(code);
+    const D = ensureDaily();
+    const bids = _peBidSeries(code, baseRows) || baseRows.map(() => null);
+    let mAgg = null;
+    if (grain === 'month') {
+      mAgg = {};
+      ((typeof buildFullAggregate === 'function') ? buildFullAggregate() : []).forEach(r => {
+        if (codes.indexOf(r.code) < 0) return;
+        const e = mAgg[r.month] || (mAgg[r.month] = { clicks: 0, adOrders: 0, orders: 0 });
+        e.clicks += +r.adClicks || 0; e.adOrders += +r.adOrders || 0; e.orders += +r.orders || 0;
+      });
+    }
+    const dayKeys = Object.keys(D.ad || {}).filter(isYmd);
+    return baseRows.map((r, i) => {
+      const k = String(r.key);
+      let imp = 0, impDays = 0, adDays = 0, clicks = 0, adOrders = 0, orders = 0, hasAd = false;
+      const days = (grain === 'day') ? [k] : dayKeys.filter(d => d.slice(0, 7) === k);
+      days.forEach(d => {
+        let dayAd = false, dayKnown = false;
+        codes.forEach(c => {
+          const ad = ((D.ad || {})[d] || {})[c];
+          if (ad) { hasAd = true; dayAd = true; if (grain === 'day') { clicks += +ad[2] || 0; adOrders += +ad[3] || 0; }
+                    if (ad.length >= 5) { dayKnown = true; imp += +ad[4] || 0; } }
+          if (grain === 'day') { const it = ((D.item || {})[d] || {})[c]; if (it) orders += +it[1] || 0; }
+        });
+        if (dayAd) adDays++;
+        if (dayKnown) impDays++;
+      });
+      if (grain === 'month') { const e = mAgg[k] || { clicks: 0, adOrders: 0, orders: 0 }; clicks = e.clicks; adOrders = e.adOrders; orders = e.orders; if (clicks || adOrders) hasAd = true; }
+      const impKnown = impDays > 0;
+      const impPartial = impKnown && impDays < adDays;   // 表示回数がある日だけの合計（月別）
+      // CTR は「表示回数がある日のクリック」で割る（月別で一部の日しか表示回数が無いとき、分子分母の日をそろえる）
+      let ctrClicks = clicks;
+      if (grain === 'month' && impPartial) {
+        ctrClicks = 0;
+        days.forEach(d => codes.forEach(c => { const ad = ((D.ad || {})[d] || {})[c]; if (ad && ad.length >= 5) ctrClicks += +ad[2] || 0; }));
+      }
+      return Object.assign({}, r, {
+        bid: bids[i], imp: impKnown ? imp : null, impPartial, impDays, adDays, clicks, adOrders, orders, hasAd,
+        dayHasAdFile: (grain === 'day') ? !!(D.ad && D.ad[k]) : true,
+        ctr: (impKnown && imp > 0) ? ctrClicks / imp * 100 : null,
+        cpc: clicks > 0 ? r.adCost / clicks : null,
+        cvr: clicks > 0 ? adOrders / clicks * 100 : null,
+        aroas: r.adCost > 0 ? r.adRev / r.adCost * 100 : null,
+        avg: orders > 0 ? r.rev / orders : null
+      });
+    });
+  });
+}
+function peRenderAdj() {
+  const code = productEditModal && productEditModal.dataset.code;
+  const cv = document.getElementById('peAdjChart'), wrap = document.getElementById('peAdjTable');
+  if (!code || !cv || !wrap) return;
+  const grain = _peAdjGrain;
+  // ---- 操作の同期（集計範囲は 売上・ROAS と同じ出し分け：セットがある商品＝親子合算だけ／無い商品＝個別だけ） ----
+  {
+    const fam = _peFamily(code);
+    const hasSet = fam.members.length >= 2;
+    if (!hasSet) _peScope = 'self'; else if (_peScope !== 'set') _peScope = 'set';
+    const sc = document.getElementById('peAdjScopeSeg');
+    if (sc) sc.querySelectorAll('.segf-btn').forEach(b => {
+      const v = b.getAttribute('data-pescope'), show = hasSet ? (v === 'set') : (v === 'self');
+      b.style.display = show ? '' : 'none'; b.disabled = !show; b.style.borderLeft = show ? 'none' : '';
+      b.classList.toggle('on', v === _peScope);
+      b.title = (v === 'set' ? '送り込みセット（親＋子）を合計して見る（' + fam.members.length + '件）。合計してから率を計算し直します' : 'この商品だけを見る（送り込みセットはありません）');
+    });
+    const gs = document.getElementById('peAdjGrainSeg');
+    if (gs) gs.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-peadjgrain') === grain));
+    const ss = document.getElementById('peAdjSpanSeg');
+    if (ss) { ss.style.display = (grain === 'day') ? '' : 'none'; ss.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pespan')) === String(_peSpan))); }
+    const ms = document.getElementById('peAdjMSpanSeg');
+    if (ms) { ms.style.display = (grain === 'month') ? '' : 'none'; ms.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pemspan')) === String(_peMSpan))); }
+  }
+  const rows = _peAdjRows(code, grain);
+  {
+    const note = document.getElementById('peAdjNote');
+    const _scCodes = _peScopeCodes(code);
+    if (note) note.textContent = rows.length
+      ? ((_peScope === 'set' ? '【親子合算】' + _scCodes.join(' / ') + '　' : '') + rows.length + (grain === 'day' ? '日分（' : 'ヶ月分（') + rows[0].key + ' 〜 ' + rows[rows.length - 1].key + '）')
+      : '';
+  }
+  if (_peAdjChart) { try { _peAdjChart.destroy(); } catch (e) {} _peAdjChart = null; }
+  if (!rows.length) {
+    const lg = document.getElementById('peAdjLegend'); if (lg) lg.innerHTML = '';
+    wrap.innerHTML = '<div class="pe-empty">この商品のデータがありません（レポートを取り込むと出ます）</div>';
+    return;
+  }
+  const yen = v => '¥' + Math.round(v || 0).toLocaleString('ja-JP');
+  const isDay = (grain === 'day');
+  const labels = rows.map(r => isDay ? ((+String(r.key).slice(5, 7)) + '/' + (+String(r.key).slice(8, 10))) : String(r.key).replace('-', '/'));
+  const hasBid = rows.some(r => r.bid != null);
+  const hasPr = rows.some(r => r.prKnown && r.prOver > 0);
+  const C = { seo: '#7c3aed', ad: '#f97316', cost: '#3b82f6', pr: '#ec4899', roas: '#10b981', bid: '#9333ea' };
+  // ---- 系列ボタン（押すと消える／戻る） ----
+  {
+    const _lg = document.getElementById('peAdjLegend');
+    const _sw = (c, l, tip, line) => '<button type="button" class="pe-sw' + (line ? ' pe-sw-line' : '') + (_peAdjHidden.has(l) ? ' off' : '')
+      + '" style="--c:' + c + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'), \'adj\')">' + l + '</button>';
+    if (_lg) _lg.innerHTML = _sw(C.seo, 'SEO売上', '左の棒（下）: SEO売上（総売上−広告売上）') + _sw(C.ad, '広告売上', '左の棒（上に積む）: 広告売上。SEO売上と合わせた高さ＝総売上')
+      + '<span class="pe-sw-sep"></span>'
+      + _sw(C.cost, '実績額', '右の棒: 広告の実績額（広告費）')
+      + (hasPr ? _sw(C.pr, 'PR実績額', 'ピンクの階段の線（左の目盛り ¥）: PR実績額（7%超・⑤の料率からの推定）', true) : '')
+      + '<span class="pe-sw-sep"></span>'
+      + _sw(C.roas, '広告ROAS', '線（右の目盛り %）: 広告ROAS ＝ 広告売上 ÷ 実績額 × 100', true)
+      + (hasBid ? _sw(C.bid, '入札価格', '紫の階段の線（右端の目盛り ¥）: 入札価格。変えた所に「¥30→¥25」の札', true) : '')
+      + '<span class="pe-sw-hint">ボタンを押すと、その項目を消す／戻す</span>';
+  }
+  // ---- グラフ ----
+  try {
+    if (typeof Chart !== 'undefined') {
+      const _clMarks = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.key), code) : [];
+      let bMin = 0, bMax = 0;
+      if (hasBid) {
+        const vs = rows.map(r => r.bid).filter(v => v != null);
+        const lo = Math.min(...vs), hi = Math.max(...vs), pad = Math.max(5, (hi - lo) * 0.25);
+        bMin = Math.max(0, Math.floor((lo - pad * 2) / 5) * 5); bMax = Math.ceil((hi + pad) / 5) * 5;
+      }
+      const bar = (label, data, color, stack) => ({ type: 'bar', label, data, backgroundColor: color, stack, yAxisID: 'y', order: 2,
+        barPercentage: 0.96, categoryPercentage: 0.9, borderRadius: 2 });
+      const ds = [
+        bar('SEO売上', rows.map(r => r.seoRev || 0), C.seo, 's'),
+        bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's'),
+        bar('実績額', rows.map(r => r.adCost || 0), C.cost, 'c'),
+        { type: 'line', label: '広告ROAS', data: rows.map(r => r.aroas == null ? null : Math.round(r.aroas)), borderColor: C.roas, backgroundColor: C.roas,
+          borderWidth: 2.6, pointRadius: (rows.length > 45 ? 2.5 : 3.5), pointHoverRadius: 6, tension: 0.3, yAxisID: 'y1', order: 1,
+          spanGaps: false }   // ★広告費0の日（ROASなし）はつながない。つなぐと広告を出していない期間に線が引かれてしまう
+      ];
+      if (hasPr) ds.push({ type: 'line', label: 'PR実績額', data: rows.map(r => r.prKnown ? Math.round(r.prOver || 0) : null), borderColor: C.pr, backgroundColor: C.pr,
+        borderWidth: 2.4, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y', stack: 'pr', order: 0 });   // ★stack を分けて棒と積まない
+      if (hasBid) ds.push({ type: 'line', label: '入札価格', data: rows.map(r => r.bid), borderColor: C.bid, backgroundColor: C.bid,
+        borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y2', order: 0 });
+      _peAdjChart = new Chart(cv.getContext('2d'), {
+        plugins: [YC_CHANGE_LINES, PE_BID_LABELS],
+        data: { labels, datasets: ds },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          interaction: { mode: 'index', intersect: false },
+          layout: { padding: { top: 4, right: 4 } },
+          plugins: {
+            ycChangeLines: { marks: _clMarks },
+            legend: { display: false },
+            tooltip: {
+              padding: 11, boxPadding: 4, titleFont: { size: 13, weight: '700' }, bodyFont: { size: 12.5 }, footerFont: { size: 12, weight: '700' },
+              filter: (c) => !(c.dataset.type === 'bar' && !(+c.parsed.y)),
+              callbacks: {
+                title: (items) => { const r = items.length ? rows[items[0].dataIndex] : null; return r ? String(r.key).replace(/-/g, '/') : ''; },
+                label: (c) => {
+                  const v = c.parsed.y, l = c.dataset.label;
+                  if (l === '広告ROAS') return '広告ROAS: ' + (v == null ? '—' : Math.round(v).toLocaleString('ja-JP') + '%');
+                  if (l === '入札価格') return '入札価格: ' + (v == null ? '—' : '¥' + v);
+                  if (l === 'PR実績額') return 'PR実績額(7%超・推定): ' + (v == null ? '—' : yen(v));
+                  return l + ': ' + yen(v);
+                },
+                footer: (items) => { const r = items.length ? rows[items[0].dataIndex] : null; return r ? ('総売上 ' + yen(r.rev)) : ''; }
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true, grid: { color: 'rgba(0,0,0,0.05)' },
+                 ticks: { font: { size: (rows.length > 45 ? 11.5 : 13) }, color: '#64748b', autoSkip: rows.length > 62, autoSkipPadding: 8, maxRotation: 55, minRotation: 0 } },
+            y: { stacked: true, position: 'left', beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' },
+                 title: { display: true, text: '金額（売上・実績額）', font: { size: 12, weight: '700' }, color: '#64748b' },
+                 ticks: { font: { size: 12 }, color: '#64748b', callback: (v) => '¥' + Number(v).toLocaleString('ja-JP') } },
+            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false },
+                 title: { display: true, text: '広告ROAS', font: { size: 12, weight: '700' }, color: C.roas },
+                 ticks: { font: { size: 12 }, color: '#0f9f6e', callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } },
+            y2: { display: hasBid, position: 'right', min: bMin, max: bMax, grid: { drawOnChartArea: false },
+                 title: { display: true, text: '入札価格', font: { size: 12, weight: '700' }, color: C.bid },
+                 ticks: { font: { size: 12 }, color: C.bid, stepSize: 5, callback: (v) => '¥' + v } }
+          }
+        }
+      });
+      _peAdjChart.data.datasets.forEach((d, i) => { if (_peAdjHidden.has(d.label)) _peAdjChart.setDatasetVisibility(i, false); });
+      _peAdjChart.update('none');
+    }
+  } catch (e) { console.warn('[Ycheck] 商品モーダル（調整-日月別）のグラフ描画に失敗', e); }
+
+  // ---- 表（新しい順） ----
+  const dash = '<span style="color:var(--text3)">—</span>';
+  const n0 = v => (v == null ? dash : Math.round(v).toLocaleString('ja-JP'));
+  const y0 = v => (v == null ? dash : (v > 0 ? yen(v) : '<span style="color:var(--text3)">¥0</span>'));
+  const pc = (v, d) => (v == null ? dash : v.toFixed(d == null ? 1 : d) + '%');
+  const roasCls = v => (v == null ? '' : v >= 300 ? 'color:#1D9E75' : v >= 200 ? 'color:#BA7517' : 'color:#A32D2D');
+  const part = r => (r.impPartial ? '<span class="pe-imp-part" title="表示回数がある日（' + r.impDays + '日 / 広告データ ' + r.adDays + '日）だけの合計。CTR も同じ日だけで計算">※</span>' : '');
+  // 列の定義（本人の並び＋PR実績額）。g＝見出しの色（入札価格＝紫／広告＝橙／PR＝桃／売上＝緑）
+  const G = { ad: { h: '#fae6ce', b: '#fdf8f1', c: '#b45309' }, bid: { h: '#ede1fb', b: '#f8f3fe', c: '#9333ea' },
+              pr: { h: '#fbd4e6', b: '#fdf2f8', c: '#db2777' }, rev: { h: '#cfe9dc', b: '#f1faf5', c: '#0f8a52' } };
+  const COLS = [
+    { t: '入札価格', g: 'bid', f: r => (r.bid == null ? dash : '¥' + r.bid), tip: isDay ? 'その日の入札価格' : 'その月の最後の日（今月は今日）の入札価格' },
+    { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
+    { t: 'クリック', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },
+    { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック ÷ 表示 × 100' },
+    { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '実績額 ÷ クリック' },
+    { t: '実績額',   g: 'ad',  f: r => y0(r.adCost) },
+    { t: 'PR実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）。⑤の料率からの推定' },
+    { t: '広告個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）' },
+    { t: '総売上',   g: 'rev', f: r => y0(r.rev), bold: true },
+    { t: '広告売上', g: 'ad',  f: r => y0(r.adRev) },
+    { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + ';font-weight:700">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 実績額 × 100' },
+    { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック × 100' },
+    { t: '平均単価', g: 'rev', f: r => (r.avg == null ? dash : yen(r.avg)), tip: '総売上 ÷ 注文数（SEO経由も含む全体の注文数）' },
+    { t: 'SEO売上',  g: 'rev', f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' }
+  ];
+  const wk = ['日', '月', '火', '水', '木', '金', '土'];
+  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + G[c.g].c + '"'
+    + (c.tip ? ' title="' + escapeHtml(c.tip) + '"' : '') + '>' + c.t + '</th>').join('') + '</tr>';
+  const desc = rows.slice().reverse();
+  const body = desc.map((r, i) => {
+    const older = desc[i + 1];   // 1つ前（1日前／前月）
+    const chg = (r.bid != null && older && older.bid != null && older.bid !== r.bid);
+    let first;
+    if (isDay) {
+      const dt = new Date(+r.key.slice(0, 4), +r.key.slice(5, 7) - 1, +r.key.slice(8, 10));
+      const dw = dt.getDay();
+      const dcol = dw === 0 ? '#dc2626' : dw === 6 ? '#2563eb' : 'var(--text)';
+      first = '<td style="font-weight:700;color:' + dcol + ';text-align:center">' + r.key.slice(5, 7) + '/' + r.key.slice(8, 10) + '(' + wk[dw] + ')</td>';
+    } else {
+      first = '<td style="font-weight:700;text-align:center">' + r.key.replace('-', '/') + '</td>';
+    }
+    const monthEdge = isDay && older && older.key.slice(0, 7) !== r.key.slice(0, 7);
+    return '<tr class="' + (chg ? 'pe-bidchg' : '') + (monthEdge ? ' pe-mon-edge' : '') + '"' + (chg ? ' title="' + (isDay ? 'この日' : 'この月') + 'に入札価格が ¥' + older.bid + ' → ¥' + r.bid + ' に変わりました"' : '') + '>'
+      + first + COLS.map(c => '<td style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + '">' + c.f(r) + '</td>').join('') + '</tr>';
+  }).join('');
+  wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
+    + '<div class="pe-day-foot">紫の破線＝入札価格を変えた' + (isDay ? '日' : '月') + '。表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
+    + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
+    + '。広告個数＝広告経由の注文数。平均単価＝総売上 ÷ 注文数（SEO経由も含む）。PR実績額は⑤の料率からの推定。</div>';
+  requestAnimationFrame(() => _peStickyHead(wrap));
+}
 function peRenderInfo() {
   const code = productEditModal && productEditModal.dataset.code;
   const wrap = document.getElementById('peTableWrap');
@@ -24161,6 +24446,7 @@ function peRenderInfo() {
     wrap.innerHTML = '<div class="pe-empty">この商品のデータがありません（レポートを取り込むと出ます）</div>';
     return;
   }
+  // 【v1.0912】v1.0911 で日別だけ調整用の中身にしていたのを戻した（日別も月別と同じ項目・同じ見せ方）。調整用は「調整-日月別」タブ（peRenderAdj）
   // ---- グラフ（SEO売上＋広告売上の積み上げ棒／広告売上ROASの折れ線） ----
   const labels = rows.map(r => (_peGrain === 'day')
     ? (+String(r.key).slice(5, 7)) + '/' + (+String(r.key).slice(8, 10))
@@ -24190,7 +24476,7 @@ function peRenderInfo() {
           + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・⑤の料率からの推定）')
           + '<span class="pe-sw-sep"></span>'
           + _sw('#10b981', 'PR広告売上ROAS', '線（右の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額）× 100', true)
-          + (_peBidSeries(code, rows) ? _sw('#9333ea', '入札価格', '紫の階段の線（右端の目盛り ¥）: 入札価格の推移（広告順位の入札価格の履歴）。変えた所に「¥30→¥25」の札', true) : '')
+          /* 【v1.0911】入札価格は日別だけ（月別のボタンは出さない） */
           + '<span class="pe-sw-hint">ボタンを押すと、その項目を消す／戻す</span>';
       }
       const _peBars = _peSplit
@@ -24216,7 +24502,8 @@ function peRenderInfo() {
       // 【v1.0910】さらに太く（0.96×0.9）。日別60日でも棒が細くならないように
       _peBars.forEach(d => { d.barPercentage = 0.96; d.categoryPercentage = 0.9; d.borderRadius = 2; });
       // 【v1.0910】入札価格の推移（右端の専用目盛り y2・紫の階段の線）。データが無い商品は出さない
-      const _bidSer = _peBidSeries(code, rows);
+      // 【v1.0911/v1.0912】入札価格はこのタブ（売上・ROAS）では出さない。「調整-日月別」タブに出す
+      const _bidSer = null;
       let _bidMin = 0, _bidMax = 0;
       if (_bidSer) {
         const vs = _bidSer.filter(v => v != null);
@@ -24490,7 +24777,7 @@ function peRenderTrend() {
 }
 window.peRenderTrend = peRenderTrend;
 
-function openProductEditModal(code) {
+function openProductEditModal(code, _openOpt) {
   if (!code) return;
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
   const meta = state.productMeta[code] || {};
@@ -24533,7 +24820,10 @@ function openProductEditModal(code) {
     if (hr) hr.textContent = rep; }
   productEditModal.classList.add('open');
   // 【v1.0606】開いた直後は必ず「全体情報」。売上をまず見せるのがこのモーダルの主目的
-  peSetTab('info');   // 【v1.0689】開いた直後は 商品-日別
+  // 【v1.0912】開いた直後のタブ：調整-入札価格／調整-PRオプから開いたら「調整-日月別」、それ以外は「売上・ROAS」。
+  //   ∧∨で前後の商品へ移ったときは、いま見ているタブのまま（_openOpt.keepTab）
+  peSetTab((_openOpt && _openOpt.keepTab && _peTab) ? _peTab
+    : ((state.currentView === 'ad-tune' || state.currentView === 'pro-tune') ? 'adj' : 'info'));
   // 【v176】背景スクロールを許可するため body.style.overflow='hidden' は付けない
   // 【v127】前後ボタンの有効/無効を更新
   if (typeof updatePrevNextButtons === 'function') updatePrevNextButtons(code);
@@ -24868,7 +25158,7 @@ function saveProductEdit(opts) {
   if (opts.keepOpen && opts.nextCode) {
     renderAll();
     // ※ renderAll で DOM が再描画されるので、表示順も更新される
-    openProductEditModal(opts.nextCode);
+    openProductEditModal(opts.nextCode, { keepTab: true });   // 【v1.0912】∧∨ではタブを変えない
     return;
   }
   // 【v154】通常の保存ボタン押下時はモーダルを閉じない（×かキャンセルでだけ閉じる方針）。
@@ -25053,6 +25343,15 @@ $('#peImageDelete').addEventListener('click', () => {
     _peSpan = parseInt(b.getAttribute('data-pespan'), 10) || 0;
     peRenderInfo();
   });
+  // 【v1.0912】調整-日月別タブの操作（集計範囲・期間は 売上・ROAS タブと共有。日別/月別だけは別に持つ）
+  const _aSc = document.getElementById('peAdjScopeSeg');
+  if (_aSc) _aSc.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.segf-btn'); if (!b || b.disabled) return; _peScope = b.getAttribute('data-pescope') || 'self'; peRenderAdj(); });
+  const _aG = document.getElementById('peAdjGrainSeg');
+  if (_aG) _aG.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return; _peAdjGrain = (b.getAttribute('data-peadjgrain') === 'month') ? 'month' : 'day'; peRenderAdj(); });
+  const _aS = document.getElementById('peAdjSpanSeg');
+  if (_aS) _aS.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return; _peSpan = parseInt(b.getAttribute('data-pespan'), 10) || 0; peRenderAdj(); });
+  const _aM = document.getElementById('peAdjMSpanSeg');
+  if (_aM) _aM.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.segf-btn'); if (!b) return; _peMSpan = b.getAttribute('data-pemspan') || 'may'; peRenderAdj(); });
   // 【v1.0641】月別の期間（5月始まり / 1年 / 2年）
   const _ms = document.getElementById('peMSpanSeg');
   if (_ms) _ms.addEventListener('click', (e) => {
