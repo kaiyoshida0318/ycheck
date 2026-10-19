@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0931 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0932 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3656,6 +3656,9 @@ table.rank-table td.rank-legend-col-row {
 .pe-day-tbl td { font-size: 0.8rem; padding: 6px 10px; white-space: nowrap; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--border); }
 /* 【v1.0916】実績額・総売上・広告ROAS の数字を太く・少し大きく（¥0 と — は薄いまま） */
 .pe-day-tbl td.pe-strong { font-weight: 800; font-size: 0.86rem; color: var(--text); }
+/* 【v1.0932】PRオプ料率を変えた日のセル（日別）。行の点線枠（入札価格）と形を変えて、同じ日に両方変えても重ならない */
+.pe-day-tbl td.pe-prchg { background: #fbcfe8 !important; color: #9d174d; font-weight: 800; text-align: right; white-space: nowrap; box-shadow: inset 0 0 0 1.5px #ec4899; }
+.pe-day-tbl td.pe-prchg .pe-prchg-from { font-weight: 600; font-size: 0.74rem; color: #be185d; opacity: 0.85; margin-right: 1px; }
 .pe-day-tbl td.pe-strong span[style*="--text3"] { font-weight: 400; font-size: 0.8rem; }   /* ¥0・— は目立たせない */
 .pe-day-tbl tr.pe-bidchg td { border-top: 2px dashed #7c2d12; border-bottom: 2px dashed #7c2d12; }   /* 【v1.0920】紫→こげ茶（入札価格の色） */
 .pe-day-tbl tr.pe-bidchg td:first-child { border-left: 2px dashed #7c2d12; }
@@ -4796,7 +4799,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0931</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0932</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24635,7 +24638,7 @@ function peRenderAdj() {
     { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
     { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '広告実績額 ÷ クリック数' },
     { t: '広告実績額', g: 'ad', f: r => y0(r.adCost), strong: true },   // 【v1.0924】実績額 → 広告実績額（本人指定）
-    { t: isDay ? 'PR' : 'PR(平均)', g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
+    { t: isDay ? 'PR' : 'PR(平均)', key: 'pr', g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
     { t: 'PR実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
     { t: '広告個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）。Yahoo のレポートは1件を0と出すので、売上があって0の日は1に戻しています' },
     { t: '広告売上', g: 'ad',  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
@@ -24651,7 +24654,9 @@ function peRenderAdj() {
   const desc = rows.slice().reverse();
   const body = desc.map((r, i) => {
     const older = desc[i + 1];   // 1つ前（1日前／前月）
-    const chg = isDay && (r.bid != null && older && older.bid != null && older.bid !== r.bid);   // 【v1.0929】月別は平均なので「変わりました」は出さない
+    const chg = isDay && (r.bid != null && older && older.bid != null && older.bid !== r.bid);
+    // 【v1.0932】PRオプ料率を変えた日（日別だけ）。行の点線枠は入札価格専用にして、PR は「そのセルだけ」濃いピンク＋「15→25%」で示す（本人と相談）
+    const prChg = isDay && r.prRate != null && older && older.prRate != null && Math.round(older.prRate) !== Math.round(r.prRate);   // 【v1.0929】月別は平均なので「変わりました」は出さない
     let first;
     if (isDay) {
       const dt = new Date(+r.key.slice(0, 4), +r.key.slice(5, 7) - 1, +r.key.slice(8, 10));
@@ -24664,10 +24669,16 @@ function peRenderAdj() {
     }
     const monthEdge = isDay && older && older.key.slice(0, 7) !== r.key.slice(0, 7);
     return '<tr class="' + (chg && isDay ? 'pe-bidchg' : '') + (monthEdge ? ' pe-mon-edge' : '') + '"'   /* 【v1.0916】破線枠をやめた →【v1.0920】日別だけ戻した（月別は付けない）。色は入札価格のこげ茶 */ + (chg ? ' title="' + (isDay ? 'この日' : 'この月') + 'に入札価格が ¥' + older.bid + ' → ¥' + r.bid + ' に変わりました"' : '') + '>'
-      + first + COLS.map(c => '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + '">' + c.f(r) + '</td>').join('') + '</tr>';
+      + first + COLS.map(c => {
+          if (c.key === 'pr' && prChg) {
+            const a = Math.round(older.prRate), b = Math.round(r.prRate);
+            return '<td class="pe-prchg" title="この日に PRオプ料率が ' + a + '% → ' + b + '% に変わりました"><span class="pe-prchg-from">' + a + '→</span>' + b + '%</td>';
+          }
+          return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + '">' + c.f(r) + '</td>';
+        }).join('') + '</tr>';
   }).join('');
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
-    + '<div class="pe-day-foot">' + (isDay ? 'こげ茶の破線＝入札価格を変えた日。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
+    + '<div class="pe-day-foot">' + (isDay ? 'こげ茶の破線＝入札価格を変えた日。ピンクのマス（15→25%）＝PRオプ料率を変えた日。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
     + '。広告個数＝広告経由の注文数。広告個数・クリック数は、Yahoo のレポートが1件を0と出す分を1に戻しています（売上・実績額がある日）。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
   requestAnimationFrame(() => _peStickyHead(wrap));
