@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0935 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0936 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4799,7 +4799,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0935</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0936</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8785,6 +8785,7 @@ async function ghLoadFromGitHub(opts) {
       migrateRemoveWarnStatus();  // 【v212】入札価格△/PRオプ△ → ✕
       migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
       migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
+      migrateChildStatusV1936();  // 【v1.0936】そのあとに子にした商品も（一度きり）
       migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
       migrateProStatusV1876();   // 【v1.0876】PR△-親-下げ挑戦中 の廃止（一度きり）
     } catch (eMig) { console.warn('[Ycheck診断-load] マイグレーションで例外（読込は継続）:', eMig && eMig.message); }
@@ -8883,6 +8884,7 @@ async function ghLoadFromPublic() {
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
     migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
+    migrateChildStatusV1936();  // 【v1.0936】そのあとに子にした商品も（一度きり）
     migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
     migrateProStatusV1876();   // 【v1.0876】PR△-親-下げ挑戦中 の廃止（一度きり）
     ghLog(`閲覧専用: 公開データ取得成功 (${(content.length / 1024).toFixed(1)} KB)`);
@@ -9815,6 +9817,7 @@ function loadFromStorage() {
     migrateRemoveWarnStatus();
     migrateStatusResetV195();   // 【v195】既存ステータスを一度だけ新商品にリセット
     migrateChildStatusV1626();  // 【v1.0626】いまの子商品を「子（親に追従）」に（一度きり）
+    migrateChildStatusV1936();  // 【v1.0936】そのあとに子にした商品も（一度きり）
     migrateProStatusV1636();   // 【v1.0636】PRオプ状態の統合・廃止（一度きり）
     migrateProStatusV1876();   // 【v1.0876】PR△-親-下げ挑戦中 の廃止（一度きり）
     return data.savedAt || true;
@@ -9970,6 +9973,38 @@ function migrateChildStatusV1626() {
   if (n > 0) {
     console.log('Ycheck: 【v1.0626】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」にしました（一度きり）');
     try { ycLog('edit', '【v1.0626】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」に変更（一度きりの移行・元の値は _statusBeforeChild に保存）'); } catch (e) {}
+    saveToStorage();
+  }
+}
+
+// 【v1.0936】v1.0626 のあとに子にした商品（ステータスが「選択前」「新商品」のままの子）を「子（親に追従）」に（一度きり）。
+//   中身は migrateChildStatusV1626 と同じ（撤退済みは触らない・元の値は _statusBeforeChild に控える）。
+//   これ以降は、子にした時点で保存処理が「子（親に追従）」にする（§322）。
+function migrateChildStatusV1936() {
+  if (!state.productMeta) return;
+  let done = false;
+  try { if (localStorage.getItem('ycheck_childStatusV1936')) done = true; } catch (e) {}
+  if (state.rankMeta && state.rankMeta.childStatusV1936) done = true;
+  if (done) return;
+  const ts = Date.now();
+  let n = 0;
+  Object.keys(state.productMeta).forEach(code => {
+    const m = state.productMeta[code];
+    if (!m) return;
+    if (!statusParentCode(code)) return;
+    if (m.status === STATUS_LIFE_CHILD) return;
+    if (m.status === '撤退済み') return;
+    m._statusBeforeChild = m.status || '';
+    m.status = STATUS_LIFE_CHILD;
+    m.statusTs = ts; m._ts = ts;
+    n++;
+  });
+  state.rankMeta = state.rankMeta || {};
+  state.rankMeta.childStatusV1936 = true;
+  try { localStorage.setItem('ycheck_childStatusV1936', '1'); } catch (e) {}
+  if (n > 0) {
+    console.log('Ycheck: 【v1.0936】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」にしました（一度きり）');
+    try { ycLog('edit', '【v1.0936】子商品 ' + n + '件 のステータスを「' + STATUS_LIFE_CHILD + '」に変更（一度きりの移行・元の値は _statusBeforeChild に保存）'); } catch (e) {}
     saveToStorage();
   }
 }
@@ -25460,6 +25495,27 @@ function saveProductEdit(opts) {
   }
   // 【v124】代表商品コードを保存（空文字なら削除扱い）
   //   【v1.0763】_prevRep（変更前の代表コード）は「子商品タイプ未選択の通知」専用だったので撤去。
+  // 【v1.0936】本人指定：子商品にした時点で、ステータスを「子（親に追従）」にする。
+  //   ・子になった（前は子でなかった／親を付け替えた）ときだけ書き換える。同じ親のまま保存し直しただけなら触らない
+  //     （子のステータスを本人があえて別の値にしている場合を上書きしない）。
+  //   ・撤退済みは触らない（isRetired が自分の status を見るので、子にすると親が撤退済みでなければ一覧に戻ってしまう）。
+  //   ・子をやめた（代表コードを外した／自分を親にした）とき、ステータスが「子（親に追従）」なら元の値（_statusBeforeChild）に戻す。無ければ「選択前」。
+  {
+    const _m = state.productMeta[code];
+    const _prevRep = String(_m.repCode || '').trim();
+    const _wasChild = !!_prevRep && _prevRep !== code;
+    const _isChild = !!newRepCode && newRepCode !== code;
+    const _ts = Date.now();
+    if (_isChild && newRepCode !== _prevRep && _m.status !== STATUS_LIFE_CHILD && _m.status !== '撤退済み') {
+      _m._statusBeforeChild = _m.status || '';
+      _m.status = STATUS_LIFE_CHILD; _m.statusTs = _ts;
+      try { ycLog('edit', code + ' を ' + newRepCode + ' の子にしたので、ステータスを「' + STATUS_LIFE_CHILD + '」に（前: ' + (_m._statusBeforeChild || '空') + '）'); } catch (e) {}
+    } else if (_wasChild && !_isChild && _m.status === STATUS_LIFE_CHILD) {
+      _m.status = _m._statusBeforeChild || '選択前'; _m.statusTs = _ts;
+      delete _m._statusBeforeChild;
+      try { ycLog('edit', code + ' を子商品でなくしたので、ステータスを「' + _m.status + '」に戻した'); } catch (e) {}
+    }
+  }
   if (newRepCode) state.productMeta[code].repCode = newRepCode;
   else delete state.productMeta[code].repCode;
   // 【親子成立時の通知】は【v1.0763】で撤去。
