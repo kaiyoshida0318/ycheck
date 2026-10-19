@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0930 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0931 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4796,7 +4796,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0930</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0931</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -25108,6 +25108,8 @@ function openProductEditModal(code, _openOpt) {
   // 【v1.0912】開いた直後のタブ：調整-入札価格／調整-PRオプから開いたら「調整-日月別」、それ以外は「売上・ROAS」。
   //   ∧∨で前後の商品へ移ったときは、いま見ているタブのまま（_openOpt.keepTab）
   if (!(_openOpt && _openOpt.keepTab)) _peAdjSpan = 30;   // 【v1.0915】商品-調整は開くたびに30日（∧∨で移ったときは今の期間のまま）
+  // 【v1.0931】商品-調整は開くたびに「日別」（本人指定）。前に月別にしていても引きずらない。∧∨で移ったときは今のまま
+  if (!(_openOpt && _openOpt.keepTab)) _peAdjGrain = 'day';
   peSetTab((_openOpt && _openOpt.keepTab && _peTab) ? _peTab
     : ((state.currentView === 'ad-tune' || state.currentView === 'pro-tune') ? 'adj' : 'info'));
   // 【v176】背景スクロールを許可するため body.style.overflow='hidden' は付けない
