@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0932 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0933 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4799,7 +4799,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0932</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0933</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17693,13 +17693,17 @@ let tuneGroup = 'all';   // 【v1.0666】既定は「全体」（旧: 'fix'＝�
 //   サブフィルタ切替 / ビュー切替・リロード / 順位データ取得(rank.json) / 「最新値を更新」取り込み。
 //   null = 未凍結（次のtune描画時に現在の分類で作り直す）。
 let tuneFrozenMembers = null;
+// 【v1.0933】凍結メンバーがどちらの調整画面のものか（'ad' / 'pro'）。
+//   タブのクリックでは resetTuneMembers が走るが、switchToView を直接呼ぶ経路では凍結が残り、
+//   調整-入札価格の凍結（37件）が調整-PRオプに持ち越されていた（v1.0922 で件数がこれを見るようになり表に出た）。
+let tuneFrozenKind = null;
 // 【fix】編集直後ピン: いま開いているページで状態などを変更した商品コードを一時的に保持し、
 //   フィルタ（入札なし除外・状態チップ・引退・調整グループ 等）に一致しなくても“その場では消さない”。
 //   ビュー切替・サブフィルタ変更・取り込み・最新値更新など「作り直しの引き金」でクリアする。
 let _editPinnedCodes = new Set();
 function clearEditPins() { _editPinnedCodes.clear(); }
 function pinEditedCode(code) { if (code) _editPinnedCodes.add(code); }
-function resetTuneMembers() { tuneFrozenMembers = null; _editPinnedCodes.clear(); }
+function resetTuneMembers() { tuneFrozenMembers = null; tuneFrozenKind = null; _editPinnedCodes.clear(); }
 // 【v1.0883】★「全体」から外す商品＝「対応内容-全更新処理」で今サイクル確認済みにした商品（adReviewed / proReviewed）。
 //   本人：「全更新処理を押したのにまだ全体に残ってる。絞って押したら、その絞ったものだけ消えるようにして」。
 //   ・v1.0882 までは「全体」＝対象商品すべて（絞り込みなし）だったので、全更新処理をしても何も消えなかった。
@@ -17721,7 +17725,7 @@ function _tuneRecordShown(tableSel, list) {
   _tuneShownByTable[tableSel] = set;
 }
 function ensureTuneMembers(kind) {
-  if (tuneFrozenMembers) return;  // 既に凍結済みなら作り直さない
+  if (tuneFrozenMembers && tuneFrozenKind === kind) return;  // 既に凍結済みなら作り直さない（【v1.0933】別の調整画面の凍結は使わない）
   const set = new Set();
   const codes = new Set(Object.keys(state.master));
   (state.item || []).forEach(i => codes.add(i.code));
@@ -17734,6 +17738,7 @@ function ensureTuneMembers(kind) {
     if (inGroup) set.add(code);
   });
   tuneFrozenMembers = set;
+  tuneFrozenKind = kind;   // 【v1.0933】
 }
 
 // 入札状態・PRオプ状態の○/×判定（新旧表記両対応。STATE_FILTERSと同じ基準）。
@@ -18024,6 +18029,10 @@ function _setTuneReviewed(code, kind, on) {
 //   ・未確認(unchecked) : 非F かつ（空欄 or スタンプのみ）。【v301】同上。対応→全体のみ、次の最新値更新でリセット再振り分け。
 //   対応済み判定: adActionAt/proActionAt（対応操作時に記録）。fixは当日、watch/uncheckedは当月で判定。
 function getTuneGroup(code, kind) {
+  // 【v1.0933】削除予定（保存値 '撤退予定'・旧値 '撤退■' '撤退予定-out記入済'）の商品は、修正あり／推移確認／未確認に出さない＝「全体」だけ（本人指定）。
+  //   ★判定は WD_MODES.plan.match（【撤退】削除予定タブと同じ列挙）＋ effectiveStatusOf（子は親に追従＝親が削除予定なら子も外す）。
+  //   ★_wdMatch は子を false にする（タブで親1行にまとめるため）ので、ここでは使わない。
+  if (WD_MODES.plan.match(effectiveStatusOf(code))) return null;
   const meta = state.productMeta[code] || {};
   const note = (kind === 'ad') ? meta.adNote : meta.proNote;
   const actionAt = (kind === 'ad') ? meta.adActionAt : meta.proActionAt;
@@ -18128,7 +18137,7 @@ function updateTuneBar() {
   //     ＝通常2が消えたタイミングで「推移確認(3)」。0件になった通常商品のみを選んでいても(3)のまま。
   //     他のグループの件数は今の分類で数える（従来どおり）。
   const _pass = _tuneCountFilter(kind, codes, true);
-  const _frozen = tuneFrozenMembers;   // 凍結は今いる調整画面（ad-tune / pro-tune）のもの。画面を移ると resetTuneMembers で消える
+  const _frozen = (tuneFrozenKind === kind) ? tuneFrozenMembers : null;   // 【v1.0933】この調整画面の凍結だけを使う（別の画面の凍結が残っていても見ない）
   const _inCur = (code) => _frozen.has(code);
   let cFix = 0, cWatch = 0, cUnchecked = 0, cAll = 0;
   [...codes].forEach(code => {
@@ -27224,7 +27233,7 @@ function _tuneShowSync() {
       const onView = (state.currentView === (kind === 'ad' ? 'ad-tune' : 'pro-tune'));
       const pass = _tuneCountFilter(kind, codes, true);
       const inGroup = (code) => {
-        if (onView && tuneFrozenMembers) return tuneFrozenMembers.has(code);
+        if (onView && tuneFrozenMembers && tuneFrozenKind === kind) return tuneFrozenMembers.has(code);   // 【v1.0933】
         return (tuneGroup === 'all') ? _tuneShowInAll(code, kind) : (getTuneGroup(code, kind) === tuneGroup);
       };
       const n = { all: 0, normal: 0, parent: 0, child: 0 };
