@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0909 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0910 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3615,6 +3615,12 @@ table.rank-table td.rank-legend-col-row {
    ※オーバーレイの上下padding(40px×2)を差し引いた高さに収め、ページ全体のスクロールも防ぐ。 */
 /* 【v1.0606】商品モーダルのタブ化（§5-I） */
 #productEditModal .modal.pe-modal-wide { max-width: min(1320px, 96vw) !important; width: min(1320px, 96vw); }   /* 【v1.0681】列が増えたので 1060 → 1320 */
+/* 【v1.0910】本人指定：Amacheck の推移モーダル（v3.28 §1-1）と同じ大きさ。幅 79vw（最小 min(1100px,96vw)・最大 1560px）× 高さ 96vh 固定。
+   ★高さは中身に関係なく常に同じ（タブ・期間・指標を変えても箱が伸び縮みしない）。上に 2vh あけて左右中央。 */
+#productEditModal { padding: 2vh 0 0 !important; align-items: flex-start; }
+#productEditModal .modal.pe-modal-wide { width: 79vw !important; min-width: min(1100px, 96vw); max-width: 1560px !important;
+  height: 96vh; max-height: 96vh !important; padding: 20px 30px 0; }
+#productEditModal .modal.pe-modal-wide .pe-tabs { margin: -20px -30px 0; padding: 0 26px; }
 /* 【v1.0683/v1.0686】タブ（全体情報 / 商品情報を編集）は左寄せ（v1.0683で中央にしたが左に戻した）。
    ★∧∨（商品送り）と ✕ は position:absolute のまま右端に固定しておく。
      並びに戻すと、あとで中央寄せに変えたくなったときにまた同じ問題（右ボタンぶんずれる）が出る。 */
@@ -3632,6 +3638,7 @@ table.rank-table td.rank-legend-col-row {
 .pe-head-name { font-size: 1.02rem; font-weight: 700; line-height: 1.35; }
 .pe-head-sub { font-size: 0.74rem; color: var(--text3); font-family: ui-monospace, Consolas, monospace; margin-top: 2px; }
 .pe-panel { padding-top: 12px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+#productEditModal .pe-panel { padding-bottom: 24px; }   /* 【v1.0910】下端に余白（96vh 固定になったので最後の行が枠に張り付かないように） */
 .pe-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .pe-ctl-note { font-size: 0.74rem; color: var(--text3); margin-left: auto; }
 .pe-chart-wrap { position: relative; height: 300px; }
@@ -3639,6 +3646,14 @@ table.rank-table td.rank-legend-col-row {
 .pe-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
 /* 【v1.0897】商品モーダル「商品-日別」のグラフを大きく・見やすく（ADcheck 商品モーダル §3-4・§8 を参考） */
 .pe-chart-wrap.pe-chart-big { height: clamp(360px, 50vh, 480px); margin-bottom: 14px; }   /* 画面の高さに合わせて 360〜480px */
+#productEditModal .pe-chart-wrap.pe-chart-big { height: 460px; margin-bottom: 18px; }   /* 【v1.0910】高さ固定（Amacheck §1-2 は 400px。日付を全部下に並べるぶん少し高く） */
+/* 【v1.0910】下へスクロールしたとき、表の見出し（2段）が上で止まる（Amacheck §5-1）。
+   ★表を包む枠に overflow:auto / hidden があるとそちらが基準になって止まらない → overflow:clip（角丸の切り抜きだけ残す）。
+   ★top は描画後に JS（_peStickyHead）で入れる：1段目＝−本文の padding-top、2段目＝1段目の高さ−padding-top。 */
+#productEditModal .pe-table-wrap { overflow: clip; }
+#productEditModal .pe-table-wrap table { border-collapse: separate !important; border-spacing: 0; }
+#productEditModal .pe-table-wrap thead th { position: sticky; z-index: 2; }
+#productEditModal .pe-table-wrap thead tr:last-child th { box-shadow: 0 1px 0 var(--border2); }
 .pe-sw-bar { justify-content: flex-start; flex-wrap: wrap; gap: 7px; margin: 2px 0 10px; align-items: center; }
 .pe-sw { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 2px solid var(--c); border-radius: 7px;
          background: var(--c); color: #fff; font: inherit; font-size: 0.74rem; font-weight: 700; line-height: 1.2; cursor: pointer; white-space: nowrap; }
@@ -4767,7 +4782,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0909</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0910</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24026,6 +24041,71 @@ function _peRows(code) {
   }
   return out;
 }
+// 【v1.0910】入札価格の推移（グラフの4本目）。Amacheck v3.28 §4-2 の「入札額」に当たる。
+//   ・値は 広告順位の入札価格の日別履歴（state.rankEdits[YYYY/MM][code].bid）を getDisplayRankEditValue で読む（空の日は前の値を引き継ぐ）。
+//   ・親子合算のときは代表（親）の入札価格（子は入札なし扱い §v1.0658）。
+//   ・月別は「その月の最後の日（今月は今日）」の値。★足さない（Amacheck §10-7）。
+function _peBidCode(code) { return (_peScope === 'set') ? _peFamily(code).key : code; }
+function _peBidSeries(code, rows) {
+  const bc = _peBidCode(code);
+  const td = (typeof getTodayYmAndIndex === 'function') ? getTodayYmAndIndex() : null;
+  const out = rows.map(r => {
+    const k = String(r.key);
+    const ym = k.slice(0, 4) + '/' + k.slice(5, 7);
+    let di;
+    if (_peGrain === 'day') di = (+k.slice(8, 10)) - 1;
+    else di = (td && td.ym === ym) ? td.dayIndex : (getDaysInMonth(ym) - 1);
+    let v = null;
+    try { v = getDisplayRankEditValue(ym, bc, 'bid', di); } catch (e) { v = null; }
+    const n = Number(v);
+    return (v == null || v === '' || !isFinite(n) || n <= 0) ? null : n;
+  });
+  return out.some(v => v != null) ? out : null;
+}
+// 入札価格を変えた所に「¥30→¥25」の札（階段の角＝前の値の高さ。下げたら角の上・上げたら角の下）。Amacheck v3.25 と同じ置き方
+const PE_BID_LABELS = {
+  id: 'peBidLabels',
+  afterDatasetsDraw(chart, args, opts) {
+    const ds = chart.data.datasets.findIndex(d => d.label === '入札価格');
+    if (ds < 0 || !chart.isDatasetVisible(ds)) return;
+    const data = chart.data.datasets[ds].data, xs = chart.scales.x, ys = chart.scales.y2, area = chart.chartArea;
+    if (!xs || !ys) return;
+    const ctx = chart.ctx; ctx.save();
+    ctx.font = '700 11.5px "Noto Sans JP", sans-serif'; ctx.textBaseline = 'middle';
+    let prev = null;
+    data.forEach((v, i) => {
+      if (v == null) return;
+      if (prev != null && v !== prev) {
+        const x = xs.getPixelForValue(i), yc = ys.getPixelForValue(prev);
+        const txt = '¥' + prev + '→¥' + v;
+        const w = ctx.measureText(txt).width + 10, h = 18;
+        let lx = Math.min(Math.max(x - w / 2, area.left + 2), area.right - w - 2);
+        let ly = (v < prev) ? (yc - h - 6) : (yc + 6);
+        ly = Math.min(Math.max(ly, area.top + 2), area.bottom - h - 2);
+        ctx.fillStyle = '#9333ea'; ctx.globalAlpha = 0.95;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(lx, ly, w, h, 4); ctx.fill(); } else ctx.fillRect(lx, ly, w, h);
+        ctx.globalAlpha = 1; ctx.fillStyle = '#fff'; ctx.fillText(txt, lx + 5, ly + h / 2 + 0.5);
+      }
+      prev = v;
+    });
+    ctx.restore();
+  }
+};
+// 表の見出し（thead の各段）を、スクロールする本文（.pe-panel）の上で止める位置に置く（Amacheck §5-1・§10-3）
+function _peStickyHead(wrap) {
+  try {
+    if (!wrap) return;
+    const panel = wrap.closest('.pe-panel'); if (!panel) return;
+    const pt = parseFloat(getComputedStyle(panel).paddingTop) || 0;
+    let top = -pt;
+    wrap.querySelectorAll('thead tr').forEach(tr => {
+      tr.querySelectorAll('th').forEach(th => { th.style.top = top + 'px'; });
+      // rowspan=2 のセルは1段目にしか無いので、段の高さは rowspan の無いセルで測る
+      const one = [...tr.children].find(th => !(th.rowSpan > 1)) || tr.children[0];
+      top += one ? one.getBoundingClientRect().height : 0;
+    });
+  } catch (e) {}
+}
 function peRenderInfo() {
   const code = productEditModal && productEditModal.dataset.code;
   const wrap = document.getElementById('peTableWrap');
@@ -24110,6 +24190,7 @@ function peRenderInfo() {
           + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・⑤の料率からの推定）')
           + '<span class="pe-sw-sep"></span>'
           + _sw('#10b981', 'PR広告売上ROAS', '線（右の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額）× 100', true)
+          + (_peBidSeries(code, rows) ? _sw('#9333ea', '入札価格', '紫の階段の線（右端の目盛り ¥）: 入札価格の推移（広告順位の入札価格の履歴）。変えた所に「¥30→¥25」の札', true) : '')
           + '<span class="pe-sw-hint">ボタンを押すと、その項目を消す／戻す</span>';
       }
       const _peBars = _peSplit
@@ -24132,9 +24213,18 @@ function peRenderInfo() {
         { type: 'bar', label: 'PR実績額',   data: rows.map(r => (r.prOver > 0 ? +r.prOver : 0)), backgroundColor: '#ec4899', stack: 'c', yAxisID: 'y', order: 2 }
       );
       // 【v1.0897】棒を太く（Chart.js 既定 0.9×0.8 → 0.92×0.86）
-      _peBars.forEach(d => { d.barPercentage = 0.92; d.categoryPercentage = 0.86; d.borderRadius = 2; });
+      // 【v1.0910】さらに太く（0.96×0.9）。日別60日でも棒が細くならないように
+      _peBars.forEach(d => { d.barPercentage = 0.96; d.categoryPercentage = 0.9; d.borderRadius = 2; });
+      // 【v1.0910】入札価格の推移（右端の専用目盛り y2・紫の階段の線）。データが無い商品は出さない
+      const _bidSer = _peBidSeries(code, rows);
+      let _bidMin = 0, _bidMax = 0;
+      if (_bidSer) {
+        const vs = _bidSer.filter(v => v != null);
+        const lo = Math.min(...vs), hi = Math.max(...vs), pad = Math.max(5, (hi - lo) * 0.25);
+        _bidMin = Math.max(0, Math.floor((lo - pad * 2) / 5) * 5); _bidMax = Math.ceil((hi + pad) / 5) * 5;
+      }
       _peChart = new Chart(cv.getContext('2d'), {
-        plugins: [YC_CHANGE_LINES],
+        plugins: [YC_CHANGE_LINES, PE_BID_LABELS],
         data: {
           labels,
           datasets: [
@@ -24144,7 +24234,10 @@ function peRenderInfo() {
             // 【v1.0897】線を太く・点を大きく（ADcheck §5-1：太さ2.6・点3px・ホバー6px・tension 0.3）
             { type: 'line', label: 'PR広告売上ROAS', data: rows.map(r => r.prsr), borderColor: '#10b981', backgroundColor: '#10b981',
               borderWidth: 2.6, pointRadius: (rows.length > 45 ? 2.5 : 3.5), pointHoverRadius: 6, pointBackgroundColor: '#10b981',
-              tension: 0.3, spanGaps: true, yAxisID: 'y1', order: 1 }
+              tension: 0.3, spanGaps: true, yAxisID: 'y1', order: 1 },
+            // 【v1.0910】入札価格（階段の線。点なし）。Amacheck §4-2
+            ...(_bidSer ? [{ type: 'line', label: '入札価格', data: _bidSer, borderColor: '#9333ea', backgroundColor: '#9333ea',
+              borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y2', order: 0 }] : [])
           ]
         },
         options: {
@@ -24168,6 +24261,7 @@ function peRenderInfo() {
                   const v = c.parsed.y;
                   if (c.dataset.label === 'PR広告売上ROAS') return 'PR広告売上ROAS(推定): ' + (v == null ? '—' : Math.round(v).toLocaleString('ja-JP') + '%');
                   if (c.dataset.label === 'PR実績額') return 'PR実績額(7%超・推定): ¥' + Math.round(v || 0).toLocaleString('ja-JP');   // 【v1.0869】
+                  if (c.dataset.label === '入札価格') return '入札価格: ' + (v == null ? '—' : '¥' + v);   // 【v1.0910】
                   return c.dataset.label + ': ¥' + Math.round(v || 0).toLocaleString('ja-JP');
                 },
                 // 【v1.0897】下に合計（売上の棒・費用の棒それぞれ）
@@ -24182,14 +24276,20 @@ function peRenderInfo() {
             }
           },
           scales: {
+            // 【v1.0910】日付を全部グラフの下に出す（62本まで。全期間など多いときは間引く）。入りきらなければ斜めにする
             x: { stacked: true, grid: { color: 'rgba(0,0,0,0.05)' },
-                 ticks: { font: { size: 12 }, color: '#64748b', maxRotation: 0, autoSkip: true, autoSkipPadding: 10 } },
+                 ticks: { font: { size: (rows.length > 45 ? 11.5 : 13) }, color: '#64748b',
+                          autoSkip: rows.length > 62, autoSkipPadding: 8, maxRotation: 55, minRotation: 0 } },
             y: { stacked: true, position: 'left', beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' },
                  title: { display: true, text: '金額（売上・費用）', font: { size: 12, weight: '700' }, color: '#64748b' },
                  ticks: { font: { size: 12 }, color: '#64748b', callback: (v) => '¥' + Number(v).toLocaleString('ja-JP') } },
             y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false },
                  title: { display: true, text: 'PR広告売上ROAS', font: { size: 12, weight: '700' }, color: '#10b981' },
-                 ticks: { font: { size: 12 }, color: '#0f9f6e', callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } }
+                 ticks: { font: { size: 12 }, color: '#0f9f6e', callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } },
+            // 【v1.0910】入札価格だけの目盛り（右端・紫）。売上と同じ目盛りだと一番下を這うため（Amacheck §4-2）
+            y2: { display: !!_bidSer, position: 'right', min: _bidMin, max: _bidMax, grid: { drawOnChartArea: false },
+                 title: { display: true, text: '入札価格', font: { size: 12, weight: '700' }, color: '#9333ea' },
+                 ticks: { font: { size: 12 }, color: '#9333ea', stepSize: 5, callback: (v) => '¥' + v } }
           }
         }
       });
@@ -24300,6 +24400,7 @@ function peRenderInfo() {
       + '</tr>';
   }).join('');
   wrap.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  requestAnimationFrame(() => _peStickyHead(wrap));   // 【v1.0910】表の見出しを上で止める
 }
 
 // ============================================================================
@@ -24385,6 +24486,7 @@ function peRenderTrend() {
     codes: codes, days: days, ym: _peTrendYm, metrics: PE_TREND_METRICS(), barKeys: PE_TREND_BARS, clCode: code });
   // ★タブ切替直後はコンテナ幅が0のことがある。2フレーム待ってから resize
   requestAnimationFrame(() => requestAnimationFrame(() => { try { if (_peTrendChart) _peTrendChart.resize(); } catch (e) {} }));
+  requestAnimationFrame(() => _peStickyHead(tbl));   // 【v1.0910】商品-推移タブの表も見出しを上で止める
 }
 window.peRenderTrend = peRenderTrend;
 
