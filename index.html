@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0916 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0919 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4796,7 +4796,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0916</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0919</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6342,7 +6342,7 @@ th.col-sroas { background-color:#e7d5f5; }
     </div>
 
     <!-- ===== タブ2: 商品-推移（1か月を「累積×日別」で見る。ROAS3種類） ===== -->
-    <!-- ===== 【v1.0912】タブ: 調整-日月別（調整用。入札価格・表示・クリック・CTR・CPC・実績額・PR実績額・広告個数・総売上・広告売上・広告ROAS・CVR・平均単価・SEO売上） ===== -->
+    <!-- ===== 【v1.0912】タブ: 調整-日月別（調整用。入札価格・表示・クリック・CTR・CPC・実績額・PR実績額・広告個数・総売上・広告売上・広告ROAS・CVR・平均獲得単価（v1.0918〜。前は平均単価）・SEO売上） ===== -->
     <div class="pe-panel" id="peTabAdj" style="display:none">
       <div class="pe-ctl">
         <span class="seg-filter" id="peAdjScopeSeg"><button type="button" class="segf-btn" data-pescope="set">親子合算</button><button type="button" class="segf-btn on" data-pescope="self">個別</button></span>
@@ -24276,7 +24276,8 @@ function _peStickyHead(wrap) {
 // ============================================================================
 // 【v1.0911→v1.0912】商品モーダル「調整-日月別」タブ＝調整用。その日（月）の細かい数字の動きを見る（本人指定）。
 //   v1.0911 では「売上・ROAS」タブの日別をこれに差し替えていたが、日別と月別で項目が変わるのは分かりにくいので、別のタブに分けた。
-//   表：日付｜入札価格｜表示｜クリック｜CTR｜CPC｜実績額｜PR実績額｜広告個数｜総売上｜広告売上｜広告ROAS｜CVR｜平均単価｜SEO売上（本人の並び＋PR実績額）
+//   表：日付｜入札価格｜表示｜クリック数｜CTR｜CPC｜実績額｜PR実績額｜広告個数｜総売上｜広告売上｜広告ROAS｜CVR｜平均獲得単価｜SEO売上（本人の並び＋PR実績額）
+//   【v1.0918】平均単価（総売上÷注文数）の列をやめて、平均獲得単価（実績額÷広告個数）に置き換えた（本人指定）
 //   グラフ：SEO売上の上に広告売上を積む（＝総売上）｜実績額（右隣の棒）｜広告ROAS（線・右の%）｜入札価格（紫の階段・右端の¥）｜PR実績額（ピンクの階段・左の¥）
 //   ・広告個数＝広告詳細レポートの「注文数」（商品-グラフ／商品-日月別データの「広告個数」と同じ。v218「注文個数ではなく注文数」）
 //   ・表示回数は v1.0911 から取り込む（item-reach の「表示回数」）。それより前に取り込んだ日は「—」（取り込み直すと出る）
@@ -24338,7 +24339,8 @@ function _peAdjRows(code, grain) {
         cpc: clicks > 0 ? r.adCost / clicks : null,
         cvr: clicks > 0 ? adOrders / clicks * 100 : null,
         aroas: r.adCost > 0 ? r.adRev / r.adCost * 100 : null,
-        avg: orders > 0 ? r.rev / orders : null
+        avg: orders > 0 ? r.rev / orders : null,
+        cpa: adOrders > 0 ? r.adCost / adOrders : null   // 【v1.0918】平均獲得単価＝実績額÷広告個数（広告で1件取るのにかかった広告費）
       });
     });
   });
@@ -24487,17 +24489,17 @@ function peRenderAdj() {
   const COLS = [
     { t: '入札価格', g: 'bid', f: r => (r.bid == null ? dash : '¥' + r.bid), tip: isDay ? 'その日の入札価格' : 'その月の最後の日（今月は今日）の入札価格' },
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
-    { t: 'クリック', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },
-    { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック ÷ 表示 × 100' },
-    { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '実績額 ÷ クリック' },
+    { t: 'クリック数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
+    { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
+    { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '実績額 ÷ クリック数' },
     { t: '実績額',   g: 'ad',  f: r => y0(r.adCost), strong: true },
     { t: 'PR実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）。⑤の料率からの推定' },
     { t: '広告個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）' },
-    { t: '総売上',   g: 'rev', f: r => y0(r.rev), strong: true },
-    { t: '広告売上', g: 'ad',  f: r => y0(r.adRev) },
+    { t: '総売上',   g: 'rev', f: r => y0(r.rev) },   // 【v1.0919】太字をやめた（本人指定）
+    { t: '広告売上', g: 'ad',  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
     { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 実績額 × 100', strong: true },
-    { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック × 100' },
-    { t: '平均単価', g: 'rev', f: r => (r.avg == null ? dash : yen(r.avg)), tip: '総売上 ÷ 注文数（SEO経由も含む全体の注文数）' },
+    { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
+    { t: '平均獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
     { t: 'SEO売上',  g: 'rev', f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' }
   ];
   const wk = ['日', '月', '火', '水', '木', '金', '土'];
@@ -24524,7 +24526,7 @@ function peRenderAdj() {
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
     + '<div class="pe-day-foot">表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
-    + '。広告個数＝広告経由の注文数。平均単価＝総売上 ÷ 注文数（SEO経由も含む）。PR実績額は⑤の料率からの推定。</div>';
+    + '。広告個数＝広告経由の注文数。平均獲得単価＝実績額 ÷ 広告個数（0件の日は —）。PR実績額は⑤の料率からの推定。</div>';
   requestAnimationFrame(() => _peStickyHead(wrap));
 }
 function peRenderInfo() {
