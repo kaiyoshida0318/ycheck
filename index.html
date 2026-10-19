@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0921 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0922 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4796,7 +4796,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0921</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0922</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -18096,12 +18096,29 @@ function updateTuneBar() {
   //   ＝分類表のマスを押したら、その条件に該当する商品での内訳が 全体/修正あり/推移確認/未確認 に出る。
   //   ★判定式は表の描画（renderAdAdjust / renderProAdjust）と同じ関数を使い回す。二重に書かない。
   // 【v1.0904】判定を _tuneCountFilter に切り出した（「表示」ボタンの件数 _tuneShowSync でも同じものを使う）
-  const _pass = _tuneCountFilter(kind, codes, false);
+  // 【v1.0922】本人指定：件数は「表示」（全表示／通常商品のみ／親商品のみ＝送り込み軸 repFilter）に関係なく、いつも【全表示】の数。
+  //   例：推移確認＝通常2＋親3 なら、通常商品のみ・親商品のみ のどちらを選んでいても「推移確認(5)」。
+  //   ★そのため送り込み軸だけは通さない（skipRep=true）。検索・状態チップ・広告軸は従来どおり通す。
+  //   ★いま選んでいるグループの件数は「画面に残っている行」（凍結メンバー tuneFrozenMembers）で数える。
+  //     状態を変えても行はその場では消えない（§288）ので、件数も行が消えたとき（更新・別画面へ移動・グループ切替）に減る。
+  //     ＝通常2が消えたタイミングで「推移確認(3)」。0件になった通常商品のみを選んでいても(3)のまま。
+  //     他のグループの件数は今の分類で数える（従来どおり）。
+  const _pass = _tuneCountFilter(kind, codes, true);
+  const _frozen = tuneFrozenMembers;   // 凍結は今いる調整画面（ad-tune / pro-tune）のもの。画面を移ると resetTuneMembers で消える
+  const _inCur = (code) => _frozen.has(code);
   let cFix = 0, cWatch = 0, cUnchecked = 0, cAll = 0;
   [...codes].forEach(code => {
     if (!_pass(code)) return;
-    if (_tuneShowInAll(code, kind)) cAll++;  // この調整タブの対象商品（全体ボタンの対象）【v1.0883】全更新処理で確認済みにした商品は数えない
+    if (_frozen && tuneGroup === 'all') { if (_inCur(code)) cAll++; }
+    else if (_tuneShowInAll(code, kind)) cAll++;  // この調整タブの対象商品（全体ボタンの対象）【v1.0883】全更新処理で確認済みにした商品は数えない
     const g = getTuneGroup(code, kind);
+    if (_frozen && tuneGroup !== 'all') {
+      // 選んでいるグループは凍結メンバーで、それ以外は今の分類で
+      if (tuneGroup === 'fix' ? _inCur(code) : g === 'fix') cFix++;
+      if (tuneGroup === 'watch' ? _inCur(code) : g === 'watch') cWatch++;
+      if (tuneGroup === 'unchecked' ? _inCur(code) : g === 'unchecked') cUnchecked++;
+      return;
+    }
     if (g === 'fix') cFix++;
     else if (g === 'watch') cWatch++;
     else if (g === 'unchecked') cUnchecked++;
