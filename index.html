@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0908 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0909 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4767,7 +4767,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0908</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0909</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -18032,8 +18032,7 @@ function updateTuneBar() {
   // 【v1.0897】一括オープンで開くページを、ボタンにマウスを乗せると分かるように
   { const ob = document.getElementById('tuneOpenPagesBtn');
     if (ob) ob.title = '新しいタブで次のページをまとめて開きます\n'
-      + (kind === 'ad' ? '① コマースアドマネージャー（アイテムマッチ 商品一覧）' : '① ストアクリエイター（ページ編集）')
-      + '\n② Ycheck の「調整-基本」'; }
+      + '① コマースアドマネージャー（アイテムマッチ 商品一覧）\n② ストアクリエイター（ページ編集）\n③ Ycheck の「調整-基本」'; }   // 【v1.0909】どちらの画面でも同じ
   // アクティブ表示
   bar.querySelectorAll('.tune-chip').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tune === tuneGroup);
@@ -22458,16 +22457,14 @@ if (tuneCondBtn && tuneCondModal) {
 //   調整-PRオプ   → ストアクリエイター（ページ編集）  ＋ 調整-基本
 //   ★開く順＝ここに書いた順（タブもこの順に並ぶ）。外部ページを先、Ycheckのページを後。
 //   ★Ycheckのページは「ナビのタブの href」を使う（調整-基本は data-view="basic" なので id で引く）。
-const TUNE_OPEN_PAGES = {
-  'ad-tune': [
-    { url: 'https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629' },
-    { tab: '#navTuneBasic', fallback: '?view=basic-tune' }   // Ycheckの「調整-基本」
-  ],
-  'pro-tune': [
-    { url: 'https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/' },
-    { tab: '#navTuneBasic', fallback: '?view=basic-tune' }   // Ycheckの「調整-基本」
-  ]
-};
+// 【v1.0909】本人指定：どちらの画面のボタンでも、コマースアドマネージャーとストアクリエイターの【両方】を開く。
+//   ＝調整-入札価格・調整-PRオプとも ① コマースアドマネージャー → ② ストアクリエイター → ③ Ycheck「調整-基本」 の順。
+const TUNE_OPEN_PAGES_ALL = [
+  { url: 'https://cam.yahoo.co.jp/yukaiya/itemad/itemList?campaignId=11287&adGroupId=11629' },   // コマースアドマネージャー（アイテムマッチ 商品一覧）
+  { url: 'https://editor.store.yahoo.co.jp/RT/yukaiya/PageEdit/' },                             // ストアクリエイター（ページ編集）
+  { tab: '#navTuneBasic', fallback: '?view=basic-tune' }                                        // Ycheckの「調整-基本」
+];
+const TUNE_OPEN_PAGES = { 'ad-tune': TUNE_OPEN_PAGES_ALL, 'pro-tune': TUNE_OPEN_PAGES_ALL };
 const tuneOpenPagesBtn = $('#tuneOpenPagesBtn');
 if (tuneOpenPagesBtn) {
   tuneOpenPagesBtn.addEventListener('click', () => {
