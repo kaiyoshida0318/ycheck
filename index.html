@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0936 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0937 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4799,7 +4799,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0936</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0937</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24049,12 +24049,32 @@ const _peHidden = new Set();
 // 【v1.0912】調整-日月別タブは別の集合・別のチャート（同じ名前の系列でもタブごとに出し入れを覚える）
 const _peAdjHidden = new Set();
 let _peAdjChart = null;
+// 【v1.0937】商品-調整：系列ボタンで消した系列の目盛り（縦軸）も消す（本人指定）。
+//   目盛りごとに「その目盛りを使う系列が1つでも見えているか」を見て display を切り替える。
+//   消えた目盛りのぶん、Chart.js がグラフの描く範囲を自動で広げる。
+//   ★chart.$peAxisBase に「データがあって本来出す目盛りか」を持たせる（入札価格・PRオプ料率が無い商品は、もともと出さない）。
+//   ★ROAS の上限で付けた上の余白（22px）も、ROAS を消したら外す。
+function _peAdjSyncAxes(ch) {
+  if (!ch || !ch.options || !ch.options.scales) return;
+  const base = ch.$peAxisBase || {};
+  const used = {};
+  ch.data.datasets.forEach((d, i) => { if (ch.isDatasetVisible(i)) used[d.yAxisID || 'y'] = true; });
+  ['y', 'y1', 'y2', 'y3'].forEach(id => {
+    const sc = ch.options.scales[id]; if (!sc) return;
+    sc.display = (base[id] !== false) && !!used[id];
+  });
+  if (ch.options.layout && ch.$peCapPad != null) {
+    const roasOn = !!used.y1;
+    ch.options.layout.padding = Object.assign({}, ch.options.layout.padding, { top: roasOn ? ch.$peCapPad : 4 });
+  }
+}
 function _peToggleSeries(label, where) {
   const adj = (where === 'adj');
   const H = adj ? _peAdjHidden : _peHidden, ch = adj ? _peAdjChart : _peChart;
   if (H.has(label)) H.delete(label); else H.add(label);
   if (ch) {
     ch.data.datasets.forEach((d, i) => { if (d.label === label) ch.setDatasetVisibility(i, !H.has(label)); });
+    if (adj) _peAdjSyncAxes(ch);   // 【v1.0937】
     ch.update('none');
   }
   document.querySelectorAll((adj ? '#peAdjLegend' : '#peLegend') + ' .pe-sw').forEach(b => b.classList.toggle('off', H.has(b.getAttribute('data-ser'))));
@@ -24672,6 +24692,10 @@ function peRenderAdj() {
       _peApplyRoasCap(ds.find(d => d.label === '広告ROAS'), _adjCfg.options.scales.y1, _adjCfg.options.layout, PE_ADJ_ROAS_MAX);   // 【v1.0915】広告ROAS の目盛りに上限 →【v1.0924】1,000% で固定
       _peAdjChart = new Chart(cv.getContext('2d'), _adjCfg);
       _peAdjChart.data.datasets.forEach((d, i) => { if (_peAdjHidden.has(d.label)) _peAdjChart.setDatasetVisibility(i, false); });
+      // 【v1.0937】消している系列の目盛りは出さない（商品を変えても・開き直しても同じ）
+      _peAdjChart.$peAxisBase = { y: true, y1: true, y2: !!hasBid, y3: !!hasPr };
+      _peAdjChart.$peCapPad = (_adjCfg.options.layout && _adjCfg.options.layout.padding && _adjCfg.options.layout.padding.top) || 4;
+      _peAdjSyncAxes(_peAdjChart);
       _peAdjChart.update('none');
       _peApplySale(_peAdjChart, rows.map(r => String(r.key)));   // 【v1.0914】セールの印（日別だけ）
     }
