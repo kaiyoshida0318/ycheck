@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0937 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0940 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2113,6 +2113,15 @@ td[data-resize-key] {
 .filters .yc-reflect-wrap .yc-cancel-btn  { flex: 1 1 auto; margin-right: 0; min-width: 0; }
 .filters .yc-reflect-wrap .yc-reflect-btn { flex: 2 1 auto; margin-right: 0; min-width: 0; }   /* 2つの大きさの比は 1 : 2 のまま広がる */
 .yc-reflect-wrap .yc-reflect-btn { margin-left: 0; }
+/* 【v1.0938】調整-入札価格／調整-PRオプ：未反映のとき「キャンセル／アップ内容／反映する」が出ても操作行を1行に保つ（本人指定）。
+   ・この2画面は入りきらないと折り返す（§250・v1.0882）ので、ボタンが出ると「表示時期」が2段目に落ちていた。
+   ・ラッパーを空き幅いっぱいに伸ばさない（v1.0669 の「隙間を埋める」はこの2画面ではやめる）。3つのボタンを小さく、間を詰める。
+   ・「反映する」の文字は「（未反映）」を付けない（オレンジ＋点滅で未反映と分かる。理由はマウスを乗せると出る）。_ycUpdateReflectBtn
+   ・検索欄を 150px に（ほかのボタンは縮めない＝文字が切れないように）。 */
+#view-ad-tune .filters .yc-reflect-wrap, #view-pro-tune .filters .yc-reflect-wrap { flex: 0 0 auto; min-width: 0; margin: 0 2px; gap: 4px; }
+#view-ad-tune .filters .yc-reflect-wrap > button, #view-pro-tune .filters .yc-reflect-wrap > button {
+  flex: 0 0 auto; font-size: 0.72rem; padding: 4px 8px; }
+#view-ad-tune .filters input[type="search"], #view-pro-tune .filters input[type="search"] { width: 150px; }
 /* 【v1.0452】「反映する」の左に出るキャンセル（未反映の変更を破棄して保存済みへ戻す） */
 .yc-cancel-btn {
   appearance: none; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2);
@@ -4799,7 +4808,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0937</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0940</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8538,7 +8547,8 @@ async function ghSaveToGitHub(options = {}) {
             ghSetSyncStatus('error', '保存中止(古い可能性)');
             ghLog('⚠ 古いデータの可能性のため保存を中止しました: ' + _detail, 'warn');
             console.warn('[Ycheck] 上書き防止ガード発動:', _detail, '| dropped=', _dropped, '| rItems=', _rItems, 'lItems=', _lItems);
-            return { skipped: true, reason: 'stale-overwrite-guard', detail: _detail, dropped: _dropped, rItems: _rItems, lItems: _lItems };
+            return { skipped: true, reason: 'stale-overwrite-guard', detail: _detail, dropped: _dropped, rItems: _rItems, lItems: _lItems,
+                     dropDays: _dropDays, onlyDaily: (_dropped.length === 0 && !_bigShrink && !_masterShrink && _dropDays.length > 0) };   // 【v1.0940】
           }
           // 【v285/v286】productMeta・入札価格(bid)・PRオプ料率(proRate)を商品単位でマージ。
           //   remoteに、この画面より新しく編集された商品があれば、その商品はremote側を採用してPUTに含める
@@ -9332,7 +9342,7 @@ function _ycUpdateReflectBtn() {
     if (ub) ub.hidden = !_ghDirty;   // ★未反映のときだけ出す（反映するボタンと同じ条件）
     if (_ghDirty) {
       b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
-      b.textContent = '⬆ 反映する（未反映）';
+      b.textContent = b.closest('#view-ad-tune, #view-pro-tune') ? '⬆ 反映する' : '⬆ 反映する（未反映）';   // 【v1.0938】調整2画面は短く（1行に収めるため）
       if (cb) cb.hidden = false;   // 反映ボタンが出るときだけキャンセルも表示
       if (wrap) wrap.hidden = false;
     } else {
@@ -9430,7 +9440,12 @@ async function ycAutoPushNow() {
   _ycAutoPushBusy = true;
   try {
     ghSetSyncStatus('saving');
-    const r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
+    let r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
+    // 【v1.0940】日別が足りないだけなら、取り込んでからもう一度（月・商品が消える場合は従来どおり手動に任せる）
+    if (r && r.reason === 'stale-overwrite-guard' && r.onlyDaily) {
+      const _n = await _ycPullMissingDaily('自動反映');
+      if (_n > 0) r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
+    }
     if (r && r.success) {
       _ghDirty = false; _ghDirtyReason = ''; ghSetSyncStatus('saved');
       try { ycLog('save', 'GitHubへ反映しました（ドロップダウン変更）'); } catch (e) {}
@@ -9495,12 +9510,50 @@ function ycLockUI(on, msg) {
     document.removeEventListener('keydown', _ycBlockKey, true);
   }
 }
+// ============================================================================
+// 【v1.0940】GitHub にあって、このタブに無い【日】の日別データだけを取り込む（足すだけ。上書きしない）。
+//   起こったこと（2026-10-21）：別のタブ／PCで 10/20 の日別を取り込んで GitHub に保存したあと、
+//   このタブで「⬆ 反映する」→ 上書き防止ガード（v1.0856）が「日別が4件ぶん消えます」で止まった。
+//   ★再読み込みしても直らなかった。未反映の変更があるタブは、起動時に GitHub から読み直さない（v1.0845：ローカルを守る）ため。
+//   → 反映のとき（と起動時）に、GitHub にしか無い日だけをこのタブへ足す。同じ日はこのタブの値のまま（取り込み直した値を守る）。
+//   ★月（item/ad の月次配列）や商品（master）が消える場合は、ここでは何もしない（従来どおり確認を出して止める）。
+// ============================================================================
+async function _ycPullMissingDaily(reason) {
+  try {
+    const res = await ghGetFile();
+    if (!res || !res.content) return 0;
+    const remote = JSON.parse(res.content);
+    const R = (remote && remote.daily) || {};
+    const D = ensureDaily();
+    let n = 0; const days = new Set();
+    ['overall', 'item', 'ad', 'pr'].forEach(k => {
+      const rk = R[k] || {}; if (!D[k]) D[k] = {};
+      Object.keys(rk).forEach(d => { if (!(d in D[k])) { D[k][d] = rk[d]; n++; days.add(d); } });
+    });
+    if (n > 0) {
+      invalidateDailyRollup();
+      saveToStorage();
+      const list = [...days].sort();
+      try { ycLog('edit', 'GitHub にだけあった日別データを取り込みました（' + n + '件・' + list.join(', ') + '）' + (reason ? '：' + reason : '')); } catch (e) {}
+      try { ghLog('日別: GitHub にだけあった ' + n + '件（' + list.join(', ') + '）を取り込みました', 'ok'); } catch (e) {}
+    }
+    return n;
+  } catch (e) { console.warn('[Ycheck] GitHub の日別の取り込みに失敗:', e && e.message); return 0; }
+}
 async function ycReflect() {
   if (!ghIsEnabled()) { alert('この端末は閲覧専用です（トークン未設定）。編集・反映はできません。'); return; }
   _ycArmAutoSave();
   ycLockUI(true, '保存中… 操作しないでください');
   try {
     let r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
+    // 【v1.0940】日別が足りないだけなら、GitHub にしか無い日を取り込んでから、もう一度（確認なしで）保存する
+    if (r && r.reason === 'stale-overwrite-guard' && r.onlyDaily) {
+      const _n = await _ycPullMissingDaily('反映する');
+      if (_n > 0) {
+        try { if (typeof renderAll === 'function') renderAll(); } catch (e) {}
+        r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
+      }
+    }
     if (r && r.reason === 'stale-overwrite-guard') {
       ycLockUI(false);
       const ok = confirm('⚠ このタブのデータは、GitHub上の最新より古い可能性があります。\n\n' + (r.detail || '') +
@@ -25201,6 +25254,16 @@ function openProductEditModal(code, _openOpt) {
   if (!(_openOpt && _openOpt.keepTab)) _peAdjSpan = 30;   // 【v1.0915】商品-調整は開くたびに30日（∧∨で移ったときは今の期間のまま）
   // 【v1.0931】商品-調整は開くたびに「日別」（本人指定）。前に月別にしていても引きずらない。∧∨で移ったときは今のまま
   if (!(_openOpt && _openOpt.keepTab)) _peAdjGrain = 'day';
+  // 【v1.0939】商品-調整のグラフで、はじめから消しておく系列（本人指定）。∧∨で移ったときは今のまま。
+  //   調整-入札価格から開く → SEO売上・PR実績額・PRオプ料率 を消す（広告の調整に関係するものだけ見せる）
+  //   調整-PRオプから開く   → 広告売上・入札価格 を消す（PR の調整に関係するものだけ見せる）
+  //   それ以外の画面から開く → 前に消した状態のまま（従来どおり）
+  //   ★名前は peRenderAdj の系列名・系列ボタンと同じ文字にすること（_peToggleSeries は名前で引く）
+  if (!(_openOpt && _openOpt.keepTab)) {
+    const _pre = (state.currentView === 'ad-tune') ? ['SEO売上', 'PR実績額', 'PRオプ料率']
+               : (state.currentView === 'pro-tune') ? ['広告売上', '入札価格'] : null;
+    if (_pre) { _peAdjHidden.clear(); _pre.forEach(l => _peAdjHidden.add(l)); }
+  }
   peSetTab((_openOpt && _openOpt.keepTab && _peTab) ? _peTab
     : ((state.currentView === 'ad-tune' || state.currentView === 'pro-tune') ? 'adj' : 'info'));
   // 【v176】背景スクロールを許可するため body.style.overflow='hidden' は付けない
@@ -28989,6 +29052,9 @@ try {
         if (!(result && result.success)) {
           console.warn(`[${curShop.id}] 起動時: 保存していないので読み直しも行いません（ローカルのデータを守る）`
             + ` reason=${(result && (result.reason || result.detail)) || 'unknown'}`);
+          // 【v1.0940】ただし GitHub にしか無い【日】の日別は足す（足すだけ＝ローカルの値は上書きしない）。
+          //   別のタブ／PCで取り込んだ日が、このタブに出ないまま「反映する」で消されそうになるのを防ぐ。
+          try { _ycPullMissingDaily('起動時').then(n => { if (n > 0 && typeof renderAll === 'function') renderAll(); }).catch(() => {}); } catch (e) {}
           try { _ycUpVerifySoon(); } catch (e) {}   // 未反映バッジの突き合わせだけは行う
           return;
         }
