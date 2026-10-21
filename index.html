@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0940 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0941 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4484,6 +4484,11 @@ th[data-sort].sort-desc::after { content: '\25BC'; }       /* ▼ 降順 */
 .yt-v1, .yt-v2 { font-family:'DM Mono',ui-monospace,monospace; font-weight:700; font-size:13px; line-height:18px; height:18px; white-space:nowrap; }
 .yt-v1 { color:var(--text); }
 .yt-v3 { font-family:'DM Mono',ui-monospace,monospace; font-size:11.5px; color:var(--text2); line-height:16px; height:16px; white-space:nowrap; }
+/* 【v1.0941】伸び率（下の月を100%としたときの上の月）。100%以上＝緑／未満＝赤／下の月に無い＝青「新規」（楽天用 v1.1459 と同じ） */
+.yt-gr { font-family:'DM Mono',ui-monospace,monospace; font-weight:700; font-size:12px; line-height:16px; height:16px; white-space:nowrap; }
+.yt-gr.up { color:#16a34a; } .yt-gr.dn { color:#dc2626; } .yt-gr.new { color:#2563eb; font-family:inherit; }
+.yt-mgr { margin-top:2px; font-size:11.5px; height:auto; }
+.yt-fgr { margin-top:2px; font-size:13px; }
 .yt-noad { display:inline-block; font-size:11px; font-weight:800; line-height:15px; padding:0 7px; border-radius:9px; background:#fff7ed; color:#c2410c; border:1px solid #fb923c;
   letter-spacing:.05em; vertical-align:middle; font-family:inherit; }
 .yt-noad.big { font-size:11px; line-height:16px; padding:0 8px; }
@@ -4808,7 +4813,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0940</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0941</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -20306,7 +20311,17 @@ function _ytNote(mt) {
     : '±＝店全体の値を動かした幅（<em class="up">＋押し上げ</em>・<em class="dn">−押し下げ</em>）';
   return '<span class="fx">' + _ytFxHtml(mt.fx) + '</span><span class="gd">' + g + '</span>';
 }
-function _ytTile(mt, x, i, parentSet) {
+// 【v1.0941】伸び率（本人指定・楽天用 v1.1459 と同じ）。下の月を100%として、上の月がどれだけか。
+//   金額の指標（type 'amt'）だけ。比率（ROAS・CVR）・単価には出さない。
+//   base>0 → 上÷下×100（100%以上は緑・未満は赤）／base が 0 で上だけある → 青で「新規」／どちらも0 → 出さない
+function _ytGrowthHtml(top, base, extraCls) {
+  top = +top || 0; base = +base || 0;
+  const c = 'yt-gr' + (extraCls ? ' ' + extraCls : '');
+  if (base > 0) { const p = top / base * 100; return '<div class="' + c + (p >= 100 ? ' up' : ' dn') + '" title="下の月を100%としたときの伸び率（' + _ytYen(top) + ' ÷ ' + _ytYen(base) + '）">' + Math.round(p).toLocaleString('ja-JP') + '%</div>'; }
+  if (top > 0) return '<div class="' + c + ' new" title="下の月は0円（この月から売上・費用が出た）">新規</div>';
+  return '<div class="' + c + '"></div>';
+}
+function _ytTile(mt, x, i, parentSet, baseMap) {
   const code = x.code, name = _ytName(code), img = _ytImg(code), ec = escapeHtml(code), focused = (_ytFocus === code);
   const imgEl = img ? '<img loading="lazy" src="' + escapeHtml(img) + '" onerror="_ytImgErr(this)" class="yt-img">' : '<div class="yt-noimg">画像</div>';
   return '<div class="yt-tile" data-code="' + ec + '" title="' + escapeHtml(name + '（' + code + '）') + '&#10;クリック：選択枠に入れる・もう一度で外す／ダブルクリック：商品-グラフ">'
@@ -20318,16 +20333,18 @@ function _ytTile(mt, x, i, parentSet) {
     + '<div class="yt-nm">' + escapeHtml(name) + '</div>'
     + '<div class="yt-v1">' + _ytValTxt(mt, x, false) + '</div>'
     + '<div class="yt-v2" style="color:' + mt.col + '">' + (mt.type === 'amt' ? x.share.toFixed(1) + '%' : _ytImpTxt(mt, x)) + '</div>'
+    + ((mt.type === 'amt' && baseMap) ? _ytGrowthHtml(x.v, baseMap.get(code) || 0) : '')   // 【v1.0941】伸び率（上の段だけ）
     + (mt.type === 'roas' ? '<div class="yt-v3">' + _ytYen(x.n || 0) + ' <span class="yt-nsh">' + (x.nShare || 0).toFixed(1) + '%</span></div>' + _ytCostsOf(mt).map(k => '<div class="yt-v3">' + _ytCostHtml(k, k === 'sp' ? x.cSp : x.cPr, false) + '</div>').join('') : '')   // 【v1.0892】売上 →【v1.0893】広告費・PR費を分けて
     + '</div>';
 }
 // 【v1.0890】タイルの各行が何かを、指標の種類ごとに具体的に（旧：商品名／指標名／全体への影響 の繰り返し）
-function _ytLabelCol(mt) {
+function _ytLabelCol(mt, withGrowth) {
   const ln = (t, cls, st, tip) => '<div class="yt-lbl ' + (cls || '') + '"' + (st ? ' style="' + st + '"' : '') + (tip ? ' title="' + tip + '"' : '') + '>' + t + '</div>';
   const v = (mt.type === 'amt') ? '金額' : (mt.type === 'cpa') ? '獲得単価' : (mt.type === 'cvr') ? 'CVR' : 'ROAS';
   const w = (mt.type === 'amt') ? '全体に占める%' : '全体を動かす幅';
   return '<div class="yt-lblcol"><div style="height:80px"></div>'
     + ln('商品名', 'h14 mt3') + ln(v, 'h15') + ln(w, 'h15', 'color:' + mt.col)
+    + ((mt.type === 'amt' && withGrowth) ? ln('伸び率', 'h14', '', '下の月を100%としたときの、この月の伸び率（100%以上＝緑・未満＝赤・下の月に無い＝新規）') : '')   // 【v1.0941】
     + (mt.type === 'roas' ? ln((YT_NUM_LABEL[mt.num] || '売上') + '・%', 'h14', '', 'この商品の' + (YT_NUM_LABEL[mt.num] || '売上') + 'と、店全体の' + (YT_NUM_LABEL[mt.num] || '売上') + 'に占める%') + _ytCostsOf(mt).map(k => ln(YT_COST[k].label, 'h14', 'color:' + YT_COST[k].col, 'この商品の' + YT_COST[k].label)).join('') : '') + '</div>';
 }
 // 【v1.0895】PR系の段の月の列に出す「実測で補正」／「補正なし」
@@ -20336,7 +20353,7 @@ function _ytCalTag(cal) {
   if (cal.ok) return '<div class="yt-mcal ok" title="' + escapeHtml('PR費(7%超)をPRレポートの実測に合わせて補正しています\n推定の合計 ' + yen(cal.est) + ' → 実測 ' + yen(cal.act) + '（各商品の推定 ×' + cal.k.toFixed(2) + '）') + '">実測で補正 ×' + cal.k.toFixed(2) + '</div>';
   return '<div class="yt-mcal ng" title="' + escapeHtml('この期間はPRレポート（PRオプション実績）の日別がそろっていないので、料率からの推定のままです') + '">補正なし（推定のまま）</div>';
 }
-function _ytMonthCell(m, mt, r, isTop) {
+function _ytMonthCell(m, mt, r, isTop, baseTotal) {
   const t = m.has ? _ytTotTxt(mt, r) : '—';
   return '<div class="yt-mcell' + (isTop ? ' top' : '') + '">'
     + '<div class="yt-mtag">' + m.title + '</div>'
@@ -20345,6 +20362,7 @@ function _ytMonthCell(m, mt, r, isTop) {
     + (m.noDaily ? '<div class="yt-mnod" title="この月は1日からの日別データが無いので、日数をそろえずに月全体で出しています">月全体（日別なし）</div>' : '')
     + '<div class="yt-mtl">' + (mt.type === 'amt' ? '合計' : '全体') + '</div>'
     + '<div class="yt-mtv" style="color:' + mt.col + ';font-size:' + (t.length > 9 ? 11 : 13) + 'px">' + t + '</div>'
+    + ((mt.type === 'amt' && baseTotal != null && m.has && r) ? _ytGrowthHtml(r.total, baseTotal, 'yt-mgr') : '')   // 【v1.0941】合計の伸び率（上の段だけ）
     + (r && r.ex ? '<div class="yt-mex" title="設定PRオプ料率が分からない商品は、PR系の計算から外しています">料率未取得' + r.ex + '件を除外</div>' : '')
     + (mt.pr && m.prCal ? _ytCalTag(m.prCal) : '')
     + '</div>';
@@ -20379,7 +20397,7 @@ function renderYtTop() {
       + '</div>';
     const SM = _ytShownMetrics(true), GS = _ytGroupStarts(SM);
     const bl = mt => GS.has(mt.k) ? ' yt-gs' : '';
-    const cell = (mt, r) => {
+    const cell = (mt, r, nr) => {
       const all = (r && r.all) || [], k = all.findIndex(y => y.code === _ytFocus);
       if (k < 0) return '<td class="yt-fc' + bl(mt) + ' none">—<div>数字なし</div></td>';
       const x = all[k];
@@ -20387,6 +20405,7 @@ function renderYtTop() {
         + '<div class="yt-frk"><span style="background:' + (k < 3 ? mt.col : '#94a3b8') + '">' + (k + 1) + '</span><small>位／' + all.length + '</small></div>'
         + '<div class="yt-fv1">' + _ytValTxt(mt, x, true) + '</div>'
         + '<div class="yt-fv2" style="color:' + mt.col + '">' + (mt.type === 'amt' ? x.share.toFixed(1) + '%' : _ytImpTxt(mt, x)) + '</div>'
+        + ((mt.type === 'amt' && nr) ? _ytGrowthHtml(x.v, ((nr.all || []).find(y => y.code === _ytFocus) || {}).v || 0, 'yt-fgr') : '')   // 【v1.0941】すぐ下の月と比べた伸び率
         + (mt.type === 'roas' ? '<div class="yt-fv3" title="' + (YT_NUM_LABEL[mt.num] || '売上') + '">' + (YT_NUM_LABEL[mt.num] || '売上') + ' ' + _ytYen(x.n || 0) + ' <span class="yt-nsh">' + (x.nShare || 0).toFixed(1) + '%</span></div>'   // 【v1.0892】売上（分子）
             + _ytCostsOf(mt).map(k => '<div class="yt-fv3">' + _ytCostHtml(k, k === 'sp' ? x.cSp : x.cPr, true) + '</div>').join('') : '')   // 【v1.0893】広告費・PR費を分けて
         + '<div class="yt-fv4">' + (mt.type === 'amt' ? '合計 ' : '全体 ') + _ytTotTxt(mt, r) + '</div></td>';
@@ -20397,7 +20416,12 @@ function renderYtTop() {
       + '<div class="yt-mtag">' + m.title + '</div><div class="yt-mym">' + _ytYmLbl(m.ym) + '</div>'
       + (m.md ? '<div class="yt-mday">1〜' + m.md + '日</div>' : '') + (m.noDaily ? '<div class="yt-mnod">月全体（日別なし）</div>' : '')
       + (m.prCal ? _ytCalTag(m.prCal).replace('実測で補正', 'PR実測で補正').replace('補正なし（推定のまま）', 'PR補正なし') : '')
-      + '</td>' + SM.map(mt => cell(mt, m.res && m.res[mt.k])).join('') + '</tr>').join('');
+      + '</td>' + SM.map(mt => {
+          // 【v1.0941】絞り込み中は、各月を「すぐ下の月」と比べる。日数がそろわない組（途中の今月×まるまるの前月）は出さない
+          const nx = M[i + 1];
+          const ok = nx && nx.has && m.has && nx.res && ((m.md || null) === (nx.md || null));
+          return cell(mt, m.res && m.res[mt.k], ok ? nx.res[mt.k] : null);
+        }).join('') + '</tr>').join('');
     html += '<table class="yt-ftable"><thead><tr><th class="yt-fm">月</th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>';
     area.innerHTML = html;
     try { const fb = area.querySelector('.yt-focusbar'); const h = fb ? fb.offsetHeight + 10 : 0; area.querySelectorAll('.yt-ftable thead th').forEach(th => { th.style.top = h + 'px'; }); } catch (e) {}   // 【v1.0888】見出しは帯の下に貼り付く
@@ -20410,9 +20434,13 @@ function renderYtTop() {
         + '<div class="yt-rows">'
         + M.map((m, i) => {
             const r = m.res ? m.res[mt.k] : null;
+            // 【v1.0941】伸び率は上の段だけ。比べる相手＝すぐ下の段（前月／前年同月／比較する月）。金額の指標だけ
+            const nx = (i === 0 && mt.type === 'amt') ? M[i + 1] : null;
+            const nr = (nx && nx.has && nx.res) ? nx.res[mt.k] : null;
+            const baseMap = nr ? new Map((nr.all || []).map(y => [y.code, y.v])) : null;
             const body = !m.has ? '<div class="yt-nodata">この月のデータがありません</div>'
-              : (r && r.list.length ? _ytLabelCol(mt) + r.list.map((x, j) => _ytTile(mt, x, j, parentSet)).join('') : '<div class="yt-nodata">該当する商品がありません</div>');
-            return '<div class="yt-row' + (i ? ' sub' : '') + '">' + _ytMonthCell(m, mt, r, i === 0) + '<div class="yt-tiles">' + body + '</div></div>';
+              : (r && r.list.length ? _ytLabelCol(mt, !!baseMap) + r.list.map((x, j) => _ytTile(mt, x, j, parentSet, baseMap)).join('') : '<div class="yt-nodata">該当する商品がありません</div>');
+            return '<div class="yt-row' + (i ? ' sub' : '') + '">' + _ytMonthCell(m, mt, r, i === 0, nr ? nr.total : null) + '<div class="yt-tiles">' + body + '</div></div>';
           }).join('')
         + '</div></div>';
     });
