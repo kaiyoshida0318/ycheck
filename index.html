@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0941 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0942 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3672,7 +3672,11 @@ table.rank-table td.rank-legend-col-row {
 .pe-day-tbl tr.pe-bidchg td { border-top: 2px dashed #7c2d12; border-bottom: 2px dashed #7c2d12; }   /* 【v1.0920】紫→こげ茶（入札価格の色） */
 .pe-day-tbl tr.pe-bidchg td:first-child { border-left: 2px dashed #7c2d12; }
 .pe-day-tbl tr.pe-bidchg td:last-child { border-right: 2px dashed #7c2d12; }
-.pe-day-tbl tr.pe-mon-edge td { border-bottom: 2px solid #cbd5e1; }
+.pe-day-tbl tr.pe-mon-edge td { border-bottom: 2px solid #94a3b8; }   /* 【v1.0942】月の境目を少し濃く（#cbd5e1 → #94a3b8。本人指定） */
+/* 【v1.0942】商品モーダルの表（商品-日月別・商品-調整・商品-推移）では、行にカーソルを乗せたときの青い枠（v147 の tbody tr:hover td）を出さない（本人指定）。
+   ★PRオプ料率を変えた日のピンクの枠（td.pe-prchg・§318）は残す。 */
+#productEditModal tbody tr:hover td:not(.pe-prchg) { box-shadow: none; }
+#productEditModal tbody tr:hover td.pe-prchg { box-shadow: inset 0 0 0 1.5px #ec4899; }
 .pe-day-foot { font-size: 0.72rem; color: var(--text3); line-height: 1.7; padding: 8px 4px 0; }
 .pe-table-wrap td.pe-date.pe-sale { position: relative; cursor: help; }
 .pe-table-wrap td.pe-date.pe-sale::before { content: ''; position: absolute; left: 0; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: #ec4899; }   /* 【v1.0914】セールの日 */
@@ -4813,7 +4817,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0941</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0942</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
