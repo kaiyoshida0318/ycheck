@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0943 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0944 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4828,7 +4828,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0943</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0944</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24819,25 +24819,27 @@ function peRenderAdj() {
   const G = { ad: { h: '#fae6ce', b: '#fdf8f1', c: '#b45309' }, bid: { h: '#ecdccd', b: '#faf5f0', c: '#7c2d12' },   /* 【v1.0916】こげ茶 */
               pr: { h: '#fbd4e6', b: '#fdf2f8', c: '#db2777' }, rev: { h: '#cfe9dc', b: '#f1faf5', c: '#0f8a52' } };
   const COLS = [
+    // 【v1.0944】並びを まとまりごとに（本人：広告・PR・広告の順で気持ち悪い）：入札価格｜広告（表示→クリック→CTR→CPC→広告実績額→広告個数→広告売上→広告ROAS→CVR→平均獲得単価）｜PR（PR→PR実績額→PR売上ROAS）｜売上（SEO売上→総売上）。gs＝まとまりの始まり（左に太い線）
     { t: isDay ? '入札<br>価格' : '入札価格<br>(平均)', g: 'bid', f: r => (r.bid == null ? dash : '¥' + (Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
     { t: 'クリック<br>数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
     { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
     { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '広告実績額 ÷ クリック数' },
     { t: '広告<br>実績額', g: 'ad', f: r => y0(r.adCost), strong: true },   /* 【v1.0943】見出しを2行に（列が増えても横スクロールを出さない） */   // 【v1.0924】実績額 → 広告実績額（本人指定）
-    { t: isDay ? 'PR' : 'PR<br>(平均)', key: 'pr', g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
-    { t: 'PR<br>実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
-    { t: 'PR売上<br>ROAS', g: 'pr', f: r => (r.pronly == null ? dash : Math.round(r.pronly).toLocaleString('ja-JP') + '%'), tip: 'PR売上ROAS（推定）＝ 総売上 ÷ PR実績額(7%超・推定) × 100。広告費は分母に入れない（PRオプ料率を7％より上げている分だけで見た効率）。料率7％だけの日は「—」' },   // 【v1.0943】PR のまとまりの右端
     { t: '広告<br>個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）。Yahoo のレポートは1件を0と出すので、売上があって0の日は1に戻しています' },
     { t: '広告<br>売上', g: 'ad',  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
     { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
     { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
     { t: '平均<br>獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '広告実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
-    { t: 'SEO<br>売上',  g: 'rev', f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
+    { t: isDay ? 'PR' : 'PR<br>(平均)', key: 'pr', gs: true, g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
+    { t: 'PR<br>実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
+    { t: 'PR売上<br>ROAS', g: 'pr', f: r => (r.pronly == null ? dash : Math.round(r.pronly).toLocaleString('ja-JP') + '%'), tip: 'PR売上ROAS（推定）＝ 総売上 ÷ PR実績額(7%超・推定) × 100。広告費は分母に入れない（PRオプ料率を7％より上げている分だけで見た効率）。料率7％だけの日は「—」' },   // 【v1.0943】PR のまとまりの右端
+    { t: 'SEO<br>売上',  g: 'rev', gs: true, f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
     { t: '総売上',   g: 'rev', f: r => y0(r.rev) }   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
   ];
   const wk = ['日', '月', '火', '水', '木', '金', '土'];
-  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + G[c.g].c + '"'
+  const _gsB = 'border-left:2px solid #94a3b8;';   // 【v1.0944】まとまりの境目
+  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + G[c.g].c + ';' + (c.gs ? _gsB : '') + '"'
     + (c.tip ? ' title="' + escapeHtml(c.tip) + '"' : '') + '>' + c.t + '</th>').join('') + '</tr>';
   const desc = rows.slice().reverse();
   const body = desc.map((r, i) => {
@@ -24860,9 +24862,9 @@ function peRenderAdj() {
       + first + COLS.map(c => {
           if (c.key === 'pr' && prChg) {
             const a = Math.round(older.prRate), b = Math.round(r.prRate);
-            return '<td class="pe-prchg" title="この日に PRオプ料率が ' + a + '% → ' + b + '% に変わりました"><span class="pe-prchg-from">' + a + '→</span>' + b + '%</td>';
+            return '<td class="pe-prchg" style="' + (c.gs ? _gsB : '') + '" title="この日に PRオプ料率が ' + a + '% → ' + b + '% に変わりました"><span class="pe-prchg-from">' + a + '→</span>' + b + '%</td>';
           }
-          return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + '">' + c.f(r) + '</td>';
+          return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + (c.gs ? _gsB : '') + '">' + c.f(r) + '</td>';
         }).join('') + '</tr>';
   }).join('');
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
