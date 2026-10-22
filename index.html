@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0944 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0946 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4828,7 +4828,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0944</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0946</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24692,7 +24692,9 @@ function peRenderAdj() {
   const hasPr = !!prRates;
   const hasPrBar = rows.some(r => r.prKnown && r.prOver > 0);   // 【v1.0926】PR実績額（推定）の棒を広告実績額の上に積む（日別・月別とも）
   const C = { seo: '#7c3aed', ad: '#f97316', cost: '#3b82f6', pr: '#be185d', prBar: '#ec4899', roas: '#10b981', bid: '#7c2d12', prRoas: '#0891b2' };   // 【v1.0943】PR売上ROAS＝シアン（緑の広告ROAS・桃の PR 系と分ける）
-  const hasPrRoas = rows.some(r => r.pronly != null);   // 【v1.0943】PR売上ROAS（総売上 ÷ PR実績額(7%超・推定)）が出せる日があるか   // 【v1.0926】料率の線は濃いピンク（#be185d）、PR実績額の棒は商品-日月別と同じピンク（#ec4899）   // 【v1.0916】入札価格は紫→こげ茶（SEO売上の紫とまぎれるため。広告の橙の仲間）
+  // 【v1.0945】PR売上ROAS → PR広告売上ROAS に差し替え（本人と相談）。PR売上ROAS は「料率の裏返し」で売れ方では動かないため。
+  //   PR広告売上ROAS ＝ 総売上 ÷（広告実績額＋PR実績額(7%超・推定)）× 100（_peRows の prsr。商品-日月別の線と同じ定義）
+  const hasPrRoas = rows.some(r => r.prsr != null);   // 【v1.0926】料率の線は濃いピンク（#be185d）、PR実績額の棒は商品-日月別と同じピンク（#ec4899）   // 【v1.0916】入札価格は紫→こげ茶（SEO売上の紫とまぎれるため。広告の橙の仲間）
   // ---- 系列ボタン（押すと消える／戻る） ----
   {
     const _lg = document.getElementById('peAdjLegend');
@@ -24705,7 +24707,7 @@ function peRenderAdj() {
       + (hasPr ? _sw(C.pr, 'PRオプ料率', 'ピンクの階段の線（右端の目盛り %）: PRオプの料率。調整-PRオプで入れた日別の料率。変えた所に「30%→28%」の札（日別だけ）', true) : '')
       + '<span class="pe-sw-sep"></span>'
       + _sw(C.roas, '広告ROAS', '線（右の目盛り %）: 広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100&#10;1,000% を超えた日は上端で止めて▲と本当の値を書く', true)
-      + (hasPrRoas ? _sw(C.prRoas, 'PR売上ROAS', '線（専用の目盛り %）: PR売上ROAS（推定）＝ 総売上 ÷ PR実績額(7%超・推定) × 100&#10;広告費は分母に入れない。料率7%だけの日（PR実績額0）は線を切る', true) : '')   /* 【v1.0943】広告ROAS の右 */
+      + (hasPrRoas ? _sw(C.prRoas, 'PR広告売上ROAS', '線（専用の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額(7%超・推定)）× 100&#10;広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は線を切る', true) : '')   /* 【v1.0943】広告ROAS の右 →【v1.0945】PR広告売上ROAS に差し替え */
       + (hasBid ? _sw(C.bid, '入札価格', 'こげ茶の階段の線（右端の目盛り ¥）: 入札価格。変えた所に「¥30→¥25」の札（日別だけ）', true) : '')
       + '<span class="pe-sw-hint">ボタンを押すと、その項目を消す／戻す</span>';
   }
@@ -24740,7 +24742,7 @@ function peRenderAdj() {
           borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y3', order: 0 });
       }
       // 【v1.0943】PR売上ROAS（専用の目盛り y4）。料率が低いと 4,000% を超えるので、広告ROAS（1,000% で上限）とは目盛りを分ける
-      if (hasPrRoas) ds.push({ type: 'line', label: 'PR売上ROAS', data: rows.map(r => r.pronly == null ? null : Math.round(r.pronly)), borderColor: C.prRoas, backgroundColor: C.prRoas,
+      if (hasPrRoas) ds.push({ type: 'line', label: 'PR広告売上ROAS', data: rows.map(r => r.prsr == null ? null : Math.round(r.prsr)), borderColor: C.prRoas, backgroundColor: C.prRoas,
         borderWidth: 2.6, pointRadius: (rows.length > 45 ? 2.5 : 3.5), pointHoverRadius: 6, tension: 0.3, yAxisID: 'y4', order: 1, spanGaps: false, _capTextColor: '#0e7490' });
       if (hasBid) ds.push({ type: 'line', label: '入札価格', data: rows.map(r => r.bid), borderColor: C.bid, backgroundColor: C.bid,
         borderWidth: 2.6, pointRadius: 0, pointHoverRadius: 5, stepped: 'before', spanGaps: true, yAxisID: 'y2', order: 0 });
@@ -24765,7 +24767,7 @@ function peRenderAdj() {
                   if (l === '入札価格') return '入札価格: ' + (v == null ? '—' : '¥' + v);
                   if (l === 'PRオプ料率') return 'PRオプ料率: ' + (v == null ? '—' : v + '%');   // 【v1.0924】
                   if (l === 'PR実績額') return 'PR実績額(7%超・推定): ' + yen(v);   // 【v1.0926】
-                  if (l === 'PR売上ROAS') { const rv = c.dataset._raw ? c.dataset._raw[c.dataIndex] : v; return 'PR売上ROAS(推定): ' + (rv == null ? '—' : Math.round(rv).toLocaleString('ja-JP') + '%'); }   // 【v1.0943】
+                  if (l === 'PR広告売上ROAS') { const rv = c.dataset._raw ? c.dataset._raw[c.dataIndex] : v; return 'PR広告売上ROAS(推定): ' + (rv == null ? '—' : Math.round(rv).toLocaleString('ja-JP') + '%'); }   // 【v1.0943】
                   return l + ': ' + yen(v);
                 },
                 footer: (items) => { const r = items.length ? rows[items[0].dataIndex] : null; return r ? ('総売上 ' + yen(r.rev)) : ''; }
@@ -24790,13 +24792,13 @@ function peRenderAdj() {
                  ticks: { font: { size: 12 }, color: C.pr, stepSize: 2, callback: (v) => v + '%' } },
             // 【v1.0943】PR売上ROAS（%）の専用の目盛り
             y4: { display: hasPrRoas, position: 'right', beginAtZero: true, grid: { drawOnChartArea: false },
-                 title: { display: true, text: 'PR売上ROAS', font: { size: 12, weight: '700' }, color: C.prRoas },
+                 title: { display: true, text: 'PR広告売上ROAS', font: { size: 12, weight: '700' }, color: C.prRoas },
                  ticks: { font: { size: 12 }, color: '#0e7490', callback: (v) => Number(v).toLocaleString('ja-JP') + '%' } }
           }
         }
       };
       _peApplyRoasCap(ds.find(d => d.label === '広告ROAS'), _adjCfg.options.scales.y1, _adjCfg.options.layout, PE_ADJ_ROAS_MAX);
-      { const _prd = ds.find(d => d.label === 'PR売上ROAS'); if (_prd) _peApplyRoasCap(_prd, _adjCfg.options.scales.y4, _adjCfg.options.layout); }   // 【v1.0943】飛び抜けた日だけ上端で止める（§301 の自動）   // 【v1.0915】広告ROAS の目盛りに上限 →【v1.0924】1,000% で固定
+      { const _prd = ds.find(d => d.label === 'PR広告売上ROAS'); if (_prd) _peApplyRoasCap(_prd, _adjCfg.options.scales.y4, _adjCfg.options.layout); }   // 【v1.0943】飛び抜けた日だけ上端で止める（§301 の自動）   // 【v1.0915】広告ROAS の目盛りに上限 →【v1.0924】1,000% で固定
       _peAdjChart = new Chart(cv.getContext('2d'), _adjCfg);
       _peAdjChart.data.datasets.forEach((d, i) => { if (_peAdjHidden.has(d.label)) _peAdjChart.setDatasetVisibility(i, false); });
       // 【v1.0937】消している系列の目盛りは出さない（商品を変えても・開き直しても同じ）
@@ -24833,7 +24835,7 @@ function peRenderAdj() {
     { t: '平均<br>獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '広告実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
     { t: isDay ? 'PR' : 'PR<br>(平均)', key: 'pr', gs: true, g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
     { t: 'PR<br>実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
-    { t: 'PR売上<br>ROAS', g: 'pr', f: r => (r.pronly == null ? dash : Math.round(r.pronly).toLocaleString('ja-JP') + '%'), tip: 'PR売上ROAS（推定）＝ 総売上 ÷ PR実績額(7%超・推定) × 100。広告費は分母に入れない（PRオプ料率を7％より上げている分だけで見た効率）。料率7％だけの日は「—」' },   // 【v1.0943】PR のまとまりの右端
+    { t: 'PR広告<br>売上ROAS', g: 'pr', strong: true, f: r => (r.prsr == null ? dash : salesRoasCellHtml(r.prsr, PR_SALES_ROAS_TH).replace('font-weight:700', 'font-weight:inherit')),   /* 太さは広告ROAS（td.pe-strong＝800）にそろえる */ tip: 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は「—」\n色：' + PR_SALES_ROAS_TH.g + '%以上＝緑／' + PR_SALES_ROAS_TH.y + '%以上＝茶／' + PR_SALES_ROAS_TH.o + '%以上＝橙／それ未満＝赤（調整-PRオプの表と同じ）' },   /* 【v1.0946】調整-PRオプの表と同じ色分け（salesRoasCellHtml＋PR_SALES_ROAS_TH）・広告ROAS と同じ太字 */   /* 【v1.0945】PR売上ROAS から差し替え */   // 【v1.0943】PR のまとまりの右端
     { t: 'SEO<br>売上',  g: 'rev', gs: true, f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
     { t: '総売上',   g: 'rev', f: r => y0(r.rev) }   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
   ];
@@ -25318,7 +25320,7 @@ function openProductEditModal(code, _openOpt) {
   //   ★名前は peRenderAdj の系列名・系列ボタンと同じ文字にすること（_peToggleSeries は名前で引く）
   if (!(_openOpt && _openOpt.keepTab)) {
     // 【v1.0943】PR売上ROAS を足した：調整-入札価格からは消す／調整-PRオプからは出す（広告実績額・広告ROAS を消す）
-    const _pre = (state.currentView === 'ad-tune') ? ['SEO売上', 'PR実績額', 'PRオプ料率', 'PR売上ROAS']
+    const _pre = (state.currentView === 'ad-tune') ? ['SEO売上', 'PR実績額', 'PRオプ料率', 'PR広告売上ROAS']   /* 【v1.0945】名前を差し替え */
                : (state.currentView === 'pro-tune') ? ['広告売上', '入札価格', '広告実績額', '広告ROAS'] : null;
     if (_pre) { _peAdjHidden.clear(); _pre.forEach(l => _peAdjHidden.add(l)); }
   }
