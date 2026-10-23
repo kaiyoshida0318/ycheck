@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0957 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0958 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1961,6 +1961,7 @@ body.col-resize-on td[data-resize-key] .col-resize-handle { pointer-events: auto
 /* ONのときは境目をうっすら見せる（どこを掴めるか分かるように） */
 body.col-resize-on th[data-resize-key] .col-resize-handle { background: rgba(37,99,235,0.22); }
 body.col-resize-on .data-grid thead th { box-shadow: inset -1px 0 0 rgba(37,99,235,0.25); }
+body.col-resize-on thead th { cursor: default; }   /* 【v1.0958】幅調整中は見出しで並び替えしない＝指マークにしない */
 /* 【v1.0865】幅調整モードの一番下の行（列ごとの幅の数値入力＋🔒固定）。表の下端に貼り付く */
 tfoot.yc-wrow-foot td.yc-wrow-td { position: sticky; bottom: 0; z-index: 4; background: #fff7e0 !important;
   border-top: 2px solid #f59e0b; padding: 4px 3px !important; text-align: center; overflow: hidden; }
@@ -4897,7 +4898,7 @@ tr.nb-empty .nb-in { border-color: var(--red); }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0957</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0958</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -13115,7 +13116,7 @@ const STATUS_DISPLAY_LABEL = {
   'PR△-親-下げ挑戦中':   'PR△-親<br>下げ挑戦中',
   'PR△-親-飛ぶ手前固定': 'PR△-親<br>飛ぶ手前固定',   /* 【v1.0734】'PRオプ△-親' → 'PR△-親'（他とそろえた） */
   'PR△-子-7％固定':      'PR△-子<br>7％固定',
-  'PR△-飛ぶ手前固定':    'PR△<br>飛ぶ手前固定',
+  'PR△-飛ぶ手前固定':    'PR△<br>飛ぶ手前<br>固定',   /* 【v1.0958】本人指定で3行に */
   'PR×':                 'PR✕<br>放置',             /* 【v1.0734】v1.0716の「PR✕-放置」を2行に */
   '入札△-調整中':        '入札△<br>調整中',          /* 【v1.0734】 */
   '入札×-調整中':        '入札△<br>調整中',          /* 【v1.0734】旧名も同じ見た目 */
@@ -29245,6 +29246,29 @@ function setColResizeMode(on) {
   try { _colFitFixedTables(); if (_colResizeOn) _wrowRefresh(); } catch (e) {}
 }
 window.setColResizeMode = setColResizeMode;
+// ============================================================================
+// 【v1.0958】★幅調整モード中は、見出しをクリックしても並び替え（昇順／降順）しない（本人指定）。
+//   列の境目を掴みそこねて見出しを押すたびに、表の並びが変わってしまっていたため。
+//   ・document の【捕獲フェーズ】で止める → wireSort（thead への委譲）・<th onclick="_cbSort(..)"> など、
+//     並び替えの付け方が画面ごとに違っても、全部まとめて止まる。
+//   ・止めるのは thead の中のクリックだけ。列幅のつまみ（.col-resize-handle）と、見出しの中の入力欄・チェックボックス等は通す。
+//   ・表の一番下の幅入力（tfoot）は thead ではないので関係ない。
+//   ・モードを終えれば、今までどおり見出しで並び替えできる。
+// ============================================================================
+let _colSortBlockToastAt = 0;
+document.addEventListener('click', (e) => {
+  if (!_colResizeOn) return;
+  const t = e.target;
+  if (!t || !t.closest) return;
+  if (!t.closest('thead')) return;
+  if (t.closest('.col-resize-handle, input, select, textarea, label')) return;
+  e.stopPropagation(); e.preventDefault();
+  const now = Date.now();
+  if (now - _colSortBlockToastAt > 4000) {
+    _colSortBlockToastAt = now;
+    try { showToast('幅調整中は見出しを押しても並び替えしません（「⇔ 幅 ▾」→「幅調整を終える」で元に戻ります）', 'info'); } catch (e2) {}
+  }
+}, true);
 
 function openViewPrefsModal() {
   const m = document.getElementById('viewPrefsModal');
