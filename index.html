@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0946 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0949 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4828,7 +4828,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0946</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0949</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5638,7 +5638,7 @@ th.col-sroas { background-color:#e7d5f5; }
     <div class="view" id="view-graphdata">
       <div class="card">
         <h3 class="card-title" id="zdCardTitle">全-月別データ</h3>
-        <div class="filters" style="align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="filters" id="zdToolbar" style="align-items:center;gap:8px;flex-wrap:wrap">
           <!-- 【v1.0546】画面内の月別/日別トグル(.dm-seg #zdDayMonthSeg)は撤去。
                粒度の切替はナビの「全-月別データ／全-日別データ」タブが担う。
                _zdSetGrain() は残置（他所からの呼び出し・URLパラメータ用）。 -->
@@ -5658,40 +5658,43 @@ th.col-sroas { background-color:#e7d5f5; }
           </span>
           <span class="zd-range-info" id="zdDayRangeInfo" style="display:none"></span>
           <span class="dm-nodata" id="zdDayNoData" style="display:none">日別データがまだありません</span>
-          <span class="filter-label" id="zdModeLabel">表示</span>
-          <button type="button" class="ig-preset-btn zd-mode-btn on" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
-          <button type="button" class="ig-preset-btn zd-mode-btn" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
-          <!-- 【v1.0508】各月の直後にSEO売上トップ15のサムネ帯を差し込むトグル -->
-          <span id="zdSeoWrap" style="margin-left:14px;display:inline-flex;gap:4px;align-items:center">
-            <span class="filter-label">SEO売上トップ15</span>
-            <button type="button" id="zdSeoOn" onclick="_zdSetSeoShow(true)">表示あり</button>
-            <button type="button" id="zdSeoOff" onclick="_zdSetSeoShow(false)">表示なし</button>
+          <!-- 【v1.0948】表上ツールバー（ADcheck v1.1476「全-月別データ_表上ツールバー_仕様書」準拠）
+               ・「表示」の文字は撤去。［通常｜前年同月比］はくっつけたペアボタン（青）
+               ・［月全体｜月途中（1〜N日）］のペアボタン（緑）。最新の日別データが月末のときは丸ごと隠す
+               ・SEO売上トップ15／比率表記は「あり／なし」の2ボタン → 1つのON/OFFスイッチ（_tgPaint）
+               ・左＝ペアボタンと配色凡例／右（margin-left:auto）＝スイッチと操作ボタン。1920pxで1行に収める -->
+          <span id="zdModePair" style="display:inline-flex;gap:0">
+            <button type="button" class="zd-mode-btn on" id="zdModeNormal" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
+            <button type="button" class="zd-mode-btn" id="zdModeYoy" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
           </span>
-          <!-- 【v1.0569】「料率別に分ける」トグルは撤去。料率別（合計 / 7%超 / 7%）がこの表の既定になったため、
-               _zdSplit は常に true。切替を戻したくなったらここにボタンを置き直すだけでよい。 -->
-          <!-- 【v1.0566】内訳列の金額の下に構成比（-7%超 ＋ -7% ＝ 100%）を出すかどうか -->
-          <span id="zdRatioWrap" style="margin-left:12px;display:inline-flex;gap:4px;align-items:center">
-            <span class="filter-label" title="-7%超 と -7% の金額の下に、合計に対する構成比を表示します（2つ足すと100%）">比率表記</span>
-            <button type="button" id="zdRatioOn" onclick="_zdSetRatio(true)">あり</button>
-            <button type="button" id="zdRatioOff" onclick="_zdSetRatio(false)">なし</button>
+          <span id="zdCutPair" style="display:none;gap:0">
+            <button type="button" id="zdCutFull" onclick="_zdSetDayCut('full')" title="各月の1日〜末日の合計（今まで通り）">月全体</button>
+            <button type="button" id="zdCutSame" onclick="_zdSetDayCut('same')">月途中</button>
           </span>
-          <!-- 【v1.0569】「検算列」トグルは撤去（_zdVerify は常に false ＝ 実効料率/設定料率の列は出さない）。
-               列の定義は MI_COLS に verify:true のまま残してあるので、戻したくなったらここにボタンを置き直す。 -->
-          <!-- 【v1.0569】配色の凡例をツールバーに常時表示（同じ列の中での相対評価）。
-               色は本文セルと同じ c-g1 / c-g2 / c-bk / c-o / c-r を使うので、凡例と実物が必ず一致する。 -->
+          <!-- 【v1.0949】SEO売上トップ15・比率表記・計算式は月途中ボタンの右（本人指定）。左＝表の見せ方を変える操作をまとめる -->
+          <!-- 【v1.0508】各月の直後にSEO売上トップ15のサムネ帯を差し込むスイッチ（月別だけ） -->
+          <span id="zdSeoWrap" style="display:inline-flex;align-items:center">
+            <button type="button" id="zdSeoOn" onclick="_zdSetSeoShow(!_zdSeoShow)">SEO売上トップ15</button>
+          </span>
+          <!-- 【v1.0566】内訳列の金額の下に構成比を出すスイッチ（商品-日月別データの「比率表記」と同じ _zdRatio を見る） -->
+          <span id="zdRatioWrap" style="display:inline-flex;align-items:center">
+            <button type="button" id="zdRatioOn" onclick="_zdSetRatio(!_zdRatio)">比率表記</button>
+          </span>
           <!-- 【v1.0756】列見出しの下に計算式を出す/消す（1クリック） -->
           <button type="button" class="fx-toggle-btn" onclick="fxToggle()">🧮 計算式</button>
-          <span id="zdColorLegend" style="margin-left:14px;display:inline-flex;gap:9px;align-items:center;font-size:12px">
+          <span id="zdColorLegend" style="margin-left:6px;display:inline-flex;gap:8px;align-items:center;font-size:11px">
             <span class="filter-label" title="同じ列の中で月（日）どうしを比べた相対評価です。詳しくは「❓ 下部説明」の「色の意味」を参照">配色:</span>
             <b class="c-g1">上位10%</b><b class="c-g2">上位20%</b><b class="c-bk">中間</b><b class="c-o">下位20%</b><b class="c-r">下位10%</b>
             <span id="zdColorScope" style="color:var(--text3)">（直近1年）</span>
           </span>
-          <!-- 【v1.0521】この表の表示内容をCSV出力（右端配置） -->
-          <!-- 【v1.0552】表の周りの説明文はここを押したときだけ出す（既定は畳む） -->
-          <button type="button" id="zdHelpBtn" onclick="_zdSetHelp(!_zdHelp)">❓ 下部説明</button>
-          <button class="btn sm ghost" id="btnDownloadZenMonthlyCsv" type="button" onclick="downloadZenMonthlyCsv()" data-tooltip="この表の表示内容（月×各指標＋送り込み売上）を、今の並び順（通常／前年同月比）のままCSV出力します">⬇ この表をCSV</button>
+          <span id="zdRightTools" style="margin-left:auto;display:inline-flex;gap:6px;align-items:center">
+            <!-- 【v1.0552】表の周りの説明文はここを押したときだけ出す（既定は畳む） -->
+            <button type="button" id="zdHelpBtn" onclick="_zdSetHelp(!_zdHelp)">❓ 下部説明</button>
+            <button class="btn sm ghost" id="btnDownloadZenMonthlyCsv" type="button" onclick="downloadZenMonthlyCsv()" data-tooltip="この表の表示内容を、今の並び順（通常／前年同月比）・集計範囲（月全体／月途中）のままCSV出力します">⬇ この表をCSV</button>
+          </span>
         </div>
-        <!-- 【v1.0521/v1.0552】送り込み売上の説明は「❓ 説明」パネルへ移動（常時表示をやめた） -->
+        <!-- 【v1.0948】月途中のときだけ出す緑の帯（月全体と見間違えないため） -->
+        <div id="zdDayBanner" style="display:none"></div>
         <div id="zdTableWrap" class="table-wrap" style="overflow:auto;max-height:70vh"></div>
       </div>
     </div>
@@ -15553,7 +15556,9 @@ function _zdSetRatioUI() {
   const off = 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
   // 【v1.0798】★ボタンは全-月別データと商品-日月別データの2か所にある。両方そろえること。
   //   片方だけ更新すると「押したのに色が変わらないボタン」ができる。
-  [['zdRatioOn', 'zdRatioOff'], ['miRatioOn', 'miRatioOff']].forEach(function (ids) {
+  // 【v1.0948】全-月別データ側はON/OFFスイッチ（_tgPaint）。商品-日月別データ側は従来の「あり／なし」のまま。
+  _tgPaint(document.getElementById('zdRatioOn'), null, _zdRatio, '#16a34a', '比率表記');
+  [['miRatioOn', 'miRatioOff']].forEach(function (ids) {
     const a = document.getElementById(ids[0]), c = document.getElementById(ids[1]);
     if (a) a.style.cssText = base + (_zdRatio ? on : off);
     if (c) c.style.cssText = base + (!_zdRatio ? on : off);
@@ -15578,7 +15583,7 @@ function _zdSetHelpUI() {
   if (!b) return;
   // 【v1.0880】ボタン名「説明」→「下部説明」（本人指定。押すと表の下に出ることが分かる名前に）
   b.textContent = (_zdHelpWarn ? '⚠ ' : '❓ ') + (_zdHelp ? '下部説明を閉じる' : '下部説明');
-  b.style.cssText = 'font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;margin-left:auto;'
+  b.style.cssText = 'font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;'   /* 【v1.0948】右寄せは #zdRightTools が担う */
     + (_zdHelp ? 'border:1px solid #1565C0;background:#1565C0;color:#fff;'
       : (_zdHelpWarn ? 'border:1px solid #d97706;background:#fffbeb;color:#b45309;'
         : 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);'));
@@ -16707,7 +16712,153 @@ function _zenYoyOrder(rowsDesc) {
 
 // ---------- 全-月別データ（縦=月×横=指標 のランク色分け表 + サマリー + 通常/前年同月比） ----------
 let _zdMode = 'normal';
-function _zdSetMode(m) { _zdMode = m; document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => b.classList.toggle('on', b.getAttribute('data-zdm') === m)); renderGraphData(); }
+function _zdSetMode(m) { _zdMode = (m === 'yoy') ? 'yoy' : 'normal'; renderGraphData(); }
+// ============================================================================
+// 【v1.0948】表上ツールバーの部品（ADcheck v1.1476 仕様書 §2〜§5 準拠）
+// ============================================================================
+// ON/OFF スイッチの見た目。btn＝スイッチにするボタン／off＝旧「なし」ボタン（あれば隠す）
+function _tgPaint(btn, off, on, color, label) {
+  if (off) off.style.display = 'none';
+  if (!btn) return;
+  btn.style.cssText = 'font-size:11px;padding:3px 9px 3px 5px;border-radius:999px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-weight:700;'
+    + (on ? 'border:1px solid ' + color + ';background:' + color + ';color:#fff;'
+          : 'border:1px solid var(--border2);background:var(--surface2);color:var(--text3);');
+  btn.innerHTML = '<span style="position:relative;display:inline-block;width:22px;height:12px;border-radius:6px;background:' + (on ? 'rgba(255,255,255,.45)' : '#cbd5e1') + ';flex-shrink:0">'
+    + '<span style="position:absolute;top:1px;left:' + (on ? '11px' : '1px') + ';width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3)"></span></span>' + label;
+  btn.title = label + '：' + (on ? '表示中（押すと消す）' : '表示しない（押すと出す）');
+}
+// くっつけたペアボタン（セグメント型）の見た目。leftOn＝左が選ばれているか
+function _pairPaint(lb, rb, leftOn, color) {
+  const base = 'font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;font-weight:600;';
+  const on = 'border:1px solid ' + color + ';background:' + color + ';color:#fff;';
+  const off = 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
+  if (lb) lb.style.cssText = base + 'border-radius:5px 0 0 5px;' + (leftOn ? on : off);
+  if (rb) rb.style.cssText = base + 'border-radius:0 5px 5px 0;margin-left:-1px;' + (!leftOn ? on : off) + (!leftOn ? 'position:relative;z-index:1;' : '');
+}
+// 月途中モード。'full'＝月全体（月次の値・今まで通り）／'same'＝各月の1〜N日だけを日別データから足し直す。
+//   ★開いたときは必ず月全体（状態は保存しない）。
+let _zdDayCutMode = 'full';
+// N＝日別データの最新日の「日」。最新日が月末なら 0（＝月途中ではない → ペアボタンごと隠す）
+function _zdLatestCut() {
+  const all = (typeof dailyAllDates === 'function') ? dailyAllDates() : [];
+  if (!all.length) return 0;
+  const mx = all[all.length - 1];
+  const y = +mx.slice(0, 4), m = +mx.slice(5, 7), d = +mx.slice(8, 10);
+  const last = new Date(y, m, 0).getDate();
+  return d >= last ? 0 : d;
+}
+function _zdSetDayCut(m) { _zdDayCutMode = (m === 'same') ? 'same' : 'full'; renderGraphData(); }
+window._zdSetDayCut = _zdSetDayCut;
+// 帯・ペアボタンの見た目をまとめて更新（表を描くたびに呼ぶ）
+function _zdPaintToolbar(N, dayMode) {
+  _pairPaint(document.getElementById('zdModeNormal'), document.getElementById('zdModeYoy'), _zdMode !== 'yoy', '#3b82f6');
+  const cp = document.getElementById('zdCutPair');
+  if (cp) cp.style.display = (N > 0 && !dayMode) ? 'inline-flex' : 'none';
+  const sb = document.getElementById('zdCutSame');
+  if (sb) sb.textContent = '月途中（1〜' + N + '日）';
+  if (sb) sb.title = '各月の1〜' + N + '日だけを日別データから合計し直して、今月と同じ日数で比べます';
+  _pairPaint(document.getElementById('zdCutFull'), sb, _zdDayCutMode !== 'same', '#0f766e');
+  const cut = (!dayMode && _zdDayCutMode === 'same' && N > 0);
+  const bn = document.getElementById('zdDayBanner');
+  if (bn) {
+    bn.style.cssText = cut ? 'display:flex;align-items:center;gap:10px;padding:7px 14px;background:#0f766e;color:#fff;font-size:13px;font-weight:800;letter-spacing:.3px;border-radius:6px 6px 0 0' : 'display:none';
+    bn.innerHTML = cut ? ('<span style="background:#fff;color:#0f766e;border-radius:4px;padding:1px 8px;font-size:12px">月途中</span>'
+      + '各月 1〜' + N + '日 だけの合計です（月全体の数字ではありません）'
+      + '<span style="font-size:11px;font-weight:600;opacity:.85">※日別データがある月だけ表示</span>'
+      + '<button type="button" onclick="_zdSetDayCut(\'full\')" style="margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer">月全体に戻す</button>') : '';
+  }
+  return cut;
+}
+// ============================================================================
+// 【v1.0948】月途中の行：各月の 1〜N日 を日別データから足し直して、_zenMonthlyRows と同じ形で返す。
+//   ・金額・件数は合計。ROAS・CVR・広告売上ROAS などの率は合計から計算し直す（日別の率の平均にしない）。
+//   ・商品別の売上（送り込み元/利益源/通常商品の内訳・SEO売上トップ15）も N日より後は足さない。
+//   ・日別データが1〜N日に1日も無い月（＝月次レポートしか無い月）は作れないので出さない。
+//     ★月次の値に N/日数 を掛けて「推定」することはしない（実際の数字ではないため）。
+//   ・1〜N日の一部しか日別が無い月は、月の列に「17/21日」のバッジを出す。
+// ============================================================================
+function _zenMonthlyRowsCut(N) {
+  if (!(N > 0)) return [];
+  const D = ensureDaily();
+  const byYm = {};
+  ['overall', 'item', 'ad'].forEach(k => Object.keys(D[k] || {}).forEach(d => {
+    if (!isYmd(d) || +d.slice(8, 10) > N) return;
+    (byYm[ymOf(d)] = byYm[ymOf(d)] || new Set()).add(d);
+  }));
+  return Object.keys(byYm).sort().map(m => {
+    const days = [...byYm[m]].sort();
+    const items = {}, ads = {};
+    let rev = 0, orders = 0, soikomi = 0, adRev = 0, adCost = 0, adClicks = 0, adOrders = 0, ovSum = 0, ovDays = 0;
+    let prCost = 0, prSales = 0, prClick = 0, prImpr = 0, prDays = 0;
+    days.forEach(d => {
+      const it = dailyItemOf(d), ad = dailyAdOf(d);
+      Object.keys(it).forEach(c => { const o = items[c] || (items[c] = { code: c, revenue: 0, orders: 0 }); o.revenue += it[c].revenue; o.orders += it[c].orders; });
+      Object.keys(ad).forEach(c => { const o = ads[c] || (ads[c] = { code: c, adCost: 0, adRevenue: 0, adClicks: 0, adOrders: 0 });
+        o.adCost += ad[c].adCost; o.adRevenue += ad[c].adRevenue; o.adClicks += ad[c].adClicks; o.adOrders += ad[c].adOrders; });
+      const ov = dailyOverallOf(d); if (ov > 0) { ovSum += ov; ovDays++; }
+      const pr = dailyPrOf(d);
+      if (pr) { prDays++; prCost += +pr.cost || 0; prSales += +pr.sales || 0; prClick += +pr.clickAll || 0; prImpr += +pr.imprAll || 0; }
+    });
+    const itemRows = Object.values(items), adRows = Object.values(ads);
+    itemRows.forEach(i => {
+      rev += i.revenue; orders += i.orders;
+      const rep = String(((state.productMeta || {})[i.code] || {}).repCode || '').trim();
+      if (rep && rep !== i.code) soikomi += i.revenue;
+    });
+    adRows.forEach(a => { adRev += a.adRevenue; adCost += a.adCost; adClicks += a.adClicks; adOrders += a.adOrders; });
+    if (ovSum > 0) rev = ovSum;   // 総売上はショップ売上KPI(日別)の合計を権威データにする（月別・日別と同じ）
+    const seoRev = Math.max(0, rev - adRev);
+    const _hasPr = prDays > 0;
+    const _prComplete = _hasPr && prDays === days.length;
+    const _ps = _hasPr ? (prSplitByBaseRate(prCost, prSales) || null) : null;
+    const _psOver = _ps ? ((_ps.over == null) ? null : _ps.over) : null;
+    return {
+      month: m, label: m.replace('-', '/'),
+      _cut: N, _cutHave: days.length,
+      salesRoas: salesRoasPct(rev, adCost, 0),
+      prSalesRoas: storeSalesRoasPct(rev, adCost, _psOver, _prComplete),
+      prOnlyRoas: (_prComplete && _psOver != null && _psOver > 0) ? Math.round(rev / _psOver * 100) : null,
+      prCost: _hasPr ? prCost : null,
+      prRatio: _hasPr ? prRatioOf(prCost, prSales) : null,
+      prImpr: _hasPr ? prImpr : null,
+      prClick: _hasPr ? prClick : null,
+      prCtr: _hasPr ? prCtrOf(prClick, prImpr) : null,
+      prSales: _hasPr ? prSales : null,
+      prBase: _ps ? (_ps.base || null) : null,
+      prOver: _psOver,
+      prEffRate: _ps ? (_ps.effRate || null) : null,
+      prSetRate: prWeightedSetRatePct(itemRows.map(i => [i.code, i.revenue])),
+      grp: _zdGroupSplit(itemRows, adRows, _hasPr ? prCost : 0),
+      _prDayCount: prDays,
+      _prComplete: _prComplete,
+      _prPartial: !!(_hasPr && !_prComplete),
+      _prNeedDays: days.length, _prHaveDays: prDays,
+      totSales: rev, seoSales: seoRev, adSales: adRev, spend: adCost,
+      cvr: adClicks > 0 ? adOrders / adClicks * 100 : 0,
+      roas: adCost > 0 ? adRev / adCost * 100 : 0,
+      orders: adOrders,
+      avgPrice: orders > 0 ? Math.round(rev / orders) : 0,
+      adClicks: adClicks,
+      soikomi: soikomi
+    };
+  });
+}
+// 【v1.0948】月途中用の SEO売上トップ15 の元データ（各月 1〜N日 の商品別 SEO売上）。形は _zdSeoByMonth と同じ {ym:{repCode:seo}}
+function _zdSeoByMonthCut(N) {
+  const D = ensureDaily(), acc = {};
+  const add = (ym, c, k, v) => { const mm = acc[ym] || (acc[ym] = {}); const o = mm[c] || (mm[c] = { rev: 0, ad: 0 }); o[k] += v; };
+  Object.keys(D.item || {}).forEach(d => { if (!isYmd(d) || +d.slice(8, 10) > N) return; const it = dailyItemOf(d); Object.keys(it).forEach(c => add(ymOf(d), c, 'rev', it[c].revenue)); });
+  Object.keys(D.ad || {}).forEach(d => { if (!isYmd(d) || +d.slice(8, 10) > N) return; const ad = dailyAdOf(d); Object.keys(ad).forEach(c => add(ymOf(d), c, 'ad', ad[c].adRevenue)); });
+  const map = {};
+  Object.keys(acc).forEach(ym => Object.keys(acc[ym]).forEach(c => {
+    const seo = Math.max(0, acc[ym][c].rev - acc[ym][c].ad);   // 商品×月で差し引いてから代表コードへ（月別と同じ順）
+    if (seo <= 0) return;
+    const rep = ((state.productMeta[c] || {}).repCode || '').trim() || c;
+    const mm = map[ym] || (map[ym] = {});
+    mm[rep] = (mm[rep] || 0) + seo;
+  }));
+  return map;
+}
 // 【v1.0527】全-日月別データの粒度切替（'month'=従来の月別／'day'=対象月の1日ごと）
 let _zdGrain = 'month';
 let _zdDayYm = '';
@@ -16912,7 +17063,10 @@ window._zdSetMode = _zdSetMode;
 // 【v1.0521】全-月別データの表示内容をCSV出力（表示モード＝通常/前年同月比の並び順そのまま）。列は表と同じ：月・総売上・SEO売上・広告売上・実績額・CVR・広告ROAS・送り込み売上。
 function downloadZenMonthlyCsv() {
   try {
-    const asc = (typeof _zenMonthlyRows === 'function') ? (_zenMonthlyRows() || []) : [];
+    // 【v1.0948】月途中のときは画面と同じく各月 1〜N日 の行を出す
+    const _cN = (typeof _zdLatestCut === 'function') ? _zdLatestCut() : 0;
+    const _cOn = (_zdDayCutMode === 'same' && _cN > 0 && _zdGrain !== 'day');
+    const asc = _cOn ? (_zenMonthlyRowsCut(_cN) || []) : ((typeof _zenMonthlyRows === 'function') ? (_zenMonthlyRows() || []) : []);
     if (!asc.length) {
       if (typeof showToast === 'function') showToast('出力できるデータがありません。レポートを取り込んでください。', 'warn');
       else alert('出力できるデータがありません。レポートを取り込んでください。');
@@ -16945,7 +17099,7 @@ function downloadZenMonthlyCsv() {
     const a = document.createElement('a');
     const d = new Date();
     const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
-    const modeLabel = (_zdMode === 'yoy') ? '前年同月比' : '通常';
+    const modeLabel = ((_zdMode === 'yoy') ? '前年同月比' : '通常') + (_cOn ? '_月途中1-' + _cN + '日' : '');
     a.href = url; a.download = 'ycheck_全月別データ_' + modeLabel + '_' + stamp + '.csv';
     document.body.appendChild(a); a.click();
     setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
@@ -16959,12 +17113,8 @@ window.downloadZenMonthlyCsv = downloadZenMonthlyCsv;
 // ==================== 【v1.0508】全-月別データ：SEO売上トップ15パネル ====================
 let _zdSeoShow = false;
 function _zdSetSeoShowUI(){
-  const base='font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;';
-  const on='border:1px solid #1565C0;background:#1565C0;color:#fff;';
-  const off='border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
-  const a=document.getElementById('zdSeoOn'), c=document.getElementById('zdSeoOff');
-  if(a) a.style.cssText=base+(_zdSeoShow?on:off);
-  if(c) c.style.cssText=base+(!_zdSeoShow?on:off);
+  // 【v1.0948】「表示あり／表示なし」の2ボタン → 1つのON/OFFスイッチ
+  _tgPaint(document.getElementById('zdSeoOn'), document.getElementById('zdSeoOff'), _zdSeoShow, '#1565C0', 'SEO売上トップ15');
 }
 function _zdSetSeoShow(b){ _zdSeoShow=!!b; _zdSetSeoShowUI(); renderGraphData(); }
 window._zdSetSeoShow=_zdSetSeoShow;
@@ -17067,6 +17217,12 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
   }
   return '<tr class="zd-seo-row" data-ym="'+ym+'"><td colspan="'+colCount+'" style="background:#fff;border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
 }
+// 【v1.0948】月途中で 1〜N日 の一部しか日別データが無い月だけ「17/21日」を出す（満日数なら何も出さない）
+function _zdCutBadgeHtml(r) {
+  if (!r || !(r._cut > 0) || !(r._cutHave < r._cut)) return '';
+  return '<span class="ym-short" title="この月は 1〜' + r._cut + '日のうち日別データが ' + r._cutHave + '日分しかありません。数字はその ' + r._cutHave + '日分の合計です">'
+    + r._cutHave + '/' + r._cut + '日</span>';
+}
 function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
   // ============================================================
@@ -17097,8 +17253,7 @@ function renderGraphData() {
     .forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? '' : 'none'; });
   { const e = document.getElementById('zdDayPresetWrap'); if (e) e.style.display = _dayMode ? 'inline-flex' : 'none'; }
   // 日別モードでは「前年同月比」とSEO売上トップ15は意味を持たないので隠す
-  ['zdModeLabel'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = _dayMode ? 'none' : ''; });
-  document.querySelectorAll('#view-graphdata .zd-mode-btn').forEach(b => { b.style.display = _dayMode ? 'none' : ''; });
+  { const e = document.getElementById('zdModePair'); if (e) e.style.display = _dayMode ? 'none' : 'inline-flex'; }   /* 【v1.0948】ペアボタンごと隠す */
   let _rangeDays = null;
   if (_dayMode) {
     // 【v1.0533】月ドロップダウン＋日付範囲。絞り込みの実体は日付範囲だけに一本化する。
@@ -17138,18 +17293,22 @@ function renderGraphData() {
     }
   }
   _zdSetSeoShowUI();
+  // 【v1.0948】月途中（各月 1〜N日）。日別タブでは使わない
+  const _cutN = _zdLatestCut();
+  if (!(_cutN > 0)) _zdDayCutMode = 'full';   // 最新日が月末になったら月全体に戻す
+  const _cutOn = _zdPaintToolbar(_cutN, _dayMode);
   const _seoOn = _zdSeoShow && !_dayMode;   // SEO売上トップ15は月別のときだけ
-  const _seoByM = _seoOn ? _zdSeoByMonth() : null;
+  const _seoByM = _seoOn ? (_cutOn ? _zdSeoByMonthCut(_cutN) : _zdSeoByMonth()) : null;
   const _seoParentSet = _seoOn ? _zdSeoParentSet() : null;   // 【v1.0520】親子商品マーカー用
   const _zdCols = zdCols();                     // 【v1.0547】検算列の表示/非表示を反映した列リスト
   _zdSetVerifyUI();
   _zdSetSplitUI();
   _zdSetRatioUI();
   // 【v1.0570】配色の母集団を凡例に出す（月別＝直近1年／日別＝表示中の期間）
-  { const _cs = document.getElementById('zdColorScope'); if (_cs) _cs.textContent = _dayMode ? '（表示中の期間）' : '（直近1年）'; }
+  { const _cs = document.getElementById('zdColorScope'); if (_cs) _cs.textContent = _dayMode ? '（表示中の期間）' : (_cutOn ? '（1〜' + _cutN + '日どうし）' : '（直近1年）'); }
   const _splitOn = _zdSplit;                       // 【v1.0555】料率別の列（合計/7%/7%超）を出すか
   const _zdColCount = 1 + _zdCols.length;          // 月 + 指標列（【v1.0562】送り込み売上は撤去）
-  const asc = _dayMode ? _zenDailyRowsFor(_rangeDays || []) : _zenMonthlyRows();
+  const asc = _dayMode ? _zenDailyRowsFor(_rangeDays || []) : (_cutOn ? _zenMonthlyRowsCut(_cutN) : _zenMonthlyRows());   /* 【v1.0948】月途中 */
   if (!asc.length) { wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">データがありません</div>'; return; }
   // 【v1.0530】色分けの母集団。
   //   月別: 当月＝未満了なので最後の1件（＝最新月）を外す（従来どおり）。
@@ -17221,7 +17380,8 @@ function renderGraphData() {
   const _hasRole = _zdCols.some(c => c.role);
   const _ROWS = _twoRow ? (_hasRole ? 3 : 2) : 1;
   const _rs = _twoRow ? ' rowspan="' + _ROWS + '"' : '';
-  let _h1 = '<th' + _rs + ' style="position:sticky;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:center;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3);vertical-align:middle">' + (_dayMode ? '日' : '月') + '</th>';   /* 【v1.0527】左固定だけ。上固定は thead 側【v1.0565】 */
+  let _h1 = '<th' + _rs + ' style="position:sticky;left:0;z-index:6;padding:' + ZD_TH_PAD + ';text-align:center;background:var(--bg3);border-bottom:2px solid var(--border);border-right:' + VBD + ';font-size:' + ZD_TH_FS + ';color:var(--text3);vertical-align:middle;white-space:nowrap">' + (_dayMode ? '日' : '月')
+    + (_cutOn ? '<br><span style="display:inline-block;margin-top:3px;background:#0f766e;color:#fff;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px">1〜' + _cutN + '日</span>' : '') + '</th>';   /* 【v1.0948】月途中のラベルは見出しの下（月名の後ろに付けると横スクロールが出る） */   /* 【v1.0527】左固定だけ。上固定は thead 側【v1.0565】 */
   let _h2 = '';   // 役割（送り込み元 / 利益源）
   let _h3 = '';   // 合計 / 7%超 / 7%
   _zdGroups.forEach(g => {
@@ -17338,8 +17498,8 @@ function renderGraphData() {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
-    const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';color:var(--accent);background:var(--bg3);position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label
-      + (_dayMode ? '' : monthDayBadgeHtml(r.month)) + '</td>';   /* 【v1.0846】足りない月だけ「14/30日」 */
+    const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';' + (_cutOn ? 'color:#0f766e;background:#e6f4f1;' : 'color:var(--accent);background:var(--bg3);') + 'position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label
+      + (_dayMode ? '' : (_cutOn ? _zdCutBadgeHtml(r) : monthDayBadgeHtml(r.month))) + '</td>';   /* 【v1.0846】足りない月だけ「14/30日」 */
     const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key], row: r })).join('');   /* 【v1.0578】row＝分母の内訳ツールチップ／PR部分取込の⚠に使う */
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
@@ -24822,6 +24982,7 @@ function peRenderAdj() {
               pr: { h: '#fbd4e6', b: '#fdf2f8', c: '#db2777' }, rev: { h: '#cfe9dc', b: '#f1faf5', c: '#0f8a52' } };
   const COLS = [
     // 【v1.0944】並びを まとまりごとに（本人：広告・PR・広告の順で気持ち悪い）：入札価格｜広告（表示→クリック→CTR→CPC→広告実績額→広告個数→広告売上→広告ROAS→CVR→平均獲得単価）｜PR（PR→PR実績額→PR売上ROAS）｜売上（SEO売上→総売上）。gs＝まとまりの始まり（左に太い線）
+    // 【v1.0947】PR のまとまりに SEO売上（PR の成果）を入れ、最後を 総売上→PR広告売上ROAS（全体の効率）に（本人：性質として）。gs＝まとまりの始まり
     { t: isDay ? '入札<br>価格' : '入札価格<br>(平均)', g: 'bid', f: r => (r.bid == null ? dash : '¥' + (Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
     { t: 'クリック<br>数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
@@ -24835,9 +24996,9 @@ function peRenderAdj() {
     { t: '平均<br>獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '広告実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
     { t: isDay ? 'PR' : 'PR<br>(平均)', key: 'pr', gs: true, g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
     { t: 'PR<br>実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
-    { t: 'PR広告<br>売上ROAS', g: 'pr', strong: true, f: r => (r.prsr == null ? dash : salesRoasCellHtml(r.prsr, PR_SALES_ROAS_TH).replace('font-weight:700', 'font-weight:inherit')),   /* 太さは広告ROAS（td.pe-strong＝800）にそろえる */ tip: 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は「—」\n色：' + PR_SALES_ROAS_TH.g + '%以上＝緑／' + PR_SALES_ROAS_TH.y + '%以上＝茶／' + PR_SALES_ROAS_TH.o + '%以上＝橙／それ未満＝赤（調整-PRオプの表と同じ）' },   /* 【v1.0946】調整-PRオプの表と同じ色分け（salesRoasCellHtml＋PR_SALES_ROAS_TH）・広告ROAS と同じ太字 */   /* 【v1.0945】PR売上ROAS から差し替え */   // 【v1.0943】PR のまとまりの右端
-    { t: 'SEO<br>売上',  g: 'rev', gs: true, f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
-    { t: '総売上',   g: 'rev', f: r => y0(r.rev) }   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
+    { t: 'SEO<br>売上',  g: 'rev', f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
+    { t: '総売上',   g: 'rev', gs: true, f: r => y0(r.rev) },   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
+    { t: 'PR広告<br>売上ROAS', g: 'pr', strong: true, f: r => (r.prsr == null ? dash : salesRoasCellHtml(r.prsr, PR_SALES_ROAS_TH).replace('font-weight:700', 'font-weight:inherit')),   /* 太さは広告ROAS（td.pe-strong＝800）にそろえる */ tip: 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は「—」\n色：' + PR_SALES_ROAS_TH.g + '%以上＝緑／' + PR_SALES_ROAS_TH.y + '%以上＝茶／' + PR_SALES_ROAS_TH.o + '%以上＝橙／それ未満＝赤（調整-PRオプの表と同じ）' }   /* 【v1.0946】調整-PRオプの表と同じ色分け（salesRoasCellHtml＋PR_SALES_ROAS_TH）・広告ROAS と同じ太字 */   /* 【v1.0945】PR売上ROAS から差し替え */   // 【v1.0943】PR のまとまりの右端
   ];
   const wk = ['日', '月', '火', '水', '木', '金', '土'];
   const _gsB = 'border-left:2px solid #94a3b8;';   // 【v1.0944】まとまりの境目
