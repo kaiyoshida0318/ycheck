@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0970 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0971 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4863,8 +4863,14 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
    ・th / td とも .col-namebasic。商品-基本データでは今までどおり出る。
    ・飛び先は商品名のリンクと同じ yahooProductUrl(code)（手動の商品ページURLがあればそれ）。クリックは下の JS（委譲）で受ける。 */
 body.basic-tune #tableBasic .col-namebasic { display: none; }
-body.basic-tune #tableBasic td.code-cell .code-text { cursor: pointer; }
-body.basic-tune #tableBasic td.code-cell .code-text:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+/* 【v1.0971】商品コードを押して飛ぶのはやめた（ダブルクリックでコピーできなくなったため・本人指定）。
+   → コードの右に小さい「↗」を付け、そこだけが商品ページへのリンク。コードは普通の文字（選択・コピーできる）。 */
+#tableBasic .code-pg-link { flex: 0 0 auto; font-size: 1em; font-weight: 700; line-height: 1; padding: 3px 4px; border-radius: 4px;
+  color: var(--accent); text-decoration: none; opacity: 0.75; }
+#tableBasic .code-pg-link:hover { opacity: 1; background: rgba(37,99,235,0.12); }
+body:not(.basic-tune) #tableBasic .code-pg-link { display: none; }   /* 商品-基本データでは出さない */
+/* 商品コードは1回クリックで丸ごと選択（ダブルクリックだと「-」で区切られて一部しか選べないため）。調整-基本だけ */
+body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-user-select: all; cursor: text; }
 </style>
 </head>
 <body>
@@ -4924,7 +4930,7 @@ body.basic-tune #tableBasic td.code-cell .code-text:hover { color: var(--accent)
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0970</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0971</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -14277,7 +14283,7 @@ function renderBasic() {
       ? _bidSetCellHtml(r.code, _mem)   /* 【v1.0870】セット行も代表（親）の入札価格を手入力できる */
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet)).replace(/<\/span>$/, '<a class="code-pg-link" href="' + escapeHtml(yahooProductUrl(r.code)) + '" target="_blank" rel="noopener" title="商品ページを開く（' + escapeHtml(r.code) + '）">↗</a></span>')}${_famBadge}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td class="col-namebasic">${nameCellHtml(r.code)}</td>
       <td class="tune-col col-kwtune">${kwCellHtml(r.code)}</td>
@@ -26449,20 +26455,27 @@ $('#peImageReset').addEventListener('click', () => {
 //   ★ハンドラは必ずこの1本にまとめる。画像用に別のリスナーを足すと、
 //     モーダルを開く経路が2つになって挙動がずれる（片方だけ preventDefault が漏れる等）。
 const PRODUCT_EDIT_OPENERS = '.name-edit-btn, .product-img-wrap';
-// 【v1.0969】調整-基本だけ：商品コードを押すと商品ページ（商品名のリンクと同じ先）を新しいタブで開く。
-//   ★チェックボックス・親子バッジ（.rep-badge）は今までどおり（.code-text だけを見る）。
-//   ★Ctrl/⌘/中クリックも新しいタブ（どちらでも別タブで開く）。
-function _basicTuneCodeOpen(e) {
+// 【v1.0971】「↗」のぶん、調整-基本の商品コード列を一度だけ +20px（本人指定「その分メインKWの列を狭くしていい」）。
+//   ・メインKWは幅を決めていない列なので、コード列が広がったぶん自動で狭くなる。
+//   ・コード列の幅を決めていない（自然幅）なら、↗ 込みで測られるので何もしない。
+//   ・済みの印は colWidths['sig|__v1971']（GitHubにも載る＝他のPCで二重に足さない）。
+function _basicTuneCodeWidenOnce() {
   if (state.currentView !== 'basic' || _basicMode !== 'tune') return;
-  const t = e.target && e.target.closest && e.target.closest('#tableBasic td.code-cell .code-text');
-  if (!t) return;
-  if (e.type === 'auxclick' && e.button !== 1) return;
-  const code = (t.textContent || '').trim(); if (!code) return;
-  e.preventDefault(); e.stopPropagation();
-  try { window.open(yahooProductUrl(code), '_blank', 'noopener'); } catch (e2) {}
+  const t = document.getElementById('tableBasic'); if (!t || !t.offsetParent) return;
+  const th = t.querySelector('thead th[data-sort="code"]'); if (!th || !th.dataset.resizeKey) return;
+  const s = _colSig(t); if (!s) return;
+  const vp = ensureViewPrefs(), W = vp.colWidths, flag = s.sig + '|__v1971';
+  if (W[flag]) return;
+  const cur = _colW(th, s);
+  if (cur == null) { W[flag] = 1; return; }
+  _colFork(t, s);
+  W[s.sig + '|' + th.dataset.resizeKey] = Math.round(cur) + 20;
+  W[flag] = 1;
+  try { ycLog('info', '調整-基本の商品コード列を ' + Math.round(cur) + '→' + (Math.round(cur) + 20) + 'px（↗ を付けたぶん。メインKWがそのぶん狭くなる）'); } catch (e) {}
+  _vpTouch('この端末');
 }
-document.addEventListener('click', _basicTuneCodeOpen);
-document.addEventListener('auxclick', _basicTuneCodeOpen);
+// 【v1.0971】v1.0969 の「商品コードを押すと商品ページ」は撤去（ダブルクリックでコピーできなくなったため）。
+//   調整-基本の商品コードの右の「↗」（a.code-pg-link・普通のリンク）で開く。
 document.addEventListener('click', (e) => {
   const btn = e.target.closest(PRODUCT_EDIT_OPENERS);
   if (!btn) return;
@@ -28519,6 +28532,7 @@ function applyColWidths() {
   const _sgCache = new Map();
   const _sgOf = (tbl) => { if (!tbl) return null; if (!_sgCache.has(tbl)) _sgCache.set(tbl, _colSig(tbl)); return _sgCache.get(tbl); };
   try { _colRegisterLayouts(); } catch (e) {}
+  try { _basicTuneCodeWidenOnce(); } catch (e) {}   // 【v1.0971】
   // data-resize-key を持つ全 th を走査
   document.querySelectorAll('th[data-resize-key]').forEach(th => {
     const key = th.dataset.resizeKey;
