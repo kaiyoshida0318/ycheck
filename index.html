@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0964 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0965 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4914,7 +4914,7 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0964</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0965</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5299,6 +5299,8 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
               <th data-sort="code" data-resize-key="code">商品コード</th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameBasic">商品名</th>
+              <!-- 【v1.0965】メインKW（調整-基本だけ。本人指定「調整-基本の商品名の右にメインKW列」）。.tune-col なので商品-基本データでは隠れる -->
+              <th class="tune-col col-kwtune" data-sort="kw">メインKW</th>
               <!-- 【v1.0592】送り込みセットの商品では、金額の下に「セット内の売上比率」を小さく出す（§5-F） -->
               <th class="num col-total" data-sort="rev" title="総売上&#10;送り込みセット（同じ代表コードの親子）の商品では、金額の下に&#10;そのセット内での売上比率を小さく表示します。メンバーの合計が100%になります。">総売上</th>
               <!-- 【v1.0863】前月比。総売上の右に常に出す。クリックで降順⇄昇順（出せない行は常に一番下） -->
@@ -13961,6 +13963,7 @@ function renderBasic() {
   // ソート
   const sortGet = (r, k) => {
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
+    if (k === 'kw') return (getMaster(r.code) && getMaster(r.code).kw) || '';   /* 【v1.0965】調整-基本のメインKW */
     if (k === 'sroas') return salesRoasSortVal(r.rev, r.adCost);   // 【v1.0524】対象外(広告費0)は -1＝最下位
     // 【v1.0580】全-月別データ相当に増やした列のソート。算出できないものは -1＝最下位に寄せる
     if (k === 'prsroas')  { const v = itemPrSalesRoasPct(r.code, r.rev, r.adCost); return (v == null) ? -1 : v; }
@@ -14062,7 +14065,7 @@ function renderBasic() {
     } else if (state.activeStateFilter && state.activeStateFilter.label) {
       _emptyMsg = state.activeStateFilter.label + 'の商品はありません';
     }
-    tbody.innerHTML = '<tr><td colspan="19" class="empty-state">' + _emptyMsg + '</td></tr>';   // 【v1.0609/v1.0676】調整-基本の3列＋PR売上ROAS を含めて 18 → 【v1.0863】前月比で 19
+    tbody.innerHTML = '<tr><td colspan="20" class="empty-state">' + _emptyMsg + '</td></tr>';   /* 【v1.0965】メインKW（調整-基本）で 19→20 */   // 【v1.0609/v1.0676】調整-基本の3列＋PR売上ROAS を含めて 18 → 【v1.0863】前月比で 19
     { const _b = document.getElementById('basicClearFiltersBtn');
       if (_b) _b.addEventListener('click', () => {
         const _kw = $('#basicSearch').value;   // 検索語は残したまま、絞り込みだけ落とす
@@ -14214,6 +14217,7 @@ function renderBasic() {
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}</td>
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
+      <td class="tune-col col-kwtune">${kwCellHtml(r.code)}</td>
       ${_revCell}
       ${_momCellHtml(r.rev, _momPrevOf(r), _momCtxB)}
       <td class="num col-sroas est-val" title="${escapeHtml(_prsrTip)}">${_prsr == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(_prsr, PR_SALES_ROAS_TH)}</td>
@@ -28678,9 +28682,21 @@ function _colRegisterLayouts(labelOverride) {
     cur.keys = s.keys; cur.tk = s.tk;
     if (label && cur.labels.indexOf(label) < 0) cur.labels.push(label);
     // 【v1.0961】同じ表の別の型に同じ画面名が残っていたら外す（列が変わった古い型に名前が残り続けないように）
+    // 【v1.0965】★列が増えた／減った画面は、前の型で決めていた幅を【同じ列だけ】新しい型へ引き継ぐ。
+    //   例：調整-基本にメインKWを足した → 前の調整-基本で決めた幅がリセットされないように。
     if (label) Object.keys(vp.colLayouts).forEach(g => {
       const o = vp.colLayouts[g]; if (g === s.sig || !o || o.tk !== s.tk || !Array.isArray(o.labels)) return;
-      const i = o.labels.indexOf(label); if (i >= 0) o.labels.splice(i, 1);
+      const i = o.labels.indexOf(label); if (i < 0) return;
+      o.labels.splice(i, 1);
+      const W = vp.colWidths, Lk = vp.colLocks;
+      if (W[g + '|__f'] && !W[s.sig + '|__f']) {
+        s.keys.forEach(k => {
+          if (W[g + '|' + k] != null) W[s.sig + '|' + k] = W[g + '|' + k];
+          else if (W[k] != null) W[s.sig + '|' + k] = W[k];
+          if (Lk[g + '|' + k]) Lk[s.sig + '|' + k] = true;
+        });
+        W[s.sig + '|__f'] = 1;
+      }
     });
     // 見出しの文字（反映先の一覧で「どの列が共通か」を見せるため）
     const row = _colHeadRow(t); const names = {};
