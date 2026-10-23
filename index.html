@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0958 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0959 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1772,7 +1772,7 @@ th.nosort:hover { background-color: #e8eaed; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* 【v1.0338/1.0339】全ての表の数値セルを少しだけ大きく（元0.85rem→0.90rem＝元と前回0.95remの中間）。ヘッダ(th)は据え置き。 */
 #mi-wrap tbody tr:hover td { box-shadow: none; }  /* 【v1.0369】月別データはホバー枠を出さない */
-td.num { font-size: 0.90rem; font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }  /* 【v1.0366】全ての表の数値をDM Mono(等幅)に */
+td.num { font-size: calc(0.90rem - 1px); font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }  /* 【v1.0366】全ての表の数値をDM Mono(等幅)に／【v1.0959】数字だけ1px小さく（本人指定：横幅の節約。文字の列はそのまま） */
 /* 【v250】入札価格/PRオプ料率の2行ヘッダーは中央揃えできれいに（データセルは右揃えのまま） */
 thead th.col-bid, thead th.col-pro, thead th.col-bidonly { text-align: center; line-height: 1.4; }
 /* 【v150】行ホバー時の背景色変化を全廃止。青枠だけ残して、枠内の色は変えない方針。
@@ -4898,7 +4898,7 @@ tr.nb-empty .nb-in { border-color: var(--red); }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0958</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0959</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -16122,7 +16122,7 @@ function renderMonthly() {
   });
   const HEAD = '<tr>' + _h1 + '</tr>' + (_twoRow ? '<tr>' + _h2 + '</tr>' : '');
 
-  const TDBASE0 = 'text-align:center;font-size:' + MI_TD_FS
+  const TDBASE0 = 'text-align:center;font-size:calc(' + MI_TD_FS + ' - 1px)'   /* 【v1.0959】数字のセルだけ1px小さく */
     + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;border-bottom:1px solid var(--border);';
   const _ratioLine = (v, den) => {
     if (!_zdRatio || !(v > 0) || !(den > 0)) return '';
@@ -17540,7 +17540,7 @@ function renderGraphData() {
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   // 【v1.0551/v1.0555】1セルの中身。列（合計 / 7% / 7%超）ごとに、その列の母集団で色を付ける。
   // 【v1.0567】数字は中央揃え（見出しの「合計 / 7%超 / 7%」と縦のラインを合わせるため）
-  const TDBASE0 = 'text-align:center;font-size:' + ZD_TD_FS + ';font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
+  const TDBASE0 = 'text-align:center;font-size:calc(' + ZD_TD_FS + ' - 1px);font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;';
   // 【v1.0578】ツールチップ用の素の金額表記（fmtY はHTMLを返すので title 属性に入れられない）
   const _zdYen = (n) => (n == null) ? '—' : ('¥' + Math.round(n).toLocaleString());
   function _zdCellHtml(c, v, o) {
