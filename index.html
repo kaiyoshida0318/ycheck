@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0969 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0970 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4924,7 +4924,7 @@ body.basic-tune #tableBasic td.code-cell .code-text:hover { color: var(--accent)
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0969</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0970</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -8571,8 +8571,12 @@ async function ghFocusSync(reason) {
     const remoteSha = await ghGetRemoteSha();
     if (!remoteSha || remoteSha === _ghLastKnownSha) return;  // リモートに変化なし
     if (_ghDirty) {
-      await ghSaveToGitHub();      // ローカルに未保存 → 保存前マージで安全に反映（C）
-      console.log('[Ycheck] フォーカス同期: 未保存をマージ保存しました');
+      // 【v1.0970】★ここは以前「保存前マージで反映」だったが、v1.0354 の手動保存モデル以降は
+      //   manual が無いので【必ず何もしない】経路だった。未反映のあるタブは、別PCの更新を一切取り込めなかった。
+      //   → GitHub にしか無い商品・日別だけを足す（このタブの変更は上書きしない）。
+      const _n = await _ycPullMissingDaily('タブに戻った');
+      if (_n > 0 && typeof renderAll === 'function') renderAll();
+      console.log('[Ycheck] フォーカス同期: 未反映あり → GitHub にしか無い商品・日別を ' + _n + ' 件取り込みました');
     } else {
       await ghLoadFromGitHub();    // リモートが新しい → 読み直してマージ（自己修復）
       if (typeof renderAll === 'function') renderAll();
@@ -8707,7 +8711,9 @@ async function ghSaveToGitHub(options = {}) {
             ghLog('⚠ 古いデータの可能性のため保存を中止しました: ' + _detail, 'warn');
             console.warn('[Ycheck] 上書き防止ガード発動:', _detail, '| dropped=', _dropped, '| rItems=', _rItems, 'lItems=', _lItems);
             return { skipped: true, reason: 'stale-overwrite-guard', detail: _detail, dropped: _dropped, rItems: _rItems, lItems: _lItems,
-                     dropDays: _dropDays, onlyDaily: (_dropped.length === 0 && !_bigShrink && !_masterShrink && _dropDays.length > 0) };   // 【v1.0940】
+                     dropDays: _dropDays, onlyDaily: (_dropped.length === 0 && !_bigShrink && !_masterShrink && _dropDays.length > 0),   // 【v1.0940】
+                     // 【v1.0970】日別・商品が足りないだけ（月次配列は消えない）＝ GitHub にしか無いものを足せば保存できる
+                     onlyPullable: (_dropped.length === 0 && !_bigShrink && (_dropDays.length > 0 || _masterShrink)) };
           }
           // 【v285/v286】productMeta・入札価格(bid)・PRオプ料率(proRate)を商品単位でマージ。
           //   remoteに、この画面より新しく編集された商品があれば、その商品はremote側を採用してPUTに含める
@@ -9325,6 +9331,24 @@ window._ycUpLogGet = function () { return _ycUpLog.slice(); };
 // ============================================================================
 let _ycUpVerifyTimer = null;
 const YC_UP_VERIFY_DELAY_MS = 1500;
+// 【v1.0970】GitHub の方が新しければ読み直す（このタブに守るべき未反映が無いときだけ呼ぶこと）
+async function _ycPullIfRemoteNewer(reason) {
+  try {
+    if (!ghIsEnabled() || _ghDirty) return false;
+    if (typeof _ghSaveInFlight !== 'undefined' && _ghSaveInFlight) return false;
+    const sha = await ghGetRemoteSha();
+    if (!sha || sha === _ghLastKnownSha) return false;
+    if (_ghDirty) return false;   // 調べている間に変更が入ったら読み直さない
+    const r = await ghLoadFromGitHub();
+    if (r && r.success) {
+      if (typeof renderAll === 'function') renderAll();
+      try { ycLog('info', 'GitHub の最新を読み込みました（' + (reason || '') + '）'); } catch (e) {}
+      console.log('[Ycheck] GitHub の最新を読み込みました（' + (reason || '') + '）');
+      return true;
+    }
+  } catch (e) { console.warn('[Ycheck] 最新の読み込みに失敗:', e && e.message); }
+  return false;
+}
 function _ycUpVerifySoon() {
   clearTimeout(_ycUpVerifyTimer);
   _ycUpVerifyTimer = setTimeout(function () {
@@ -9339,6 +9363,10 @@ function _ycUpVerifySoon() {
       if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
       console.log('[Ycheck] 未反映を解除しました: GitHubに入っている内容と【中身が完全に同じ】でした'
         + '（基準: ' + ((d.base && d.base.at) || '不明') + ' ' + ((d.base && d.base.how) || '') + '）');
+      // 【v1.0970】★守るべき変更が無いと分かったので、GitHub が新しければここで読み直す。
+      //   これまでは「未反映」を下ろすだけで読み直さなかった＝起動時に未保存フラグが残っていたタブは、
+      //   何度開き直しても【前に保存した時点のデータ】のまま（隣のPCで追加した商品が出ない）だった。
+      try { _ycPullIfRemoteNewer('未反映の解除後'); } catch (e) {}
     } catch (e) { console.warn('[Ycheck] 未反映の自動解除に失敗:', e && e.message); }
   }, YC_UP_VERIFY_DELAY_MS);
 }
@@ -9601,7 +9629,7 @@ async function ycAutoPushNow() {
     ghSetSyncStatus('saving');
     let r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
     // 【v1.0940】日別が足りないだけなら、取り込んでからもう一度（月・商品が消える場合は従来どおり手動に任せる）
-    if (r && r.reason === 'stale-overwrite-guard' && r.onlyDaily) {
+    if (r && r.reason === 'stale-overwrite-guard' && (r.onlyDaily || r.onlyPullable)) {   /* 【v1.0970】商品が足りないだけでも */
       const _n = await _ycPullMissingDaily('自動反映');
       if (_n > 0) r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
     }
@@ -9689,14 +9717,39 @@ async function _ycPullMissingDaily(reason) {
       const rk = R[k] || {}; if (!D[k]) D[k] = {};
       Object.keys(rk).forEach(d => { if (!(d in D[k])) { D[k][d] = rk[d]; n++; days.add(d); } });
     });
-    if (n > 0) {
-      invalidateDailyRollup();
+    // 【v1.0970】★商品（master）も同じ考え方で足す：GitHub にあって、このタブに無い商品コードだけ。
+    //   起こったこと（2026-10-23）：隣のPCで追加した商品（eq-24-03-lock ほか）が、このPCでは何度開き直しても出なかった。
+    //   このタブは「未保存フラグ」が残っていて、起動時に GitHub を読まない（v1.0845：ローカルを守る）→ 商品は丸ごと古いまま。
+    //   ★足すだけ。このタブにある商品は一切上書きしない（productMeta・入札価格・料率も「このタブに無いときだけ」）。
+    //   ★このタブでコード変更（migrateProductCode）した旧コードは足し戻さない（_migratedFrom で見分ける）。
+    const RM = (remote && remote.master) || {}, RP = (remote && remote.productMeta) || {};
+    const _migratedFrom = new Set(Object.keys(state.productMeta || {}).map(c => (state.productMeta[c] || {})._migratedFrom).filter(Boolean));
+    const addedCodes = [];
+    if (!state.master) state.master = {};
+    if (!state.productMeta) state.productMeta = {};
+    Object.keys(RM).forEach(c => {
+      if (c in state.master || _migratedFrom.has(c)) return;
+      state.master[c] = RM[c];
+      if (!state.productMeta[c] && RP[c]) state.productMeta[c] = RP[c];
+      const cl = String(c).toLowerCase();
+      if (remote.bid && remote.bid[cl] != null && (!state.bid || state.bid[cl] == null)) { if (!state.bid) state.bid = {}; state.bid[cl] = remote.bid[cl]; }
+      if (remote.proRate && remote.proRate[cl] != null && (!state.proRate || state.proRate[cl] == null)) { if (!state.proRate) state.proRate = {}; state.proRate[cl] = remote.proRate[cl]; }
+      addedCodes.push(c);
+    });
+    if (n > 0 || addedCodes.length) {
+      if (n > 0) invalidateDailyRollup();
       saveToStorage();
-      const list = [...days].sort();
-      try { ycLog('edit', 'GitHub にだけあった日別データを取り込みました（' + n + '件・' + list.join(', ') + '）' + (reason ? '：' + reason : '')); } catch (e) {}
-      try { ghLog('日別: GitHub にだけあった ' + n + '件（' + list.join(', ') + '）を取り込みました', 'ok'); } catch (e) {}
+      if (n > 0) {
+        const list = [...days].sort();
+        try { ycLog('edit', 'GitHub にだけあった日別データを取り込みました（' + n + '件・' + list.join(', ') + '）' + (reason ? '：' + reason : '')); } catch (e) {}
+        try { ghLog('日別: GitHub にだけあった ' + n + '件（' + list.join(', ') + '）を取り込みました', 'ok'); } catch (e) {}
+      }
+      if (addedCodes.length) {
+        try { ycLog('edit', 'GitHub にだけあった商品を取り込みました（' + addedCodes.length + '件・' + addedCodes.slice(0, 10).join(', ') + (addedCodes.length > 10 ? ' ほか' : '') + '）' + (reason ? '：' + reason : '')); } catch (e) {}
+        try { ghLog('商品: GitHub にだけあった ' + addedCodes.length + '件を取り込みました', 'ok'); } catch (e) {}
+      }
     }
-    return n;
+    return n + addedCodes.length;
   } catch (e) { console.warn('[Ycheck] GitHub の日別の取り込みに失敗:', e && e.message); return 0; }
 }
 async function ycReflect() {
@@ -9706,7 +9759,7 @@ async function ycReflect() {
   try {
     let r = await ghSaveToGitHub({ allowEmpty: false, manual: true });
     // 【v1.0940】日別が足りないだけなら、GitHub にしか無い日を取り込んでから、もう一度（確認なしで）保存する
-    if (r && r.reason === 'stale-overwrite-guard' && r.onlyDaily) {
+    if (r && r.reason === 'stale-overwrite-guard' && (r.onlyDaily || r.onlyPullable)) {   /* 【v1.0970】商品が足りないだけでも */
       const _n = await _ycPullMissingDaily('反映する');
       if (_n > 0) {
         try { if (typeof renderAll === 'function') renderAll(); } catch (e) {}
@@ -26224,6 +26277,8 @@ function migrateProductCode(oldCode, newCode) {
     state.productMeta[newCode] = Object.assign({}, state.productMeta[oldCode]);
     delete state.productMeta[oldCode];
   }
+  // 【v1.0970】旧コードを覚えておく（_ycPullMissingDaily が GitHub に残る旧コードを足し戻さないように）
+  if (state.productMeta[newCode]) state.productMeta[newCode]._migratedFrom = oldCode;
   // 【v233】再登録後の移行商品はステータスを「新商品」にする
   if (!state.productMeta[newCode]) {
     state.productMeta[newCode] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
@@ -29901,8 +29956,27 @@ try {
             + ` reason=${(result && (result.reason || result.detail)) || 'unknown'}`);
           // 【v1.0940】ただし GitHub にしか無い【日】の日別は足す（足すだけ＝ローカルの値は上書きしない）。
           //   別のタブ／PCで取り込んだ日が、このタブに出ないまま「反映する」で消されそうになるのを防ぐ。
-          try { _ycPullMissingDaily('起動時').then(n => { if (n > 0 && typeof renderAll === 'function') renderAll(); }).catch(() => {}); } catch (e) {}
-          try { _ycUpVerifySoon(); } catch (e) {}   // 未反映バッジの突き合わせだけは行う
+          // 【v1.0970】★順番を変えた：まず「本当に守るべき変更があるか」を突き合わせる。
+          //   ・中身が GitHub と同じ（＝未保存フラグだけ残っていた）→ 未反映を下ろし、GitHub が新しければ【丸ごと読み直す】
+          //     （隣のPCで追加した商品・変えたステータスも全部入る）
+          //   ・本当に差分がある → このタブの変更は守ったまま、GitHub にしか無い商品・日別だけを足す
+          //   ★先に足してしまうと「差分あり」になり、丸ごと読み直す道が閉じる（v1.0940 の順番だとそうなる）。
+          setTimeout(async () => {
+            try {
+              const _d = (typeof _ycUpDiff === 'function') ? _ycUpDiff() : { ok: false };
+              if (_d.ok && !_d.rows.length) {
+                _ghDirty = false; _ghDirtyReason = '';
+                try { localStorage.removeItem(ghPendingFlagKey()); } catch (e) {}
+                ghSetSyncStatus('synced');
+                if (typeof _ycUpdateReflectBtn === 'function') _ycUpdateReflectBtn();
+                await _ycPullIfRemoteNewer('起動時（未保存フラグだけ残っていた）');
+              } else {
+                const n = await _ycPullMissingDaily('起動時');
+                if (n > 0 && typeof renderAll === 'function') renderAll();
+                try { _ycUpVerifySoon(); } catch (e) {}
+              }
+            } catch (e) { console.warn('[Ycheck] 起動時の突き合わせに失敗:', e && e.message); }
+          }, 1500);
           return;
         }
         try {
