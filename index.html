@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0963 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0964 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2192,7 +2192,7 @@ td[data-resize-key] {
   text-align: center; gap: 2px; line-height: 1.18; white-space: nowrap;  /* 改行は<br>のみ。自動折返し・1文字折返しを禁止 */
   background: #fff; border: 1.5px solid #cbd5e1; border-radius: 5px;
   font-size: 12.6px; font-weight: 600; padding: 2px 6px;  /* 【v192】12.6px・太さ600 */
-  width: 112px; min-width: 0; min-height: 37px;   /* 【v1.0741】98→112px。【v1.0830】★ここは広げないこと。入札状態とPR状態で共通の幅なので、広げると2列ぶん太る（v1.0829 で124pxにしたが元に戻した） */ box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
+  width: 84px; min-width: 0; min-height: 37px;   /* 【v1.0964】▾を外したので 112→84px（いちばん長い「PR◯-通常／7％固定」が約79px） */   /* 【v1.0741】98→112px。【v1.0830】★ここは広げないこと。入札状態とPR状態で共通の幅なので、広げると2列ぶん太る（v1.0829 で124pxにしたが元に戻した） */ box-sizing: border-box; cursor: pointer;  /* 【v192】入札状態・PRオプ状態で共通の固定枠幅（12.6pxでの最長ラベル約96pxに合わせて統一） */
   /* 【v1.0734】★min-height は「2行ぶん」。28px のままだと 1行の値（入札◯ など）だけ枠が低くなり、
      2行の値（入札△-調整中 など）と並んだときに行の高さがガタガタになる。
      計算: 12.6px × line-height1.18 × 2行 ＋ 上下padding4 ＋ 枠線3 ≒ 37px。
@@ -2202,6 +2202,9 @@ td[data-resize-key] {
   max-width: 100%; overflow: hidden;
 }
 .status-chev { font-size: 0.66em; opacity: 0.55; flex: 0 0 auto; }
+/* 【v1.0964】★ステータス／入札状態／PR状態の右端の「▾」は出さない（本人指定：横幅の節約）。
+   枠そのものを押せば選択肢が開くのは今までどおり（透明の select が上に重なっている）。HTML の status-chev は残してある＝戻すならこの1行を消すだけ。 */
+.status-chev { display: none; }
 /* 【v1.0756】列見出しの下に出す計算式。★見出しの高さを増やさないよう、細く薄く
    【v1.0757】中身を「売上/費用」の短い形にしたので、商品-基本データの .th-sub と同じ見た目に揃える。
    ★nowrap ＋ overflow:hidden。見出しを折り返させない＝計算式ONで列幅や行高が変わらない。 */
@@ -4911,7 +4914,7 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0963</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0964</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
