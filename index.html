@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0960 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0961 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4838,6 +4838,15 @@ tr.nb-empty .nb-in { border-color: var(--red); }
 .vp-wm-name { flex: 1 1 auto; }
 .vp-wm-cnt { flex: 0 0 auto; font-size: 0.72rem; color: var(--text3); font-weight: 600; }
 .vp-wm-empty { font-size: 0.78rem; color: var(--text3); padding: 6px 10px; }
+.vp-wm-head { font-size: 0.74rem; font-weight: 700; color: var(--text2); padding: 8px 10px 4px; }
+.vp-wm-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 10px 4px; }
+.vp-chip { font-size: 0.8rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); }
+.vp-chip.is-here { border-color: var(--accent); background: var(--accent); color: #fff; }
+.vp-wm-sub { font-size: 0.72rem; color: var(--text3); padding: 2px 10px 8px; line-height: 1.5; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+.vp-wm-sec span { font-weight: 400; }
+.vp-wm-item { flex-direction: column; align-items: flex-start !important; gap: 2px !important; }
+.vp-wmenu .vp-wm-name { font-size: 0.84rem; font-weight: 700; color: var(--accent); }
+.vp-wm-desc { font-size: 0.7rem; font-weight: 500; color: var(--text3); line-height: 1.45; }
 .vp-wm-note { font-size: 0.7rem; color: var(--text3); padding: 6px 10px 4px; line-height: 1.5; border-top: 1px solid var(--border); margin-top: 4px; }
 /* 【v1.0960】商品名の文字を2px小さく（本人指定「商品名の文字も変えてOK。もう少し小さくして」・横幅の節約）。
    ・セルの文字（1em）から2px引く＝どの表でも同じだけ小さくなる。A−/A+ にも追従。
@@ -4902,7 +4911,7 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0960</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0961</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -28652,15 +28661,20 @@ function _colScreenLabel() {
   return s || String(state.currentView || '');
 }
 // いま見えている画面の表の「型」を台帳に記録する（★_vpTouch はしない＝これだけで未反映にしない）
-function _colRegisterLayouts() {
+function _colRegisterLayouts(labelOverride) {
   const view = document.querySelector('.view.active'); if (!view) return;
-  const vp = ensureViewPrefs(); const label = _colScreenLabel();
+  const vp = ensureViewPrefs(); const label = labelOverride || _colScreenLabel();
   view.querySelectorAll('table').forEach(t => {
     if (!t.offsetParent) return;
     const s = _colSig(t); if (!s || s.keys.length < 2) return;
     const cur = vp.colLayouts[s.sig] || (vp.colLayouts[s.sig] = { tk: s.tk, keys: s.keys, labels: [] });
     cur.keys = s.keys; cur.tk = s.tk;
     if (label && cur.labels.indexOf(label) < 0) cur.labels.push(label);
+    // 【v1.0961】同じ表の別の型に同じ画面名が残っていたら外す（列が変わった古い型に名前が残り続けないように）
+    if (label) Object.keys(vp.colLayouts).forEach(g => {
+      const o = vp.colLayouts[g]; if (g === s.sig || !o || o.tk !== s.tk || !Array.isArray(o.labels)) return;
+      const i = o.labels.indexOf(label); if (i >= 0) o.labels.splice(i, 1);
+    });
     // 見出しの文字（反映先の一覧で「どの列が共通か」を見せるため）
     const row = _colHeadRow(t); const names = {};
     Array.from(row.children).forEach(th => { const k = th.dataset.resizeKey; if (k) names[k] = (th.textContent || '').replace(/[▲▼⇅↕]/g, '').replace(/\s+/g, '').slice(0, 14); });
@@ -28733,22 +28747,65 @@ function _vpMenuEl() {
   return m;
 }
 function _vpMenuClose() { const m = document.getElementById('vpWidthMenu'); if (m) m.hidden = true; }
+// 【v1.0961】同じ表を「モード」で切り替えている画面（撤退4画面／商品-基本データと調整-基本）は、
+//   メニューを開いたときに裏でモードを切り替えて列を調べ、台帳に載せる（まだ開いていない兄弟画面も一覧に出すため）。
+//   ★同じ処理の中で元のモードに戻す＝画面には一瞬も出ない（描画は処理が終わってから）。
+function _colLabelOf(el) { return el ? el.textContent.replace(/\(\s*\d+\s*\)/g, '').replace(/\d+$/, '').replace(/\s+/g, ' ').trim() : ''; }
+function _colProbeModes() {
+  const v = state.currentView;
+  if (v === 'withdraw' && typeof renderWithdraw === 'function') {
+    const orig = _wdMode;
+    document.querySelectorAll('.nav-tab[data-view="withdraw"][data-wdmode]').forEach(t => {
+      _wdMode = t.dataset.wdmode;
+      try { renderWithdraw(); } catch (e) {}
+      try { _colRegisterLayouts(_colLabelOf(t)); } catch (e) {}
+    });
+    _wdMode = orig; try { renderWithdraw(); applyColWidths(); } catch (e) {}
+  } else if (v === 'basic' && typeof _basicSyncNavTabs === 'function') {
+    const orig = _basicMode;
+    document.querySelectorAll('.nav-tab[data-view="basic"][data-basicmode]').forEach(t => {
+      _basicMode = t.dataset.basicmode; _basicSyncNavTabs();   // 調整-基本だけの列は body.basic-tune の CSS で出し入れ（描き直し不要）
+      try { _colRegisterLayouts(_colLabelOf(t)); } catch (e) {}
+    });
+    _basicMode = orig; _basicSyncNavTabs();
+  }
+}
 function _vpMenuOpen() {
+  try { _colProbeModes(); } catch (e) {}
   try { _colRegisterLayouts(); } catch (e) {}
   const m = _vpMenuEl(); const b = document.getElementById('btnViewPrefs');
   const e = escapeHtml; const here = _colScreenLabel();
   const T = _colCopyTargets();
-  let html = '<button type="button" class="vp-wm-main" data-vpw="toggle">' + (_colResizeOn ? '✓ 幅調整を終える（GitHubへ反映）' : '✎ この画面の幅を調整する') + '</button>';
-  html += '<div class="vp-wm-sec">この画面（<b>' + e(here) + '</b>）の幅を、ほかの画面にも反映</div>';
-  if (!T.src) html += '<div class="vp-wm-empty">この画面には幅を変えられる表がありません</div>';
-  else if (!T.list.length) html += '<div class="vp-wm-empty">反映できる画面がまだありません（ほかの画面を一度開くと、ここに出ます）</div>';
-  else html += T.list.map(x => {
-    const nm = x.labels.join('・');
-    const full = (x.common.length === x.total) && (x.total === T.srcSig.keys.length);
-    return '<button type="button" class="vp-wm-item" data-vpw="copy" data-sig="' + e(x.sig) + '" data-label="' + e(nm) + '" title="共通する ' + x.common.length + '列の幅を、いまのこの画面と同じにします（' + e(nm) + 'にしか無い列は変わりません）">'
-      + '<span class="vp-wm-name">' + e(nm) + '</span><span class="vp-wm-cnt">共通 ' + x.common.length + ' / ' + x.total + '列' + '</span></button>';
-  }).join('');
-  html += '<div class="vp-wm-note">幅は<b>列の並びがまったく同じ画面だけ</b>で共有されます。押した画面には、共通する列の幅だけをコピーします（その画面にしか無い列は変わりません）。</div>';
+  // 【v1.0961】★本人指定：「共通 17 / 19列」では意味が分からない → 見出しで【幅が変わる画面】をはっきり出す。
+  //   1) 幅を調整すると変わる画面（＝列がまったく同じ画面）をチップで並べる。いまの画面は濃く。
+  //   2) 幅調整の開始／終了
+  //   3) ほかの画面にも同じ幅をコピー（列が少し違う画面）。「その画面にしか無い列」は名前で出す。
+  let html = '<div class="vp-wm-head">幅を調整すると変わる画面</div>';
+  if (!T.src) {
+    html += '<div class="vp-wm-empty">この画面（' + e(here) + '）には幅を変えられる表がありません</div>';
+  } else {
+    const vp = ensureViewPrefs(); const L = vp.colLayouts[T.srcSig.sig] || { labels: [] };
+    const labs = (L.labels || []).slice(); if (here && labs.indexOf(here) < 0) labs.unshift(here);
+    labs.sort((a, b) => (a === here ? -1 : b === here ? 1 : 0));
+    html += '<div class="vp-wm-chips">' + labs.map(x => '<span class="vp-chip' + (x === here ? ' is-here' : '') + '">' + e(x) + '</span>').join('') + '</div>';
+    html += '<div class="vp-wm-sub">' + (labs.length > 1
+      ? 'この' + labs.length + '画面は<b>列がまったく同じ</b>なので、どこで幅を変えても' + labs.length + '画面とも同じ幅になります。'
+      : '<b>この画面だけ</b>が変わります（列がまったく同じ画面はほかにありません）。') + '</div>';
+  }
+  html += '<button type="button" class="vp-wm-main" data-vpw="toggle">' + (_colResizeOn ? '✓ 幅調整を終える（GitHubへ反映）' : '✎ 幅を調整する') + '</button>';
+  if (T.src && T.list.length) {
+    html += '<div class="vp-wm-sec">ほかの画面にも同じ幅をコピー<span>（列が少し違う画面。押すとその場でコピー）</span></div>';
+    const vp = ensureViewPrefs();
+    html += T.list.map(x => {
+      const nm = x.labels.join('・');
+      const tl = vp.colLayouts[x.sig] || {}; const names = tl.names || {};
+      const only = (tl.keys || []).filter(k => T.srcSig.keys.indexOf(k) < 0).map(k => names[k] || k);
+      const onlyTxt = only.length ? ('「' + only.slice(0, 4).join('・') + (only.length > 4 ? ' ほか' + (only.length - 4) + '列' : '') + '」はそのまま') : '';
+      return '<button type="button" class="vp-wm-item" data-vpw="copy" data-sig="' + e(x.sig) + '" data-label="' + e(nm) + '">'
+        + '<span class="vp-wm-name">→ ' + e(nm) + ' にもコピー</span>'
+        + '<span class="vp-wm-desc">同じ列の幅をこの画面とそろえます' + (onlyTxt ? '。' + e(nm) + 'にしか無い' + e(onlyTxt) : '') + '</span></button>';
+    }).join('');
+  }
   m.innerHTML = html;
   m.hidden = false;
   const r = b.getBoundingClientRect();
