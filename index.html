@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0962 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0963 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4911,7 +4911,7 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0962</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0963</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -7249,7 +7249,10 @@ const state = {
 // ==================== Utility ====================
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
-const fmt = (n) => (n == null || isNaN(n) || n === 0) ? '—' : '¥' + Math.round(n).toLocaleString('ja-JP');
+// 【v1.0963】★表のセルの金額は ¥ を付けない（本人指定：横幅の節約）。fmt はセル用。
+//   ツールチップ・説明文・グラフの札など「文章の中の金額」は ¥ 付きの fmtYen を使う（数字だけだと金額と分からないため）。
+const fmt = (n) => (n == null || isNaN(n) || n === 0) ? '—' : Math.round(n).toLocaleString('ja-JP');
+const fmtYen = (n) => (n == null || isNaN(n) || n === 0) ? '—' : '¥' + Math.round(n).toLocaleString('ja-JP');
 const fmtNum = (n) => (n == null || isNaN(n) || n === 0) ? '—' : Math.round(n).toLocaleString('ja-JP');
 const fmtRoas = (n) => {
   if (n == null || isNaN(n) || !isFinite(n) || n === 0) return '—';
@@ -13248,7 +13251,7 @@ function _bidUpdLabel(ymd) {
 // 入札価格セルの中身（金額 ＋ 小さく最終更新日）。★4か所から呼ぶので必ずこの関数を通すこと
 function bidCellInnerHtml(code, bid) {
   const has = (bid != null && Number(bid) > 0);
-  const main = has ? ('¥' + Number(bid)) : '—';
+  const main = has ? String(Number(bid)) : '—';   /* 【v1.0963】¥ は付けない（横幅の節約） */
   if (!has) return main;
   const ymd = bidLastChangedYmd(code);
   const lbl = _bidUpdLabel(ymd);
@@ -14157,7 +14160,7 @@ function renderBasic() {
       if (!_k || _famN < 2 || !(_famTot > 0)) return `<td class="num col-total">${fmt(r.rev)}</td>`;
       const _p = Math.round((+r.rev || 0) / _famTot * 1000) / 10;
       const _t = 'このセット（代表コード「' + _k + '」・' + _famN + '件）の中での売上比率\n'
-        + '  ' + fmt(r.rev) + ' ÷ セット総売上 ' + fmt(_famTot) + ' = ' + _p + '%\n'
+        + '  ' + fmtYen(r.rev) + ' ÷ セット総売上 ' + fmtYen(_famTot) + ' = ' + _p + '%\n'
         + 'メンバーの合計が100%になります。';
       return `<td class="num col-total share-cell" title="${escapeHtml(_t)}"><span class="amt">${fmt(r.rev)}<span class="share-pct fam-pct">${Math.round(_p)}%</span></span></td>`;
     })();
@@ -15158,7 +15161,7 @@ function basicPrSalesRoasOf(r) {
 //   ★子にも入札価格が入っているときは「＋子」の小札を付け、ツールチップにセット内の内訳を出す（子の分は「個別」で編集）。
 //   ★商品-基本データ／調整-入札価格／商品-広告データ の3か所のセット行がこれを使う。
 function _bidSetCellHtml(rep, members) {
-  const v = _basicMultiVal(members, c => getBid(c), x => '¥' + x);
+  const v = _basicMultiVal(members, c => getBid(c), x => String(x));   /* 【v1.0963】 */
   const own = getBid(rep);
   const others = (members || []).filter(c => c !== rep && getBid(c) > 0);
   const tip = 'クリックで編集（セットの代表＝親「' + rep + '」の入札価格）'
@@ -15322,8 +15325,8 @@ function _momBandCls(p) {
 }
 function _momYen(d) {
   const v = Math.round(d);
-  if (v === 0) return '±¥0';
-  return (v > 0 ? '+' : '−') + '¥' + Math.abs(v).toLocaleString('ja-JP');
+  if (v === 0) return '±0';   /* 【v1.0963】¥ は付けない */
+  return (v > 0 ? '+' : '−') + Math.abs(v).toLocaleString('ja-JP');
 }
 // 【v1.0863】総売上の右の「前月比」列のセル。c が null（日選択中）なら「—」
 // 【v1.0864】上＝差額（円）／下＝前月比（%）の2段
@@ -15338,10 +15341,10 @@ function _momCellHtml(rev, prevRev, c) {
   const lines = [];
   lines.push('差額 ' + _momYen(d) + (p != null ? '（前月比 ' + _momPctSigned(p) + '＝前月をならした額の ' + Math.round(p) + '%）' : '（前月 ' + c.prev + ' は売上なし）'));
   if (c.t.have < c.t.need) lines.push('今月は ' + c.t.have + '/' + c.t.need + '日分なので、前月を同じ割合にならして比べています');
-  lines.push('  前月をならした額 ＝ 前月 ' + fmt(prevRev)
+  lines.push('  前月をならした額 ＝ 前月 ' + fmtYen(prevRev)
     + (c.q.have < c.q.need ? ' × ' + c.q.need + '/' + c.q.have + '日（前月の欠けを補正）' : '')
     + (c.t.have < c.t.need ? ' × ' + c.t.have + '/' + c.t.need + '日' : '') + ' ＝ ¥' + Math.round(e).toLocaleString('ja-JP'));
-  lines.push('  差額 ＝ 今月 ' + fmt(rev) + ' − ¥' + Math.round(e).toLocaleString('ja-JP'));
+  lines.push('  差額 ＝ 今月 ' + fmtYen(rev) + ' − ¥' + Math.round(e).toLocaleString('ja-JP'));
   const cls = Math.round(d) > 0 ? 'up' : (Math.round(d) < 0 ? 'down' : 'flat');
   const pct = (p != null) ? _momPctSigned(p) : '—';   /* 【v1.0871】94% → −6%（増減率。＋／−を付ける） */
   return '<td class="num col-mom" title="' + escapeHtml(lines.join('\n')) + '">'
@@ -15358,7 +15361,7 @@ function _momHtml(rev, prevRev, c) {
   const lines = [];
   lines.push('前月比 ' + r + '%');
   if (c.t.have < c.t.need) lines.push('今月は ' + c.t.have + '/' + c.t.need + '日分なので、前月を同じ割合にならして比べています');
-  lines.push('  今月 ' + fmt(rev) + ' ÷（前月 ' + fmt(prevRev)
+  lines.push('  今月 ' + fmtYen(rev) + ' ÷（前月 ' + fmtYen(prevRev)
     + (c.q.have < c.q.need ? ' × ' + c.q.need + '/' + c.q.have + '日（前月の欠けを補正）' : '')
     + (c.t.have < c.t.need ? ' × ' + c.t.have + '/' + c.t.need + '日' : '') + '）');
   return '<span class="mom-pct ' + (r >= 100 ? 'up' : 'down') + '" title="' + escapeHtml(lines.join('\n')) + '">前月比 ' + r + '%</span>';
@@ -16082,7 +16085,7 @@ function renderMonthly() {
   const stats = sel.stats.map((m, i2) => Object.assign({}, m, { grp: _miGrpFor(selKeys[i2]) }));
 
   const pool = {}; cols.forEach(c => { pool[c.id] = stats.map(m => _zdValOf(m, c)).filter(v => v > 0); });
-  const fmtY2 = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
+  const fmtY2 = v => (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   /* 【v1.0963】¥ なし */
 
   const BLK = '2px solid var(--border2)';
   const VBD = '1px solid var(--border)';
@@ -16423,7 +16426,7 @@ function renderOyako(){
   HEAD += th('子商品タイプ','text-align:center;background:#fdf6df');   // 【子商品タイプ】子の内容ドロップダウン
   HEAD += th('ステータス','text-align:center');
 
-  const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':'¥'+Math.round(v).toLocaleString();
+  const fmtY = v => (!v||v===0)?'<span style="color:var(--text3)">—</span>':Math.round(v).toLocaleString();   /* 【v1.0963】 */
   // 【v206】グループ（商品）の境目をはっきりさせる濃い区切り線。グループ最終行の下＝境目。
   // 【v1.0437】濃い黒線は「直近3ヶ月」（1グループ3行）でグループの塊を分けるためのもの。
   //   月別は1グループ1行なので濃い線だと重すぎる → 元の細線（1px）に戻す。
@@ -16431,7 +16434,7 @@ function renderOyako(){
   const pctCell = (num, den, bg, bb, extra='') => {
     if (!den || den<=0) return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><span style="color:var(--text3)">—</span></td>`;
     const pct = Math.round(num/den*100);
-    const amt = _oyShowAmt ? `<div style="font-size:12.65px;color:#64748b;margin-top:3px;font-family:'DM Mono',ui-monospace,monospace">¥${Math.round(num).toLocaleString()}</div>` : '';
+    const amt = _oyShowAmt ? `<div style="font-size:12.65px;color:#64748b;margin-top:3px;font-family:'DM Mono',ui-monospace,monospace">${Math.round(num).toLocaleString()}</div>` : '';
     return `<td style="padding:8px 12px;text-align:center;background:${bg};border-bottom:${bb};${extra}"><div style="font-size:16.8px;font-weight:800;line-height:1.05;color:${pctBandColor(pct)}">${pct}%</div>${amt}</td>`;
   };
 
@@ -17297,7 +17300,7 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
   const prevYm=_py+'-'+String(_pm).padStart(2,'0');
   const prevMap=seoByMonth[prevYm]||{};
   const esc=function(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
-  const fY=function(v){return '¥'+Math.round(v).toLocaleString('ja-JP');};
+  const fY=function(v){return Math.round(v).toLocaleString('ja-JP');};   /* 【v1.0963】¥ なし */
   let inner;
   if(!top.length){
     inner='<div style="padding:10px 12px;color:var(--text3);font-size:12px">この月はSEO売上のある商品がありません</div>';
@@ -17443,7 +17446,7 @@ function renderGraphData() {
   const _rankPoolRows = _dayMode ? asc : asc.slice(0, -1).slice(-RANK_MONTHS);
   // 【v1.0555】色分けの母集団は「その列」ごと。合計列・7%列・7%超列はそれぞれ別の母集団で評価する。
   const pool = {}; _zdCols.forEach(c => { pool[c.id] = _rankPoolRows.map(r => _zdValOf(r, c)).filter(v => v > 0); });
-  const fmtY = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(v).toLocaleString();
+  const fmtY = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   /* 【v1.0963】¥ なし（ツールチップの _zdYen は ¥ 付きのまま） */
   const fmtP = (v, dec) => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : fmtPctBy(v, dec);   /* 【v1.0794】桁は列の dec 任せ */
   const fmtN = v => (v == null || !v || v === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(v).toLocaleString();   // 【v1.0537】回数系（表示回数・CL）
   const BLK = '2px solid var(--border2)';   // 【v1.0537】SEO / PRオプ / 広告 のブロック境界線
@@ -17955,7 +17958,7 @@ function renderGraphAll() {
   const body = rows.slice().reverse().map(r => {
     const tds = cols.map(c => {
       const v = r[c.key];
-      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
+      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
     }).join('');
     return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + r.label + monthDayBadgeHtml(r.month) + '</td>' + tds + '</tr>';   /* 【v1.0849】 */
@@ -19627,7 +19630,7 @@ function formatBidCell(v) {
   if (v == null || v === '' || isNaN(Number(v))) return '';
   const n = Number(v);
   const cls = (n === 25) ? 'rank-edit-good' : 'rank-edit-off';
-  return `<span class="rank-edit-value ${cls}">¥${n}</span>`;
+  return `<span class="rank-edit-value ${cls}">${n}</span>`;   /* 【v1.0963】¥ なし */
 }
 
 // 【v111】その商品のその月の日別値を見て、各日に「変化ライン色クラス」と
@@ -20075,7 +20078,7 @@ function renderCompare(){
   const orders=periods.map(function(_,k){ return [...top].sort(function(a,b){ return b.v[k].s-a.v[k].s; }); });
   const idxs=orders.map(function(ord){ const m={}; ord.forEach(function(p,i){ m[p.code]=i; }); return m; });
 
-  const yen=function(v){ return '¥'+Math.round(v).toLocaleString('ja-JP'); };
+  const yen=function(v){ return Math.round(v).toLocaleString('ja-JP'); };   /* 【v1.0963】¥ なし */
   const fmt=function(v){ return v>0?yen(v):'<span style="color:var(--text3)">—</span>'; };
   const esc=function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
 
@@ -20249,7 +20252,7 @@ const YT_COST = {
 function _ytCostsOf(mt) { return mt.den === 'spPr' ? ['sp', 'pr'] : (mt.den === 'prOver' ? ['pr'] : ['sp']); }
 function _ytCostHtml(key, v, withLabel) {
   const c = YT_COST[key], z = !(Math.round(v || 0) > 0);
-  const val = z ? '<span class="yt-c0" style="background:' + c.col + '">¥0</span>' : _ytYen(v);
+  const val = z ? '<span class="yt-c0" style="background:' + c.col + '">0</span>' : _ytYen(v);
   return (withLabel ? '<span class="yt-clb" style="color:' + c.col + '">' + c.short + '</span> ' : '') + '<span style="color:' + c.col + '">' + val + '</span>';
 }
 const YT_DEN_LABEL = { sp:'広告実績額', spPr:'広告+PR費', prOver:'PR(7%超)' };   // spPr＝広告実績額＋PR実績額(7%超)
@@ -20580,10 +20583,10 @@ function _ytNavSpy() {
 }
 
 // ---- 表 ----
-function _ytYen(v) { return '¥' + Math.round(v).toLocaleString('ja-JP'); }
+function _ytYen(v) { return Math.round(v).toLocaleString('ja-JP'); }   /* 【v1.0963】表の金額は ¥ なし */
 function _ytNoAdBadge(big, mt) { const t = (mt && mt.zero) || '広告なし'; return '<span class="yt-noad' + (big ? ' big' : '') + '" title="この期間は' + ((mt && YT_DEN_LABEL[mt.den]) || '広告費') + 'が0円（売上だけある）">' + t + '</span>'; }
 function _ytImpTxt(mt, x) {
-  if (mt.type === 'cpa') { const bad = x.imp > 0; return '<span style="color:' + (bad ? '#dc2626' : '#16a34a') + '">' + (x.imp >= 0 ? '+' : '−') + '¥' + Math.round(Math.abs(x.imp)).toLocaleString('ja-JP') + '</span>'; }
+  if (mt.type === 'cpa') { const bad = x.imp > 0; return '<span style="color:' + (bad ? '#dc2626' : '#16a34a') + '">' + (x.imp >= 0 ? '+' : '−') + Math.round(Math.abs(x.imp)).toLocaleString('ja-JP') + '</span>'; }
   const dec = mt.type === 'cvr' ? 2 : 1, up = x.imp >= 0;
   return '<span style="color:' + (up ? '#16a34a' : '#dc2626') + '">' + (up ? '+' : '−') + Math.abs(x.imp).toFixed(dec) + 'pt</span>';
 }
@@ -21157,11 +21160,11 @@ function renderItemGraph() {
     const it = itemMap[m] || {}, ad = adMap[m] || {};
     const tds = cols.map(c => {
       const v = c.calc(it, ad);
-      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? '¥' + Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
+      const disp = (!v || v === 0) ? '<span style="color:var(--text3)">—</span>' : (c.unit === 'y' ? Math.round(v).toLocaleString() : (c.unit === 'p' ? fmtPctBy(v, c.dec) : Math.round(v).toLocaleString()));   /* 【v1.0794】 */
       return '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + c.bg + ';border-bottom:1px solid var(--border);white-space:nowrap">' + disp + '</td>';
     }).join('');
     const sv = (childMap[m] || {}).rev || 0;
-    const sdisp = (!sv || sv === 0) ? '<span style="color:var(--text3)">—</span>' : '¥' + Math.round(sv).toLocaleString();
+    const sdisp = (!sv || sv === 0) ? '<span style="color:var(--text3)">—</span>' : Math.round(sv).toLocaleString();   /* 【v1.0963】 */
     const soiTd = '<td style="padding:7px 12px;text-align:right;font-family:\'DM Mono\',ui-monospace,monospace;font-size:0.9rem;background:' + _SOI_BG + ';border-left:' + _SOI_BD + ';border-bottom:1px solid var(--border);white-space:nowrap">' + sdisp + '</td>';
     return '<tr><td style="padding:7px 12px;text-align:right;font-weight:700;font-size:0.85rem;color:var(--accent);font-family:\'DM Mono\',ui-monospace,monospace;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap">' + m.replace('-', '/') + monthDayBadgeHtml(m) + '</td>' + tds + soiTd + '</tr>';   /* 【v1.0849】 */
   }).join('');
@@ -21248,7 +21251,7 @@ function ycThumbHtml(r, opts) {
     + ' onclick="' + esc(o.onclick || '') + '" title="' + tip + '">'
     + '<div class="mi-thumb-img">' + (src ? '<img loading="lazy" src="' + esc(src) + '" onerror="this.remove()">' : '📦')
     + '<span class="mi-thumb-rank">' + esc(o.rank == null ? '—' : o.rank) + '</span></div>'
-    + '<span class="mi-thumb-amt">' + (amt ? '¥' + amt.toLocaleString() : '—') + '</span>'
+    + '<span class="mi-thumb-amt">' + (amt ? amt.toLocaleString() : '—') + '</span>'   /* 【v1.0963】 */
     + '<span class="mi-thumb-roas" style="color:' + roasColor + '">'
     + '<span class="mi-roas-k">ROAS</span> ' + (roas == null ? '—' : (roas.toLocaleString() + '%')) + '</span>'
     + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
@@ -21661,7 +21664,7 @@ function _trendPaint(opt) {
              + '<tr>' + subRev + metrics.map(sub).join('') + subAd + subPr + '</tr>';
   const mono = "font-family:'DM Mono',ui-monospace,monospace;";           // ★桁を揃えて比較できるように
   const fp = v => (v > 0 ? Math.round(v).toLocaleString('ja-JP') + '%' : '<span style="color:var(--text3)">—</span>');
-  const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
+  const fyen = v => (v == null ? '<span style="color:var(--text3)">—</span>' : (v > 0 ? Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">0</span>'));   /* 【v1.0963】¥ なし */
   // 【v1.0779】率が「—」になる理由をセルの title に出す。★売上があるのに「—」だと不具合に見えるため
   const dashTip = (m, a) => {
     if (m.den(a) > 0) return '';
@@ -22091,7 +22094,7 @@ function renderContrib() {
     const rank = (r.rankOk && amt != null) ? _cbRank5(amt, _pools[poolKey], _cbIsCost(poolKey)) : 'bk';
     const main = (amt == null || Math.abs(amt) < 1)
       ? '<span class="cb-chg-0">±0</span>'
-      : '<span class="cb-chgv c-' + rank + '">' + (amt > 0 ? '+' : '−') + '¥' + Math.round(Math.abs(amt)).toLocaleString('ja-JP') + '</span>';
+      : '<span class="cb-chgv c-' + rank + '">' + (amt > 0 ? '+' : '−') + Math.round(Math.abs(amt)).toLocaleString('ja-JP') + '</span>';   /* 【v1.0963】 */
     const sub = (pct == null) ? ''
       : '<span class="cb-chgp">' + (Math.abs(pct) < 0.05 ? '±0%' : ((pct > 0 ? '+' : '−') + Math.abs(pct).toFixed(1) + '%')) + '</span>';
     return main + sub;
@@ -22136,7 +22139,7 @@ function renderContrib() {
     const rank = (rankKey && rankOk) ? _cbRank5(v, _pools[rankKey], _cbIsCost(rankKey)) : 'bk';
     return _dWrap((v > 0 ? '+' : '−') + fmtOne(Math.abs(v)), 'c-' + rank);
   };
-  const _yen = (v) => '¥' + Math.round(v).toLocaleString('ja-JP');
+  const _yen = (v) => Math.round(v).toLocaleString('ja-JP');   /* 【v1.0963】表の差分は ¥ なし */
   const _pt  = (v) => v.toFixed(1) + 'pt';
   const _ptR = (v) => Math.round(v).toLocaleString('ja-JP') + 'pt';
   const _dNew = () => _dWrap('新規', 'cb-new');   // 【v1.0773】4段の色とは別の色（紫）
@@ -22254,7 +22257,7 @@ function renderContrib() {
     if (!now && !before) return '<span style="color:var(--text3)">—</span>';
     const d = (+now || 0) - (+before || 0);
     const main = (Math.abs(d) < 1) ? '<span class="cb-chg-0">±0</span>'
-      : '<b>' + (d > 0 ? '+' : '−') + '¥' + Math.round(Math.abs(d)).toLocaleString('ja-JP') + '</b>';
+      : '<b>' + (d > 0 ? '+' : '−') + Math.round(Math.abs(d)).toLocaleString('ja-JP') + '</b>';   /* 【v1.0963】 */
     if (!(before > 0)) return main;
     const pct = (now / before - 1) * 100;
     return main + '<span class="cb-chgp">' + (Math.abs(pct) < 0.05 ? '±0%' : ((pct > 0 ? '+' : '−') + Math.abs(pct).toFixed(1) + '%')) + '</span>';
@@ -22292,13 +22295,13 @@ function renderContrib() {
       return v;
     };
     let h = '1か月ぶん（売上・シェア・広告費・シェア・PR実績額・PR広告売上ROAS）を左右に並べています。'
-          + '分母は<b>月ごと</b>に取り直しています。' + mR + ' ＝ 商品別売上の合計 <b>' + fmt(totRevR) + '</b> / 広告実績額の合計 <b>' + fmt(totCostR) + '</b>'
-          + (_cmp ? ('、' + mL + ' ＝ <b>' + fmt(totRevL) + '</b> / <b>' + fmt(totCostL) + '</b>') : '') + '（それぞれ100%）。'
+          + '分母は<b>月ごと</b>に取り直しています。' + mR + ' ＝ 商品別売上の合計 <b>' + fmtYen(totRevR) + '</b> / 広告実績額の合計 <b>' + fmtYen(totCostR) + '</b>'
+          + (_cmp ? ('、' + mL + ' ＝ <b>' + fmtYen(totRevL) + '</b> / <b>' + fmtYen(totCostL) + '</b>') : '') + '（それぞれ100%）。'
           + '両方を同じ分母で割ると、売上が伸びた月のシェアが勝手に増えてしまうためです。';
     const sr = shopRevOf(_cbYm);
     if (sr != null) {
       const d = sr - totRevR;
-      h += '<br>' + mR + ' のショップ総売上(KPI) は ' + fmt(sr) + '（差 ' + (d >= 0 ? '+' : '−') + fmt(Math.abs(d)) + '）。'
+      h += '<br>' + mR + ' のショップ総売上(KPI) は ' + fmtYen(sr) + '（差 ' + (d >= 0 ? '+' : '−') + fmtYen(Math.abs(d)) + '）。'
          + '商品別レポートに出ない売上（送料・まとめ買いなど）があるため一致しないことがあります。ここでは商品別の合計を100%としています。';
     }
     if (_cmp) h += '<br><b>最新月変動</b>の売上・広告費は<b>増えた金額</b>（' + mR + ' − ' + mL + '）と、その下に小さく<b>変動率</b>（' + mR + ' ÷ ' + mL + ' − 1）。'
@@ -24961,7 +24964,7 @@ const PE_BID_LABELS = {
       if (v == null) return;
       if (prev != null && v !== prev) {
         const x = xs.getPixelForValue(i), yc = ys.getPixelForValue(prev);
-        const txt = fmt(prev) + '→' + fmt(v);
+        const txt = fmtYen(prev) + '→' + fmtYen(v);   /* 【v1.0963】グラフの札は ¥ 付きのまま */
         const w = ctx.measureText(txt).width + 10, h = 18;
         let lx = Math.min(Math.max(x - w / 2, area.left + 2), area.right - w - 2);
         let ly = (v < prev) ? (yc - h - 6) : (yc + 6);
@@ -25157,7 +25160,8 @@ function peRenderAdj() {
     wrap.innerHTML = '<div class="pe-empty">この商品のデータがありません（レポートを取り込むと出ます）</div>';
     return;
   }
-  const yen = v => '¥' + Math.round(v || 0).toLocaleString('ja-JP');
+  const yen = v => Math.round(v || 0).toLocaleString('ja-JP');           /* 【v1.0963】表のセルは ¥ なし */
+  const yenT = v => '¥' + Math.round(v || 0).toLocaleString('ja-JP');    /* グラフのツールチップは ¥ 付き */
   const isDay = (grain === 'day');
   const labels = rows.map(r => isDay ? ((+String(r.key).slice(5, 7)) + '/' + (+String(r.key).slice(8, 10))) : String(r.key).replace('-', '/'));
   const hasBid = isDay && rows.some(r => r.bid != null);   // 【v1.0916】月別のグラフには入札価格を出さない（表の列はそのまま）
@@ -25239,11 +25243,11 @@ function peRenderAdj() {
                   if (l === '広告ROAS') { const rv = c.dataset._raw ? c.dataset._raw[c.dataIndex] : v; return '広告ROAS: ' + (rv == null ? '—' : Math.round(rv).toLocaleString('ja-JP') + '%'); }   // 【v1.0915】上限で止めても本当の値
                   if (l === '入札価格') return '入札価格: ' + (v == null ? '—' : '¥' + v);
                   if (l === 'PRオプ料率') return 'PRオプ料率: ' + (v == null ? '—' : v + '%');   // 【v1.0924】
-                  if (l === 'PR実績額') return 'PR実績額(7%超・推定): ' + yen(v);   // 【v1.0926】
+                  if (l === 'PR実績額') return 'PR実績額(7%超・推定): ' + yenT(v);   // 【v1.0926】
                   if (l === 'PR広告売上ROAS') { const rv = c.dataset._raw ? c.dataset._raw[c.dataIndex] : v; return 'PR広告売上ROAS(推定): ' + (rv == null ? '—' : Math.round(rv).toLocaleString('ja-JP') + '%'); }   // 【v1.0943】
-                  return l + ': ' + yen(v);
+                  return l + ': ' + yenT(v);
                 },
-                footer: (items) => { const r = items.length ? rows[items[0].dataIndex] : null; return r ? ('総売上 ' + yen(r.rev)) : ''; }
+                footer: (items) => { const r = items.length ? rows[items[0].dataIndex] : null; return r ? ('総売上 ' + yenT(r.rev)) : ''; }
               }
             }
           },
@@ -25286,7 +25290,7 @@ function peRenderAdj() {
   // ---- 表（新しい順） ----
   const dash = '<span style="color:var(--text3)">—</span>';
   const n0 = v => (v == null ? dash : Math.round(v).toLocaleString('ja-JP'));
-  const y0 = v => (v == null ? dash : (v > 0 ? yen(v) : '<span style="color:var(--text3)">¥0</span>'));
+  const y0 = v => (v == null ? dash : (v > 0 ? yen(v) : '<span style="color:var(--text3)">0</span>'));
   const pc = (v, d) => (v == null ? dash : v.toFixed(d == null ? 1 : d) + '%');
   const roasCls = v => (v == null ? '' : v >= 300 ? 'color:#1D9E75' : v >= 200 ? 'color:#BA7517' : 'color:#A32D2D');
   const part = r => (r.impPartial ? '<span class="pe-imp-part" title="表示回数がある日（' + r.impDays + '日 / 広告データ ' + r.adDays + '日）だけの合計。CTR も同じ日だけで計算">※</span>' : '');
@@ -25296,7 +25300,7 @@ function peRenderAdj() {
   const COLS = [
     // 【v1.0944】並びを まとまりごとに（本人：広告・PR・広告の順で気持ち悪い）：入札価格｜広告（表示→クリック→CTR→CPC→広告実績額→広告個数→広告売上→広告ROAS→CVR→平均獲得単価）｜PR（PR→PR実績額→PR売上ROAS）｜売上（SEO売上→総売上）。gs＝まとまりの始まり（左に太い線）
     // 【v1.0947】PR のまとまりに SEO売上（PR の成果）を入れ、最後を 総売上→PR広告売上ROAS（全体の効率）に（本人：性質として）。gs＝まとまりの始まり
-    { t: isDay ? '入札<br>価格' : '入札価格<br>(平均)', g: 'bid', f: r => (r.bid == null ? dash : '¥' + (Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
+    { t: isDay ? '入札<br>価格' : '入札価格<br>(平均)', g: 'bid', f: r => (r.bid == null ? dash : String(Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
     { t: 'クリック<br>数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
     { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
@@ -25600,7 +25604,7 @@ function peRenderInfo() {
   const _amtTh = (label) => '実績額<br><span style="font-weight:400;color:var(--text3);font-size:0.9em">(' + label + ')</span>';
   const _dash = '<span style="color:var(--text3)">—</span>';
   const _pct  = (v) => (v == null ? _dash : Number(Math.round(v)).toLocaleString('ja-JP') + '%');
-  const _yen0 = (v) => (v == null ? _dash : (v > 0 ? '¥' + Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">¥0</span>'));
+  const _yen0 = (v) => (v == null ? _dash : (v > 0 ? Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">0</span>'));   /* 【v1.0963】 */
 
   // ---- 見出し（2段） ----
   const _revCols = _tblSplit ? 4 : 3;
