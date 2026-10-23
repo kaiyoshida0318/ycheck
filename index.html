@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0959 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0960 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4839,6 +4839,10 @@ tr.nb-empty .nb-in { border-color: var(--red); }
 .vp-wm-cnt { flex: 0 0 auto; font-size: 0.72rem; color: var(--text3); font-weight: 600; }
 .vp-wm-empty { font-size: 0.78rem; color: var(--text3); padding: 6px 10px; }
 .vp-wm-note { font-size: 0.7rem; color: var(--text3); padding: 6px 10px 4px; line-height: 1.5; border-top: 1px solid var(--border); margin-top: 4px; }
+/* 【v1.0960】商品名の文字を2px小さく（本人指定「商品名の文字も変えてOK。もう少し小さくして」・横幅の節約）。
+   ・セルの文字（1em）から2px引く＝どの表でも同じだけ小さくなる。A−/A+ にも追従。
+   ・広告順位／SEO順位の表（.rank-table）は元から小さい（約13.6px）ので対象外。メインKW・商品コードは変えない。 */
+table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); }
 </style>
 </head>
 <body>
@@ -4898,7 +4902,7 @@ tr.nb-empty .nb-in { border-color: var(--red); }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0959</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0960</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
