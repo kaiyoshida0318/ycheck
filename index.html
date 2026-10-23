@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0949 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0950 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4828,7 +4828,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0949</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0950</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -16720,16 +16720,17 @@ function _zdSetMode(m) { _zdMode = (m === 'yoy') ? 'yoy' : 'normal'; renderGraph
 function _tgPaint(btn, off, on, color, label) {
   if (off) off.style.display = 'none';
   if (!btn) return;
-  btn.style.cssText = 'font-size:11px;padding:3px 9px 3px 5px;border-radius:999px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-weight:700;'
+  // 【v1.0950】文字の大きさは「🧮 計算式」（.fx-toggle-btn ＝ 0.78rem）にそろえる（本人指定）。rem なので A−/A+ にも追従する
+  btn.style.cssText = 'font-size:0.78rem;padding:4px 10px 4px 6px;border-radius:999px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;font-weight:600;'
     + (on ? 'border:1px solid ' + color + ';background:' + color + ';color:#fff;'
           : 'border:1px solid var(--border2);background:var(--surface2);color:var(--text3);');
-  btn.innerHTML = '<span style="position:relative;display:inline-block;width:22px;height:12px;border-radius:6px;background:' + (on ? 'rgba(255,255,255,.45)' : '#cbd5e1') + ';flex-shrink:0">'
-    + '<span style="position:absolute;top:1px;left:' + (on ? '11px' : '1px') + ';width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3)"></span></span>' + label;
+  btn.innerHTML = '<span style="position:relative;display:inline-block;width:26px;height:14px;border-radius:7px;background:' + (on ? 'rgba(255,255,255,.45)' : '#cbd5e1') + ';flex-shrink:0">'
+    + '<span style="position:absolute;top:1px;left:' + (on ? '13px' : '1px') + ';width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3)"></span></span>' + label;
   btn.title = label + '：' + (on ? '表示中（押すと消す）' : '表示しない（押すと出す）');
 }
 // くっつけたペアボタン（セグメント型）の見た目。leftOn＝左が選ばれているか
 function _pairPaint(lb, rb, leftOn, color) {
-  const base = 'font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;font-weight:600;';
+  const base = 'font-size:0.78rem;padding:4px 10px;cursor:pointer;white-space:nowrap;font-weight:600;';   /* 【v1.0950】計算式ボタンと同じ文字サイズ */
   const on = 'border:1px solid ' + color + ';background:' + color + ';color:#fff;';
   const off = 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
   if (lb) lb.style.cssText = base + 'border-radius:5px 0 0 5px;' + (leftOn ? on : off);
