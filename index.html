@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0951 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0953 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2373,6 +2373,8 @@ td[data-resize-key] {
 /* ★.status-lbl2 で2行ぶんを1つの flex アイテムにまとめる（これが無いと横並びになる） */
 .status-lbl2 { display: inline-block; text-align: center; line-height: 1.18; min-width: 0; }
 .status-sub { font-size: 0.78em; opacity: 0.85; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+/* 【v1.0953】順位・価格を2行に分けたので、小さい2行をひとかたまりにして少しだけ行間をとる（3行目の入札◯/△と詰まらないように） */
+.status-sub { display: inline-block; line-height: 1.2; margin-bottom: 2px; }
 /* 【v1.0743】入札△の1行目（入札△-調整中 など）を1行に収めるため少しだけ縮める */
 .status-lbl-1line { font-size: 0.86em; letter-spacing: -0.03em; white-space: nowrap; }
 /* 【v1.0748】ステータスの「広告なし」部分＝入札状態の「入札なし」と同じグレー（対象外の色） */
@@ -4828,7 +4830,7 @@ th.col-sroas { background-color:#e7d5f5; }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0951</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0953</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5026,10 +5028,10 @@ th.col-sroas { background-color:#e7d5f5; }
   <div class="states-grid">
 
     <span class="sg-label g-status">【ステータス】</span>
-    <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 選択前 ＋ 新リニュ（新商品・リニューアル済）（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
+    <button class="state-chip chip-all" data-state="all-basic" title="中立以上＝健常◯ ＋ 中立△ ＋ 選択前 ＋ 新リニュ（新商品・リニュ済）（撤退検討▲・撤退予定・撤退済み・未設定は含みません）"><span class="chip-label">中立以上</span><span class="chip-num" id="cntAllStatus">(0)</span></button>
     <!-- 【v1.0867】「選択前-新リニュ」を2つに分けた（本人指定）。3列目＝選択前（入札・PRの選択前と縦にそろう）、4列目＝新リニュ -->
     <button class="state-chip" data-state="status-sentakumae" title="選択前＝追加されたばかりで、まだステータスを選んでいない商品"><span class="chip-label">選択前</span><span class="chip-num" id="cntStatusSentakumae">(0)</span></button>
-    <button class="state-chip" data-state="new-product" title="新リニュ＝新商品 ＋ リニューアル済（一覧のセルには選んだ値がそのまま出ます）"><span class="chip-label">新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
+    <button class="state-chip" data-state="new-product" title="新リニュ＝新商品 ＋ リニュ済（一覧のセルには選んだ値がそのまま出ます）"><span class="chip-label">新リニュ</span><span class="chip-num" id="cntNewProduct">(0)</span></button>
     <button class="state-chip" data-state="status-kenzen" title="健常（健常-広告あり◯ ＋ 健常-広告なし◯）"><span class="chip-label">健常◯</span><span class="chip-num" id="cntStatusKenzen">(0)</span></button>
     <button class="state-chip" data-state="status-churitsu" title="中立（中立-広告あり□ ＋ 中立-広告なし□）"><span class="chip-label">中立△</span><span class="chip-num" id="cntStatusChuritsu">(0)</span></button>
     <button class="state-chip" data-state="pro-wc"><span class="chip-label">撤退検討▲</span><span class="chip-num" id="cntProWithdrawConsider">(0)</span></button>
@@ -13025,7 +13027,7 @@ const STATUS_OPTION_LABEL = {
   'PR×': 'PR✕-放置',                // 【v1.0716】見た目だけ改称（保存値は 'PR×' のまま）
   '撤退予定': '削除予定',            // 【v1.0737】★保存値は '撤退予定' のまま
   '撤退済み': '削除済',              // 【v1.0733/v1.0737】★保存値は '撤退済み' のまま
-  'リニューアル': 'リニューアル済'    // 【v1.0828】「リニューアル予定」と紛らわしいので【済】を付ける。
+  'リニューアル': 'リニュ済'         // 【v1.0828】「リニューアル予定」と紛らわしいので【済】を付ける。【v1.0952】本人指定で「リニュ済」に短縮
                                      //   ★保存値・判定式・STATUS_ORDER・チップは 'リニューアル' のまま。
                                      //     ここを変えると isNewGroup（新商品グループ判定）から漏れる。
 };
@@ -13084,8 +13086,10 @@ function _adCircleSubLabel(code) {
   // 【v1.0830】★区切りは【半角スペース1つ】。v1.0829 で入れた「・」は
   //   全角1文字ぶん（約10px）幅を食い、枠を112→124pxに広げる羽目になった。
   //   色分けで2つの軸はすでに見分けられるので、区切り文字は要らない。
+  // 【v1.0953】順位と価格を【改行】で分けて3行表示にした（本人指定）：1-4位 / 30円以下 / 入札◯
+  //   ★1つの .status-lbl2 の中の <br> なので横並びにはならない（adStatusFacadeLabel のコメント参照）。
   return _adSubPart(top ? AD_SUB_RANK_OK : AD_SUB_RANK_NG, top ? AD_SUB_BLUE : AD_SUB_RED)
-       + ' '
+       + '<br>'
        + _adSubPart(_adSubPriceLabel(over), over ? AD_SUB_RED : AD_SUB_BLUE);
 }
 // 【v1.0745】入札価格の「最終更新日」＝ いまの金額になった日。
@@ -13291,7 +13295,7 @@ const STATUS_LIFE_DISPLAY_LABEL = {
   '撤退予定': '削除予定',            // 【v1.0737】見た目だけ。★保存値・判定式は '撤退予定' のまま
   '撤退済み': '削除済',              // 【v1.0733/v1.0737】見た目だけ。★保存値・判定式は '撤退済み' のまま
   'リニューアル予定': 'リニューアル<br>予定',   // 【v1.0734】2行にそろえる
-  'リニューアル': 'リニューアル済',             // 【v1.0828】見た目だけ。★保存値は 'リニューアル' のまま
+  'リニューアル': 'リニュ済',                   // 【v1.0828】見た目だけ。★保存値は 'リニューアル' のまま【v1.0952】リニューアル済→リニュ済
   /* 【v1.0721】v1.0720でここに入れていた '新商品'→'新リニュ' / 'リニューアル'→'新リニュ' は取りやめ。
      ★セルは「いまどちらを選んだか」が見えないと選び直せないので、正式名をそのまま出す。
      まとめて1つに見せるのは【チップ】の役目（チップ名を「新リニュ」にした）。 */
@@ -21168,11 +21172,10 @@ function ycThumbStatusHtml(code) {
   // 【v1.0817/v1.0828】★幅86pxに収まらないものだけ2行に割る。
   //   キーは【保存値】、中身は【表示ラベル(statusOptionLabel)を2行に割ったもの】。
   //   ★STATUS_OPTION_LABEL の言い換えを変えたら、ここも直すこと
-  //     （'リニューアル' → 'リニューアル済' なので ['リニューアル','済']）。
+  //     （【v1.0952】'リニューアル' → 'リニュ済' に短くしたので1行に収まる＝ここから外した）。
   //   ★ここに無い値は1行で出す。はみ出すなら足す（文字を削らない）。
   const LABEL_BR = {
-    'リニューアル予定': ['リニューアル', '予定'],
-    'リニューアル':     ['リニューアル', '済']
+    'リニューアル予定': ['リニューアル', '予定']
   };
   const br = LABEL_BR[cur];
   const labelHtml = br ? (esc(br[0]) + '<br>' + esc(br[1])) : _lbl(cur);
