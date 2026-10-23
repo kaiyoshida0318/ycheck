@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0954 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0956 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -244,6 +244,8 @@ body {
   padding: 8px 10px; border-color: transparent; background: transparent; color: var(--text); font-weight: 600; }
 .yc-addmenu > .btn:hover:not(:disabled) { background: var(--bg3); }
 .yc-addmenu > #btnJumpNewProduct { color: var(--green); }
+.yc-addmenu > #btnNameBulk { color: #0f766e; }   /* 【v1.0955】 */
+.nb-menu-badge { margin-left: auto; padding: 0 7px; border-radius: 999px; font-size: 0.66rem; font-weight: 700; color: #fff; background: #f59e0b; }
 .yc-addmenu > #btnJumpCodeMigrate { color: #7c3aed; }
 .yc-addmenu > #btnJumpUploadMonthly { color: var(--blue); }
 .yc-addmenu > #btnJumpUploadMonthly.report-due { animation: none; }   /* メニュー内では光らせない（親ボタンが光る） */
@@ -4780,6 +4782,49 @@ table td.code-cell,
 table td.code-cell .code-cell-inner,
 table td.code-cell .code-text { white-space: normal; text-overflow: clip; }
 table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; line-height: 1.3; }
+/* ==================== 【v1.0955】商品名一括修正（#view-namebulk） ==================== */
+.nb-title { font-size: 1rem; font-weight: 800; color: #0f766e; white-space: nowrap; margin-right: 4px; }
+#view-namebulk .nb-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+#nbSearch { width: 240px; font-size: 0.86rem; padding: 6px 10px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text); }
+.nb-pair { display: inline-flex; }
+.nb-pair > button { font-size: 0.78rem; padding: 4px 10px; cursor: pointer; white-space: nowrap; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text3); }
+.nb-pair > button:first-child { border-radius: 5px 0 0 5px; }
+.nb-pair > button:last-child { border-radius: 0 5px 5px 0; margin-left: -1px; }
+.nb-pair > button.on { border-color: #0f766e; background: #0f766e; color: #fff; position: relative; z-index: 1; }
+.nb-count { font-size: 0.8rem; color: var(--text3); white-space: nowrap; }
+.nb-count b.nb-chg { color: #b45309; }
+.nb-btn { font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap; font-weight: 700;
+  border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); }
+.nb-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.nb-btn.nb-apply { border-color: #0f766e; background: #0f766e; color: #fff; }
+.nb-btn.nb-apply:disabled { background: var(--surface2); color: var(--text3); border-color: var(--border2); }
+.nb-hint { font-size: 0.74rem; color: var(--text3); margin: 0 0 8px; }
+.nb-wrap { overflow: auto; max-height: calc(100vh - 250px); border: 1px solid var(--border); border-radius: 8px; }
+table.nb-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.nb-table th { position: sticky; top: 0; z-index: 2; background: var(--bg3); font-size: 0.76rem; color: var(--text2);
+  padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; user-select: none; }
+table.nb-table th[data-nbk] { cursor: pointer; }
+table.nb-table th[data-nbk]:hover { color: var(--text); }
+table.nb-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: normal; }
+table.nb-table td.nb-code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 0.78rem; color: var(--text2);
+  word-break: normal; overflow-wrap: anywhere; }
+table.nb-table td.nb-img img, table.nb-table td.nb-img .nb-noimg { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; display: block;
+  background: var(--bg3); border: 1px solid var(--border); }
+table.nb-table td.nb-img .nb-noimg { display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.nb-in { width: 100%; box-sizing: border-box; font-size: 0.8rem; padding: 5px 8px;   /* 【v1.0956】0.9rem → 0.8rem（本人指定「2個くらい落として」） */ border: 1px solid var(--border2); border-radius: 6px;
+  background: var(--bg2); color: var(--text); }
+.nb-in:focus { outline: 2px solid #0f766e; outline-offset: -1px; border-color: #0f766e; }
+.nb-orig { font-size: 0.72rem; color: var(--text3); margin-top: 3px; display: none; }
+.nb-orig s { color: var(--text3); }
+table.nb-table td.nb-len { text-align: right; font-family: 'DM Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.8rem; }   /* 【v1.0956】商品名に合わせて 0.9→0.8rem */
+.nb-len-was { display: none; font-size: 0.7rem; font-weight: 500; color: var(--text3); }
+.nb-undo { display: none; font-size: 0.72rem; padding: 2px 8px; border-radius: 5px; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; white-space: nowrap; }
+tr.nb-changed td { background: rgba(250, 204, 21, 0.13); }
+tr.nb-changed .nb-in { border-color: #f59e0b; }
+tr.nb-changed .nb-orig, tr.nb-changed .nb-len-was { display: block; }
+tr.nb-changed .nb-undo { display: inline-block; }
+tr.nb-empty .nb-in { border-color: var(--red); }
 </style>
 </head>
 <body>
@@ -4839,7 +4884,7 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0954</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0956</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4863,15 +4908,18 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
          ★閉じたメニューの中では「✓ 最新 / ● 未反映 / ⚠ エラー」とログの警告数が見えなくなるので、
            親ボタンの上に写して出す（_ycAddMenuSync）。 -->
     <div class="yc-addmenu-wrap" id="ycAddMenuWrap">
-      <button class="btn sm yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="再登録後のコード移行 / ログ / 商品追加・更新・反映 / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
+      <button class="btn sm yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="ログ / 商品名一括修正 / 商品追加・更新・反映 / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
       <!-- 【v1.0859】並びを「コード移行 → レポート追加 → ログ → 商品追加・更新・反映」に（本人指定）。GitHub連携は末尾に残す。
            「+ レポート追加」も外からこの中へ移した（外は「🔎 APIから取得」だけにするため）。 -->
       <div class="yc-addmenu" id="ycAddMenu" role="menu" hidden>
-        <button class="btn sm" id="btnJumpCodeMigrate" type="button" role="menuitem" title="Yahooで削除→別コードで作り直した商品の、履歴・設定を新コードへ移行します（順位はリセット）">🔁 再登録後のコード移行</button>
+        <!-- 【v1.0956】「🔁 再登録後のコード移行」はメニューから撤去（本人指定「この機能消しちゃってOK」）。
+             ★モーダル本体（#codeMigrateModal・openCodeMigrateModal）は残置。戻すときはこのボタンを置き直すだけ（id: btnJumpCodeMigrate）。 -->
         <!-- 【v1.0908】「+ レポート追加」はメニューから出して、右上「🔎 APIから取得」の右へ移した（本人指定） -->
         <!-- 【v1.0604】操作ログ。商品の追加/更新・GitHubへの反映・別クライアントの上書き・商品件数の増減を記録する。
              「追加したのに消えた」をその場で見せられるようにするのが目的（§20）。 -->
         <button class="btn sm" id="btnOpLog" type="button" role="menuitem" title="操作ログ（商品の追加・更新 / GitHubへの反映 / 上書き検知 / 商品件数の増減）を表示します">🧾 ログ<span class="oplog-badge" id="opLogBadge" style="display:none">0</span></button>
+        <!-- 【v1.0955】商品名一括修正（本人指定：「+ 商品追加・更新・反映」の上）。押すと下の表示が 商品名一括修正 の画面に変わる -->
+        <button class="btn sm" id="btnNameBulk" type="button" role="menuitem" title="全商品の商品名を一覧で直して、まとめてGitHubへ反映します">✏️ 商品名一括修正<span class="nb-menu-badge" id="nbMenuBadge" hidden></span></button>
         <button class="btn sm" id="btnJumpNewProduct" type="button" role="menuitem">+ 商品追加・更新・反映</button>
         <div class="gh-sync-area" id="ghSyncArea" role="menuitem" tabindex="0" title="クリックでGitHub連携設定を開く">
           <span class="gh-sync-label">⚙️ GitHub連携</span>
@@ -5575,6 +5623,35 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
         </div>
         <div id="oyChildUnsetBanner" style="display:none"></div>
         <div id="oy-wrap" style="text-align:center;margin-top:0"></div>
+      </div>
+    </div>
+
+    <!-- 【v1.0955】View: 商品名一括修正（ナビのタブは無し。「+ 商品追加 ▾」→「✏️ 商品名一括修正」から開く）
+         ・商品コード｜画像｜商品名（入力欄）｜文字数 の一覧。直した内容は【下書き】で、まだ state には入れない。
+         ・「⬆ まとめて反映」で全部まとめて state.master[code].name に書き、そのまま GitHub へ反映（ycReflect）する。 -->
+    <div class="view" id="view-namebulk">
+      <div class="card">
+        <div class="nb-bar">
+          <!-- ★.card-title は全体で display:none（§）なので、見出しは span で出す -->
+          <span class="nb-title">✏️ 商品名一括修正</span>
+          <input type="search" id="nbSearch" placeholder="商品コード・商品名で検索" autocomplete="off">
+          <span class="nb-pair" id="nbScopePair">
+            <button type="button" data-nbs="live" title="削除済（撤退済み）を除いた商品">現役のみ</button>
+            <button type="button" data-nbs="all" title="削除済（撤退済み）も含めたすべての商品">削除済も含む</button>
+          </span>
+          <span class="nb-pair" id="nbOnlyPair">
+            <button type="button" data-nbo="0">全件</button>
+            <button type="button" data-nbo="1">変更した商品だけ</button>
+          </span>
+          <span class="nb-count" id="nbCount"></span>
+          <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
+            <button type="button" class="nb-btn" id="nbDiscard" title="この画面で直した内容（まだ反映していないもの）をすべて元に戻します">↺ 変更をすべて取り消す</button>
+            <button type="button" class="nb-btn nb-apply" id="nbApply" title="直した商品名をまとめて保存し、GitHubへ反映します">⬆ まとめて反映</button>
+            <button type="button" class="nb-btn" id="nbClose" title="前の画面に戻ります（直した内容は、このタブを閉じるまで下書きとして残ります）">✕ 閉じる</button>
+          </span>
+        </div>
+        <div class="nb-hint">商品名を直すと行が黄色になり、元の商品名が下に出ます（Enter で次の行へ／Esc でその行を元に戻す）。直しただけではまだ保存されません。最後に「⬆ まとめて反映」を押してください。</div>
+        <div id="nbTableWrap" class="nb-wrap"></div>
       </div>
     </div>
 
@@ -8954,7 +9031,7 @@ function ghApplyViewerMode() {
   try { document.body.classList.add('viewer-mode'); } catch (e) {}
   ghSetSyncStatus('viewer');
   // 主要な編集ボタンを無効化（閲覧端末では使えないことを明示）
-  ['btnJumpUploadMonthly', 'btnJumpUploadSpot', 'btnJumpNewProduct', 'btnJumpCodeMigrate', 'btnHdrApi'].forEach(id => {   /* 【v1.0859】btnHdrApi */
+  ['btnJumpUploadMonthly', 'btnJumpUploadSpot', 'btnJumpNewProduct', 'btnJumpCodeMigrate', 'btnHdrApi', 'btnNameBulk'].forEach(id => {   /* 【v1.0859】btnHdrApi／【v1.0955】btnNameBulk */
     const b = document.getElementById(id);
     if (b) { b.disabled = true; b.title = '閲覧専用モードでは使用できません（編集はトークンを設定した端末のみ）'; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed'; }
   });
@@ -9692,7 +9769,7 @@ function _ycAddMenuSync() {
       const due = rb.classList.contains('report-due') && !!rb.closest('.yc-addmenu');
       pb.classList.toggle('report-due', due);
       pb.title = due ? (rb.title || '先月の月次レポートがまだ追加されていません') + '\n（メニューの「+ レポート追加」から）'
-                     : '再登録後のコード移行 / ログ / 商品追加・更新・反映 / GitHub連携';
+                     : 'ログ / 商品名一括修正 / 商品追加・更新・反映 / GitHub連携';   /* 【v1.0956】コード移行は撤去 */
     }
     const src = document.getElementById('opLogBadge'), dst = document.getElementById('ycAddMenuWarn');
     if (src && dst) {
@@ -22272,6 +22349,7 @@ function renderAll() {
   else if (state.currentView === 'ad-rank') renderAdRank();
   else if (state.currentView === 'seo-rank') renderSeoRank();
   else if (state.currentView === 'review-sales4') renderReviewSales4();
+  else if (state.currentView === 'namebulk') renderNameBulk();   // 【v1.0955】商品名一括修正
   // 【v239】調整サブフィルタバーの表示/件数を更新（毎日の順位更新後も renderAll 経由で自動反映）
   if (typeof updateTuneBar === 'function') updateTuneBar();
   if (typeof updateTuneChipEmphasis === 'function') updateTuneChipEmphasis();   // 【v1.0645】
@@ -22471,6 +22549,197 @@ function updateStateBarVisibility() {
     if (typeof _recalcStickyTops === 'function') requestAnimationFrame(_recalcStickyTops);
   } catch (e) {}
 }
+
+// ============================================================================
+// 【v1.0955】商品名一括修正（#view-namebulk）
+//   本人指定：「商品コード・画像・商品名・文字数の一覧で商品名を全部直して、まとめてプッシュして反映したい」
+//   ・直した内容は _nbDraft（下書き）にだけ持つ。★入力のたびに state.master を書き換えない。
+//     書き換えると、1文字打つごとに「未反映」になり自動保存（v1.0856）が途中の名前をGitHubへ送ってしまう。
+//   ・「⬆ まとめて反映」で、変わった商品だけ state.master[code].name に書き → saveToStorage → ycReflect（いつもの反映）。
+//   ・下書きはこのタブを開いている間だけ残る（ほかの画面へ行って戻っても消えない）。リロード・タブを閉じると消える＝閉じる前に確認を出す。
+//   ・文字数は Array.from(文字列).length（全角も半角も1文字。絵文字も1文字）。
+//   ・商品名を空にする変更は受け付けない（一覧で「— 未登録 —」になってしまうため）。
+// ============================================================================
+let _nbDraft = {};
+let _nbScope = 'live';      // 'live' 現役のみ（削除済＝撤退済みを除く）／'all' すべて
+let _nbOnlyChanged = false;
+let _nbQuery = '';
+let _nbSortKey = 'code', _nbSortDir = 1;
+let _nbPrevView = 'basic';
+function _nbLen(s) { return Array.from(String(s == null ? '' : s)).length; }
+function _nbOrig(code) { const m = (state.master || {})[code]; return (m && m.name) ? String(m.name) : ''; }
+function _nbHas(code) { return Object.prototype.hasOwnProperty.call(_nbDraft, code); }
+function _nbCur(code) { return _nbHas(code) ? _nbDraft[code] : _nbOrig(code); }
+function _nbIsChanged(code) { return _nbHas(code) && String(_nbDraft[code]).trim() !== _nbOrig(code); }
+function _nbChanges() {
+  return Object.keys(_nbDraft).filter(c => (state.master || {})[c] && _nbIsChanged(c))
+    .map(c => ({ code: c, from: _nbOrig(c), to: String(_nbDraft[c]).trim() }));
+}
+function openNameBulk() {
+  if (state.currentView && state.currentView !== 'namebulk') _nbPrevView = state.currentView;
+  switchToView('namebulk');
+  renderAll();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+function closeNameBulk() {
+  switchToView(_nbPrevView || 'basic');
+  renderAll();
+}
+function _nbRowCodes() {
+  const q = _nbQuery.trim().toLowerCase();
+  let codes = Object.keys(state.master || {});
+  if (_nbScope === 'live') codes = codes.filter(c => !isRetired(c));
+  if (_nbOnlyChanged) codes = codes.filter(c => _nbIsChanged(c));
+  if (q) codes = codes.filter(c => c.toLowerCase().indexOf(q) >= 0 || _nbCur(c).toLowerCase().indexOf(q) >= 0 || _nbOrig(c).toLowerCase().indexOf(q) >= 0);
+  const d = _nbSortDir;
+  const byCode = (a, b) => a.localeCompare(b, 'ja', { numeric: true });
+  if (_nbSortKey === 'len') codes.sort((a, b) => ((_nbLen(_nbCur(a).trim()) - _nbLen(_nbCur(b).trim())) * d) || byCode(a, b));
+  else if (_nbSortKey === 'name') codes.sort((a, b) => (_nbCur(a).localeCompare(_nbCur(b), 'ja') * d) || byCode(a, b));
+  else codes.sort((a, b) => byCode(a, b) * d);
+  return codes;
+}
+function _nbRowHtml(code) {
+  const e = escapeHtml;
+  const cur = _nbCur(code), orig = _nbOrig(code);
+  const chg = _nbIsChanged(code), empty = !String(cur).trim();
+  const src = (typeof getProductImageSrc === 'function') ? getProductImageSrc(code) : null;
+  const img = src ? '<img src="' + e(src) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;nb-noimg&quot;>📦</div>\'">' : '<div class="nb-noimg">📦</div>';
+  return '<tr data-code="' + e(code) + '" class="' + (chg ? 'nb-changed' : '') + (empty ? ' nb-empty' : '') + '">'
+    + '<td class="nb-code">' + e(code) + (isRetired(code) ? '<div style="font-size:0.68rem;color:var(--text3)">削除済</div>' : '') + '</td>'
+    + '<td class="nb-img">' + img + '</td>'
+    + '<td><input type="text" class="nb-in" value="' + e(cur) + '" data-code="' + e(code) + '" spellcheck="false">'
+    + '<div class="nb-orig">元：' + (orig ? e(orig) : '（未登録）') + '</div></td>'
+    + '<td class="nb-len"><span class="nb-len-now">' + _nbLen(String(cur).trim()) + '</span><span class="nb-len-was">元 ' + _nbLen(orig) + '</span></td>'
+    + '<td style="text-align:center"><button type="button" class="nb-undo" data-code="' + e(code) + '" title="この商品だけ元の商品名に戻す">戻す</button></td>'
+    + '</tr>';
+}
+function renderNameBulk() {
+  const wrap = document.getElementById('nbTableWrap'); if (!wrap) return;
+  _nbWire();
+  const s = document.getElementById('nbSearch'); if (s && s.value !== _nbQuery) s.value = _nbQuery;
+  document.querySelectorAll('#nbScopePair > button').forEach(b => b.classList.toggle('on', b.dataset.nbs === _nbScope));
+  document.querySelectorAll('#nbOnlyPair > button').forEach(b => b.classList.toggle('on', (b.dataset.nbo === '1') === _nbOnlyChanged));
+  const codes = _nbRowCodes();
+  const arw = (k) => (_nbSortKey === k ? (_nbSortDir > 0 ? ' ▲' : ' ▼') : '');
+  wrap.innerHTML = '<table class="nb-table"><colgroup><col style="width:190px"><col style="width:66px"><col><col style="width:80px"><col style="width:64px"></colgroup>'
+    + '<thead><tr><th data-nbk="code">商品コード' + arw('code') + '</th><th>画像</th><th data-nbk="name">商品名' + arw('name') + '</th>'
+    + '<th data-nbk="len" style="text-align:right" title="商品名の文字数（全角・半角どちらも1文字）。押すと文字数で並べ替え">文字数' + arw('len') + '</th><th></th></tr></thead>'
+    + '<tbody>' + (codes.length ? codes.map(_nbRowHtml).join('')
+      : '<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3)">' + (_nbOnlyChanged ? 'まだ変更した商品はありません' : '該当する商品がありません') + '</td></tr>')
+    + '</tbody></table>';
+  _nbUpdateBar(codes.length);
+}
+function _nbUpdateBar(shown) {
+  const n = _nbChanges().length;
+  const editable = (typeof ghIsEnabled === 'function') && ghIsEnabled();
+  const cnt = document.getElementById('nbCount');
+  if (cnt) {
+    const rows = (shown != null) ? shown : document.querySelectorAll('#nbTableWrap tbody tr[data-code]').length;
+    cnt.innerHTML = rows + '件' + (n ? '　<b class="nb-chg">変更 ' + n + '件（未反映）</b>' : '');
+  }
+  const ap = document.getElementById('nbApply');
+  if (ap) {
+    ap.disabled = !n || !editable;
+    ap.textContent = '⬆ まとめて反映' + (n ? '（' + n + '件）' : '');
+    if (!editable) ap.title = '閲覧専用モードでは反映できません（トークンを設定した端末で行ってください）';
+  }
+  const ds = document.getElementById('nbDiscard'); if (ds) ds.disabled = !n;
+  const bd = document.getElementById('nbMenuBadge');
+  if (bd) { bd.hidden = !n; bd.textContent = '未反映 ' + n; }
+}
+// 1行ぶんだけ見た目を更新（★表を描き直さない＝入力中のカーソルが飛ばない）
+function _nbRefreshRow(tr) {
+  if (!tr) return;
+  const code = tr.dataset.code;
+  const cur = _nbCur(code);
+  tr.classList.toggle('nb-changed', _nbIsChanged(code));
+  tr.classList.toggle('nb-empty', !String(cur).trim());
+  const ln = tr.querySelector('.nb-len-now'); if (ln) ln.textContent = _nbLen(String(cur).trim());
+}
+function _nbSetDraft(code, val) {
+  if (String(val).trim() === _nbOrig(code)) delete _nbDraft[code];   // 元に戻した＝下書きから消す
+  else _nbDraft[code] = val;
+}
+function _nbWire() {
+  const view = document.getElementById('view-namebulk');
+  if (!view || view._nbWired) return;
+  view._nbWired = true;
+  const wrap = document.getElementById('nbTableWrap');
+  wrap.addEventListener('input', (ev) => {
+    const t = ev.target; if (!t.classList || !t.classList.contains('nb-in')) return;
+    _nbSetDraft(t.dataset.code, t.value);
+    _nbRefreshRow(t.closest('tr'));
+    _nbUpdateBar();
+  });
+  wrap.addEventListener('keydown', (ev) => {
+    const t = ev.target; if (!t.classList || !t.classList.contains('nb-in')) return;
+    if (ev.isComposing || ev.keyCode === 229) return;   // ★日本語の変換確定の Enter では動かさない
+    if (ev.key === 'Enter' || ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      const ins = [...wrap.querySelectorAll('.nb-in')];
+      const i = ins.indexOf(t) + ((ev.key === 'ArrowUp' || (ev.key === 'Enter' && ev.shiftKey)) ? -1 : 1);
+      // ★全選択はしない（Enter で移ってすぐ文字を打つと、元の商品名がまるごと消えるため）。カーソルは末尾に置く
+      if (ins[i]) { ev.preventDefault(); ins[i].focus(); const L = ins[i].value.length; try { ins[i].setSelectionRange(L, L); } catch (e2) {} }
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      delete _nbDraft[t.dataset.code]; t.value = _nbOrig(t.dataset.code);
+      _nbRefreshRow(t.closest('tr')); _nbUpdateBar();
+    }
+  });
+  wrap.addEventListener('click', (ev) => {
+    const u = ev.target.closest && ev.target.closest('.nb-undo');
+    if (u) {
+      const code = u.dataset.code; delete _nbDraft[code];
+      const tr = u.closest('tr'); const inp = tr && tr.querySelector('.nb-in'); if (inp) inp.value = _nbOrig(code);
+      _nbRefreshRow(tr); _nbUpdateBar(); return;
+    }
+    const th = ev.target.closest && ev.target.closest('th[data-nbk]');
+    if (th) {
+      const k = th.dataset.nbk;
+      if (_nbSortKey === k) _nbSortDir = -_nbSortDir; else { _nbSortKey = k; _nbSortDir = (k === 'len') ? -1 : 1; }
+      renderNameBulk();
+    }
+  });
+  const s = document.getElementById('nbSearch');
+  if (s) s.addEventListener('input', () => { _nbQuery = s.value; renderNameBulk(); s.focus(); });
+  document.querySelectorAll('#nbScopePair > button').forEach(b => b.addEventListener('click', () => { _nbScope = b.dataset.nbs; renderNameBulk(); }));
+  document.querySelectorAll('#nbOnlyPair > button').forEach(b => b.addEventListener('click', () => { _nbOnlyChanged = b.dataset.nbo === '1'; renderNameBulk(); }));
+  document.getElementById('nbClose').addEventListener('click', closeNameBulk);
+  document.getElementById('nbDiscard').addEventListener('click', () => {
+    const n = _nbChanges().length; if (!n) return;
+    if (!confirm('この画面で直した商品名 ' + n + '件 をすべて元に戻しますか？（GitHubには何も書き込みません）')) return;
+    _nbDraft = {}; renderNameBulk();
+  });
+  document.getElementById('nbApply').addEventListener('click', nbApplyAll);
+}
+async function nbApplyAll() {
+  if (!(typeof ghIsEnabled === 'function' && ghIsEnabled())) { alert('この端末は閲覧専用です（トークン未設定）。反映はできません。'); return; }
+  const ch = _nbChanges();
+  if (!ch.length) return;
+  const empties = ch.filter(x => !x.to);
+  if (empties.length) {
+    alert('商品名が空の商品があります（' + empties.length + '件）。\n' + empties.slice(0, 10).map(x => '・' + x.code).join('\n')
+      + '\n\n空のままでは反映できません。商品名を入れるか「戻す」を押してください。');
+    return;
+  }
+  const lines = ch.slice(0, 15).map(x => '・' + x.code + '\n　' + (x.from || '（未登録）') + '\n　→ ' + x.to).join('\n');
+  if (!confirm('商品名を ' + ch.length + '件 変更して、GitHubへ反映します。\n\n' + lines + (ch.length > 15 ? '\n…ほか ' + (ch.length - 15) + '件' : '') + '\n\nよろしいですか？')) return;
+  ch.forEach(x => {
+    if (!state.master[x.code]) return;
+    state.master[x.code].name = x.to;
+  });
+  try { ycLog('edit', '商品名を一括修正（' + ch.length + '件）：' + ch.slice(0, 20).map(x => x.code + '「' + x.from + '」→「' + x.to + '」').join(' / ') + (ch.length > 20 ? ' …' : '')); } catch (e) {}
+  _nbDraft = {};
+  const ok = saveToStorage();
+  if (!afterSaveOk(ok)) return;
+  renderNameBulk();
+  await ycReflect();
+  renderAll();
+  if (typeof showToast === 'function') showToast('商品名を ' + ch.length + '件 変更しました', 'success');
+}
+window.openNameBulk = openNameBulk;
+// 下書きが残ったままリロード・タブを閉じようとしたら確認する
+window.addEventListener('beforeunload', (e) => { if (_nbChanges().length) { e.preventDefault(); e.returnValue = ''; } });
+(function () { const b = document.getElementById('btnNameBulk'); if (b) b.addEventListener('click', openNameBulk); })();
 
 function switchToView(viewName) {
   // 【v1.0546】'graphdata-day' 等の別名を実ビュー＋粒度に解決する
@@ -27385,7 +27654,7 @@ if (codeMigrateModal) {
     showToast(`コードを移行しました（${oldCode} → ${newCode}）`, 'success');
   });
 }
-$('#btnJumpCodeMigrate').addEventListener('click', openCodeMigrateModal);
+{ const _bcm = document.getElementById('btnJumpCodeMigrate'); if (_bcm) _bcm.addEventListener('click', openCodeMigrateModal); }   /* 【v1.0956】ボタンは撤去済み（無くても落ちないように） */
 
 // 【v231/v1.0549/v1.0700】ヘッダーの開閉トグル。★v1.0700で3段に分割。
 //   ヘッダー1 (body.chrome-hidden)    … 上部バー ＋【基本】【全体】【取得データ】の段
