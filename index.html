@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0956 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0957 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4825,6 +4825,19 @@ tr.nb-changed .nb-in { border-color: #f59e0b; }
 tr.nb-changed .nb-orig, tr.nb-changed .nb-len-was { display: block; }
 tr.nb-changed .nb-undo { display: inline-block; }
 tr.nb-empty .nb-in { border-color: var(--red); }
+/* 【v1.0957】「⇔ 幅」のドロップダウン */
+.vp-wmenu { position: fixed; z-index: 3000; width: 340px; max-height: 70vh; overflow: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
+.vp-wmenu[hidden] { display: none; }
+.vp-wmenu button { font: inherit; text-align: left; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--text); border-radius: 6px; }
+.vp-wmenu .vp-wm-main { padding: 9px 10px; font-weight: 700; color: var(--accent); font-size: 0.86rem; }
+.vp-wmenu button:hover { background: var(--bg3); }
+.vp-wm-sec { font-size: 0.74rem; color: var(--text3); padding: 8px 10px 4px; border-top: 1px solid var(--border); margin-top: 2px; }
+.vp-wm-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 0.84rem; font-weight: 600; }
+.vp-wm-name { flex: 1 1 auto; }
+.vp-wm-cnt { flex: 0 0 auto; font-size: 0.72rem; color: var(--text3); font-weight: 600; }
+.vp-wm-empty { font-size: 0.78rem; color: var(--text3); padding: 6px 10px; }
+.vp-wm-note { font-size: 0.7rem; color: var(--text3); padding: 6px 10px 4px; line-height: 1.5; border-top: 1px solid var(--border); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -4884,7 +4897,7 @@ tr.nb-empty .nb-in { border-color: var(--red); }
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0956</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0957</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -4892,7 +4905,7 @@ tr.nb-empty .nb-in { border-color: var(--red); }
       <!-- 【v1.0545】列幅の調整パネル。GitHubに保存して他PCで一発再現する -->
       <!-- 【v1.0736】「⇔ 幅」は【モード切替】に変更。押している間だけ列幅をドラッグで変えられる。
            表示設定パネル（スライダー・他PCへ保存）は右隣の「⚙」に分けた。 -->
-      <button class="font-btn vp-open-btn" id="btnViewPrefs" type="button" title="幅調整モード：押すと列の境目をドラッグして列幅を変えられます（もう一度押すと終了）">⇔ 幅</button>
+      <button class="font-btn vp-open-btn" id="btnViewPrefs" type="button" title="列の幅：押すと「幅調整を始める／この画面の幅をほかの画面にも反映」の選択肢が出ます">⇔ 幅 ▾</button>
       <button class="font-btn" id="btnViewPrefsPanel" type="button" title="表示設定（列幅・文字サイズ）を開く。設定はGitHubに保存され、他のPCで開くと同じ見た目が再現されます">⚙</button>
     </div>
     <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
@@ -7472,6 +7485,7 @@ function _vpWriteDeviceBackup() {
     localStorage.setItem(VP_DEVICE_KEY, JSON.stringify({
       colWidths: vp.colWidths, fontScale: vp.fontScale, itTrendSaved: vp.itTrendSaved,   // 【v1.0684】
       colLocks: vp.colLocks || {},   // 【v1.0865】
+      colLayouts: vp.colLayouts || {},   // 【v1.0957】
       updatedAt: vp.updatedAt, updatedBy: vp.updatedBy || 'この端末'
     }));
   } catch (e) {}
@@ -7521,6 +7535,7 @@ function _vpAdoptIncoming(incoming) {
     state.viewPrefs = {
       colWidths: Object.assign({}, bk.colWidths || {}),
       colLocks: Object.assign({}, bk.colLocks || {}),   // 【v1.0865】
+      colLayouts: Object.assign({}, bk.colLayouts || {}, (state.viewPrefs && state.viewPrefs.colLayouts) || {}),   // 【v1.0957】台帳は両方を足す
       fontScale: (bk.fontScale > 0 ? bk.fontScale : 1),
       itTrendSaved: Array.isArray(bk.itTrendSaved) ? bk.itTrendSaved.slice() : [],   // 【v1.0684】
       updatedAt: bk.updatedAt, updatedBy: bk.updatedBy || 'この端末'
@@ -7559,6 +7574,7 @@ function ensureViewPrefs() {
   const vp = state.viewPrefs;
   if (!vp.colWidths || typeof vp.colWidths !== 'object') vp.colWidths = {};
   if (!vp.colLocks || typeof vp.colLocks !== 'object') vp.colLocks = {};   // 【v1.0865】幅を固定した列 { key: true }
+  if (!vp.colLayouts || typeof vp.colLayouts !== 'object') vp.colLayouts = {};   // 【v1.0957】列の並び（画面の型）の台帳 { sig: {tk, keys, labels, ts} }
   if (!(vp.fontScale > 0)) vp.fontScale = 1;
   if (!Array.isArray(vp.itTrendSaved)) vp.itTrendSaved = [];   // 【v1.0684】商品-推移の★保存リスト
   if (typeof vp.updatedAt !== 'string') vp.updatedAt = '';
@@ -28389,14 +28405,18 @@ function applyColWidths() {
   //   （_vpPreviewColWidth / applyViewPrefs 等）でも自動キーが揃っているようにする。
   try { autoAssignResizeKeys(); } catch (e) {}
   _ensureFixedLayout();
-  const widths = loadColWidths();
+  loadColWidths();
+  // 【v1.0957】幅は「表の型（sig）」ごと。表ごとに sig を1回だけ求める
+  const _sgCache = new Map();
+  const _sgOf = (tbl) => { if (!tbl) return null; if (!_sgCache.has(tbl)) _sgCache.set(tbl, _colSig(tbl)); return _sgCache.get(tbl); };
+  try { _colRegisterLayouts(); } catch (e) {}
   // data-resize-key を持つ全 th を走査
   document.querySelectorAll('th[data-resize-key]').forEach(th => {
     const key = th.dataset.resizeKey;
     if (!key) return;
     const tbl = th.closest('table');
     const isFixed = !!(tbl && tbl.dataset.fixedInit === '1');
-    const px = widths[key];
+    const px = _colW(th, _sgOf(tbl));
     if (px == null) {
       // 保存値なし → min/maxは解除。fixed表はキャプチャした自然幅(th.style.width)を保持、auto表はCSS既定へ戻す。
       th.style.minWidth = '';
@@ -28419,17 +28439,17 @@ function applyColWidths() {
 //   → 自分で幅を決めた列は数字どおり。まだ触っていない列が残りを元の比率で分け合って、表を画面いっぱいにする。
 //   ★全部の列を自分で決めたときだけ、表の右に余白が出る（＝打った数字どおり）。広げすぎれば横スクロール（従来どおり）。
 function _colFitFixedTables() {
-  const widths = loadColWidths();
   document.querySelectorAll('table').forEach(t => {
     if (t.dataset.fixedInit !== '1') return;
     const row = t.querySelector('thead tr'); if (!row) return;
+    const _sg = _colSig(t);   // 【v1.0957】
     const ths = Array.from(row.children).filter(th => getComputedStyle(th).display !== 'none');
     if (!ths.length) return;
     // 自分で幅を決めた列（保存値あり＝数値入力・ドラッグ・🔒）はその数字どおり。残り＝まだ触っていない列
     let setSum = 0; const free = [];
     ths.forEach(th => {
       const k = th.dataset.resizeKey;
-      if (k && widths[k] != null) setSum += (parseFloat(th.style.width) || 0);
+      if (k && _colW(th, _sg) != null) setSum += (parseFloat(th.style.width) || 0);
       else free.push(th);
     });
     const wrap = t.closest('.table-wrap');
@@ -28516,7 +28536,8 @@ function _colPlanWiden(ownerTh, wantW) {
   if (remaining <= 0.5) return none;            // そのまま収まる
   const next = new Map(cur);
   // 【v1.0865】★幅を固定した列からはもらわない（固定＝その数値のまま）
-  const _unlocked = (t) => !_colIsLocked(t.dataset && t.dataset.resizeKey);
+  const _sgP = _colSig(table);
+  const _unlocked = (t) => !_colIsLockedTh(t, _sgP);   // 【v1.0957】ロックも表の型ごと
   let pool = others.filter(t => _unlocked(t) && next.get(t) > COL_RESIZE_MIN_PX + 0.5);
   let guard = 0;
   while (remaining > 0.5 && pool.length && guard++ < 10) {
@@ -28546,19 +28567,204 @@ function _colVisibleSum(table) {
   return Array.from(row.children).filter(th => getComputedStyle(th).display !== 'none')
     .reduce((a, th) => a + (parseFloat(th.style.width) || th.getBoundingClientRect().width || 0), 0);
 }
+// ============================================================================
+// 【v1.0957】★列幅は「列の並びがまったく同じ表」だけで共有する（本人指定）。
+//   それまでは列ごとのキー（code / auto_tableBasic__adCost など）で幅を持っていたので、
+//   商品-基本データで幅を変えると、同じ表を使う 調整-基本（列が3本多い）まで変わっていた。
+//   → 表の「型」＝ 表のキー ＋ 見えている列のキーの並び を sig にして、幅は「sig|列キー」で持つ。
+//     ・列の並びが完全に同じ画面（例：撤退検討／削除予定… が同じ列なら）は同じ sig ＝ 自動で同じ幅。
+//     ・1本でも列が違えば別の sig ＝ 別々の幅。
+//   ★移行：その型で【初めて幅を変えたとき】に、それまでの列キーの幅（とロック）をその型へコピーしてから書く
+//     （_colFork。印は colWidths['sig|__f']）。まだ触っていない型は今までどおり列キーの幅を見る＝見た目は変わらない。
+//   ★⚙ 表示設定パネルのスライダーは従来の列キー（まだ触っていない型）に効く。
+// ============================================================================
+function _colHash36(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+function _colHeadRow(table) { return table ? table.querySelector('thead tr') : null; }
+function _colSig(table) {
+  const row = _colHeadRow(table); if (!row) return null;
+  const keys = Array.from(row.children).filter(th => th.dataset && th.dataset.resizeKey && getComputedStyle(th).display !== 'none').map(th => th.dataset.resizeKey);
+  if (!keys.length) return null;
+  const tk = _rkTableKey(table) || '';
+  return { sig: 'L' + _colHash36(tk + '#' + keys.join(',')), tk: tk, keys: keys };
+}
+function _colSigOf(th, sg) { return sg || _colSig(th.closest('table')); }
+function _colForked(sig) { return !!(sig && ensureViewPrefs().colWidths[sig + '|__f']); }
+// 実際に効いている幅（保存値が無ければ null）
+function _colW(th, sg) {
+  const key = th.dataset.resizeKey; if (!key) return null;
+  const W = ensureViewPrefs().colWidths; const s = _colSigOf(th, sg);
+  if (s && _colForked(s.sig)) { const v = W[s.sig + '|' + key]; return (v == null) ? null : v; }
+  return (W[key] == null) ? null : W[key];
+}
+function _colIsLockedTh(th, sg) {
+  const key = th && th.dataset && th.dataset.resizeKey; if (!key) return false;
+  const L = ensureViewPrefs().colLocks; const s = _colSigOf(th, sg);
+  if (s && _colForked(s.sig)) return !!L[s.sig + '|' + key];
+  return !!L[key];
+}
+// その型を独立させる（初回だけ）。いまの列キーの幅・ロックを型の中へコピー
+function _colFork(table, sg) {
+  const s = sg || _colSig(table); if (!s) return null;
+  const vp = ensureViewPrefs(), W = vp.colWidths, L = vp.colLocks;
+  if (W[s.sig + '|__f']) return s;
+  const row = _colHeadRow(table);
+  Array.from(row ? row.children : []).forEach(th => {
+    const k = th.dataset && th.dataset.resizeKey; if (!k) return;
+    if (W[k] != null && W[s.sig + '|' + k] == null) W[s.sig + '|' + k] = W[k];
+    if (L[k]) L[s.sig + '|' + k] = true;
+  });
+  W[s.sig + '|__f'] = 1;
+  return s;
+}
+function saveColWidthTh(th, px) {
+  try {
+    const table = th.closest('table'); const s = _colFork(table); const key = th.dataset.resizeKey;
+    if (!s || !key) return;
+    const vp = ensureViewPrefs();
+    if (px == null) delete vp.colWidths[s.sig + '|' + key];
+    else vp.colWidths[s.sig + '|' + key] = Math.round(px);
+    _vpTouch('この端末');
+    _colResizeDirty = true;
+  } catch (e) { console.warn('列幅の保存に失敗:', e); }
+}
+function _colToggleLockTh(th) {
+  const table = th.closest('table'); const s = _colFork(table); const key = th.dataset.resizeKey;
+  if (!s || !key) return;
+  const vp = ensureViewPrefs(), sk = s.sig + '|' + key;
+  if (vp.colLocks[sk]) delete vp.colLocks[sk];
+  else {
+    vp.colLocks[sk] = true;
+    const w = Math.round(th.getBoundingClientRect().width);
+    if (w > 0 && vp.colWidths[sk] == null) vp.colWidths[sk] = w;   // 固定する時点の幅を保存値にしておく
+  }
+  _vpTouch('この端末');
+  _colResizeDirty = true;
+}
+// 画面の名前（いま選んでいるナビのタブ）
+function _colScreenLabel() {
+  const t = document.querySelector('.nav-tab.active');
+  const s = t ? t.textContent.replace(/\(\s*\d+\s*\)/g, '').replace(/\s+/g, ' ').trim() : '';
+  return s || String(state.currentView || '');
+}
+// いま見えている画面の表の「型」を台帳に記録する（★_vpTouch はしない＝これだけで未反映にしない）
+function _colRegisterLayouts() {
+  const view = document.querySelector('.view.active'); if (!view) return;
+  const vp = ensureViewPrefs(); const label = _colScreenLabel();
+  view.querySelectorAll('table').forEach(t => {
+    if (!t.offsetParent) return;
+    const s = _colSig(t); if (!s || s.keys.length < 2) return;
+    const cur = vp.colLayouts[s.sig] || (vp.colLayouts[s.sig] = { tk: s.tk, keys: s.keys, labels: [] });
+    cur.keys = s.keys; cur.tk = s.tk;
+    if (label && cur.labels.indexOf(label) < 0) cur.labels.push(label);
+    // 見出しの文字（反映先の一覧で「どの列が共通か」を見せるため）
+    const row = _colHeadRow(t); const names = {};
+    Array.from(row.children).forEach(th => { const k = th.dataset.resizeKey; if (k) names[k] = (th.textContent || '').replace(/[▲▼⇅↕]/g, '').replace(/\s+/g, '').slice(0, 14); });
+    cur.names = names;
+  });
+}
+// いまの画面のいちばん大きい表（反映元）
+function _colMainTable() {
+  const view = document.querySelector('.view.active'); if (!view) return null;
+  let best = null, bestN = 0;
+  view.querySelectorAll('table').forEach(t => { if (!t.offsetParent) return; const s = _colSig(t); if (s && s.keys.length > bestN) { best = t; bestN = s.keys.length; } });
+  return best;
+}
+// 反映先の候補（共通の列が2本以上ある、ほかの型）
+function _colCopyTargets() {
+  const t = _colMainTable(); if (!t) return { src: null, list: [] };
+  const s = _colSig(t); const vp = ensureViewPrefs();
+  const list = Object.keys(vp.colLayouts).filter(g => g !== s.sig).map(g => {
+    const L = vp.colLayouts[g]; const common = (L.keys || []).filter(k => s.keys.indexOf(k) >= 0);
+    return { sig: g, labels: (L.labels || []).slice(), common: common, total: (L.keys || []).length };
+  }).filter(x => x.common.length >= 2 && x.labels.length)
+    .sort((a, b) => (b.common.length / b.total) - (a.common.length / a.total) || b.common.length - a.common.length);
+  return { src: t, srcSig: s, list: list };
+}
+// いまの表の幅を、別の型（sig）へコピー（共通の列だけ）
+function _colCopyTo(targetSig) {
+  const t = _colMainTable(); if (!t) return 0;
+  const s = _colSig(t); const vp = ensureViewPrefs(); const L = vp.colLayouts[targetSig]; if (!L) return 0;
+  const W = vp.colWidths;
+  // 反映先を独立させる（それまでの列キーの幅を引き継いでから上書き）
+  if (!W[targetSig + '|__f']) {
+    (L.keys || []).forEach(k => { if (W[k] != null && W[targetSig + '|' + k] == null) W[targetSig + '|' + k] = W[k]; if (vp.colLocks[k]) vp.colLocks[targetSig + '|' + k] = true; });
+    W[targetSig + '|__f'] = 1;
+  }
+  let n = 0;
+  Array.from(_colHeadRow(t).children).forEach(th => {
+    const k = th.dataset.resizeKey; if (!k || getComputedStyle(th).display === 'none') return;
+    if ((L.keys || []).indexOf(k) < 0) return;
+    const w = Math.round(parseFloat(th.style.width) || th.getBoundingClientRect().width || 0);
+    if (w > 0) { W[targetSig + '|' + k] = w; n++; }
+  });
+  if (n) _vpTouch('この端末');
+  return n;
+}
+// ---------- 「⇔ 幅」のドロップダウン ----------
+function _vpMenuEl() {
+  let m = document.getElementById('vpWidthMenu');
+  if (!m) {
+    m = document.createElement('div'); m.id = 'vpWidthMenu'; m.className = 'vp-wmenu'; m.hidden = true;
+    document.body.appendChild(m);
+    m.addEventListener('click', (e) => {
+      const tg = e.target.closest && e.target.closest('[data-vpw]'); if (!tg) return;
+      const act = tg.dataset.vpw;
+      if (act === 'toggle') { _vpMenuClose(); setColResizeMode(!_colResizeOn); return; }
+      if (act === 'copy') {
+        const n = _colCopyTo(tg.dataset.sig);
+        const nm = tg.dataset.label || '';
+        _vpMenuClose();
+        try { applyColWidths(); if (_colResizeOn) _wrowRefresh(); } catch (e2) {}
+        if (n) {
+          try { ycLog('edit', '列幅を「' + _colScreenLabel() + '」から「' + nm + '」へ反映（' + n + '列）'); } catch (e2) {}
+          if (_colResizeOn) { _colResizeDirty = true; try { showToast('「' + nm + '」に ' + n + '列の幅を反映しました（幅調整を終えるとGitHubへ反映します）', 'success'); } catch (e2) {} }
+          else { try { showToast('「' + nm + '」に ' + n + '列の幅を反映しました。GitHubへ反映します', 'success'); } catch (e2) {} try { ycAutoPushSoon(); } catch (e2) {} }
+        } else { try { showToast('反映できる列がありませんでした', 'warn'); } catch (e2) {} }
+      }
+    });
+    document.addEventListener('click', (e) => { if (!m.hidden && !e.target.closest('#vpWidthMenu') && !e.target.closest('#btnViewPrefs')) _vpMenuClose(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !m.hidden) _vpMenuClose(); });
+  }
+  return m;
+}
+function _vpMenuClose() { const m = document.getElementById('vpWidthMenu'); if (m) m.hidden = true; }
+function _vpMenuOpen() {
+  try { _colRegisterLayouts(); } catch (e) {}
+  const m = _vpMenuEl(); const b = document.getElementById('btnViewPrefs');
+  const e = escapeHtml; const here = _colScreenLabel();
+  const T = _colCopyTargets();
+  let html = '<button type="button" class="vp-wm-main" data-vpw="toggle">' + (_colResizeOn ? '✓ 幅調整を終える（GitHubへ反映）' : '✎ この画面の幅を調整する') + '</button>';
+  html += '<div class="vp-wm-sec">この画面（<b>' + e(here) + '</b>）の幅を、ほかの画面にも反映</div>';
+  if (!T.src) html += '<div class="vp-wm-empty">この画面には幅を変えられる表がありません</div>';
+  else if (!T.list.length) html += '<div class="vp-wm-empty">反映できる画面がまだありません（ほかの画面を一度開くと、ここに出ます）</div>';
+  else html += T.list.map(x => {
+    const nm = x.labels.join('・');
+    const full = (x.common.length === x.total) && (x.total === T.srcSig.keys.length);
+    return '<button type="button" class="vp-wm-item" data-vpw="copy" data-sig="' + e(x.sig) + '" data-label="' + e(nm) + '" title="共通する ' + x.common.length + '列の幅を、いまのこの画面と同じにします（' + e(nm) + 'にしか無い列は変わりません）">'
+      + '<span class="vp-wm-name">' + e(nm) + '</span><span class="vp-wm-cnt">共通 ' + x.common.length + ' / ' + x.total + '列' + '</span></button>';
+  }).join('');
+  html += '<div class="vp-wm-note">幅は<b>列の並びがまったく同じ画面だけ</b>で共有されます。押した画面には、共通する列の幅だけをコピーします（その画面にしか無い列は変わりません）。</div>';
+  m.innerHTML = html;
+  m.hidden = false;
+  const r = b.getBoundingClientRect();
+  m.style.top = Math.round(r.bottom + 6) + 'px';
+  m.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - m.offsetWidth - 8, r.left))) + 'px';
+}
+window._vpMenuOpen = _vpMenuOpen;
+
 // 【v1.0877】★1列の幅を変えるとき、他の列（まだ触っていない列も）をいまの幅で止める。
 //   本人の指定：「ある列を狭くしたら、空いた分は右端の空きとして残す（他の列は動かさない）」。
 //   固定レイアウトの表（#tableBasic）だけ。自動レイアウトの表は画面幅に合わせてブラウザが配るので対象外。
 function _colPinOthers(table, exceptKey) {
   if (!table || table.dataset.fixedInit !== '1') return;
-  const widths = loadColWidths();
   const row = table.querySelector('thead tr'); if (!row) return;
+  const sg = _colSig(table);   // 【v1.0957】幅は表の型ごと
   Array.from(row.children).forEach(th => {
     const k = th.dataset.resizeKey;
-    if (!k || k === exceptKey || widths[k] != null) return;
+    if (!k || k === exceptKey || _colW(th, sg) != null) return;
     if (getComputedStyle(th).display === 'none') return;      // 隠れている列（調整-基本だけの列など）は触らない
     const w = Math.round(parseFloat(th.style.width) || th.getBoundingClientRect().width || 0);
-    if (w > 0) saveColWidth(k, w);
+    if (w > 0) saveColWidthTh(th, w);
   });
 }
 // 【v1.0865】幅を固定した列か
@@ -28585,7 +28791,7 @@ function installColResizeHandles() {
       e.preventDefault();
       e.stopPropagation();  // 行hover/ソートクリックに波及させない
       // 【v1.0865】幅を固定した列は動かさない（解除は一番下の 🔒 を押す）
-      if (_colIsLocked(key)) {
+      if (_colIsLockedTh(ownerTh)) {   /* 【v1.0957】 */
         try { showToast('この列は幅をロック中です（一番下の「ロック中」を押すと解除できます）', 'warn'); } catch (e2) {}
         return;
       }
@@ -28636,10 +28842,10 @@ function installColResizeHandles() {
         // 【v1.0877】★動かした列以外は、いまの幅のまま止める（まだ触っていない列も保存値にする）。
         //   しないと applyColWidths → _colFitFixedTables が「まだ触っていない列」に空きを配り直し、他の列が動く。
         if (moved && _isFixedTbl) _colPinOthers(_tbl, key);
-        saveColWidth(key, finalW);
+        saveColWidthTh(ownerTh, finalW);   // 【v1.0957】この表の型だけに保存
         // 【v1.0751】★他の列からもらった結果も保存する。しないと再描画で元の幅に戻り、
         //   横スクロールがまた出る（見た目とデータが食い違う）。
-        if (_shrunk) _shrunk.forEach((w, t) => { const k2 = t.dataset && t.dataset.resizeKey; if (k2) saveColWidth(k2, w); });
+        if (_shrunk) _shrunk.forEach((w, t) => { const k2 = t.dataset && t.dataset.resizeKey; if (k2) saveColWidthTh(t, w); });
         applyColWidths();
         try { _wrowRefresh(); } catch (e2) {}   // 【v1.0865】一番下の数値も合わせる
         // 【v1.0623】★今までドラッグしても画面に何も出ず、「保存されていない」ように見えていた。
@@ -28664,8 +28870,8 @@ function installColResizeHandles() {
     handle.addEventListener('dblclick', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (_colIsLocked(key)) return;   // 【v1.0865】固定した列は既定に戻さない
-      saveColWidth(key, null);
+      if (_colIsLockedTh(ownerTh)) return;   // 【v1.0865】固定した列は既定に戻さない
+      saveColWidthTh(ownerTh, null);   // 【v1.0957】
       applyColWidths();
       try { _wrowRefresh(); } catch (e2) {}   // 【v1.0865】
     });
@@ -28749,7 +28955,8 @@ function _wrowSumUpdate(table) {
   const rest = avail - used;
   const fixed = table.dataset.fixedInit === '1';
   const ths = Array.from(table.querySelectorAll('thead tr')[0].children).filter(th => th.dataset.resizeKey && getComputedStyle(th).display !== 'none');
-  const nLock = ths.filter(th => _colIsLocked(th.dataset.resizeKey)).length;
+  const _sgS = _colSig(table);
+  const nLock = ths.filter(th => _colIsLockedTh(th, _sgS)).length;
   const yen = (n) => Math.abs(n).toLocaleString('ja-JP');
   let restHtml;
   if (!fixed) restHtml = '<span class="ws-note">この表は画面の幅に合わせて自動で配分されるため、右の空きは出ません</span>';
@@ -28768,15 +28975,17 @@ function _wrowBuild(table) {
   let foot = table.querySelector('tfoot.yc-wrow-foot');
   if (!foot) { foot = document.createElement('tfoot'); foot.className = 'yc-wrow-foot'; table.appendChild(foot); }
   const cls = (th) => String(th.className || '').split(/\s+/).filter(c => c && !/^sort-/.test(c)).join(' ');
-  foot.innerHTML = '<tr>' + ths.map(th => {
+  const _sgB = _colSig(table);
+  // 【v1.0957】入力欄・ロックは「この表の何列目か」（data-ci）で持つ。キーだけだと同じキーの別の表（型が違う）まで触ってしまう
+  foot.innerHTML = '<tr>' + ths.map((th, ci) => {
     const key = th.dataset.resizeKey;
     if (!key) return '<td class="' + cls(th) + ' yc-wrow-td"></td>';
-    const lk = _colIsLocked(key);
+    const lk = _colIsLockedTh(th, _sgB);
     // 【v1.0877】🔓/🔒 → 文字（未固定「ロック」／固定中「ロック中」）。数値の下に置く
     return '<td class="' + cls(th) + ' yc-wrow-td' + (lk ? ' is-locked' : '') + '"><span class="yc-wrow">'
       + '<input type="number" class="yc-wrow-in" min="' + COL_RESIZE_MIN_PX + '" max="' + COL_RESIZE_MAX_PX + '" step="1"'
-      + ' data-key="' + escapeHtml(key) + '"' + (lk ? ' disabled' : '') + ' title="この列の幅（px）。入力して Enter か欄の外をクリックで反映">'
-      + '<button type="button" class="yc-wrow-lock' + (lk ? ' is-locked' : '') + '" data-key="' + escapeHtml(key) + '" title="'
+      + ' data-key="' + escapeHtml(key) + '" data-ci="' + ci + '"' + (lk ? ' disabled' : '') + ' title="この列の幅（px）。入力して Enter か欄の外をクリックで反映">'
+      + '<button type="button" class="yc-wrow-lock' + (lk ? ' is-locked' : '') + '" data-key="' + escapeHtml(key) + '" data-ci="' + ci + '" title="'
       + (lk ? 'この列の幅をロック中（押すと解除）' : '押すとこの幅でロック（ドラッグや他の列の調整で変わらなくなります）') + '">' + (lk ? 'ロック中' : 'ロック') + '</button>'
       + '</span></td>';
   }).join('') + '</tr>';
@@ -28801,37 +29010,33 @@ function _wrowSyncAll() {
   if (!_colResizeOn) { _wrowRemoveAll(); return; }
   _wrowTables().forEach(_wrowBuild);
 }
-function _wrowSetWidth(key, px) {
-  if (!key || _colIsLocked(key)) return;
+// 【v1.0957】一番下の入力欄・ロック → その表の th（何列目か）
+function _wrowThOf(el) {
+  const t = el && el.closest('table'); const row = _colHeadRow(t);
+  return row ? row.children[+el.dataset.ci] || null : null;
+}
+function _wrowSetWidth(th, px) {
+  if (!th || !th.dataset.resizeKey || _colIsLockedTh(th)) return;
+  const key = th.dataset.resizeKey;
   const v = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, Math.round(+px || 0)));
   if (!(v > 0)) return;
-  // 【v1.0877】★他の列はいまの幅のまま止める（狭くした分は右の空きになる）
-  try { _wrowTables().forEach(t => { if (t.querySelector('thead th[data-resize-key="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]')) _colPinOthers(t, key); }); } catch (e) {}
-  saveColWidth(key, v);
+  // 【v1.0877】★他の列はいまの幅のまま止める（狭くした分は右の空きになる）／【v1.0957】この表だけ
+  try { _colPinOthers(th.closest('table'), key); } catch (e) {}
+  saveColWidthTh(th, v);
   applyColWidths();
   _wrowRefresh();
   try { _vpNotifySaved(); } catch (e) {}
 }
-function _wrowToggleLock(key) {
-  if (!key) return;
-  const vp = ensureViewPrefs();
-  if (vp.colLocks[key]) delete vp.colLocks[key];
-  else {
-    vp.colLocks[key] = true;
-    // 固定する時点の幅を保存値にしておく（保存値が無い列＝自然幅のままだと、固定しても再描画で動きうるため）
-    const th = document.querySelector('th[data-resize-key="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
-    const w = th ? Math.round(th.getBoundingClientRect().width) : 0;
-    if (w > 0 && vp.colWidths[key] == null) vp.colWidths[key] = w;
-  }
-  _vpTouch('この端末');
-  _colResizeDirty = true;   // モードを終えたときに GitHub へまとめて反映（v1.0749 と同じ）
+function _wrowToggleLock(th) {
+  if (!th || !th.dataset.resizeKey) return;
+  _colToggleLockTh(th);   // 【v1.0957】ロックも表の型ごと（固定する時点の幅を保存値にする・未反映の印もこの中）
   applyColWidths();
   _wrowSyncAll();
 }
 // 入力・🔒 は委譲で受ける（tfoot は作り直されるので個別に付けない）
 document.addEventListener('change', (e) => {
   const inp = e.target.closest && e.target.closest('.yc-wrow-in');
-  if (inp) _wrowSetWidth(inp.dataset.key, inp.value);
+  if (inp) _wrowSetWidth(_wrowThOf(inp), inp.value);
 });
 document.addEventListener('keydown', (e) => {
   const inp = e.target.closest && e.target.closest('.yc-wrow-in');
@@ -28841,7 +29046,7 @@ document.addEventListener('click', (e) => {
   const b = e.target.closest && e.target.closest('.yc-wrow-lock');
   if (!b) return;
   e.preventDefault(); e.stopPropagation();
-  _wrowToggleLock(b.dataset.key);
+  _wrowToggleLock(_wrowThOf(b));
 }, true);
 
 // 初期化: ハンドル設置 + 保存幅の復元。renderAll後に呼ぶ。
@@ -29018,7 +29223,7 @@ function setColResizeMode(on) {
     b.classList.toggle('is-on', _colResizeOn);
     b.title = _colResizeOn
       ? '幅調整モード中：列の境目をドラッグで幅変更（狭くした分は右の空きに）／境目をダブルクリックで既定に戻す／表の一番下で数値入力・ロック（もう一度押すと終了）'
-      : '幅調整モード：押すと列の境目をドラッグして列幅を変えられます';
+      : '列の幅：押すと「幅調整を始める／この画面の幅をほかの画面にも反映」の選択肢が出ます';
   }
   try { ycLog('info', _colResizeOn ? '幅調整モード: ON（列の境目をドラッグできます）' : '幅調整モード: OFF'); } catch (e) {}
   // 【v1.0749】★モードを【終える】ときに、そのあいだに変えた列幅をまとめてGitHubへ反映する。
@@ -29110,7 +29315,8 @@ async function _vpPushToGitHub() {
 (function _vpBindUI() {
   // 【v1.0736】「⇔ 幅」＝幅調整モードのON/OFF。「⚙」＝表示設定パネル
   const openBtn = document.getElementById('btnViewPrefs');
-  if (openBtn) openBtn.addEventListener('click', () => setColResizeMode(!_colResizeOn));
+  // 【v1.0957】押すと下に選択肢（幅調整の開始/終了 ＋ この画面の幅をほかの画面にも反映）を出す
+  if (openBtn) openBtn.addEventListener('click', (e) => { e.stopPropagation(); const m = document.getElementById('vpWidthMenu'); if (m && !m.hidden) _vpMenuClose(); else _vpMenuOpen(); });
   const panelBtn = document.getElementById('btnViewPrefsPanel');
   if (panelBtn) panelBtn.addEventListener('click', openViewPrefsModal);
   const closeBtn = document.getElementById('vpClose');
