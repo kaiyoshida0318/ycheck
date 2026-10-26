@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0974 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0975 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3805,6 +3805,11 @@ table.rank-table td.rank-legend-col-row {
    画面が狭い環境でも溢れないよう、ビューポート幅の96%を上限にする。 */
 #uploadModal .modal { max-width: min(1560px, 96vw); padding: 26px 28px; }
 #uploadModal .modal-title { font-size: 1.32rem; }
+/* 【v1.0975】見出しの行をモーダルの上に固定（中をスクロールしても「アップロード実行」「閉じる」が見えている） */
+#uploadModal .modal-header.up-head { position: sticky; top: -26px; z-index: 30; background: var(--bg2);
+  margin: -26px -28px 14px; padding: 18px 28px 12px; border-radius: 12px 12px 0 0; }
+#uploadModal .up-head-actions { display: inline-flex; gap: 8px; align-items: center; }
+#uploadModal .up-head-actions .btn { white-space: nowrap; }
 #uploadModal .dropzone-hint { font-size: 0.86rem; line-height: 1.7; }
 #uploadModal .dropzone-text { font-size: 1rem; }
 #uploadModal .file-slot { font-size: 0.9rem; padding: 12px 14px; }
@@ -4939,7 +4944,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0974</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0975</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6846,9 +6851,14 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
 <!-- 【v1.0753】#btnConfirmUploadTop（日別レポートの右上）は #btnConfirmUpload の分身。同期は _bindUploadTopBtn() -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
-    <div class="modal-header">
+    <!-- 【v1.0975】見出しの行を上に固定し、右上に「アップロード実行」（分身）と「閉じる」を常に出す（本人指定）。
+         下までスクロールしなくても取り込み・閉じるができる。分身の同期は _bindUploadTopBtn()。 -->
+    <div class="modal-header up-head">
       <h2 class="modal-title">📂 レポートを追加</h2>
-      <button class="modal-close" id="modalClose">×</button>
+      <span class="up-head-actions">
+        <button class="btn sm primary" id="btnConfirmUploadHead" type="button" disabled>⬆ アップロード実行</button>
+        <button class="btn sm" id="modalClose" type="button" title="閉じる（Esc）">✕ 閉じる</button>
+      </span>
     </div>
     <p class="dropzone-hint" id="uploadModeHint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートは1つ以上、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
     <div class="dropzone" id="dropzone">
@@ -6987,18 +6997,21 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
 (function _bindUploadTopBtn() {
   const init = () => {
     const main = document.getElementById('btnConfirmUpload');
-    const top  = document.getElementById('btnConfirmUploadTop');
-    if (!main || !top) return;
+    // 【v1.0975】分身は2つ（日別レポートの右上・見出しの行の右上）
+    const tops = ['btnConfirmUploadTop', 'btnConfirmUploadHead'].map(id => document.getElementById(id)).filter(Boolean);
+    if (!main || !tops.length) return;
     const sync = () => {
-      top.textContent = main.textContent;
-      top.disabled = main.disabled;
-      top.className = main.className + ' btn sm';
-      top.style.marginLeft = 'auto';
-      top.title = main.disabled ? 'ファイルを入れると押せるようになります' : 'この内容で取り込みます';
+      tops.forEach(top => {
+        top.textContent = main.textContent;
+        top.disabled = main.disabled;
+        top.className = main.className + ' btn sm';
+        if (top.id === 'btnConfirmUploadTop') top.style.marginLeft = 'auto';
+        top.title = main.disabled ? 'ファイルを入れると押せるようになります' : 'この内容で取り込みます';
+      });
     };
     sync();
     try { new MutationObserver(sync).observe(main, { attributes: true, childList: true, characterData: true, subtree: true }); } catch (e) {}
-    top.addEventListener('click', () => { if (!main.disabled) main.click(); });
+    tops.forEach(top => top.addEventListener('click', () => { if (!main.disabled) main.click(); }));
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
