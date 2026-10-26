@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0971 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0973 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4865,12 +4865,20 @@ table:not(.rank-table) .name-cell-wrap .name-cell { font-size: calc(1em - 2px); 
 body.basic-tune #tableBasic .col-namebasic { display: none; }
 /* 【v1.0971】商品コードを押して飛ぶのはやめた（ダブルクリックでコピーできなくなったため・本人指定）。
    → コードの右に小さい「↗」を付け、そこだけが商品ページへのリンク。コードは普通の文字（選択・コピーできる）。 */
-#tableBasic .code-pg-link { flex: 0 0 auto; font-size: 1em; font-weight: 700; line-height: 1; padding: 3px 4px; border-radius: 4px;
+/* 【v1.0972】↗ はコードの右 → 「2点」バッジの右（コードの下の行）へ移した（本人指定・横幅の節約）。バッジが無い商品はコードの下に ↗ だけ */
+#tableBasic .code-pg-link { display: inline-block; vertical-align: middle; margin-left: 4px; font-size: 1em; font-weight: 700; line-height: 1; padding: 2px 4px; border-radius: 4px;
   color: var(--accent); text-decoration: none; opacity: 0.75; }
 #tableBasic .code-pg-link:hover { opacity: 1; background: rgba(37,99,235,0.12); }
 body:not(.basic-tune) #tableBasic .code-pg-link { display: none; }   /* 商品-基本データでは出さない */
 /* 商品コードは1回クリックで丸ごと選択（ダブルクリックだと「-」で区切られて一部しか選べないため）。調整-基本だけ */
 body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-user-select: all; cursor: text; }
+/* ==================== 【v1.0973】メインKW：文字を小さく・2行・編集ボタンは下（本人指定） ====================
+   ・文字はセルの文字から2px小さく（商品名 v1.0960 と同じ）。2行まで折り返し、はみ出しは …（従来どおり）。
+   ・✏（編集）は右端 → 文字の下の行（左寄せ）へ。右に✏のぶんの幅を取らないので、列を狭めても文字が使える幅が増える。
+   ・メインKWの出る表すべて（調整-基本・調整-入札価格・調整-PRオプ など kwCellHtml の所）で同じ。 */
+.kw-cell { flex-direction: column; align-items: flex-start; gap: 1px; }
+.kw-cell .kw-text { width: 100%; font-size: calc(1em - 2px); line-height: 1.3; }
+.kw-cell .kw-edit-btn { flex: 0 0 auto; font-size: 0.72rem; padding: 0 3px; }
 </style>
 </head>
 <body>
@@ -4930,7 +4938,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0971</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0973</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -14283,7 +14291,7 @@ function renderBasic() {
       ? _bidSetCellHtml(r.code, _mem)   /* 【v1.0870】セット行も代表（親）の入札価格を手入力できる */
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet)).replace(/<\/span>$/, '<a class="code-pg-link" href="' + escapeHtml(yahooProductUrl(r.code)) + '" target="_blank" rel="noopener" title="商品ページを開く（' + escapeHtml(r.code) + '）">↗</a></span>')}${_famBadge}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}<a class="code-pg-link" href="${escapeHtml(yahooProductUrl(r.code))}" target="_blank" rel="noopener" title="商品ページを開く（${escapeHtml(r.code)}）">↗</a></td>
       <td>${imageCellHtml(r.code)}</td>
       <td class="col-namebasic">${nameCellHtml(r.code)}</td>
       <td class="tune-col col-kwtune">${kwCellHtml(r.code)}</td>
@@ -26459,19 +26467,22 @@ const PRODUCT_EDIT_OPENERS = '.name-edit-btn, .product-img-wrap';
 //   ・メインKWは幅を決めていない列なので、コード列が広がったぶん自動で狭くなる。
 //   ・コード列の幅を決めていない（自然幅）なら、↗ 込みで測られるので何もしない。
 //   ・済みの印は colWidths['sig|__v1971']（GitHubにも載る＝他のPCで二重に足さない）。
+// 【v1.0972】↗ をコードの下の行（「2点」の右）へ移したので、v1.0971 で +20px した分を一度だけ戻す。
+//   ・v1.0971 で足した型（colWidths['sig|__v1971'] がある）だけ。済みの印は 'sig|__v1972'。
+//   ・v1.0971 を使っていない環境では何もしない（足していないので戻さない）。
 function _basicTuneCodeWidenOnce() {
   if (state.currentView !== 'basic' || _basicMode !== 'tune') return;
   const t = document.getElementById('tableBasic'); if (!t || !t.offsetParent) return;
   const th = t.querySelector('thead th[data-sort="code"]'); if (!th || !th.dataset.resizeKey) return;
   const s = _colSig(t); if (!s) return;
-  const vp = ensureViewPrefs(), W = vp.colWidths, flag = s.sig + '|__v1971';
-  if (W[flag]) return;
-  const cur = _colW(th, s);
-  if (cur == null) { W[flag] = 1; return; }
-  _colFork(t, s);
-  W[s.sig + '|' + th.dataset.resizeKey] = Math.round(cur) + 20;
-  W[flag] = 1;
-  try { ycLog('info', '調整-基本の商品コード列を ' + Math.round(cur) + '→' + (Math.round(cur) + 20) + 'px（↗ を付けたぶん。メインKWがそのぶん狭くなる）'); } catch (e) {}
+  const vp = ensureViewPrefs(), W = vp.colWidths;
+  if (!W[s.sig + '|__v1971'] || W[s.sig + '|__v1972']) return;
+  const k = s.sig + '|' + th.dataset.resizeKey;
+  W[s.sig + '|__v1972'] = 1;
+  if (W[k] == null) return;
+  const before = Math.round(W[k]);
+  W[k] = Math.max(COL_RESIZE_MIN_PX, before - 20);
+  try { ycLog('info', '調整-基本の商品コード列を ' + before + '→' + W[k] + 'px に戻した（↗ をコードの下の行へ移したため）'); } catch (e) {}
   _vpTouch('この端末');
 }
 // 【v1.0971】v1.0969 の「商品コードを押すと商品ページ」は撤去（ダブルクリックでコピーできなくなったため）。
