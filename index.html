@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0973 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0974 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4776,7 +4776,8 @@ th.col-sroas, td.col-sroas { background-color:#f6effc; }
 th.col-sroas { background-color:#e7d5f5; }
 /* 【v1.0678/v1.0679】ROAS見出しの下に「売上/費用」の形で内訳を小さく出す（見出しの最終行）
    分子＝売上＝緑（プラス）／分母＝費用＝赤（マイナス）。色の意味は他の表と揃える */
-.th-sub { display:block; margin-top:2px; font-size:0.62rem; font-weight:700; letter-spacing:0; white-space:nowrap; }
+.th-note { font-size: calc(1em - 2px); font-weight: 600; }   /* 【v1.0974】入札価格の見出しの「(最安25円)」を2px小さく（本人指定・全画面の5か所） */
+.th-sub { display:block; margin-top:2px; font-size:calc(0.62rem - 2px); font-weight:700;   /* 【v1.0974】見出しの下の「売上/PR・広告費」を2px小さく（本人指定） */ letter-spacing:0; white-space:nowrap; }
 .ts-rev  { color:#0f8a52; }   /* 売上（プラス側） */
 .ts-cost { color:#d03f3f; }   /* 費用（マイナス側） */
 .ts-sl   { color:#9aa0a6; margin:0 1px; font-weight:600; }
@@ -4938,7 +4939,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0973</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0974</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5350,7 +5351,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
                      renderBasic の tr.innerHTML に col-cvr の td を書き戻すだけ（colspan も 14→15 に）。 -->
               <th class="num col-prov" data-sort="prOverEst" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。"><span class="th-est">？</span>PR<br>実績額</th>
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
-              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
               <!-- 【v1.0609】調整-基本のときだけ出す3列（body.basic-tune で表示）。
                    ★th と td を両方 .tune-col にして常に同じ数だけ存在させる。
                      片方だけ出し入れすると列がずれる。 -->
@@ -5727,7 +5728,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameRetired">商品名</th>
               <th class="num col-total" data-sort="rev">総売上（直近月）</th>
-              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
             <tbody></tbody>
@@ -5908,7 +5909,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
               <th data-sort="name" data-resize-key="nameAdAdjust">商品名</th>
               <th class="nosort" data-resize-key="kwAdAdjust">メインKW</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
               <th data-sort="adNote">対応内容</th>
               <!-- 【v1.0654】広告売上も直近3ヶ月ぶん並べる（旧: 最新月の1列だけ） -->
               <th class="num col-ad" data-sort="adRev0" id="hAdAdjustAdSales0">広告売上<br>(3ヶ月前)</th>
@@ -6012,7 +6013,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+              <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <!-- 【v1.0654】広告売上も直近3ヶ月ぶん並べる（旧: 最新月の1列だけ） -->
               <th class="num col-ad" data-sort="adRev0" id="hAdTuneAdSales0">広告売上<br>(3ヶ月前)</th>
@@ -6184,7 +6185,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
               <th class="num col-spend" data-sort="adCost1" id="hAdDataAdRev1">広告実績額<br>(2ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost2" id="hAdDataAdRev2">広告実績額<br>(前月)</th>
               <!-- 【v1.0652】入札価格は一番右へ -->
-<th class="num col-bidonly" data-sort="bid">入札価格<br>(最安25円)</th>
+<th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
               <!-- 【v1.0906】本人指定：右端にステータス（調整-入札価格／調整-PRオプと同じドロップダウン） -->
               <th class="status-col" data-sort="status">ステータス</th>
             </tr></thead>
