@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0979 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0980 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3658,6 +3658,32 @@ table.rank-table td.rank-legend-col-row {
 .pe-tab.on { color: var(--text); border-bottom-color: var(--accent); }
 .pe-tabs .pe-nav-mini { position: absolute; right: 54px; top: 50%; transform: translateY(-50%); margin-left: 0; }
 .pe-tabs-close { position: absolute !important; right: 18px; top: 50%; transform: translateY(-50%); margin-left: 0; }
+/* 【v1.0980】GPT用にコピー（商品-調整タブのときだけ。∧∨ の左） */
+.pe-tabs .pe-gpt-btn { position: absolute; right: 126px; top: 50%; transform: translateY(-50%); height: 26px; padding: 0 11px; border: 1px solid #0f766e; border-radius: 6px;
+  background: #f0fdfa; color: #0f766e; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.pe-tabs .pe-gpt-btn:hover { background: #0f766e; color: #fff; }
+.pe-tabs .pe-gpt-btn.done { background: #0f766e; color: #fff; }
+.pe-tabs .pe-gpt-btn.done::after { content: ' ✓'; }
+/* 【v1.0980】調整-入札価格／調整-PRオプ「GPT用に要約コピー」のメニュー（「⇔ 幅」のメニューと同じ見た目） */
+.gpt-tune-btn { border-color: #0f766e !important; color: #0f766e !important; font-weight: 600; }
+.gpt-menu { position: fixed; z-index: 3000; width: 300px; max-height: 70vh; overflow: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
+.gpt-menu[hidden] { display: none; }
+.gpt-menu-head { font-size: 0.8rem; font-weight: 700; color: var(--text2); padding: 8px 10px 2px; }
+.gpt-menu-sub { font-size: 0.7rem; color: var(--text3); padding: 2px 10px 8px; line-height: 1.5; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+.gpt-menu-empty { font-size: 0.78rem; color: var(--text3); padding: 8px 10px; }
+.gpt-menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font: inherit; text-align: left; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--text); border-radius: 6px; }
+.gpt-menu-item:hover { background: var(--bg3); }
+.gpt-mi-name { flex: 1 1 auto; font-size: 0.86rem; font-weight: 700; color: #0f766e; }
+.gpt-mi-cnt { flex: 0 0 auto; font-size: 0.72rem; color: var(--text3); font-weight: 600; }
+.gpt-menu-item.done .gpt-mi-cnt { color: #0f766e; }
+.gpt-menu-item.busy { opacity: 0.55; cursor: progress; }
+.gpt-menu-item.busy .gpt-mi-cnt::after { content: '　作成中…'; }
+.gpt-manual { position: fixed; inset: 0; z-index: 4000; background: rgba(15,23,42,0.45); display: flex; align-items: center; justify-content: center; }
+.gpt-manual-box { width: min(900px, 92vw); height: 70vh; background: var(--bg2); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.gpt-manual-head { font-size: 0.86rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.gpt-manual-x { margin-left: auto; border: 1px solid var(--border2); background: var(--bg3); border-radius: 6px; padding: 2px 10px; cursor: pointer; font: inherit; }
+.gpt-manual textarea { flex: 1 1 auto; width: 100%; font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem; }
 /* 【v1.0686】商品ヘッダー（画像・商品名・コード）は左寄せ（従来どおり） */
 .pe-head { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 0 10px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
 .pe-head-img img, .pe-head-img .product-img-placeholder { width: 46px; height: 46px; border-radius: 6px; }
@@ -4961,7 +4987,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0979</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0980</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6017,6 +6043,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
             <span class="tsb-each-tag" title="この画面はいつも1商品1行で表示します（親子を合算した行は出しません）。&#10;親子の合計で見たいときは 商品-基本データ 等の「合算」を使ってください">1商品1行（個別）</span>
           </span>
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
+          <!-- 【v1.0980】GPT用に要約コピー（表示中の商品を1商品1行・30件ずつ）§366 -->
+          <button class="btn sm ghost gpt-tune-btn" type="button" onclick="gptOpenTuneMenu('ad', this)" title="いま表に出ている商品を、1商品1行の要約にしてクリップボードへ（30件ずつ選んでコピー）。&#10;ルールと回答形式（CSV）も付くので、ChatGPT などにそのまま貼れます">🤖 GPT用に要約コピー ▾</button>
           <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
@@ -6124,6 +6152,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <!-- 【v1.0882】調整-基本と同じ「順位取得CSV(GitHub反映)」を調整-PRオプにも（本人指定）。中身・変動アラートは共通（updateCsvDownloadButtonState が両方を更新） -->
           <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
+          <!-- 【v1.0980】GPT用に要約コピー（表示中の商品を1商品1行・30件ずつ）§366 -->
+          <button class="btn sm ghost gpt-tune-btn" type="button" onclick="gptOpenTuneMenu('pro', this)" title="いま表に出ている商品を、1商品1行の要約にしてクリップボードへ（30件ずつ選んでコピー）。&#10;ルールと回答形式（CSV）も付くので、ChatGPT などにそのまま貼れます">🤖 GPT用に要約コピー ▾</button>
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
@@ -6509,6 +6539,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
       <button type="button" class="pe-tab" data-petab="adj" title="入札価格・表示・クリック・CTR・CPC…の細かい数字（調整用。日別／月別）">商品-調整</button>
       <button type="button" class="pe-tab" data-petab="trend" title="1か月を累積×日別で見る（ROAS 3種）">商品-推移</button>
       <button type="button" class="pe-tab" data-petab="edit">商品情報を編集</button>
+      <!-- 【v1.0980】GPT分析用のコピー（商品-調整タブのときだけ出す。peSetTab が出し入れ）§366 -->
+      <button type="button" class="pe-gpt-btn" id="peGptBtn" style="display:none" onclick="gptCopyItem()" title="この商品の判断材料（ルール・データの注意点・商品情報・日別60日と月別12か月の表・入札価格/PRの変更履歴と前後の結果・順位・親子の範囲・回答形式）をまとめてクリップボードへ。&#10;ChatGPT などにそのまま貼って使います">🤖 GPT用にコピー</button>
       <div class="pe-nav-mini">
         <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
         <button class="pe-nav-btn-mini" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">∨</button>
@@ -24791,6 +24823,7 @@ function peSetTab(t) {
   const i = document.getElementById('peTabInfo'), e = document.getElementById('peTabEdit'), tr = document.getElementById('peTabTrend');
   const aj = document.getElementById('peTabAdj');
   if (aj) aj.style.display = (_peTab === 'adj') ? '' : 'none';
+  { const gb = document.getElementById('peGptBtn'); if (gb) gb.style.display = (_peTab === 'adj') ? '' : 'none'; }   // 【v1.0980】GPT用にコピーは商品-調整だけ
   if (i)  i.style.display  = (_peTab === 'info')  ? '' : 'none';
   if (tr) tr.style.display = (_peTab === 'trend') ? '' : 'none';
   if (e)  e.style.display  = (_peTab === 'edit')  ? '' : 'none';
@@ -25487,6 +25520,445 @@ function peRenderAdj() {
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
     + '。広告個数＝広告経由の注文数。広告個数・クリック数は、Yahoo のレポートが1件を0と出す分を1に戻しています（売上・実績額がある日）。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
   requestAnimationFrame(() => _peStickyHead(wrap));
+}
+// ============================================================================
+// 【v1.0980】GPT分析用のコピー（本人指定・§366）
+//   (a) 商品-調整モーダル右上「🤖 GPT用にコピー」… 1商品ぶんの判断材料を Markdown でクリップボードへ
+//   (b) 調整-入札価格／調整-PRオプ「🤖 GPT用に要約コピー」… 表示中の商品を1商品1行・30件ずつ
+//   ★数字は商品-調整モーダルと同じ _peAdjRows から取る（ここで別の計算式を書かない＝表と食い違わない）。
+//   ★_peScope／_peAdjSpan／_peMSpan は _gptWithPe で一時的に差し替え、必ず元に戻す（画面の表示は変えない）。
+//   ★ルールの文（GPT_RULES_LINES）は1か所だけ。言い回しを変えるときはここだけ直す。
+// ============================================================================
+const GPT_CHUNK = 30;            // (b) 1回にコピーする商品数
+const GPT_DAY_SPAN = 60;         // (a) 日別表の日数
+const GPT_MONTH_SPAN = '12';     // (a) 月別表の月数（_peMSpan の値）
+const GPT_WIN = 14;              // 変更の前後で比べる日数・(b) の「直近◯日」
+function _gptRulesLines() {
+  const TH = PR_SALES_ROAS_TH, B = AD_CIRCLE_BID_BORDER, P = PR_BASE_RATE_PCT;
+  return [
+    '## ルール（Ycheck の判断基準）',
+    '- 目的：入札価格（広告）と PRオプ料率（SEO順位を上げるための費用）を、売上と順位を保ったまま、むだのない値にする。',
+    '- 入札価格の最安は25円。広告順位の「上位」は1〜4位。',
+    '  - 入札◯＝1〜4位に出ていて、入札価格が' + B + '円以下（いちばん良い状態）。',
+    '  - 入札◯なのに5位以下・圏外が続く → 入札価格を上げる、または入札△（調整中）にする。',
+    '  - 入札◯で1〜4位でも' + B + '円を超えている → 下げてみる。',
+    '  - 入札△（調整中）で1〜4位が続き、' + B + '円以下 → 入札◯にできる。',
+    '  - 入札△-飛ぶ手前固定＝これより下げると広告が出なくなる値で固定済み。入札なし＝広告を出していない（子商品は親の広告から送り込むので入札なし）。',
+    '- PRオプ料率の最低は' + P + '%。SEO順位の「上位」は1〜6位。',
+    '  - PR◯／PR◯-親-30％固定 なのに7位以下・圏外が続く → 料率を上げる、または PR△ にする。',
+    '  - PR△-調整中／PR✕ なのに1〜6位が続く → PR◯ にする、または料率をさらに下げてみる。',
+    '  - PR◯-子-7％固定・PR◯-通常-7％固定・PR△-飛ぶ手前固定 は原則動かさない。',
+    '- 順位は1日だけのぶれで判断しない（Ycheck は直近2回の順位取得が続けて同じ側のときだけ「修正あり」にしている）。',
+    '- 効率の目安（Ycheck の色分けと同じ）：広告ROAS 500%以上＝良い／300%以上＝ふつう／それ未満＝悪い。'
+      + 'PR広告売上ROAS ' + TH.g + '%以上＝良い／' + TH.y + '%以上＝やや良い／' + TH.o + '%以上＝ふつう／それ未満＝悪い。',
+    '- 注文が少ない（判断に使う期間の注文数・広告個数が少ない）ときは、数字がぶれやすいので「様子見」にする。変更してから日が浅く、変更後のデータが少ないときも様子見。',
+    '- 最終判断は人が行う。あなたの答えは提案として出す。'
+  ];
+}
+function _gptNotesLines(lastDate, today) {
+  return [
+    '## データの注意点',
+    '- 日別データは ' + lastDate + ' まで（今日 ' + today + ' の分はまだ無い）。いちばん新しい月の月別は途中までの合計。',
+    '- 「—」はデータなし（0 とは別）。',
+    '- SEO売上＝総売上−広告売上（広告以外の売上。PRオプの効果もここに出る）。',
+    '- 広告ROAS＝広告売上÷広告実績額×100。CTR＝クリック数÷表示×100。CPC＝広告実績額÷クリック数。CVR＝広告個数÷クリック数×100。平均獲得単価＝広告実績額÷広告個数。',
+    '- PR実績額は推定：総売上÷1.1×（その日のPRオプ料率−' + PR_BASE_RATE_PCT + '%）。最低料率' + PR_BASE_RATE_PCT + '%ぶんは固定費として除いている。',
+    '- PR広告売上ROAS（推定）＝総売上÷（広告実績額＋PR実績額）×100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。',
+    '- 広告個数＝広告経由の注文数。Yahoo のレポートは1件を0と出すことがあるので、売上・費用がある日は1に戻している。',
+    '- 表示・CTR は、表示回数を取り込み始める前の日は「—」。',
+    '- 入札価格・PR料率の日ごとの履歴は ' + (function () { const k = Object.keys(state.rankEdits || {}).sort(); return k.length ? k[0].replace('/', '年') + '月' : '（無し）'; })() + 'から。それより前の月の入札価格は「—」、PR は今の料率で推定している。',
+    '- 順位は1日1回の取得で、区分で持っている（広告：1~4位◯ など／SEO：1~6位◯・7~14位△・15位以下✕）。',
+    '- 送り込み（親子）セット＝親の広告・PRで子の商品ページにも客を送る組み合わせ。親子合算の数字は親と子の合計で、入札価格・PRは親の値。'
+  ];
+}
+// --- 小さな道具 ---
+function _gptWithPe(o, fn) {
+  const k = { scope: _peScope, span: _peAdjSpan, mspan: _peMSpan };
+  try {
+    if (o.scope) _peScope = o.scope;
+    if (o.span != null) _peAdjSpan = o.span;
+    if (o.mspan) _peMSpan = o.mspan;
+    return fn();
+  } finally { _peScope = k.scope; _peAdjSpan = k.span; _peMSpan = k.mspan; }
+}
+// 集計範囲。商品-調整モーダルと同じ：セットがある商品＝親子合算。
+//   childSelf=true（(b) の要約）のときは、子商品の行だけ「個別」（子の行で親子合算を出すと親の行と同じ数字が2回出るため）
+function _gptScopeOf(code, childSelf) {
+  const f = _peFamily(code);
+  if (f.members.length < 2) return 'self';
+  if (childSelf && code !== f.key) return 'self';
+  return 'set';
+}
+const _gN = v => (v == null || !isFinite(v)) ? '—' : Math.round(v).toLocaleString('ja-JP');
+const _gP = (v, d) => (v == null || !isFinite(v)) ? '—' : (d ? (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d) : Math.round(v).toLocaleString('ja-JP')) + '%';
+const _gY = v => (v == null || !isFinite(v)) ? '—' : Math.round(v).toLocaleString('ja-JP') + '円';
+function _gptYmd(dt) { return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); }
+function _gptAddDays(ymd, n) { const d = new Date(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10)); d.setDate(d.getDate() + n); return _gptYmd(d); }
+function _gptToday() {
+  try { const t = getTodayYmAndIndex(); if (t && t.ym) return t.ym.replace('/', '-') + '-' + String(t.dayIndex + 1).padStart(2, '0'); } catch (e) {}
+  return _gptYmd(new Date());
+}
+function _gptNowStr() { const d = new Date(); return _gptYmd(d) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function _gptVer() { try { return document.querySelector('.logo-sub').textContent.trim(); } catch (e) { return ''; } }
+function _gptShopName() { try { return getSessionShop().name || getSessionShopId(); } catch (e) { return ''; } }
+function _gptCell(s) { return String(s == null ? '' : s).replace(/\|/g, '／').replace(/[\r\n]+/g, ' ').trim(); }
+// その日の順位（区分の文字）。値が無い日は back 日まで前へさかのぼる。{ v:'1~4位◯', d:'YYYY-MM-DD' } か null
+function _gptRankAt(code, kind, ymd, back) {
+  const field = (kind === 'ad') ? 'adRank' : 'seoRank';
+  let d = ymd;
+  for (let i = 0; i <= (back || 0); i++) {
+    let e = null;
+    try { e = getEffectiveRankValue(d.slice(0, 4) + '/' + d.slice(5, 7), code, field, (+d.slice(8, 10)) - 1); } catch (er) { e = null; }
+    if (e && e.value != null && e.value !== '') return { v: String(e.value).replace(/\s+/g, ''), d: d };
+    d = _gptAddDays(d, -1);
+  }
+  return null;
+}
+function _gptRankNowAgo(code, kind) {
+  const t = _gptToday();
+  return { now: _gptRankAt(code, kind, t, 7), ago: _gptRankAt(code, kind, _gptAddDays(t, -30), 7) };
+}
+const _gptRankTxt = r => r ? (r.v + '（' + r.d.slice(5).replace('-', '/') + '）') : '—';
+// 日別の行（_peAdjRows の形）をまとめる。ROAS は合計から計算し直す（足さない）
+function _gptSum(rows) {
+  const s = { days: rows.length, rev: 0, orders: 0, adCost: 0, adRev: 0, clicks: 0, adOrders: 0, prOver: 0, prKnown: false, from: rows.length ? rows[0].key : '', to: rows.length ? rows[rows.length - 1].key : '' };
+  rows.forEach(r => {
+    s.rev += +r.rev || 0; s.orders += +r.orders || 0; s.adCost += +r.adCost || 0; s.adRev += +r.adRev || 0;
+    s.clicks += +r.clicks || 0; s.adOrders += +r.adOrders || 0;
+    if (r.prKnown) { s.prKnown = true; s.prOver += +r.prOver || 0; }
+  });
+  s.aroas = s.adCost > 0 ? s.adRev / s.adCost * 100 : null;
+  s.prsr = (s.prKnown && (s.adCost + s.prOver) > 0) ? s.rev / (s.adCost + s.prOver) * 100 : null;
+  s.revPerDay = s.days ? s.rev / s.days : null;
+  return s;
+}
+// 入札価格・PR を変えた日（日別の行から。表のマス「35→30」と同じ判定）と、その前後 GPT_WIN 日の結果。
+//   前＝変更日の前の GPT_WIN 日（同じ項目の1つ前の変更より前には戻らない）
+//   後＝変更日から GPT_WIN 日（同じ項目の次の変更の前日まで・データの最終日まで）
+function _gptChanges(dayRows) {
+  const out = [];
+  ['bid', 'pr'].forEach(kind => {
+    const idx = [];
+    for (let i = 1; i < dayRows.length; i++) {
+      const a = dayRows[i - 1], b = dayRows[i];
+      if (kind === 'bid') { if (a.bid != null && b.bid != null && Math.round(a.bid * 10) !== Math.round(b.bid * 10)) idx.push(i); }
+      else if (a.prRate != null && b.prRate != null && Math.round(a.prRate) !== Math.round(b.prRate)) idx.push(i);
+    }
+    idx.forEach((i, j) => {
+      const prev = j > 0 ? idx[j - 1] : 0, next = (j + 1 < idx.length) ? idx[j + 1] : dayRows.length;
+      const a = dayRows[i - 1], b = dayRows[i];
+      out.push({
+        kind: kind, date: b.key,
+        from: kind === 'bid' ? Math.round(a.bid * 10) / 10 : Math.round(a.prRate),
+        to:   kind === 'bid' ? Math.round(b.bid * 10) / 10 : Math.round(b.prRate),
+        before: _gptSum(dayRows.slice(Math.max(prev, i - GPT_WIN), i)),
+        after:  _gptSum(dayRows.slice(i, Math.min(next, i + GPT_WIN)))
+      });
+    });
+  });
+  out.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
+  return out;
+}
+const _gptChgTxt = c => (c.kind === 'bid' ? '入札価格 ' + c.from + '→' + c.to + '円' : 'PR ' + c.from + '→' + c.to + '%');
+const _gptWinTxt = s => s.days ? (s.days + '日：日売上' + _gN(s.revPerDay) + '・注文' + _gN(s.orders) + '・広告個数' + _gN(s.adOrders) + '・広告ROAS ' + _gP(s.aroas) + '・PR広告売上ROAS ' + _gP(s.prsr)) : 'データなし';
+// その商品の材料をまとめて作る（(a)(b) 共通）
+function _gptCollect(code, opt) {
+  opt = opt || {};
+  const scope = _gptScopeOf(code, !!opt.childSelf);
+  const fam = _peFamily(code);
+  const codes = _gptWithPe({ scope: scope }, () => _peScopeCodes(code));
+  const bidCode = (scope === 'set') ? fam.key : code;   // _peBidCode と同じ
+  const dayAll = _gptWithPe({ scope: scope, span: 0 }, () => _peAdjRows(code, 'day'));
+  const months = _gptWithPe({ scope: scope, mspan: opt.mspan || GPT_MONTH_SPAN }, () => _peAdjRows(code, 'month'));
+  return { code, scope, fam, codes, bidCode, dayAll, months, changes: _gptChanges(dayAll) };
+}
+function _gptStatusTxt(code) {
+  let s = '', a = '', p = '';
+  try { s = effectiveStatusOf(code) || ''; } catch (e) {}
+  try { a = effectiveAdStatusOf(code) || ''; } catch (e) {}
+  try { p = effectiveProStatusOf(code) || ''; } catch (e) {}
+  return { status: s || '（未設定）', ad: a || '（未設定）', pro: p || '（未設定）' };
+}
+function _gptScopeTxt(C) {
+  if (C.scope !== 'set') {
+    if (C.fam.members.length >= 2) return '個別（子商品。親 ' + C.fam.key + ' とは別に、この商品だけの数字）';
+    return '個別（送り込みセットなし）';
+  }
+  return '親子合算（親 ' + C.fam.key + ' ＋ 子 ' + C.codes.filter(c => c !== C.fam.key).join('・') + '。数字は合計、入札価格・PRは親の値）';
+}
+
+// ---------------- (a) 1商品ぶん ----------------
+function gptBuildItemText(code) {
+  const C = _gptCollect(code);
+  const today = _gptToday();
+  const lastDate = C.dayAll.length ? C.dayAll[C.dayAll.length - 1].key : '—';
+  const m = getMaster(code) || {};
+  const pm = (state.productMeta || {})[code] || {};
+  const st = _gptStatusTxt(code);
+  const L = [];
+  L.push('# Ycheck 商品-調整データ（GPT分析用）：' + code);
+  L.push('作成 ' + _gptNowStr() + '／Ycheck ' + _gptVer() + '／ショップ ' + _gptShopName());
+  L.push('');
+  L.push('あなたは Yahoo!ショッピングの広告運用の相談相手です。下のルールとデータを読んで、この商品の「入札価格」と「PRオプ料率」をどうするかを提案してください。最後の「回答形式」のとおりに答えてください。');
+  L.push('');
+  _gptRulesLines().forEach(x => L.push(x));
+  L.push('');
+  _gptNotesLines(lastDate, today).forEach(x => L.push(x));
+  L.push('');
+  L.push('## 商品情報');
+  L.push('- 商品コード：' + code);
+  L.push('- 商品名：' + _gptCell(m.name || '—'));
+  L.push('- メインKW：' + _gptCell(m.kw || '—'));
+  L.push('- ステータス：' + st.status + '／入札状態：' + st.ad + '／PR状態：' + st.pro);
+  L.push('- 今の入札価格：' + _gY(getBid(C.bidCode)) + (C.bidCode !== code ? '（親 ' + C.bidCode + ' の値）' : '') + '／今のPRオプ料率：' + _gP(getProRate(C.bidCode)) + (C.bidCode !== code ? '（親 ' + C.bidCode + ' の値）' : ''));
+  { let fx = null; try { fx = tuneFixInfo(code, 'ad'); } catch (e) {} if (fx) L.push('- Ycheck の「修正あり」（入札）：' + _gptCell(fx.tip)); }
+  { let fx = null; try { fx = tuneFixInfo(code, 'pro'); } catch (e) {} if (fx) L.push('- Ycheck の「修正あり」（PR）：' + _gptCell(fx.tip)); }
+  if ((pm.adNote || '').trim()) L.push('- 対応内容メモ（入札）：' + _gptCell(pm.adNote));
+  if ((pm.proNote || '').trim()) L.push('- 対応内容メモ（PR）：' + _gptCell(pm.proNote));
+  L.push('');
+  L.push('## 親子の範囲');
+  L.push('- ' + _gptScopeTxt(C));
+  if (C.fam.members.length >= 2) {
+    C.fam.members.forEach(c => {
+      const s2 = _gptStatusTxt(c);
+      L.push('  - ' + c + (c === C.fam.key ? '（親）' : '（子）') + '：' + _gptCell((getMaster(c) || {}).name || '') + '／入札 ' + _gY(getBid(c)) + '・PR ' + _gP(getProRate(c)) + '／' + s2.ad + '・' + s2.pro);
+    });
+  }
+  L.push('');
+  L.push('## 広告順位・SEO順位（今と1か月前）');
+  L.push('| 商品 | 広告順位 今 | 広告順位 1か月前 | SEO順位 今 | SEO順位 1か月前 |');
+  L.push('|---|---|---|---|---|');
+  (C.fam.members.length >= 2 ? C.fam.members : [code]).forEach(c => {
+    const a = _gptRankNowAgo(c, 'ad'), s = _gptRankNowAgo(c, 'seo');
+    L.push('| ' + c + ' | ' + _gptRankTxt(a.now) + ' | ' + _gptRankTxt(a.ago) + ' | ' + _gptRankTxt(s.now) + ' | ' + _gptRankTxt(s.ago) + ' |');
+  });
+  L.push('');
+  L.push('## 入札価格・PR の変更履歴と前後の結果');
+  L.push('前＝変更日の前の' + GPT_WIN + '日（1つ前の同じ変更より前には戻らない）。後＝変更日から' + GPT_WIN + '日（次の同じ変更の前日・データの最終日まで）。日売上＝その期間の総売上÷日数。');
+  const chg = C.changes.slice(-20);
+  if (!chg.length) L.push('（日別データの期間に変更なし）');
+  else {
+    L.push('| 変更日 | 変更 | 前 | 後 |');
+    L.push('|---|---|---|---|');
+    chg.forEach(c => L.push('| ' + c.date + ' | ' + _gptChgTxt(c) + ' | ' + _gptWinTxt(c.before) + ' | ' + _gptWinTxt(c.after) + ' |'));
+  }
+  L.push('');
+  // 日別表（古い順）。商品-調整モーダルの表と同じ列＋注文数・順位
+  const dRows = C.dayAll.slice(-GPT_DAY_SPAN);
+  L.push('## 日別（直近' + dRows.length + '日・古い順）' + (dRows.length ? '：' + dRows[0].key + '〜' + dRows[dRows.length - 1].key : ''));
+  L.push('入札価格・PR のマスの「27→25」＝その日に変えた。広告順位・SEO順位は ' + C.bidCode + ' の順位。');
+  const H = ['日付', '入札価格', '表示', 'クリック数', 'CTR', 'CPC', '広告実績額', '広告個数', '広告売上', '広告ROAS', 'CVR', '平均獲得単価', 'PR', 'PR実績額(推定)', 'SEO売上', '総売上', '注文数', 'PR広告売上ROAS', '広告順位', 'SEO順位'];
+  L.push('| ' + H.join(' | ') + ' |');
+  L.push('|' + H.map(() => '---').join('|') + '|');
+  const wk = ['日', '月', '火', '水', '木', '金', '土'];
+  dRows.forEach((r, i) => {
+    const prev = i > 0 ? dRows[i - 1] : (C.dayAll[C.dayAll.length - dRows.length - 1] || null);
+    const dt = new Date(+r.key.slice(0, 4), +r.key.slice(5, 7) - 1, +r.key.slice(8, 10));
+    const bidTxt = (r.bid == null) ? '—' : ((prev && prev.bid != null && Math.round(prev.bid * 10) !== Math.round(r.bid * 10)) ? (Math.round(prev.bid * 10) / 10) + '→' + (Math.round(r.bid * 10) / 10) : String(Math.round(r.bid * 10) / 10));
+    const prTxt = (r.prRate == null) ? '—' : ((prev && prev.prRate != null && Math.round(prev.prRate) !== Math.round(r.prRate)) ? Math.round(prev.prRate) + '→' + Math.round(r.prRate) + '%' : Math.round(r.prRate) + '%');
+    const hasAd = r.hasAd || r.dayHasAdFile;
+    const ar = _gptRankAt(C.bidCode, 'ad', r.key, 0), sr = _gptRankAt(C.bidCode, 'seo', r.key, 0);
+    L.push('| ' + [
+      r.key.slice(5).replace('-', '/') + '(' + wk[dt.getDay()] + ')', bidTxt, _gN(r.imp), hasAd ? _gN(r.clicks) : '—', _gP(r.ctr, 2), _gN(r.cpc),
+      _gN(r.adCost), hasAd ? _gN(r.adOrders) : '—', _gN(r.adRev), _gP(r.aroas), _gP(r.cvr, 2), _gN(r.cpa),
+      prTxt, r.prKnown ? _gN(r.prOver) : '—', _gN(r.seoRev), _gN(r.rev), _gN(r.orders), _gP(r.prsr),
+      ar ? ar.v : '—', sr ? sr.v : '—'
+    ].join(' | ') + ' |');
+  });
+  L.push('');
+  L.push('## 月別（直近' + C.months.length + 'か月・古い順。入札価格・PR はその月の平均）');
+  const HM = ['月', '入札価格(平均)', '表示', 'クリック数', 'CTR', 'CPC', '広告実績額', '広告個数', '広告売上', '広告ROAS', 'CVR', '平均獲得単価', 'PR(平均)', 'PR実績額(推定)', 'SEO売上', '総売上', '注文数', 'PR広告売上ROAS'];
+  L.push('| ' + HM.join(' | ') + ' |');
+  L.push('|' + HM.map(() => '---').join('|') + '|');
+  C.months.forEach(r => {
+    L.push('| ' + [
+      String(r.key).replace('-', '/') + (r.key === today.slice(0, 7) ? '（途中）' : ''), r.bid == null ? '—' : String(Math.round(r.bid * 10) / 10),
+      _gN(r.imp) + (r.impPartial ? '※' : ''), _gN(r.clicks), _gP(r.ctr, 2) + (r.impPartial ? '※' : ''), _gN(r.cpc), _gN(r.adCost), _gN(r.adOrders), _gN(r.adRev), _gP(r.aroas), _gP(r.cvr, 2), _gN(r.cpa),
+      r.prRate == null ? '—' : Math.round(r.prRate) + '%', r.prKnown ? _gN(r.prOver) : '—', _gN(r.seoRev), _gN(r.rev), _gN(r.orders), _gP(r.prsr)
+    ].join(' | ') + ' |');
+  });
+  if (C.months.some(r => r.impPartial)) L.push('※＝表示回数がある日だけの合計（CTR も同じ日だけで計算）');
+  // 変更記録（商品ごと・ショップ全体）。表の期間にあるものだけ
+  {
+    const from = C.dayAll.length ? C.dayAll[0].key : '';
+    const it = [];
+    try { C.codes.forEach(c => clItemList(c).forEach(e => { if (!from || e.date >= from) it.push(e.date + '（' + c + '）：' + _gptCell(e.text)); })); } catch (e) {}
+    try { clShopList().forEach(e => { if (!from || e.date >= from) it.push(e.date + '（ショップ全体）：' + _gptCell(e.text)); }); } catch (e) {}
+    if (it.length) { L.push(''); L.push('## 変更記録（Ycheck に残したメモ）'); it.sort().forEach(x => L.push('- ' + x)); }
+  }
+  L.push('');
+  L.push('## 回答形式（この形のまま答えてください）');
+  L.push('- 入札価格：上げる／下げる／様子見 のどれか（→ いくらに：◯円。様子見なら今の値）');
+  L.push('- PR：上げる／下げる／様子見 のどれか（→ 何%に：◯%。様子見なら今の値）');
+  L.push('- 根拠：');
+  L.push('  1. （1行）');
+  L.push('  2. （1行）');
+  L.push('  3. （1行）');
+  L.push('- 次に見直す日：YYYY-MM-DD');
+  return L.join('\n');
+}
+
+// ---------------- (b) 調整画面の要約（1商品1行） ----------------
+function _gptTuneCodes(kind) {
+  const tb = document.querySelector((kind === 'ad' ? '#tableAdTune' : '#tableProTune') + ' tbody');
+  if (!tb) return [];
+  const out = [];
+  tb.querySelectorAll(':scope > tr').forEach(tr => {
+    const el = tr.querySelector('td.code-cell .code-text');
+    const c = el ? el.textContent.trim() : '';
+    if (c && out.indexOf(c) < 0) out.push(c);
+  });
+  return out;
+}
+function _gptTuneMonths() {
+  try { return _tunePeriodInclCurrent ? last3MonthsInclCurrent() : last3Months(true); } catch (e) { return []; }
+}
+function _gptSummaryLine(code, no, months) {
+  const C = _gptCollect(code, { childSelf: true, mspan: '24' });
+  const m = getMaster(code) || {};
+  const st = _gptStatusTxt(code);
+  const mm = months.map(k => C.months.find(r => r.key === k) || null);
+  const seq = f => mm.map(r => r ? f(r) : '—').join('/');
+  const last = C.dayAll.slice(-GPT_WIN), s14 = _gptSum(last);
+  const a = _gptRankNowAgo(C.bidCode, 'ad'), s = _gptRankNowAgo(C.bidCode, 'seo');
+  const lastOf = k => { const x = C.changes.filter(c => c.kind === k); return x.length ? x[x.length - 1] : null; };
+  const chgTxt = c => c ? (c.date.slice(5).replace('-', '/') + ' ' + c.from + '→' + c.to + (c.kind === 'bid' ? '円' : '%') + '［前' + _gptWinTxt(c.before) + ' ⇒ 後' + _gptWinTxt(c.after) + '］') : 'なし';
+  const scopeShort = (C.scope === 'set') ? '親子合算' + C.codes.length + '件' : (C.fam.members.length >= 2 ? '子（親 ' + C.fam.key + '）' : '単品');
+  const parts = [
+    no + '. ' + code,
+    _gptCell(m.name || '—'),
+    st.status + '・' + st.ad + '・' + st.pro,
+    scopeShort,
+    '今：入札' + (adStatusIsNone(effectiveAdStatusOf(code)) ? 'なし' : _gY(getBid(code))) + '・PR ' + _gP(getProRate(code)),
+    '月別(' + months.map(k => (+k.slice(5, 7)) + '月').join('/') + ')：総売上' + seq(r => _gN(r.rev)) + '・広告ROAS ' + seq(r => _gP(r.aroas)) + '・PR広告売上ROAS ' + seq(r => _gP(r.prsr)),
+    '直近' + s14.days + '日' + (s14.days ? '(' + s14.from.slice(5).replace('-', '/') + '〜' + s14.to.slice(5).replace('-', '/') + ')' : '') + '：総売上' + _gN(s14.rev) + '・注文' + _gN(s14.orders) + '・広告費' + _gN(s14.adCost) + '・広告売上' + _gN(s14.adRev) + '・広告ROAS ' + _gP(s14.aroas) + '・クリック' + _gN(s14.clicks) + '・広告個数' + _gN(s14.adOrders) + '・PR実績額' + (s14.prKnown ? _gN(s14.prOver) : '—') + '・PR広告売上ROAS ' + _gP(s14.prsr),
+    '広告順位 今' + _gptRankTxt(a.now) + '／1か月前' + _gptRankTxt(a.ago),
+    'SEO順位 今' + _gptRankTxt(s.now) + '／1か月前' + _gptRankTxt(s.ago),
+    '入札の最後の変更 ' + chgTxt(lastOf('bid')),
+    'PRの最後の変更 ' + chgTxt(lastOf('pr'))
+  ];
+  return parts.join('｜');
+}
+function gptBuildTuneText(kind, codes, startNo, total, partNo, partAll) {
+  const months = _gptTuneMonths();
+  const lastDate = (function () { const d = dailyAllDates(); return d.length ? d[d.length - 1] : '—'; })();
+  const view = (kind === 'ad') ? '調整-入札価格' : '調整-PRオプ';
+  const L = [];
+  L.push('# Ycheck ' + view + ' の要約（GPT分析用）その' + partNo + '/' + partAll + '：' + startNo + '〜' + (startNo + codes.length - 1) + '件目（表示中 ' + total + '件）');
+  L.push('作成 ' + _gptNowStr() + '／Ycheck ' + _gptVer() + '／ショップ ' + _gptShopName());
+  L.push('');
+  L.push('あなたは Yahoo!ショッピングの広告運用の相談相手です。下のルールとデータを読んで、商品ごとに「入札価格」と「PRオプ料率」をどうするかを提案してください。'
+    + (kind === 'ad' ? 'この一覧は 調整-入札価格 の画面から出したもので、主に入札価格の判断がほしい。' : 'この一覧は 調整-PRオプ の画面から出したもので、主にPRオプ料率の判断がほしい。')
+    + '最後の「回答形式」の CSV で答えてください。');
+  L.push('');
+  _gptRulesLines().forEach(x => L.push(x));
+  L.push('');
+  _gptNotesLines(lastDate, _gptToday()).forEach(x => L.push(x));
+  L.push('');
+  L.push('## 各行の見方（「｜」区切り）');
+  L.push('番号. 商品コード｜商品名｜ステータス・入札状態・PR状態｜範囲（親子合算＝親と子の合計／子＝子だけ／単品）｜今の入札価格・PR｜月別（' + months.join('・') + '）の総売上・広告ROAS・PR広告売上ROAS（左から古い順）'
+    + '｜直近' + GPT_WIN + '日の合計｜広告順位（今／1か月前）｜SEO順位（今／1か月前）｜入札の最後の変更と前後' + GPT_WIN + '日の結果｜PRの最後の変更と前後の結果');
+  L.push('- 順位は親子合算の行では親の順位。PR広告売上ROAS は日ごとの料率で推定（商品-調整と同じ。調整-PRオプの表は今の料率で推定するので少し違うことがある）。');
+  L.push('');
+  L.push('## 商品（' + codes.length + '件）');
+  codes.forEach((c, i) => { try { L.push(_gptSummaryLine(c, startNo + i, months)); } catch (e) { L.push((startNo + i) + '. ' + c + '｜（集計できませんでした：' + e.message + '）'); } });
+  L.push('');
+  L.push('## 回答形式（CSV。この見出しのまま、上の' + codes.length + '件すべてを1行ずつ。コードブロックで）');
+  L.push('商品コード,入札価格判断,新しい価格,PR判断,新しい料率,根拠（1行）,次に見る日');
+  L.push('- 入札価格判断・PR判断：上げる／下げる／様子見 のどれか（入札なしの商品の入札価格判断は「—」）');
+  L.push('- 新しい価格：円の数字だけ（例 27）。新しい料率：%の数字だけ（例 15）。様子見なら今の値');
+  L.push('- 根拠：1行。カンマを使わない（使うなら「、」）');
+  L.push('- 次に見る日：YYYY-MM-DD');
+  return L.join('\n');
+}
+
+// ---------------- コピーの実行 ----------------
+async function _ycCopyText(text) {
+  window._gptLastText = text;   // 確認用（テストでも読む）
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  _gptShowManual(text);
+  return false;
+}
+// クリップボードに入れられなかったとき：文字を出して、自分でコピーしてもらう
+function _gptShowManual(text) {
+  let w = document.getElementById('gptManual');
+  if (!w) {
+    w = document.createElement('div'); w.id = 'gptManual'; w.className = 'gpt-manual';
+    w.innerHTML = '<div class="gpt-manual-box"><div class="gpt-manual-head">自動でコピーできませんでした。下の文字を全部選んで（Ctrl+A）コピー（Ctrl+C）してください'
+      + '<button type="button" class="gpt-manual-x" onclick="document.getElementById(\'gptManual\').remove()">×</button></div><textarea readonly></textarea></div>';
+    document.body.appendChild(w);
+  }
+  const ta = w.querySelector('textarea'); ta.value = text; ta.focus(); ta.select();
+}
+async function gptCopyItem() {
+  const code = productEditModal && productEditModal.dataset.code;
+  if (!code) return;
+  const btn = document.getElementById('peGptBtn');
+  let text = '';
+  try { text = gptBuildItemText(code); }
+  catch (e) { console.error('[Ycheck] GPT用コピーの作成に失敗', e); if (typeof showToast === 'function') showToast('GPT用コピーを作れませんでした：' + e.message, 'warn'); return; }
+  const ok = await _ycCopyText(text);
+  if (ok) {
+    if (typeof showToast === 'function') showToast('GPT用にコピーしました（' + code + '・' + text.length.toLocaleString('ja-JP') + '文字）。GPT に貼ってください', 'ok');
+    if (btn) { btn.classList.add('done'); setTimeout(() => btn.classList.remove('done'), 1600); }
+  }
+}
+// (b) のメニュー（30件ずつ）。コピーした区切りには ✓（このタブを開いている間だけ覚える）
+const _gptCopiedParts = {};
+function _gptMenuClose() { const m = document.getElementById('gptTuneMenu'); if (m) m.hidden = true; }
+function gptOpenTuneMenu(kind, btn) {
+  let m = document.getElementById('gptTuneMenu');
+  if (!m) {
+    m = document.createElement('div'); m.id = 'gptTuneMenu'; m.className = 'gpt-menu'; m.hidden = true;
+    document.body.appendChild(m);
+    document.addEventListener('click', (e) => { if (!m.hidden && !e.target.closest('#gptTuneMenu') && !e.target.closest('.gpt-tune-btn')) _gptMenuClose(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !m.hidden) _gptMenuClose(); });
+  }
+  if (!m.hidden && m.dataset.kind === kind) { _gptMenuClose(); return; }
+  const codes = _gptTuneCodes(kind);
+  const sig = kind + ':' + codes.join(',');
+  const done = _gptCopiedParts[sig] || (_gptCopiedParts[sig] = {});
+  const parts = Math.ceil(codes.length / GPT_CHUNK);
+  let h = '<div class="gpt-menu-head">表示中の ' + codes.length + '件を ' + GPT_CHUNK + '件ずつコピー</div>'
+    + '<div class="gpt-menu-sub">1つ押す → GPT に貼る → 次を押す、の順に。ルールと回答形式（CSV）は毎回付きます。</div>';
+  if (!codes.length) h += '<div class="gpt-menu-empty">表示中の商品がありません</div>';
+  for (let p = 0; p < parts; p++) {
+    const a = p * GPT_CHUNK + 1, b = Math.min(codes.length, (p + 1) * GPT_CHUNK);
+    h += '<button type="button" class="gpt-menu-item' + (done[p] ? ' done' : '') + '" data-part="' + p + '">'
+      + '<span class="gpt-mi-name">' + a + '〜' + b + '件目</span><span class="gpt-mi-cnt">' + (b - a + 1) + '件' + (done[p] ? '　✓ コピー済み' : '') + '</span></button>';
+  }
+  m.innerHTML = h; m.dataset.kind = kind;
+  m.onclick = async (e) => {
+    const it = e.target.closest('.gpt-menu-item'); if (!it) return;
+    const p = +it.getAttribute('data-part');
+    const part = codes.slice(p * GPT_CHUNK, (p + 1) * GPT_CHUNK);
+    it.classList.add('busy');
+    await new Promise(r => setTimeout(r, 20));   // 「作成中」を先に描かせる
+    let text = '';
+    try { text = gptBuildTuneText(kind, part, p * GPT_CHUNK + 1, codes.length, p + 1, parts); }
+    catch (er) { console.error('[Ycheck] GPT用要約の作成に失敗', er); it.classList.remove('busy'); if (typeof showToast === 'function') showToast('GPT用要約を作れませんでした：' + er.message, 'warn'); return; }
+    const ok = await _ycCopyText(text);
+    it.classList.remove('busy');
+    if (ok) {
+      done[p] = true;
+      it.classList.add('done');
+      const cn = it.querySelector('.gpt-mi-cnt'); if (cn) cn.textContent = part.length + '件　✓ コピー済み';
+      if (typeof showToast === 'function') showToast('GPT用にコピーしました（' + (p * GPT_CHUNK + 1) + '〜' + (p * GPT_CHUNK + part.length) + '件目・' + text.length.toLocaleString('ja-JP') + '文字）', 'ok');
+    }
+  };
+  m.hidden = false;
+  const r = btn.getBoundingClientRect();
+  const w = 300;
+  m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + 'px';
+  m.style.top = (r.bottom + 6) + 'px';
 }
 function peRenderInfo() {
   const code = productEditModal && productEditModal.dataset.code;
