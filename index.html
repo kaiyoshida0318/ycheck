@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0983 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0985 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4841,14 +4841,14 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 /* 【v1.0982】ヘッダー1（【基本】【全体】【取得データ】【新商品】）を全体に詰めて、【新商品】新規登録を同じ行の右端に（本人指定）。
    ・詰めるのは余白だけ（文字の大きさ・太さは変えない）：タブの左右 14px→5px／タブとタブの間 2px→0／グループの間 18px→8px／見出しの右 6px→3px／行の左右 20px→10px／件数の前のすき間 9px→3px。
    ・これで 1914px／1600px／1536px（1920px の画面を125%表示）では1行に収まる。それより狭いと【新商品】だけ次の行（右端）に回る。
-   ・【新商品】は margin-left:auto で右端へ。
+   ・【新商品】は【v1.0984】から右寄せせず、【取得データ】のすぐ右に並べる。
    ・ヘッダー2（【一覧】【調整】…・.top-nav-3）は変えていない。 */
 .top-nav:not(.top-nav-3) { column-gap: 8px; padding-left: 10px; padding-right: 10px; }
 .top-nav:not(.top-nav-3) .nav-group { gap: 0; }
 .top-nav:not(.top-nav-3) .nav-tab { padding-left: 5px; padding-right: 5px; gap: 3px; }
 .top-nav:not(.top-nav-3) .nav-tab .chip-num { margin-left: 0; }
 .top-nav:not(.top-nav-3) .nav-group-label { padding-right: 3px; }
-.top-nav:not(.top-nav-3) .nav-group-newp { margin-left: auto; }
+/* 【v1.0984】【新商品】の右寄せ（margin-left:auto）はやめた。SEO順位のすぐ右に普通に並べる（本人指定「変によせたりしないで」） */
 /* ==================== 【v1.0981】【新商品】新規登録（#view-newreg） ==================== */
 .nav-group-label.g-newp { color:#16a34a; }  /* 【新商品】 */
 #view-newreg .nb-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -4863,6 +4863,17 @@ table.nr-table td.nr-code { font-size: 0.78rem; word-break: break-all; }
 table.nr-table td.nr-miss .kw-cell { outline: 1px dashed #f59e0b; outline-offset: 2px; border-radius: 4px; }
 .nr-empty { padding: 36px 16px; text-align: center; color: var(--text3); font-size: 0.86rem; line-height: 1.8; }
 .nr-dash { color: var(--text3); }
+/* 【v1.0985】合算／両表示 */
+#view-newreg .js-rowmode-bar { flex: 0 0 auto; }
+table.nr-table tr.nr-setrow > td { background: #f0fdf4; }
+table.nr-table tr.nr-sethead > td { background: #ecfdf5; padding: 6px 10px; font-size: 0.8rem; color: var(--text2); border-top: 2px solid #bbf7d0; }
+table.nr-table tr.nr-member > td { background: #fbfefc; }
+table.nr-table tr.nr-member > td.nr-code { padding-left: 6px; }
+.nr-mem-mark { color: #94a3b8; margin-right: 4px; }
+.nr-setbadge { display: inline-block; font-size: 0.66rem; font-weight: 700; color: #15803d; background: #dcfce7; border-radius: 999px; padding: 0 7px; margin: 3px 6px 0 0; font-family: 'Noto Sans JP', sans-serif; }
+.nr-setkids { font-size: 0.68rem; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+.nr-setkids .nr-kid-sk { color: #15803d; font-weight: 700; }
+.nr-sethead-sub { margin-left: 10px; font-size: 0.72rem; color: var(--text3); }
 #view-newreg .child-detail-select { width: 100%; max-width: 100%; box-sizing: border-box; }   /* 列（160px）からはみ出さない */
 .nr-mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
 .nr-seg { display: inline-flex; }
@@ -5042,7 +5053,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0983</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0985</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5828,12 +5839,15 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <span class="nb-title nr-title">【新商品】選択前</span>
           <input type="search" id="nrSearch" placeholder="商品コード・商品名・メインKWで検索" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0983】「新商品・選択前／現役すべて」の切り替えは撤去（選択前だけを出す・本人指定） -->
+          <!-- 【v1.0985】合算／個別／両表示（本人指定）。商品-基本データ等と同じ部品（.js-rowmode-bar・basicRowMode を共有）＝どの画面で切り替えても同じまとめ方になる -->
+          <span class="seg-filter js-rowmode-bar" id="nrRollupBar" role="group" aria-label="個別/合算"
+            title="合算＝親子（送り込みセット）を1行にまとめる（行の入力欄は親のもの。子は下に一覧）&#10;個別＝選択前の商品を1件ずつ&#10;両表示＝セットの見出しの下に、親と子を1件ずつ（それぞれ入力できる）"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="nb-count" id="nrCount"></span>
           <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
             <button type="button" class="nb-btn" id="nrAddBtn" title="商品マスタCSV・APIから商品を取り込みます（「+ 商品追加 ▾」の「+ 商品追加・更新・反映」と同じ）。取り込んだ商品は「選択前」でここに出ます">＋ 商品を追加（CSV・API）</button>
           </span>
         </div>
-        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ここに出るのはステータスが「選択前」の商品だけです。ステータスを変えた商品も、画面を移るまではここに残ります（移ると消えます）。</div>
+        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ここに出るのはステータスが「選択前」の商品だけです（合算・両表示では、選択前の商品がいるセットの親と子も出ます）。ステータスを変えた商品も、画面を移るまではここに残ります（移ると消えます）。</div>
         <div id="nrTableWrap" class="nb-wrap"></div>
       </div>
     </div>
@@ -22659,6 +22673,45 @@ function _nrRepCellHtml(code) {
   }
   return '<div class="nr-rep"><span class="nr-seg">' + b('none', 'なし', 'r-none') + b('parent', '親', 'r-parent') + b('child', '子', 'r-child') + '</span>' + sub + '</div>';
 }
+// 【v1.0985】送り込みセットのメンバー（現役のみ・代表（親）を先頭、あとはコード順）
+function _nrFamilyMembers(key) {
+  const mem = Object.keys(state.master || {}).filter(c => !isRetired(c) && (c === key || _basicRepKeyOf(c) === key));
+  mem.sort((a, b) => a === key ? -1 : b === key ? 1 : a.localeCompare(b, 'ja'));
+  return mem;
+}
+const _nrIsSentaku = c => String(((state.productMeta || {})[c] || {}).status || '') === STATUS_SENTAKUMAE;
+// 1行。opt.set＝合算のセット行（メンバー配列）／opt.member＝両表示の内訳の行
+function _nrRowHtml(c, opt) {
+  opt = opt || {};
+  const role = _nrRoleOf(c);
+  const kw = String((getMaster(c) || {}).kw || '').trim();
+  let codeHtml = escapeHtml(c);
+  if (opt.set) {
+    const kids = opt.set.filter(x => x !== c);
+    const nS = opt.set.filter(_nrIsSentaku).length;
+    codeHtml += '<div class="nr-setbadge" title="' + escapeHtml(opt.set.join('\n')) + '">セット ' + opt.set.length + '件</div>'
+      + '<div class="nr-setkids">子：' + kids.map(x => '<span class="' + (_nrIsSentaku(x) ? 'nr-kid-sk' : '') + '">' + escapeHtml(x) + '</span>').join('・') + '</div>'
+      + (nS ? '<div class="nr-setkids">選択前 ' + nS + '件' + '</div>' : '');
+  }
+  if (opt.member) codeHtml = '<span class="nr-mem-mark">└</span>' + codeHtml;
+  return '<tr data-code="' + escapeHtml(c) + '" class="' + (opt.set ? 'nr-setrow' : opt.member ? 'nr-member' : '') + '">'
+    + '<td class="nb-code nr-code">' + codeHtml + '</td>'
+    + '<td>' + imageCellHtml(c) + '</td>'
+    + '<td>' + nameCellHtml(c) + '</td>'
+    + '<td>' + _nrRepCellHtml(c) + '</td>'
+    + '<td>' + (role === 'child' ? childDetailSelectHtml(c) : '<span class="nr-dash" title="子商品のときだけ選べます">—</span>') + '</td>'
+    + '<td class="' + (kw ? '' : 'nr-miss') + '">' + kwCellHtml(c) + '</td>'
+    + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
+    + '<td class="status-col">' + statusSelectHtml(c, 'ad') + '</td>'
+    + '<td class="status-col">' + statusSelectHtml(c, 'pro') + '</td>'
+    + '</tr>';
+}
+// 両表示のセット見出し行（入力欄なし）
+function _nrSetHeadHtml(mem) {
+  const k = mem[0], nS = mem.filter(_nrIsSentaku).length;
+  return '<tr class="nr-sethead"><td colspan="9"><span class="nr-setbadge">セット ' + mem.length + '件</span>'
+    + '<b class="nr-mono">' + escapeHtml(k) + '</b> ' + escapeHtml(_nrShortName(k)) + '<span class="nr-sethead-sub">親1＋子' + (mem.length - 1) + '　選択前 ' + nS + '件</span></td></tr>';
+}
 function renderNewReg() {
   const wrap = document.getElementById('nrTableWrap');
   if (!wrap) return;
@@ -22678,21 +22731,25 @@ function renderNewReg() {
   const head = '<colgroup><col style="width:150px"><col style="width:58px"><col><col style="width:250px"><col style="width:160px"><col style="width:200px"><col style="width:112px"><col style="width:104px"><col style="width:118px"></colgroup>'
     + '<thead><tr><th>商品コード</th><th>画像</th><th>商品名</th><th>親子（送り込み）</th><th title="子商品のときだけ：親に対してどういう子か">子タイプ</th>'
     + '<th>メインKW</th><th>ステータス</th><th>入札状態</th><th>PR状態</th></tr></thead>';
-  const body = list.map(c => {
-    const role = _nrRoleOf(c);
-    const kw = String((getMaster(c) || {}).kw || '').trim();
-    return '<tr data-code="' + escapeHtml(c) + '">'
-      + '<td class="nb-code nr-code">' + escapeHtml(c) + '</td>'
-      + '<td>' + imageCellHtml(c) + '</td>'
-      + '<td>' + nameCellHtml(c) + '</td>'
-      + '<td>' + _nrRepCellHtml(c) + '</td>'
-      + '<td>' + (role === 'child' ? childDetailSelectHtml(c) : '<span class="nr-dash" title="子商品のときだけ選べます">—</span>') + '</td>'
-      + '<td class="' + (kw ? '' : 'nr-miss') + '">' + kwCellHtml(c) + '</td>'
-      + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
-      + '<td class="status-col">' + statusSelectHtml(c, 'ad') + '</td>'
-      + '<td class="status-col">' + statusSelectHtml(c, 'pro') + '</td>'
-      + '</tr>';
-  }).join('');
+  // 【v1.0985】合算／個別／両表示（_effRowMode()＝商品-基本データ等と共有の basicRowMode）
+  //   個別＝選択前の商品を1件1行（v1.0983 まで）
+  //   合算＝送り込みセットを1行に。入力欄は代表（親）のもの。セットは「メンバーのだれかが選択前」なら出す（＝商品-基本データの合算と同じくセット単位で残す）
+  //   両表示＝セットの見出し行の下に、親と子を1件ずつ（それぞれ入力できる）。子はセットの全員（選択前でない子も）
+  const mode = _effRowMode();
+  let body = '', nSet = 0;
+  if (mode === 'each') body = list.map(c => _nrRowHtml(c)).join('');
+  else {
+    const keys = [];
+    list.forEach(c => { const k = _basicRepKeyOf(c); if (keys.indexOf(k) < 0) keys.push(k); });
+    body = keys.map(k => {
+      const mem = _nrFamilyMembers(k);
+      if (mem.length < 2) return _nrRowHtml(mem[0] || k);
+      nSet++;
+      if (mode === 'sum') return _nrRowHtml(mem[0], { set: mem });
+      return _nrSetHeadHtml(mem) + mem.map(c => _nrRowHtml(c, { member: true })).join('');
+    }).join('');
+  }
+  if (cnt && mode !== 'each' && nSet) cnt.textContent = '選択前 ' + list.length + '件・セット ' + nSet + '組' + (ghIsEnabled() ? '' : '（閲覧専用のため変更できません）');
   wrap.innerHTML = '<table class="nb-table nr-table">' + head + '<tbody>' + body + '</tbody></table>';
   wrap.scrollTop = keepTop;
 }
