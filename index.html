@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0985 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0987 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4863,17 +4863,14 @@ table.nr-table td.nr-code { font-size: 0.78rem; word-break: break-all; }
 table.nr-table td.nr-miss .kw-cell { outline: 1px dashed #f59e0b; outline-offset: 2px; border-radius: 4px; }
 .nr-empty { padding: 36px 16px; text-align: center; color: var(--text3); font-size: 0.86rem; line-height: 1.8; }
 .nr-dash { color: var(--text3); }
-/* 【v1.0985】合算／両表示 */
+/* 【v1.0985】合算／両表示 →【v1.0986】見た目は商品-基本データ・調整-基本と同じ（row-setparent／row-setmember／fam-count／code-pg-link） */
 #view-newreg .js-rowmode-bar { flex: 0 0 auto; }
-table.nr-table tr.nr-setrow > td { background: #f0fdf4; }
-table.nr-table tr.nr-sethead > td { background: #ecfdf5; padding: 6px 10px; font-size: 0.8rem; color: var(--text2); border-top: 2px solid #bbf7d0; }
-table.nr-table tr.nr-member > td { background: #fbfefc; }
-table.nr-table tr.nr-member > td.nr-code { padding-left: 6px; }
-.nr-mem-mark { color: #94a3b8; margin-right: 4px; }
-.nr-setbadge { display: inline-block; font-size: 0.66rem; font-weight: 700; color: #15803d; background: #dcfce7; border-radius: 999px; padding: 0 7px; margin: 3px 6px 0 0; font-family: 'Noto Sans JP', sans-serif; }
-.nr-setkids { font-size: 0.68rem; color: var(--text3); margin-top: 2px; line-height: 1.4; }
-.nr-setkids .nr-kid-sk { color: #15803d; font-weight: 700; }
-.nr-sethead-sub { margin-left: 10px; font-size: 0.72rem; color: var(--text3); }
+#nrTableWrap .code-pg-link { display: inline-block; vertical-align: middle; margin-left: 4px; font-size: 1em; font-weight: 700; line-height: 1; padding: 2px 4px; border-radius: 4px;
+  color: var(--accent); text-decoration: none; opacity: 0.75; }
+#nrTableWrap .code-pg-link:hover { opacity: 1; background: rgba(37,99,235,0.12); }
+#nrTableWrap td.code-cell .code-text { user-select: all; -webkit-user-select: all; cursor: text; }   /* 1回クリックでコードを丸ごと選択（調整-基本と同じ） */
+#nrTableWrap .rep-badge { pointer-events: none; }   /* 親子マークは目印だけ（この画面では押しても絞り込まない） */
+table.nr-table td.nr-sethead-sub { font-size: 0.74rem; font-weight: 500; color: var(--text3); }
 #view-newreg .child-detail-select { width: 100%; max-width: 100%; box-sizing: border-box; }   /* 列（160px）からはみ出さない */
 .nr-mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
 .nr-seg { display: inline-flex; }
@@ -5053,7 +5050,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0985</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0987</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5146,7 +5143,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   <!-- 【v1.0981】【新商品】新規登録（本人指定：【取得データ】の右）。新しく入った商品の 親子・メインKW・ステータス・入札状態・PR状態 をまとめて決める画面 §367 -->
   <div class="nav-group nav-group-newp">
     <span class="nav-group-label g-newp">【新商品】</span>
-    <a class="nav-tab nav-tab-link" data-view="newreg" href="?view=newreg">選択前<span class="chip-num" id="cntNewReg" title="ステータスが「選択前」の商品の数"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="newreg" href="?view=newreg">選択前<span class="chip-num" id="cntNewReg" title="ステータスが「選択前」の商品の数（親に追従している子も数える＝状態チップの「選択前」と同じ）"></span></a>
   </div>
   <!-- 【v1.0550/v1.0607】ヘッダー1（上部バー＋タブ段）の開閉。
        v1.0606までは .top-nav-2 の右端にあったが、その段ごと撤去したのでこの行の右端へ移した。
@@ -5847,7 +5844,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
             <button type="button" class="nb-btn" id="nrAddBtn" title="商品マスタCSV・APIから商品を取り込みます（「+ 商品追加 ▾」の「+ 商品追加・更新・反映」と同じ）。取り込んだ商品は「選択前」でここに出ます">＋ 商品を追加（CSV・API）</button>
           </span>
         </div>
-        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ここに出るのはステータスが「選択前」の商品だけです（合算・両表示では、選択前の商品がいるセットの親と子も出ます）。ステータスを変えた商品も、画面を移るまではここに残ります（移ると消えます）。</div>
+        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ここに出るのはステータスが「選択前」の商品だけです（親が選択前の子＝「子（親に追従）」も出ます。合算・両表示では、選択前の商品がいるセットの親と子も出ます）。ステータスを変えた商品も、画面を移るまではここに残ります（移ると消えます）。</div>
         <div id="nrTableWrap" class="nb-wrap"></div>
       </div>
     </div>
@@ -22616,8 +22613,11 @@ window.renderContrib = renderContrib;
 // 【v1.0983】本人指定で、出すのはステータスが「選択前」の商品だけ（v1.0981〜0982 は 新商品・選択前・空＋「現役すべて」の切り替え）
 let _nrScope = 'new';     // 'new' のみ（切り替えは撤去。値は残置）
 const NR_NEW_STATUSES = [STATUS_SENTAKUMAE];
+// 【v1.0987】★判定は effectiveStatusOf（子（親に追従）の子は親のステータス）。状態チップ「選択前」（STATE_FILTERS['status-sentakumae']）と同じ。
+//   v1.0983〜0986 は保存値（meta.status）だけを見ていたので、親が選択前でも子（＝保存値は「子（親に追従）」）が出なかった（本人指摘）。
 function _nrIsNew(code) {
-  const st = String(((state.productMeta || {})[code] || {}).status || '');
+  let st = '';
+  try { st = effectiveStatusOf(code); } catch (e) { st = String(((state.productMeta || {})[code] || {}).status || ''); }
   return NR_NEW_STATUSES.indexOf(st) >= 0;
 }
 function _nrCodesAll() {
@@ -22679,38 +22679,41 @@ function _nrFamilyMembers(key) {
   mem.sort((a, b) => a === key ? -1 : b === key ? 1 : a.localeCompare(b, 'ja'));
   return mem;
 }
-const _nrIsSentaku = c => String(((state.productMeta || {})[c] || {}).status || '') === STATUS_SENTAKUMAE;
-// 1行。opt.set＝合算のセット行（メンバー配列）／opt.member＝両表示の内訳の行
+const _nrIsSentaku = c => _nrIsNew(c);   // 【v1.0987】子は親に追従（effectiveStatusOf）
+// 【v1.0986】商品コードの欄は 調整-基本 と同じ見た目（本人指定）：
+//   親子マーク＋コード（codeCellHtml）、その下の行に「N点」（セットのとき・fam-count）と「↗」（商品ページ・code-pg-link）。
+//   v1.0985 の「セット N件／子：…／選択前 N件」の文字は撤去（子の一覧は 親子 の列に出ている）。
+function _nrCodeCellHtml(c, setMem) {
+  const fam = (setMem && setMem.length >= 2)
+    ? '<span class="fam-count" title="' + escapeHtml('このセットにまとめた商品（' + setMem.length + '件）:\n' + setMem.map(x => x + (_nrIsSentaku(x) ? '（選択前）' : '')).join('\n')) + '">' + setMem.length + '点</span>'
+    : '';
+  return '<td class="code-cell">' + codeCellHtml(c) + fam
+    + '<a class="code-pg-link" href="' + escapeHtml(yahooProductUrl(c)) + '" target="_blank" rel="noopener" title="商品ページを開く（' + escapeHtml(c) + '）">↗</a></td>';
+}
+// 1行。opt.set＝合算のセット行（メンバー配列）／opt.member＝両表示の内訳の行（商品-基本データと同じ row-setmember）
 function _nrRowHtml(c, opt) {
   opt = opt || {};
   const role = _nrRoleOf(c);
   const kw = String((getMaster(c) || {}).kw || '').trim();
-  let codeHtml = escapeHtml(c);
-  if (opt.set) {
-    const kids = opt.set.filter(x => x !== c);
-    const nS = opt.set.filter(_nrIsSentaku).length;
-    codeHtml += '<div class="nr-setbadge" title="' + escapeHtml(opt.set.join('\n')) + '">セット ' + opt.set.length + '件</div>'
-      + '<div class="nr-setkids">子：' + kids.map(x => '<span class="' + (_nrIsSentaku(x) ? 'nr-kid-sk' : '') + '">' + escapeHtml(x) + '</span>').join('・') + '</div>'
-      + (nS ? '<div class="nr-setkids">選択前 ' + nS + '件' + '</div>' : '');
-  }
-  if (opt.member) codeHtml = '<span class="nr-mem-mark">└</span>' + codeHtml;
-  return '<tr data-code="' + escapeHtml(c) + '" class="' + (opt.set ? 'nr-setrow' : opt.member ? 'nr-member' : '') + '">'
-    + '<td class="nb-code nr-code">' + codeHtml + '</td>'
+  return '<tr data-code="' + escapeHtml(c) + '" class="' + (opt.member ? 'row-setmember' : (opt.pcCls || '')) + '">'
+    + _nrCodeCellHtml(c, opt.set)
     + '<td>' + imageCellHtml(c) + '</td>'
     + '<td>' + nameCellHtml(c) + '</td>'
     + '<td>' + _nrRepCellHtml(c) + '</td>'
     + '<td>' + (role === 'child' ? childDetailSelectHtml(c) : '<span class="nr-dash" title="子商品のときだけ選べます">—</span>') + '</td>'
     + '<td class="' + (kw ? '' : 'nr-miss') + '">' + kwCellHtml(c) + '</td>'
-    + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
+    // 【v1.0986】並びを 入札状態 → PR状態 → ステータス に（本人指定。v1.0985 までは ステータス → 入札状態 → PR状態）
     + '<td class="status-col">' + statusSelectHtml(c, 'ad') + '</td>'
     + '<td class="status-col">' + statusSelectHtml(c, 'pro') + '</td>'
+    + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
     + '</tr>';
 }
-// 両表示のセット見出し行（入力欄なし）
+// 両表示のセット行（商品-基本データの両表示と同じ row-setparent）。入力欄は出さない（すぐ下の親の行で変える）
 function _nrSetHeadHtml(mem) {
   const k = mem[0], nS = mem.filter(_nrIsSentaku).length;
-  return '<tr class="nr-sethead"><td colspan="9"><span class="nr-setbadge">セット ' + mem.length + '件</span>'
-    + '<b class="nr-mono">' + escapeHtml(k) + '</b> ' + escapeHtml(_nrShortName(k)) + '<span class="nr-sethead-sub">親1＋子' + (mem.length - 1) + '　選択前 ' + nS + '件</span></td></tr>';
+  return '<tr class="row-setparent nr-sethead">' + _nrCodeCellHtml(k, mem)
+    + '<td>' + imageCellHtml(k) + '</td><td>' + nameCellHtml(k) + '</td>'
+    + '<td colspan="6" class="nr-sethead-sub">セット（親1＋子' + (mem.length - 1) + '）。選択前 ' + nS + '件。変えるのは下の1件ずつの行で</td></tr>';
 }
 function renderNewReg() {
   const wrap = document.getElementById('nrTableWrap');
@@ -22728,16 +22731,21 @@ function renderNewReg() {
       : '該当する商品はありません') + '</div>';
     return;
   }
-  const head = '<colgroup><col style="width:150px"><col style="width:58px"><col><col style="width:250px"><col style="width:160px"><col style="width:200px"><col style="width:112px"><col style="width:104px"><col style="width:118px"></colgroup>'
+  const head = '<colgroup><col style="width:150px"><col style="width:58px"><col><col style="width:250px"><col style="width:160px"><col style="width:200px"><col style="width:104px"><col style="width:118px"><col style="width:112px"></colgroup>'
     + '<thead><tr><th>商品コード</th><th>画像</th><th>商品名</th><th>親子（送り込み）</th><th title="子商品のときだけ：親に対してどういう子か">子タイプ</th>'
-    + '<th>メインKW</th><th>ステータス</th><th>入札状態</th><th>PR状態</th></tr></thead>';
+    + '<th>メインKW</th><th>入札状態</th><th>PR状態</th><th>ステータス</th></tr></thead>';
   // 【v1.0985】合算／個別／両表示（_effRowMode()＝商品-基本データ等と共有の basicRowMode）
   //   個別＝選択前の商品を1件1行（v1.0983 まで）
   //   合算＝送り込みセットを1行に。入力欄は代表（親）のもの。セットは「メンバーのだれかが選択前」なら出す（＝商品-基本データの合算と同じくセット単位で残す）
   //   両表示＝セットの見出し行の下に、親と子を1件ずつ（それぞれ入力できる）。子はセットの全員（選択前でない子も）
   const mode = _effRowMode();
   let body = '', nSet = 0;
-  if (mode === 'each') body = list.map(c => _nrRowHtml(c)).join('');
+  if (mode === 'each') {
+    // 【v1.0987】個別でも親子は並べてまとめる（親が先頭・子はその下）。ほかの画面の個別と同じ applyRepGrouping＋rowParentChildClass（子の行は字下げ）
+    const grouped = applyRepGrouping(list.map(c => ({ code: c })));
+    const pcs = buildParentChildSets(grouped);
+    body = grouped.map(r => _nrRowHtml(r.code, { pcCls: rowParentChildClass(r.code, pcs) })).join('');
+  }
   else {
     const keys = [];
     list.forEach(c => { const k = _basicRepKeyOf(c); if (keys.indexOf(k) < 0) keys.push(k); });
