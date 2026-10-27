@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0988 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0990 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4870,7 +4870,10 @@ table.nr-table td.nr-miss .kw-cell { outline: 1px dashed #f59e0b; outline-offset
 #nrTableWrap .code-pg-link:hover { opacity: 1; background: rgba(37,99,235,0.12); }
 #nrTableWrap td.code-cell .code-text { user-select: all; -webkit-user-select: all; cursor: text; }   /* 1回クリックでコードを丸ごと選択（調整-基本と同じ） */
 #nrTableWrap .rep-badge { pointer-events: none; }   /* 親子マークは目印だけ（この画面では押しても絞り込まない） */
+table.nr-table td.nr-sethead-name { font-size: 0.82rem; }
 table.nr-table td.nr-sethead-sub { font-size: 0.74rem; font-weight: 500; color: var(--text3); }
+#view-newreg .nr-name-in { font-size: 0.82rem; font-weight: 600; }
+#view-newreg .nr-name-in.nr-saved { border-color: #16a34a; background: #f0fdf4; }
 #view-newreg .nr-kw-ro { font-size: 0.8rem; color: var(--text3); }
 #view-newreg .child-detail-select { width: 100%; max-width: 100%; box-sizing: border-box; }   /* 列（160px）からはみ出さない */
 .nr-mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
@@ -4887,7 +4890,8 @@ table.nr-table td.nr-sethead-sub { font-size: 0.74rem; font-weight: 500; color: 
 .nr-rep-sub { font-size: 0.72rem; color: var(--text3); margin-top: 4px; line-height: 1.45; }
 .nr-rep-sub b { color: var(--text2); }
 .nr-rep-nm { color: var(--text3); }
-.nr-pick-btn { font: inherit; font-size: 0.7rem; margin-left: 4px; padding: 0 7px; border: 1px solid var(--border2); border-radius: 4px; background: var(--bg2); color: var(--accent); cursor: pointer; }
+.nr-rep { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.nr-pick-btn { font: inherit; font-size: 0.72rem; margin-left: 0; padding: 2px 8px; border: 1px solid var(--border2); border-radius: 4px; background: var(--bg2); color: var(--accent); cursor: pointer; }
 .nr-pick { position: fixed; z-index: 3000; width: 380px; max-height: 360px; display: flex; flex-direction: column; gap: 6px; padding: 8px;
   background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
 .nr-pick[hidden] { display: none; }
@@ -5051,7 +5055,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0988</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0990</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -22660,19 +22664,18 @@ function _nrRepCellHtml(code) {
   const role = _nrRoleOf(code);
   const dis = ghIsEnabled() ? '' : ' disabled';
   const b = (r, label, cls) => '<button type="button" class="nr-role ' + cls + (role === r ? ' on' : '') + '" data-nrrole="' + r + '" data-code="' + escapeHtml(code) + '"' + dis + '>' + label + '</button>';
-  let sub = '';
+  // 【v1.0989】ボタンの下のコード表示（子の行の「親：…」／親の行の「子 N件：…」）は撤去（本人指定）。子の行の「変更」だけ残し、ボタンの右に置く。
+  //   相手のコードはツールチップで見られるようにしておく。
+  let sub = '', tip = '';
   if (role === 'child') {
     const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
-    sub = '<div class="nr-rep-sub">親：<b class="nr-mono">' + escapeHtml(rep) + '</b> <span class="nr-rep-nm">' + escapeHtml(_nrShortName(rep)) + '</span>'
-      + '<button type="button" class="nr-pick-btn" data-nrpick="' + escapeHtml(code) + '"' + dis + '>変更</button></div>';
+    tip = '親（送り込み元）：' + rep + ' ' + ((getMaster(rep) || {}).name || '');
+    sub = '<button type="button" class="nr-pick-btn" data-nrpick="' + escapeHtml(code) + '"' + dis + ' title="' + escapeHtml('親を変える（いまの親：' + rep + '）') + '">変更</button>';
   } else if (role === 'parent') {
     const kids = _nrKidsOf(code);
-    // 子が多い親で行が縦に伸びないよう、見せるのは3件まで（全部はツールチップ）
-    sub = '<div class="nr-rep-sub"' + (kids.length > 3 ? ' title="' + escapeHtml(kids.join('\n')) + '"' : '') + '>' + (kids.length
-      ? '子 ' + kids.length + '件：<span class="nr-mono">' + kids.slice(0, 3).map(escapeHtml).join('・') + '</span>' + (kids.length > 3 ? ' ほか' + (kids.length - 3) + '件' : '')
-      : '子はまだ無し（子の商品の行で「子」を押して、この商品を選ぶ）') + '</div>';
+    tip = kids.length ? '子（送り込み先）' + kids.length + '件：\n' + kids.join('\n') : '子はまだ無し';
   }
-  return '<div class="nr-rep"><span class="nr-seg">' + b('none', 'なし', 'r-none') + b('parent', '親', 'r-parent') + b('child', '子', 'r-child') + '</span>' + sub + '</div>';
+  return '<div class="nr-rep"' + (tip ? ' title="' + escapeHtml(tip) + '"' : '') + '><span class="nr-seg">' + b('none', 'なし', 'r-none') + b('parent', '親', 'r-parent') + b('child', '子', 'r-child') + '</span>' + sub + '</div>';
 }
 // 【v1.0985】送り込みセットのメンバー（現役のみ・代表（親）を先頭、あとはコード順）
 function _nrFamilyMembers(key) {
@@ -22699,7 +22702,7 @@ function _nrRowHtml(c, opt) {
   return '<tr data-code="' + escapeHtml(c) + '" class="' + (opt.member ? 'row-setmember' : (opt.pcCls || '')) + '">'
     + _nrCodeCellHtml(c, opt.set)
     + '<td>' + imageCellHtml(c) + '</td>'
-    + '<td>' + nameCellHtml(c) + '</td>'
+    + '<td>' + _nrNameInputHtml(c) + '</td>'   /* 【v1.0990】商品名は最初から入力欄（本人指定。リンクではなく） */
     + '<td>' + _nrRepCellHtml(c) + '</td>'
     // 【v1.0988】子タイプの列は撤去（本人指定）。データ（childDetail）と 商品-各比率 側の部品はそのまま
     // 【v1.0988】メインKW は親子があるとき親にだけ入力（本人指定）。子の行は今の値を見せるだけ（✏ なし・点線枠なし）
@@ -22716,9 +22719,54 @@ function _nrRowHtml(c, opt) {
 function _nrSetHeadHtml(mem) {
   const k = mem[0], nS = mem.filter(_nrIsSentaku).length;
   return '<tr class="row-setparent nr-sethead">' + _nrCodeCellHtml(k, mem)
-    + '<td>' + imageCellHtml(k) + '</td><td>' + nameCellHtml(k) + '</td>'
+    + '<td>' + imageCellHtml(k) + '</td><td class="nr-sethead-name">' + escapeHtml((getMaster(k) || {}).name || '') + '</td>'   /* 【v1.0990】リンクにしない（入力は下の行） */
     + '<td colspan="5" class="nr-sethead-sub">セット（親1＋子' + (mem.length - 1) + '）。選択前 ' + nS + '件。変えるのは下の1件ずつの行で</td></tr>';
 }
+// 【v1.0990】商品名の入力欄（本人指定「もっと簡単に商品変更出来るように。編集可能状態に。商品名からのリンクじゃなくて」）。
+//   ・保存は【確定したとき】だけ（Enter／欄から出たとき＝change）。打っている途中は保存しない
+//     （1文字ごとに保存すると自動反映が途中の名前を GitHub へ送ってしまう＝§341 と同じ考え方）。
+//   ・Enter／↓ で次の行の商品名へ、Shift+Enter／↑ で前の行へ（商品名一括修正と同じ）。Esc で元に戻す。
+//   ・空にはできない（一覧で「— 未登録 —」になるため。元に戻してトースト）。
+//   ・保存のしかたは商品名一括修正と同じ：state.master[code].name を書き換えて saveToStorage → 自動反映（ycAutoPushSoon）。
+//   ・商品ページへは商品コードの下の「↗」から。
+function _nrNameInputHtml(c) {
+  const nm = String((getMaster(c) || {}).name || '');
+  return '<input type="text" class="nb-in nr-name-in" data-code="' + escapeHtml(c) + '" value="' + escapeHtml(nm) + '" data-orig="' + escapeHtml(nm) + '"'
+    + (ghIsEnabled() ? '' : ' disabled') + ' autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" title="商品名（Enter で確定して次の行へ／Esc で元に戻す）">';
+}
+function _nrSaveName(inp) {
+  const code = inp.getAttribute('data-code');
+  const orig = inp.getAttribute('data-orig') || '';
+  const v = inp.value.trim();
+  if (v === orig) { inp.value = orig; return; }
+  if (!ghIsEnabled()) { inp.value = orig; return; }
+  if (!v) { inp.value = orig; try { showToast('商品名は空にできません（元に戻しました）', 'warn'); } catch (e) {} return; }
+  if (!state.master[code]) return;
+  state.master[code].name = v;
+  inp.value = v; inp.setAttribute('data-orig', v);
+  pinEditedCode(code);
+  try { ycLog('edit', '選択前：' + code + ' の商品名を「' + orig + '」→「' + v + '」'); } catch (e) {}
+  saveToStorage();
+  try { ycAutoPushSoon(); } catch (e) {}
+  inp.classList.add('nr-saved'); setTimeout(() => inp.classList.remove('nr-saved'), 1200);
+}
+document.addEventListener('change', (e) => { if (e.target && e.target.classList && e.target.classList.contains('nr-name-in')) _nrSaveName(e.target); });
+document.addEventListener('keydown', (e) => {
+  const t = e.target;
+  if (!t || !t.classList || !t.classList.contains('nr-name-in')) return;
+  if (e.isComposing || e.keyCode === 229) return;   // 日本語変換の確定の Enter では動かない
+  if (e.key === 'Escape') { e.preventDefault(); t.value = t.getAttribute('data-orig') || ''; t.blur(); return; }
+  const down = (e.key === 'Enter' && !e.shiftKey) || e.key === 'ArrowDown';
+  const up = (e.key === 'Enter' && e.shiftKey) || e.key === 'ArrowUp';
+  if (!down && !up) return;
+  e.preventDefault();
+  const all = [...document.querySelectorAll('#nrTableWrap .nr-name-in')];
+  const i = all.indexOf(t);
+  const next = all[i + (down ? 1 : -1)];
+  _nrSaveName(t);
+  if (next) { next.focus(); const n = next.value.length; try { next.setSelectionRange(n, n); } catch (er) {} }
+  else t.blur();
+});
 function renderNewReg() {
   const wrap = document.getElementById('nrTableWrap');
   if (!wrap) return;
