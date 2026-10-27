@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0977 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0978 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2094,6 +2094,15 @@ td[data-resize-key] {
 .roas-good { color: var(--green); font-weight: 600; }
 .roas-bad { color: var(--red); font-weight: 600; }
 .roas-mid { color: var(--amber); font-weight: 600; }
+/* 【v1.0978】★広告ROAS（広告売上 ÷ 広告実績額）の色は ADcheck「全広告ROAS 色分け 仕様書 v1.1492」と同じにした。
+   500%以上＝緑 #1D9E75／300%以上＝黄土 #BA7517／0%より大きく300%未満＝赤 #A32D2D／広告費0＝—（灰）。文字だけ・太字700。
+   ★色は【表示する整数】で決める（499.6% が「500%」と出るのに黄土、を起こさない）。
+   ★広告費があって広告売上が0 → 赤の「0%」。広告費が0（計算できない）→ 灰の「—」。 */
+td.roas-good, td.roas-mid, td.roas-bad, td.roas-none { font-weight: 700; }
+td.roas-good { color: #1D9E75; }
+td.roas-mid  { color: #BA7517; }
+td.roas-bad  { color: #A32D2D; }
+td.roas-none { color: var(--text3); font-weight: 400; }
 
 /* Status select (広告状態/PRオプ状態) */
 /* 【v1.0354】「反映する」ボタン + 保存中フルロック */
@@ -4944,7 +4953,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0977</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0978</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -12568,10 +12577,20 @@ function productUrlCellHtml(code) {
   return `<a class="link-btn" href="${url}" target="_blank" rel="noopener">商品ページ ↗</a>`;
 }
 function roasClass(roas) {
-  if (roas == null || !isFinite(roas)) return '';
-  if (roas >= 300) return 'roas-good';
-  if (roas >= 100) return 'roas-mid';
-  return 'roas-bad';
+  // 【v1.0978】ADcheck 全広告ROAS の基準（500 / 300 / 0）。表示と同じ整数で判定する
+  if (roas == null || !isFinite(roas)) return 'roas-none';
+  const v = Math.round(roas);
+  if (v >= 500) return 'roas-good';
+  if (v >= 300) return 'roas-mid';
+  if (v > 0) return 'roas-bad';
+  return 'roas-bad';   // 0%（広告費はあるが広告売上0）も赤。広告費0は呼び出し側で null にして「—」
+}
+// 【v1.0978】広告ROAS のセル（クラスと中身）。cost＝広告実績額。cost が無ければ「—」（灰）
+function adRoasCell(roas, cost, extraCls) {
+  const ok = (cost > 0) && roas != null && isFinite(roas);
+  const cls = ok ? roasClass(roas) : 'roas-none';
+  const txt = ok ? (Math.round(roas).toLocaleString('ja-JP') + '%') : '—';
+  return '<td class="num col-aroas ' + cls + (extraCls ? ' ' + extraCls : '') + '">' + txt + '</td>';
 }
 // 【v171】「YYYY-MM」形式で当月/前月を返すヘルパー。CSV由来の月キー(YYYY-MM)と統一。
 // (v167ではYYYY/MM形式で返していたが、同じ月が「2026-05」と「2026/05」で重複表示されるバグの原因になっていた)
@@ -14316,7 +14335,7 @@ function renderBasic() {
       <td class="num col-sroas est-val" title="${escapeHtml(_prOnlyTip)}">${_prOnly == null ? '<span style="color:var(--text3)">—</span>' : Number(_prOnly).toLocaleString('ja-JP') + '%'}</td>
       ${_seoCell}
       ${_adRevCell}
-      <td class="num col-aroas ${roasClass(r.roas)}">${fmtRoas(r.roas)}</td>
+      ${adRoasCell(r.roas, r.adCost)}
       <td class="num col-adunk" title="${escapeHtml(_adUnkTip)}">${_adUnk.val != null ? '<span class="adunk-val">' + fmt(Math.round(_adUnk.val)) + '</span>' : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="num col-spend">${fmt(r.adCost)}</td>
       <td class="num col-prov est-val" title="${escapeHtml(_prOverTip)}">${(_prOver != null && _prOver > 0) ? fmt(Math.round(_prOver)) : '<span style="color:var(--text3)">—</span>'}</td>
@@ -18858,7 +18877,7 @@ function renderAdAdjust(cfg) {
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     // 【v1.0647】色を商品-基本データに合わせた: 広告実績額＝ピンク(col-spend) / 広告ROAS＝藍(col-aroas)。広告売上はアンバー(col-ad)のまま
     const _revCells  = r.adCosts.map(v => `<td class="num col-spend">${fmt(v)}</td>`).join('');
-    const _roasCells = r.roass.map(v => `<td class="num col-aroas ${roasClass(v)}">${fmtRoas(v)}</td>`).join('');
+    const _roasCells = r.roass.map((v, i) => adRoasCell(v, (r.adCosts || [])[i])).join('');   /* 【v1.0978】ADcheck 全広告ROAS の色 */
     // 【v1.0654】広告売上は月数ぶん（実績額・広告ROASと同じ並び）。構成比%つき
     const _adRevMainCell = r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('');
     // 【v1.0649】商品-広告データ: 商品コード / 画像 / 商品名 / 入札価格 / 広告売上×3 / 広告ROAS×3 / 広告実績額×3
@@ -25392,7 +25411,8 @@ function peRenderAdj() {
   const n0 = v => (v == null ? dash : Math.round(v).toLocaleString('ja-JP'));
   const y0 = v => (v == null ? dash : (v > 0 ? yen(v) : '<span style="color:var(--text3)">0</span>'));
   const pc = (v, d) => (v == null ? dash : v.toFixed(d == null ? 1 : d) + '%');
-  const roasCls = v => (v == null ? '' : v >= 300 ? 'color:#1D9E75' : v >= 200 ? 'color:#BA7517' : 'color:#A32D2D');
+  // 【v1.0978】広告ROAS の色を ADcheck 全広告ROAS と同じ基準に（500以上 緑／300以上 黄土／0より大きい 赤／0 は赤の 0%）。表示と同じ整数で判定
+  const roasCls = v => { if (v == null) return ''; const n = Math.round(v); return n >= 500 ? 'color:#1D9E75' : n >= 300 ? 'color:#BA7517' : 'color:#A32D2D'; };
   const part = r => (r.impPartial ? '<span class="pe-imp-part" title="表示回数がある日（' + r.impDays + '日 / 広告データ ' + r.adDays + '日）だけの合計。CTR も同じ日だけで計算">※</span>' : '');
   // 列の定義（本人の並び＋PR実績額）。g＝見出しの色（入札価格＝こげ茶（v1.0916〜。前は紫）／広告＝橙／PR＝桃／売上＝緑）
   const G = { ad: { h: '#fae6ce', b: '#fdf8f1', c: '#b45309' }, bid: { h: '#ecdccd', b: '#faf5f0', c: '#7c2d12' },   /* 【v1.0916】こげ茶 */
