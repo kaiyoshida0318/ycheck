@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0990 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0992 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4873,7 +4873,10 @@ table.nr-table td.nr-miss .kw-cell { outline: 1px dashed #f59e0b; outline-offset
 table.nr-table td.nr-sethead-name { font-size: 0.82rem; }
 table.nr-table td.nr-sethead-sub { font-size: 0.74rem; font-weight: 500; color: var(--text3); }
 #view-newreg .nr-name-in { font-size: 0.82rem; font-weight: 600; }
-#view-newreg .nr-name-in.nr-saved { border-color: #16a34a; background: #f0fdf4; }
+#view-newreg .nr-name-in.nr-chg { border-color: #f59e0b; background: #fffbeb; }
+#view-newreg .nr-name-orig { font-size: 0.72rem; color: var(--text3); margin-top: 3px; }
+#view-newreg .nr-name-orig[hidden] { display: none; }
+#view-newreg .nr-name-count b { color: #b45309; }
 #view-newreg .nr-kw-ro { font-size: 0.8rem; color: var(--text3); }
 #view-newreg .child-detail-select { width: 100%; max-width: 100%; box-sizing: border-box; }   /* 列（160px）からはみ出さない */
 .nr-mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
@@ -5055,7 +5058,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0990</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0992</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5846,6 +5849,10 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
             title="合算＝親子（送り込みセット）を1行にまとめる（行の入力欄は親のもの。子は下に一覧）&#10;個別＝選択前の商品を1件ずつ&#10;両表示＝セットの見出しの下に、親と子を1件ずつ（それぞれ入力できる）"><button type="button" class="segf-btn on" data-rollup="sum">合算</button><button type="button" class="segf-btn" data-rollup="each">個別</button><button type="button" class="segf-btn" data-rollup="both">両表示</button></span>
           <span class="nb-count" id="nrCount"></span>
           <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
+            <!-- 【v1.0992】商品名は下書き → まとめて反映（本人指定） -->
+            <span class="nb-count nr-name-count" id="nrNameCount"></span>
+            <button type="button" class="nb-btn" id="nrNameDiscard" disabled title="この画面で直した商品名（まだ反映していないもの）をすべて元に戻します">↺ 取り消す</button>
+            <button type="button" class="nb-btn nb-apply" id="nrNameApply" disabled title="直した商品名をまとめて保存し、GitHubへ反映します">⬆ 商品名をまとめて反映</button>
             <button type="button" class="nb-btn" id="nrAddBtn" title="商品マスタCSV・APIから商品を取り込みます（「+ 商品追加 ▾」の「+ 商品追加・更新・反映」と同じ）。取り込んだ商品は「選択前」でここに出ます">＋ 商品を追加（CSV・API）</button>
           </span>
         </div>
@@ -22710,7 +22717,8 @@ function _nrRowHtml(c, opt) {
         ? '<td><span class="nr-kw-ro" title="子商品のメインKWはここでは入力しません（親の行で入力）">' + (kw ? escapeHtml(kw) : '—') + '</span></td>'
         : '<td class="' + (kw ? '' : 'nr-miss') + '">' + kwCellHtml(c) + '</td>')
     // 【v1.0986】並びを 入札状態 → PR状態 → ステータス に（本人指定。v1.0985 までは ステータス → 入札状態 → PR状態）
-    + '<td class="status-col">' + statusSelectHtml(c, 'ad') + '</td>'
+    // 【v1.0991】子の行の入札状態は「—」だけ（本人指定「入札なしの表示もされないように」）。子は入札しない（保存値は触らない）
+    + '<td class="status-col">' + ((role === 'child' || _isSoiChildProduct(c)) ? '<span class="nr-dash" title="子商品は入札しません（入札は親の行で）">—</span>' : statusSelectHtml(c, 'ad')) + '</td>'
     + '<td class="status-col">' + statusSelectHtml(c, 'pro') + '</td>'
     + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
     + '</tr>';
@@ -22722,51 +22730,91 @@ function _nrSetHeadHtml(mem) {
     + '<td>' + imageCellHtml(k) + '</td><td class="nr-sethead-name">' + escapeHtml((getMaster(k) || {}).name || '') + '</td>'   /* 【v1.0990】リンクにしない（入力は下の行） */
     + '<td colspan="5" class="nr-sethead-sub">セット（親1＋子' + (mem.length - 1) + '）。選択前 ' + nS + '件。変えるのは下の1件ずつの行で</td></tr>';
 }
-// 【v1.0990】商品名の入力欄（本人指定「もっと簡単に商品変更出来るように。編集可能状態に。商品名からのリンクじゃなくて」）。
-//   ・保存は【確定したとき】だけ（Enter／欄から出たとき＝change）。打っている途中は保存しない
-//     （1文字ごとに保存すると自動反映が途中の名前を GitHub へ送ってしまう＝§341 と同じ考え方）。
-//   ・Enter／↓ で次の行の商品名へ、Shift+Enter／↑ で前の行へ（商品名一括修正と同じ）。Esc で元に戻す。
-//   ・空にはできない（一覧で「— 未登録 —」になるため。元に戻してトースト）。
-//   ・保存のしかたは商品名一括修正と同じ：state.master[code].name を書き換えて saveToStorage → 自動反映（ycAutoPushSoon）。
-//   ・商品ページへは商品コードの下の「↗」から。
+// 【v1.0990】商品名の入力欄 →【v1.0992】★保存は「まとめて反映」だけ（本人指定「商品名を編集してると、かってにpushが走って元に戻ったりするから、一通り終わったあとに、まとめてpushする形にしたい」）。
+//   ・打った内容は _nrNameDraft（下書き・この画面だけ・メモリ）に入れるだけ。state.master は書き換えない＝自動保存・自動反映が途中の名前を送らない。
+//   ・ツールバーの「⬆ 商品名をまとめて反映（N件）」（_nrApplyNames）で、まとめて state.master に入れて saveToStorage → ycReflect（商品名一括修正 nbApplyAll と同じ）。
+//   ・直した行は黄色＋下に「元：…」。Esc でその行を元に戻す。「↺ 取り消す」で下書きを全部捨てる。
+//   ・Enter／↓ で次の行、Shift+Enter／↑ で前の行（移るだけ。保存はしない）。
+//   ・表を描き直しても（ほかの欄の自動反映など）下書きは消えず、打っている欄のカーソルも戻す（renderNewReg）。
+//   ・下書きがあるままリロード・タブを閉じようとしたら確認を出す。ほかの画面へ移っても下書きは残る。
+let _nrNameDraft = {};
+function _nrNameOrig(c) { return String((getMaster(c) || {}).name || ''); }
+function _nrNameChanges() {
+  return Object.keys(_nrNameDraft).filter(c => state.master[c]).map(c => ({ code: c, from: _nrNameOrig(c), to: String(_nrNameDraft[c]).trim() })).filter(x => x.to !== x.from);
+}
 function _nrNameInputHtml(c) {
-  const nm = String((getMaster(c) || {}).name || '');
-  return '<input type="text" class="nb-in nr-name-in" data-code="' + escapeHtml(c) + '" value="' + escapeHtml(nm) + '" data-orig="' + escapeHtml(nm) + '"'
-    + (ghIsEnabled() ? '' : ' disabled') + ' autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" title="商品名（Enter で確定して次の行へ／Esc で元に戻す）">';
+  const orig = _nrNameOrig(c);
+  const has = Object.prototype.hasOwnProperty.call(_nrNameDraft, c);
+  const v = has ? _nrNameDraft[c] : orig;
+  const chg = has && String(v).trim() !== orig;
+  return '<input type="text" class="nb-in nr-name-in' + (chg ? ' nr-chg' : '') + '" data-code="' + escapeHtml(c) + '" value="' + escapeHtml(v) + '"'
+    + (ghIsEnabled() ? '' : ' disabled') + ' autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" title="商品名（直したら最後に「⬆ 商品名をまとめて反映」／Esc でこの行を元に戻す）">'
+    + '<div class="nr-name-orig"' + (chg ? '' : ' hidden') + '>元：' + escapeHtml(orig || '（未登録）') + '</div>';
 }
-function _nrSaveName(inp) {
-  const code = inp.getAttribute('data-code');
-  const orig = inp.getAttribute('data-orig') || '';
-  const v = inp.value.trim();
-  if (v === orig) { inp.value = orig; return; }
-  if (!ghIsEnabled()) { inp.value = orig; return; }
-  if (!v) { inp.value = orig; try { showToast('商品名は空にできません（元に戻しました）', 'warn'); } catch (e) {} return; }
-  if (!state.master[code]) return;
-  state.master[code].name = v;
-  inp.value = v; inp.setAttribute('data-orig', v);
-  pinEditedCode(code);
-  try { ycLog('edit', '選択前：' + code + ' の商品名を「' + orig + '」→「' + v + '」'); } catch (e) {}
-  saveToStorage();
-  try { ycAutoPushSoon(); } catch (e) {}
-  inp.classList.add('nr-saved'); setTimeout(() => inp.classList.remove('nr-saved'), 1200);
+function _nrNameMark(inp) {
+  const c = inp.getAttribute('data-code'), orig = _nrNameOrig(c);
+  const chg = inp.value.trim() !== orig;
+  if (chg) _nrNameDraft[c] = inp.value; else delete _nrNameDraft[c];
+  inp.classList.toggle('nr-chg', chg);
+  const o = inp.parentElement && inp.parentElement.querySelector('.nr-name-orig');
+  if (o) { o.hidden = !chg; o.textContent = '元：' + (orig || '（未登録）'); }
+  _nrSyncNameBar();
 }
-document.addEventListener('change', (e) => { if (e.target && e.target.classList && e.target.classList.contains('nr-name-in')) _nrSaveName(e.target); });
+function _nrSyncNameBar() {
+  const n = _nrNameChanges().length;
+  const a = document.getElementById('nrNameApply'), d = document.getElementById('nrNameDiscard'), t = document.getElementById('nrNameCount');
+  if (a) { a.disabled = !n || !ghIsEnabled(); a.textContent = '⬆ 商品名をまとめて反映' + (n ? '（' + n + '件）' : ''); }
+  if (d) d.disabled = !n;
+  if (t) t.innerHTML = n ? '商品名 <b>' + n + '件</b> 未反映' : '';
+}
+async function _nrApplyNames() {
+  if (!ghIsEnabled()) { alert('この端末は閲覧専用です（トークン未設定）。反映はできません。'); return; }
+  const ch = _nrNameChanges();
+  if (!ch.length) return;
+  const empties = ch.filter(x => !x.to);
+  if (empties.length) {
+    alert('商品名が空の商品があります（' + empties.length + '件）。\n' + empties.slice(0, 10).map(x => '・' + x.code).join('\n')
+      + '\n\n空のままでは反映できません。商品名を入れるか、その行で Esc を押して元に戻してください。');
+    return;
+  }
+  const lines = ch.slice(0, 15).map(x => '・' + x.code + '\n　' + (x.from || '（未登録）') + '\n　→ ' + x.to).join('\n');
+  if (!confirm('商品名を ' + ch.length + '件 変更して、GitHubへ反映します。\n\n' + lines + (ch.length > 15 ? '\n…ほか ' + (ch.length - 15) + '件' : '') + '\n\nよろしいですか？')) return;
+  ch.forEach(x => { if (state.master[x.code]) state.master[x.code].name = x.to; pinEditedCode(x.code); });
+  try { ycLog('edit', '選択前：商品名をまとめて変更（' + ch.length + '件）：' + ch.slice(0, 20).map(x => x.code + '「' + x.from + '」→「' + x.to + '」').join(' / ') + (ch.length > 20 ? ' …' : '')); } catch (e) {}
+  _nrNameDraft = {};
+  const ok = saveToStorage();
+  if (!afterSaveOk(ok)) return;
+  renderNewReg();
+  await ycReflect();
+  renderAll();
+  try { showToast('商品名を ' + ch.length + '件 変更しました', 'success'); } catch (e) {}
+}
+function _nrDiscardNames() {
+  const n = _nrNameChanges().length;
+  if (!n) return;
+  if (!confirm('商品名の変更（' + n + '件・未反映）をすべて取り消して、元の名前に戻しますか？')) return;
+  _nrNameDraft = {};
+  renderNewReg();
+}
+document.addEventListener('input', (e) => { if (e.target && e.target.classList && e.target.classList.contains('nr-name-in')) _nrNameMark(e.target); });
 document.addEventListener('keydown', (e) => {
   const t = e.target;
   if (!t || !t.classList || !t.classList.contains('nr-name-in')) return;
   if (e.isComposing || e.keyCode === 229) return;   // 日本語変換の確定の Enter では動かない
-  if (e.key === 'Escape') { e.preventDefault(); t.value = t.getAttribute('data-orig') || ''; t.blur(); return; }
+  if (e.key === 'Escape') { e.preventDefault(); t.value = _nrNameOrig(t.getAttribute('data-code')); _nrNameMark(t); return; }
   const down = (e.key === 'Enter' && !e.shiftKey) || e.key === 'ArrowDown';
   const up = (e.key === 'Enter' && e.shiftKey) || e.key === 'ArrowUp';
   if (!down && !up) return;
   e.preventDefault();
   const all = [...document.querySelectorAll('#nrTableWrap .nr-name-in')];
-  const i = all.indexOf(t);
-  const next = all[i + (down ? 1 : -1)];
-  _nrSaveName(t);
+  const next = all[all.indexOf(t) + (down ? 1 : -1)];
   if (next) { next.focus(); const n = next.value.length; try { next.setSelectionRange(n, n); } catch (er) {} }
-  else t.blur();
 });
+document.addEventListener('click', (e) => {
+  if (e.target.closest && e.target.closest('#nrNameApply')) _nrApplyNames();
+  else if (e.target.closest && e.target.closest('#nrNameDiscard')) _nrDiscardNames();
+});
+window.addEventListener('beforeunload', (e) => { try { if (_nrNameChanges().length) { e.preventDefault(); e.returnValue = ''; } } catch (er) {} });
 function renderNewReg() {
   const wrap = document.getElementById('nrTableWrap');
   if (!wrap) return;
@@ -22777,6 +22825,11 @@ function renderNewReg() {
   const cnt = document.getElementById('nrCount');
   if (cnt) cnt.textContent = list.length + '件' + (ghIsEnabled() ? '' : '（閲覧専用のため変更できません）');
   const keepTop = wrap.scrollTop;
+  // 【v1.0992】打っている商品名の欄があれば、描き直したあとにカーソルを戻す（下書きは _nrNameDraft から描くので消えない）
+  const _ae = document.activeElement;
+  const _keepFocus = (_ae && _ae.classList && _ae.classList.contains('nr-name-in') && wrap.contains(_ae))
+    ? { code: _ae.getAttribute('data-code'), s: _ae.selectionStart, e: _ae.selectionEnd } : null;
+  _nrSyncNameBar();
   if (!list.length) {
     wrap.innerHTML = '<div class="nr-empty">' + (_nrScope === 'new'
       ? 'ステータスが「選択前」の商品はありません。<br>新しい商品は「＋ 商品を追加（CSV・API）」から取り込むと、ここに出ます（ステータスは「選択前」から始まります）。'
@@ -22812,6 +22865,10 @@ function renderNewReg() {
   if (cnt && mode !== 'each' && nSet) cnt.textContent = '選択前 ' + list.length + '件・セット ' + nSet + '組' + (ghIsEnabled() ? '' : '（閲覧専用のため変更できません）');
   wrap.innerHTML = '<table class="nb-table nr-table">' + head + '<tbody>' + body + '</tbody></table>';
   wrap.scrollTop = keepTop;
+  if (_keepFocus) {
+    const el = wrap.querySelector('.nr-name-in[data-code="' + (window.CSS && CSS.escape ? CSS.escape(_keepFocus.code) : _keepFocus.code) + '"]');
+    if (el) { el.focus(); try { el.setSelectionRange(_keepFocus.s, _keepFocus.e); } catch (er) {} }
+  }
 }
 // 親子を変える（なし／親／子）。子のときは parent を渡す
 function _nrSetRole(code, role, parent) {
