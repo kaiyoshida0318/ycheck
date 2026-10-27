@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0978 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0979 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3707,6 +3707,14 @@ table.rank-table td.rank-legend-col-row {
 .pe-day-tbl td.pe-bidchg-cell .pe-prchg-from { color: #9a3412; }
 #productEditModal tbody tr:hover td.pe-bidchg-cell { box-shadow: inset 0 0 0 1.5px #9a3412; }
 #productEditModal tbody tr:hover td:not(.pe-prchg):not(.pe-bidchg-cell) { box-shadow: none; }
+/* 【v1.0979】上げた日＝濃いマス・白文字／下げた日＝薄いマス（今までの色）。どちらに動かしたかを一目で分かるように（本人指定） */
+.pe-day-tbl td.pe-bidchg-cell.pe-chg-up { background: #9a3412 !important; color: #fff; }
+.pe-day-tbl td.pe-bidchg-cell.pe-chg-up .pe-prchg-from { color: #fed7aa; opacity: 1; }
+.pe-day-tbl td.pe-prchg.pe-chg-up { background: #db2777 !important; color: #fff; box-shadow: inset 0 0 0 1.5px #9d174d; }
+.pe-day-tbl td.pe-prchg.pe-chg-up .pe-prchg-from { color: #fce7f3; opacity: 1; }
+.pe-day-tbl td.pe-bidchg-cell.pe-chg-down { background: #fbeee3 !important; }
+.pe-day-tbl td.pe-prchg.pe-chg-down { background: #fdf0f6 !important; }
+#productEditModal tbody tr:hover td.pe-prchg.pe-chg-up { box-shadow: inset 0 0 0 1.5px #9d174d; }
 #productEditModal tbody tr:hover td.pe-prchg { box-shadow: inset 0 0 0 1.5px #ec4899; }
 .pe-day-foot { font-size: 0.72rem; color: var(--text3); line-height: 1.7; padding: 8px 4px 0; }
 .pe-table-wrap td.pe-date.pe-sale { position: relative; cursor: help; }
@@ -4953,7 +4961,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0978</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0979</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -25463,17 +25471,19 @@ function peRenderAdj() {
           // 【v1.0968】入札価格を変えた日も PR と同じ見せ方（そのセルだけ こげ茶の濃いマス＋「35→30」）。本人指定
           if (c.key === 'bid' && chg) {
             const a = Math.round(older.bid * 10) / 10, b = Math.round(r.bid * 10) / 10;
-            return '<td class="pe-bidchg-cell" style="' + (c.gs ? _gsB : '') + '" title="この日に入札価格が ¥' + a + ' → ¥' + b + ' に変わりました"><span class="pe-prchg-from">' + a + '→</span>' + b + '</td>';
+            const _up = b > a;   // 【v1.0979】上げた＝濃いマス（白文字）／下げた＝薄いマス（本人指定）
+            return '<td class="pe-bidchg-cell ' + (_up ? 'pe-chg-up' : 'pe-chg-down') + '" style="' + (c.gs ? _gsB : '') + '" title="この日に入札価格を' + (_up ? '上げました' : '下げました') + '：¥' + a + ' → ¥' + b + '"><span class="pe-prchg-from">' + a + '→</span>' + b + '</td>';
           }
           if (c.key === 'pr' && prChg) {
             const a = Math.round(older.prRate), b = Math.round(r.prRate);
-            return '<td class="pe-prchg" style="' + (c.gs ? _gsB : '') + '" title="この日に PRオプ料率が ' + a + '% → ' + b + '% に変わりました"><span class="pe-prchg-from">' + a + '→</span>' + b + '%</td>';
+            const _up = b > a;   // 【v1.0979】上げた＝濃いマス（白文字）／下げた＝薄いマス
+            return '<td class="pe-prchg ' + (_up ? 'pe-chg-up' : 'pe-chg-down') + '" style="' + (c.gs ? _gsB : '') + '" title="この日に PRオプ料率を' + (_up ? '上げました' : '下げました') + '：' + a + '% → ' + b + '%"><span class="pe-prchg-from">' + a + '→</span>' + b + '%</td>';
           }
           return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + (c.gs ? _gsB : '') + '">' + c.f(r) + '</td>';
         }).join('') + '</tr>';
   }).join('');
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
-    + '<div class="pe-day-foot">' + (isDay ? 'こげ茶のマス（35→30）＝入札価格を変えた日。ピンクのマス（15→25%）＝PRオプ料率を変えた日。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
+    + '<div class="pe-day-foot">' + (isDay ? 'こげ茶のマス（35→30）＝入札価格を変えた日。ピンクのマス（15→25%）＝PRオプ料率を変えた日。濃いマス＝上げた／薄いマス＝下げた。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
     + '。広告個数＝広告経由の注文数。広告個数・クリック数は、Yahoo のレポートが1件を0と出す分を1に戻しています（売上・実績額がある日）。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
   requestAnimationFrame(() => _peStickyHead(wrap));
