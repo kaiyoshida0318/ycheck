@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0980 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0981 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4838,6 +4838,50 @@ table td.code-cell,
 table td.code-cell .code-cell-inner,
 table td.code-cell .code-text { white-space: normal; text-overflow: clip; }
 table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; line-height: 1.3; }
+/* ==================== 【v1.0981】【新商品】新規登録（#view-newreg） ==================== */
+.nav-group-label.g-newp { color:#16a34a; }  /* 【新商品】 */
+#view-newreg .nb-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+#view-newreg #nrSearch { font-size: 0.8rem; padding: 5px 9px; border: 1px solid var(--border2); border-radius: 6px; width: 240px; background: var(--bg2); color: var(--text); }
+.nr-title { color: #16a34a; }
+#nrScopePair > button.on { border-color: #16a34a; background: #16a34a; }
+.nr-n { font-weight: 600; opacity: 0.8; }
+#nrAddBtn { border-color: #16a34a; color: #16a34a; background: var(--bg2); }
+#nrAddBtn:hover:not(:disabled) { background: #16a34a; color: #fff; }
+table.nr-table td { padding: 6px 8px; }
+table.nr-table td.nr-code { font-size: 0.78rem; word-break: break-all; }
+table.nr-table td.nr-miss .kw-cell { outline: 1px dashed #f59e0b; outline-offset: 2px; border-radius: 4px; }
+.nr-empty { padding: 36px 16px; text-align: center; color: var(--text3); font-size: 0.86rem; line-height: 1.8; }
+.nr-dash { color: var(--text3); }
+#view-newreg .child-detail-select { width: 100%; max-width: 100%; box-sizing: border-box; }   /* 列（160px）からはみ出さない */
+.nr-mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+.nr-seg { display: inline-flex; }
+.nr-role { font: inherit; font-size: 0.76rem; font-weight: 700; padding: 3px 11px; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; }
+.nr-role:first-child { border-radius: 5px 0 0 5px; }
+.nr-role:last-child { border-radius: 0 5px 5px 0; }
+.nr-role + .nr-role { margin-left: -1px; }
+.nr-role:disabled { cursor: not-allowed; opacity: 0.6; }
+.nr-role.on { color: #fff; position: relative; z-index: 1; }
+.nr-role.r-none.on { background: #64748b; border-color: #64748b; }
+.nr-role.r-parent.on { background: #2563eb; border-color: #2563eb; }
+.nr-role.r-child.on { background: #d97706; border-color: #d97706; }
+.nr-rep-sub { font-size: 0.72rem; color: var(--text3); margin-top: 4px; line-height: 1.45; }
+.nr-rep-sub b { color: var(--text2); }
+.nr-rep-nm { color: var(--text3); }
+.nr-pick-btn { font: inherit; font-size: 0.7rem; margin-left: 4px; padding: 0 7px; border: 1px solid var(--border2); border-radius: 4px; background: var(--bg2); color: var(--accent); cursor: pointer; }
+.nr-pick { position: fixed; z-index: 3000; width: 380px; max-height: 360px; display: flex; flex-direction: column; gap: 6px; padding: 8px;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
+.nr-pick[hidden] { display: none; }
+.nr-pick-head { font-size: 0.78rem; color: var(--text2); padding: 2px 4px; }
+.nr-pick-in { font-size: 0.82rem; padding: 6px 9px; border: 1px solid var(--border2); border-radius: 6px; background: var(--bg2); color: var(--text); }
+.nr-pick-list { overflow: auto; display: flex; flex-direction: column; gap: 1px; }
+.nr-pick-item { display: flex; align-items: center; gap: 8px; font: inherit; font-size: 0.8rem; text-align: left; padding: 6px 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text); cursor: pointer; }
+.nr-pick-item:hover { background: var(--bg3); }
+.nr-pick-item.cur { border-color: #d97706; }
+.nr-pick-item .nr-mono { flex: 0 0 auto; font-size: 0.76rem; color: var(--text2); }
+.nr-pick-nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text3); font-size: 0.76rem; }
+.nr-pick-tag { flex: 0 0 auto; font-size: 0.66rem; font-weight: 700; padding: 0 6px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; }
+.nr-pick-tag.cur { background: #fef3c7; color: #b45309; }
+.nr-pick-more { font-size: 0.72rem; color: var(--text3); padding: 6px 8px; }
 /* ==================== 【v1.0955】商品名一括修正（#view-namebulk） ==================== */
 .nb-title { font-size: 1rem; font-weight: 800; color: #0f766e; white-space: nowrap; margin-right: 4px; }
 #view-namebulk .nb-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -4987,7 +5031,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0980</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0981</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5075,6 +5119,11 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     <span class="nav-group-label g-shutoku">【取得データ】</span>
     <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank">広告順位</a>
     <a class="nav-tab nav-tab-link" data-view="seo-rank" href="?view=seo-rank">SEO順位</a>
+  </div>
+  <!-- 【v1.0981】【新商品】新規登録（本人指定：【取得データ】の右）。新しく入った商品の 親子・メインKW・ステータス・入札状態・PR状態 をまとめて決める画面 §367 -->
+  <div class="nav-group nav-group-newp">
+    <span class="nav-group-label g-newp">【新商品】</span>
+    <a class="nav-tab nav-tab-link" data-view="newreg" href="?view=newreg">新規登録<span class="chip-num" id="cntNewReg" title="ステータスが「新商品」「選択前」の現役の商品の数"></span></a>
   </div>
   <!-- 【v1.0550/v1.0607】ヘッダー1（上部バー＋タブ段）の開閉。
        v1.0606までは .top-nav-2 の右端にあったが、その段ごと撤去したのでこの行の右端へ移した。
@@ -5757,6 +5806,26 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
         </div>
         <div class="nb-hint">商品名を直すと行が黄色になり、元の商品名が下に出ます（Enter で次の行へ／Esc でその行を元に戻す）。直しただけではまだ保存されません。最後に「⬆ まとめて反映」を押してください。</div>
         <div id="nbTableWrap" class="nb-wrap"></div>
+      </div>
+    </div>
+
+    <!-- 【v1.0981】View: 【新商品】新規登録（§367）。描画は renderNewReg() -->
+    <div class="view" id="view-newreg">
+      <div class="card">
+        <div class="nb-bar">
+          <span class="nb-title nr-title">🆕 新規登録</span>
+          <input type="search" id="nrSearch" placeholder="商品コード・商品名・メインKWで検索" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <span class="nb-pair" id="nrScopePair">
+            <button type="button" data-nrs="new" title="ステータスが「新商品」「選択前」の商品（撤退済みを除く）">新商品・選択前<span class="nr-n"></span></button>
+            <button type="button" data-nrs="all" title="撤退済みを除くすべての商品">現役すべて<span class="nr-n"></span></button>
+          </span>
+          <span class="nb-count" id="nrCount"></span>
+          <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
+            <button type="button" class="nb-btn" id="nrAddBtn" title="商品マスタCSV・APIから商品を取り込みます（「+ 商品追加 ▾」の「+ 商品追加・更新・反映」と同じ）。取り込んだ商品は「選択前」でここに出ます">＋ 商品を追加（CSV・API）</button>
+          </span>
+        </div>
+        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ステータスを変えた商品も、画面を移るまではここに残ります。</div>
+        <div id="nrTableWrap" class="nb-wrap"></div>
       </div>
     </div>
 
@@ -12796,6 +12865,7 @@ document.addEventListener('click', (e) => {
 //   ★targetView が basic でないチップ（削除済＝撤退済み商品ビュー）は商品の数のまま。
 function updateStateCounts() {
   _updateStateCountsRaw();
+  try { _nrUpdateCount(); } catch (e) {}   // 【v1.0981】【新商品】新規登録の件数
   try { _rollupChipCounts(); } catch (e) { console.warn('[Ycheck] 合算の件数の数え直しに失敗:', e && e.message); }
 }
 function _rollupChipCounts() {
@@ -22510,6 +22580,215 @@ function renderContrib() {
 }
 window.renderContrib = renderContrib;
 
+// ============================================================================
+// 【v1.0981】【新商品】新規登録（#view-newreg・本人指定・§367）
+//   ヘッダー1の【取得データ】の右に【新商品】新規登録。新しく入った商品の初期設定をこの1画面で済ませる：
+//     親子の結びつけ（送り込み）／子タイプ／メインKW／ステータス／入札状態／PR状態
+//   ★入力のセルは既存の部品をそのまま使う（statusSelectHtml・kwCellHtml・childDetailSelectHtml）。
+//     保存・同期は既存の document の change/click ハンドラが受け持つ（ほかの画面で変えたのと同じ扱い）。
+//   ★親子は applyRepCodeChange（商品情報を編集と同じ処理）。子にしたらステータスが「子（親に追従）」になる。
+//   ★対象（既定）：現役（撤退済みを除く）で、ステータスが 新商品／選択前／空 の商品。「現役すべて」でも開ける。
+//     その場で状態を変えた商品は、画面を移るまで一覧に残す（_editPinnedCodes＝ほかの画面と同じ）。
+// ============================================================================
+let _nrScope = 'new';     // 'new'（新商品・選択前）| 'all'（現役すべて）
+const NR_NEW_STATUSES = ['新商品', '選択前', ''];
+function _nrIsNew(code) {
+  const st = String(((state.productMeta || {})[code] || {}).status || '');
+  return NR_NEW_STATUSES.indexOf(st) >= 0;
+}
+function _nrCodesAll() {
+  return Object.keys(state.master || {}).filter(c => !isRetired(c)).sort((a, b) => a.localeCompare(b, 'ja'));
+}
+function _nrCodes() {
+  const all = _nrCodesAll();
+  const pinned = (typeof _editPinnedCodes !== 'undefined') ? _editPinnedCodes : new Set();
+  let list = (_nrScope === 'all') ? all : all.filter(c => _nrIsNew(c) || pinned.has(c));
+  const el = document.getElementById('nrSearch');
+  const q = (el ? el.value : '').trim().toLowerCase();
+  if (q) list = list.filter(c => { const m = getMaster(c) || {}; return [c, m.name, m.kw].filter(Boolean).join(' ').toLowerCase().includes(q); });
+  return list;
+}
+// ナビの件数（新商品・選択前の現役の数）
+function _nrUpdateCount() {
+  const el = document.getElementById('cntNewReg');
+  if (!el) return;
+  let n = 0;
+  try { n = _nrCodesAll().filter(_nrIsNew).length; } catch (e) { n = 0; }
+  el.textContent = n > 0 ? '(' + n + ')' : '';
+}
+// 親子の役割。child＝ほかの商品を親にしている／parent＝自分を親にしている、または子から参照されている／none
+function _nrKidsOf(code) {
+  const pm = state.productMeta || {};
+  return Object.keys(state.master || {}).filter(c => c !== code && String((pm[c] || {}).repCode || '').trim() === code);
+}
+function _nrRoleOf(code) {
+  const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
+  if (rep && rep !== code) return 'child';
+  if (rep === code || _nrKidsOf(code).length) return 'parent';
+  return 'none';
+}
+function _nrShortName(code) {
+  const n = String((getMaster(code) || {}).name || '');
+  return n.length > 18 ? n.slice(0, 18) + '…' : n;
+}
+function _nrRepCellHtml(code) {
+  const role = _nrRoleOf(code);
+  const dis = ghIsEnabled() ? '' : ' disabled';
+  const b = (r, label, cls) => '<button type="button" class="nr-role ' + cls + (role === r ? ' on' : '') + '" data-nrrole="' + r + '" data-code="' + escapeHtml(code) + '"' + dis + '>' + label + '</button>';
+  let sub = '';
+  if (role === 'child') {
+    const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
+    sub = '<div class="nr-rep-sub">親：<b class="nr-mono">' + escapeHtml(rep) + '</b> <span class="nr-rep-nm">' + escapeHtml(_nrShortName(rep)) + '</span>'
+      + '<button type="button" class="nr-pick-btn" data-nrpick="' + escapeHtml(code) + '"' + dis + '>変更</button></div>';
+  } else if (role === 'parent') {
+    const kids = _nrKidsOf(code);
+    // 子が多い親で行が縦に伸びないよう、見せるのは3件まで（全部はツールチップ）
+    sub = '<div class="nr-rep-sub"' + (kids.length > 3 ? ' title="' + escapeHtml(kids.join('\n')) + '"' : '') + '>' + (kids.length
+      ? '子 ' + kids.length + '件：<span class="nr-mono">' + kids.slice(0, 3).map(escapeHtml).join('・') + '</span>' + (kids.length > 3 ? ' ほか' + (kids.length - 3) + '件' : '')
+      : '子はまだ無し（子の商品の行で「子」を押して、この商品を選ぶ）') + '</div>';
+  }
+  return '<div class="nr-rep"><span class="nr-seg">' + b('none', 'なし', 'r-none') + b('parent', '親', 'r-parent') + b('child', '子', 'r-child') + '</span>' + sub + '</div>';
+}
+function renderNewReg() {
+  const wrap = document.getElementById('nrTableWrap');
+  if (!wrap) return;
+  _nrUpdateCount();
+  const all = _nrCodesAll();
+  const nNew = all.filter(_nrIsNew).length;
+  document.querySelectorAll('#nrScopePair button').forEach(b => {
+    b.classList.toggle('on', b.getAttribute('data-nrs') === _nrScope);
+    const n = b.querySelector('.nr-n'); if (n) n.textContent = ' ' + (b.getAttribute('data-nrs') === 'all' ? all.length : nNew);
+  });
+  const addBtn = document.getElementById('nrAddBtn'); if (addBtn) addBtn.disabled = !ghIsEnabled();
+  const list = _nrCodes();
+  const cnt = document.getElementById('nrCount');
+  if (cnt) cnt.textContent = list.length + '件' + (ghIsEnabled() ? '' : '（閲覧専用のため変更できません）');
+  const keepTop = wrap.scrollTop;
+  if (!list.length) {
+    wrap.innerHTML = '<div class="nr-empty">' + (_nrScope === 'new'
+      ? 'ステータスが「新商品」「選択前」の商品はありません。<br>新しい商品は「＋ 商品を追加（CSV・API）」から取り込むと、ここに出ます（ステータスは「選択前」から始まります）。'
+      : '該当する商品はありません') + '</div>';
+    return;
+  }
+  const head = '<colgroup><col style="width:150px"><col style="width:58px"><col><col style="width:250px"><col style="width:160px"><col style="width:200px"><col style="width:112px"><col style="width:104px"><col style="width:118px"></colgroup>'
+    + '<thead><tr><th>商品コード</th><th>画像</th><th>商品名</th><th>親子（送り込み）</th><th title="子商品のときだけ：親に対してどういう子か">子タイプ</th>'
+    + '<th>メインKW</th><th>ステータス</th><th>入札状態</th><th>PR状態</th></tr></thead>';
+  const body = list.map(c => {
+    const role = _nrRoleOf(c);
+    const kw = String((getMaster(c) || {}).kw || '').trim();
+    return '<tr data-code="' + escapeHtml(c) + '">'
+      + '<td class="nb-code nr-code">' + escapeHtml(c) + '</td>'
+      + '<td>' + imageCellHtml(c) + '</td>'
+      + '<td>' + nameCellHtml(c) + '</td>'
+      + '<td>' + _nrRepCellHtml(c) + '</td>'
+      + '<td>' + (role === 'child' ? childDetailSelectHtml(c) : '<span class="nr-dash" title="子商品のときだけ選べます">—</span>') + '</td>'
+      + '<td class="' + (kw ? '' : 'nr-miss') + '">' + kwCellHtml(c) + '</td>'
+      + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
+      + '<td class="status-col">' + statusSelectHtml(c, 'ad') + '</td>'
+      + '<td class="status-col">' + statusSelectHtml(c, 'pro') + '</td>'
+      + '</tr>';
+  }).join('');
+  wrap.innerHTML = '<table class="nb-table nr-table">' + head + '<tbody>' + body + '</tbody></table>';
+  wrap.scrollTop = keepTop;
+}
+// 親子を変える（なし／親／子）。子のときは parent を渡す
+function _nrSetRole(code, role, parent) {
+  if (!ghIsEnabled()) { try { showToast('閲覧専用のため変更できません', 'warn'); } catch (e) {} return; }
+  const cur = _nrRoleOf(code);
+  const kids = _nrKidsOf(code);
+  if ((role === 'none' || role === 'child') && kids.length) {
+    alert(code + ' には子が ' + kids.length + '件 結びついています（' + kids.join('・') + '）。\n'
+      + (role === 'child' ? '親を、さらに別の商品の子にはできません。' : '親のままになります。')
+      + '\n先に子の商品の行で「なし」にしてください。');
+    renderNewReg();
+    return;
+  }
+  let newRep = '';
+  if (role === 'parent') newRep = code;
+  else if (role === 'child') newRep = String(parent || '').trim();
+  if (role === 'child' && (!newRep || newRep === code)) return;
+  if (role === cur && (role !== 'child' || newRep === String(((state.productMeta || {})[code] || {}).repCode || '').trim())) return;
+  applyRepCodeChange(code, newRep);
+  pinEditedCode(code);
+  try { ycLog('edit', '新規登録：' + code + ' の親子を「' + (role === 'none' ? 'なし' : role === 'parent' ? '親' : newRep + ' の子') + '」に'); } catch (e) {}
+  saveToStorage();
+  try { ycAutoPushSoon(); } catch (e) {}
+  renderNewReg();
+  try { updateStateCounts(); } catch (e) {}
+  try { showToast(role === 'child' ? code + ' を ' + newRep + ' の子にしました（ステータスは「子（親に追従）」）' : code + ' を「' + (role === 'none' ? 'なし' : '親') + '」にしました', 'ok'); } catch (e) {}
+}
+// 親を選ぶ小窓（検索して選ぶ）。候補＝現役で、自分でなく、子でない商品
+function _nrPickClose() { const p = document.getElementById('nrPick'); if (p) p.hidden = true; }
+function _nrPickOpen(code, anchor) {
+  let p = document.getElementById('nrPick');
+  if (!p) {
+    p = document.createElement('div'); p.id = 'nrPick'; p.className = 'nr-pick'; p.hidden = true;
+    p.innerHTML = '<div class="nr-pick-head"></div><input type="search" class="nr-pick-in" placeholder="親にする商品を、商品コード・商品名で検索" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other"><div class="nr-pick-list"></div>';
+    document.body.appendChild(p);
+    p.querySelector('.nr-pick-in').addEventListener('input', () => _nrPickFill());
+    p.querySelector('.nr-pick-in').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') _nrPickClose();
+      if (e.key === 'Enter' && !e.isComposing) { const f = p.querySelector('.nr-pick-item'); if (f) f.click(); }
+    });
+    p.addEventListener('click', (e) => {
+      const it = e.target.closest('.nr-pick-item'); if (!it) return;
+      const c = p.dataset.code; _nrPickClose(); _nrSetRole(c, 'child', it.getAttribute('data-pick'));
+    });
+    document.addEventListener('mousedown', (e) => { if (!p.hidden && !e.target.closest('#nrPick') && !e.target.closest('[data-nrpick],[data-nrrole]')) _nrPickClose(); });
+  }
+  p.dataset.code = code;
+  p.querySelector('.nr-pick-head').innerHTML = '<b class="nr-mono">' + escapeHtml(code) + '</b> の親（送り込み元）を選ぶ';
+  const inp = p.querySelector('.nr-pick-in');
+  inp.value = '';
+  // 候補のはじめの並び：同じ商品コードの頭（例 si-22-05-2l → si-22-05）の商品を先に
+  p.dataset.hint = String(code).replace(/-[^-]*$/, '');
+  _nrPickFill();
+  p.hidden = false;
+  const r = anchor.getBoundingClientRect(), w = 380;
+  p.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + 'px';
+  const top = r.bottom + 6, h = 360;
+  p.style.top = ((top + h > window.innerHeight) ? Math.max(8, r.top - h - 6) : top) + 'px';
+  inp.focus();
+}
+function _nrPickFill() {
+  const p = document.getElementById('nrPick'); if (!p) return;
+  const code = p.dataset.code, hint = p.dataset.hint || '';
+  const q = p.querySelector('.nr-pick-in').value.trim().toLowerCase();
+  const pm = state.productMeta || {};
+  let cands = _nrCodesAll().filter(c => {
+    if (c === code) return false;
+    const rep = String((pm[c] || {}).repCode || '').trim();
+    return !rep || rep === c;   // 子は親にできない
+  });
+  if (q) cands = cands.filter(c => (c + ' ' + ((getMaster(c) || {}).name || '')).toLowerCase().includes(q));
+  else cands.sort((a, b) => ((b.indexOf(hint) === 0) - (a.indexOf(hint) === 0)) || ((_nrRoleOf(b) === 'parent') - (_nrRoleOf(a) === 'parent')) || a.localeCompare(b, 'ja'));
+  const cur = String((pm[code] || {}).repCode || '').trim();
+  const shown = cands.slice(0, 40);
+  p.querySelector('.nr-pick-list').innerHTML = shown.length
+    ? shown.map(c => '<button type="button" class="nr-pick-item' + (c === cur ? ' cur' : '') + '" data-pick="' + escapeHtml(c) + '"><span class="nr-mono">' + escapeHtml(c) + '</span>'
+        + (_nrRoleOf(c) === 'parent' ? '<span class="nr-pick-tag">親</span>' : '') + '<span class="nr-pick-nm">' + escapeHtml((getMaster(c) || {}).name || '') + '</span>' + (c === cur ? '<span class="nr-pick-tag cur">いまの親</span>' : '') + '</button>').join('')
+      + (cands.length > shown.length ? '<div class="nr-pick-more">ほか ' + (cands.length - shown.length) + '件（検索でしぼってください）</div>' : '')
+    : '<div class="nr-pick-more">該当する商品がありません</div>';
+}
+document.addEventListener('click', (e) => {
+  const v = e.target.closest && e.target.closest('#view-newreg');
+  if (!v) return;
+  const rb = e.target.closest('[data-nrrole]');
+  if (rb) {
+    const code = rb.getAttribute('data-code'), role = rb.getAttribute('data-nrrole');
+    if (role === 'child') {
+      if (_nrKidsOf(code).length) { _nrSetRole(code, 'child', ''); return; }   // 子を持つ親は子にできない（理由を出す）
+      _nrPickOpen(code, rb); return;
+    }
+    _nrSetRole(code, role); return;
+  }
+  const pb = e.target.closest('[data-nrpick]');
+  if (pb) { _nrPickOpen(pb.getAttribute('data-nrpick'), pb); return; }
+  const sb = e.target.closest('#nrScopePair button');
+  if (sb) { _nrScope = sb.getAttribute('data-nrs') === 'all' ? 'all' : 'new'; renderNewReg(); return; }
+  if (e.target.closest('#nrAddBtn')) { try { openNewProductModal(); } catch (er) { console.warn(er); } }
+});
+document.addEventListener('input', (e) => { if (e.target && e.target.id === 'nrSearch') renderNewReg(); });
 function renderAll() {
   // 【v1.0828】★ビューが決まってから復帰バーの出し分けを掛け直す。
   //   applyHeaderCollapse() の最初の呼び出し（スクリプト先頭）は state.currentView が
@@ -22542,6 +22821,7 @@ function renderAll() {
   else if (state.currentView === 'seo-rank') renderSeoRank();
   else if (state.currentView === 'review-sales4') renderReviewSales4();
   else if (state.currentView === 'namebulk') renderNameBulk();   // 【v1.0955】商品名一括修正
+  else if (state.currentView === 'newreg') renderNewReg();   // 【v1.0981】【新商品】新規登録
   // 【v239】調整サブフィルタバーの表示/件数を更新（毎日の順位更新後も renderAll 経由で自動反映）
   if (typeof updateTuneBar === 'function') updateTuneBar();
   if (typeof updateTuneChipEmphasis === 'function') updateTuneChipEmphasis();   // 【v1.0645】
@@ -26692,6 +26972,38 @@ function _peSoiSuggest(q) {
   }
 })();
 
+// 【v1.0981】送り込み（親子）の付け替え。商品情報を編集（saveProductEdit）と 新規登録（#view-newreg）の共通処理。
+//   ★中身は v1.0936 までの saveProductEdit の処理をそのまま移しただけ（子にしたらステータスを「子（親に追従）」に／子をやめたら元に戻す）。
+//   newRepCode：''＝なし／自分のコード＝親／ほかのコード＝その商品の子。保存（saveToStorage）は呼び出し側で。
+function applyRepCodeChange(code, newRepCode) {
+  newRepCode = String(newRepCode || '').trim();
+  if (!state.productMeta[code]) state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前' };
+  //   【v1.0763】_prevRep（変更前の代表コード）は「子商品タイプ未選択の通知」専用だったので撤去。
+  // 【v1.0936】本人指定：子商品にした時点で、ステータスを「子（親に追従）」にする。
+  //   ・子になった（前は子でなかった／親を付け替えた）ときだけ書き換える。同じ親のまま保存し直しただけなら触らない
+  //     （子のステータスを本人があえて別の値にしている場合を上書きしない）。
+  //   ・撤退済みは触らない（isRetired が自分の status を見るので、子にすると親が撤退済みでなければ一覧に戻ってしまう）。
+  //   ・子をやめた（代表コードを外した／自分を親にした）とき、ステータスが「子（親に追従）」なら元の値（_statusBeforeChild）に戻す。無ければ「選択前」。
+  {
+    const _m = state.productMeta[code];
+    const _prevRep = String(_m.repCode || '').trim();
+    const _wasChild = !!_prevRep && _prevRep !== code;
+    const _isChild = !!newRepCode && newRepCode !== code;
+    const _ts = Date.now();
+    if (_isChild && newRepCode !== _prevRep && _m.status !== STATUS_LIFE_CHILD && _m.status !== '撤退済み') {
+      _m._statusBeforeChild = _m.status || '';
+      _m.status = STATUS_LIFE_CHILD; _m.statusTs = _ts;
+      try { ycLog('edit', code + ' を ' + newRepCode + ' の子にしたので、ステータスを「' + STATUS_LIFE_CHILD + '」に（前: ' + (_m._statusBeforeChild || '空') + '）'); } catch (e) {}
+    } else if (_wasChild && !_isChild && _m.status === STATUS_LIFE_CHILD) {
+      _m.status = _m._statusBeforeChild || '選択前'; _m.statusTs = _ts;
+      delete _m._statusBeforeChild;
+      try { ycLog('edit', code + ' を子商品でなくしたので、ステータスを「' + _m.status + '」に戻した'); } catch (e) {}
+    }
+  }
+  if (newRepCode) state.productMeta[code].repCode = newRepCode;
+  else delete state.productMeta[code].repCode;
+  state.productMeta[code]._ts = Date.now();
+}
 function saveProductEdit(opts) {
   opts = opts || {};
   const code = productEditModal.dataset.code;
@@ -26725,31 +27037,8 @@ function saveProductEdit(opts) {
   if (!state.productMeta[code]) {
     state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
   }
-  // 【v124】代表商品コードを保存（空文字なら削除扱い）
-  //   【v1.0763】_prevRep（変更前の代表コード）は「子商品タイプ未選択の通知」専用だったので撤去。
-  // 【v1.0936】本人指定：子商品にした時点で、ステータスを「子（親に追従）」にする。
-  //   ・子になった（前は子でなかった／親を付け替えた）ときだけ書き換える。同じ親のまま保存し直しただけなら触らない
-  //     （子のステータスを本人があえて別の値にしている場合を上書きしない）。
-  //   ・撤退済みは触らない（isRetired が自分の status を見るので、子にすると親が撤退済みでなければ一覧に戻ってしまう）。
-  //   ・子をやめた（代表コードを外した／自分を親にした）とき、ステータスが「子（親に追従）」なら元の値（_statusBeforeChild）に戻す。無ければ「選択前」。
-  {
-    const _m = state.productMeta[code];
-    const _prevRep = String(_m.repCode || '').trim();
-    const _wasChild = !!_prevRep && _prevRep !== code;
-    const _isChild = !!newRepCode && newRepCode !== code;
-    const _ts = Date.now();
-    if (_isChild && newRepCode !== _prevRep && _m.status !== STATUS_LIFE_CHILD && _m.status !== '撤退済み') {
-      _m._statusBeforeChild = _m.status || '';
-      _m.status = STATUS_LIFE_CHILD; _m.statusTs = _ts;
-      try { ycLog('edit', code + ' を ' + newRepCode + ' の子にしたので、ステータスを「' + STATUS_LIFE_CHILD + '」に（前: ' + (_m._statusBeforeChild || '空') + '）'); } catch (e) {}
-    } else if (_wasChild && !_isChild && _m.status === STATUS_LIFE_CHILD) {
-      _m.status = _m._statusBeforeChild || '選択前'; _m.statusTs = _ts;
-      delete _m._statusBeforeChild;
-      try { ycLog('edit', code + ' を子商品でなくしたので、ステータスを「' + _m.status + '」に戻した'); } catch (e) {}
-    }
-  }
-  if (newRepCode) state.productMeta[code].repCode = newRepCode;
-  else delete state.productMeta[code].repCode;
+  // 【v124】代表商品コードを保存（空文字なら削除扱い）。【v1.0981】中身は applyRepCodeChange へ（新規登録の画面と共通）
+  applyRepCodeChange(code, newRepCode);
   // 【親子成立時の通知】は【v1.0763】で撤去。
   //   ★案内先の「商品-各比率」タブが無くなったため。行けない画面を案内しないこと。
   //     タブを戻すときは、この通知も一緒に戻す。
