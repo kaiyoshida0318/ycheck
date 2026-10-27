@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0981 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0983 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4838,6 +4838,17 @@ table td.code-cell,
 table td.code-cell .code-cell-inner,
 table td.code-cell .code-text { white-space: normal; text-overflow: clip; }
 table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; line-height: 1.3; }
+/* 【v1.0982】ヘッダー1（【基本】【全体】【取得データ】【新商品】）を全体に詰めて、【新商品】新規登録を同じ行の右端に（本人指定）。
+   ・詰めるのは余白だけ（文字の大きさ・太さは変えない）：タブの左右 14px→5px／タブとタブの間 2px→0／グループの間 18px→8px／見出しの右 6px→3px／行の左右 20px→10px／件数の前のすき間 9px→3px。
+   ・これで 1914px／1600px／1536px（1920px の画面を125%表示）では1行に収まる。それより狭いと【新商品】だけ次の行（右端）に回る。
+   ・【新商品】は margin-left:auto で右端へ。
+   ・ヘッダー2（【一覧】【調整】…・.top-nav-3）は変えていない。 */
+.top-nav:not(.top-nav-3) { column-gap: 8px; padding-left: 10px; padding-right: 10px; }
+.top-nav:not(.top-nav-3) .nav-group { gap: 0; }
+.top-nav:not(.top-nav-3) .nav-tab { padding-left: 5px; padding-right: 5px; gap: 3px; }
+.top-nav:not(.top-nav-3) .nav-tab .chip-num { margin-left: 0; }
+.top-nav:not(.top-nav-3) .nav-group-label { padding-right: 3px; }
+.top-nav:not(.top-nav-3) .nav-group-newp { margin-left: auto; }
 /* ==================== 【v1.0981】【新商品】新規登録（#view-newreg） ==================== */
 .nav-group-label.g-newp { color:#16a34a; }  /* 【新商品】 */
 #view-newreg .nb-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -5031,7 +5042,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0981</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0983</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5120,10 +5131,11 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     <a class="nav-tab nav-tab-link" data-view="ad-rank" href="?view=ad-rank">広告順位</a>
     <a class="nav-tab nav-tab-link" data-view="seo-rank" href="?view=seo-rank">SEO順位</a>
   </div>
+  <!-- 【v1.0983】タブ名を「新規登録」→「選択前」に。出すのはステータスが「選択前」の商品だけ（本人指定）。 -->
   <!-- 【v1.0981】【新商品】新規登録（本人指定：【取得データ】の右）。新しく入った商品の 親子・メインKW・ステータス・入札状態・PR状態 をまとめて決める画面 §367 -->
   <div class="nav-group nav-group-newp">
     <span class="nav-group-label g-newp">【新商品】</span>
-    <a class="nav-tab nav-tab-link" data-view="newreg" href="?view=newreg">新規登録<span class="chip-num" id="cntNewReg" title="ステータスが「新商品」「選択前」の現役の商品の数"></span></a>
+    <a class="nav-tab nav-tab-link" data-view="newreg" href="?view=newreg">選択前<span class="chip-num" id="cntNewReg" title="ステータスが「選択前」の商品の数"></span></a>
   </div>
   <!-- 【v1.0550/v1.0607】ヘッダー1（上部バー＋タブ段）の開閉。
        v1.0606までは .top-nav-2 の右端にあったが、その段ごと撤去したのでこの行の右端へ移した。
@@ -5813,18 +5825,15 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     <div class="view" id="view-newreg">
       <div class="card">
         <div class="nb-bar">
-          <span class="nb-title nr-title">🆕 新規登録</span>
+          <span class="nb-title nr-title">【新商品】選択前</span>
           <input type="search" id="nrSearch" placeholder="商品コード・商品名・メインKWで検索" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-          <span class="nb-pair" id="nrScopePair">
-            <button type="button" data-nrs="new" title="ステータスが「新商品」「選択前」の商品（撤退済みを除く）">新商品・選択前<span class="nr-n"></span></button>
-            <button type="button" data-nrs="all" title="撤退済みを除くすべての商品">現役すべて<span class="nr-n"></span></button>
-          </span>
+          <!-- 【v1.0983】「新商品・選択前／現役すべて」の切り替えは撤去（選択前だけを出す・本人指定） -->
           <span class="nb-count" id="nrCount"></span>
           <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
             <button type="button" class="nb-btn" id="nrAddBtn" title="商品マスタCSV・APIから商品を取り込みます（「+ 商品追加 ▾」の「+ 商品追加・更新・反映」と同じ）。取り込んだ商品は「選択前」でここに出ます">＋ 商品を追加（CSV・API）</button>
           </span>
         </div>
-        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ステータスを変えた商品も、画面を移るまではここに残ります。</div>
+        <div class="nb-hint">変えたらその場で保存され、GitHub にも反映されます（ほかの画面で変えたのと同じ）。親子：「子」を押すと親を選ぶ窓が出ます（子にするとステータスは「子（親に追従）」になり、入札状態・PR状態は「入札なし」「PR◯-子-7％固定」の扱い）。メインKW は ✏ で編集。ここに出るのはステータスが「選択前」の商品だけです。ステータスを変えた商品も、画面を移るまではここに残ります（移ると消えます）。</div>
         <div id="nrTableWrap" class="nb-wrap"></div>
       </div>
     </div>
@@ -22590,8 +22599,9 @@ window.renderContrib = renderContrib;
 //   ★対象（既定）：現役（撤退済みを除く）で、ステータスが 新商品／選択前／空 の商品。「現役すべて」でも開ける。
 //     その場で状態を変えた商品は、画面を移るまで一覧に残す（_editPinnedCodes＝ほかの画面と同じ）。
 // ============================================================================
-let _nrScope = 'new';     // 'new'（新商品・選択前）| 'all'（現役すべて）
-const NR_NEW_STATUSES = ['新商品', '選択前', ''];
+// 【v1.0983】本人指定で、出すのはステータスが「選択前」の商品だけ（v1.0981〜0982 は 新商品・選択前・空＋「現役すべて」の切り替え）
+let _nrScope = 'new';     // 'new' のみ（切り替えは撤去。値は残置）
+const NR_NEW_STATUSES = [STATUS_SENTAKUMAE];
 function _nrIsNew(code) {
   const st = String(((state.productMeta || {})[code] || {}).status || '');
   return NR_NEW_STATUSES.indexOf(st) >= 0;
@@ -22654,11 +22664,6 @@ function renderNewReg() {
   if (!wrap) return;
   _nrUpdateCount();
   const all = _nrCodesAll();
-  const nNew = all.filter(_nrIsNew).length;
-  document.querySelectorAll('#nrScopePair button').forEach(b => {
-    b.classList.toggle('on', b.getAttribute('data-nrs') === _nrScope);
-    const n = b.querySelector('.nr-n'); if (n) n.textContent = ' ' + (b.getAttribute('data-nrs') === 'all' ? all.length : nNew);
-  });
   const addBtn = document.getElementById('nrAddBtn'); if (addBtn) addBtn.disabled = !ghIsEnabled();
   const list = _nrCodes();
   const cnt = document.getElementById('nrCount');
@@ -22666,7 +22671,7 @@ function renderNewReg() {
   const keepTop = wrap.scrollTop;
   if (!list.length) {
     wrap.innerHTML = '<div class="nr-empty">' + (_nrScope === 'new'
-      ? 'ステータスが「新商品」「選択前」の商品はありません。<br>新しい商品は「＋ 商品を追加（CSV・API）」から取り込むと、ここに出ます（ステータスは「選択前」から始まります）。'
+      ? 'ステータスが「選択前」の商品はありません。<br>新しい商品は「＋ 商品を追加（CSV・API）」から取り込むと、ここに出ます（ステータスは「選択前」から始まります）。'
       : '該当する商品はありません') + '</div>';
     return;
   }
@@ -22710,7 +22715,7 @@ function _nrSetRole(code, role, parent) {
   if (role === cur && (role !== 'child' || newRep === String(((state.productMeta || {})[code] || {}).repCode || '').trim())) return;
   applyRepCodeChange(code, newRep);
   pinEditedCode(code);
-  try { ycLog('edit', '新規登録：' + code + ' の親子を「' + (role === 'none' ? 'なし' : role === 'parent' ? '親' : newRep + ' の子') + '」に'); } catch (e) {}
+  try { ycLog('edit', '選択前：' + code + ' の親子を「' + (role === 'none' ? 'なし' : role === 'parent' ? '親' : newRep + ' の子') + '」に'); } catch (e) {}
   saveToStorage();
   try { ycAutoPushSoon(); } catch (e) {}
   renderNewReg();
