@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0976 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0977 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4944,7 +4944,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0976</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0977</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -21353,7 +21353,7 @@ function ycThumbHtml(r, opts) {
     + '<span class="mi-thumb-rank">' + esc(o.rank == null ? '—' : o.rank) + '</span></div>'
     + '<span class="mi-thumb-amt">' + (amt ? amt.toLocaleString() : '—') + '</span>'   /* 【v1.0963】 */
     + '<span class="mi-thumb-roas" style="color:' + roasColor + '">'
-    + '<span class="mi-roas-k">ROAS</span> ' + (roas == null ? '—' : (roas.toLocaleString() + '%')) + '</span>'
+    + '<span class="mi-roas-k">PR広告R</span> ' + (roas == null   /* 【v1.0977】「ROAS」だと何のROASか分からない → PR広告売上ROAS の略「PR広告R」（本人指定） */ ? '—' : (roas.toLocaleString() + '%')) + '</span>'
     + '<span class="mi-thumb-ad' + (act === true ? '' : ' is-off') + '">広告出稿中</span>'
     + '<span class="mi-thumb-pr"><span class="mi-pr-k">PR</span> ' + (pr ? esc(pr.text) : '—') + '</span>'
     + ycThumbStatusHtml(r.code)
