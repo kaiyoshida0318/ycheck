@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0975 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0976 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4944,7 +4944,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0975</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0976</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -17370,7 +17370,7 @@ function _zdSeoChgStyle(cur, prev){
   if(pct<=-10) return { col:'#BA7517', tag:'▼'+Math.abs(r)+'%' };
   return { col:'#1a1a1a', tag:(r>=0?'+':'')+r+'%' };
 }
-function _zdSeoImgErr(el){ try{ el.outerHTML='<div style="width:96px;height:96px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">画像</div>'; }catch(e){} }
+function _zdSeoImgErr(el){ try{ el.outerHTML='<div style="width:100%;aspect-ratio:1/1;box-sizing:border-box;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">画像</div>'; }catch(e){} }
 window._zdSeoImgErr=_zdSeoImgErr;
 function _zdSeoOpenGraph(code){
   try{
@@ -17407,8 +17407,8 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       const m=getMaster(x.code)||{}; const name=m.name||x.code;
       const img=(typeof getProductImageSrc==='function')?(getProductImageSrc(x.code)||''):'';
       const imgEl=img
-        ? '<img loading="lazy" src="'+esc(img)+'" onerror="_zdSeoImgErr(this)" style="width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">'
-        : '<div style="width:96px;height:96px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">画像</div>';
+        ? '<img loading="lazy" src="'+esc(img)+'" onerror="_zdSeoImgErr(this)" style="width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block;box-sizing:border-box">'
+        : '<div style="width:100%;aspect-ratio:1/1;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3);box-sizing:border-box">画像</div>';   /* 【v1.0976】96px固定 → マスの幅いっぱい（正方形） */
       const prevSeo=prevMap[x.code]||0;
       const cs=_zdSeoChgStyle(x.seo, prevSeo);
       const tagHtml=cs.tag?'<div style="font-size:12px;font-weight:700;color:'+cs.col+';line-height:1.05;margin-top:2px">'+cs.tag+'</div>':'';
@@ -17419,8 +17419,8 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       const parentMark=_isParent
         ? '<div title="親子商品（親商品）" style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:5px;background:#16a34a;border:1.5px solid rgba(255,255,255,.92);box-shadow:0 1px 3px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2"><svg viewBox="0 0 20 20" style="width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></div>'
         : '';
-      return '<div title="'+esc(name)+(_isParent?'（親子商品）':'')+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;width:96px;flex:0 0 auto;text-align:center;position:relative">'
-        +'<div style="position:relative;display:inline-block;vertical-align:top;line-height:0">'+imgEl+scrim+rankBadge+parentMark+'</div>'
+      return '<div title="'+esc(name)+(_isParent?'（親子商品）':'')+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;min-width:0;text-align:center;position:relative">'
+        +'<div style="position:relative;display:block;width:100%;max-width:120px;margin:0 auto;line-height:0">'+imgEl+scrim+rankBadge+parentMark+'</div>'
         +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:15px;color:'+cs.col+';margin-top:6px;line-height:1.2">'+fY(x.seo)+'</div>'
         +tagHtml
         +'</div>';
@@ -17435,7 +17435,9 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       +'<span style="color:#A32D2D;font-weight:700">-20%↓</span>）'
       +'<span style="margin-left:10px;display:inline-flex;align-items:center;gap:4px;vertical-align:middle"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:#16a34a"><svg viewBox="0 0 20 20" style="width:11px;height:11px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span><span style="font-weight:800;color:var(--text)">＝親子商品（<span style="color:#16a34a">'+_parentCount+'</span>）</span></span>'
       +'</span></div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">'+items+'</div>'
+      // 【v1.0976】★15個を1行に等間隔で並べる（本人指定）。flex＋96px固定だと14個で折り返し、15個目だけ次の行に落ちていた。
+      //   → 15等分のグリッド。画像はマスの幅いっぱいの正方形（最大120px）。表が狭いときは画像が小さくなるだけで折り返さない。
+      +'<div style="display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:10px;align-items:start">'+items+'</div>'
       +'</div>';
   }
   return '<tr class="zd-seo-row" data-ym="'+ym+'"><td colspan="'+colCount+'" style="background:#fff;border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
