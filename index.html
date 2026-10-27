@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0992 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0993 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5058,7 +5058,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0992</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0993</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5960,6 +5960,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <span id="zdModePair" style="display:inline-flex;gap:0">
             <button type="button" class="zd-mode-btn on" id="zdModeNormal" data-zdm="normal" onclick="_zdSetMode('normal')">通常</button>
             <button type="button" class="zd-mode-btn" id="zdModeYoy" data-zdm="yoy" onclick="_zdSetMode('yoy')">前年同月比</button>
+            <!-- 【v1.0993】前年同月比差異（ADcheck v1.1492「全-月別データ 前年同月比・差異」準拠）§379 -->
+            <button type="button" class="zd-mode-btn" id="zdModeYoyDiff" data-zdm="yoydiff" onclick="_zdSetMode('yoydiff')" title="前年同月比の並びで、同じ月の組の下に「今年−前年」の差を出す（金額の列だけ）">前年同月比差異</button>
           </span>
           <span id="zdCutPair" style="display:none;gap:0">
             <button type="button" id="zdCutFull" onclick="_zdSetDayCut('full')" title="各月の1日〜末日の合計（今まで通り）">月全体</button>
@@ -5984,7 +5986,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <span id="zdRightTools" style="margin-left:auto;display:inline-flex;gap:6px;align-items:center">
             <!-- 【v1.0552】表の周りの説明文はここを押したときだけ出す（既定は畳む） -->
             <button type="button" id="zdHelpBtn" onclick="_zdSetHelp(!_zdHelp)">❓ 下部説明</button>
-            <button class="btn sm ghost" id="btnDownloadZenMonthlyCsv" type="button" onclick="downloadZenMonthlyCsv()" data-tooltip="この表の表示内容を、今の並び順（通常／前年同月比）・集計範囲（月全体／月途中）のままCSV出力します">⬇ この表をCSV</button>
+            <button class="btn sm ghost" id="btnDownloadZenMonthlyCsv" type="button" onclick="downloadZenMonthlyCsv()" data-tooltip="この表の表示内容を、今の並び順（通常／前年同月比／前年同月比差異）・集計範囲（月全体／月途中）のままCSV出力します。差異のときは差異の行も入ります">⬇ この表をCSV</button>
           </span>
         </div>
         <!-- 【v1.0948】月途中のときだけ出す緑の帯（月全体と見間違えないため） -->
@@ -17093,8 +17095,55 @@ function _zenYoyOrder(rowsDesc) {
 }
 
 // ---------- 全-月別データ（縦=月×横=指標 のランク色分け表 + サマリー + 通常/前年同月比） ----------
-let _zdMode = 'normal';
-function _zdSetMode(m) { _zdMode = (m === 'yoy') ? 'yoy' : 'normal'; renderGraphData(); }
+let _zdMode = 'normal';   // 'normal' | 'yoy' | 'yoydiff'（【v1.0993】）
+function _zdSetMode(m) {
+  _zdMode = (m === 'yoy' || m === 'yoydiff') ? m : 'normal';
+  // 【v1.0993】ADcheck と同じく「前年同月比差異」を押したら月途中（1〜N日）を初期にする。
+  //   ★ただし Ycheck の月途中は日別データがある月しか作れない（§336）。月途中に前年の同じ月が1組も無いときは
+  //     月全体のまま（切り替えると差異の行が1つも出ないため）。今月の差異には「⚠ 今月は1〜N日」が付く。
+  if (_zdMode === 'yoydiff') { const N = _zdLatestCut(); if (N > 0 && _zdCutHasYoyPair(N)) _zdDayCutMode = 'same'; }
+  renderGraphData();
+}
+const _zdIsYoy = () => (_zdMode === 'yoy' || _zdMode === 'yoydiff');
+// 月途中（1〜N日）の行に、前年の同じ月がある組が1つでもあるか
+function _zdCutHasYoyPair(N) {
+  try {
+    const ms = new Set((_zenMonthlyRowsCut(N) || []).map(r => r.month));
+    return [...ms].some(m => ms.has((+m.slice(0, 4) - 1) + m.slice(4)));
+  } catch (e) { return false; }
+}
+// 【v1.0993】前年同月比差異（ADcheck v1.1492 spec_yoy §4）。drows＝_zenYoyOrder で並べた行（組の先頭に _grpTop）。
+//   ・2行以上ある組だけ。A＝組の1行目（新しい年）、B＝2行目（1つ前の年）。差異の行は組の最後の行の直後（3年分あっても1行・A−B）。
+//   ・出すのは金額の列（c.t === 'y'）だけ。率の列（ROAS・CVR など）は割り算どうしの差になって読み違えやすいので出さない。
+//   ・色：売上の列（c.hi＝高いほど良い）は増えたら青 #1565C0／減ったら赤 #A32D2D／0は黒。費用の列（広告実績額・PR実績額）は常に #334155。
+//   ・総売上・SEO売上は、A か B の総売上が0なら「—」（総売上を取り込んでいない月の差は意味がない）。
+//   ・増減率＝(A−B)÷B×100（小数1桁）。B が0なら出さない。
+//   戻り値：Map（組の最後の行の month → { a, b, cells:[{c, d, pc, dash, col}] }）
+function _zdYoyDiffs(drows, cols) {
+  const out = new Map();
+  const grps = [];
+  drows.forEach((r, i) => { if (i === 0 || r._grpTop) grps.push([]); grps[grps.length - 1].push(r); });
+  grps.forEach(g => {
+    if (g.length < 2) return;
+    const a = g[0], b = g[1];
+    if (!/^\d{4}-\d{2}$/.test(String(a.month)) || !/^\d{4}-\d{2}$/.test(String(b.month))) return;
+    const cells = cols.map(c => {
+      if (c.t !== 'y') return null;
+      if ((c.key === 'totSales' || c.key === 'seoSales') && (!(+a.totSales) || !(+b.totSales))) return { c: c, dash: true };
+      // 【v1.0993】Ycheck 独自：どちらかの月にその列のデータが無いときも「—」（0 と比べると、ある方の月の額がまるごと増減に見えるため）
+      //   ・値が null（例：PRオプションレポートを取り込む前の月の PR実績額）
+      //   ・内訳の列（送り込み元／利益源／通常商品）で、合計はあるのに内訳がどれも0（例：2024年は商品別の内訳が無い）
+      const _noGrp = r => { if (!c.grp) return false; const tot = +r[c.key] || 0; if (!tot) return false; const g = r.grp || {}; return !Object.keys(g).some(k => +((g[k] || {})[c.key]) > 0); };
+      const ra = _zdValOf(a, c), rb = _zdValOf(b, c);
+      if (ra == null || rb == null || _noGrp(a) || _noGrp(b)) return { c: c, dash: true, why: 'nodata' };
+      const va = +ra || 0, vb = +rb || 0, d = va - vb;
+      const col = c.hi ? (d > 0 ? '#1565C0' : d < 0 ? '#A32D2D' : '#1a1a1a') : '#334155';
+      return { c: c, d: d, pc: vb > 0 ? Math.round(d / vb * 1000) / 10 : null, col: col };
+    });
+    out.set(g[g.length - 1].month, { a: a, b: b, cells: cells });
+  });
+  return out;
+}
 // ============================================================================
 // 【v1.0948】表上ツールバーの部品（ADcheck v1.1476 仕様書 §2〜§5 準拠）
 // ============================================================================
@@ -17134,7 +17183,15 @@ function _zdSetDayCut(m) { _zdDayCutMode = (m === 'same') ? 'same' : 'full'; ren
 window._zdSetDayCut = _zdSetDayCut;
 // 帯・ペアボタンの見た目をまとめて更新（表を描くたびに呼ぶ）
 function _zdPaintToolbar(N, dayMode) {
-  _pairPaint(document.getElementById('zdModeNormal'), document.getElementById('zdModeYoy'), _zdMode !== 'yoy', '#3b82f6');
+  // 【v1.0993】3つくっつけ（通常｜前年同月比｜前年同月比差異）。左＝左角だけ丸く、真ん中＝角なし、右＝右角だけ丸く
+  {
+    const base = 'font-size:0.78rem;padding:4px 10px;cursor:pointer;white-space:nowrap;font-weight:600;';
+    const on = 'border:1px solid #3b82f6;background:#3b82f6;color:#fff;position:relative;z-index:1;', off = 'border:1px solid var(--border);background:var(--surface2);color:var(--text3);';
+    const nb = document.getElementById('zdModeNormal'), yb = document.getElementById('zdModeYoy'), db = document.getElementById('zdModeYoyDiff');
+    if (nb) nb.style.cssText = base + 'border-radius:5px 0 0 5px;' + (_zdMode === 'normal' ? on : off);
+    if (yb) yb.style.cssText = base + 'border-radius:0;margin-left:-1px;' + (_zdMode === 'yoy' ? on : off);
+    if (db) db.style.cssText = base + 'border-radius:0 5px 5px 0;margin-left:-1px;' + (_zdMode === 'yoydiff' ? on : off);
+  }
   const cp = document.getElementById('zdCutPair');
   if (cp) cp.style.display = (N > 0 && !dayMode) ? 'inline-flex' : 'none';
   const sb = document.getElementById('zdCutSame');
@@ -17457,7 +17514,7 @@ function downloadZenMonthlyCsv() {
       return;
     }
     const desc = asc.slice().reverse();
-    const drows = (_zdMode === 'yoy' && typeof _zenYoyOrder === 'function') ? _zenYoyOrder(desc) : desc;
+    const drows = (_zdIsYoy() && _zdGrain !== 'day' && typeof _zenYoyOrder === 'function') ? _zenYoyOrder(desc) : desc;   /* 【v1.0993】差異も前年同月比の並び */
     const esc = function (v) { let s = (v == null) ? '' : String(v); if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
     const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
     // 【v1.0794】★CSVも画面と同じ桁で出す。ここだけ小数第1位のままにすると
@@ -17471,11 +17528,19 @@ function downloadZenMonthlyCsv() {
     // 【v1.0593】★見出し行も必ず esc を通す。列名にカンマを含むもの（例: 'PR売上ROAS(推定,%)'）があると、
     //   そこで見出しだけ2列に割れ、本文と1列ずれる（v1.0580〜v1.0592 の商品基本データCSVで実際に起きていた）。
     const lines = [header.map(esc).join(',')];
+    // 【v1.0993】前年同月比差異のときは、画面と同じ位置に「差異 2026-2025」の行（金額の列だけ・符号つき。総売上が0の組の総売上・SEO売上は空）
+    const _ydCsv = (_zdMode === 'yoydiff' && _zdGrain !== 'day') ? _zdYoyDiffs(drows, csvCols) : null;
     drows.forEach(function (r) {
       // 【v1.0555】料率別の列も含めて1行で出す（画面と同じ並び）
       const row = [r.month || r.label];
       csvCols.forEach(function (c) { const v = _zdValOf(r, c); row.push(c.t === 'p' ? numP(v, c.dec) : numY(v)); });
       lines.push(row.map(esc).join(','));
+      if (_ydCsv && _ydCsv.has(r.month)) {
+        const x = _ydCsv.get(r.month);
+        const dr = ['差異 ' + String(x.a.month).slice(0, 4) + '-' + String(x.b.month).slice(0, 4) + '（' + String(x.a.month).slice(5) + '月）'];
+        x.cells.forEach(function (cl) { dr.push((!cl || cl.dash) ? '' : String(Math.round(cl.d))); });
+        lines.push(dr.map(esc).join(','));
+      }
     });
     const csv = '﻿' + lines.join('\r\n');   // BOM付き＝Excelで文字化けしない
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -17483,7 +17548,7 @@ function downloadZenMonthlyCsv() {
     const a = document.createElement('a');
     const d = new Date();
     const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
-    const modeLabel = ((_zdMode === 'yoy') ? '前年同月比' : '通常') + (_cOn ? '_月途中1-' + _cN + '日' : '');
+    const modeLabel = ((_zdMode === 'yoydiff') ? '前年同月比差異' : (_zdMode === 'yoy') ? '前年同月比' : '通常') + (_cOn ? '_月途中1-' + _cN + '日' : '');
     a.href = url; a.download = 'ycheck_全月別データ_' + modeLabel + '_' + stamp + '.csv';
     document.body.appendChild(a); a.click();
     setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 0);
@@ -17813,7 +17878,10 @@ function renderGraphData() {
   const HEAD = '<tr>' + _h1 + '</tr>' + (_twoRow ? ((_hasRole ? '<tr>' + _h2 + '</tr>' : '') + '<tr>' + _h3 + '</tr>') : '');
   const desc = asc.slice().reverse();
   // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
-  const drows = (!_dayMode && _zdMode === 'yoy') ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));
+  const drows = (!_dayMode && _zdIsYoy()) ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));   /* 【v1.0993】差異も前年同月比の並び */
+  // 【v1.0993】前年同月比差異の行（組の最後の行の month → 差異）
+  const _ydMap = (!_dayMode && _zdMode === 'yoydiff') ? _zdYoyDiffs(drows, _zdCols) : null;
+  const _ydLatest = drows.reduce((mx, r) => (r.month && r.month > mx ? r.month : mx), '');
   const curYm = (typeof getCurrentYm === 'function') ? getCurrentYm() : '';
   // 【v1.0551/v1.0555】1セルの中身。列（合計 / 7% / 7%超）ごとに、その列の母集団で色を付ける。
   // 【v1.0567】数字は中央揃え（見出しの「合計 / 7%超 / 7%」と縦のラインを合わせるため）
@@ -17880,6 +17948,28 @@ function renderGraphData() {
       + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + (opt.vb || '')   /* 【v1.0553】縦罫線 */
       + 'white-space:nowrap;' + (opt.bT || '') + '">' + inner + '</td>';
   }
+  // 【v1.0993】差異の行。1列目＝「差異／2026−2025（／⚠ 今月は1〜N日）」。セルの罫線・余白は _zdCellHtml と同じ
+  function _zdYoyDiffRowHtml(x) {
+    const ya = String(x.a.month).slice(0, 4), yb = String(x.b.month).slice(0, 4);
+    const warn = (!_cutOn && _cutN > 0 && x.a.month === _ydLatest)
+      ? '<div style="margin-top:2px;font-size:9px;font-weight:700;color:#c2410c;white-space:nowrap" title="今月はまだ1〜' + _cutN + '日分、前年は1か月分なので、差が大きくマイナスに出ます">⚠ 今月は1〜' + _cutN + '日</div>' : '';
+    const lbl = '<div style="font-size:11px;font-weight:800;color:#334155">差異</div><div style="font-size:9px;color:var(--text3);white-space:nowrap">' + ya + '−' + yb + '</div>' + warn;
+    const DBG = '#eef2f7';
+    const first = '<td style="padding:5px 6px;text-align:center;background:' + DBG + ';position:sticky;left:0;z-index:1;border-bottom:1px solid var(--border);border-right:' + VBD + ';vertical-align:middle">' + lbl + '</td>';
+    const tds = x.cells.map((cl, ci) => {
+      const c = _zdCols[ci];
+      let inner = '';
+      if (cl && cl.dash) inner = '<span style="color:var(--text3)" title="' + (cl.why === 'nodata' ? 'どちらかの月にこの列のデータが無いので差は出しません' : '総売上が0の月がからむので差は出しません') + '">—</span>';
+      else if (cl) {
+        const d = cl.d, sign = d > 0 ? '+' : d < 0 ? '−' : '±';
+        inner = '<span style="color:' + cl.col + ';font-weight:700;font-size:0.88em;letter-spacing:-0.02em">' + sign + '¥' + Math.abs(Math.round(d)).toLocaleString('ja-JP') + '</span>'   /* 少し小さく：差異の行で列が広がらないように */
+          + (cl.pc == null ? '' : '<div style="font-size:0.82em;font-weight:700;color:' + cl.col + ';opacity:.8;line-height:1.1;margin-top:1px">' + (cl.pc > 0 ? '+' : '') + cl.pc + '%</div>');
+      }
+      return '<td style="padding:' + _zdTdPad(c) + ';' + TDBASE0 + 'background:' + DBG + ';border-bottom:1px solid var(--border);'
+        + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + _vb(ci) + 'white-space:nowrap;vertical-align:middle">' + inner + '</td>';
+    }).join('');
+    return '<tr class="zd-yoydiff" style="border-top:1px dashed #94a3b8">' + first + tds + '</tr>';
+  }
   const body = drows.map(r => {
     const bT = r._grpTop ? 'border-top:2px solid var(--border2)' : '';
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
@@ -17888,10 +17978,18 @@ function renderGraphData() {
       + (_dayMode ? '' : (_cutOn ? _zdCutBadgeHtml(r) : monthDayBadgeHtml(r.month))) + '</td>';   /* 【v1.0846】足りない月だけ「14/30日」 */
     const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key], row: r })).join('');   /* 【v1.0578】row＝分母の内訳ツールチップ／PR部分取込の⚠に使う */
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
+    // 【v1.0993】前年同月比差異の行（組の最後の行の直後。SEO売上トップ15より前＝ADcheck と同じ）
+    if (_ydMap && _ydMap.has(r.month)) _rowHtml += _zdYoyDiffRowHtml(_ydMap.get(r.month));
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
     return _rowHtml;
   }).join('');
+  // 【v1.0993】前年同月比差異で差異の行が1つも出ないとき（月途中＝日別データがある月だけ、など）の説明
+  let _ydNote = '';
+  if (_ydMap && !_ydMap.size) {
+    _ydNote = '<div class="zd-partial-note">ℹ 前年の同じ月が表に無いので、差異の行は出ていません。'
+      + (_cutOn ? '<b>月途中（1〜' + _cutN + '日）は日別データがある月だけ</b>で作るため、前年の月がまだありません。<b>「月全体」</b>にすると前年同月と比べられます（今月の差異には ⚠ が付きます）。' : '') + '</div>';
+  }
   // 【v1.0536】部分取込の月がある場合の注意書き（月次の数字がどこから来ているかを明示）
   let _partialNote = '';
   if (_dayMode) {
@@ -18061,7 +18159,7 @@ function renderGraphData() {
   // 【v1.0565】見出しは <thead> ごと固定する。2段が必ずセットで動くので、段ごとの位置計算が要らない。
   //   ★ border-collapse:collapse のままだと、sticky な thead の背景が一部ブラウザで消えることがある。
   //     そこで separate + border-spacing:0 にし、罫線は各セルの border だけで描く（見た目は従来どおり）。
-  wrap.innerHTML = '<table style="border-collapse:separate;border-spacing:0;width:100%">\n'
+  wrap.innerHTML = _ydNote + '<table style="border-collapse:separate;border-spacing:0;width:100%">\n'
     + '<thead style="position:sticky;top:0;z-index:5">' + HEAD + '</thead><tbody>' + body + '</tbody></table>' + _helpHtml;
   requestAnimationFrame(_zdFitTableHeight);   // 【v1.0513】描画後に表の高さを画面下端まで合わせる
 }
