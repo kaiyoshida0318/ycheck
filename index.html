@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0995 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0997 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4903,6 +4903,9 @@ table.nr-table td.nr-sethead-sub { font-size: 0.74rem; font-weight: 500; color: 
 #view-newreg .nr-name-orig { font-size: 0.72rem; color: var(--text3); margin-top: 3px; }
 #view-newreg .nr-name-orig[hidden] { display: none; }
 #view-newreg .nr-name-count b { color: #b45309; }
+table.nr-table td.nr-num { text-align: center; font-family: 'DM Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 700; }
+table.nr-table td.bid-price, table.nr-table td.pro-rate-cell { cursor: pointer; }
+table.nr-table th.nr-th-num { text-align: center; }
 #view-newreg .nr-kw-ro { font-size: 0.8rem; color: var(--text3); }
 #view-newreg .child-detail-select { width: 100%; max-width: 100%; box-sizing: border-box; }   /* 列（160px）からはみ出さない */
 .nr-mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
@@ -5084,7 +5087,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0995</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0997</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -22911,6 +22914,12 @@ function _nrRowHtml(c, opt) {
         : '<td class="' + (kw ? '' : 'nr-miss') + '">' + kwCellHtml(c) + '</td>')
     // 【v1.0986】並びを 入札状態 → PR状態 → ステータス に（本人指定。v1.0985 までは ステータス → 入札状態 → PR状態）
     // 【v1.0991】子の行の入札状態は「—」だけ（本人指定「入札なしの表示もされないように」）。子は入札しない（保存値は触らない）
+    // 【v1.0996】入札状態の左に 入札価格、PR状態の左に PRオプ料率（本人指定）。セルは調整-入札価格／調整-PRオプと同じ（クリックで編集＝startBidEdit／startProRateEdit）。子の入札価格は「—」
+    + ((role === 'child' || _isSoiChildProduct(c)) ? '<td class="num nr-num"><span class="nr-dash" title="子商品は入札しません（入札は親の行で）">—</span></td>'
+        : '<td class="num col-bidonly bid-price nr-num" data-code="' + escapeHtml(c) + '" title="クリックで編集">' + bidCellInnerHtml(c, getBid(c)) + '</td>')
+    // 【v1.0997】PRオプ料率は入札価格のすぐ右へ（本人指定）：入札価格｜PRオプ料率｜入札状態｜PR状態｜ステータス
+    + (function () { const pr = getProRate(c); return '<td class="num col-pro pro-rate-cell nr-num" data-code="' + escapeHtml(c) + '" title="クリックで編集">'
+        + ((pr == null || isNaN(pr)) ? fmtProRate(pr) : '<span class="pro-rate-val ' + (Number(pr) > PR_BASE_RATE_PCT ? 'over' : 'base') + '">' + fmtProRate(pr) + '</span>') + '</td>'; })()
     + '<td class="status-col">' + ((role === 'child' || _isSoiChildProduct(c)) ? '<span class="nr-dash" title="子商品は入札しません（入札は親の行で）">—</span>' : statusSelectHtml(c, 'ad')) + '</td>'
     + '<td class="status-col">' + statusSelectHtml(c, 'pro') + '</td>'
     + '<td class="status-col">' + statusSelectHtml(c, 'status') + '</td>'
@@ -22921,7 +22930,7 @@ function _nrSetHeadHtml(mem) {
   const k = mem[0], nS = mem.filter(_nrIsSentaku).length;
   return '<tr class="row-setparent nr-sethead">' + _nrCodeCellHtml(k, mem)
     + '<td>' + imageCellHtml(k) + '</td><td class="nr-sethead-name">' + escapeHtml((getMaster(k) || {}).name || '') + '</td>'   /* 【v1.0990】リンクにしない（入力は下の行） */
-    + '<td colspan="5" class="nr-sethead-sub">セット（親1＋子' + (mem.length - 1) + '）。選択前 ' + nS + '件。変えるのは下の1件ずつの行で</td></tr>';
+    + '<td colspan="7" class="nr-sethead-sub">セット（親1＋子' + (mem.length - 1) + '）。選択前 ' + nS + '件。変えるのは下の1件ずつの行で</td></tr>';
 }
 // 【v1.0990】商品名の入力欄 →【v1.0992】★保存は「まとめて反映」だけ（本人指定「商品名を編集してると、かってにpushが走って元に戻ったりするから、一通り終わったあとに、まとめてpushする形にしたい」）。
 //   ・打った内容は _nrNameDraft（下書き・この画面だけ・メモリ）に入れるだけ。state.master は書き換えない＝自動保存・自動反映が途中の名前を送らない。
@@ -23029,9 +23038,9 @@ function renderNewReg() {
       : '該当する商品はありません') + '</div>';
     return;
   }
-  const head = '<colgroup><col style="width:150px"><col style="width:58px"><col><col style="width:250px"><col style="width:220px"><col style="width:104px"><col style="width:118px"><col style="width:112px"></colgroup>'
+  const head = '<colgroup><col style="width:150px"><col style="width:58px"><col><col style="width:230px"><col style="width:200px"><col style="width:78px"><col style="width:66px"><col style="width:104px"><col style="width:118px"><col style="width:112px"></colgroup>'
     + '<thead><tr><th>商品コード</th><th>画像</th><th>商品名</th><th>親子（送り込み）</th>'
-    + '<th>メインKW</th><th>入札状態</th><th>PR状態</th><th>ステータス</th></tr></thead>';
+    + '<th>メインKW</th><th class="nr-th-num">入札価格<br><span class="th-note">(最安25円)</span></th><th class="nr-th-num">PRオプ<br>料率</th><th>入札状態</th><th>PR状態</th><th>ステータス</th></tr></thead>';
   // 【v1.0985】合算／個別／両表示（_effRowMode()＝商品-基本データ等と共有の basicRowMode）
   //   個別＝選択前の商品を1件1行（v1.0983 まで）
   //   合算＝送り込みセットを1行に。入力欄は代表（親）のもの。セットは「メンバーのだれかが選択前」なら出す（＝商品-基本データの合算と同じくセット単位で残す）
