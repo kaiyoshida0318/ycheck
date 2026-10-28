@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0993 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0995 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4849,6 +4849,32 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .top-nav:not(.top-nav-3) .nav-tab .chip-num { margin-left: 0; }
 .top-nav:not(.top-nav-3) .nav-group-label { padding-right: 3px; }
 /* 【v1.0984】【新商品】の右寄せ（margin-left:auto）はやめた。SEO順位のすぐ右に普通に並べる（本人指定「変によせたりしないで」） */
+/* 【v1.0994】撤退候補の確認（confirm() の代わり。文字を選択・コピーできる） */
+.yc-rc { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; }
+.yc-rc-box { width: min(560px, 100%); max-height: 86vh; display: flex; flex-direction: column; gap: 10px; background: var(--bg2); color: var(--text); border-radius: 14px; padding: 20px 22px 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.yc-rc-title { font-size: 1rem; font-weight: 700; }
+.yc-rc-lead { font-size: 0.86rem; line-height: 1.6; }
+.yc-rc-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.yc-rc-copy { font: inherit; font-size: 0.78rem; font-weight: 700; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--accent); background: var(--bg2); color: var(--accent); cursor: pointer; }
+.yc-rc-copy:hover { background: var(--accent); color: #fff; }
+.yc-rc-list { flex: 1 1 auto; min-height: 80px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; background: var(--bg3); user-select: text; -webkit-user-select: text; cursor: text; }
+.yc-rc-row { display: block; font-size: 0.82rem; line-height: 1.7; white-space: nowrap; cursor: pointer; }
+.yc-rc-row.off .yc-rc-code, .yc-rc-row.off .yc-rc-name { opacity: 0.45; text-decoration: line-through; }
+.yc-rc-row input, .yc-rc-all input { vertical-align: middle; margin: 0 2px 0 0; cursor: pointer; }
+.yc-rc-row2 { font-size: 0.8rem; line-height: 1.6; white-space: nowrap; }
+.yc-rc-all { font-size: 0.8rem; font-weight: 700; margin-right: 4px; cursor: pointer; }
+.yc-rc-sub { color: var(--text3); font-size: 0.8rem; }
+.yc-rc-skip { font-size: 0.8rem; color: var(--text2); }
+.yc-rc-skip summary { cursor: pointer; }
+.yc-rc-skiplist { max-height: 120px; overflow: auto; margin-top: 4px; padding: 4px 10px; border: 1px dashed var(--border2); border-radius: 8px; user-select: text; -webkit-user-select: text; }
+.yc-rc-ok:disabled { opacity: 0.45; cursor: not-allowed; }
+.yc-rc-code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-weight: 700; }
+.yc-rc-name { margin-left: 4px; color: var(--text2); }
+.yc-rc-q { font-size: 0.86rem; font-weight: 700; }
+.yc-rc-btns { display: flex; justify-content: flex-end; gap: 10px; }
+.yc-rc-ok, .yc-rc-cancel { font: inherit; font-size: 0.9rem; font-weight: 700; padding: 9px 26px; border-radius: 999px; cursor: pointer; border: none; }
+.yc-rc-ok { background: #0b57d0; color: #fff; }
+.yc-rc-cancel { background: #d3e3fd; color: #0b57d0; }
 /* ==================== 【v1.0981】【新商品】新規登録（#view-newreg） ==================== */
 .nav-group-label.g-newp { color:#16a34a; }  /* 【新商品】 */
 #view-newreg .nb-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -5058,7 +5084,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0993</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0995</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -12238,7 +12264,7 @@ async function commitUpload() {
   // 確認ダイアログでOKのときだけ適用。saveToStorageより前なので撤退結果も保存される。
   if (buf.proRate) {
     try {
-      const retired = applyRetireByProRate(state.proRate);
+      const retired = await applyRetireByProRate(state.proRate);   // 【v1.0994】画面の中の確認になったので await
       if (retired > 0) log(`🗂 Yahooで削除された商品 ${retired}件を「撤退済み」にしました`, 'ok');
     } catch (e) {
       console.warn('applyRetireByProRate エラー:', e);
@@ -12555,25 +12581,25 @@ function detectRetiredByProRate(proRateMap) {
 
 // 【v202】撤退候補を確認ダイアログにかけ、OKなら status を「撤退済み」に一括セット。
 // 返り値: 実際に撤退済みにした件数。
-function applyRetireByProRate(proRateMap) {
-  const candidates = detectRetiredByProRate(proRateMap);
-  if (candidates.length === 0) return 0;
-  const preview = candidates.slice(0, 30).map(c => {
-    const m = state.master[c];
-    const nm = (m && m.name) ? `（${m.name}）` : '';
-    return `・${c}${nm}`;
-  }).join('\n');
-  const more = candidates.length > 30 ? `\n…他${candidates.length - 30}件` : '';
-  const ok = confirm(
-    `PRオプ料率CSV（Yahoo公開中の全商品リスト）に存在しない商品が ${candidates.length}件 見つかりました。\n` +
-    `これらはYahooで商品ページが削除された可能性が高いため、「撤退済み」にします。\n` +
-    `撤退済みにすると「撤退済み商品」ブロックにのみ表示され、他の表（過去分含む）からは外れます。\n\n` +
-    `${preview}${more}\n\n` +
-    `これらを撤退済みにしますか？`
-  );
-  if (!ok) return 0;
+// 【v1.0994】ブラウザの confirm() → 画面の中の確認（_ycRetireConfirm）に置き換えた（本人指定「並んでる商品コードを選択してコピーできるように」）。
+//   confirm() の文字は選択もコピーもできないため。中身・OK/キャンセルの意味は同じ。★戻り値が Promise になったので、呼ぶ側は await する。
+//   一覧は全件（confirm のときは30件まで）。商品コードだけ／コードと商品名 をまとめてコピーするボタンつき。
+async function applyRetireByProRate(proRateMap) {
+  const all = detectRetiredByProRate(proRateMap);
+  if (all.length === 0) return 0;
+  // 【v1.0995】ステータスが「選択前」の商品（親が選択前の子＝子（親に追従）も含む＝effectiveStatusOf）は撤退候補から外す（本人と相談）。
+  //   新しく登録した商品は、Yahooの商品リスト（PRオプ料率CSV）にまだ載っていないことがあり、「削除された」と誤判定していた（実例：et-sony-26-01 の親2件・子6件）。
+  //   新商品は必ず「選択前」から始まる（v1.0861）ので、ここで外せば新商品だけを外せる。初期設定を済ませて選択前でなくなっても CSV に無いままなら、そのときは候補に出る。
+  const _isSk = c => { try { return effectiveStatusOf(c) === STATUS_SENTAKUMAE; } catch (e) { return false; } };
+  const skipped = all.filter(_isSk);
+  const candidates = all.filter(c => !_isSk(c));
+  if (skipped.length) { try { log('🆕 Yahooの商品リストにまだ無い「選択前」の商品 ' + skipped.length + '件は撤退にしていません（新商品）：' + skipped.slice(0, 20).join(', ') + (skipped.length > 20 ? ' …' : ''), 'ok'); } catch (e) {} }
+  if (candidates.length === 0) return 0;   // 全部が選択前なら確認も出さない
+  // 【v1.0995】確認画面で1件ずつチェックを外せる（外した商品は撤退にしない）。戻り値＝撤退にするコードの配列（キャンセルは null）
+  const picked = await _ycRetireConfirm(candidates, skipped);
+  if (!picked || !picked.length) return 0;
   let n = 0;
-  candidates.forEach(code => {
+  picked.forEach(code => {
     const meta = getMeta(code);
     const _rtTs = Date.now();  // 【v1.0350】撤退も状態変更 → 専用Ts(statusTs)と_tsを打ち、古いセッションの巻き戻しから保護する。
     meta.status = '撤退済み';
@@ -12582,6 +12608,72 @@ function applyRetireByProRate(proRateMap) {
     n++;
   });
   return n;
+}
+// 【v1.0994】撤退候補の確認（画面の中に出す。文字は選択・コピーできる）。
+// 【v1.0995】各行にチェックボックス（最初は全部オン）。OK＝チェックした商品のコード配列／キャンセル・Esc＝null。
+//   skipped（選択前のため外した商品）は下に「対象外」として表示だけする。
+function _ycRetireConfirm(candidates, skipped) {
+  skipped = skipped || [];
+  return new Promise(resolve => {
+    const old = document.getElementById('ycRetireConfirm'); if (old) old.remove();
+    const w = document.createElement('div');
+    w.id = 'ycRetireConfirm'; w.className = 'yc-rc';
+    const nmOf = c => ((state.master[c] || {}).name) || '';
+    const rows = candidates.map(c => {
+      const nm = nmOf(c);
+      return '<label class="yc-rc-row"><input type="checkbox" class="yc-rc-cb" data-code="' + escapeHtml(c) + '" checked> <span class="yc-rc-code">' + escapeHtml(c) + '</span>' + (nm ? ' <span class="yc-rc-name">' + escapeHtml(nm) + '</span>' : '') + '</label>';
+    }).join('');
+    const skHtml = skipped.length
+      ? '<details class="yc-rc-skip"><summary>🆕 「選択前」（新商品）なので対象外：<b>' + skipped.length + '件</b>（撤退にしません）</summary><div class="yc-rc-skiplist">'
+        + skipped.map(c => '<div class="yc-rc-row2"><span class="yc-rc-code">' + escapeHtml(c) + '</span>' + (nmOf(c) ? ' <span class="yc-rc-name">' + escapeHtml(nmOf(c)) + '</span>' : '') + '</div>').join('') + '</div></details>'
+      : '';
+    w.innerHTML = '<div class="yc-rc-box" role="dialog" aria-modal="true">'
+      + '<div class="yc-rc-title">' + escapeHtml(location.host || 'Ycheck') + ' の内容</div>'
+      + '<div class="yc-rc-lead">PRオプ料率CSV（Yahoo公開中の全商品リスト）に存在しない商品が <b>' + candidates.length + '件</b> 見つかりました。<br>'
+      + 'これらはYahooで商品ページが削除された可能性が高いため、「撤退済み」にします。<br>'
+      + '撤退済みにすると「撤退済み商品」ブロックにのみ表示され、他の表（過去分含む）からは外れます。<br>'
+      + '<span class="yc-rc-sub">撤退にしない商品はチェックを外してください。</span></div>'
+      + '<div class="yc-rc-tools"><label class="yc-rc-all"><input type="checkbox" class="yc-rc-allcb" checked> 全部</label>'
+      + '<button type="button" class="yc-rc-copy" data-rc="code">📋 商品コードをコピー（' + candidates.length + '件）</button>'
+      + '<button type="button" class="yc-rc-copy" data-rc="both">📋 コードと商品名をコピー</button></div>'
+      + '<div class="yc-rc-list">' + rows + '</div>'
+      + skHtml
+      + '<div class="yc-rc-q">チェックした商品を撤退済みにしますか？</div>'
+      + '<div class="yc-rc-btns"><button type="button" class="yc-rc-ok"></button><button type="button" class="yc-rc-cancel">キャンセル</button></div>'
+      + '</div>';
+    document.body.appendChild(w);
+    const cbs = [...w.querySelectorAll('.yc-rc-cb')], allcb = w.querySelector('.yc-rc-allcb'), okb = w.querySelector('.yc-rc-ok');
+    const picked = () => cbs.filter(x => x.checked).map(x => x.getAttribute('data-code'));
+    const sync = () => {
+      const n = picked().length;
+      okb.textContent = 'OK（' + n + '件を撤退済みに）'; okb.disabled = !n;
+      allcb.checked = n === cbs.length; allcb.indeterminate = n > 0 && n < cbs.length;
+      cbs.forEach(x => x.closest('.yc-rc-row').classList.toggle('off', !x.checked));
+    };
+    cbs.forEach(x => x.addEventListener('change', sync));
+    allcb.addEventListener('change', () => { cbs.forEach(x => { x.checked = allcb.checked; }); sync(); });
+    sync();
+    const done = (v) => { document.removeEventListener('keydown', onKey, true); w.remove(); resolve(v); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(null); }
+      else if (e.key === 'Enter' && document.activeElement === okb && !okb.disabled) { e.preventDefault(); done(picked()); }
+    };
+    document.addEventListener('keydown', onKey, true);
+    okb.addEventListener('click', () => { if (!okb.disabled) done(picked()); });
+    w.querySelector('.yc-rc-cancel').addEventListener('click', () => done(null));
+    w.querySelectorAll('.yc-rc-copy').forEach(b => b.addEventListener('click', async () => {
+      const both = b.getAttribute('data-rc') === 'both';
+      const text = candidates.map(c => both ? (c + '\t' + nmOf(c)) : c).join('\n');
+      let ok = false;
+      try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); ok = true; } } catch (e) {}
+      if (!ok) { try { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; w.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove(); } catch (e) {} }
+      window._ycLastCopied = text;
+      const lb = b.textContent;
+      b.textContent = ok ? '✓ コピーしました' : 'コピーできませんでした（一覧を選んでコピーしてください）';
+      setTimeout(() => { b.textContent = lb; }, 1600);
+    }));
+    setTimeout(() => okb.focus(), 0);
+  });
 }
 // 【v1.0341】撤退チェック(パターン①): ストアクリエイターの商品リスト(PRオプ料率CSV/data*.csv)を単体で取り込み、
 //   そこに載っていない現役商品＝Yahooでページ削除された商品を「撤退済み」にする。
@@ -12603,7 +12695,10 @@ async function runRetireCheck(file) {
       alert('撤退候補は見つかりませんでした。\n（マスタの現役商品はすべて、取り込んだ商品リストに存在しています）');
       return;
     }
-    const n = applyRetireByProRate(liveMap);  // 確認ダイアログ→OKで撤退済みに一括セット
+    // 【v1.0995】全部が「選択前」（新商品）なら撤退にしない（applyRetireByProRate が外す）。何も起きない理由をここで伝える
+    { const _nonSk = candidates.filter(c => { try { return effectiveStatusOf(c) !== STATUS_SENTAKUMAE; } catch (e) { return true; } });
+      if (!_nonSk.length) { alert('取り込んだ商品リストに無い商品は ' + candidates.length + '件 ありましたが、すべて「選択前」（新商品）なので撤退にはしません。'); return; } }
+    const n = await applyRetireByProRate(liveMap);  // 確認ダイアログ→OKで撤退済みに一括セット（【v1.0994】await）
     if (n > 0) {
       saveToStorage();
       renderAll();
