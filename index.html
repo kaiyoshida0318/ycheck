@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0998 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0999 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5087,7 +5087,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0998</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0999</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -6175,8 +6175,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
             <span class="tsb-each-tag" title="この画面はいつも1商品1行で表示します（親子を合算した行は出しません）。&#10;親子の合計で見たいときは 商品-基本データ 等の「合算」を使ってください">1商品1行（個別）</span>
           </span>
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <!-- 【v1.0980】GPT用に要約コピー（表示中の商品を1商品1行・30件ずつ）§366 -->
-          <button class="btn sm ghost gpt-tune-btn" type="button" onclick="gptOpenTuneMenu('ad', this)" title="いま表に出ている商品を、1商品1行の要約にしてクリップボードへ（30件ずつ選んでコピー）。&#10;ルールと回答形式（CSV）も付くので、ChatGPT などにそのまま貼れます">🤖 GPT用に要約コピー ▾</button>
+          <!-- 【v1.0999】「🤖 GPT用に要約コピー ▾」は撤去（本人指定）。処理（gptOpenTuneMenu / gptBuildTuneText）は残置 -->
           <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
@@ -6284,8 +6283,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <!-- 【v1.0882】調整-基本と同じ「順位取得CSV(GitHub反映)」を調整-PRオプにも（本人指定）。中身・変動アラートは共通（updateCsvDownloadButtonState が両方を更新） -->
           <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
-          <!-- 【v1.0980】GPT用に要約コピー（表示中の商品を1商品1行・30件ずつ）§366 -->
-          <button class="btn sm ghost gpt-tune-btn" type="button" onclick="gptOpenTuneMenu('pro', this)" title="いま表に出ている商品を、1商品1行の要約にしてクリップボードへ（30件ずつ選んでコピー）。&#10;ルールと回答形式（CSV）も付くので、ChatGPT などにそのまま貼れます">🤖 GPT用に要約コピー ▾</button>
+          <!-- 【v1.0999】「🤖 GPT用に要約コピー ▾」は撤去（本人指定）。処理（gptOpenTuneMenu / gptBuildTuneText）は残置 -->
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
           <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
             <span class="filter-label">表示時期</span>
@@ -6671,8 +6669,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
       <button type="button" class="pe-tab" data-petab="adj" title="入札価格・表示・クリック・CTR・CPC…の細かい数字（調整用。日別／月別）">商品-調整</button>
       <button type="button" class="pe-tab" data-petab="trend" title="1か月を累積×日別で見る（ROAS 3種）">商品-推移</button>
       <button type="button" class="pe-tab" data-petab="edit">商品情報を編集</button>
-      <!-- 【v1.0980】GPT分析用のコピー（商品-調整タブのときだけ出す。peSetTab が出し入れ）§366 -->
-      <button type="button" class="pe-gpt-btn" id="peGptBtn" style="display:none" onclick="gptCopyItem()" title="この商品の判断材料（ルール・データの注意点・商品情報・日別60日と月別12か月の表・入札価格/PRの変更履歴と前後の結果・順位・親子の範囲・回答形式）をまとめてクリップボードへ。&#10;ChatGPT などにそのまま貼って使います">🤖 GPT用にコピー</button>
+      <!-- 【v1.0999】「🤖 GPT用にコピー」（#peGptBtn・v1.0980〜）は撤去（本人指定「全ての GPT用にコピーボタンをなくして」）。処理（gptCopyItem / gptBuildItemText）は残置。戻すときは v1.0998 のこの位置のボタンを書き戻す -->
       <div class="pe-nav-mini">
         <button class="pe-nav-btn-mini" id="pePrevBtn" type="button" title="前の商品を開く（現在のビュー順）">∧</button>
         <button class="pe-nav-btn-mini" id="peNextBtn" type="button" title="次の商品を開く（現在のビュー順）">∨</button>
