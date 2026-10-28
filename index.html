@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.0997 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.0998 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5087,7 +5087,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
   </div>
   <div class="header-tools">
     <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0997</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.0998</div>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -24611,7 +24611,11 @@ document.addEventListener('change', (e) => {
       if (_next !== _cur) { meta.status = _next; meta.statusTs = _stTs; }
     }
   }
-  else if (kind === 'pro') { meta.proStatus = value; meta.proStatusTs = _stTs; }
+  else if (kind === 'pro') {
+    meta.proStatus = value; meta.proStatusTs = _stTs;
+    // 【v1.0998】PR状態を「PR◯-子-7％固定」にしたら、PRオプ料率を7％に（本人指定）
+    if (_proIsC7(value)) setProRateTo(code, PR_BASE_RATE_PCT, 'PR状態を ' + value + ' にしたため');
+  }
   // 【v1.0618】子への伝播も statusManual の判定も無し。変えた商品のステータスだけを書き換える。
   // 【v1.0714】まとめ（健常◯/中立△）を選んだら、その商品の入札状態から細かい値へ変換して保存する
   else if (kind === 'status') { meta.status = _statusLifeResolve(code, value) || '新商品'; meta.statusTs = _stTs; }
@@ -25049,6 +25053,35 @@ document.addEventListener('click', (e) => {
 });
 
 // ==================== PRオプ料率クリック編集（入札価格と同仕様） ====================
+// 【v1.0998】PRオプ料率を決まった値にする（手で編集したとき＝startProRateEdit の確定と同じ後処理）。
+//   ・state.proRate／今日の料率の履歴（rankEdits）／対応内容に「p旧-新（日付）」／対応済みの印（markTuneAction・レビュー済み解除）
+//   ・画面に出ている同じ商品の料率セル（.pro-rate-cell）も描き直す。保存（saveToStorage）は呼ぶ側で。
+//   ・いまと同じ値なら何もしない（false）。
+function setProRateTo(code, num, why) {
+  if (!code || num == null || isNaN(num)) return false;
+  const codeLower = String(code).toLowerCase();
+  const cur = (typeof getProRate === 'function') ? getProRate(code) : null;
+  if (cur != null && !isNaN(cur) && Number(cur) === Number(num)) return false;
+  if (!state.proRate) state.proRate = {};
+  state.proRate[codeLower] = Number(num);
+  try { const t = getTodayYmAndIndex(); setRankEditValue(t.ym, codeLower, 'proRate', t.dayIndex, Number(num)); } catch (e) {}
+  const oldRate = (cur == null || isNaN(cur)) ? '' : Math.floor(Number(cur));
+  const newRate = Math.floor(Number(num));
+  if (String(oldRate) !== String(newRate)) {
+    const pm = state.productMeta[code] || state.productMeta[codeLower] || (state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' });
+    pm.proNote = buildPriceChangeNote(pm.proNote, 'pro', oldRate, newRate);
+    try { markTuneAction(code, 'pro'); _setTuneReviewed(code, 'pro', false); } catch (e) {}
+  }
+  try { log('✓ PRオプ料率を ' + newRate + '% に' + (why ? '（' + why + '）' : '') + ': ' + code + '（前: ' + (oldRate === '' ? '—' : oldRate + '%') + '）', 'ok'); } catch (e) {}
+  try {
+    const sel = (window.CSS && CSS.escape) ? CSS.escape(code) : code;
+    document.querySelectorAll('.pro-rate-cell[data-code="' + sel + '"]').forEach(cell => {
+      if (cell.querySelector('input')) return;
+      cell.innerHTML = '<span class="pro-rate-val ' + (Number(num) > PR_BASE_RATE_PCT ? 'over' : 'base') + '">' + fmtProRate(Number(num)) + '</span>';
+    });
+  } catch (e) {}
+  return true;
+}
 function startProRateEdit(cell) {
   if (cell.querySelector('input')) return;
   const code = cell.dataset.code;
@@ -27371,6 +27404,8 @@ function applyRepCodeChange(code, newRepCode) {
     const _wasChild = !!_prevRep && _prevRep !== code;
     const _isChild = !!newRepCode && newRepCode !== code;
     const _ts = Date.now();
+    // 【v1.0998】子にした（親を付け替えた）ときは PR状態が「PR◯-子-7％固定」の扱いになる（_isSoiChildProduct）ので、PRオプ料率も7％に（本人指定）。撤退済みは触らない
+    if (_isChild && newRepCode !== _prevRep && _m.status !== '撤退済み') setProRateTo(code, PR_BASE_RATE_PCT, newRepCode + ' の子にしたため');
     if (_isChild && newRepCode !== _prevRep && _m.status !== STATUS_LIFE_CHILD && _m.status !== '撤退済み') {
       _m._statusBeforeChild = _m.status || '';
       _m.status = STATUS_LIFE_CHILD; _m.statusTs = _ts;
