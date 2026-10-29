@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1000 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1001 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5078,16 +5078,18 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
       <span class="shop-selector-caret">▼</span>
     </button>
     <div class="shop-menu" id="shopMenu"></div>
-    <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み）
-         【v1.0582】ヘッダー右（.header-tools）から、ショップ選択のすぐ右へ移動。
-         ★ボタンはこの1つだけ。右側に残したまま複製しないこと（openBunseki が2回走る） -->
-    <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
+    <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1001</div>
     <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
     <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
   <div class="header-tools">
-    <!-- 【v1.0523】画面ヘッダーのバージョン表記も v1.0519 で止まっていたため実体に合わせて修正（title と2箇所セットで更新すること） -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1000</div>
+    <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み）
+         【v1.0582】ヘッダー右（.header-tools）から、ショップ選択のすぐ右へ移動。
+         【v1.1001】ショップ選択の右 → 文字サイズ（A− 100% A+）のすぐ左へ移動（本人指定）。バージョン表記がショップ選択の右に入った。
+         ★ボタンはこの1つだけ。複製しないこと（openBunseki が2回走る）
+         ★バージョン表記は <title> と .header-left の .logo-sub の2箇所セットで更新すること -->
+    <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
     <div class="font-controls" title="文字サイズ">
       <button class="font-btn" id="fontDown">A−</button>
       <span class="font-size-label" id="fontLabel">100%</span>
@@ -5102,7 +5104,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
     <!-- 【v206】title属性のラグ（OS標準ツールチップは0.5〜1秒遅延）を回避するため、data-tip属性＋CSSの即時ツールチップに変更。 -->
     <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札状態・PR状態・ステータスの説明を表示する"><span class="chip-label">💡 全体の説明</span></button>
-    <!-- 【v1.0582】「分析」ボタンはここから .header-left（ショップ選択の右）へ移動した -->
+    <!-- 【v1.0582】「分析」ボタンは .header-left へ移動 → 【v1.1001】文字サイズの左（.header-tools の先頭）へ戻した -->
     <!-- 【v1.0753】並びを「商品追加 → コード移行 → レポート追加」にした（作業の順番に合わせた）。
          ★ボタンの id とハンドラは変えていない。順番だけの入れ替え。 -->
     <!-- 【v1.0858】「商品追加・更新・反映 / 再登録後のコード移行 / ログ / GitHub連携」を「+ 商品追加 ▾」1つにまとめた。
