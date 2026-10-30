@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1004 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1005 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5079,7 +5079,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1004</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1005</div>
     <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
     <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
@@ -26752,7 +26752,7 @@ function peRenderInfo() {
           + '" style="--c:' + c + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'))">' + l + '</button>';
         const _rev = _peSplit
           ? [['#6d28d9','SEO売上-親','親商品のSEO売上（総売上−広告売上）'],['#c4b5fd','SEO売上-子','子商品のSEO売上'],
-             ['#ea580c','広告売上-親','親商品の広告売上'],['#fdba74','広告売上-子','子商品の広告売上']]
+             ['#f97316','広告売上','広告売上（親＋子。子の広告売上は基本的に無い）']]   /* 【v1.1005】広告売上-親／-子 → 1本（本人指定「広告売上-子は基本的にはないので消して」） */
           : [['#7c3aed','SEO売上','SEO売上（総売上−広告売上）'],['#f97316','広告売上','広告売上']];
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
           + '<span class="pe-sw-sep"></span>'
@@ -26767,8 +26767,8 @@ function peRenderInfo() {
         ? [
             { type: 'bar', label: 'SEO売上-親',  data: rows.map(r => r.seoP || 0), backgroundColor: '#6d28d9', stack: 's', yAxisID: 'y', order: 2 },
             { type: 'bar', label: 'SEO売上-子',  data: rows.map(r => r.seoC || 0), backgroundColor: '#c4b5fd', stack: 's', yAxisID: 'y', order: 2 },
-            { type: 'bar', label: '広告売上-親', data: rows.map(r => r.adP  || 0), backgroundColor: '#ea580c', stack: 's', yAxisID: 'y', order: 2 },
-            { type: 'bar', label: '広告売上-子', data: rows.map(r => r.adC  || 0), backgroundColor: '#fdba74', stack: 's', yAxisID: 'y', order: 2 }
+            // 【v1.1005】広告売上-子は基本的に無いので、親子に割らず1本（親＋子）にした。★子に広告売上があっても棒からは消えない
+            { type: 'bar', label: '広告売上', data: rows.map(r => (r.adP || 0) + (r.adC || 0)), backgroundColor: '#f97316', stack: 's', yAxisID: 'y', order: 2 }
           ]
         : [
             { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: '#7c3aed', stack: 's', yAxisID: 'y', order: 2 },
