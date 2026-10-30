@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1011 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1016 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3760,6 +3760,7 @@ table.rank-table td.rank-legend-col-row {
 .pe-sw.off { background: transparent; color: var(--text3); text-decoration: line-through; opacity: 0.55; }
 .pe-sw.off::before { background: var(--c); }
 .pe-sw:hover { filter: brightness(1.06); }
+.pe-th-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: 1px; }   /* 【v1.1014】表の見出しの色の印（グラフの色） */
 .pe-sw-sep { width: 1px; align-self: stretch; background: var(--border2); margin: 2px 4px; }
 .pe-sw-hint { font-size: 0.7rem; color: var(--text3); margin-left: 6px; }
 .pe-table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; overflow-x: auto; }  /* 【v1.0642】合算で列が増えるので横スクロール可 */
@@ -4329,9 +4330,52 @@ table.rank-table td.rank-legend-col-row {
 }
 .tc-foot b { color: var(--text); }
 /* 【v273】必要ページ一括オープン ボタン */
+
+/* ============================================================================
+   【v1.1012】ヘッダーの右側（ADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形）
+   ・.hg＝まとまり（中では折り返さない）、.hsep＝まとまりの区切りの縦線。まとまりの間（8+6+1+6+8）＞まとまりの中の間（8）。
+   ・段（目立つ順）：警告（#dailyGapBtn＝濃い赤の塗り・光る）＞主役（.hbtn-main＝ロゴの赤の塗り）＞ときどき（.hbtn-o＝白地・枠）＞表示・設定（.hbtn-ic・.hzoom＝薄い枠・薄い文字）。
+   ・字の大きさは rem（ヘッダーの他の部分と同じく文字サイズ A−／A+ に合わせて変わる）。狭い幅でも小さくしない（全部そろえる。仕様書 §2-4 の注意）。
+   ============================================================================ */
+.header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.header-right .hg { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+.header-right .hsep { width: 1px; height: 22px; background: var(--border2); margin: 0 6px; flex: 0 0 auto; }
+.hbtn-o, .hbtn-ic, .hbtn-main, #dailyGapBtn { font-family: inherit; font-size: 0.7rem; line-height: 1.3; padding: 6px 12px; border-radius: 6px;
+  cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
+.hbtn-o { font-weight: 600; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); }
+.hbtn-o:hover { background: var(--bg3); }
+.hbtn-o.hbtn-newtab { font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; }   /* 左の「↗ 新しいタブ」も同じ白地・枠（ADcheck §2-2） */
+.hbtn-ic { font-weight: 500; padding: 6px 9px; border: 1px solid var(--border); background: var(--bg2); color: var(--text3); }
+.hbtn-ic:hover { background: var(--bg3); color: var(--text2); }
+.hbtn-ic.is-on { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 700; }   /* ⇔ 幅：幅調整モード中（塗りつぶしはしない） */
+.hbtn-main { font-weight: 700; border: 1px solid #E4002B; background: #E4002B; color: #fff; position: relative; }
+.hbtn-main:hover { background: #b80022; border-color: #b80022; }
+.hbtn-main:disabled { opacity: .5; cursor: not-allowed; }
+/* 警告（日別データ欠け）が出ている間は、主役を白地＋赤枠・赤文字に下げる（赤の塗りが2つ並ぶと、主役と警告の見分けが「光るかどうか」だけになるため） */
+.header.hdr-alert .hbtn-main { background: var(--bg2); color: #E4002B; }
+.header.hdr-alert .hbtn-main:hover { background: #fff1f3; }
+/* 月が変わって先月分の月次レポートが未追加：主役に波紋＋右上の赤い点（v1.0402。色だけロゴの赤に） */
+.hbtn-main.report-due { animation: ycMainRipple 1.6s ease-in-out infinite; }
+.hbtn-main.report-due::after { content: ''; position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; border-radius: 50%;
+  background: #dc2626; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.28); }
+@keyframes ycMainRipple { 0%,100% { box-shadow: 0 0 0 0 rgba(228,0,43,.45); } 50% { box-shadow: 0 0 0 5px rgba(228,0,43,.18); } }
+@media (prefers-reduced-motion: reduce) { .hbtn-main.report-due { animation: none; } }
+/* ③ 文字サイズ（ADcheck の .hzoom と同じく控えめに） */
+.header-right .hzoom { opacity: .85; border: 1px solid var(--border); border-radius: 6px; padding: 1px 3px; }
+.header-right .hzoom .font-btn { padding: 3px 7px; font-size: 0.78rem; font-weight: 700; line-height: 1.2; }
+.header-right .hzoom .font-size-label { padding: 2px 4px; font-size: 0.64rem; min-width: 36px; color: var(--text3); }
+/* ①「💡 全体の説明」の即時ツールチップ（v206 の data-tip と同じ見た目） */
+.hdr-tip { position: relative; }
+.hdr-tip[data-tip]:hover::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: #1f2937; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; line-height: 1.55;
+  white-space: nowrap; z-index: 1200; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+/* 「+ 商品追加 ▾」：白地・枠線になったので、中の状態のしるし（未反映など）は灰色の地に */
+.hbtn-o.yc-addmenu-btn { display: inline-flex; align-items: center; gap: 4px; }
+.hbtn-o.yc-addmenu-btn:hover, .hbtn-o.yc-addmenu-btn[aria-expanded="true"] { background: var(--bg3); }
+.hbtn-o.yc-addmenu-btn .yc-addmenu-gh { background: var(--bg3); }
 /* 【v1.0907】日別データ欠け通知（ADcheck v1.1438 と同じ見た目・同じ光り方） */
-#dailyGapBtn { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 6px; border: 1px solid #b71c1c; background: #b71c1c;
-  color: #fff; cursor: pointer; white-space: nowrap; margin-left: 10px; font-family: inherit; line-height: 1.3;
+#dailyGapBtn { font-weight: 700; border: 1px solid #b71c1c; background: #b71c1c;   /* 【v1.1012】字の大きさ・余白は .hbtn-o などとそろえた（上の共通の指定） */
+  color: #fff;
   animation: ycGapAlarm 1.3s ease-in-out infinite; }
 #dailyGapBtn:hover { background: #9a1515; }
 @keyframes ycGapAlarm {
@@ -4340,9 +4384,7 @@ table.rank-table td.rank-legend-col-row {
 }
 @media (prefers-reduced-motion: reduce) { #dailyGapBtn { animation: none; } }
 /* 【v1.0908】右上の「+ レポート追加」（【調整】の同名ボタンと同じ橙） */
-#btnJumpUploadMonthly { background: var(--amber); border-color: var(--amber); color: #fff; font-weight: 700; margin-left: 6px; }
-#btnJumpUploadMonthly:hover { filter: brightness(1.06); }
-#btnJumpUploadMonthly:disabled { opacity: .5; }
+/* 【v1.1012】橙 → 主役（.hbtn-main・ロゴの赤）にした。下の id の指定は使わない */
 .tune-openpages-btn {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 5px 14px; margin-left: 8px;
@@ -5073,7 +5115,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
       <img class="logo-img" src="ycheck-icon.svg" alt="Ycheck" onerror="this.onerror=null;this.src='ycheck-icon.png';">
     </a>
     <!-- 【v219】ADcheck同様の「新しいタブ」ボタン。商品-基本データを新しいタブで開く -->
-    <a class="btn sm ghost" id="btnNewTab" href="https://kaiyoshida0318.github.io/ycheck/?view=basic" target="_blank" rel="noopener" title="商品-基本データを新しいタブで開く" style="text-decoration:none; white-space:nowrap;">↗ 新しいタブ</a>
+    <a class="hbtn-o hbtn-newtab" id="btnNewTab" href="https://kaiyoshida0318.github.io/ycheck/?view=basic" target="_blank" rel="noopener" title="商品-基本データを新しいタブで開く" style="text-decoration:none; white-space:nowrap;">↗ 新しいタブ</a>
     <!-- 【v1.0812】<select> をやめ、ボタン＋自前のドロップダウンにした（中で編集できるようにするため） -->
     <button type="button" class="shop-selector" id="shopSelectorBtn" title="表示するショップを切り替え">
       <span class="shop-selector-icon">🏪</span>
@@ -5082,31 +5124,26 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1011</div>
-    <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
-    <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1016</div>
+    <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
-  <div class="header-tools">
-    <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み）
-         【v1.0582】ヘッダー右（.header-tools）から、ショップ選択のすぐ右へ移動。
-         【v1.1001】ショップ選択の右 → 文字サイズ（A− 100% A+）のすぐ左へ移動（本人指定）。バージョン表記がショップ選択の右に入った。
-         ★ボタンはこの1つだけ。複製しないこと（openBunseki が2回走る）
-         ★バージョン表記は <title> と .header-left の .logo-sub の2箇所セットで更新すること -->
-    <button class="btn-bunseki" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（チェックリスト）を別ウィンドウで開く">分析</button>
-    <div class="font-controls" title="文字サイズ">
-      <button class="font-btn" id="fontDown">A−</button>
-      <span class="font-size-label" id="fontLabel">100%</span>
-      <button class="font-btn" id="fontUp">A+</button>
-      <!-- 【v1.0545】列幅の調整パネル。GitHubに保存して他PCで一発再現する -->
-      <!-- 【v1.0736】「⇔ 幅」は【モード切替】に変更。押している間だけ列幅をドラッグで変えられる。
-           表示設定パネル（スライダー・他PCへ保存）は右隣の「⚙」に分けた。 -->
-      <button class="font-btn vp-open-btn" id="btnViewPrefs" type="button" title="列の幅：押すと「幅調整を始める／この画面の幅をほかの画面にも反映」の選択肢が出ます">⇔ 幅 ▾</button>
-      <button class="font-btn" id="btnViewPrefsPanel" type="button" title="表示設定（列幅・文字サイズ）を開く。設定はGitHubに保存され、他のPCで開くと同じ見た目が再現されます">⚙</button>
-    </div>
+  <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
+       ・3つのまとまり（.hg）を細い縦線（.hsep）で区切る：①ときどき使う｜②毎日の作業｜③表示・設定。
+       ・色で塗るのは「+ レポート追加」（主役＝ロゴの赤）と警告（日別データ欠け）だけ。ほかは白地に枠線。③はいちばん控えめ。
+       ・警告が出ている間は、主役を白地＋赤枠に下げる（赤の塗りが2つ並ばないように。仕様書 §4-1 の改善案）。
+       ・ボタンの id とハンドラは全部そのまま（並びと見た目だけ）。 -->
+  <div class="header-tools header-right">
+    <div class="hg">
+      <!-- 【v314】ADcheckの「分析」＝確認メモ。別ウィンドウで開く（本体はページ末尾にbase64埋め込み）
+           【v1.1012】名前を「分析」→「📝 確認メモ」（中身が確認の手順メモなので。ADcheck v1.1514 と同じ）。①ときどき使う の先頭。
+           ★ボタンはこの1つだけ。複製しないこと（openBunseki が2回走る）
+           ★バージョン表記は <title> と .header-left の .logo-sub の2箇所セットで更新すること -->
+      <button class="hbtn-o" id="btnBunseki" type="button" onclick="openBunseki()" title="確認メモ（どの画面で何を確認するかの手順メモ）を別ウィンドウで開く">📝 確認メモ</button>
     <!-- 【v162】「💡 全体の説明」を3段目から移動。文字調整ボタンとレポート追加(月次)の間に配置 -->
     <!-- 【v205】ホバー表示廃止。クリックで開いて×か外部クリックで閉じる方式に変更。 -->
     <!-- 【v206】title属性のラグ（OS標準ツールチップは0.5〜1秒遅延）を回避するため、data-tip属性＋CSSの即時ツールチップに変更。 -->
-    <button class="state-chip info-chip" id="stateInfoBtn" type="button" data-tip="入札状態・PR状態・ステータスの説明を表示する"><span class="chip-label">💡 全体の説明</span></button>
+      <!-- 【v1.1012】①ときどき使う。見た目は .hbtn-o（白地・枠線）。info-chip のクラスは残す（【状態】の絞り込みの対象外にする目印） -->
+      <button class="hbtn-o hdr-tip info-chip" id="stateInfoBtn" type="button" data-tip="入札状態・PR状態・ステータスの説明を表示する">💡 全体の説明</button>
     <!-- 【v1.0582】「分析」ボタンは .header-left へ移動 → 【v1.1001】文字サイズの左（.header-tools の先頭）へ戻した -->
     <!-- 【v1.0753】並びを「商品追加 → コード移行 → レポート追加」にした（作業の順番に合わせた）。
          ★ボタンの id とハンドラは変えていない。順番だけの入れ替え。 -->
@@ -5115,8 +5152,9 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
            ghSetSyncStatus・_ycLogBadge・閲覧専用の無効化は従来どおりこれらの id を触る。
          ★閉じたメニューの中では「✓ 最新 / ● 未反映 / ⚠ エラー」とログの警告数が見えなくなるので、
            親ボタンの上に写して出す（_ycAddMenuSync）。 -->
+      <!-- 【v1.1012】①ときどき使う。緑の塗り → 白地・枠線（.hbtn-o）。中の GitHub の状態・ログの警告数の表示はそのまま -->
     <div class="yc-addmenu-wrap" id="ycAddMenuWrap">
-      <button class="btn sm yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="ログ / 商品名一括修正 / 商品追加・更新・反映 / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
+      <button class="hbtn-o yc-addmenu-btn" id="btnAddMenu" type="button" aria-haspopup="true" aria-expanded="false" title="ログ / 商品名一括修正 / 商品追加・更新・反映 / GitHub連携">+ 商品追加<span class="yc-addmenu-gh" id="ycAddMenuGh" hidden></span><span class="oplog-badge" id="ycAddMenuWarn" style="display:none">0</span><span class="yc-addmenu-caret">▾</span></button>
       <!-- 【v1.0859】並びを「コード移行 → レポート追加 → ログ → 商品追加・更新・反映」に（本人指定）。GitHub連携は末尾に残す。
            「+ レポート追加」も外からこの中へ移した（外は「🔎 APIから取得」だけにするため）。 -->
       <div class="yc-addmenu" id="ycAddMenu" role="menu" hidden>
@@ -5135,11 +5173,32 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
         </div>
       </div>
     </div>
-    <!-- 【v1.0859】右上は「🔎 APIから取得」だけ。商品追加・更新モーダルを、右の「Yahooの商品一覧」を開いた状態で開く。 -->
-    <button class="btn sm primary" id="btnHdrApi" type="button" title="Yahooの商品一覧（imagegallery-yahoo の取得結果）を開いて、未登録の商品を追加します">🔎 APIから取得</button>
+    </div>
+    <div class="hsep"></div>
+    <div class="hg">
+      <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る。
+           【v1.1012】左から ②毎日の作業 の先頭へ（ADcheck と同じ）。出ている間は .header に hdr-alert を付けて主役を下げる -->
+      <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
+    <!-- 【v1.0859】右上は「🔎 APIから取得」だけ。商品追加・更新モーダルを、右の「Yahooの商品一覧」を開いた状態で開く。
+         【v1.1012】②毎日の作業。青の塗り → 白地・枠線（.hbtn-o） -->
+    <button class="hbtn-o" id="btnHdrApi" type="button" title="Yahooの商品一覧（imagegallery-yahoo の取得結果）を開いて、未登録の商品を追加します">🔎 APIから取得</button>
     <!-- 【v1.0908】本人指定：「+ レポート追加」を「🔎 APIから取得」の右に置く（v1.0859〜v1.0907 は「+ 商品追加 ▾」の中）。
          ★id・ハンドラは従来のまま（btnJumpUploadMonthly。閲覧専用での無効化もこの id を見る）。色は【調整】の「+ レポート追加」と同じ橙 -->
-    <button class="btn sm" id="btnJumpUploadMonthly" type="button" title="その日の6ファイル（日別4＋最新値2）をまとめて取り込みます">+ レポート追加</button>
+    <!-- 【v1.1012】★主役（毎日いちばん押す）。ヘッダーで塗りつぶすのはこれと警告だけ。色はロゴの赤（#E4002B）。②の右端 -->
+    <button class="hbtn-main" id="btnJumpUploadMonthly" type="button" title="その日の6ファイル（日別4＋最新値2）をまとめて取り込みます">+ レポート追加</button>
+    </div>
+    <div class="hsep"></div>
+    <div class="hg">
+      <!-- ③表示・設定（いちばん控えめ）。【v1.1012】文字サイズの枠から ⇔ 幅・⚙ を出して、それぞれ .hbtn-ic に -->
+      <div class="font-controls hzoom" title="文字サイズ">
+        <button class="font-btn" id="fontDown" title="文字を小さく">A−</button>
+        <span class="font-size-label" id="fontLabel">100%</span>
+        <button class="font-btn" id="fontUp" title="文字を大きく">A+</button>
+      </div>
+      <!-- 【v1.0736】「⇔ 幅」は【モード切替】。押すと「幅調整を始める／ほかの画面にも反映」の選択肢 -->
+      <button class="hbtn-ic vp-open-btn" id="btnViewPrefs" type="button" title="列の幅：押すと「幅調整を始める／この画面の幅をほかの画面にも反映」の選択肢が出ます">⇔ 幅 ▾</button>
+      <button class="hbtn-ic" id="btnViewPrefsPanel" type="button" title="表示設定（列幅・文字サイズ）を開く。設定はGitHubに保存され、他のPCで開くと同じ見た目が再現されます">⚙</button>
+    </div>
   </div>
 </div>
 
@@ -10956,6 +11015,8 @@ let _dailyGapLast = [];
 function renderDailyGapAlert() {
   const b = document.getElementById('dailyGapBtn'); if (!b) return;
   const gaps = _dailyGapDays(); _dailyGapLast = gaps;
+  const _hd = document.querySelector('.header');   // 【v1.1012】警告が出ている間は主役（+ レポート追加）を下げる
+  if (_hd) _hd.classList.toggle('hdr-alert', !!gaps.length);
   if (!gaps.length) { b.style.display = 'none'; b.textContent = ''; b.title = ''; return; }
   const slash = s => s.replace(/-/g, '/');
   b.style.display = '';
@@ -18304,6 +18365,10 @@ const YC_CC = {
   adDark: '#c2410c', adLight: '#fdba74',
   axis: '#64748b'
 };
+// 【v1.1016】表の見出しをグラフの色にあわせる（本人指定・A案「印と文字だけ」）。グラフに出ている項目の列だけ、
+//   見出しの左にグラフと同じ色の印（ycCcDot）、見出しの文字をその色を暗くした色（ycCcText。薄い色でも読めるように 0.62 倍）。表の地の色は変えない。
+function ycCcDot(hex) { return '<span class="pe-th-dot" style="background:' + hex + '"></span>'; }
+function ycCcText(hex) { try { const n = parseInt(String(hex).slice(1), 16), d = v => Math.round(v * 0.62); return 'rgb(' + d((n >> 16) & 255) + ',' + d((n >> 8) & 255) + ',' + d(n & 255) + ')'; } catch (e) { return ''; } }
 // 【v1.1002】グラフの色をそろえた（本人指定）：総売上＝青／SEO売上＝紫／広告売上＝オレンジ／広告実績額＝赤。
 //   全-月別グラフ・商品-グラフ（_ZG_METRICS／_IG_METRICS／_SALES_SERIES）と商品モーダルのグラフ（商品-日月別・商品-調整）で同じ色。
 //   ★赤・紫が実績額・SEO売上に入ったので、かぶる 広告ROAS（赤→緑 #10b981＝商品モーダルの広告ROASの線と同じ）・CVR（紫→藍 #4f46e5）・送り込み売上（紫→ティール #0d9488）を変えた。
@@ -26098,13 +26163,17 @@ function peRenderAdj() {
   // 【v1.0945】PR売上ROAS → PR広告売上ROAS に差し替え（本人と相談）。PR売上ROAS は「料率の裏返し」で売れ方では動かないため。
   //   PR広告売上ROAS ＝ 総売上 ÷（広告実績額＋PR実績額(7%超・推定)）× 100（_peRows の prsr。商品-日月別の線と同じ定義）
   const hasPrRoas = rows.some(r => r.prsr != null);   // 【v1.0926】料率の線は濃いピンク（#be185d）、PR実績額の棒は商品-日月別と同じピンク（#ec4899）   // 【v1.0916】入札価格は紫→こげ茶（SEO売上の紫とまぎれるため。広告の橙の仲間）
+  const _adjSplit = (_peScope === 'set');   // 【v1.1013】親子合算＝SEO売上を親／子に割る
   // ---- 系列ボタン（押すと消える／戻る） ----
   {
     const _lg = document.getElementById('peAdjLegend');
     const _sw = (c, l, tip, line) => '<button type="button" class="pe-sw' + (line ? ' pe-sw-line' : '') + (_peAdjHidden.has(l) ? ' off' : '')
       + '" style="--c:' + c + _ycSwT(c) + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'), \'adj\')">' + l + '</button>';
+    // 【v1.1013】親子合算のときは SEO売上を -親／-子 に割る（商品-日月別と同じ。色も同じ：親＝濃い紫・子＝薄い紫）
     // 【v1.1008】下から 広告売上 → SEO売上（商品-日月別と同じ。広告売上と広告実績額が同じ 0 から並ぶ）
-    if (_lg) _lg.innerHTML = _sw(C.ad, '広告売上', '左の棒（下）: 広告売上。右の棒の広告実績額と同じ高さから並ぶので、かけた額と返ってきた額を比べられる') + _sw(C.seo, 'SEO売上', '左の棒（上に積む）: SEO売上（総売上−広告売上）。広告売上と合わせた高さ＝総売上')
+    if (_lg) _lg.innerHTML = _sw(C.ad, '広告売上', '左の棒（下）: 広告売上。右の棒の広告実績額と同じ高さから並ぶので、かけた額と返ってきた額を比べられる') + (_adjSplit
+        ? _sw(YC_CC.seoDark, 'SEO売上-親', '左の棒（広告売上の上）: 親商品のSEO売上（総売上−広告売上）') + _sw(YC_CC.seoLight, 'SEO売上-子', '左の棒（いちばん上）: 子商品のSEO売上。広告売上・SEO売上-親と合わせた高さ＝総売上')
+        : _sw(C.seo, 'SEO売上', '左の棒（上に積む）: SEO売上（総売上−広告売上）。広告売上と合わせた高さ＝総売上'))
       + '<span class="pe-sw-sep"></span>'
       + _sw(C.cost, '広告実績額', '右の棒（下）: 広告実績額（広告費）')   /* 【v1.0924】実績額 → 広告実績額 */
       + (hasPrBar ? _sw(C.prBar, 'PR実績額', '右の棒（上に積む）: PR実績額（7%超・その日のPRオプ料率からの推定）。広告実績額と合わせた高さ＝費用の合計') : '')
@@ -26129,7 +26198,10 @@ function peRenderAdj() {
         barPercentage: 0.96, categoryPercentage: 0.9, borderRadius: 2 });
       const ds = [
         bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's'),   // 【v1.1008】下＝広告売上
-        bar('SEO売上', rows.map(r => r.seoRev || 0), C.seo, 's'),
+        // 【v1.1013】親子合算のときは SEO売上-親（濃い紫）→ SEO売上-子（薄い紫）の順に広告売上の上へ積む（_peRows の seoP／seoC。商品-日月別と同じ）
+        ...(_adjSplit
+          ? [bar('SEO売上-親', rows.map(r => r.seoP || 0), YC_CC.seoDark, 's'), bar('SEO売上-子', rows.map(r => r.seoC || 0), YC_CC.seoLight, 's')]
+          : [bar('SEO売上', rows.map(r => r.seoRev || 0), C.seo, 's')]),
         bar('広告実績額', rows.map(r => r.adCost || 0), C.cost, 'c'),
         bar('PR実績額', rows.map(r => (r.prKnown && r.prOver > 0) ? Math.round(r.prOver) : 0), C.prBar, 'c'),   // 【v1.0926】広告実績額の上に積む（stack 'c'）
         { type: 'line', label: '広告ROAS', data: rows.map(r => r.aroas == null ? null : Math.round(r.aroas)), borderColor: C.roas, backgroundColor: C.roas,
@@ -26225,30 +26297,36 @@ function peRenderAdj() {
   // 列の定義（本人の並び＋PR実績額）。g＝見出しの色（入札価格＝こげ茶（v1.0916〜。前は紫）／広告＝橙／PR＝桃／売上＝緑）
   const G = { ad: { h: '#fae6ce', b: '#fdf8f1', c: '#b45309' }, bid: { h: '#ecdccd', b: '#faf5f0', c: '#7c2d12' },   /* 【v1.0916】こげ茶 */
               pr: { h: '#fbd4e6', b: '#fdf2f8', c: '#db2777' }, rev: { h: '#cfe9dc', b: '#f1faf5', c: '#0f8a52' } };
+  // 【v1.1016】cc＝グラフに出ている項目の色（見出しに印＋文字色。ycCcDot／ycCcText）
   const COLS = [
     // 【v1.0944】並びを まとまりごとに（本人：広告・PR・広告の順で気持ち悪い）：入札価格｜広告（表示→クリック→CTR→CPC→広告実績額→広告個数→広告売上→広告ROAS→CVR→平均獲得単価）｜PR（PR→PR実績額→PR売上ROAS）｜売上（SEO売上→総売上）。gs＝まとまりの始まり（左に太い線）
     // 【v1.0947】PR のまとまりに SEO売上（PR の成果）を入れ、最後を 総売上→PR広告売上ROAS（全体の効率）に（本人：性質として）。gs＝まとまりの始まり
-    { t: isDay ? '入札<br>価格' : '入札価格<br>(平均)', key: 'bid', g: 'bid', f: r => (r.bid == null ? dash : String(Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
+    { t: isDay ? '入札<br>価格' : '入札価格<br>(平均)', key: 'bid', g: 'bid', cc: YC_CC.bid, f: r => (r.bid == null ? dash : String(Math.round(r.bid * 10) / 10)), tip: isDay ? 'その日の入札価格' : 'その月の毎日の入札価格の平均（今月は今日まで）' },   // 【v1.0929】月別は平均
     { t: '表示',     g: 'ad',  f: r => n0(r.imp) + part(r), tip: '広告の表示回数（item-reach の「表示回数」）。v1.0911 より前に取り込んだ日は「—」（取り込み直すと出ます）' },
     { t: 'クリック<br>数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.clicks) : dash) },   // 【v1.0917】クリック → クリック数
     { t: 'CTR',      g: 'ad',  f: r => pc(r.ctr, 2) + part(r), tip: 'クリック数 ÷ 表示 × 100' },
     { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '広告実績額 ÷ クリック数' },
-    { t: '広告<br>実績額', g: 'ad', f: r => y0(r.adCost), strong: true },   /* 【v1.0943】見出しを2行に（列が増えても横スクロールを出さない） */   // 【v1.0924】実績額 → 広告実績額（本人指定）
+    { t: '広告<br>実績額', g: 'ad', cc: YC_CC.cost, f: r => y0(r.adCost), strong: true },   /* 【v1.0943】見出しを2行に（列が増えても横スクロールを出さない） */   // 【v1.0924】実績額 → 広告実績額（本人指定）
     { t: '広告<br>個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）。Yahoo のレポートは1件を0と出すので、売上があって0の日は1に戻しています' },
-    { t: '広告<br>売上', g: 'ad',  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
-    { t: '広告ROAS', g: 'ad',  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
+    { t: '広告<br>売上', g: 'ad', cc: YC_CC.ad,  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
+    { t: '広告ROAS', g: 'ad', cc: YC_CC.roas,  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
     { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
     { t: '平均<br>獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '広告実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
-    { t: isDay ? 'PR' : 'PR<br>(平均)', key: 'pr', gs: true, g: 'pr',  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
-    { t: 'PR<br>実績額', g: 'pr',  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
-    { t: 'SEO<br>売上',  g: 'rev', gs: true /* 【v1.0967】太線を総売上の左 → SEO売上の左（＝PR実績額の右）へ。PR と PR実績額 をくくる（本人指定） */, f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' },
+    { t: isDay ? 'PR' : 'PR<br>(平均)', key: 'pr', gs: true, g: 'pr', cc: YC_CC.prRate,  f: r => (r.prRate == null ? dash : Math.round(r.prRate) + '%') /* 【v1.0930】小数点以下は四捨五入（本人指定） */, tip: isDay ? 'その日の PRオプ料率（調整-PRオプで入れた料率の履歴）。親子合算は親の料率' : 'その月の PRオプ料率の平均。売れた日の売上で重みを付けた平均＝PR実績額の計算に使った料率（売上が無い月は毎日の料率の平均）。親子合算は親の料率' },   // 【v1.0929】月別は平均   // 【v1.0928】本人指定：PR実績額の左に
+    { t: 'PR<br>実績額', g: 'pr', cc: YC_CC.pr,  f: r => (r.prKnown ? y0(r.prOver) : dash), tip: 'PR実績額（7%超・推定）＝ 総売上 ÷ 1.1 ×（その日のPRオプ料率 − 7％）。料率は調整-PRオプの日別の履歴（月別は売れた日の料率の平均）' },
+    // 【v1.1014】親子合算のときは SEO売上を -親／-子 の2列に（本人指定・グラフ §399 と同じ割り方。値は _peRows の seoP／seoC）。
+    //   見出しの左に グラフと同じ色の印（親＝濃い紫・子＝薄い紫）。親子の無い商品は今までどおり1列。
+    ...((_peScope === 'set')
+      ? [{ t: 'SEO売上<br>-親', g: 'rev', cc: YC_CC.seoDark, gs: true, f: r => y0(r.seoP || 0), tip: '親商品のSEO売上（親の総売上 − 親の広告売上。マイナスは0）' },
+         { t: 'SEO売上<br>-子', g: 'rev', cc: YC_CC.seoLight, f: r => y0(r.seoC || 0), tip: '子商品のSEO売上（子の総売上 − 子の広告売上。マイナスは0）。SEO売上-親＋SEO売上-子＝前の SEO売上' }]
+      : [{ t: 'SEO<br>売上',  g: 'rev', cc: YC_CC.seo, gs: true /* 【v1.0967】太線を総売上の左 → SEO売上の左（＝PR実績額の右）へ。PR と PR実績額 をくくる（本人指定） */, f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' }]),
     { t: '総売上',   g: 'rev', f: r => y0(r.rev) },   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
-    { t: 'PR広告<br>売上ROAS', g: 'pr', strong: true, f: r => (r.prsr == null ? dash : salesRoasCellHtml(r.prsr, PR_SALES_ROAS_TH).replace('font-weight:700', 'font-weight:inherit')),   /* 太さは広告ROAS（td.pe-strong＝800）にそろえる */ tip: 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は「—」\n色：' + PR_SALES_ROAS_TH.g + '%以上＝緑／' + PR_SALES_ROAS_TH.y + '%以上＝茶／' + PR_SALES_ROAS_TH.o + '%以上＝橙／それ未満＝赤（調整-PRオプの表と同じ）' }   /* 【v1.0946】調整-PRオプの表と同じ色分け（salesRoasCellHtml＋PR_SALES_ROAS_TH）・広告ROAS と同じ太字 */   /* 【v1.0945】PR売上ROAS から差し替え */   // 【v1.0943】PR のまとまりの右端
+    { t: 'PR広告<br>売上ROAS', g: 'pr', cc: YC_CC.salesRoas, strong: true, f: r => (r.prsr == null ? dash : salesRoasCellHtml(r.prsr, PR_SALES_ROAS_TH).replace('font-weight:700', 'font-weight:inherit')),   /* 太さは広告ROAS（td.pe-strong＝800）にそろえる */ tip: 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は「—」\n色：' + PR_SALES_ROAS_TH.g + '%以上＝緑／' + PR_SALES_ROAS_TH.y + '%以上＝茶／' + PR_SALES_ROAS_TH.o + '%以上＝橙／それ未満＝赤（調整-PRオプの表と同じ）' }   /* 【v1.0946】調整-PRオプの表と同じ色分け（salesRoasCellHtml＋PR_SALES_ROAS_TH）・広告ROAS と同じ太字 */   /* 【v1.0945】PR売上ROAS から差し替え */   // 【v1.0943】PR のまとまりの右端
   ];
   const wk = ['日', '月', '火', '水', '木', '金', '土'];
   const _gsB = 'border-left:2px solid #94a3b8;';   // 【v1.0944】まとまりの境目
-  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + G[c.g].c + ';' + (c.gs ? _gsB : '') + '"'
-    + (c.tip ? ' title="' + escapeHtml(c.tip) + '"' : '') + '>' + c.t + '</th>').join('') + '</tr>';
+  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + (c.cc ? ycCcText(c.cc) : G[c.g].c) + ';' + (c.gs ? _gsB : '') + '"'
+    + (c.tip ? ' title="' + escapeHtml(c.tip) + '"' : '') + '>' + (c.cc ? ycCcDot(c.cc) : '') + c.t + '</th>').join('') + '</tr>';
   const desc = rows.slice().reverse();
   const body = desc.map((r, i) => {
     const older = desc[i + 1];   // 1つ前（1日前／前月）
@@ -26972,7 +27050,7 @@ function peRenderInfo() {
     pron: { hbg: '#fbd4e6', bg: '#fdeff6', bg2: '#fbe4ef', color: '#ec4899' }
   };
   const OYA = { hbg: '#cfeadb', bg: '#eaf7ef' };   // 親＝緑（.rep-badge と同じ考え方。§60）
-  const KO  = { hbg: '#fbe7bb', bg: '#fdf6e3' };   // 子＝黄
+  const KO  = OYA;   // 【v1.1015】子売上も親売上と同じ緑（本人指定。前は 子＝黄 { hbg: '#fbe7bb', bg: '#fdf6e3' }）
   const BD = 'border-left:2px solid var(--border);';
   const thB = 'padding:6px 9px;font-size:0.72rem;font-weight:700;white-space:nowrap;border-bottom:1px solid var(--border);text-align:center;';
   const tdB = 'padding:5px 9px;font-size:0.78rem;white-space:nowrap;border-bottom:1px solid var(--border);text-align:center;font-variant-numeric:tabular-nums;';
@@ -26995,14 +27073,15 @@ function peRenderInfo() {
     + '<th style="' + thB + BD + 'background:' + G.rev.bg + '">総売上</th>'
     + (_tblSplit
         ? '<th style="' + thB + 'background:' + OYA.hbg + '">親売上</th><th style="' + thB + 'background:' + KO.hbg + '">子売上</th>'
-        : '<th style="' + thB + 'background:' + G.rev.bg2 + '">SEO売上</th>')
-    + '<th style="' + thB + 'background:' + G.rev.bg2 + '">広告売上</th>'
-    + '<th style="' + thB + BD + 'background:' + G.prsr.bg  + '">' + _subCell('PR・広告費') + '</th>'
+        : '<th style="' + thB + 'background:' + G.rev.bg2 + ';color:' + ycCcText(YC_CC.seo) + '">' + ycCcDot(YC_CC.seo) + 'SEO売上</th>')
+    // 【v1.1016】グラフに出ている項目（広告売上・PR広告売上ROAS・広告実績額・PR実績額。合算でないときは SEO売上 も）の見出しに、グラフの色の印＋文字色
+    + '<th style="' + thB + 'background:' + G.rev.bg2 + ';color:' + ycCcText(YC_CC.ad) + '">' + ycCcDot(YC_CC.ad) + '広告売上</th>'
+    + '<th style="' + thB + BD + 'background:' + G.prsr.bg  + '">' + ycCcDot(YC_CC.salesRoas) + _subCell('PR・広告費') + '</th>'
     + '<th style="' + thB + 'background:'      + G.prsr.bg2 + ';line-height:1.35">' + _amtTh('広告＋PR') + '</th>'
     + '<th style="' + thB + BD + 'background:' + G.sr.bg    + '">' + _subCell('広告費') + '</th>'
-    + '<th style="' + thB + 'background:'      + G.sr.bg2    + ';line-height:1.35">' + _amtTh('広告') + '</th>'
+    + '<th style="' + thB + 'background:'      + G.sr.bg2    + ';line-height:1.35;color:' + ycCcText(YC_CC.cost) + '">' + ycCcDot(YC_CC.cost) + _amtTh('広告') + '</th>'
     + '<th style="' + thB + BD + 'background:' + G.pron.bg  + '">' + _subCell('PR') + '</th>'
-    + '<th style="' + thB + 'background:'      + G.pron.bg2  + ';line-height:1.35">' + _amtTh('PR') + '</th>'
+    + '<th style="' + thB + 'background:'      + G.pron.bg2  + ';line-height:1.35;color:' + ycCcText(YC_CC.pr) + '">' + ycCcDot(YC_CC.pr) + _amtTh('PR') + '</th>'
     + '</tr>';
 
   // ---- 明細（新しい順） ----
