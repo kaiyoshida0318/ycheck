@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1006 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1007 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3643,9 +3643,12 @@ table.rank-table td.rank-legend-col-row {
 #productEditModal .modal.pe-modal-wide { max-width: min(1320px, 96vw) !important; width: min(1320px, 96vw); }   /* 【v1.0681】列が増えたので 1060 → 1320 */
 /* 【v1.0910】本人指定：Amacheck の推移モーダル（v3.28 §1-1）と同じ大きさ。幅 79vw（最小 min(1100px,96vw)・最大 1560px）× 高さ 96vh 固定。
    ★高さは中身に関係なく常に同じ（タブ・期間・指標を変えても箱が伸び縮みしない）。上に 2vh あけて左右中央。 */
-#productEditModal { padding: 2vh 0 0 !important; align-items: flex-start; }
-#productEditModal .modal.pe-modal-wide { width: 79vw !important; min-width: min(1100px, 96vw); max-width: 1560px !important;
-  height: 96vh; max-height: 96vh !important; padding: 20px 30px 0; }   /* 【v1.0914】94vw/1840px に広げた →【v1.0921】本人指定で 79vw/1560px に戻した（広すぎ。Amacheck と同じ大きさ） */
+/* 【v1.1007】本人指定：ADcheck の商品モーダルと同じくらいに拡大。画面いっぱい（左右 18px・上下 24px あけるだけ）。
+   幅 79vw（最大1560px）→ calc(100vw − 36px)（上限なし）／高さ 96vh → calc(100vh − 48px)。上は 2vh → 24px。
+   ★v1.0921 で「広すぎ」と 79vw に戻した経緯あり。今回は本人が ADcheck のスクショを見せて広げた。 */
+#productEditModal { padding: 24px 0 0 !important; align-items: flex-start; }
+#productEditModal .modal.pe-modal-wide { width: calc(100vw - 36px) !important; min-width: 0; max-width: none !important;
+  height: calc(100vh - 48px); max-height: calc(100vh - 48px) !important; padding: 20px 30px 0; }   /* 【v1.0914】94vw/1840px に広げた →【v1.0921】本人指定で 79vw/1560px に戻した（広すぎ。Amacheck と同じ大きさ） */
 #productEditModal .modal.pe-modal-wide .pe-tabs { margin: -20px -30px 0; padding: 0 26px; }
 /* 【v1.0683/v1.0686】タブ（全体情報 / 商品情報を編集）は左寄せ（v1.0683で中央にしたが左に戻した）。
    ★∧∨（商品送り）と ✕ は position:absolute のまま右端に固定しておく。
@@ -5079,7 +5082,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1006</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1007</div>
     <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
     <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
