@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1001 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1003 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5079,7 +5079,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1001</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1003</div>
     <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
     <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
@@ -18262,13 +18262,16 @@ function renderGraphData() {
 }
 
 // ---------- 全-月別グラフ（商品-月別グラフ準拠：月別・指標切替・期間プリセット） ----------
+// 【v1.1002】グラフの色をそろえた（本人指定）：総売上＝青／SEO売上＝紫／広告売上＝オレンジ／広告実績額＝赤。
+//   全-月別グラフ・商品-グラフ（_ZG_METRICS／_IG_METRICS／_SALES_SERIES）と商品モーダルのグラフ（商品-日月別・商品-調整）で同じ色。
+//   ★赤・紫が実績額・SEO売上に入ったので、かぶる 広告ROAS（赤→緑 #10b981＝商品モーダルの広告ROASの線と同じ）・CVR（紫→藍 #4f46e5）・送り込み売上（紫→ティール #0d9488）を変えた。
 const _ZG_METRICS = {
   totSales: { label: '総売上', unit: 'y', color: '#2563eb' },
-  seoSales: { label: 'SEO売上', unit: 'y', color: '#16a34a' },
-  adSales: { label: '広告売上', unit: 'y', color: '#d97706' },
-  spend: { label: '実績額', unit: 'y', color: '#b45309' },
-  roas: { label: '広告ROAS', unit: 'p', dec: 0, color: '#dc2626' },   /* 【v1.0794】小数点以下なし */
-  cvr: { label: 'CVR', unit: 'p', color: '#7c3aed' },
+  seoSales: { label: 'SEO売上', unit: 'y', color: '#7c3aed' },
+  adSales: { label: '広告売上', unit: 'y', color: '#f97316' },
+  spend: { label: '実績額', unit: 'y', color: '#dc2626' },
+  roas: { label: '広告ROAS', unit: 'p', dec: 0, color: '#10b981' },   /* 【v1.0794】小数点以下なし */
+  cvr: { label: 'CVR', unit: 'p', color: '#4f46e5' },
   orders: { label: '広告個数', unit: 'n', color: '#0891b2' },
   avgPrice: { label: '平均単価', unit: 'y', color: '#db2777' }
 };
@@ -18286,9 +18289,9 @@ const _ZG_TABLE_COLS = [
 // 【v1.0406】売上（複合）指標の系列定義＋系列トグル（全-月別グラフ / 商品-グラフ 共通）。押すとその線を消す。
 const _SALES_SERIES = [
   { key: 'totSales', label: '総売上',       color: '#2563eb' },
-  { key: 'seoSales', label: 'SEO売上',      color: '#16a34a' },
-  { key: 'adSales',  label: '広告売上',     color: '#d97706' },
-  { key: 'soikomi',  label: '送り込み売上', color: '#7c3aed' }
+  { key: 'seoSales', label: 'SEO売上',      color: '#7c3aed' },   /* 【v1.1002】緑→紫 */
+  { key: 'adSales',  label: '広告売上',     color: '#f97316' },   /* 【v1.1002】→オレンジ */
+  { key: 'soikomi',  label: '送り込み売上', color: '#0d9488' }    /* 【v1.1002】紫→ティール（SEO売上の紫とかぶるため） */
 ];
 let _zgSalesHidden = new Set();
 let _igSalesHidden = new Set();
@@ -21326,11 +21329,11 @@ let _igChart = null;
 // グラフ用の指標定義（Ycheckのデータ＝1種広告に合わせる。CTR/KW/20円は無し）
 const _IG_METRICS = {
   totSales: { label:'総売上',   unit:'y', color:'#2563eb', calc:(it,ad)=> it.rev||0 },
-  seoSales: { label:'SEO売上',  unit:'y', color:'#16a34a', calc:(it,ad)=> Math.max(0,(it.rev||0)-(ad.r||0)) },
-  adSales:  { label:'広告売上', unit:'y', color:'#d97706', calc:(it,ad)=> ad.r||0 },
-  spend:    { label:'実績額',   unit:'y', color:'#b45309', calc:(it,ad)=> ad.c||0 },
-  roas:     { label:'広告ROAS', unit:'p', dec:0, color:'#dc2626', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },   /* 【v1.0794】小数点以下なし */
-  cvr:      { label:'CVR',      unit:'p', color:'#7c3aed', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
+  seoSales: { label:'SEO売上',  unit:'y', color:'#7c3aed', calc:(it,ad)=> Math.max(0,(it.rev||0)-(ad.r||0)) },
+  adSales:  { label:'広告売上', unit:'y', color:'#f97316', calc:(it,ad)=> ad.r||0 },
+  spend:    { label:'実績額',   unit:'y', color:'#dc2626', calc:(it,ad)=> ad.c||0 },
+  roas:     { label:'広告ROAS', unit:'p', dec:0, color:'#10b981', calc:(it,ad)=> ad.c>0?Math.round((ad.r||0)/ad.c*1000)/10:0 },   /* 【v1.0794】小数点以下なし */
+  cvr:      { label:'CVR',      unit:'p', color:'#4f46e5', calc:(it,ad)=> ad.cl>0?Math.round((ad.or||0)/ad.cl*1000)/10:0 },
   orders:   { label:'広告個数', unit:'n', color:'#0891b2', calc:(it,ad)=> ad.or||0 },
   avgPrice: { label:'平均単価', unit:'y', color:'#db2777', calc:(it,ad)=>{ var _d=(it.orders>0)?it.orders:(it.qty||0); return _d>0?Math.round((it.rev||0)/_d):0; } },  /* 【v1.0377】客単価＝総売上÷注文数(件数)。件数の無い月は点数(qty)で代替 */
 };
@@ -26040,7 +26043,7 @@ function peRenderAdj() {
   const prRates = isDay ? _peProRateSeries(code, rows) : null;   // 【v1.0924】ピンクの階段＝PRオプ料率（%）。前は PR実績額（¥・推定）
   const hasPr = !!prRates;
   const hasPrBar = rows.some(r => r.prKnown && r.prOver > 0);   // 【v1.0926】PR実績額（推定）の棒を広告実績額の上に積む（日別・月別とも）
-  const C = { seo: '#7c3aed', ad: '#f97316', cost: '#3b82f6', pr: '#be185d', prBar: '#ec4899', roas: '#10b981', bid: '#7c2d12', prRoas: '#0891b2' };   // 【v1.0943】PR売上ROAS＝シアン（緑の広告ROAS・桃の PR 系と分ける）
+  const C = { seo: '#7c3aed', ad: '#3b82f6' /* 【v1.1003】広告売上 オレンジ→青（本人指定：商品-調整だけ青。商品-日月別はオレンジのまま） */, cost: '#dc2626' /* 【v1.1002】広告実績額 青→赤（本人指定） */, pr: '#be185d', prBar: '#ec4899', roas: '#10b981', bid: '#7c2d12', prRoas: '#0891b2' };   // 【v1.0943】PR売上ROAS＝シアン（緑の広告ROAS・桃の PR 系と分ける）
   // 【v1.0945】PR売上ROAS → PR広告売上ROAS に差し替え（本人と相談）。PR売上ROAS は「料率の裏返し」で売れ方では動かないため。
   //   PR広告売上ROAS ＝ 総売上 ÷（広告実績額＋PR実績額(7%超・推定)）× 100（_peRows の prsr。商品-日月別の線と同じ定義）
   const hasPrRoas = rows.some(r => r.prsr != null);   // 【v1.0926】料率の線は濃いピンク（#be185d）、PR実績額の棒は商品-日月別と同じピンク（#ec4899）   // 【v1.0916】入札価格は紫→こげ茶（SEO売上の紫とまぎれるため。広告の橙の仲間）
@@ -26753,7 +26756,7 @@ function peRenderInfo() {
           : [['#7c3aed','SEO売上','SEO売上（総売上−広告売上）'],['#f97316','広告売上','広告売上']];
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
           + '<span class="pe-sw-sep"></span>'
-          + _sw('#3b82f6', '広告実績額', '右の棒（費用）: 広告実績額')
+          + _sw('#dc2626', '広告実績額', '右の棒（費用）: 広告実績額')   /* 【v1.1002】青→赤 */
           + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・その日のPRオプ料率からの推定）')
           + '<span class="pe-sw-sep"></span>'
           + _sw('#10b981', 'PR広告売上ROAS', '線（右の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額）× 100', true)
@@ -26773,10 +26776,10 @@ function peRenderInfo() {
           ];
       // 【v1.0869】★売上の棒（左）の右に、費用の棒（広告実績額＋PR実績額(7%超・推定)の積み上げ）を並べる（本人指定）。
       //   stack を 's'（売上）と 'c'（費用）に分けると、Chart.js は同じ日の中で2本を左右に並べる（x/y とも stacked:true のまま）。
-      //   ★色は下の表と同じ：広告実績額＝青（広告売上ROAS の列）／PR実績額＝桃（PR売上ROAS の列）。
+      //   ★色：広告実績額＝赤（【v1.1002】青→赤・本人指定）／PR実績額＝桃（PR売上ROAS の列）。
       //   ★PR実績額は⑤の料率からの推定（表の「？」と同じ）。料率が未設定の日は 0 として描く（表では —）。
       _peBars.push(
-        { type: 'bar', label: '広告実績額', data: rows.map(r => +r.adCost || 0), backgroundColor: '#3b82f6', stack: 'c', yAxisID: 'y', order: 2 },
+        { type: 'bar', label: '広告実績額', data: rows.map(r => +r.adCost || 0), backgroundColor: '#dc2626', stack: 'c', yAxisID: 'y', order: 2 },
         { type: 'bar', label: 'PR実績額',   data: rows.map(r => (r.prOver > 0 ? +r.prOver : 0)), backgroundColor: '#ec4899', stack: 'c', yAxisID: 'y', order: 2 }
       );
       // 【v1.0897】棒を太く（Chart.js 既定 0.9×0.8 → 0.92×0.86）
