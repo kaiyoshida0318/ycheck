@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1016 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1017 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5124,7 +5124,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1016</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1017</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -18368,6 +18368,9 @@ const YC_CC = {
 // 【v1.1016】表の見出しをグラフの色にあわせる（本人指定・A案「印と文字だけ」）。グラフに出ている項目の列だけ、
 //   見出しの左にグラフと同じ色の印（ycCcDot）、見出しの文字をその色を暗くした色（ycCcText。薄い色でも読めるように 0.62 倍）。表の地の色は変えない。
 function ycCcDot(hex) { return '<span class="pe-th-dot" style="background:' + hex + '"></span>'; }
+// 【v1.1017】B案（本人指定）：その列の見出しとセルの地も、グラフの色を白に混ぜた薄い色に。見出し＝26%、セル＝9%（ycCcTint）
+const YC_CC_TH = 0.26, YC_CC_TD = 0.09;
+function ycCcTint(hex, a) { try { const n = parseInt(String(hex).slice(1), 16), m = v => Math.round(255 - (255 - v) * a); return 'rgb(' + m((n >> 16) & 255) + ',' + m((n >> 8) & 255) + ',' + m(n & 255) + ')'; } catch (e) { return ''; } }
 function ycCcText(hex) { try { const n = parseInt(String(hex).slice(1), 16), d = v => Math.round(v * 0.62); return 'rgb(' + d((n >> 16) & 255) + ',' + d((n >> 8) & 255) + ',' + d(n & 255) + ')'; } catch (e) { return ''; } }
 // 【v1.1002】グラフの色をそろえた（本人指定）：総売上＝青／SEO売上＝紫／広告売上＝オレンジ／広告実績額＝赤。
 //   全-月別グラフ・商品-グラフ（_ZG_METRICS／_IG_METRICS／_SALES_SERIES）と商品モーダルのグラフ（商品-日月別・商品-調整）で同じ色。
@@ -26325,7 +26328,7 @@ function peRenderAdj() {
   ];
   const wk = ['日', '月', '火', '水', '木', '金', '土'];
   const _gsB = 'border-left:2px solid #94a3b8;';   // 【v1.0944】まとまりの境目
-  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + G[c.g].h + ';color:' + (c.cc ? ycCcText(c.cc) : G[c.g].c) + ';' + (c.gs ? _gsB : '') + '"'
+  const head = '<tr><th style="text-align:center">' + (isDay ? '日付' : '月') + '</th>' + COLS.map(c => '<th style="background:' + (c.cc ? ycCcTint(c.cc, YC_CC_TH) : G[c.g].h) /* 【v1.1017】B案 */ + ';color:' + (c.cc ? ycCcText(c.cc) : G[c.g].c) + ';' + (c.gs ? _gsB : '') + '"'
     + (c.tip ? ' title="' + escapeHtml(c.tip) + '"' : '') + '>' + (c.cc ? ycCcDot(c.cc) : '') + c.t + '</th>').join('') + '</tr>';
   const desc = rows.slice().reverse();
   const body = desc.map((r, i) => {
@@ -26357,7 +26360,7 @@ function peRenderAdj() {
             const _up = b > a;   // 【v1.0979】上げた＝濃いマス（白文字）／下げた＝薄いマス
             return '<td class="pe-prchg ' + (_up ? 'pe-chg-up' : 'pe-chg-down') + '" style="' + (c.gs ? _gsB : '') + '" title="この日に PRオプ料率を' + (_up ? '上げました' : '下げました') + '：' + a + '% → ' + b + '%"><span class="pe-prchg-from">' + a + '→</span>' + b + '%</td>';
           }
-          return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + G[c.g].b + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + (c.gs ? _gsB : '') + '">' + c.f(r) + '</td>';
+          return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + (c.cc ? ycCcTint(c.cc, YC_CC_TD) : G[c.g].b) /* 【v1.1017】B案 */ + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + (c.gs ? _gsB : '') + '">' + c.f(r) + '</td>';
         }).join('') + '</tr>';
   }).join('');
   wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
@@ -27073,15 +27076,15 @@ function peRenderInfo() {
     + '<th style="' + thB + BD + 'background:' + G.rev.bg + '">総売上</th>'
     + (_tblSplit
         ? '<th style="' + thB + 'background:' + OYA.hbg + '">親売上</th><th style="' + thB + 'background:' + KO.hbg + '">子売上</th>'
-        : '<th style="' + thB + 'background:' + G.rev.bg2 + ';color:' + ycCcText(YC_CC.seo) + '">' + ycCcDot(YC_CC.seo) + 'SEO売上</th>')
+        : '<th style="' + thB + 'background:' + ycCcTint(YC_CC.seo, YC_CC_TH) + ';color:' + ycCcText(YC_CC.seo) + '">' + ycCcDot(YC_CC.seo) + 'SEO売上</th>')
     // 【v1.1016】グラフに出ている項目（広告売上・PR広告売上ROAS・広告実績額・PR実績額。合算でないときは SEO売上 も）の見出しに、グラフの色の印＋文字色
-    + '<th style="' + thB + 'background:' + G.rev.bg2 + ';color:' + ycCcText(YC_CC.ad) + '">' + ycCcDot(YC_CC.ad) + '広告売上</th>'
-    + '<th style="' + thB + BD + 'background:' + G.prsr.bg  + '">' + ycCcDot(YC_CC.salesRoas) + _subCell('PR・広告費') + '</th>'
+    + '<th style="' + thB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TH) + ';color:' + ycCcText(YC_CC.ad) + '">' + ycCcDot(YC_CC.ad) + '広告売上</th>'
+    + '<th style="' + thB + BD + 'background:' + ycCcTint(YC_CC.salesRoas, YC_CC_TH) + '">' + ycCcDot(YC_CC.salesRoas) + _subCell('PR・広告費') + '</th>'
     + '<th style="' + thB + 'background:'      + G.prsr.bg2 + ';line-height:1.35">' + _amtTh('広告＋PR') + '</th>'
     + '<th style="' + thB + BD + 'background:' + G.sr.bg    + '">' + _subCell('広告費') + '</th>'
-    + '<th style="' + thB + 'background:'      + G.sr.bg2    + ';line-height:1.35;color:' + ycCcText(YC_CC.cost) + '">' + ycCcDot(YC_CC.cost) + _amtTh('広告') + '</th>'
+    + '<th style="' + thB + 'background:'      + ycCcTint(YC_CC.cost, YC_CC_TH) + ';line-height:1.35;color:' + ycCcText(YC_CC.cost) + '">' + ycCcDot(YC_CC.cost) + _amtTh('広告') + '</th>'
     + '<th style="' + thB + BD + 'background:' + G.pron.bg  + '">' + _subCell('PR') + '</th>'
-    + '<th style="' + thB + 'background:'      + G.pron.bg2  + ';line-height:1.35;color:' + ycCcText(YC_CC.pr) + '">' + ycCcDot(YC_CC.pr) + _amtTh('PR') + '</th>'
+    + '<th style="' + thB + 'background:'      + ycCcTint(YC_CC.pr, YC_CC_TH) + ';line-height:1.35;color:' + ycCcText(YC_CC.pr) + '">' + ycCcDot(YC_CC.pr) + _amtTh('PR') + '</th>'
     + '</tr>';
 
   // ---- 明細（新しい順） ----
@@ -27093,18 +27096,18 @@ function peRenderInfo() {
       + '<td style="' + tdB + BD + 'background:' + G.rev.bg + ';color:' + G.rev.color + '">' + _yen0(r.rev) + '</td>'
       + (_tblSplit
           ? '<td style="' + tdB + 'background:' + OYA.bg + '">' + _yen0(r.revP || 0) + '</td><td style="' + tdB + 'background:' + KO.bg + '">' + _yen0(r.revC || 0) + '</td>'
-          : '<td style="' + tdB + 'background:' + G.rev.bg2 + '">' + _yen0(r.seoRev) + '</td>')
-      + '<td style="' + tdB + 'background:' + G.rev.bg2 + '">' + _yen0(r.adRev) + '</td>'
+          : '<td style="' + tdB + 'background:' + ycCcTint(YC_CC.seo, YC_CC_TD) + '">' + _yen0(r.seoRev) + '</td>')   // 【v1.1017】B案：グラフに出ている列は地もグラフの色
+      + '<td style="' + tdB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TD) + '">' + _yen0(r.adRev) + '</td>'
       // PR広告売上ROAS（推定）＋ その分母
-      + '<td class="est-val" style="' + tdB + BD + 'background:' + G.prsr.bg + '">' + _pct(r.prsr) + '</td>'
+      + '<td class="est-val" style="' + tdB + BD + 'background:' + ycCcTint(YC_CC.salesRoas, YC_CC_TD) + '">' + _pct(r.prsr) + '</td>'
       + '<td class="est-val" style="' + tdB + 'background:' + G.prsr.bg2 + '">' + _yen0(_prAmt) + '</td>'
       // 広告売上ROAS ＋ 広告実績額（★広告売上があるのに0なら⚠。§68-2）
       + '<td style="' + tdB + BD + 'background:' + G.sr.bg + '">' + _pct(r.sroas) + '</td>'
-      + '<td' + (gap ? ' class="pe-warn" title="' + escapeHtml(gap) + '"' : '') + ' style="' + tdB + 'background:' + (gap ? '#fff8ec' : G.sr.bg2) + '">'
+      + '<td' + (gap ? ' class="pe-warn" title="' + escapeHtml(gap) + '"' : '') + ' style="' + tdB + 'background:' + (gap ? '#fff8ec' : ycCcTint(YC_CC.cost, YC_CC_TD)) + '">'
         + _yen0(r.adCost) + (gap ? '<span class="pe-warn-mk">⚠</span>' : '') + '</td>'
       // PR売上ROAS（推定）＋ PR実績額(7%超・推定)。★¥0 と — を区別する（§67-2）
       + '<td class="est-val"' + (r.pronly == null ? ' title="' + escapeHtml(_whyDash(r)) + '"' : '') + ' style="' + tdB + BD + 'background:' + G.pron.bg + '">' + _pct(r.pronly) + '</td>'
-      + '<td class="est-val" title="' + escapeHtml(_whyDash(r) || ('【内訳】\n' + _prPartsTip(r))) + '" style="' + tdB + 'background:' + G.pron.bg2 + '">'
+      + '<td class="est-val" title="' + escapeHtml(_whyDash(r) || ('【内訳】\n' + _prPartsTip(r))) + '" style="' + tdB + 'background:' + ycCcTint(YC_CC.pr, YC_CC_TD) + '">'
         + (!r.prKnown ? _dash : _yen0(r.prOver)) + '</td>'
       + '</tr>';
   }).join('');
