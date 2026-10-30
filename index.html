@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1003 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1004 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5079,7 +5079,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1003</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1004</div>
     <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
     <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
@@ -26757,7 +26757,7 @@ function peRenderInfo() {
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
           + '<span class="pe-sw-sep"></span>'
           + _sw('#dc2626', '広告実績額', '右の棒（費用）: 広告実績額')   /* 【v1.1002】青→赤 */
-          + _sw('#ec4899', 'PR実績額', '右の棒（費用）: PR実績額（7%超・その日のPRオプ料率からの推定）')
+          + _sw('#eab308', 'PR実績額', '右の棒（費用）: PR実績額（7%超・その日のPRオプ料率からの推定）')   /* 【v1.1004】桃→黄（赤の広告実績額の上で見づらいため・本人指定） */
           + '<span class="pe-sw-sep"></span>'
           + _sw('#10b981', 'PR広告売上ROAS', '線（右の目盛り %）: PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額＋PR実績額）× 100', true)
           /* 【v1.0911】入札価格は日別だけ（月別のボタンは出さない） */
@@ -26776,11 +26776,11 @@ function peRenderInfo() {
           ];
       // 【v1.0869】★売上の棒（左）の右に、費用の棒（広告実績額＋PR実績額(7%超・推定)の積み上げ）を並べる（本人指定）。
       //   stack を 's'（売上）と 'c'（費用）に分けると、Chart.js は同じ日の中で2本を左右に並べる（x/y とも stacked:true のまま）。
-      //   ★色：広告実績額＝赤（【v1.1002】青→赤・本人指定）／PR実績額＝桃（PR売上ROAS の列）。
+      //   ★色：広告実績額＝赤（【v1.1002】青→赤・本人指定）／PR実績額＝黄 #eab308（【v1.1004】桃は赤の上で見づらい・本人指定）。
       //   ★PR実績額は⑤の料率からの推定（表の「？」と同じ）。料率が未設定の日は 0 として描く（表では —）。
       _peBars.push(
         { type: 'bar', label: '広告実績額', data: rows.map(r => +r.adCost || 0), backgroundColor: '#dc2626', stack: 'c', yAxisID: 'y', order: 2 },
-        { type: 'bar', label: 'PR実績額',   data: rows.map(r => (r.prOver > 0 ? +r.prOver : 0)), backgroundColor: '#ec4899', stack: 'c', yAxisID: 'y', order: 2 }
+        { type: 'bar', label: 'PR実績額',   data: rows.map(r => (r.prOver > 0 ? +r.prOver : 0)), backgroundColor: '#eab308', stack: 'c', yAxisID: 'y', order: 2 }
       );
       // 【v1.0897】棒を太く（Chart.js 既定 0.9×0.8 → 0.92×0.86）
       // 【v1.0910】さらに太く（0.96×0.9）。日別60日でも棒が細くならないように
