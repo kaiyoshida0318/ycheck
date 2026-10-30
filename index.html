@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1007 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1008 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5082,7 +5082,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1007</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1008</div>
     <!-- 【v1.0907】日別データの欠けを知らせるボタン（ADcheck v1.1438「日別データ欠け通知」の移植）。欠けがあるときだけ出る -->
     <button id="dailyGapBtn" type="button" onclick="_dailyGapOpen()" style="display:none"></button>
   </div>
@@ -26063,7 +26063,8 @@ function peRenderAdj() {
     const _lg = document.getElementById('peAdjLegend');
     const _sw = (c, l, tip, line) => '<button type="button" class="pe-sw' + (line ? ' pe-sw-line' : '') + (_peAdjHidden.has(l) ? ' off' : '')
       + '" style="--c:' + c + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'), \'adj\')">' + l + '</button>';
-    if (_lg) _lg.innerHTML = _sw(C.seo, 'SEO売上', '左の棒（下）: SEO売上（総売上−広告売上）') + _sw(C.ad, '広告売上', '左の棒（上に積む）: 広告売上。SEO売上と合わせた高さ＝総売上')
+    // 【v1.1008】下から 広告売上 → SEO売上（商品-日月別と同じ。広告売上と広告実績額が同じ 0 から並ぶ）
+    if (_lg) _lg.innerHTML = _sw(C.ad, '広告売上', '左の棒（下）: 広告売上。右の棒の広告実績額と同じ高さから並ぶので、かけた額と返ってきた額を比べられる') + _sw(C.seo, 'SEO売上', '左の棒（上に積む）: SEO売上（総売上−広告売上）。広告売上と合わせた高さ＝総売上')
       + '<span class="pe-sw-sep"></span>'
       + _sw(C.cost, '広告実績額', '右の棒（下）: 広告実績額（広告費）')   /* 【v1.0924】実績額 → 広告実績額 */
       + (hasPrBar ? _sw(C.prBar, 'PR実績額', '右の棒（上に積む）: PR実績額（7%超・その日のPRオプ料率からの推定）。広告実績額と合わせた高さ＝費用の合計') : '')
@@ -26087,8 +26088,8 @@ function peRenderAdj() {
       const bar = (label, data, color, stack) => ({ type: 'bar', label, data, backgroundColor: color, stack, yAxisID: 'y', order: 2,
         barPercentage: 0.96, categoryPercentage: 0.9, borderRadius: 2 });
       const ds = [
+        bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's'),   // 【v1.1008】下＝広告売上
         bar('SEO売上', rows.map(r => r.seoRev || 0), C.seo, 's'),
-        bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's'),
         bar('広告実績額', rows.map(r => r.adCost || 0), C.cost, 'c'),
         bar('PR実績額', rows.map(r => (r.prKnown && r.prOver > 0) ? Math.round(r.prOver) : 0), C.prBar, 'c'),   // 【v1.0926】広告実績額の上に積む（stack 'c'）
         { type: 'line', label: '広告ROAS', data: rows.map(r => r.aroas == null ? null : Math.round(r.aroas)), borderColor: C.roas, backgroundColor: C.roas,
@@ -26752,7 +26753,7 @@ function peRenderInfo() {
       const _clMarksPe = (typeof clMarksForKeys === 'function') ? clMarksForKeys(rows.map(r => r.key), code) : [];
       // 【v1.0639】合算のときは「SEO×親子 / 広告×親子」の4系列に割る。
       //   色の決め方: SEO=紫 / 広告=オレンジ（従来どおり）、親=濃い / 子=淡い。
-      //   ★積む順は 親→子 で、SEOのあと広告。積み上げの見た目が毎回同じになるようにする。
+      //   ★積む順は【v1.1008】下から 広告売上 → SEO売上-親 → SEO売上-子（前は SEO→広告）。積み上げの見た目が毎回同じになるようにする。
       const _peSplit = (_peScope === 'set');
       // 【v1.0639】凡例も系列に合わせて描き替える（4系列のとき「親＝濃い／子＝淡い」が分かるように）
       // 【v1.0897】凡例 → 押すと消える／戻るボタン（ADcheck §3-4）。棒＝丸、線＝横棒の印。
@@ -26762,9 +26763,11 @@ function peRenderInfo() {
         const _sw = (c, l, tip, line) => '<button type="button" class="pe-sw' + (line ? ' pe-sw-line' : '') + (_peHidden.has(l) ? ' off' : '')
           + '" style="--c:' + c + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'))">' + l + '</button>';
         const _rev = _peSplit
-          ? [[YC_CC.seoP,'SEO売上-親','親商品のSEO売上（総売上−広告売上）'],[YC_CC.seoC,'SEO売上-子','子商品のSEO売上'],
-             [YC_CC.ad,'広告売上','広告売上（親＋子。子の広告売上は基本的に無い）']]   /* 【v1.1005】広告売上-親／-子 → 1本（本人指定「広告売上-子は基本的にはないので消して」） */
-          : [[YC_CC.seo,'SEO売上','SEO売上（総売上−広告売上）'],[YC_CC.ad,'広告売上','広告売上']];   /* 【v1.1006】広告売上 オレンジ→青（YC_CC） */
+          // 【v1.1008】★売上の棒は 下から 広告売上 → SEO売上-親 → SEO売上-子（本人と相談）。ボタンも積む順に並べる。
+          //   広告売上を一番下＝右の棒の一番下（広告実績額）と同じ 0 から並ぶ → 広告にかけた額と返ってきた額を高さで比べられる。
+          ? [[YC_CC.ad,'広告売上','広告売上（親＋子。子の広告売上は基本的に無い）'],
+             [YC_CC.seoP,'SEO売上-親','親商品のSEO売上（総売上−広告売上）'],[YC_CC.seoC,'SEO売上-子','子商品のSEO売上']]   /* 【v1.1005】広告売上-親／-子 → 1本（本人指定「広告売上-子は基本的にはないので消して」） */
+          : [[YC_CC.ad,'広告売上','広告売上'],[YC_CC.seo,'SEO売上','SEO売上（総売上−広告売上）']];   /* 【v1.1006】広告売上 オレンジ→青（YC_CC） */
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
           + '<span class="pe-sw-sep"></span>'
           + _sw(YC_CC.cost, '広告実績額', '右の棒（費用）: 広告実績額')   /* 【v1.1002】青→赤 */
@@ -26776,14 +26779,15 @@ function peRenderInfo() {
       }
       const _peBars = _peSplit
         ? [
-            { type: 'bar', label: 'SEO売上-親',  data: rows.map(r => r.seoP || 0), backgroundColor: YC_CC.seoP, stack: 's', yAxisID: 'y', order: 2 },
-            { type: 'bar', label: 'SEO売上-子',  data: rows.map(r => r.seoC || 0), backgroundColor: YC_CC.seoC, stack: 's', yAxisID: 'y', order: 2 },
+            // 【v1.1008】★Chart.js は datasets の順に下から積む＝広告売上を先頭にして一番下へ（右の棒の広告実績額と同じ 0 から）
             // 【v1.1005】広告売上-子は基本的に無いので、親子に割らず1本（親＋子）にした。★子に広告売上があっても棒からは消えない
-            { type: 'bar', label: '広告売上', data: rows.map(r => (r.adP || 0) + (r.adC || 0)), backgroundColor: YC_CC.ad, stack: 's', yAxisID: 'y', order: 2 }
+            { type: 'bar', label: '広告売上', data: rows.map(r => (r.adP || 0) + (r.adC || 0)), backgroundColor: YC_CC.ad, stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: 'SEO売上-親',  data: rows.map(r => r.seoP || 0), backgroundColor: YC_CC.seoP, stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: 'SEO売上-子',  data: rows.map(r => r.seoC || 0), backgroundColor: YC_CC.seoC, stack: 's', yAxisID: 'y', order: 2 }
           ]
         : [
-            { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: YC_CC.seo, stack: 's', yAxisID: 'y', order: 2 },
-            { type: 'bar', label: '広告売上', data: rows.map(r => r.adRev), backgroundColor: YC_CC.ad, stack: 's', yAxisID: 'y', order: 2 }
+            { type: 'bar', label: '広告売上', data: rows.map(r => r.adRev), backgroundColor: YC_CC.ad, stack: 's', yAxisID: 'y', order: 2 },   /* 【v1.1008】下＝広告売上 */
+            { type: 'bar', label: 'SEO売上', data: rows.map(r => r.seoRev), backgroundColor: YC_CC.seo, stack: 's', yAxisID: 'y', order: 2 }
           ];
       // 【v1.0869】★売上の棒（左）の右に、費用の棒（広告実績額＋PR実績額(7%超・推定)の積み上げ）を並べる（本人指定）。
       //   stack を 's'（売上）と 'c'（費用）に分けると、Chart.js は同じ日の中で2本を左右に並べる（x/y とも stacked:true のまま）。
