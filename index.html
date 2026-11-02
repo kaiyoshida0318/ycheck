@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1021 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1023 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2564,6 +2564,12 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 .idd-stack > .idd-sub { color: var(--text3); }
 .idd-stack > .idd-none { color: #c0c4cc; }
 .idd-stack > div.idd-on { background: #fde8e8; color: #b91c1c; border-radius: 3px; padding: 0 4px; margin: 0 -4px; width: fit-content; }
+
+/* 【v1.1022】表の中で「…」で切れているところにカーソルを当てたら、すぐ（遅れなし）全体を出す（本人指定）。JS は _ycTruncTip */
+#ycTruncTip { position: fixed; z-index: 6000; max-width: 520px; padding: 6px 10px; border-radius: 6px; background: #fffbeb; color: #1f2937;
+  border: 1px solid #f3e2a9; /* 【v1.1023】黒地は目立ちすぎる（大事な意味がありそうに見える）→ 薄いクリーム地＋黒字（本人がC案を選択） */
+  font-size: 0.74rem; font-weight: 500; line-height: 1.5; white-space: pre-wrap; word-break: break-all; pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,.10); display: none; }
 .data-grid th, .data-grid td { text-align: center; }
 .data-grid td.code-cell,
 .data-grid td:has(> .name-cell-wrap),
@@ -5144,7 +5150,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1021</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1023</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -30729,6 +30735,57 @@ document.addEventListener('click', (e) => {
   try { _vpMenuClose(); } catch (e2) {}
   setColResizeMode(false);
 });
+
+// ============================================================================
+// 【v1.1022】表の「…」で切れた文字を、カーソルを当てた瞬間に全部出す（本人指定「ラグなくすぐ出るように」）。
+//   ・ブラウザの title（0.5〜1秒遅れて出る）ではなく、自前の吹き出し（#ycTruncTip）を mouseover で即表示。
+//   ・対象：どの表（<table>）の中でも、カーソルの下の要素からセル（td/th）までをたどり、
+//     【実際に切れている】要素（横にはみ出している：scrollWidth > clientWidth）があればその文字を出す。切れていなければ何も出さない。
+//   ・入力欄・プルダウン・ボタンの上では出さない。スクロール・クリック・カーソルが離れたら消す。
+// ============================================================================
+(function _ycTruncTip() {
+  let tip = null, cur = null;
+  const el = () => { if (!tip) { tip = document.createElement('div'); tip.id = 'ycTruncTip'; document.body.appendChild(tip); } return tip; };
+  const hide = () => { cur = null; if (tip) tip.style.display = 'none'; };
+  const cut = (n) => {
+    if (!n || n.nodeType !== 1) return false;
+    const cs = getComputedStyle(n);
+    // 2行などで止めて「…」にしている（-webkit-line-clamp）ものは縦のはみ出しで見る
+    if (cs.webkitLineClamp && cs.webkitLineClamp !== 'none' && n.scrollHeight > n.clientHeight + 1) return true;
+    if (n.scrollWidth <= n.clientWidth + 1) return false;
+    if (cs.overflowX === 'visible' && cs.textOverflow !== 'ellipsis') return false;
+    // ★scrollWidth だけだと、見出しの右端の列幅つまみ（右に3pxはみ出している）でも「切れている」になる。
+    //   中の【文字】が実際に右端（padding の内側）を越えているかで決める。
+    const r = n.getBoundingClientRect(), right = r.right - (parseFloat(cs.paddingRight) || 0) - (parseFloat(cs.borderRightWidth) || 0);
+    const w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT, { acceptNode: (tn) => (tn.nodeValue.trim() && !(tn.parentElement && tn.parentElement.closest('.col-resize-handle'))) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+    const rg = document.createRange(); let tn, max = -Infinity;
+    while ((tn = w.nextNode())) { rg.selectNodeContents(tn); const rr = rg.getBoundingClientRect(); if (rr.width && rr.right > max) max = rr.right; }
+    return max > right + 0.5;
+  };
+  document.addEventListener('mouseover', (e) => {
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const cell = t.closest('td, th');
+    if (!cell || !cell.closest('table')) { if (cur) hide(); return; }
+    if (t.closest('input, select, textarea, button, .col-resize-handle')) { if (cur) hide(); return; }
+    // カーソルの下からセルまで、切れている要素を探す
+    let hit = null;
+    for (let n = t; n; n = n.parentElement) { if (cut(n)) { hit = n; break; } if (n === cell) break; }
+    if (!hit) { if (cur) hide(); return; }
+    const txt = (hit.innerText || hit.textContent || '').replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+    if (!txt) { if (cur) hide(); return; }
+    cur = hit;
+    const b = el(); b.textContent = txt; b.style.display = 'block';
+    const r = hit.getBoundingClientRect(), w = b.offsetWidth, h = b.offsetHeight;
+    let x = Math.max(6, Math.min(window.innerWidth - w - 6, r.left));
+    let y = r.bottom + 4; if (y + h > window.innerHeight - 6) y = Math.max(6, r.top - h - 4);
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+  }, true);
+  document.addEventListener('mouseout', (e) => { if (cur && (!e.relatedTarget || !cur.contains(e.relatedTarget))) hide(); }, true);
+  window.addEventListener('scroll', hide, true);
+  document.addEventListener('mousedown', hide, true);
+  window.addEventListener('blur', hide);
+})();
 function _wrowSyncAll() {
   if (!_colResizeOn) { _wrowRemoveAll(); return; }
   _wrowTables().forEach(_wrowBuild);
