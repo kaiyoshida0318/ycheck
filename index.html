@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1020 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1021 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1982,6 +1982,9 @@ tfoot.yc-wrow-foot td.yc-wrow-td.is-locked { background: #e0ecff !important; }
   margin-top: 4px; padding: 5px 10px; border: 1px solid #f59e0b; border-radius: 6px; background: #fff7e0;
   font-size: 12px; color: #78350f; font-variant-numeric: tabular-nums; }
 .yc-wrow-sum b { font-weight: 800; }
+.yc-wrow-sum .yc-wrow-end { margin-left: auto; font: inherit; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  border: 1px solid #2563eb; background: #2563eb; color: #fff; }   /* 【v1.1021】帯の右端の「幅調整を終える」 */
+.yc-wrow-sum .yc-wrow-end:hover { background: #1d4ed8; border-color: #1d4ed8; }
 .yc-wrow-sum .ws-rest { color: #15803d; }
 .yc-wrow-sum .ws-rest.is-over { color: #dc2626; }
 .yc-wrow-sum .ws-note { color: #92400e; opacity: .8; }
@@ -5141,7 +5144,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1020</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1021</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -30676,7 +30679,9 @@ function _wrowSumUpdate(table) {
     + '<span>表の幅 <b>' + yen(used) + 'px</b></span>'
     + restHtml
     + '<span>ロック中 <b>' + nLock + '</b> / ' + ths.length + '列</span>'
-    + (fixed ? '<span class="ws-note">列を狭くすると、空いた分は右の空きになります（他の列は動きません）</span>' : '');
+    + (fixed ? '<span class="ws-note">列を狭くすると、空いた分は右の空きになります（他の列は動きません）</span>' : '')
+    // 【v1.1021】帯の右端に「幅調整を終える」（本人指定。ヘッダーの「⇔ 幅 ▾」のメニューと同じ動き＝終えるときに GitHub へ反映）
+    + '<button type="button" class="yc-wrow-end" title="幅調整モードを終えます（この下の数字の行と帯が消えます）。変えた幅は GitHub へ反映されます">✓ 幅調整を終える（GitHubへ反映）</button>';
   wrap.classList.toggle('yc-has-rest', fixed && rest > 0);
 }
 function _wrowBuild(table) {
@@ -30716,6 +30721,14 @@ function _wrowRefresh(table) {
     try { _wrowSumUpdate(t); } catch (e) {}   // 【v1.0877】表の下の「残り」も合わせる
   });
 }
+// 【v1.1021】帯の「✓ 幅調整を終える」。帯は描き直されるので document で受ける
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('.yc-wrow-end');
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  try { _vpMenuClose(); } catch (e2) {}
+  setColResizeMode(false);
+});
 function _wrowSyncAll() {
   if (!_colResizeOn) { _wrowRemoveAll(); return; }
   _wrowTables().forEach(_wrowBuild);
