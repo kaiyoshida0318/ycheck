@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1019 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1020 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2545,6 +2545,22 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 
 /* 【v187】主要テーブル（商品リスト・順位表）: 全ヘッダーは中央揃え。
    セルは 商品コード/商品名/メインKW/対応内容 のみ左寄せ（他は中央）。 */
+
+/* 【v1.1020】初回販売日／リニュ登録日の列（ADcheck v1.1521 の移植）。見出しも中身も上下2段 */
+.data-grid th.id-dates-th { text-align: left; cursor: default; padding-top: 4px; padding-bottom: 4px; }
+.data-grid th.id-dates-th .ch-sub { display: block; position: relative; cursor: pointer; white-space: nowrap; padding-right: 12px; line-height: 1.35; }
+.data-grid th.id-dates-th .ch-sub + .ch-sub { margin-top: 3px; color: var(--text3); }
+.data-grid th.id-dates-th .ch-sub:hover { color: var(--accent); }
+.data-grid th.id-dates-th .ch-sub::after { content: '⇅'; position: absolute; right: 0; top: 0; font-size: 9px; opacity: .45; }
+.data-grid th.id-dates-th .ch-sub.sort-desc::after { content: '↓'; opacity: 1; color: #b91c1c; font-weight: 700; }
+.data-grid th.id-dates-th .ch-sub.sort-asc::after  { content: '↑'; opacity: 1; color: #b91c1c; font-weight: 700; }
+.data-grid th.id-dates-th .ch-sub.sort-active { color: #b91c1c; }
+.data-grid td.idd-cell { text-align: left; }
+.idd-stack { display: flex; flex-direction: column; gap: 3px; font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.66rem; color: var(--text2); white-space: nowrap; user-select: text; }
+.idd-stack > div { overflow: hidden; text-overflow: ellipsis; }
+.idd-stack > .idd-sub { color: var(--text3); }
+.idd-stack > .idd-none { color: #c0c4cc; }
+.idd-stack > div.idd-on { background: #fde8e8; color: #b91c1c; border-radius: 3px; padding: 0 4px; margin: 0 -4px; width: fit-content; }
 .data-grid th, .data-grid td { text-align: center; }
 .data-grid td.code-cell,
 .data-grid td:has(> .name-cell-wrap),
@@ -5125,7 +5141,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1019</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1020</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -5542,6 +5558,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
                  ============================================================ -->
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
+              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
               <th class="nosort">画像</th>
               <th class="col-namebasic" data-sort="name" data-resize-key="nameBasic">商品名</th>   <!-- 【v1.0969】調整-基本では隠す（.col-namebasic） -->
               <!-- 【v1.0965】メインKW（調整-基本だけ。本人指定「調整-基本の商品名の右にメインKW列」）。.tune-col なので商品-基本データでは隠れる -->
@@ -6255,6 +6273,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <table id="tableAdTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
+              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdTune">商品名</th>
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
@@ -6303,6 +6323,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <table id="tableWithdraw" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
+              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameWd">商品名</th>
               <!-- 【v1.0724】列は 広告売上×3 / SEO売上×3 / 広告実績額×3 の9列だけ。
@@ -6363,6 +6385,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <table id="tableProTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
+              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProTune">商品名</th>
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
@@ -6417,6 +6441,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <table id="tableAdData" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
+              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdData">商品名</th>
               <!-- 【v1.0655】広告売上ROAS(総売上÷広告実績額)×3ヶ月。商品-基本データと同じ計算・同じ紫 -->
@@ -6475,6 +6501,8 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
           <table id="tablePrData" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
+              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="namePrData">商品名</th>
               <th class="num col-sales" data-sort="seoRev0" id="hPrDataSeo0">SEO売上<br>(3ヶ月前)</th>
@@ -7664,7 +7692,7 @@ function getBid(code) {
 
 // テーブルヘッダのソートインジケータを更新（.sort-asc / .sort-desc クラス）
 function updateSortIndicator(tableSelector, key, dir) {
-  const ths = document.querySelectorAll(tableSelector + ' th[data-sort]');
+  const ths = document.querySelectorAll(tableSelector + ' th[data-sort], ' + tableSelector + ' .ch-sub[data-sort]');   // 【v1.1020】2段の見出しの段にも
   ths.forEach(th => {
     th.classList.remove('sort-active', 'sort-asc', 'sort-desc');
     if (th.dataset.sort === key) {
@@ -13332,6 +13360,72 @@ function _updateStateCountsRaw() {
 // 【v1.0620】prefixHtml: .code-cell-inner の先頭に差し込むHTML（一括変更のチェックボックス用）。
 //   ★セル直下（<td>の中）に置くと、.code-cell-inner が display:flex; width:100% のため
 //     チェックボックスだけ上の行に落ちる。必ずこのflexの中に入れること。
+// ============================================================================
+// 【v1.1020】「初回販売日／リニュ登録日」の列（ADcheck v1.1521「初回販売日・リニュ登録日の列 仕様書」の移植。本人指定）
+//   ・1つの列を上下2段：上＝初回販売日、下＝リニュ登録日（一段薄い）。見出しも上下2段で、それぞれ並べ替えボタン。
+//   ・初回販売日＝その商品の売上が最初に立った日。日別データ（D.item）の売上>0のいちばん古い日。
+//     ★日別データは途中の日（2026/05/23 など）からしか無いので、それより前の月に売上があれば【月まで】（YYYY/MM）を出す
+//       （月別の売上 buildFullAggregate の売上>0のいちばん古い月）。日別データが月の1日から揃っている月は日まで分かる。
+//     ★月別データの始まり（2025/01 など）より前は分からない（ADcheck §2-1 と同じ。データの始まりの月になる商品が多い）。
+//   ・リニュ登録日＝その商品の変更記録（state.changeLog.items[コード]）の、いちばん新しい日付（中身は問わない）。
+//   ・合算のセット行は、メンバーの中で 初回販売日＝いちばん古い／リニュ登録日＝いちばん新しい。
+//   ・値が無いときは薄い灰色の「-」。並べ替え中の項目は全行で薄い赤（.idd-on）。日付の無い商品は向きに関係なくいつも下。
+//   ・選んでいる月に関係なく、持っているデータ全体から求める。
+// ============================================================================
+let _ycFsCache = null, _ycFsSig = '';
+function _ycFirstSaleMap() {
+  const D = ensureDaily(); const it = D.item || {};
+  const days = Object.keys(it).filter(isYmd).sort();
+  const sig = days.length + '|' + (days[days.length - 1] || '') + '|' + ((state.item || []).length) + '|' + ((state.dailyMonthly && Object.keys(state.dailyMonthly).length) || 0);
+  if (_ycFsCache && sig === _ycFsSig) return _ycFsCache;
+  const dMin = {}, mMin = {};
+  days.forEach(d => { const row = it[d] || {}; Object.keys(row).forEach(c => { const v = row[c]; if (v && +v[0] > 0 && !dMin[c]) dMin[c] = d; }); });
+  let agg = []; try { agg = buildFullAggregate() || []; } catch (e) {}
+  agg.forEach(r => { if (!r || !/^\d{4}-\d{2}$/.test(String(r.month || ''))) return; if (!(+r.rev > 0)) return; if (!mMin[r.code] || r.month < mMin[r.code]) mMin[r.code] = r.month; });
+  // 日別データが月の1日から揃っている最初の月（それ以降の月は日まで正確に分かる）
+  const d0 = days[0] || '';
+  let fullFrom = '';
+  if (d0) { const y = +d0.slice(0, 4), m = +d0.slice(5, 7); fullFrom = d0.slice(8, 10) === '01' ? d0.slice(0, 7) : (m === 12 ? (y + 1) + '-01' : y + '-' + String(m + 1).padStart(2, '0')); }
+  const out = {};
+  new Set(Object.keys(dMin).concat(Object.keys(mMin))).forEach(c => {
+    const dm = dMin[c] || '', mm = mMin[c] || '';
+    if (mm && (!fullFrom || mm < fullFrom)) out[c] = mm;           // 日別より前の月に売上がある → 月まで
+    else if (dm) out[c] = dm;                                      // 日まで分かる
+    else if (mm) out[c] = mm;
+  });
+  _ycFsCache = out; _ycFsSig = sig;
+  return out;
+}
+function _ycFirstSaleDate(code) { return _ycFirstSaleMap()[code] || ''; }
+function _ycRenewalDate(code) {
+  const a = ((state.changeLog || {}).items || {})[code];
+  if (!Array.isArray(a)) return '';
+  let mx = ''; a.forEach(e => { const d = String((e && e.date) || '').slice(0, 10); if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d > mx) mx = d; });
+  return mx;
+}
+// 行（合算のセット行ならメンバー全体）の 初回販売日・リニュ登録日
+function _ycIdDates(r) {
+  const codes = (r && r._rollup && Array.isArray(r._members) && r._members.length) ? r._members : [r.code];
+  let fs = '', rn = '';
+  codes.forEach(c => { const f = _ycFirstSaleDate(c), n = _ycRenewalDate(c); if (f && (!fs || f < fs)) fs = f; if (n && n > rn) rn = n; });
+  return { fs, rn };
+}
+function _ycYmdSlash(s) { return String(s || '').replace(/-/g, '/'); }
+// 2段のセル。activeKey＝いま並べ替えている項目（'firstsale'／'renewal'ならその段を全行で薄い赤）
+function _idDatesTd(r, activeKey) {
+  const { fs, rn } = _ycIdDates(r);
+  const cell = (v, sub, on, tip) => '<div class="' + (sub ? 'idd-sub ' : '') + (v ? '' : 'idd-none ') + ((on && v) ? 'idd-on' : '') + '" title="' + tip + '">' + (v ? _ycYmdSlash(v) : '-') + '</div>';
+  return '<td class="idd-cell"><div class="idd-stack">'
+    + cell(fs, false, activeKey === 'firstsale', '初回販売日（売上が最初に立った日）' + (fs && fs.length === 7 ? '。日別データより前の月なので月まで' : ''))
+    + cell(rn, true, activeKey === 'renewal', 'リニュ登録日（変更記録の最後の日付）')
+    + '</div></td>';
+}
+// 並べ替え：日付の無い行は向きに関係なくいつも下
+function _ycCmpDateBlankLast(x, y, dir) {
+  if (!x && !y) return 0; if (!x) return 1; if (!y) return -1;
+  return dir * x.localeCompare(y);
+}
+function _ycIdDateSortVal(r, k) { const d = _ycIdDates(r); return k === 'firstsale' ? d.fs : d.rn; }
 function codeCellHtml(code, prefixHtml) {
   const meta = state.productMeta[code] || {};
   const rep = (meta.repCode || '').trim();
@@ -14424,12 +14518,14 @@ function renderBasic() {
     if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     if (k === 'mom')       { return _momDiff(r.rev, _momPrevOf(r), _momCtxB); }   /* 【v1.0864】差額（円）で並べる。null＝出せない */
+    if (k === 'firstsale' || k === 'renewal') return _ycIdDateSortVal(r, k);   /* 【v1.1020】 */
     return r[k] || 0;
   };
   list.sort((a, b) => {
     const va = sortGet(a, basicSortKey), vb = sortGet(b, basicSortKey);
     // 【v1.0863】前月比が出せない行（データが無い月・日選択中）は、昇順でも降順でも一番下
     if (basicSortKey === 'mom' && (va == null || vb == null)) return (va == null) - (vb == null);
+    if (basicSortKey === 'firstsale' || basicSortKey === 'renewal') return _ycCmpDateBlankLast(va, vb, basicSortDir);   // 【v1.1020】日付の無い行はいつも下
     if (typeof va === 'string') return basicSortDir * va.localeCompare(vb);
     return basicSortDir * (va - vb);
   });
@@ -14661,6 +14757,7 @@ function renderBasic() {
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSet))}${_famBadge}<a class="code-pg-link" href="${escapeHtml(yahooProductUrl(r.code))}" target="_blank" rel="noopener" title="商品ページを開く（${escapeHtml(r.code)}）">↗</a></td>
+      ${_idDatesTd(r, basicSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td class="col-namebasic">${nameCellHtml(r.code)}</td>
       <td class="tune-col col-kwtune">${kwCellHtml(r.code)}</td>
@@ -19323,6 +19420,7 @@ function renderAdAdjust(cfg) {
     if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     if (k === 'adNote')    { const m = state.productMeta[r.code] || {}; return (m.adNote || '').trim(); }  // 【v114】対応内容のソート
+    if (k === 'firstsale' || k === 'renewal') return _ycIdDateSortVal(r, k);   // 【v1.1020】文字列＝空は下（下の比べ方）
     return 0;
   };
   list.sort((a, b) => {
@@ -19391,6 +19489,7 @@ function renderAdAdjust(cfg) {
         : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
       tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
+      ${_idDatesTd(r, adAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       ${(r.sroass || []).map(v => '<td class="num col-sroas">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v)) + '</td>').join('')}
@@ -19407,6 +19506,7 @@ function renderAdAdjust(cfg) {
     if (_wd) {
       tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
+      ${_idDatesTd(r, adAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       ${(r.revs || []).map(v => `<td class="num col-total">${fmt(v)}</td>`).join('')}
@@ -19419,6 +19519,7 @@ function renderAdAdjust(cfg) {
     }
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
+      ${_idDatesTd(r, adAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
@@ -19588,6 +19689,7 @@ function renderProAdjust(cfg) {
     if (k === 'proStatus') { return proStatusOrder(effectiveProStatusOf(r.code)); }   /* 【v1.0660】 */
     if (k === 'status')    { const m = state.productMeta[r.code] || {}; return statusOrder(m.status); }
     if (k === 'proNote')   { const m = state.productMeta[r.code] || {}; return (m.proNote || '').trim(); }  // 【v114】対応内容のソート
+    if (k === 'firstsale' || k === 'renewal') return _ycIdDateSortVal(r, k);   // 【v1.1020】
     return 0;
   };
   list.sort((a, b) => {
@@ -19641,6 +19743,7 @@ function renderProAdjust(cfg) {
         : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
       tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetD))}</td>
+      ${_idDatesTd(r, proAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
@@ -19662,6 +19765,7 @@ function renderProAdjust(cfg) {
       : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
+      ${_idDatesTd(r, proAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
@@ -24632,7 +24736,7 @@ function wireSort(tableSel, apply) {
     //   列幅ハンドルのクリックは handle 側で stopPropagation 済み、
     //   ドラッグ直後の click も v278 の握りつぶしで届かないので、誤ソートは起きない。
     if (e.target.closest('.col-resize-handle')) return;
-    const th = e.target.closest('th[data-sort]');
+    const th = e.target.closest('th[data-sort], .ch-sub[data-sort]');   // 【v1.1020】2段の見出し（初回販売日／リニュ登録日）は段ごとに並べ替え
     if (!th || !thead.contains(th)) return;
     e.stopPropagation();
     apply(th.dataset.sort);
