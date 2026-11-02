@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1018 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1019 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3116,6 +3116,7 @@ tr.row-child .code-cell-inner::before {
 .validation-box.warn .validation-msg { color:#8a5a00; }
 /* 不足スロットの強調 */
 .file-slot.slot-missing { border-color:#e0a000; background:#fffdf5; }
+.slot-missing-tag.slot-skip-tag { color:#64748b; background:#f1f5f9; border-color:#cbd5e1; font-weight:600; }   /* 【v1.1019】⑤⑥の「今回なし」 */
 .slot-missing-tag { display:inline-block; margin:3px 0 2px; font-size:0.82rem; font-weight:700; color:#8a5a00; background:#fff2cc; border:1px solid #f0c26b; border-radius:4px; padding:1px 6px; }
 
 /* ① 対応ファイルの種類（アコーディオン） */
@@ -5124,7 +5125,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1018</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1019</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -10823,7 +10824,7 @@ function _dailySlotSummary(kind) {
   updateSlot(kind, label);
 }
 // 【v1.0526】不足しているスロットに赤枠＋「⚠ 不足」を出す（どれが足りないか一目で分かるように）
-function _renderMissingNotice(chk) {
+function _renderMissingNotice(chk, latestSoft) {   // 【v1.1019】latestSoft＝日別①〜④がそろっている（⑤⑥は「今回なし」の灰色の札にする）
   REPORT_TYPES.forEach(t => {
     const el = document.getElementById(t.slotId);
     if (!el) return;
@@ -10832,6 +10833,18 @@ function _renderMissingNotice(chk) {
     if (old) old.remove();
   });
   if (!chk) return;
+  if (latestSoft) {   // 【v1.1019】⑤⑥は警告の色にせず、灰色の「今回なし」
+    chk.missingLatest.forEach(k => {
+      const t = reportTypeOf(k); if (!t) return;
+      const el = document.getElementById(t.slotId); if (!el) return;
+      const tag = document.createElement('div');
+      tag.className = 'slot-missing-tag slot-skip-tag';
+      tag.textContent = (chk.latestKept && chk.latestKept[k]) ? '今回なし（前回の値のまま）' : '今回なし';
+      const label = el.querySelector('.file-slot-label');
+      if (label && label.nextSibling) el.insertBefore(tag, label.nextSibling); else el.appendChild(tag);
+    });
+    return;
+  }
   const missing = new Set(chk.missingLatest);
   Object.keys(chk.missingByDate).forEach(d => chk.missingByDate[d].forEach(k => missing.add(k)));
   missing.forEach(k => {
@@ -11946,6 +11959,23 @@ function validateBuffer() {
       btn.disabled = false;
       btn.textContent = '⬆ アップロード実行';
       _renderMissingNotice(chk);
+      return true;
+    }
+    // 【v1.1019】★日別の基礎ファイル①〜④がどの日もそろっていて、足りないのが最新値（⑤PRオプ料率・⑥入札価格）だけのとき（本人指定）。
+    //   ⑤⑥は毎回入れるものではないので、警告（⚠ 不足があるまま取り込む）にしない。緑の「✓」で「基礎ファイル①〜④を取り込む」。
+    //   ⑤⑥は「今回なし（前回の値のまま）」と添える。⑤か⑥を一緒に入れたときはボタンに「＋⑤」のように足す。
+    const _dailyOk = chk.dates.length > 0 && Object.keys(chk.missingByDate).length === 0;
+    if (_dailyOk) {
+      const _db = DAILY_TYPE_KEYS.map(k => (reportTypeOf(k) || {}).badge || '');
+      const _base = '基礎ファイル' + _db[0] + '〜' + _db[_db.length - 1];
+      const _inc = LATEST_TYPE_KEYS.filter(k => buf[k] != null).map(k => (reportTypeOf(k) || {}).badge || '');
+      const _keptAll = chk.missingLatest.every(k => chk.latestKept && chk.latestKept[k]);
+      box.className = 'validation-box ok';
+      msg.textContent = `✓ ${_base}（日別）が揃っています：${range}` + (extra.length ? `　＋　${extra.join(' / ')}` : '')
+        + `。${chk.missingLatest.map(_typeLabel).join('・')} は今回なし` + (_keptAll ? '（前回の値のまま）' : '（まだ一度も取り込んでいません）');
+      btn.disabled = false;
+      btn.textContent = '⬆ ' + _base + (_inc.length ? '＋' + _inc.join('') : '') + 'を取り込む';
+      _renderMissingNotice(chk, true);
       return true;
     }
     // 不足あり：警告は出すが、実行はできる
