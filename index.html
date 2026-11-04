@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1024 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1025 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4920,6 +4920,11 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .top-nav:not(.top-nav-3) .nav-tab .chip-num { margin-left: 0; }
 .top-nav:not(.top-nav-3) .nav-group-label { padding-right: 3px; }
 /* 【v1.0984】【新商品】の右寄せ（margin-left:auto）はやめた。SEO順位のすぐ右に普通に並べる（本人指定「変によせたりしないで」） */
+/* 【v1.1025】全-月別データ-新商品：リリース月別の行の「▸ 一覧」ボタンと、開いた一覧の行 */
+.zd-co-btn { flex: none; font: inherit; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; border: 1px solid #93c5fd; background: #fff; color: #1d4ed8; cursor: pointer; white-space: nowrap; }
+.zd-co-btn:hover { background: #eff6ff; }
+.zd-co-btn.on { background: #2563eb; border-color: #2563eb; color: #fff; }
+.zd-co-prow:hover { background: #fef9c3; }
 /* 【v1.0994】撤退候補の確認（confirm() の代わり。文字を選択・コピーできる） */
 .yc-rc { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; }
 .yc-rc-box { width: min(560px, 100%); max-height: 86vh; display: flex; flex-direction: column; gap: 10px; background: var(--bg2); color: var(--text); border-radius: 14px; padding: 20px 22px 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
@@ -5150,7 +5155,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1024</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1025</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -18063,6 +18068,15 @@ function _zdCohortRows(r, N) {
     o.wBase += rev; o.wOver += rev * (rate - PR_BASE_RATE_PCT);
   });
   src.adRows.forEach(a => { b[_zdCohortKeyOf(a.code, m, fsMap)].ads.push(a); });
+  // 【v1.1025】展開したときの商品一覧用に、商品ごとの数字をまとめる
+  const _prodOf = (o) => {
+    const pm = {};
+    const get = c => pm[c] || (pm[c] = { code: c, rev: 0, adRev: 0, adCost: 0 });
+    o.items.forEach(i => { get(i.code).rev += +i.revenue || 0; });
+    o.ads.forEach(a => { const p = get(a.code); p.adRev += +a.adRevenue || 0; p.adCost += +a.adCost || 0; });
+    return Object.values(pm).filter(p => p.rev > 0 || p.adCost > 0 || p.adRev > 0)
+      .sort((x, y) => (y.rev - x.rev) || (y.adCost - x.adCost));
+  };
   // リリース月ごとの商品数（その月に売れたかどうかに関係なく、初回販売日がその月の商品の数）
   const size = {};
   Object.keys(fsMap).forEach(c => { const fm = String(fsMap[c]).slice(0, 7); if (b[fm] && fm.length === 7 && fm !== 'old') size[fm] = (size[fm] || 0) + 1; });
@@ -18088,6 +18102,7 @@ function _zdCohortRows(r, N) {
       _coSize: size[k] || 0, _coSold: Object.keys(o.sold).length,
       _coShare: itemTot > 0 ? rev / itemTot * 100 : null,
       _coSoldList: Object.keys(o.sold).map(c => [c, o.sold[c]]).sort((x, y) => y[1] - x[1]),
+      _coProds: _prodOf(o), _coItemTot: itemTot,   // 【v1.1025】展開の一覧用
       _cut: r._cut, _cutHave: r._cutHave,
       prEst: true,
       totSales: rev, seoSales: Math.max(0, rev - adRev), adSales: adRev, spend: adCost,
@@ -18113,6 +18128,90 @@ function _zdCohortDrows(desc, N) {
   });
   return out;
 }
+// ============================================================================
+// 【v1.1025】リリース月別の行の「▸ 一覧」：押すと行の下に、その行の商品を全-比較の商品一覧と同じ形で並べる
+//   ・1商品1行：画像｜商品名（親子の親は緑の印）＋コード・初回販売日｜総売上｜全体に占める割合（バー）｜SEO売上｜広告実績額｜広告ROAS
+//   ・並びは総売上の多い順（売上0で広告費だけの商品は下）。表の幅に合わせて1〜3列に分けて並べる（上から下・左から右）。
+//   ・「全体に占める割合」の分母＝その月のリリース月別の行の合計（＝②商品別売上の合計。1列目の「売上の◯%」と同じ）。
+//     2行目の小さい字＝そのリリース分の中での割合。
+//   ・画像・商品名を押すと商品モーダル（openProductEditModal）。開いている行は月全体／月途中を切り替えても開いたまま（タブを開き直すまで）。
+// ============================================================================
+const _zdCoOpen = new Set();   // 'YYYY-MM|リリース月キー'
+function _zdCoToggle(key) {
+  if (_zdCoOpen.has(key)) _zdCoOpen.delete(key); else _zdCoOpen.add(key);
+  const w = document.getElementById('zdTableWrap');
+  const st = w ? w.scrollTop : 0, sl = w ? w.scrollLeft : 0;
+  renderGraphData();
+  if (w) { w.scrollTop = st; w.scrollLeft = sl; }
+}
+window._zdCoToggle = _zdCoToggle;
+function _zdCoOpenProduct(code) { try { if (typeof openProductEditModal === 'function') openProductEditModal(code); } catch (e) {} }
+window._zdCoOpenProduct = _zdCoOpenProduct;
+function _zdCohortPanelHtml(r, colCount, wrapW) {
+  const prods = r._coProds || [];
+  const tot = +r._coItemTot || 0, coTot = +r.totSales || 0;
+  const esc = escapeHtml;
+  const yen = v => Math.round(v).toLocaleString('ja-JP');
+  const dash = '<span style="color:var(--text3)">—</span>';
+  const parentSet = _zdSeoParentSet();
+  const maxShare = prods.reduce((mx, p) => Math.max(mx, tot > 0 ? p.rev / tot * 100 : 0), 0);
+  const W = Math.max(600, (wrapW || 1200) - 24);
+  const BLOCK = 640;
+  const ncol = Math.max(1, Math.min(3, Math.floor((W + 16) / (BLOCK + 16)), prods.length));
+  const per = Math.ceil(prods.length / ncol);
+  const colDefs = [
+    { w: 52, lbl: '画像', al: 'center' }, { w: 0, lbl: '商品名', al: 'left' },
+    { w: 84, lbl: '総売上', al: 'right' }, { w: 112, lbl: '全体に占める割合', al: 'left' },
+    { w: 76, lbl: 'SEO売上', al: 'right' }, { w: 76, lbl: '広告実績額', al: 'right' }, { w: 64, lbl: '広告ROAS', al: 'right' }
+  ];
+  const cell = (d, inner, extra) => '<div style="' + (d.w ? 'width:' + d.w + 'px;flex:0 0 ' + d.w + 'px;' : 'flex:1 1 auto;min-width:0;') + 'text-align:' + d.al + ';padding:0 6px;' + (extra || '') + '">' + inner + '</div>';
+  const head = '<div style="display:flex;align-items:center;height:28px;background:var(--surface2);border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3)">'
+    + colDefs.map(d => cell(d, d.lbl)).join('') + '</div>';
+  const pmark = '<span title="親子商品（親商品）" style="display:inline-flex;align-items:center;justify-content:center;width:1.15em;height:1.15em;border-radius:3px;background:#16a34a;margin-right:4px;vertical-align:-2px"><svg viewBox="0 0 20 20" style="width:0.82em;height:0.82em;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>';
+  const rowHtml = (p, rank) => {
+    const m = getMaster(p.code) || {};
+    const name = m.name || p.code;
+    const img = (typeof getProductImageSrc === 'function') ? (getProductImageSrc(p.code) || '') : '';
+    const im = img ? '<img loading="lazy" src="' + esc(img) + '" style="width:44px;height:44px;object-fit:contain;border-radius:4px;background:#fff;border:1px solid var(--border)" onerror="this.style.visibility=\'hidden\'">'
+                   : '<div style="width:44px;height:44px;background:var(--surface2);border-radius:4px;margin:0 auto"></div>';
+    const fsd = String((typeof _ycFirstSaleDate === 'function' ? _ycFirstSaleDate(p.code) : '') || '').replace(/-/g, '/');
+    const share = tot > 0 && p.rev > 0 ? p.rev / tot * 100 : 0;
+    const inCo = coTot > 0 && p.rev > 0 ? p.rev / coTot * 100 : 0;
+    const bw = maxShare > 0 ? Math.max(2, Math.round(share / maxShare * 56)) : 0;
+    const shareCell = p.rev > 0
+      ? '<div style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:56px;height:8px;border-radius:4px;background:#e5e7eb;position:relative;overflow:hidden;flex:none"><span style="position:absolute;left:0;top:0;bottom:0;width:' + bw + 'px;background:#2563eb;border-radius:4px"></span></span>'
+        + '<span style="font-weight:700;color:var(--text)">' + (Math.round(share * 100) / 100) + '%</span></div>'
+        + '<div style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap">この分の中 ' + (Math.round(inCo * 10) / 10) + '%</div>'
+      : dash;
+    const seo = Math.max(0, p.rev - p.adRev);
+    const ro = p.adCost > 0 ? Math.round(p.adRev / p.adCost * 100) : null;
+    const roCell = ro == null ? dash : '<span style="color:' + (ro >= 500 ? '#1D9E75' : ro >= 300 ? '#BA7517' : '#A32D2D')   /* 【v1.0978】広告ROAS の色（ADcheck 全広告ROAS）と同じ */ + ';font-weight:700">' + ro + '%</span>';
+    const num = 'font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:12.5px;';
+    const isP = parentSet && parentSet.has(p.code);
+    return '<div class="zd-co-prow" onclick="_zdCoOpenProduct(\'' + esc(String(p.code).replace(/\\/g, '\\\\').replace(/'/g, "\\'")) + '\')" title="' + esc(name + '（' + p.code + '）') + '　クリックで商品モーダル" style="display:flex;align-items:center;height:54px;border-bottom:1px solid var(--border);cursor:pointer;' + (p.rev > 0 ? '' : 'opacity:.6;') + '">'
+      + cell(colDefs[0], im, 'display:flex;justify-content:center;')
+      + cell(colDefs[1], '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2"><span style="color:var(--text3);font-weight:600;margin-right:4px">' + rank + '</span>' + (isP ? pmark : '') + esc(name) + '</div>'
+        + '<div style="font-size:10px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">' + esc(p.code) + (fsd ? '　初回 ' + esc(fsd) : '') + '</div>')
+      + cell(colDefs[2], p.rev > 0 ? '<b>' + yen(p.rev) + '</b>' : dash, num)
+      + cell(colDefs[3], shareCell, 'font-size:12px;')
+      + cell(colDefs[4], seo > 0 ? yen(seo) : dash, num)
+      + cell(colDefs[5], p.adCost > 0 ? yen(p.adCost) : dash, num)
+      + cell(colDefs[6], roCell, num)
+      + '</div>';
+  };
+  let blocks = '';
+  for (let k = 0; k < ncol; k++) {
+    const part = prods.slice(k * per, (k + 1) * per);
+    if (!part.length) continue;
+    blocks += '<div style="flex:1 1 ' + BLOCK + 'px;min-width:0;max-width:' + (ncol === 1 ? 760 : 9999) + 'px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#fff">'
+      + head + part.map((p, i) => rowHtml(p, k * per + i + 1)).join('') + '</div>';
+  }
+  const ttl = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin:0 0 8px">◎ ' + esc(r.month.replace('-', '/')) + (r._cut > 0 ? '（1〜' + r._cut + '日）' : '') + '　' + esc(r.label) + ' の商品（' + prods.length + '品・総売上の多い順）'
+    + '<span style="font-weight:400;color:var(--text3);margin-left:10px">全体に占める割合＝この月の商品別売上の合計 ' + yen(tot) + ' に対する割合／画像・商品名を押すと商品モーダル</span></div>';
+  return '<tr class="zd-co-panel"><td colspan="' + colCount + '" style="padding:0;background:#f4f7fc;border-bottom:2px solid #c7d2fe">'
+    + '<div style="position:sticky;left:0;box-sizing:border-box;width:' + Math.round(W + 24) + 'px;max-width:100%;padding:10px 12px 12px">' + ttl
+    + '<div style="display:flex;gap:16px;align-items:flex-start">' + blocks + '</div></div></td></tr>';
+}
 // 1列目（リリース月別の行）
 function _zdCohortFirstCellHtml(r, pad, fs, vbd) {
   const named = (r._co !== 'old' && r._co !== 'pre');
@@ -18129,9 +18228,16 @@ function _zdCohortFirstCellHtml(r, pad, fs, vbd) {
     + (named ? '\n「売れた N/M品」の M＝このリリース月の商品の数（親子の子でまだ売れていないものも含む）' : '')
     + (r._co === 'pre' ? '\n初回販売前＝この月の時点でまだ一度も売れていない商品（広告費などだけが出ている）' : '')
     + (r._co === 'old' ? '\nそれ以前＝初回販売日が ' + _zdYmAdd(r.month, -ZD_CO_BACK - 1).replace('-', '/') + ' 以前の商品（★日別データより前は月まで・2025/01 より前は 2025/01 扱い）' : '');
-  return '<td title="' + escapeHtml(tip) + '" style="padding:' + pad + ';padding-left:14px;text-align:left;font-size:calc(' + fs + ' - 1px);background:#fbfcfd;position:sticky;left:0;z-index:1;border-bottom:1px solid var(--border);border-right:' + vbd + ';white-space:nowrap;cursor:help">'
+  // 【v1.1025】右に展開ボタン（商品が1つも無い行には出さない）。押すとこの行の下に商品の一覧（_zdCohortPanelHtml）
+  const _n = (r._coProds || []).length;
+  const _key = r.month + '|' + r._co;
+  const _open = _zdCoOpen.has(_key);
+  const btn = _n ? ('<button type="button" class="zd-co-btn' + (_open ? ' on' : '') + '" onclick="event.stopPropagation();_zdCoToggle(\'' + _key + '\')"'
+      + ' title="' + (_open ? '商品の一覧を閉じる' : 'この行の商品（' + _n + '品）を画像つきで並べる') + '">' + (_open ? '▾ 閉じる' : '▸ 一覧 ' + _n) + '</button>') : '';
+  return '<td title="' + escapeHtml(tip) + '" style="padding:' + pad + ';padding-left:14px;text-align:left;font-size:calc(' + fs + ' - 1px);background:' + (_open ? '#eef4ff' : '#fbfcfd') + ';position:sticky;left:0;z-index:1;border-bottom:1px solid var(--border);border-right:' + vbd + ';white-space:nowrap;cursor:help">'
+    + '<div style="display:flex;align-items:center;gap:8px"><div style="flex:1 1 auto;min-width:0">'
     + '<div style="font-weight:700;color:' + (named ? 'var(--text)' : 'var(--text3)') + ';line-height:1.25">└ ' + escapeHtml(r.label) + '</div>'
-    + '<div style="font-size:10px;color:var(--text3);line-height:1.2;margin-top:1px">' + escapeHtml(sub) + '</div></td>';
+    + '<div style="font-size:10px;color:var(--text3);line-height:1.2;margin-top:1px">' + escapeHtml(sub) + '</div></div>' + btn + '</div></td>';
 }
 function renderGraphData() {
   const wrap = document.getElementById('zdTableWrap'); if (!wrap) return;
@@ -18437,7 +18543,9 @@ function renderGraphData() {
     // 【v1.1024】全-月別データ-新商品のリリース月別の行
     if (r._co) {
       const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { plain: true, vb: _vb(ci), total: r[c.famKey || c.key], row: r, tdx: 'opacity:.92;' })).join('');
-      return '<tr class="zd-co-row">' + _zdCohortFirstCellHtml(r, ZD_TD_PAD, ZD_TD_FS, VBD) + cells + '</tr>';
+      let _h = '<tr class="zd-co-row">' + _zdCohortFirstCellHtml(r, ZD_TD_PAD, ZD_TD_FS, VBD) + cells + '</tr>';
+      if (_zdCoOpen.has(r.month + '|' + r._co) && (r._coProds || []).length) _h += _zdCohortPanelHtml(r, _zdColCount, wrap.clientWidth);   // 【v1.1025】
+      return _h;
     }
     const bT = r._coTop ? 'border-top:3px solid #64748b' : (r._grpTop ? 'border-top:2px solid var(--border2)' : '');
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
@@ -23736,6 +23844,7 @@ $$('.nav-tab').forEach(item => {
     if (item.dataset.view === 'withdraw' && typeof _wdResetSort === 'function') _wdResetSort();   // 【v1.0729】総売上(最新月)の降順に戻す
     if (item.dataset.zdgrain) {
       const want = (item.dataset.zdgrain === 'day') ? 'day' : (item.dataset.zdgrain === 'cohort' ? 'cohort' : 'month');   /* 【v1.1024】 */
+      if (want === 'cohort' && typeof _zdCoOpen !== 'undefined') _zdCoOpen.clear();   /* 【v1.1025】開き直したら一覧は閉じる */
       if (want === 'day' && typeof dailyAllDates === 'function' && !dailyAllDates().length) {
         _zdGrain = 'month';   // 日別データが無いときは月別のまま（renderGraphData が案内を出す）
       } else {
