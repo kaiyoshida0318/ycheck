@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1034 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1035 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4931,6 +4931,8 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .zd-co-btn:hover { background: #eff6ff; }
 .zd-co-btn.on { background: #2563eb; border-color: #2563eb; color: #fff; }
 .zd-co-tile:hover { background: #fef9c3; }   /* 【v1.1026】タイルの上 */
+/* 【v1.1035】調整-入札価格の広告ROASの下の「子 ◯%」 */
+.yc-kid-share { font-size: 10.5px; font-weight: 700; line-height: 1.1; margin-top: 1px; white-space: nowrap; }
 /* 【v1.1033】全体の一覧：画像の下に「11月リリース」の小さな印／見出しのリリース月ごとの割合／全体の行のボタン */
 .zd-co-mark { position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); z-index: 2; white-space: nowrap; font-size: 9.5px; font-weight: 800; line-height: 14px;
   padding: 0 5px; border-radius: 4px; color: #fff; box-shadow: 0 0 0 1.5px #fff; font-family: inherit; letter-spacing: -0.02em; }
@@ -5188,7 +5190,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1034</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1035</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -11729,6 +11731,22 @@ function _ycFamAdSplit(revP, adP, revC, adC) {
   const send = Math.min(Math.max(0, adP - revP), revC);
   return { p: adP - send, c: adC + send, send: send };
 }
+// 【v1.1035】「広告売上のうち、子が売れた分の割合」（§421・本人「ROASがそこそこでも、子を売っている広告を止めないための目印」）。
+//   月ごと・親子のまとまり（代表コード）ごとに _ycFamAdSplit で 広告売上-子 を出し、÷ まとまりの広告売上。
+//   戻り値 { '代表コード|YYYY-MM': { pct, c:広告売上-子, t:広告売上 } }（広告売上0の月は null）。表を描くたびに作り直す（キャッシュしない）。
+function _ycChildAdShareMap() {
+  const meta = state.productMeta || {}, fam = {};
+  (buildFullAggregate() || []).forEach(r => {
+    const f = String((meta[r.code] || {}).repCode || '').trim() || r.code;
+    const o = (fam[f + '|' + r.month] = fam[f + '|' + r.month] || { revP: 0, adP: 0, revC: 0, adC: 0 });
+    if (r.code === f) { o.revP += +r.rev || 0; o.adP += +r.adRev || 0; } else { o.revC += +r.rev || 0; o.adC += +r.adRev || 0; }
+  });
+  const out = {};
+  Object.keys(fam).forEach(k => { const o = fam[k], a = _ycFamAdSplit(o.revP, o.adP, o.revC, o.adC), t = o.adP + o.adC; out[k] = t > 0 ? { pct: a.c / t * 100, c: a.c, t: t } : null; });
+  return out;
+}
+// 割合の文字色（50%以上＝濃いオレンジ／20%以上＝オレンジ／それ未満＝茶）。モーダルと表で同じ
+function _ycChildAdShareCol(pct) { return pct >= 50 ? '#c2410c' : pct >= 20 ? '#ea580c' : '#9a3412'; }
 function _zdGroupSplit(itemRows, adRows, prCost) {
   const mk = () => ({ totSales: 0, adSales: 0, spend: 0, adClicks: 0, adOrders: 0, _prEst: 0, codes: 0 });
   const g = {}; ZD_GRP_KEYS.forEach(k => { g[k] = mk(); });
@@ -19809,6 +19827,7 @@ function renderAdAdjust(cfg) {
   const byKey = {};
   agg.forEach(r => { byKey[r.code + '|' + r.month] = r; });
 
+  const _csm = (tableSel === '#tableAdTune') ? _ycChildAdShareMap() : null;   // 【v1.1035】子の分の割合（調整-入札価格だけ）
   let list = [...codes].map(code => {
     const adRevs = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adRev : 0);
     const adCosts = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adCost : 0);
@@ -19947,7 +19966,12 @@ function renderAdAdjust(cfg) {
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     // 【v1.0647】色を商品-基本データに合わせた: 広告実績額＝ピンク(col-spend) / 広告ROAS＝藍(col-aroas)。広告売上はアンバー(col-ad)のまま
     const _revCells  = r.adCosts.map(v => `<td class="num col-spend">${fmt(v)}</td>`).join('');
-    const _roasCells = r.roass.map((v, i) => adRoasCell(v, (r.adCosts || [])[i])).join('');   /* 【v1.0978】ADcheck 全広告ROAS の色 */
+    // 【v1.1035】調整-入札価格だけ：広告ROASの下に小さく「子 ◯%」（広告売上のうち子が売れた分。子が売れていない月・親子の無い商品は出さない）
+    const _famK = String(((state.productMeta || {})[r.code] || {}).repCode || '').trim() || r.code;
+    const _roasCells = r.roass.map((v, i) => { const td = adRoasCell(v, (r.adCosts || [])[i]);
+      const x = _csm ? _csm[_famK + '|' + months[i]] : null;
+      if (!x || !(x.c > 0)) return td;
+      return td.replace(/<\/td>$/, '<div class="yc-kid-share" style="color:' + _ycChildAdShareCol(x.pct) + '" title="' + months[i].replace('-', '/') + ' の広告売上のうち、子が売れた分（推定）&#10;¥' + Math.round(x.c).toLocaleString('ja-JP') + ' ／ ¥' + Math.round(x.t).toLocaleString('ja-JP') + '&#10;広告ROASはこの子の分も含んだ値です">子 ' + Math.round(x.pct) + '%</div></td>'); }).join('');   /* 【v1.0978】ADcheck 全広告ROAS の色 */
     // 【v1.0654】広告売上は月数ぶん（実績額・広告ROASと同じ並び）。構成比%つき
     const _adRevMainCell = r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('');
     // 【v1.0649】商品-広告データ: 商品コード / 画像 / 商品名 / 入札価格 / 広告売上×3 / 広告ROAS×3 / 広告実績額×3
@@ -26934,7 +26958,9 @@ function peRenderAdj() {
     // 【v1.1034】親子合算のときは 広告売上を -親／-子 の2列に（グラフと同じ割り方・色）
     ...((_peScope === 'set')
       ? [{ t: '広告売上<br>-親', g: 'ad', cc: YC_CC.ad, f: r => y0(r.adSelfP || 0), strong: true, tip: '親の広告から親そのものが売れた分（広告売上 − 広告売上-子）' },
-         { t: '広告売上<br>-子', g: 'ad', cc: YC_CC.adLight, f: r => y0(r.adSelfC || 0), tip: '子が広告経由で売れた分（推定）＝ 親の広告から子が売れた分（親の広告売上 − 親の総売上。子の総売上まで）＋ 子の広告売上。広告売上-親 ＋ 広告売上-子 ＝ 広告売上' }]
+         { t: '広告売上<br>-子', g: 'ad', cc: YC_CC.adLight, f: r => y0(r.adSelfC || 0), tip: '子が広告経由で売れた分（推定）＝ 親の広告から子が売れた分（親の広告売上 − 親の総売上。子の総売上まで）＋ 子の広告売上。広告売上-親 ＋ 広告売上-子 ＝ 広告売上' },
+         // 【v1.1035】広告売上のうち子が売れた分の割合（§421）。広告ROASが低めでもここが大きい日は、その広告が子を売っている
+         { t: '子の<br>割合', g: 'ad', f: r => (r.adRev > 0 ? '<b style="color:' + _ycChildAdShareCol(r.adSelfC / r.adRev * 100) + '">' + Math.round(r.adSelfC / r.adRev * 100) + '%</b>' : dash), tip: '広告売上のうち、子が売れた分の割合（広告売上-子 ÷ 広告売上）。広告ROASは子の分も含んだ値なので、ここが大きいのにROASだけで広告を止めると子の売上も減るおそれがある' }]
       : [{ t: '広告<br>売上', g: 'ad', cc: YC_CC.ad,  f: r => y0(r.adRev), strong: true }]),   // 【v1.0919】太字に
     { t: '広告ROAS', g: 'ad', cc: YC_CC.roas,  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
     { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
