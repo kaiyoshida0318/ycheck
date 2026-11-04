@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1031 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1032 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5177,7 +5177,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1031</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1032</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -11689,6 +11689,23 @@ const ZD_GRP_KEYS = ['soi', 'prof', 'normal'];
 //     そこでここでは推定値を比率としてのみ使い、実績額（総額）をその比で割り振る。
 //     こうすると 7%グループ＋7%超グループ＝実績額 が必ず成立し、勝手な絶対額を作らない。
 //     税抜への割り戻しは比率計算で相殺されるので、rev は税込のままでよい。
+// ============================================================================
+// 【v1.1032】親子のまとまりの SEO売上（仕様書 §418・本人「直して」）
+//   ★送り込み（親の広告から子が売れる）では、広告売上は親に・商品の売上は子に付く。
+//     商品ごとに「総売上 − 広告売上」を出すと、親は 0（マイナスを0で止める）・子は売上まるごと になり、
+//     同じ売上が「広告売上」と「SEO売上-子」の両方に数えられていた（広告売上＋SEO売上 ＞ 総売上）。
+//   → SEO売上は【まとまり】で出す：合計 ＝ max(0, まとまりの総売上 − まとまりの広告売上)
+//     親の分 ＝ min(max(0, 親の総売上 − 親の広告売上), 合計)／子の分 ＝ 合計 − 親の分
+//     ＝ 親の広告売上が親の売上を上回った分は、子のSEO売上から引く（親の広告から子が売れた分）。
+//   ★親と子への分け方は推定（広告レポートは「どの商品の売上が広告経由か」までは分からない）。合計は正確。
+//   ★親子の無い商品は今までどおり（max(0, 総売上 − 広告売上)）。
+// ============================================================================
+function _ycFamSeoSplit(revP, adP, revC, adC) {
+  revP = +revP || 0; adP = +adP || 0; revC = +revC || 0; adC = +adC || 0;
+  const tot = Math.max(0, (revP + revC) - (adP + adC));
+  const p = Math.min(Math.max(0, revP - adP), tot);
+  return { tot: tot, p: p, c: tot - p };
+}
 function _zdGroupSplit(itemRows, adRows, prCost) {
   const mk = () => ({ totSales: 0, adSales: 0, spend: 0, adClicks: 0, adOrders: 0, _prEst: 0, codes: 0 });
   const g = {}; ZD_GRP_KEYS.forEach(k => { g[k] = mk(); });
@@ -11710,10 +11727,35 @@ function _zdGroupSplit(itemRows, adRows, prCost) {
     g[k].adClicks += +a.adClicks || 0;
     g[k].adOrders += +a.adOrders || 0;
   });
+  // 【v1.1032】SEO売上は親子のまとまりで出してから、親の分＝送り込み元（soi）・子の分＝利益源（prof）へ（_ycFamSeoSplit）
+  const _fam = {};
+  const _famOf = (code) => {
+    const f = String(((state.productMeta || {})[code] || {}).repCode || '').trim() || code;
+    return _fam[f] || (_fam[f] = { revP: 0, adP: 0, revC: 0, adC: 0, gP: null });
+  };
+  (itemRows || []).forEach(i => { const k = _zdGroupOf(i.code, ref), o = _famOf(i.code), v = +i.revenue || 0;
+    if (k === 'prof') o.revC += v; else { o.revP += v; o.gP = (o.gP === 'soi' || k === 'soi') ? 'soi' : k; } });
+  (adRows || []).forEach(a => { const k = _zdGroupOf(a.code, ref), o = _famOf(a.code), v = +a.adRevenue || 0;
+    if (k === 'prof') o.adC += v; else { o.adP += v; o.gP = (o.gP === 'soi' || k === 'soi') ? 'soi' : k; } });
+  ZD_GRP_KEYS.forEach(k => { g[k].seoSales = 0; });
+  Object.keys(_fam).forEach(f => {
+    const o = _fam[f], sp = _ycFamSeoSplit(o.revP, o.adP, o.revC, o.adC);
+    if (sp.p > 0) g[o.gP || 'soi'].seoSales += sp.p;
+    if (sp.c > 0) g.prof.seoSales += sp.c;
+  });
+  // 【v1.1032】★まとまりごとに0で止めると、広告売上がまとまりの総売上を上回る分（広告からまとまりの外の商品が売れた分）が
+  //   どこからも引かれず、3つの内訳を足すと合計（＝商品別の総売上 − 広告売上）より多くなる（実データで1〜2%）。
+  //   どの商品から引くべきかは分からないので、内訳の比はそのままにして合計に合わせて縮める（足すと合計＝今までどおり）。
+  {
+    let _it = 0, _ad = 0, _sum = 0;
+    ZD_GRP_KEYS.forEach(k => { _it += g[k].totSales; _sum += g[k].seoSales; });
+    (adRows || []).forEach(a => { _ad += +a.adRevenue || 0; });
+    const _tgt = Math.max(0, _it - _ad);
+    if (_sum > _tgt && _sum > 0) { const f = _tgt / _sum; ZD_GRP_KEYS.forEach(k => { g[k].seoSales *= f; }); }
+  }
   let estTot = 0; ZD_GRP_KEYS.forEach(k => { estTot += g[k]._prEst; });
   ZD_GRP_KEYS.forEach(k => {
     const o = g[k];
-    o.seoSales = Math.max(0, o.totSales - o.adSales);
     o.cvr  = o.adClicks > 0 ? (o.adOrders / o.adClicks * 100) : 0;
     o.roas = o.spend > 0 ? (o.adSales / o.spend * 100) : 0;
     o.prCost = (prCost > 0 && estTot > 0) ? (prCost * o._prEst / estTot) : null;
@@ -17621,13 +17663,18 @@ function _zdSeoByMonthCut(N) {
   const add = (ym, c, k, v) => { const mm = acc[ym] || (acc[ym] = {}); const o = mm[c] || (mm[c] = { rev: 0, ad: 0 }); o[k] += v; };
   Object.keys(D.item || {}).forEach(d => { if (!isYmd(d) || +d.slice(8, 10) > N) return; const it = dailyItemOf(d); Object.keys(it).forEach(c => add(ymOf(d), c, 'rev', it[c].revenue)); });
   Object.keys(D.ad || {}).forEach(d => { if (!isYmd(d) || +d.slice(8, 10) > N) return; const ad = dailyAdOf(d); Object.keys(ad).forEach(c => add(ymOf(d), c, 'ad', ad[c].adRevenue)); });
-  const map = {};
+  // 【v1.1032】代表コードごとに 総売上・広告売上 を足してから差し引く（月別 _zdSeoByMonth と同じ順・§418）
+  const fam = {};
   Object.keys(acc).forEach(ym => Object.keys(acc[ym]).forEach(c => {
-    const seo = Math.max(0, acc[ym][c].rev - acc[ym][c].ad);   // 商品×月で差し引いてから代表コードへ（月別と同じ順）
-    if (seo <= 0) return;
     const rep = ((state.productMeta[c] || {}).repCode || '').trim() || c;
-    const mm = map[ym] || (map[ym] = {});
-    mm[rep] = (mm[rep] || 0) + seo;
+    const mm = fam[ym] || (fam[ym] = {}); const o = mm[rep] || (mm[rep] = { rev: 0, ad: 0 });
+    o.rev += acc[ym][c].rev; o.ad += acc[ym][c].ad;
+  }));
+  const map = {};
+  Object.keys(fam).forEach(ym => Object.keys(fam[ym]).forEach(rep => {
+    const seo = Math.max(0, fam[ym][rep].rev - fam[ym][rep].ad);
+    if (seo <= 0) return;
+    (map[ym] || (map[ym] = {}))[rep] = seo;
   }));
   return map;
 }
@@ -17903,16 +17950,20 @@ function _zdSetSeoShow(b){ _zdSeoShow=!!b; _zdSetSeoShowUI(); renderGraphData();
 window._zdSetSeoShow=_zdSetSeoShow;
 // 商品×月のSEO売上（=max(0,総売上−広告売上)）を {ym:{code:seo}} で返す（正の分だけ）
 function _zdSeoByMonth(){
-  const map={};
+  // 【v1.0511】親子商品は代表コード(repCode)へ合算して1商品として集計。
+  // 【v1.1032】★SEO売上は「代表コードごとに 総売上・広告売上 を足してから」差し引く（§418）。
+  //   商品ごとに差し引いてから足すと、親の広告から子が売れた分が二重に数えられる（子の売上まるごとがSEO売上になる）。
+  const acc={};
   (buildFullAggregate()||[]).forEach(function(r){
     const ym=r.month; if(!ym) return;
-    const seo=Math.max(0,(+r.rev||0)-(+r.adRev||0));
-    if(seo<=0) return;
-    // 【v1.0511】親子商品は代表コード(repCode)へ合算して1商品として集計。
     const rep=((state.productMeta[r.code]||{}).repCode||'').trim()||r.code;
-    const mm=(map[ym]||(map[ym]={}));
-    mm[rep]=(mm[rep]||0)+seo;
+    const mm=(acc[ym]||(acc[ym]={})); const o=mm[rep]||(mm[rep]={rev:0,ad:0});
+    o.rev+=(+r.rev||0); o.ad+=(+r.adRev||0);
   });
+  const map={};
+  Object.keys(acc).forEach(function(ym){ Object.keys(acc[ym]).forEach(function(rep){
+    const seo=Math.max(0,acc[ym][rep].rev-acc[ym][rep].ad); if(seo<=0) return;
+    (map[ym]||(map[ym]={}))[rep]=seo; }); });
   return map;
 }
 function _zdSeoTop(seoByMonth, ym){
@@ -26234,6 +26285,8 @@ function _peRows(code) {
         if (c === _famKey) { seoP += a.seoRev || 0; adP += a.adRev || 0; revP += a.rev || 0; }
         else               { seoC += a.seoRev || 0; adC += a.adRev || 0; revC += a.rev || 0; }
       });
+      // 【v1.1032】SEO売上は親子のまとまりで出し直す（商品ごとの足し算だと、親の広告から子が売れた分が二重に数えられる）
+      { const _ss = _ycFamSeoSplit(revP, adP, revC, adC); seoRev = _ss.tot; seoP = _ss.p; seoC = _ss.c; }
       // ★ROASは足し算してはいけない。合計から計算し直す（§5-D の合算と同じ考え方）
       out.push({ key: d, rev: rev, seoRev: seoRev, adRev: adRev, adCost: adCost, sroas: salesRoasPct(rev, adCost, 0),
                  // 【v1.0675】PR広告売上ROAS(推定)＝総売上÷(広告実績額＋PR実績額7%超・推定)×100。★合計から計算し直す
@@ -26258,6 +26311,7 @@ function _peRows(code) {
     });
     Object.keys(byMonth).sort().forEach(m => {
       const e = byMonth[m];
+      { const _ss = _ycFamSeoSplit(e.revP, e.adP, e.revC, e.adC); e.seoRev = _ss.tot; e.seoP = _ss.p; e.seoC = _ss.c; }   // 【v1.1032】
       out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0),
                  prsr: (e.prKnown && (e.adCost + e.prOver) > 0) ? Math.round(e.rev / (e.adCost + e.prOver) * 100) : null,   // 【v1.0675】
                  pronly: (e.prKnown && e.prOver > 0) ? Math.round(e.rev / e.prOver * 100) : null,   // 【v1.0677】
@@ -26804,8 +26858,8 @@ function peRenderAdj() {
     // 【v1.1014】親子合算のときは SEO売上を -親／-子 の2列に（本人指定・グラフ §399 と同じ割り方。値は _peRows の seoP／seoC）。
     //   見出しの左に グラフと同じ色の印（親＝濃い紫・子＝薄い紫）。親子の無い商品は今までどおり1列。
     ...((_peScope === 'set')
-      ? [{ t: 'SEO売上<br>-親', g: 'rev', cc: YC_CC.seoDark, gs: true, f: r => y0(r.seoP || 0), tip: '親商品のSEO売上（親の総売上 − 親の広告売上。マイナスは0）' },
-         { t: 'SEO売上<br>-子', g: 'rev', cc: YC_CC.seoLight, f: r => y0(r.seoC || 0), tip: '子商品のSEO売上（子の総売上 − 子の広告売上。マイナスは0）。SEO売上-親＋SEO売上-子＝前の SEO売上' }]
+      ? [{ t: 'SEO売上<br>-親', g: 'rev', cc: YC_CC.seoDark, gs: true, f: r => y0(r.seoP || 0), tip: '親商品のSEO売上。【v1.1032】親子まとめたSEO売上（親子の総売上 − 親子の広告売上）のうち、親の総売上 − 親の広告売上 の分' },
+         { t: 'SEO売上<br>-子', g: 'rev', cc: YC_CC.seoLight, f: r => y0(r.seoC || 0), tip: '子商品のSEO売上。【v1.1032】親子まとめたSEO売上の残り（親の広告から子が売れた分は引いてある）。SEO売上-親＋SEO売上-子＝親子まとめたSEO売上＝総売上−広告売上' }]
       : [{ t: 'SEO<br>売上',  g: 'rev', cc: YC_CC.seo, gs: true /* 【v1.0967】太線を総売上の左 → SEO売上の左（＝PR実績額の右）へ。PR と PR実績額 をくくる（本人指定） */, f: r => y0(r.seoRev), tip: '総売上 − 広告売上（マイナスは0）' }]),
     { t: '総売上',   g: 'rev', f: r => y0(r.rev) },   // 【v1.0919】太字をやめた／【v1.0921】SEO売上の左へ →【v1.0923】SEO売上の右（いちばん右）へ（本人指定）
     { t: 'PR広告<br>売上ROAS', g: 'pr', cc: YC_CC.salesRoas, strong: true, f: r => (r.prsr == null ? dash : salesRoasCellHtml(r.prsr, PR_SALES_ROAS_TH).replace('font-weight:700', 'font-weight:inherit')),   /* 太さは広告ROAS（td.pe-strong＝800）にそろえる */ tip: 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。広告費とPR費を合わせた費用に対して、どれだけ売れたか。費用が0の日は「—」\n色：' + PR_SALES_ROAS_TH.g + '%以上＝緑／' + PR_SALES_ROAS_TH.y + '%以上＝茶／' + PR_SALES_ROAS_TH.o + '%以上＝橙／それ未満＝赤（調整-PRオプの表と同じ）' }   /* 【v1.0946】調整-PRオプの表と同じ色分け（salesRoasCellHtml＋PR_SALES_ROAS_TH）・広告ROAS と同じ太字 */   /* 【v1.0945】PR売上ROAS から差し替え */   // 【v1.0943】PR のまとまりの右端
@@ -27371,7 +27425,7 @@ function peRenderInfo() {
           // 【v1.1008】★売上の棒は 下から 広告売上 → SEO売上-親 → SEO売上-子（本人と相談）。ボタンも積む順に並べる。
           //   広告売上を一番下＝右の棒の一番下（広告実績額）と同じ 0 から並ぶ → 広告にかけた額と返ってきた額を高さで比べられる。
           ? [[YC_CC.ad,'広告売上','広告売上（親＋子。子の広告売上は基本的に無い）'],
-             [YC_CC.seoDark,'SEO売上-親','親商品のSEO売上（総売上−広告売上）'],[YC_CC.seoLight,'SEO売上-子','子商品のSEO売上']]   /* 【v1.1005】広告売上-親／-子 → 1本（本人指定「広告売上-子は基本的にはないので消して」） */
+             [YC_CC.seoDark,'SEO売上-親','親商品のSEO売上（親子まとめたSEO売上のうち、親の総売上−親の広告売上の分）'],[YC_CC.seoLight,'SEO売上-子','子商品のSEO売上（親子まとめたSEO売上の残り。親の広告から子が売れた分は引いてある）']]   /* 【v1.1005】広告売上-親／-子 → 1本（本人指定「広告売上-子は基本的にはないので消して」） */
           : [[YC_CC.ad,'広告売上','広告売上'],[YC_CC.seo,'SEO売上','SEO売上（総売上−広告売上）']];   /* 【v1.1006】広告売上 オレンジ→青（YC_CC） */
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
           + '<span class="pe-sw-sep"></span>'
