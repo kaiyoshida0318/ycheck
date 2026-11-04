@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1025 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1026 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4924,7 +4924,7 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .zd-co-btn { flex: none; font: inherit; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; border: 1px solid #93c5fd; background: #fff; color: #1d4ed8; cursor: pointer; white-space: nowrap; }
 .zd-co-btn:hover { background: #eff6ff; }
 .zd-co-btn.on { background: #2563eb; border-color: #2563eb; color: #fff; }
-.zd-co-prow:hover { background: #fef9c3; }
+.zd-co-tile:hover { background: #fef9c3; }   /* 【v1.1026】タイルの上 */
 /* 【v1.0994】撤退候補の確認（confirm() の代わり。文字を選択・コピーできる） */
 .yc-rc { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.35); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; }
 .yc-rc-box { width: min(560px, 100%); max-height: 86vh; display: flex; flex-direction: column; gap: 10px; background: var(--bg2); color: var(--text); border-radius: 14px; padding: 20px 22px 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
@@ -5155,7 +5155,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1025</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1026</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -18130,8 +18130,8 @@ function _zdCohortDrows(desc, N) {
 }
 // ============================================================================
 // 【v1.1025】リリース月別の行の「▸ 一覧」：押すと行の下に、その行の商品を全-比較の商品一覧と同じ形で並べる
-//   ・1商品1行：画像｜商品名（親子の親は緑の印）＋コード・初回販売日｜総売上｜全体に占める割合（バー）｜SEO売上｜広告実績額｜広告ROAS
-//   ・並びは総売上の多い順（売上0で広告費だけの商品は下）。表の幅に合わせて1〜3列に分けて並べる（上から下・左から右）。
+//   ・【v1.1026】横並びのタイル（寄与度トップ20と同じ形）に変えた（下の _zdCohortPanelHtml）。v1.1025 の「1商品1行・1〜3列」はやめた。
+//   ・並びは総売上の多い順（売上0で広告費だけの商品は右の端・薄く）。
 //   ・「全体に占める割合」の分母＝その月のリリース月別の行の合計（＝②商品別売上の合計。1列目の「売上の◯%」と同じ）。
 //     2行目の小さい字＝そのリリース分の中での割合。
 //   ・画像・商品名を押すと商品モーダル（openProductEditModal）。開いている行は月全体／月途中を切り替えても開いたまま（タブを開き直すまで）。
@@ -18147,70 +18147,60 @@ function _zdCoToggle(key) {
 window._zdCoToggle = _zdCoToggle;
 function _zdCoOpenProduct(code) { try { if (typeof openProductEditModal === 'function') openProductEditModal(code); } catch (e) {} }
 window._zdCoOpenProduct = _zdCoOpenProduct;
+// 【v1.1026】一覧を「寄与度トップ20」（全-比較）と同じ横並びのタイルに（本人がスクショで指定）。
+//   左から：その行の見出し（リリース分・月・総売上・全体の◯%）｜各段の名前（商品名／総売上／全体に占める%／広告実績額）｜商品のタイル（総売上の多い順）。
+//   ★タイル・段の名前の見た目は寄与度トップ20の .yt-* をそのまま使う（クリックの動きは #ytArea の中だけなので、こちらには付かない）。
+//   ★「絞込」ボタンは付けない（この画面には絞り込む先が無い）。タイルを押すと商品モーダル。
+//   ★商品が多い行（それ以前 など）は、一覧の中だけ横にスクロールする（左の見出しと段の名前は止まったまま）。
 function _zdCohortPanelHtml(r, colCount, wrapW) {
   const prods = r._coProds || [];
   const tot = +r._coItemTot || 0, coTot = +r.totSales || 0;
   const esc = escapeHtml;
   const yen = v => Math.round(v).toLocaleString('ja-JP');
-  const dash = '<span style="color:var(--text3)">—</span>';
-  const parentSet = _zdSeoParentSet();
-  const maxShare = prods.reduce((mx, p) => Math.max(mx, tot > 0 ? p.rev / tot * 100 : 0), 0);
-  const W = Math.max(600, (wrapW || 1200) - 24);
-  const BLOCK = 640;
-  const ncol = Math.max(1, Math.min(3, Math.floor((W + 16) / (BLOCK + 16)), prods.length));
-  const per = Math.ceil(prods.length / ncol);
-  const colDefs = [
-    { w: 52, lbl: '画像', al: 'center' }, { w: 0, lbl: '商品名', al: 'left' },
-    { w: 84, lbl: '総売上', al: 'right' }, { w: 112, lbl: '全体に占める割合', al: 'left' },
-    { w: 76, lbl: 'SEO売上', al: 'right' }, { w: 76, lbl: '広告実績額', al: 'right' }, { w: 64, lbl: '広告ROAS', al: 'right' }
-  ];
-  const cell = (d, inner, extra) => '<div style="' + (d.w ? 'width:' + d.w + 'px;flex:0 0 ' + d.w + 'px;' : 'flex:1 1 auto;min-width:0;') + 'text-align:' + d.al + ';padding:0 6px;' + (extra || '') + '">' + inner + '</div>';
-  const head = '<div style="display:flex;align-items:center;height:28px;background:var(--surface2);border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3)">'
-    + colDefs.map(d => cell(d, d.lbl)).join('') + '</div>';
-  const pmark = '<span title="親子商品（親商品）" style="display:inline-flex;align-items:center;justify-content:center;width:1.15em;height:1.15em;border-radius:3px;background:#16a34a;margin-right:4px;vertical-align:-2px"><svg viewBox="0 0 20 20" style="width:0.82em;height:0.82em;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></span>';
-  const rowHtml = (p, rank) => {
-    const m = getMaster(p.code) || {};
-    const name = m.name || p.code;
+  const famSet = _zdSeoParentSet();
+  const W = Math.max(600, (wrapW || 1200) - 2);
+  const COL = '#2563eb';   // 割合の色（総売上＝青。YC_CC.tot と同じ）
+  const tiles = prods.map((p, i) => {
+    const name = (getMaster(p.code) || {}).name || p.code;
     const img = (typeof getProductImageSrc === 'function') ? (getProductImageSrc(p.code) || '') : '';
-    const im = img ? '<img loading="lazy" src="' + esc(img) + '" style="width:44px;height:44px;object-fit:contain;border-radius:4px;background:#fff;border:1px solid var(--border)" onerror="this.style.visibility=\'hidden\'">'
-                   : '<div style="width:44px;height:44px;background:var(--surface2);border-radius:4px;margin:0 auto"></div>';
-    const fsd = String((typeof _ycFirstSaleDate === 'function' ? _ycFirstSaleDate(p.code) : '') || '').replace(/-/g, '/');
+    const imgEl = img ? '<img loading="lazy" src="' + esc(img) + '" onerror="_ytImgErr(this)" class="yt-img">' : '<div class="yt-noimg">画像</div>';
     const share = tot > 0 && p.rev > 0 ? p.rev / tot * 100 : 0;
     const inCo = coTot > 0 && p.rev > 0 ? p.rev / coTot * 100 : 0;
-    const bw = maxShare > 0 ? Math.max(2, Math.round(share / maxShare * 56)) : 0;
-    const shareCell = p.rev > 0
-      ? '<div style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:56px;height:8px;border-radius:4px;background:#e5e7eb;position:relative;overflow:hidden;flex:none"><span style="position:absolute;left:0;top:0;bottom:0;width:' + bw + 'px;background:#2563eb;border-radius:4px"></span></span>'
-        + '<span style="font-weight:700;color:var(--text)">' + (Math.round(share * 100) / 100) + '%</span></div>'
-        + '<div style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap">この分の中 ' + (Math.round(inCo * 10) / 10) + '%</div>'
-      : dash;
+    const fsd = String((typeof _ycFirstSaleDate === 'function' ? _ycFirstSaleDate(p.code) : '') || '').replace(/-/g, '/');
     const seo = Math.max(0, p.rev - p.adRev);
-    const ro = p.adCost > 0 ? Math.round(p.adRev / p.adCost * 100) : null;
-    const roCell = ro == null ? dash : '<span style="color:' + (ro >= 500 ? '#1D9E75' : ro >= 300 ? '#BA7517' : '#A32D2D')   /* 【v1.0978】広告ROAS の色（ADcheck 全広告ROAS）と同じ */ + ';font-weight:700">' + ro + '%</span>';
-    const num = 'font-family:\'DM Mono\',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:12.5px;';
-    const isP = parentSet && parentSet.has(p.code);
-    return '<div class="zd-co-prow" onclick="_zdCoOpenProduct(\'' + esc(String(p.code).replace(/\\/g, '\\\\').replace(/'/g, "\\'")) + '\')" title="' + esc(name + '（' + p.code + '）') + '　クリックで商品モーダル" style="display:flex;align-items:center;height:54px;border-bottom:1px solid var(--border);cursor:pointer;' + (p.rev > 0 ? '' : 'opacity:.6;') + '">'
-      + cell(colDefs[0], im, 'display:flex;justify-content:center;')
-      + cell(colDefs[1], '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2"><span style="color:var(--text3);font-weight:600;margin-right:4px">' + rank + '</span>' + (isP ? pmark : '') + esc(name) + '</div>'
-        + '<div style="font-size:10px;color:var(--text3);font-family:\'DM Mono\',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">' + esc(p.code) + (fsd ? '　初回 ' + esc(fsd) : '') + '</div>')
-      + cell(colDefs[2], p.rev > 0 ? '<b>' + yen(p.rev) + '</b>' : dash, num)
-      + cell(colDefs[3], shareCell, 'font-size:12px;')
-      + cell(colDefs[4], seo > 0 ? yen(seo) : dash, num)
-      + cell(colDefs[5], p.adCost > 0 ? yen(p.adCost) : dash, num)
-      + cell(colDefs[6], roCell, num)
+    const tip = name + '（' + p.code + '）'
+      + '\n総売上 ' + yen(p.rev) + '（全体の ' + (Math.round(share * 100) / 100) + '%／この分の中 ' + (Math.round(inCo * 10) / 10) + '%）'
+      + '\nSEO売上 ' + yen(seo) + '／広告売上 ' + yen(p.adRev) + '／広告実績額 ' + yen(p.adCost)
+      + (p.adCost > 0 ? '／広告ROAS ' + Math.round(p.adRev / p.adCost * 100) + '%' : '')
+      + (fsd ? '\n初回販売日 ' + fsd : '') + '\nクリック：商品モーダル';
+    const ec = esc(String(p.code).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+    return '<div class="yt-tile zd-co-tile" onclick="_zdCoOpenProduct(\'' + ec + '\')" title="' + esc(tip) + '"' + (p.rev > 0 ? '' : ' style="opacity:.55"') + '>'
+      + '<div class="yt-imgbox">' + imgEl
+      +   '<div class="yt-rank" style="background:' + (i < 3 ? COL : '#94a3b8') + '">' + (i + 1) + '</div>'
+      +   (famSet && famSet.has(p.code) ? '<div class="yt-oya" title="親子商品（親商品）"><svg viewBox="0 0 20 20"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/></svg></div>' : '')
+      + '</div>'
+      + '<div class="yt-nm">' + esc(name) + '</div>'
+      + '<div class="yt-v1">' + (p.rev > 0 ? yen(p.rev) : '<span style="color:var(--text3)">—</span>') + '</div>'
+      + '<div class="yt-v2" style="color:' + COL + '">' + (p.rev > 0 ? (share >= 10 ? share.toFixed(1) : share.toFixed(2)) + '%' : '<span style="color:var(--text3)">—</span>') + '</div>'
+      + '<div class="yt-v3">' + (p.adCost > 0 ? yen(p.adCost) : '<span class="yt-noad" title="この期間は広告費が0円">広告なし</span>') + '</div>'
       + '</div>';
-  };
-  let blocks = '';
-  for (let k = 0; k < ncol; k++) {
-    const part = prods.slice(k * per, (k + 1) * per);
-    if (!part.length) continue;
-    blocks += '<div style="flex:1 1 ' + BLOCK + 'px;min-width:0;max-width:' + (ncol === 1 ? 760 : 9999) + 'px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#fff">'
-      + head + part.map((p, i) => rowHtml(p, k * per + i + 1)).join('') + '</div>';
-  }
-  const ttl = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin:0 0 8px">◎ ' + esc(r.month.replace('-', '/')) + (r._cut > 0 ? '（1〜' + r._cut + '日）' : '') + '　' + esc(r.label) + ' の商品（' + prods.length + '品・総売上の多い順）'
-    + '<span style="font-weight:400;color:var(--text3);margin-left:10px">全体に占める割合＝この月の商品別売上の合計 ' + yen(tot) + ' に対する割合／画像・商品名を押すと商品モーダル</span></div>';
-  return '<tr class="zd-co-panel"><td colspan="' + colCount + '" style="padding:0;background:#f4f7fc;border-bottom:2px solid #c7d2fe">'
-    + '<div style="position:sticky;left:0;box-sizing:border-box;width:' + Math.round(W + 24) + 'px;max-width:100%;padding:10px 12px 12px">' + ttl
-    + '<div style="display:flex;gap:16px;align-items:flex-start">' + blocks + '</div></div></td></tr>';
+  }).join('');
+  const ln = (t, cls, st, tip) => '<div class="yt-lbl ' + (cls || '') + '"' + (st ? ' style="' + st + '"' : '') + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + t + '</div>';
+  const lbl = '<div class="yt-lblcol" style="left:118px"><div style="height:80px"></div>'
+    + ln('商品名', 'h14 mt3') + ln('総売上', 'h15')
+    + ln('全体に占める%', 'h15', 'color:' + COL, 'この月の商品別売上の合計 ' + yen(tot) + ' に対する割合')
+    + ln('広告実績額', 'h14') + '</div>';
+  const head = '<div class="yt-mcell top" style="left:0;width:118px;flex:0 0 118px;background:#eef4ff">'
+    + '<div class="yt-mtag" style="background:#2563eb;white-space:normal;line-height:1.3">' + esc(r.label) + '</div>'
+    + '<div class="yt-mym">' + esc(r.month.replace('-', '/')) + '</div>'
+    + (r._cut > 0 ? '<div class="yt-mday">1〜' + r._cut + '日</div>' : '')
+    + '<div class="yt-mtl">総売上</div><div class="yt-mtv">' + yen(coTot) + '</div>'
+    + '<div class="yt-mtl">全体の</div><div class="yt-mtv" style="color:' + COL + '">' + (tot > 0 ? (Math.round(coTot / tot * 1000) / 10) : 0) + '%</div>'
+    + '<div class="yt-mtl">' + prods.length + '品</div></div>';
+  return '<tr class="zd-co-panel"><td colspan="' + colCount + '" style="padding:0;background:#fff;border-bottom:2px solid #c7d2fe">'
+    + '<div class="zd-co-strip" style="position:sticky;left:0;box-sizing:border-box;width:' + Math.round(W) + 'px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain">'
+    + '<div style="display:flex;align-items:stretch;width:max-content;min-width:100%">' + head + '<div class="yt-tiles">' + lbl + tiles + '</div></div>'   /* 段の名前はタイルの並びの中（寄与度トップ20と同じ）＝高さがそろう */
+    + '</div></td></tr>';
 }
 // 1列目（リリース月別の行）
 function _zdCohortFirstCellHtml(r, pad, fs, vbd) {
