@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1036 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1037 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1734,7 +1734,7 @@ body.basic-tune #view-basic .filters { overflow: visible; flex-wrap: wrap; row-g
 #view-oyako #oySalesSeg .oy-btn[data-tier="3"].on { background: #dc2626; color: #fff; }
 /* 表は内容幅で中央寄せ（画面いっぱいに間延びさせない） */
 #view-oyako .oy-tablebox { display: inline-block; text-align: left; border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-width: 100%; max-height: 76vh; }  /* 【v1.0442】ヘッダー固定：この枠を縦横スクロールのコンテナにする（overflow:hiddenだとstickyが効かない） */
-/* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない） */
+/* 【v1.0400】入札価格調整/PRオプ調整：表示時期トグル（今月含む/含まない）／【v1.1037】画面の見出しは「時期」（本人指定。コメントの「表示時期」は同じもの） */
 .tune-period-btn { font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--bg2); color: var(--text2); cursor: pointer; font-weight: 600; white-space: nowrap; }
 .tune-period-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
@@ -5198,7 +5198,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1036</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1037</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -5772,8 +5772,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <span class="filter-label">検索</span>
           <input type="search" id="reviewSales4Search" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <!-- 【v1.0498】表示時期トグル（画面右端）。今月含む→当月を含む直近4ヶ月（3完了＋当月） -->
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（満了した4ヶ月のみ）">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む（完了3ヶ月＋当月）。当月は未満了のため参考値。">今月含む</button>
@@ -6220,8 +6220,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <button class="search-rep-badge" id="adAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <span class="state-explain" id="adAdjustStateExplain" style="display:none;"></span>
           <!-- 【v1.0497】表示時期トグル（入札価格調整と同じ右端位置）。実績額・広告ROASに当月を含めるか切替 -->
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。実績額・広告ROASは満了月まで。">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。実績額・広告ROASに当月分を表示。">今月含む</button>
@@ -6267,8 +6267,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <button class="search-rep-badge" id="proAdjustRepBadge" type="button" data-tooltip="送り込みがある商品"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></button>
           <span class="state-explain" id="proAdjustStateExplain" style="display:none;"></span>
           <!-- 【v1.0497】表示時期トグル（PRオプ調整と同じ右端位置）。SEO売上に当月を含めるか切替 -->
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない（完了した月のみ）。SEO売上は満了月まで。">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む。SEO売上に当月分を表示。">今月含む</button>
@@ -6324,8 +6324,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
           <!-- 【v1.0999】「🤖 GPT用に要約コピー ▾」は撤去（本人指定）。処理（gptOpenTuneMenu / gptBuildTuneText）は残置 -->
           <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
@@ -6374,8 +6374,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <span class="filter-label">検索</span>
           <input type="search" id="wdSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
@@ -6436,8 +6436,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
           <!-- 【v1.0999】「🤖 GPT用に要約コピー ▾」は撤去（本人指定）。処理（gptOpenTuneMenu / gptBuildTuneText）は残置 -->
           <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
@@ -6492,8 +6492,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           </span>
           <!-- 【v1.0651】一括変更（商品-基本データと同じ。バー #basicBulkBar はいま開いている画面へ移して使う） -->
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
@@ -6552,8 +6552,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           </span>
           <!-- 【v1.0651】一括変更（商品-基本データと同じ。バー #basicBulkBar はいま開いている画面へ移して使う） -->
           <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <span class="tune-period-seg" role="group" aria-label="表示時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">表示時期</span>
+          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+            <span class="filter-label">時期</span>
             <span style="display:inline-flex;gap:4px">
               <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
