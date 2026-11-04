@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1033 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1034 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5188,7 +5188,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1033</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1034</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -11716,6 +11716,18 @@ function _ycFamSeoSplit(revP, adP, revC, adC) {
   const tot = Math.max(0, (revP + revC) - (adP + adC));
   const p = Math.min(Math.max(0, revP - adP), tot);
   return { tot: tot, p: p, c: tot - p };
+}
+// 【v1.1034】広告売上を「親」「子」に割る（§420・本人指定 A案＝薄いオレンジ・名前は「広告売上-子」）。
+//   親の広告から子が売れた分（推定）＝ min(max(0, 親の広告売上 − 親の総売上), 子の総売上)
+//   広告売上-親 ＝ 親の広告売上 − その分（親そのものが広告から売れた分。まとまりの外へ流れた分もここに残る）
+//   広告売上-子 ＝ その分 ＋ 子の広告売上（子が広告経由で売れた分）
+//   ★§418 の SEO売上の割り方（_ycFamSeoSplit）と同じ考え方なので、売上が広告売上より多い日は
+//     親：広告売上-親 ＋ SEO売上-親 ＝ 親の総売上／子：広告売上-子 ＋ SEO売上-子 ＝ 子の総売上 になる。
+//   ★Yahoo の広告レポートは直接（親そのもの）と間接（親の広告から別の商品）を分けて出さない（CSV・アカウント分析とも確認済み）ので推定。合計（広告売上）は正確。
+function _ycFamAdSplit(revP, adP, revC, adC) {
+  revP = +revP || 0; adP = +adP || 0; revC = +revC || 0; adC = +adC || 0;
+  const send = Math.min(Math.max(0, adP - revP), revC);
+  return { p: adP - send, c: adC + send, send: send };
 }
 function _zdGroupSplit(itemRows, adRows, prCost) {
   const mk = () => ({ totSales: 0, adSales: 0, spend: 0, adClicks: 0, adOrders: 0, _prEst: 0, codes: 0 });
@@ -26349,6 +26361,7 @@ function _peRows(code) {
       });
       // 【v1.1032】SEO売上は親子のまとまりで出し直す（商品ごとの足し算だと、親の広告から子が売れた分が二重に数えられる）
       { const _ss = _ycFamSeoSplit(revP, adP, revC, adC); seoRev = _ss.tot; seoP = _ss.p; seoC = _ss.c; }
+      const _as = _ycFamAdSplit(revP, adP, revC, adC);   // 【v1.1034】広告売上-親／-子
       // ★ROASは足し算してはいけない。合計から計算し直す（§5-D の合算と同じ考え方）
       out.push({ key: d, rev: rev, seoRev: seoRev, adRev: adRev, adCost: adCost, sroas: salesRoasPct(rev, adCost, 0),
                  // 【v1.0675】PR広告売上ROAS(推定)＝総売上÷(広告実績額＋PR実績額7%超・推定)×100。★合計から計算し直す
@@ -26356,7 +26369,7 @@ function _peRows(code) {
                  // 【v1.0677】PR売上ROAS(推定)＝総売上÷PR実績額(7%超・推定)×100。★広告費は分母に入れない
                  pronly: (prKnown && prOver > 0) ? Math.round(rev / prOver * 100) : null,
                  prOver: prOver, prKnown: prKnown, prParts: prParts,   // 【v1.0681/v1.0682】PR実績額(7%超・推定)の列と、その内訳
-                 seoP: seoP, seoC: seoC, adP: adP, adC: adC, revP: revP, revC: revC });   // 【v1.0687】
+                 seoP: seoP, seoC: seoC, adP: adP, adC: adC, revP: revP, revC: revC, adSelfP: _as.p, adSelfC: _as.c });   // 【v1.0687】／【v1.1034】adSelfP／adSelfC＝広告売上-親／-子
     });
   } else {
     const agg = (typeof buildFullAggregate === 'function') ? buildFullAggregate() : [];
@@ -26374,11 +26387,12 @@ function _peRows(code) {
     Object.keys(byMonth).sort().forEach(m => {
       const e = byMonth[m];
       { const _ss = _ycFamSeoSplit(e.revP, e.adP, e.revC, e.adC); e.seoRev = _ss.tot; e.seoP = _ss.p; e.seoC = _ss.c; }   // 【v1.1032】
+      const _as = _ycFamAdSplit(e.revP, e.adP, e.revC, e.adC);   // 【v1.1034】
       out.push({ key: m, rev: e.rev, seoRev: e.seoRev, adRev: e.adRev, adCost: e.adCost, sroas: salesRoasPct(e.rev, e.adCost, 0),
                  prsr: (e.prKnown && (e.adCost + e.prOver) > 0) ? Math.round(e.rev / (e.adCost + e.prOver) * 100) : null,   // 【v1.0675】
                  pronly: (e.prKnown && e.prOver > 0) ? Math.round(e.rev / e.prOver * 100) : null,   // 【v1.0677】
                  prOver: e.prOver, prKnown: e.prKnown, prParts: e.prParts,   // 【v1.0681/v1.0682】
-                 seoP: e.seoP, seoC: e.seoC, adP: e.adP, adC: e.adC, revP: e.revP, revC: e.revC });   // 【v1.0687】
+                 seoP: e.seoP, seoC: e.seoC, adP: e.adP, adC: e.adC, revP: e.revP, revC: e.revC, adSelfP: _as.p, adSelfC: _as.c });   // 【v1.0687】／【v1.1034】
     });
     // 【v1.0641】月別の期間しぼり。★基準は「データの最終月」（今日の日付ではない）
     //   may＝最終月以前でいちばん近い5月から（例: 最終月 2027-03 → 2026-05〜）
@@ -26774,7 +26788,10 @@ function peRenderAdj() {
       + '" style="--c:' + c + _ycSwT(c) + '" data-ser="' + l + '" title="' + tip + '&#10;（押すとグラフから消す／もう一度押すと戻す）" onclick="_peToggleSeries(this.getAttribute(\'data-ser\'), \'adj\')">' + l + '</button>';
     // 【v1.1013】親子合算のときは SEO売上を -親／-子 に割る（商品-日月別と同じ。色も同じ：親＝濃い紫・子＝薄い紫）
     // 【v1.1008】下から 広告売上 → SEO売上（商品-日月別と同じ。広告売上と広告実績額が同じ 0 から並ぶ）
-    if (_lg) _lg.innerHTML = _sw(C.ad, '広告売上', '左の棒（下）: 広告売上。右の棒の広告実績額と同じ高さから並ぶので、かけた額と返ってきた額を比べられる') + (_adjSplit
+    // 【v1.1034】親子合算のときは 広告売上も -親（オレンジ）／-子（薄いオレンジ）に割る（_peRows の adSelfP／adSelfC）
+    if (_lg) _lg.innerHTML = (_adjSplit
+        ? _sw(C.ad, '広告売上-親', '左の棒（いちばん下）: 親の広告から親そのものが売れた分（広告売上 − 広告売上-子）') + _sw(YC_CC.adLight, '広告売上-子', '左の棒（広告売上-親の上）: 子が広告経由で売れた分（推定）＝ 親の広告から子が売れた分（親の広告売上 − 親の総売上。子の総売上まで）＋ 子の広告売上。&#10;Yahoo のレポートは直接／間接を分けないので推定。広告売上-親 ＋ 広告売上-子 ＝ 広告売上')
+        : _sw(C.ad, '広告売上', '左の棒（下）: 広告売上。右の棒の広告実績額と同じ高さから並ぶので、かけた額と返ってきた額を比べられる')) + (_adjSplit
         ? _sw(YC_CC.seoDark, 'SEO売上-親', '左の棒（広告売上の上）: 親商品のSEO売上（総売上−広告売上）') + _sw(YC_CC.seoLight, 'SEO売上-子', '左の棒（いちばん上）: 子商品のSEO売上。広告売上・SEO売上-親と合わせた高さ＝総売上')
         : _sw(C.seo, 'SEO売上', '左の棒（上に積む）: SEO売上（総売上−広告売上）。広告売上と合わせた高さ＝総売上'))
       + '<span class="pe-sw-sep"></span>'
@@ -26800,7 +26817,10 @@ function peRenderAdj() {
       const bar = (label, data, color, stack) => ({ type: 'bar', label, data, backgroundColor: color, stack, yAxisID: 'y', order: 2,
         barPercentage: 0.96, categoryPercentage: 0.9, borderRadius: 2 });
       const ds = [
-        bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's'),   // 【v1.1008】下＝広告売上
+        // 【v1.1008】下＝広告売上／【v1.1034】親子合算なら 広告売上-親 → 広告売上-子（薄いオレンジ）
+        ...(_adjSplit
+          ? [bar('広告売上-親', rows.map(r => r.adSelfP || 0), C.ad, 's'), bar('広告売上-子', rows.map(r => r.adSelfC || 0), YC_CC.adLight, 's')]
+          : [bar('広告売上', rows.map(r => r.adRev || 0), C.ad, 's')]),
         // 【v1.1013】親子合算のときは SEO売上-親（濃い紫）→ SEO売上-子（薄い紫）の順に広告売上の上へ積む（_peRows の seoP／seoC。商品-日月別と同じ）
         ...(_adjSplit
           ? [bar('SEO売上-親', rows.map(r => r.seoP || 0), YC_CC.seoDark, 's'), bar('SEO売上-子', rows.map(r => r.seoC || 0), YC_CC.seoLight, 's')]
@@ -26911,7 +26931,11 @@ function peRenderAdj() {
     { t: 'CPC',      g: 'ad',  f: r => (r.cpc == null ? dash : yen(r.cpc)), tip: '広告実績額 ÷ クリック数' },
     { t: '広告<br>実績額', g: 'ad', cc: YC_CC.cost, f: r => y0(r.adCost), strong: true },   /* 【v1.0943】見出しを2行に（列が増えても横スクロールを出さない） */   // 【v1.0924】実績額 → 広告実績額（本人指定）
     { t: '広告<br>個数', g: 'ad',  f: r => (r.hasAd || r.dayHasAdFile ? n0(r.adOrders) : dash), tip: '広告経由の注文数（広告詳細レポートの「注文数」）。Yahoo のレポートは1件を0と出すので、売上があって0の日は1に戻しています' },
-    { t: '広告<br>売上', g: 'ad', cc: YC_CC.ad,  f: r => y0(r.adRev), strong: true },   // 【v1.0919】太字に
+    // 【v1.1034】親子合算のときは 広告売上を -親／-子 の2列に（グラフと同じ割り方・色）
+    ...((_peScope === 'set')
+      ? [{ t: '広告売上<br>-親', g: 'ad', cc: YC_CC.ad, f: r => y0(r.adSelfP || 0), strong: true, tip: '親の広告から親そのものが売れた分（広告売上 − 広告売上-子）' },
+         { t: '広告売上<br>-子', g: 'ad', cc: YC_CC.adLight, f: r => y0(r.adSelfC || 0), tip: '子が広告経由で売れた分（推定）＝ 親の広告から子が売れた分（親の広告売上 − 親の総売上。子の総売上まで）＋ 子の広告売上。広告売上-親 ＋ 広告売上-子 ＝ 広告売上' }]
+      : [{ t: '広告<br>売上', g: 'ad', cc: YC_CC.ad,  f: r => y0(r.adRev), strong: true }]),   // 【v1.0919】太字に
     { t: '広告ROAS', g: 'ad', cc: YC_CC.roas,  f: r => (r.aroas == null ? dash : '<span style="' + roasCls(r.aroas) + '">' + Math.round(r.aroas).toLocaleString('ja-JP') + '%</span>'), tip: '広告売上 ÷ 広告実績額 × 100', strong: true },
     { t: 'CVR',      g: 'ad',  f: r => pc(r.cvr, 2), tip: '広告個数 ÷ クリック数 × 100' },
     { t: '平均<br>獲得単価', g: 'ad', f: r => (r.cpa == null ? dash : yen(r.cpa)), tip: '広告実績額 ÷ 広告個数（広告で1件の注文を取るのにかかった広告費）。広告個数が0のときは「—」' },   // 【v1.0918】平均単価から置き換え
@@ -27486,7 +27510,7 @@ function peRenderInfo() {
         const _rev = _peSplit
           // 【v1.1008】★売上の棒は 下から 広告売上 → SEO売上-親 → SEO売上-子（本人と相談）。ボタンも積む順に並べる。
           //   広告売上を一番下＝右の棒の一番下（広告実績額）と同じ 0 から並ぶ → 広告にかけた額と返ってきた額を高さで比べられる。
-          ? [[YC_CC.ad,'広告売上','広告売上（親＋子。子の広告売上は基本的に無い）'],
+          ? [[YC_CC.ad,'広告売上-親','親の広告から親そのものが売れた分（広告売上 − 広告売上-子）'],[YC_CC.adLight,'広告売上-子','子が広告経由で売れた分（推定）＝ 親の広告から子が売れた分（親の広告売上 − 親の総売上。子の総売上まで）＋ 子の広告売上'],   /* 【v1.1034】 */
              [YC_CC.seoDark,'SEO売上-親','親商品のSEO売上（親子まとめたSEO売上のうち、親の総売上−親の広告売上の分）'],[YC_CC.seoLight,'SEO売上-子','子商品のSEO売上（親子まとめたSEO売上の残り。親の広告から子が売れた分は引いてある）']]   /* 【v1.1005】広告売上-親／-子 → 1本（本人指定「広告売上-子は基本的にはないので消して」） */
           : [[YC_CC.ad,'広告売上','広告売上'],[YC_CC.seo,'SEO売上','SEO売上（総売上−広告売上）']];   /* 【v1.1006】広告売上 オレンジ→青（YC_CC） */
         if (_lg) _lg.innerHTML = _rev.map(x => _sw(x[0], x[1], '左の棒（売上）: ' + x[2])).join('')
@@ -27502,7 +27526,9 @@ function peRenderInfo() {
         ? [
             // 【v1.1008】★Chart.js は datasets の順に下から積む＝広告売上を先頭にして一番下へ（右の棒の広告実績額と同じ 0 から）
             // 【v1.1005】広告売上-子は基本的に無いので、親子に割らず1本（親＋子）にした。★子に広告売上があっても棒からは消えない
-            { type: 'bar', label: '広告売上', data: rows.map(r => (r.adP || 0) + (r.adC || 0)), backgroundColor: YC_CC.ad, stack: 's', yAxisID: 'y', order: 2 },
+            // 【v1.1034】広告売上も -親（オレンジ）／-子（薄いオレンジ）に割る（本人指定 A案）。合わせると前の「広告売上」1本と同じ高さ
+            { type: 'bar', label: '広告売上-親', data: rows.map(r => r.adSelfP || 0), backgroundColor: YC_CC.ad, stack: 's', yAxisID: 'y', order: 2 },
+            { type: 'bar', label: '広告売上-子', data: rows.map(r => r.adSelfC || 0), backgroundColor: YC_CC.adLight, stack: 's', yAxisID: 'y', order: 2 },
             { type: 'bar', label: 'SEO売上-親',  data: rows.map(r => r.seoP || 0), backgroundColor: YC_CC.seoDark, stack: 's', yAxisID: 'y', order: 2 },
             { type: 'bar', label: 'SEO売上-子',  data: rows.map(r => r.seoC || 0), backgroundColor: YC_CC.seoLight, stack: 's', yAxisID: 'y', order: 2 }
           ]
@@ -27665,7 +27691,7 @@ function peRenderInfo() {
   const _yen0 = (v) => (v == null ? _dash : (v > 0 ? Math.round(v).toLocaleString('ja-JP') : '<span style="color:var(--text3)">0</span>'));   /* 【v1.0963】 */
 
   // ---- 見出し（2段） ----
-  const _revCols = _tblSplit ? 4 : 3;
+  const _revCols = _tblSplit ? 5 : 3;   // 【v1.1034】合算は 総売上・親売上・子売上・広告売上-親・広告売上-子
   const head = '<tr>'
     + '<th rowspan="2" style="' + thB + 'background:var(--bg3);vertical-align:bottom">' + (_peGrain === 'day' ? '日付' : '月') + '</th>'
     + '<th colspan="' + _revCols + '" style="' + thB + BD + 'background:' + G.rev.hbg  + ';color:' + G.rev.color  + '">売上</th>'
@@ -27678,7 +27704,10 @@ function peRenderInfo() {
         ? '<th style="' + thB + 'background:' + OYA.hbg + '">親売上</th><th style="' + thB + 'background:' + KO.hbg + '">子売上</th>'
         : '<th style="' + thB + 'background:' + ycCcTint(YC_CC.seo, YC_CC_TH) + ';color:' + ycCcText(YC_CC.seo) + '">' + ycCcDot(YC_CC.seo) + 'SEO売上</th>')
     // 【v1.1016】グラフに出ている項目（広告売上・PR広告売上ROAS・広告実績額・PR実績額。合算でないときは SEO売上 も）の見出しに、グラフの色の印＋文字色
-    + '<th style="' + thB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TH) + ';color:' + ycCcText(YC_CC.ad) + '">' + ycCcDot(YC_CC.ad) + '広告売上</th>'
+    + (_tblSplit   // 【v1.1034】
+        ? '<th style="' + thB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TH) + ';color:' + ycCcText(YC_CC.ad) + '" title="親の広告から親そのものが売れた分">' + ycCcDot(YC_CC.ad) + '広告売上-親</th>'
+          + '<th style="' + thB + 'background:' + ycCcTint(YC_CC.adLight, YC_CC_TH) + ';color:' + ycCcText(YC_CC.adLight) + '" title="子が広告経由で売れた分（推定）＝ 親の広告から子が売れた分 ＋ 子の広告売上">' + ycCcDot(YC_CC.adLight) + '広告売上-子</th>'
+        : '<th style="' + thB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TH) + ';color:' + ycCcText(YC_CC.ad) + '">' + ycCcDot(YC_CC.ad) + '広告売上</th>')
     + '<th style="' + thB + BD + 'background:' + ycCcTint(YC_CC.salesRoas, YC_CC_TH) + '">' + ycCcDot(YC_CC.salesRoas) + _subCell('PR・広告費') + '</th>'
     + '<th style="' + thB + 'background:'      + G.prsr.bg2 + ';line-height:1.35">' + _amtTh('広告＋PR') + '</th>'
     + '<th style="' + thB + BD + 'background:' + G.sr.bg    + '">' + _subCell('広告費') + '</th>'
@@ -27697,7 +27726,9 @@ function peRenderInfo() {
       + (_tblSplit
           ? '<td style="' + tdB + 'background:' + OYA.bg + '">' + _yen0(r.revP || 0) + '</td><td style="' + tdB + 'background:' + KO.bg + '">' + _yen0(r.revC || 0) + '</td>'
           : '<td style="' + tdB + 'background:' + ycCcTint(YC_CC.seo, YC_CC_TD) + '">' + _yen0(r.seoRev) + '</td>')   // 【v1.1017】B案：グラフに出ている列は地もグラフの色
-      + '<td style="' + tdB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TD) + '">' + _yen0(r.adRev) + '</td>'
+      + (_tblSplit   // 【v1.1034】
+          ? '<td style="' + tdB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TD) + '">' + _yen0(r.adSelfP || 0) + '</td><td style="' + tdB + 'background:' + ycCcTint(YC_CC.adLight, YC_CC_TD) + '">' + _yen0(r.adSelfC || 0) + '</td>'
+          : '<td style="' + tdB + 'background:' + ycCcTint(YC_CC.ad, YC_CC_TD) + '">' + _yen0(r.adRev) + '</td>')
       // PR広告売上ROAS（推定）＋ その分母
       + '<td class="est-val" style="' + tdB + BD + 'background:' + ycCcTint(YC_CC.salesRoas, YC_CC_TD) + '">' + _pct(r.prsr) + '</td>'
       + '<td class="est-val" style="' + tdB + 'background:' + G.prsr.bg2 + '">' + _yen0(_prAmt) + '</td>'
@@ -27859,7 +27890,7 @@ function openProductEditModal(code, _openOpt) {
     // 【v1.0943】PR売上ROAS を足した：調整-入札価格からは消す／調整-PRオプからは出す（広告実績額・広告ROAS を消す）
     // 【v1.1031】調整-入札価格から開いたときも SEO売上 は出す（本人指定「SEO売上も選択された状態をデフォルトに」）。消すのは PR の3つだけ
     const _pre = (state.currentView === 'ad-tune') ? ['PR実績額', 'PRオプ料率', 'PR広告売上ROAS']   /* 【v1.0945】名前を差し替え／【v1.1031】'SEO売上' を外した */
-               : (state.currentView === 'pro-tune') ? ['広告売上', '入札価格', '広告実績額', '広告ROAS'] : null;
+               : (state.currentView === 'pro-tune') ? ['広告売上', '広告売上-親', '広告売上-子', '入札価格', '広告実績額', '広告ROAS'] : null;   /* 【v1.1034】親子合算の 広告売上-親／-子 も消す */
     if (_pre) { _peAdjHidden.clear(); _pre.forEach(l => _peAdjHidden.add(l)); }
   }
   peSetTab((_openOpt && _openOpt.keepTab && _peTab) ? _peTab
