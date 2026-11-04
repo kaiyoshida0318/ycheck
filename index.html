@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1032 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1033 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4931,6 +4931,17 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .zd-co-btn:hover { background: #eff6ff; }
 .zd-co-btn.on { background: #2563eb; border-color: #2563eb; color: #fff; }
 .zd-co-tile:hover { background: #fef9c3; }   /* 【v1.1026】タイルの上 */
+/* 【v1.1033】全体の一覧：画像の下に「11月リリース」の小さな印／見出しのリリース月ごとの割合／全体の行のボタン */
+.zd-co-mark { position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); z-index: 2; white-space: nowrap; font-size: 9.5px; font-weight: 800; line-height: 14px;
+  padding: 0 5px; border-radius: 4px; color: #fff; box-shadow: 0 0 0 1.5px #fff; font-family: inherit; letter-spacing: -0.02em; }
+.zd-co-shr { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: var(--text2); white-space: nowrap; margin-top: 2px; width: 100%; justify-content: center; }
+.zd-co-shr span { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.zd-co-shr b { font-family: 'DM Mono', ui-monospace, monospace; font-weight: 700; color: var(--text); margin-left: 2px; }
+.zd-co-shr.sum { border-top: 1px dashed #cbd5e1; padding-top: 2px; margin-top: 3px; font-weight: 700; }
+.zd-co-shr.sum b { color: #dc2626; }
+.zd-co-topin { display: flex; align-items: center; gap: 8px; }
+.zd-co-topin > div:first-child { flex: 1 1 auto; text-align: center; }
+.zd-co-btn-top { font-family: 'Noto Sans JP', sans-serif; }
 /* 【v1.1027】開いた一覧の左の見出しの「親子を合算」（ツールバーのスイッチと同じ状態・紫） */
 .zd-co-merge { margin-top: 6px; font: inherit; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; border: 1px solid #c4b5fd; background: #fff; color: #7c3aed; cursor: pointer; white-space: nowrap; }
 .zd-co-merge:hover { background: #f5f3ff; }
@@ -5177,7 +5188,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1032</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1033</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -18200,10 +18211,32 @@ function _zdCohortRows(r, N) {
 function _zdCohortDrows(desc, N) {
   const out = [];
   desc.slice(0, ZD_CO_MONTHS).forEach(r => {
-    out.push(Object.assign({}, r, { _coTop: true, _grpTop: true }));
-    _zdCohortRows(r, N).forEach(x => out.push(x));
+    const top = Object.assign({}, r, { _coTop: true, _grpTop: true });
+    const subs = _zdCohortRows(r, N);
+    // 【v1.1033】全体の行の「▸ 一覧」用：その月の全商品（リリース月別の行の商品を全部。どの行の商品かを co に持つ）
+    top._coProds = [];
+    top._coShares = [];   // 見出しに出す「リリース月ごとの売上と割合」
+    subs.forEach(x => {
+      (x._coProds || []).forEach(p => top._coProds.push(Object.assign({ co: x._co }, p)));
+      top._coItemTot = x._coItemTot;
+      if (x._co !== 'pre') top._coShares.push({ co: x._co, label: x.label, rev: x.totSales, share: x._coShare });
+    });
+    top._coProds.sort((a, b) => (b.rev - a.rev) || (b.adCost - a.adCost));
+    out.push(top);
+    subs.forEach(x => out.push(x));
   });
   return out;
+}
+// 【v1.1033】リリース月の印の色。0＝その月リリース／1＝1か月前／2＝2か月前／3＝3か月前（それ以前は印なし）
+const ZD_CO_MARK_COL = ['#dc2626', '#ea580c', '#16a34a', '#2563eb'];
+function _zdCoMarkIdx(co, m) {
+  if (!co || co.length !== 7) return -1;
+  for (let k = 0; k <= ZD_CO_BACK; k++) if (co === _zdYmAdd(m, -k)) return k;
+  return -1;
+}
+function _zdCoMarkLabel(co, m) {   // 「11月リリース」（年が違えば「25/12リリース」）
+  const y = co.slice(0, 4), mo = +co.slice(5, 7);
+  return (y === m.slice(0, 4) ? mo + '月' : y.slice(2) + '/' + mo) + 'リリース';
 }
 // ============================================================================
 // 【v1.1025】リリース月別の行の「▸ 一覧」：押すと行の下に、その行の商品を全-比較の商品一覧と同じ形で並べる
@@ -18244,7 +18277,7 @@ function _zdCoTiles(r) {
   const meta = state.productMeta || {}, fam = {};
   all.forEach(p => {
     const f = String((meta[p.code] || {}).repCode || '').trim() || p.code;
-    const o = fam[f] || (fam[f] = { code: f, rev: 0, adRev: 0, adCost: 0, members: [], memberRevs: [] });
+    const o = fam[f] || (fam[f] = { code: f, rev: 0, adRev: 0, adCost: 0, members: [], memberRevs: [], co: p.co });   /* 【v1.1033】co＝リリース月（まとまりは同じ月） */
     o.rev += p.rev; o.adRev += p.adRev; o.adCost += p.adCost; o.members.push(p.code); o.memberRevs.push(p.rev);
   });
   return Object.values(fam).filter(o => o.rev > 0).sort((a, b) => b.rev - a.rev);
@@ -18264,6 +18297,7 @@ function _zdCohortPanelHtml(r, colCount, wrapW) {
   const famSet = _zdSeoParentSet();
   const W = Math.max(600, (wrapW || 1200) - 2);
   const COL = '#2563eb';   // 割合の色（総売上＝青。YC_CC.tot と同じ）
+  const isAll = !!r._coTop;   // 【v1.1033】全体の行の一覧（その月の全商品・リリース月の印つき）
   const tiles = prods.map((p, i) => {
     // 【v1.1027】合算のときの代表＝代表コード。商品マスタに無いときは、まとまりの中でいちばん売れた商品の名前・画像
     const repC = (getMaster(p.code) || !p.members || !p.members.length) ? p.code : p.members[0];
@@ -18275,8 +18309,10 @@ function _zdCohortPanelHtml(r, colCount, wrapW) {
     const inCo = coTot > 0 && p.rev > 0 ? p.rev / coTot * 100 : 0;
     const fsd = String((typeof _ycFirstSaleDate === 'function' ? _ycFirstSaleDate(p.code) : '') || '').replace(/-/g, '/');
     const seo = Math.max(0, p.rev - p.adRev);
+    const mk = isAll ? _zdCoMarkIdx(p.co, r.month) : -1;   // 【v1.1033】直近のリリース月なら印
     const tip = name + '（' + p.code + '）'
-      + '\n総売上 ' + yen(p.rev) + '（全体の ' + (Math.round(share * 100) / 100) + '%／この分の中 ' + (Math.round(inCo * 10) / 10) + '%）'
+      + (isAll ? '\n' + (mk >= 0 ? _zdCohortLabel(p.co, r.month) : (p.co === 'old' ? _zdCohortLabel('old', r.month) : '')) : '')
+      + '\n総売上 ' + yen(p.rev) + '（全体の ' + (Math.round(share * 100) / 100) + '%' + (isAll ? '' : '／この分の中 ' + (Math.round(inCo * 10) / 10) + '%') + '）'
       + '\nSEO売上 ' + yen(seo) + '／広告売上 ' + yen(p.adRev) + '／広告実績額 ' + yen(p.adCost)
       + (p.adCost > 0 ? '／広告ROAS ' + Math.round(p.adRev / p.adCost * 100) + '%' : '')
       + (fsd ? '\n初回販売日 ' + fsd : '')
@@ -18288,6 +18324,7 @@ function _zdCohortPanelHtml(r, colCount, wrapW) {
       +   '<div class="yt-rank" style="background:' + (i < 3 ? COL : '#94a3b8') + '">' + (i + 1) + '</div>'
       +   (multi ? '<div class="yt-oya" title="親子の合算：' + p.members.length + '商品"><svg viewBox="0 0 20 20"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/></svg><span>×' + p.members.length + '</span></div>'
            : (famSet && famSet.has(p.code) ? '<div class="yt-oya" title="親子商品（親商品）"><svg viewBox="0 0 20 20"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/></svg></div>' : ''))
+      +   (mk >= 0 ? '<div class="zd-co-mark" style="background:' + ZD_CO_MARK_COL[mk] + '">' + esc(_zdCoMarkLabel(p.co, r.month)) + '</div>' : '')   /* 【v1.1033】画像の下に小さく「11月リリース」 */
       + '</div>'
       + '<div class="yt-nm">' + esc(name) + '</div>'
       + '<div class="yt-v1">' + (p.rev > 0 ? yen(p.rev) : '<span style="color:var(--text3)">—</span>') + '</div>'
@@ -18300,12 +18337,26 @@ function _zdCohortPanelHtml(r, colCount, wrapW) {
     + ln('商品名', 'h14 mt3') + ln('総売上', 'h15')
     + ln('全体に占める%', 'h15', 'color:' + COL, 'この月の商品別売上の合計 ' + yen(tot) + ' に対する割合')
     + ln('広告実績額', 'h14') + '</div>';
+  // 【v1.1033】全体の一覧の見出し：直近のリリース月ごとの売上の割合（印と同じ色）と、その合計
+  let _shareHtml = '';
+  if (isAll) {
+    let nSum = 0;
+    const lines = (r._coShares || []).map(x => {
+      const k = _zdCoMarkIdx(x.co, r.month); if (k < 0) return '';
+      nSum += +x.share || 0;
+      return '<div class="zd-co-shr" title="' + esc(x.label + '：総売上 ' + yen(x.rev)) + '"><span style="background:' + ZD_CO_MARK_COL[k] + '"></span>' + esc(_zdCoMarkLabel(x.co, r.month).replace('リリース', '')) + '<b>' + (Math.round((+x.share || 0) * 10) / 10) + '%</b></div>';
+    }).join('');
+    _shareHtml = '<div class="yt-mtl">リリース月の割合</div>' + lines
+      + '<div class="zd-co-shr sum" title="直近' + (ZD_CO_BACK + 1) + 'か月にリリースした商品の合計"><span></span>計<b>' + (Math.round(nSum * 10) / 10) + '%</b></div>';
+  }
   const head = '<div class="yt-mcell top" style="left:0;width:118px;flex:0 0 118px;background:#eef4ff">'
-    + '<div class="yt-mtag" style="background:#2563eb;white-space:normal;line-height:1.3">' + esc(r.label) + '</div>'
+    + '<div class="yt-mtag" style="background:' + (isAll ? '#334155' : '#2563eb') + ';white-space:normal;line-height:1.3">' + (isAll ? '全体' : esc(r.label)) + '</div>'
     + '<div class="yt-mym">' + esc(r.month.replace('-', '/')) + '</div>'
     + (r._cut > 0 ? '<div class="yt-mday">1〜' + r._cut + '日</div>' : '')
-    + '<div class="yt-mtl">総売上</div><div class="yt-mtv">' + yen(coTot) + '</div>'
-    + '<div class="yt-mtl">全体の</div><div class="yt-mtv" style="color:' + COL + '">' + (tot > 0 ? (Math.round(coTot / tot * 1000) / 10) : 0) + '%</div>'
+    + (isAll
+        ? '<div class="yt-mtl">総売上（商品別）</div><div class="yt-mtv">' + yen(tot) + '</div>' + _shareHtml
+        : '<div class="yt-mtl">総売上</div><div class="yt-mtv">' + yen(coTot) + '</div>'
+          + '<div class="yt-mtl">全体の</div><div class="yt-mtv" style="color:' + COL + '">' + (tot > 0 ? (Math.round(coTot / tot * 1000) / 10) : 0) + '%</div>')
     + '<div class="yt-mtl">' + prods.length + (_zdCoMerge ? '件（親子まとめ）' : '品') + '</div>'
     // 【v1.1027】ここでも親子の合算を切り替えられる（ツールバーのスイッチと同じ状態）
     + '<button type="button" class="zd-co-merge' + (_zdCoMerge ? ' on' : '') + '" onclick="event.stopPropagation();_zdSetCoMerge(!_zdCoMerge)" title="' + (_zdCoMerge ? '親子を1商品ずつに戻す' : '親子のある商品を1つにまとめる（代表コードごとに合計）') + '">' + (_zdCoMerge ? '✓ 親子を合算' : '親子を合算') + '</button>'
@@ -18314,6 +18365,14 @@ function _zdCohortPanelHtml(r, colCount, wrapW) {
     + '<div class="zd-co-strip" style="position:sticky;left:0;box-sizing:border-box;width:' + Math.round(W) + 'px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain">'
     + '<div style="display:flex;align-items:stretch;width:max-content;min-width:100%">' + head + '<div class="yt-tiles">' + lbl + (tiles || '<div class="yt-nodata">この月に売れた商品はありません</div>') + '</div></div>'   /* 段の名前はタイルの並びの中（寄与度トップ20と同じ）＝高さがそろう */
     + '</div></td></tr>';
+}
+// 【v1.1033】全体の行の「▸ 一覧」ボタン（1列目の右端。CSS .zd-co-topcell で右に寄せる）
+function _zdCoTopBtnHtml(r) {
+  const n = _zdCoTiles(r).length; if (!n) return '';
+  const key = r.month + '|all', open = _zdCoOpen.has(key);
+  return '<button type="button" class="zd-co-btn zd-co-btn-top' + (open ? ' on' : '') + '" onclick="event.stopPropagation();_zdCoToggle(\'' + key + '\')"'
+    + ' title="' + (open ? '商品の一覧を閉じる' : 'この月に売れた商品（' + n + (_zdCoMerge ? '件・親子まとめ' : '品') + '）を全部並べる。直近にリリースした商品には「◯月リリース」の印') + '">'
+    + (open ? '▾ 閉じる' : '▸ 一覧 ' + n) + '</button>';
 }
 // 1列目（リリース月別の行）
 function _zdCohortFirstCellHtml(r, pad, fs, vbd) {
@@ -18656,11 +18715,14 @@ function renderGraphData() {
     const bT = r._coTop ? 'border-top:3px solid #64748b' : (r._grpTop ? 'border-top:2px solid var(--border2)' : '');
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
-    const _ymCell = '<td style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';' + (_cutOn ? 'color:#0f766e;background:#e6f4f1;' : 'color:var(--accent);background:var(--bg3);') + 'position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">' + r.label
+    const _ymCell = '<td' + (r._coTop && _zdCoTiles(r).length ? ' class="zd-co-topcell"' : '') + ' style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';' + (_cutOn ? 'color:#0f766e;background:#e6f4f1;' : 'color:var(--accent);background:var(--bg3);') + 'position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">'
+      + (r._coTop ? '<div class="zd-co-topin"><div>' : '') + r.label
       + (_dayMode ? '' : (_cutOn ? _zdCutBadgeHtml(r) : monthDayBadgeHtml(r.month)))
-      + (r._coTop ? '<div style="font-size:10px;font-weight:700;color:var(--text2);font-family:inherit;margin-top:1px">全体</div>' : '') + '</td>';   /* 【v1.1024】 */   /* 【v1.0846】足りない月だけ「14/30日」 */
+      + (r._coTop ? '<div style="font-size:10px;font-weight:700;color:var(--text2);font-family:inherit;margin-top:1px">全体</div></div>' + _zdCoTopBtnHtml(r) + '</div>' : '') + '</td>';   /* 【v1.1024】／【v1.1033】全体の行にも「▸ 一覧」（右端） */   /* 【v1.0846】足りない月だけ「14/30日」 */
     const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { unmatured: _unmatured, bT: bT, vb: _vb(ci), total: r[c.famKey || c.key], row: r, tdx: r._coTop ? 'font-weight:700;' : '' })).join('');   /* 【v1.0578】row＝分母の内訳ツールチップ／PR部分取込の⚠に使う */
     let _rowHtml = '<tr>' + _ymCell + cells + '</tr>';
+    // 【v1.1033】全体の行の一覧（その月の全商品・直近のリリース月の印つき）
+    if (r._coTop && _zdCoOpen.has(r.month + '|all') && _zdCoTiles(r).length) _rowHtml += _zdCohortPanelHtml(r, _zdColCount, wrap.clientWidth);
     // 【v1.0993】前年同月比差異の行（組の最後の行の直後。SEO売上トップ15より前＝ADcheck と同じ）
     if (_ydMap && _ydMap.has(r.month)) _rowHtml += _zdYoyDiffRowHtml(_ydMap.get(r.month));
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
