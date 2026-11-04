@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1027 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1028 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5159,7 +5159,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1027</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1028</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -31076,6 +31076,9 @@ document.addEventListener('click', (e) => {
     if (cs.webkitLineClamp && cs.webkitLineClamp !== 'none' && n.scrollHeight > n.clientHeight + 1) return true;
     if (n.scrollWidth <= n.clientWidth + 1) return false;
     if (cs.overflowX === 'visible' && cs.textOverflow !== 'ellipsis') return false;
+    // 【v1.1028】横にスクロールできる枠（overflow:auto/scroll）は「切れている」ではない（スクロールすれば見える）。
+    //   ★これが無いと、全-月別データ-新商品の開いた一覧（中で横スクロール）にカーソルを当てたとき、一覧の文字が全部クリーム色の吹き出しで画面の左に出ていた。
+    if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') return false;
     // ★scrollWidth だけだと、見出しの右端の列幅つまみ（右に3pxはみ出している）でも「切れている」になる。
     //   中の【文字】が実際に右端（padding の内側）を越えているかで決める。
     const r = n.getBoundingClientRect(), right = r.right - (parseFloat(cs.paddingRight) || 0) - (parseFloat(cs.borderRightWidth) || 0);
@@ -31090,6 +31093,8 @@ document.addEventListener('click', (e) => {
     const cell = t.closest('td, th');
     if (!cell || !cell.closest('table')) { if (cur) hide(); return; }
     if (t.closest('input, select, textarea, button, .col-resize-handle')) { if (cur) hide(); return; }
+    // 【v1.1028】全-月別データ-新商品の開いた一覧（タイル）の上では出さない（本人指定）。タイルは自分のツールチップ（title）を持っている
+    if (t.closest('.zd-co-panel')) { if (cur) hide(); return; }
     // カーソルの下からセルまで、切れている要素を探す
     let hit = null;
     for (let n = t; n; n = n.parentElement) { if (cut(n)) { hit = n; break; } if (n === cell) break; }
