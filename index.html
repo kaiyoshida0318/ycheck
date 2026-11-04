@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1035 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1036 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1318,6 +1318,14 @@ body.tabs-collapsed.states-collapsed .top-nav-3 { display: none; }
   opacity: 1;
   visibility: visible;
 }
+/* 【v1.1036】★表の中の親子バッジ（.rep-badge）の「グループで絞り込み」は、CSS の ::after をやめて画面に固定した吹き出し（#ycBadgeTip・JS は _ycBadgeTip）にした。
+   商品コードのセルは overflow:hidden なので、バッジの真ん中から左右に広げる ::after だと、セルの外にはみ出た左側（「グルー」）が切れていた（本人「前半部分も切れていた」）。
+   ・バッジの左端から右へ出す（画面の右端からはみ出すときは左へ寄せる）。下に入らなければ上に出す。
+   ・文字は 0.75rem（106% で 14.3px。本人「文字サイズが大きく」）→ 11px。黒地・白字はそのまま。
+   ・検索欄のバッジ（.search-rep-badge）は表の外なので切れない → 今までどおり ::after。 */
+.rep-badge[data-tooltip]::after, .rep-badge[data-tooltip]::before { display: none !important; }
+#ycBadgeTip { position: fixed; z-index: 6000; padding: 3px 8px; border-radius: 5px; background: #1f2937; color: #fff; font-size: 11px; font-weight: 500;
+  line-height: 1.4; white-space: nowrap; pointer-events: none; display: none; box-shadow: 0 2px 6px rgba(0,0,0,.18); font-family: 'Noto Sans JP', sans-serif; }
 
 /* 【v126】検索欄右のバッジ（送り込みがある商品のみ表示するトグル） */
 /* 【v141】通常時から「緑塗り」のボタンに。隣の白背景ボタン(順位再取得など)と一目で区別できるようにする */
@@ -5190,7 +5198,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1035</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1036</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -31299,6 +31307,27 @@ document.addEventListener('click', (e) => {
     let x = Math.max(6, Math.min(window.innerWidth - w - 6, r.left));
     let y = r.bottom + 4; if (y + h > window.innerHeight - 6) y = Math.max(6, r.top - h - 4);
     b.style.left = x + 'px'; b.style.top = y + 'px';
+  }, true);
+  document.addEventListener('mouseout', (e) => { if (cur && (!e.relatedTarget || !cur.contains(e.relatedTarget))) hide(); }, true);
+  window.addEventListener('scroll', hide, true);
+  document.addEventListener('mousedown', hide, true);
+  window.addEventListener('blur', hide);
+})();
+// 【v1.1036】表の中の親子バッジの吹き出し（CSS の .rep-badge と #ycBadgeTip の説明を参照）
+(function _ycBadgeTip() {
+  let tip = null, cur = null;
+  const el = () => { if (!tip) { tip = document.createElement('div'); tip.id = 'ycBadgeTip'; document.body.appendChild(tip); } return tip; };
+  const hide = () => { cur = null; if (tip) tip.style.display = 'none'; };
+  document.addEventListener('mouseover', (e) => {
+    const b = e.target && e.target.closest && e.target.closest('.rep-badge[data-tooltip]');
+    if (!b) { if (cur) hide(); return; }
+    if (b === cur) return;
+    cur = b;
+    const t = el(); t.textContent = b.getAttribute('data-tooltip') || ''; t.style.display = 'block';
+    const r = b.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+    const x = Math.max(6, Math.min(window.innerWidth - w - 6, r.left));
+    let y = r.bottom + 5; if (y + h > window.innerHeight - 6) y = Math.max(6, r.top - h - 5);
+    t.style.left = x + 'px'; t.style.top = y + 'px';
   }, true);
   document.addEventListener('mouseout', (e) => { if (cur && (!e.relatedTarget || !cur.contains(e.relatedTarget))) hide(); }, true);
   window.addEventListener('scroll', hide, true);
