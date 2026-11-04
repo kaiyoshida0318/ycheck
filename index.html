@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1030 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1031 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5177,7 +5177,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1030</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1031</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -27735,13 +27735,14 @@ function openProductEditModal(code, _openOpt) {
   // 【v1.0931】商品-調整は開くたびに「日別」（本人指定）。前に月別にしていても引きずらない。∧∨で移ったときは今のまま
   if (!(_openOpt && _openOpt.keepTab)) _peAdjGrain = 'day';
   // 【v1.0939】商品-調整のグラフで、はじめから消しておく系列（本人指定）。∧∨で移ったときは今のまま。
-  //   調整-入札価格から開く → SEO売上・PR実績額・PRオプ料率 を消す（広告の調整に関係するものだけ見せる）
+  //   調整-入札価格から開く → PR実績額・PRオプ料率・PR広告売上ROAS を消す（【v1.1031】SEO売上は消さない＝出す）
   //   調整-PRオプから開く   → 広告売上・入札価格 を消す（PR の調整に関係するものだけ見せる）
   //   それ以外の画面から開く → 前に消した状態のまま（従来どおり）
   //   ★名前は peRenderAdj の系列名・系列ボタンと同じ文字にすること（_peToggleSeries は名前で引く）
   if (!(_openOpt && _openOpt.keepTab)) {
     // 【v1.0943】PR売上ROAS を足した：調整-入札価格からは消す／調整-PRオプからは出す（広告実績額・広告ROAS を消す）
-    const _pre = (state.currentView === 'ad-tune') ? ['SEO売上', 'PR実績額', 'PRオプ料率', 'PR広告売上ROAS']   /* 【v1.0945】名前を差し替え */
+    // 【v1.1031】調整-入札価格から開いたときも SEO売上 は出す（本人指定「SEO売上も選択された状態をデフォルトに」）。消すのは PR の3つだけ
+    const _pre = (state.currentView === 'ad-tune') ? ['PR実績額', 'PRオプ料率', 'PR広告売上ROAS']   /* 【v1.0945】名前を差し替え／【v1.1031】'SEO売上' を外した */
                : (state.currentView === 'pro-tune') ? ['広告売上', '入札価格', '広告実績額', '広告ROAS'] : null;
     if (_pre) { _peAdjHidden.clear(); _pre.forEach(l => _peAdjHidden.add(l)); }
   }
