@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1028 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1029 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1513,6 +1513,12 @@ a.nav-tab:hover { color: var(--text); text-decoration: none; }
   font-variant-numeric: tabular-nums;
 }
 .nav-tab.active .chip-num { opacity: 0.9; }
+/* 【v1.1029】ヘッダーの2行（1行目【基本】【全体】【取得データ】【新商品】／2行目【一覧】【調整】【撤退】【リニューアル】）の
+   タブ・グループ見出し・件数の文字を、v1.1028 の 95% に（本人指定）。元の大きさ：タブ・見出し 0.85rem／件数 0.75rem。
+   ★「上部を隠す」ボタン・状態チップの行は変えていない。★ここより上の font-size を変えるときは、ここも合わせること。 */
+.top-nav:not(.top-nav-3) .nav-tab, .top-nav-3 .nav-row-tabs .nav-tab,
+.top-nav:not(.top-nav-3) .nav-group-label, .top-nav-3 .nav-row-tabs .nav-group-label { font-size: calc(0.85rem * 0.95); }
+.top-nav:not(.top-nav-3) .nav-tab .chip-num, .top-nav-3 .nav-row-tabs .nav-tab .chip-num { font-size: calc(0.75rem * 0.95); }
 
 /* 2段目のタブバー：【調整】用（旧【定期チェック】） */
 .top-nav-2 {
@@ -5159,7 +5165,7 @@ body.basic-tune #tableBasic td.code-cell .code-text { user-select: all; -webkit-
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1028</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1029</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
