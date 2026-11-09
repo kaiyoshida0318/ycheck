@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1041 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1043 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2676,6 +2676,13 @@ td.col-mom .mom-v.mb-m40 { color: #881337; }
 }
 .note-cell:focus { outline: none; border-color: var(--accent); background: var(--bg2); }
 .note-cell:empty::before { content: 'クリックして入力'; color: var(--text3); font-style: italic; }
+/* 【v1.1042】対応内容：列の幅が足りないときは、はみ出た分を2行目へ（本人指定・§428）
+   ・列幅を固定する表（調整-入札価格／調整-PRオプ／撤退＝FIXED_LAYOUT_TABLES。固定化すると data-fixed-init="1"）では、
+     入力欄を列の幅ぴったりにする（最低180px・最大280px の決まりを外す）。文字は pre-wrap なので、入らない分は自動で次の行へ折り返す。
+     列を広げれば欄も広がる（今までは280pxで止まっていた）。
+   ・固定化する前（最初の描画で自然幅を測るとき）は今までどおり 180〜280px＝最初の列の幅は今までと同じ。 */
+table[data-fixed-init="1"] .note-wrap { width: 100%; min-width: 0; }
+table[data-fixed-init="1"] .note-cell { width: 100%; min-width: 0; max-width: none; box-sizing: border-box; overflow-wrap: anywhere; }
 /* 【子タイプ未選択】上部バナー */
 .oy-cu-banner{display:flex;align-items:center;gap:12px;background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #d97706;border-radius:9px;padding:10px 14px;margin:0 auto 14px;max-width:100%;text-align:left}
 .oy-cu-ico{font-size:18px;flex:0 0 auto}
@@ -5234,7 +5241,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1041</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1043</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -30701,7 +30708,11 @@ function saveColWidth(key, px) {
 }
 // 【v1.0623】列幅をドラッグで変えた直後の通知。連続操作でうるさくならないよう間引く。
 let _vpNotifyTimer = null;
+// 【v1.1043】★知らせ（右下の黒い吹き出し）は出さない（本人指定・§429）。
+//   列の幅を動かすたびに出て、表の下の帯の右端の「✓ 幅調整を終える」「✕ キャンセル」の上に重なり、押しづらかったため。
+//   保存は今までどおり（端末に保存・幅調整を終えると GitHub へ反映）。呼ぶ側はそのまま残してある。
 function _vpNotifySaved() {
+  return;   // 【v1.1043】
   if (_vpNotifyTimer) clearTimeout(_vpNotifyTimer);
   _vpNotifyTimer = setTimeout(function () {
     _vpNotifyTimer = null;
@@ -31213,7 +31224,7 @@ function installColResizeHandles() {
       e.stopPropagation();  // 行hover/ソートクリックに波及させない
       // 【v1.0865】幅を固定した列は動かさない（解除は一番下の 🔒 を押す）
       if (_colIsLockedTh(ownerTh)) {   /* 【v1.0957】 */
-        try { showToast('この列は幅をロック中です（一番下の「ロック中」を押すと解除できます）', 'warn'); } catch (e2) {}
+        // 【v1.1043】知らせ（黒い吹き出し）は出さない（§429）。ロック中なのは表の一番下の「ロック中」で分かる
         return;
       }
       const startX = e.clientX;
@@ -31815,10 +31826,9 @@ document.addEventListener('click', (e) => {
   if (t.closest('.col-resize-handle, input, select, textarea, label')) return;
   e.stopPropagation(); e.preventDefault();
   const now = Date.now();
-  if (now - _colSortBlockToastAt > 4000) {
-    _colSortBlockToastAt = now;
-    try { showToast('幅調整中は見出しを押しても並び替えしません（「⇔ 幅 ▾」→「幅調整を終える」で元に戻ります）', 'info'); } catch (e2) {}
-  }
+  // 【v1.1043】知らせ（黒い吹き出し）は出さない（§429）。つまみを掴みそこねて見出しを押すたびに出て、
+  //   右下の「✓ 幅調整を終える」「✕ キャンセル」の上に重なっていたため。並び替えを止めるのは今までどおり。
+  void now;
 }, true);
 
 function openViewPrefsModal() {
