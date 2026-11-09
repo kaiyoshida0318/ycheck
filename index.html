@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1037 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1038 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4939,6 +4939,34 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .zd-co-btn:hover { background: #eff6ff; }
 .zd-co-btn.on { background: #2563eb; border-color: #2563eb; color: #fff; }
 .zd-co-tile:hover { background: #fef9c3; }   /* 【v1.1026】タイルの上 */
+/* 【v1.1038】調整-入札価格／調整-PRオプの順位の列と、直近7日のモーダル */
+.data-grid th.yc-rk-th { background: #e0e7ff; color: #3730a3; text-align: center; line-height: 1.4; }
+.data-grid td.yc-rk-cell { background: #f5f7ff; padding: 4px 6px; }
+.yc-rk-in { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }   /* 1行目＝順位、2行目の左端＝↗（メインKWの ✏ と同じ置き方） */
+.yc-rk-badge { display: inline-block; padding: 2px 6px; border-radius: 5px; font-size: 0.78rem; font-weight: 700; white-space: nowrap; line-height: 1.3; }
+.yc-rk-badge.rank-best { background: rgba(37,99,235,0.13); color: var(--blue); }
+.yc-rk-badge.rank-good { background: rgba(217,119,6,0.15); color: var(--amber); }
+.yc-rk-badge.rank-bad  { background: rgba(220,38,38,0.10); color: var(--red); font-weight: 600; }
+.yc-rk-badge.yc-rk-none { color: var(--text3); font-weight: 400; }
+.yc-rk-open { flex: 0 0 auto; cursor: pointer; border: none; background: transparent; padding: 0 3px; font-size: 0.72rem; line-height: 1; color: var(--text3); border-radius: 3px; opacity: 0.55; }
+.yc-rk-open:hover { opacity: 1; background: rgba(37,99,235,0.12); color: var(--accent); }
+#ycRankModal { position: fixed; inset: 0; z-index: 7000; background: rgba(15,23,42,0.35); display: none; align-items: center; justify-content: center; }
+.yc-rkm-box { background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); min-width: 380px; max-width: 520px; padding: 16px 18px 14px; }
+.yc-rkm-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.yc-rkm-head > div { flex: 1; min-width: 0; }
+.yc-rkm-ttl { font-size: 15px; font-weight: 800; color: #3730a3; }
+.yc-rkm-sub { font-size: 12px; color: var(--text2); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yc-rkm-sub code { font-size: 11px; color: var(--text3); }
+.yc-rkm-x { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 15px; cursor: pointer; color: var(--text2); }
+.yc-rkm-x:hover { background: #f1f5f9; }
+.yc-rkm-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.yc-rkm-tbl th { background: #eef2ff; color: #3730a3; font-weight: 700; padding: 6px 8px; border-bottom: 2px solid #c7d2fe; text-align: center; }
+.yc-rkm-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; }
+.yc-rkm-tbl tr:first-child td { background: #fafbff; }
+.yc-rkm-d { font-weight: 700; white-space: nowrap; } .yc-rkm-d span { font-weight: 400; color: var(--text3); font-size: 11px; }
+.yc-rkm-n { font-family: 'DM Mono', ui-monospace, monospace; font-weight: 700; }
+.yc-rkm-man { margin-left: 4px; font-size: 10px; padding: 0 4px; border-radius: 3px; background: #fef3c7; color: #92400e; }
+.yc-rkm-note { margin-top: 8px; font-size: 11px; color: var(--text3); }
 /* 【v1.1035】調整-入札価格の広告ROASの下の「子 ◯%」 */
 .yc-kid-share { font-size: 10.5px; font-weight: 700; line-height: 1.1; margin-top: 1px; white-space: nowrap; }
 /* 【v1.1033】全体の一覧：画像の下に「11月リリース」の小さな印／見出しのリリース月ごとの割合／全体の行のボタン */
@@ -5198,7 +5226,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1037</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1038</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6344,6 +6372,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
               <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
+              <th class="nosort yc-rk-th" id="hAdTuneRank" title="取得データ（広告順位）の最新日の順位。↗ で直近7日">広告順位</th>   <!-- 【v1.1038】 -->
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <!-- 【v1.0654】広告売上も直近3ヶ月ぶん並べる（旧: 最新月の1列だけ） -->
               <th class="num col-ad" data-sort="adRev0" id="hAdTuneAdSales0">広告売上<br>(3ヶ月前)</th>
@@ -6456,6 +6485,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="proStatus">PR状態</th>
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
+              <th class="nosort yc-rk-th" id="hProTuneRank" title="取得データ（SEO順位）の最新日の順位。↗ で直近7日">SEO順位</th>   <!-- 【v1.1038】 -->
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <!-- 【v1.0647】PR広告売上ROAS(推定)×3ヶ月を SEO売上 の左に追加（商品-基本データと同じ紫・同じ計算） -->
               <th class="num col-sroas" data-sort="prsr0" id="hProTunePrsr0" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR広告<br>売上ROAS<br>(3ヶ月前)</th>
@@ -20031,6 +20061,7 @@ function renderAdAdjust(cfg) {
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}${(tableSel === '#tableAdTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'ad') : ''}</td>
       ${_bidCellT}
+      ${tableSel === '#tableAdTune' ? _ycRankCellHtml(r.code, 'ad') : ''}
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
       ${_roasCells}
@@ -20052,6 +20083,7 @@ function renderAdAdjust(cfg) {
 
 // 【v239】入札価格調整（tune）: 入札価格全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderAdTune() {
+  { const h = document.getElementById('hAdTuneRank'); if (h) h.innerHTML = '広告順位<br><span class="th-note">' + (_ycRankLatestDate() ? _ycRankLatestDate().slice(5).replace('-', '/') : '—') + '</span>'; }   // 【v1.1038】
   ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   _syncTunePeriodSegs();    // 【v1.0400】表示時期トグルの選択状態を反映
   if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();   // 【v1.0662】
@@ -20277,6 +20309,7 @@ function renderProAdjust(cfg) {
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}${(tableSel === '#tableProTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'pro') : ''}</td>
       ${_proCellT}
+      ${tableSel === '#tableProTune' ? _ycRankCellHtml(r.code, 'seo') : ''}
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
@@ -20297,6 +20330,7 @@ function renderProAdjust(cfg) {
 
 // 【v239】PRオプ調整（tune）: PRオプ全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderProTune() {
+  { const h = document.getElementById('hProTuneRank'); if (h) h.innerHTML = 'SEO順位<br><span class="th-note">' + (_ycRankLatestDate() ? _ycRankLatestDate().slice(5).replace('-', '/') : '—') + '</span>'; }   // 【v1.1038】
   ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   _syncTunePeriodSegs();     // 【v1.0400】表示時期トグルの選択状態を反映
   if (typeof _bulkPlaceBar === 'function') _bulkPlaceBar();   // 【v1.0662】
@@ -21069,6 +21103,79 @@ function renderRankTable(kind) {
 
 // 順位セルの値から状態別クラス名を返す
 // 【v161】新仕様：「N位以内\n◯」「M-N位以内\n△」「N位以下\n✕」の3種に対応。旧表記（上段◎等）は廃止。
+// ============================================================================
+// 【v1.1038】調整-入札価格／調整-PRオプ：取得データの順位（最新日）の列と、↗ で開く「直近7日」のモーダル（§424）
+//   ・最新日＝取得データ（state.rank。手動の rankEdits を優先＝getEffectiveRankValue と同じ）で、
+//     どれかの商品に値が入っているいちばん新しい日（全商品で共通の1日。見出しに日付）。
+//   ・調整-入札価格＝広告順位（adRank）、調整-PRオプ＝SEO順位（seoRank）。色は 広告順位／SEO順位 タブと同じ（◯青・△黄・✕赤）。
+//   ・モーダル：直近7日（最新日から前へ）の 日付｜順位｜入札価格（広告）／PRオプ料率（SEO）。閉じる＝✕・モーダルの外・Esc。
+// ============================================================================
+function _ycRankDates() {   // 値が1つでもある日（'YYYY-MM-DD'）を古い順
+  const out = new Set();
+  const add = (ym, arrs) => arrs.forEach(a => { (a || []).forEach((v, i) => { if (v != null && v !== '') out.add(ym.replace('/', '-') + '-' + String(i + 1).padStart(2, '0')); }); });
+  Object.keys(state.rank || {}).forEach(ym => { const m = state.rank[ym] || {}; Object.keys(m).forEach(c => add(ym, [m[c].adRank, m[c].seoRank])); });
+  Object.keys(state.rankEdits || {}).forEach(ym => { const m = state.rankEdits[ym] || {}; Object.keys(m).forEach(c => add(ym, [m[c].rankAd, m[c].rankSeo])); });
+  return [...out].sort();
+}
+function _ycRankLatestDate() { const d = _ycRankDates(); return d.length ? d[d.length - 1] : null; }
+function _ycRankAt(code, kind, ymd) {   // ymd 'YYYY-MM-DD' → { value, source }
+  const ym = ymd.slice(0, 7).replace('-', '/'), i = +ymd.slice(8, 10) - 1;
+  return getEffectiveRankValue(ym, code, kind === 'ad' ? 'adRank' : 'seoRank', i);
+}
+function _ycRankBadge(v) {
+  if (v == null || v === '') return '<span class="yc-rk-badge yc-rk-none">—</span>';
+  return '<span class="yc-rk-badge ' + rankStatusClass(String(v)) + '">' + escapeHtml(String(v).replace(/\s*\n\s*/g, ' ')) + '</span>';
+}
+function _ycRankLast7() {   // 最新日から7日ぶんの 'YYYY-MM-DD'（新しい順）
+  const last = _ycRankLatestDate(), days = [];
+  if (last) { const t = new Date(last + 'T00:00:00'); for (let k = 0; k < 7; k++) { const x = new Date(t); x.setDate(t.getDate() - k); days.push(x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0')); } }
+  return days;
+}
+function _ycRankCellHtml(code, kind) {
+  const d = _ycRankLatestDate();
+  const eff = d ? _ycRankAt(code, kind, d) : { value: null };
+  const kw = ((getMaster(code) || {}).kw || '').trim();
+  // 直近7日に順位が1日も無い（メインKWの無い子など）→ ↗ は出さない（本人「出さない」）
+  const has = _ycRankLast7().some(x => { const v = _ycRankAt(code, kind, x).value; return v != null && v !== ''; });
+  if (!has) return '<td class="yc-rk-cell"><div class="yc-rk-in">' + _ycRankBadge(eff.value) + '</div></td>';
+  return '<td class="yc-rk-cell"><div class="yc-rk-in">' + _ycRankBadge(eff.value)
+    + '<button type="button" class="yc-rk-open" onclick="event.stopPropagation();_ycRankModal(\'' + String(code).replace(/'/g, "\\'") + '\',\'' + kind + '\')"'
+    + ' title="直近7日の' + (kind === 'ad' ? '広告順位と入札価格' : 'SEO順位とPRオプ料率') + 'を見る' + (kw ? '（KW：' + escapeHtml(kw) + '）' : '') + '">↗</button></div></td>';
+}
+function _ycRankModal(code, kind) {
+  const isAd = (kind === 'ad');
+  const all = _ycRankDates();
+  const last = all.length ? all[all.length - 1] : null;
+  const days = [];
+  _ycRankLast7().forEach(x => days.push(x));
+  const m = getMaster(code) || {};
+  const wd = ['日', '月', '火', '水', '木', '金', '土'];
+  const rows = days.map(ymd => {
+    const ym = ymd.slice(0, 7).replace('-', '/'), i = +ymd.slice(8, 10) - 1;
+    const eff = _ycRankAt(code, kind, ymd);
+    const ev = getDisplayRankEditValue(ym, code, isAd ? 'bid' : 'proRate', i);
+    const dt = new Date(ymd + 'T00:00:00');
+    return '<tr><td class="yc-rkm-d">' + (+ymd.slice(5, 7)) + '/' + (+ymd.slice(8, 10)) + '<span>（' + wd[dt.getDay()] + '）</span></td>'
+      + '<td>' + _ycRankBadge(eff.value) + (eff.source === 'manual' ? '<span class="yc-rkm-man" title="手で入れた値">手</span>' : '') + '</td>'
+      + '<td class="yc-rkm-n">' + (isAd ? formatBidCell(ev) : formatProRateCell(ev)) + '</td></tr>';
+  }).join('');
+  let ov = document.getElementById('ycRankModal');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'ycRankModal';
+    ov.addEventListener('mousedown', e => { if (e.target === ov) _ycRankModalClose(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.style.display === 'flex') _ycRankModalClose(); });
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = '<div class="yc-rkm-box" role="dialog" aria-label="直近7日の順位">'
+    + '<div class="yc-rkm-head"><div><div class="yc-rkm-ttl">' + (isAd ? '広告順位' : 'SEO順位') + '　直近7日</div>'
+    + '<div class="yc-rkm-sub">' + escapeHtml(m.name || code) + '　<code>' + escapeHtml(code) + '</code>' + (m.kw ? '　KW：' + escapeHtml(m.kw) : '') + '</div></div>'
+    + '<button type="button" class="yc-rkm-x" onclick="_ycRankModalClose()" title="閉じる（Esc・外をクリックでも閉じる）">✕</button></div>'
+    + '<table class="yc-rkm-tbl"><thead><tr><th>日付</th><th>' + (isAd ? '広告順位' : 'SEO順位') + '</th><th>' + (isAd ? '入札価格' : 'PRオプ料率') + '</th></tr></thead><tbody>' + rows + '</tbody></table>'
+    + '<div class="yc-rkm-note">' + (isAd ? '広告：1〜4位◯／5〜6位△／7位以下✕' : 'SEO：1〜6位◯／7〜14位△／15位以下✕') + '。毎朝の自動取得（ログインしていない状態の検索結果）。</div></div>';
+  ov.style.display = 'flex';
+}
+function _ycRankModalClose() { const ov = document.getElementById('ycRankModal'); if (ov) ov.style.display = 'none'; }
+window._ycRankModal = _ycRankModal; window._ycRankModalClose = _ycRankModalClose;
 function rankStatusClass(v) {
   if (v == null || typeof v !== 'string') return '';
   // 改行を除いた形で比較
