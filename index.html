@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1038 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1039 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2563,7 +2563,7 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 /* 【v187】主要テーブル（商品リスト・順位表）: 全ヘッダーは中央揃え。
    セルは 商品コード/商品名/メインKW/対応内容 のみ左寄せ（他は中央）。 */
 
-/* 【v1.1020】初回販売日／リニュ登録日の列（ADcheck v1.1521 の移植）。見出しも中身も上下2段 */
+/* 【v1.1020】初回販売日／リニュ日の列（ADcheck v1.1521 の移植）。見出しも中身も上下2段 */
 .data-grid th.id-dates-th { text-align: left; cursor: default; padding-top: 4px; padding-bottom: 4px; }
 .data-grid th.id-dates-th .ch-sub { display: block; position: relative; cursor: pointer; white-space: nowrap; padding-right: 12px; line-height: 1.35; }
 .data-grid th.id-dates-th .ch-sub + .ch-sub { margin-top: 3px; color: var(--text3); }
@@ -5226,7 +5226,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1038</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1039</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -5645,8 +5645,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
                  ============================================================ -->
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th class="col-namebasic" data-sort="name" data-resize-key="nameBasic">商品名</th>   <!-- 【v1.0969】調整-基本では隠す（.col-namebasic） -->
               <!-- 【v1.0965】メインKW（調整-基本だけ。本人指定「調整-基本の商品名の右にメインKW列」）。.tune-col なので商品-基本データでは隠れる -->
@@ -6364,8 +6364,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableAdTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdTune">商品名</th>
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
@@ -6415,8 +6415,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableWithdraw" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameWd">商品名</th>
               <!-- 【v1.0724】列は 広告売上×3 / SEO売上×3 / 広告実績額×3 の9列だけ。
@@ -6477,8 +6477,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableProTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProTune">商品名</th>
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
@@ -6534,8 +6534,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableAdData" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdData">商品名</th>
               <!-- 【v1.0655】広告売上ROAS(総売上÷広告実績額)×3ヶ月。商品-基本データと同じ計算・同じ紫 -->
@@ -6594,8 +6594,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tablePrData" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ登録日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ登録日（変更記録の最後の日付）で並べ替え">リニュ登録日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="namePrData">商品名</th>
               <th class="num col-sales" data-sort="seoRev0" id="hPrDataSeo0">SEO売上<br>(3ヶ月前)</th>
@@ -13525,13 +13525,14 @@ function _updateStateCountsRaw() {
 //     チェックボックスだけ上の行に落ちる。必ずこのflexの中に入れること。
 // ============================================================================
 // 【v1.1020】「初回販売日／リニュ登録日」の列（ADcheck v1.1521「初回販売日・リニュ登録日の列 仕様書」の移植。本人指定）
-//   ・1つの列を上下2段：上＝初回販売日、下＝リニュ登録日（一段薄い）。見出しも上下2段で、それぞれ並べ替えボタン。
+// 【v1.1039】画面の表記「リニュ登録日」→「リニュ日」（本人指定・§425）。並べ替えのキー（renewal）・列幅のキー（idDates）は変えていない。
+//   ・1つの列を上下2段：上＝初回販売日、下＝リニュ日（一段薄い）。見出しも上下2段で、それぞれ並べ替えボタン。
 //   ・初回販売日＝その商品の売上が最初に立った日。日別データ（D.item）の売上>0のいちばん古い日。
 //     ★日別データは途中の日（2026/05/23 など）からしか無いので、それより前の月に売上があれば【月まで】（YYYY/MM）を出す
 //       （月別の売上 buildFullAggregate の売上>0のいちばん古い月）。日別データが月の1日から揃っている月は日まで分かる。
 //     ★月別データの始まり（2025/01 など）より前は分からない（ADcheck §2-1 と同じ。データの始まりの月になる商品が多い）。
-//   ・リニュ登録日＝その商品の変更記録（state.changeLog.items[コード]）の、いちばん新しい日付（中身は問わない）。
-//   ・合算のセット行は、メンバーの中で 初回販売日＝いちばん古い／リニュ登録日＝いちばん新しい。
+//   ・リニュ日＝その商品の変更記録（state.changeLog.items[コード]）の、いちばん新しい日付（中身は問わない）。
+//   ・合算のセット行は、メンバーの中で 初回販売日＝いちばん古い／リニュ日＝いちばん新しい。
 //   ・値が無いときは薄い灰色の「-」。並べ替え中の項目は全行で薄い赤（.idd-on）。日付の無い商品は向きに関係なくいつも下。
 //   ・選んでいる月に関係なく、持っているデータ全体から求める。
 // ============================================================================
@@ -13566,7 +13567,7 @@ function _ycRenewalDate(code) {
   let mx = ''; a.forEach(e => { const d = String((e && e.date) || '').slice(0, 10); if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d > mx) mx = d; });
   return mx;
 }
-// 行（合算のセット行ならメンバー全体）の 初回販売日・リニュ登録日
+// 行（合算のセット行ならメンバー全体）の 初回販売日・リニュ日
 function _ycIdDates(r) {
   const codes = (r && r._rollup && Array.isArray(r._members) && r._members.length) ? r._members : [r.code];
   let fs = '', rn = '';
@@ -13580,7 +13581,7 @@ function _idDatesTd(r, activeKey) {
   const cell = (v, sub, on, tip) => '<div class="' + (sub ? 'idd-sub ' : '') + (v ? '' : 'idd-none ') + ((on && v) ? 'idd-on' : '') + '" title="' + tip + '">' + (v ? _ycYmdSlash(v) : '-') + '</div>';
   return '<td class="idd-cell"><div class="idd-stack">'
     + cell(fs, false, activeKey === 'firstsale', '初回販売日（売上が最初に立った日）' + (fs && fs.length === 7 ? '。日別データより前の月なので月まで' : ''))
-    + cell(rn, true, activeKey === 'renewal', 'リニュ登録日（変更記録の最後の日付）')
+    + cell(rn, true, activeKey === 'renewal', 'リニュ日（変更記録の最後の日付）')
     + '</div></td>';
 }
 // 並べ替え：日付の無い行は向きに関係なくいつも下
@@ -25349,7 +25350,7 @@ function wireSort(tableSel, apply) {
     //   列幅ハンドルのクリックは handle 側で stopPropagation 済み、
     //   ドラッグ直後の click も v278 の握りつぶしで届かないので、誤ソートは起きない。
     if (e.target.closest('.col-resize-handle')) return;
-    const th = e.target.closest('th[data-sort], .ch-sub[data-sort]');   // 【v1.1020】2段の見出し（初回販売日／リニュ登録日）は段ごとに並べ替え
+    const th = e.target.closest('th[data-sort], .ch-sub[data-sort]');   // 【v1.1020】2段の見出し（初回販売日／リニュ日）は段ごとに並べ替え
     if (!th || !thead.contains(th)) return;
     e.stopPropagation();
     apply(th.dataset.sort);
@@ -25882,6 +25883,8 @@ function startBidEdit(cell) {
         markTuneAction(code, 'ad');  // 【v249】入札価格の値変更＝対応済み
         _setTuneReviewed(code, 'ad', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
       }
+      // 【v1.1039】0を入れた（または入っていた価格を消した）→ 入札状態も「入札なし」に（§425）
+      if (raw === '0' || (raw === '' && oldBid !== '')) setAdStatusNoneByBidZero(code);
     }
     saveToStorage();
     log(`✓ 入札価格を更新: ${code} → ${state.bid[code] != null ? '¥' + state.bid[code] : '削除'}`, 'ok');
@@ -25930,6 +25933,31 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   startBidEdit(cell);
 });
+
+// 【v1.1039】入札価格を0（＝削除）にしたら、入札状態も「入札なし」にする（本人指定・§425）。
+//   ・入札状態のプルダウンを手で「入札なし」にしたときと同じ後処理：adStatusTs・健常/中立の「広告あり/なし」の付け替え（_statusLifeResolve）・
+//     _ts・pinEditedCode・対応済みの印（markTuneAction）。プルダウンと同じく対応内容（adNote）には触らない（入札価格の「￥旧-新」は呼ぶ側で付く）。
+//   ・もう「入札なし」の商品（子＝親に追従 も含む）は何もしない（false）。保存（saveToStorage）・描き直しは呼ぶ側で。
+//   ・逆（入札なし → 価格を入れた）は自動にしない（本人の指示は 0 のときだけ）。
+function setAdStatusNoneByBidZero(code) {
+  if (!code) return false;
+  if (adStatusIsNone(effectiveAdStatusOf(code))) return false;
+  const meta = getMeta(code);
+  const ts = Date.now();
+  const before = meta.adStatus || '';
+  meta.adStatus = '入札なし'; meta.adStatusTs = ts;
+  const _cur = meta.status || '';
+  const _grp = _statusLifeCoarseOf(_cur);
+  if (STATUS_LIFE_COARSE[_grp]) {
+    const _next = _statusLifeResolve(code, _grp);
+    if (_next !== _cur) { meta.status = _next; meta.statusTs = ts; }
+  }
+  meta._ts = ts;
+  try { pinEditedCode(code); } catch (e) {}
+  try { markTuneAction(code, 'ad'); } catch (e) {}
+  try { log('✓ 入札価格を0にしたため、入札状態を「入札なし」に: ' + code + '（前: ' + (adStatusCanon(before) || '—') + '）', 'ok'); } catch (e) {}
+  return true;
+}
 
 // ==================== PRオプ料率クリック編集（入札価格と同仕様） ====================
 // 【v1.0998】PRオプ料率を決まった値にする（手で編集したとき＝startProRateEdit の確定と同じ後処理）。
@@ -26183,6 +26211,8 @@ function startRankEditCell(cell) {
           state.productMeta[codeLower].adNote = buildPriceChangeNote(state.productMeta[codeLower].adNote, 'bid', oldNum, newNum);
           markTuneAction(codeLower, 'ad');  // 【v249】
           _setTuneReviewed(codeLower, 'ad', false);  // 【v1.0398】値を再調整→レビュー済み解除
+          // 【v1.1039】最新の入札価格を0（削除）にした → 入札状態も「入札なし」に（§425）。過去日だけの修正では変えない。
+          if (isMostRecent && newNum === '') setAdStatusNoneByBidZero(codeLower);
         } else {
           state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldNum, newNum);
           markTuneAction(codeLower, 'pro');  // 【v249】
