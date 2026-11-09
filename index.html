@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1040 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1041 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1999,6 +1999,14 @@ tfoot.yc-wrow-foot td.yc-wrow-td.is-locked { background: #e0ecff !important; }
 .yc-wrow-sum .yc-wrow-end { margin-left: auto; font: inherit; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
   border: 1px solid #2563eb; background: #2563eb; color: #fff; }   /* 【v1.1021】帯の右端の「幅調整を終える」 */
 .yc-wrow-sum .yc-wrow-end:hover { background: #1d4ed8; border-color: #1d4ed8; }
+/* 【v1.1041】帯の「キャンセル」（「幅調整を終える」の左。白地＋灰色の枠＝終えるより控えめ） */
+.yc-wrow-sum .yc-wrow-cancel { margin-left: auto; font: inherit; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  border: 1px solid #cbd5e1; background: #fff; color: #475569; }
+.yc-wrow-sum .yc-wrow-cancel:hover { background: #f1f5f9; border-color: #94a3b8; color: #1e293b; }
+.yc-wrow-sum .yc-wrow-cancel + .yc-wrow-end { margin-left: 0; }
+/* 【v1.1041】「⇔ 幅 ▾」のメニューの「キャンセル」 */
+.vp-wmenu .vp-wm-cancel { padding: 7px 10px; font-weight: 700; color: #475569; font-size: 0.82rem; }
+.vp-wmenu .vp-wm-cancel span { display: block; font-size: 0.7rem; font-weight: 500; color: var(--text3); margin-top: 1px; }
 .yc-wrow-sum .ws-rest { color: #15803d; }
 .yc-wrow-sum .ws-rest.is-over { color: #dc2626; }
 .yc-wrow-sum .ws-note { color: #92400e; opacity: .8; }
@@ -5226,7 +5234,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1040</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1041</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -31077,6 +31085,7 @@ function _vpMenuEl() {
       const tg = e.target.closest && e.target.closest('[data-vpw]'); if (!tg) return;
       const act = tg.dataset.vpw;
       if (act === 'toggle') { _vpMenuClose(); setColResizeMode(!_colResizeOn); return; }
+      if (act === 'cancel') { _vpMenuClose(); cancelColResizeMode(); return; }   // 【v1.1041】
       if (act === 'copy') {
         const n = _colCopyTo(tg.dataset.sig);
         const nm = tg.dataset.label || '';
@@ -31141,6 +31150,8 @@ function _vpMenuOpen() {
       : '<b>この画面だけ</b>が変わります（列がまったく同じ画面はほかにありません）。') + '</div>';
   }
   html += '<button type="button" class="vp-wm-main" data-vpw="toggle">' + (_colResizeOn ? '✓ 幅調整を終える（GitHubへ反映）' : '✎ 幅を調整する') + '</button>';
+  // 【v1.1041】幅調整中だけ「キャンセル」（本人指定）＝始める前の幅に戻して終える（§427）
+  if (_colResizeOn) html += '<button type="button" class="vp-wm-cancel" data-vpw="cancel">✕ キャンセル<span>幅調整を始める前の幅に戻して終えます</span></button>';
   if (T.src && T.list.length) {
     html += '<div class="vp-wm-sec">ほかの画面にも同じ幅をコピー<span>（列が少し違う画面。押すとその場でコピー）</span></div>';
     const vp = ensureViewPrefs();
@@ -31378,6 +31389,7 @@ function _wrowSumUpdate(table) {
     + '<span>ロック中 <b>' + nLock + '</b> / ' + ths.length + '列</span>'
     + (fixed ? '<span class="ws-note">列を狭くすると、空いた分は右の空きになります（他の列は動きません）</span>' : '')
     // 【v1.1021】帯の右端に「幅調整を終える」（本人指定。ヘッダーの「⇔ 幅 ▾」のメニューと同じ動き＝終えるときに GitHub へ反映）
+    + '<button type="button" class="yc-wrow-cancel" title="幅調整を始める前の幅に戻して、幅調整モードを終えます">✕ キャンセル</button>'   // 【v1.1041】
     + '<button type="button" class="yc-wrow-end" title="幅調整モードを終えます（この下の数字の行と帯が消えます）。変えた幅は GitHub へ反映されます">✓ 幅調整を終える（GitHubへ反映）</button>';
   wrap.classList.toggle('yc-has-rest', fixed && rest > 0);
 }
@@ -31418,6 +31430,14 @@ function _wrowRefresh(table) {
     try { _wrowSumUpdate(t); } catch (e) {}   // 【v1.0877】表の下の「残り」も合わせる
   });
 }
+// 【v1.1041】帯の「✕ キャンセル」（「⇔ 幅 ▾」のメニューの「キャンセル」と同じ）
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('.yc-wrow-cancel');
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  try { _vpMenuClose(); } catch (e2) {}
+  cancelColResizeMode();
+});
 // 【v1.1021】帯の「✓ 幅調整を終える」。帯は描き直されるので document で受ける
 document.addEventListener('click', (e) => {
   const b = e.target.closest && e.target.closest('.yc-wrow-end');
@@ -31711,9 +31731,44 @@ function _vpRenderPanel() {
 //     「掴めるかどうか」だけを切り替えている。
 let _colResizeOn = false;
 let _colResizeDirty = false;   // 【v1.0749】このモード中に幅を1つでも変えたか
+// 【v1.1041】幅調整の「キャンセル」（本人指定「キャンセルして終わるボタンがない」・§427）
+//   ・幅調整を始めたとき（OFF→ON）に、列の幅とロック（state.viewPrefs.colWidths／colLocks）を丸ごと覚える（_colResizeSnap）。
+//   ・キャンセル＝覚えた幅とロックに戻してモードを終える。GitHubへの「まとめて反映」（終えるときの ycAutoPushSoon）はしない。
+//   ・幅調整の途中で自動保存（§v1.0856）が途中の幅を GitHub へ送っていることがあるので、戻した結果が今と違うときは
+//     ふつうの変更と同じく _vpTouch（保存・未反映の印）をする＝次の自動保存／反映で GitHub も元の幅に戻る。何も変えていなければ何もしない。
+//   ・コピー（→ 〜にもコピー）で変えたほかの画面の幅も、まとめて元に戻る（同じ colWidths に入っているため）。
+let _colResizeSnap = null;
+function _colSnapTake() {
+  const vp = ensureViewPrefs();
+  return JSON.parse(JSON.stringify({ w: vp.colWidths || {}, l: vp.colLocks || {} }));
+}
+function cancelColResizeMode() {
+  if (!_colResizeOn) return;
+  const snap = _colResizeSnap;
+  let changed = false;
+  if (snap) {
+    const now = _colSnapTake();
+    changed = JSON.stringify(now) !== JSON.stringify(snap);
+    if (changed) {
+      const vp = ensureViewPrefs();
+      vp.colWidths = JSON.parse(JSON.stringify(snap.w));
+      vp.colLocks = JSON.parse(JSON.stringify(snap.l));
+      try { _vpTouch('この端末'); } catch (e) {}
+    }
+  }
+  _colResizeDirty = false;   // ★「終える」のときの GitHub へのまとめて反映はしない
+  setColResizeMode(false);
+  // 戻した幅は setColResizeMode(false) の中の applyColWidths／_colFitFixedTables で画面に出る
+  //   （保存値の無くなった列は、固定レイアウトの表なら最初に測った自然幅 natW の比率に戻る）。
+  //   ★固定レイアウトの印（data-fixed-init）は消さない。消すと、いまの幅を「自然幅」として測り直してしまう。
+  try { ycLog('info', '幅調整をキャンセル' + (changed ? '（始める前の幅に戻しました）' : '（変えた幅はありませんでした）')); } catch (e) {}
+  try { showToast(changed ? '幅調整をキャンセルしました（始める前の幅に戻しました）' : '幅調整をキャンセルしました', 'info'); } catch (e) {}
+}
+window.cancelColResizeMode = cancelColResizeMode;
 function setColResizeMode(on) {
   const wasOn = _colResizeOn;
   _colResizeOn = !!on;
+  if (!wasOn && _colResizeOn) { try { _colResizeSnap = _colSnapTake(); } catch (e) { _colResizeSnap = null; } }   // 【v1.1041】キャンセル用に覚える
   document.body.classList.toggle('col-resize-on', _colResizeOn);
   const b = document.getElementById('btnViewPrefs');
   if (b) {
