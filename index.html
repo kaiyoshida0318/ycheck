@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1039 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1040 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5226,7 +5226,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1039</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1040</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -21111,7 +21111,17 @@ function renderRankTable(kind) {
 //   ・調整-入札価格＝広告順位（adRank）、調整-PRオプ＝SEO順位（seoRank）。色は 広告順位／SEO順位 タブと同じ（◯青・△黄・✕赤）。
 //   ・モーダル：直近7日（最新日から前へ）の 日付｜順位｜入札価格（広告）／PRオプ料率（SEO）。閉じる＝✕・モーダルの外・Esc。
 // ============================================================================
-function _ycRankDates() {   // 値が1つでもある日（'YYYY-MM-DD'）を古い順
+// 【v1.1040】高速化（§426）：_ycRankDates は全商品×全日を走査するので、行ごとに呼ぶと 調整-PRオプ（約290行×8回）で約5.6秒かかっていた。
+//   1回の描画（同期処理）の間だけ結果を覚えておく（queueMicrotask で描画が終わったら捨てる）。描画の途中で順位データは変わらないので結果は同じ。
+//   ★返す配列を書き換えないこと（共有している）。
+let _ycRankDatesMemo = null;
+function _ycRankDates() {
+  if (_ycRankDatesMemo) return _ycRankDatesMemo;
+  _ycRankDatesMemo = _ycRankDatesCompute();
+  queueMicrotask(() => { _ycRankDatesMemo = null; _ycRankLast7Memo = null; });
+  return _ycRankDatesMemo;
+}
+function _ycRankDatesCompute() {   // 値が1つでもある日（'YYYY-MM-DD'）を古い順
   const out = new Set();
   const add = (ym, arrs) => arrs.forEach(a => { (a || []).forEach((v, i) => { if (v != null && v !== '') out.add(ym.replace('/', '-') + '-' + String(i + 1).padStart(2, '0')); }); });
   Object.keys(state.rank || {}).forEach(ym => { const m = state.rank[ym] || {}; Object.keys(m).forEach(c => add(ym, [m[c].adRank, m[c].seoRank])); });
@@ -21127,7 +21137,13 @@ function _ycRankBadge(v) {
   if (v == null || v === '') return '<span class="yc-rk-badge yc-rk-none">—</span>';
   return '<span class="yc-rk-badge ' + rankStatusClass(String(v)) + '">' + escapeHtml(String(v).replace(/\s*\n\s*/g, ' ')) + '</span>';
 }
-function _ycRankLast7() {   // 最新日から7日ぶんの 'YYYY-MM-DD'（新しい順）
+let _ycRankLast7Memo = null;   // 【v1.1040】_ycRankDates と同じく1回の描画の間だけ覚える（捨てるのは _ycRankDates の queueMicrotask）
+function _ycRankLast7() {
+  if (_ycRankLast7Memo) return _ycRankLast7Memo.slice();
+  _ycRankLast7Memo = _ycRankLast7Compute();
+  return _ycRankLast7Memo.slice();
+}
+function _ycRankLast7Compute() {   // 最新日から7日ぶんの 'YYYY-MM-DD'（新しい順）
   const last = _ycRankLatestDate(), days = [];
   if (last) { const t = new Date(last + 'T00:00:00'); for (let k = 0; k < 7; k++) { const x = new Date(t); x.setDate(t.getDate() - k); days.push(x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0')); } }
   return days;
@@ -24048,7 +24064,22 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('#nrAddBtn')) { try { openNewProductModal(); } catch (er) { console.warn(er); } }
 });
 document.addEventListener('input', (e) => { if (e.target && e.target.id === 'nrSearch') renderNewReg(); });
+// 【v1.1040】高速化（§426）：renderAll の中では applyHeaderCollapse（「上部を隠す」ボタンの幅合わせ＝_tcFitLabel が
+//   レイアウトを測る）を走らせず、最後に1回だけ走らせる。
+//   以前は ①描画の前（＝前に描いた古い表ごとレイアウト計算）②updateStateBarVisibility の中（新しい表を描いた直後）の2回測っていて、
+//   調整-PRオプ（約290行）ではこれだけで 0.4〜0.7秒かかっていた。
+//   ★applyHeaderCollapse が変えるのは body のクラス（_hdrCollapse だけで決まる＝renderAll の途中では変わらない）と復帰ボタンの出し分けなので、
+//     最後にまとめても見た目は同じ。renderAll の外（ボタンを押したとき等）から呼んだときは今までどおりすぐ走る。
+var _hdrDeferDepth = 0, _hdrDeferPending = false;   // ★var（let だと宣言より前に applyHeaderCollapse が呼ばれたとき typeof でも例外になる）
 function renderAll() {
+  _hdrDeferDepth++;
+  try { return _renderAllBody(); }
+  finally {
+    _hdrDeferDepth--;
+    if (_hdrDeferDepth === 0 && _hdrDeferPending) { _hdrDeferPending = false; try { applyHeaderCollapse(); } catch (e) {} }
+  }
+}
+function _renderAllBody() {
   try { _tunePeriodApplyAuto(); } catch (e) {}   // 【v1.1000】今月含む／含まないの自動（描画より先に決める）
   // 【v1.0828】★ビューが決まってから復帰バーの出し分けを掛け直す。
   //   applyHeaderCollapse() の最初の呼び出し（スクリプト先頭）は state.currentView が
@@ -30033,6 +30064,7 @@ function _hdr12Toggle() {
 window._hdr12Toggle = _hdr12Toggle;
 
 function applyHeaderCollapse() {
+  if (typeof _hdrDeferDepth !== 'undefined' && _hdrDeferDepth > 0) { _hdrDeferPending = true; return; }   // 【v1.1040】renderAll の最後にまとめて1回（§426）
   document.body.classList.toggle('chrome-hidden',   !!_hdrCollapse.h1);
   document.body.classList.toggle('tabs-collapsed',  !!_hdrCollapse.h2);   // 【v1.0700】
   document.body.classList.toggle('states-collapsed', !!_hdrCollapse.h3);
