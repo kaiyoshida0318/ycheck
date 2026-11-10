@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1043 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1044 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5241,7 +5241,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1043</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1044</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -14462,7 +14462,7 @@ function renderWithdrawConsider() {
     const hit = fams[k].some(c => f.match(state.productMeta[c] || {}, c) || _editPinnedCodes.has(c));
     if (hit) listCodes.push.apply(listCodes, fams[k]);
   });
-  if (q) listCodes = listCodes.filter(code => { const m = getMaster(code); return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q); });
+  if (q) listCodes = listCodes.filter(code => _ycSearchHit(code, q, false));   // 【v1.1044】子は親が当たれば出す（§430）
   let rows = listCodes.map(code => {
     const sales = [0,1,2,3].map(i => { const m = months[i]; if (!m) return null; const r = byKey[code + '|' + m]; return r ? (r.rev || 0) : 0; });
     const total = sales.reduce((s, v) => s + (v || 0), 0);
@@ -14642,7 +14642,8 @@ function renderBasic() {
       const m = getMaster(c);
       return acc + ' ' + c + ' ' + ((m && m.name) || '') + ' ' + ((m && m.kw) || '');
     }, String(r.code)).toLowerCase();
-    return hay.includes(qq);
+    if (hay.includes(qq)) return true;
+    return codes.some(c => _ycSearchHit(c, qq, true));   // 【v1.1044】子は親が当たれば出す（§430）
   };
   if (q) list = list.filter(r => _basicSearchHit(r, q));
   // 【v1.0516】広告あり商品/なし商品 絞り込みは「ステータス」列で判定する。
@@ -19418,6 +19419,26 @@ function _isSoiChildProduct(code) {
   const rep = String(meta.repCode || '').trim();
   return !!rep && rep !== String(code);
 }
+// 【v1.1044】検索：子の商品は、親（送り込み先＝repCode）が検索に当たれば一緒に出す（本人指定・§430）。
+//   例：「かかと靴下」→ 親 ih-21-02（02.かかと靴下）に当たる → 子 ih-21-kakato-0203（02.03.靴下クリーム・メインKW空）も出す。
+//       「ih-21-02」→ 子のコードは ih-21-kakato-… なので今までは出なかった → 出す。
+//   ・親で見るのは、その検索欄が自分で見ている項目と同じ（withKw＝メインKWも見る欄か）。
+//   ・親が分かる子だけ（repCode が自分以外）。repCode の無い「子（親に追従）」は親が分からないので今までどおり。
+//   ・親そのものを足すわけではない（親が出るかは親自身の判定どおり。撤退済みなど一覧の外の親でも、子は出る）。
+function _ycSearchHay(code, withKw) {
+  const m = getMaster(code) || {};
+  return (String(code) + ' ' + (m.name || '') + (withKw ? ' ' + (m.kw || '') : '')).toLowerCase();
+}
+function _ycSearchParentOf(code) {
+  const rep = String(((state.productMeta || {})[code] || {}).repCode || '').trim();
+  return (rep && rep !== String(code)) ? rep : '';
+}
+function _ycSearchHit(code, q, withKw) {
+  if (!q) return true;
+  if (_ycSearchHay(code, withKw).includes(q)) return true;
+  const p = _ycSearchParentOf(code);
+  return !!p && _ycSearchHay(p, withKw).includes(q);
+}
 // 【v1.0660】子商品のPR状態は、いつでも「PR◯-子-7％固定」として扱う（子は最低料率7％から動かせないため）。
 //   ★入札状態と同じで、保存値（meta.proStatus）は書き換えない＝読むときだけ差し替える。
 //   ★PR状態を読んで 絞り込む／数える／仕分ける 処理は、必ずこの関数を通すこと。
@@ -19750,8 +19771,7 @@ function _tuneCountFilter(kind, codes, skipRep) {
     if (isRetired(code)) return false;
     if (kind === 'ad' && adStatusIsNone(effectiveAdStatusOf(code))) return false;   // 【v1.0658】子は入札なし扱い
     if (_q) {
-      const m = getMaster(code);
-      if (![code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(_q)) return false;
+      if (!_ycSearchHit(code, _q, false)) return false;   // 【v1.1044】子は親が当たれば出す（表の検索と同じ・§430）
     } else {
       if (_repOk && !_repOk(code)) return false;                                    // 送り込み軸（検索中はバイパス＝表と同じ）
       if (_adAxisOn && !(_xfInScope(code) && _xfHasAd(code) === _wantAd)) return false;   // 広告軸
@@ -19922,10 +19942,7 @@ function renderAdAdjust(cfg) {
 
   const _adSearchEl = $(searchSel);
   const q = (_adSearchEl ? _adSearchEl.value : '').trim().toLowerCase();
-  if (q) list = list.filter(r => _rfMembersOf(r).some(c => {   // 【v1.0650】合算行はメンバーのどれかに一致すれば残す
-    const m = getMaster(c);
-    return [c, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
-  }));
+  if (q) list = list.filter(r => _rfMembersOf(r).some(c => _ycSearchHit(c, q, false)));   // 【v1.0650】合算行はメンバーのどれかに一致すれば残す／【v1.1044】子は親が当たれば出す（§430）
 
   // 【状態】バッジによるフィルタ適用
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'ad-adjust') {
@@ -20203,10 +20220,7 @@ function renderProAdjust(cfg) {
 
   const _proSearchEl = $(searchSel);
   const q = (_proSearchEl ? _proSearchEl.value : '').trim().toLowerCase();
-  if (q) list = list.filter(r => _rfMembersOf(r).some(c => {   // 【v1.0650】合算行はメンバーのどれかに一致すれば残す
-    const m = getMaster(c);
-    return [c, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q);
-  }));
+  if (q) list = list.filter(r => _rfMembersOf(r).some(c => _ycSearchHit(c, q, false)));   // 【v1.0650】合算行はメンバーのどれかに一致すれば残す／【v1.1044】子は親が当たれば出す（§430）
 
   // 【状態】バッジによるフィルタ適用
   if (state.activeStateFilter && state.activeStateFilter.targetView === 'pro-adjust') {
@@ -21044,9 +21058,7 @@ function renderRankTable(kind) {
   const q = ($(searchId).value || '').trim().toLowerCase();
   if (q) {
     codes = codes.filter(code => {
-      const m = getMaster(code);
-      const hay = [code, m && m.name].filter(Boolean).join(' ').toLowerCase();
-      return hay.includes(q);
+      return _ycSearchHit(code, q, false);   // 【v1.1044】子は親が当たれば出す（§430）
     });
   }
   // 【v174】代表コード絞り込み（バッジクリックで設定された state.repFilter を適用）
@@ -21260,7 +21272,7 @@ function downloadRankCsv(kind) {
     let codes = Object.keys(state.master || {}).filter(function (c) { return !isRetired(c); });
     if (isAd) codes = codes.filter(function (code) { return !adStatusIsNone(effectiveAdStatusOf(code)); });   /* 【v1.0658】 */
     const q = (searchEl && searchEl.value ? searchEl.value : '').trim().toLowerCase();
-    if (q) codes = codes.filter(function (code) { const m = getMaster(code); return [code, m && m.name].filter(Boolean).join(' ').toLowerCase().includes(q); });
+    if (q) codes = codes.filter(function (code) { return _ycSearchHit(code, q, false); });   // 【v1.1044】表と同じ（§430）
     codes = applyRepFilter(codes.map(function (c) { return { code: c }; })).map(function (x) { return x.code; });
     codes.sort();
     codes = applyRepGrouping(codes.map(function (c) { return { code: c }; })).map(function (x) { return x.code; });
@@ -23746,7 +23758,7 @@ function _nrCodes() {
   let list = (_nrScope === 'all') ? all : all.filter(c => _nrIsNew(c) || pinned.has(c));
   const el = document.getElementById('nrSearch');
   const q = (el ? el.value : '').trim().toLowerCase();
-  if (q) list = list.filter(c => { const m = getMaster(c) || {}; return [c, m.name, m.kw].filter(Boolean).join(' ').toLowerCase().includes(q); });
+  if (q) list = list.filter(c => _ycSearchHit(c, q, true));   // 【v1.1044】子は親が当たれば出す（§430）
   return list;
 }
 // ナビの件数（新商品・選択前の現役の数）
