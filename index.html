@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1044 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1045 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4403,17 +4403,19 @@ table.rank-table td.rank-legend-col-row {
 .hbtn-ic { font-weight: 500; padding: 6px 9px; border: 1px solid var(--border); background: var(--bg2); color: var(--text3); }
 .hbtn-ic:hover { background: var(--bg3); color: var(--text2); }
 .hbtn-ic.is-on { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 700; }   /* ⇔ 幅：幅調整モード中（塗りつぶしはしない） */
-.hbtn-main { font-weight: 700; border: 1px solid #E4002B; background: #E4002B; color: #fff; position: relative; }
-.hbtn-main:hover { background: #b80022; border-color: #b80022; }
+/* 【v1.1045】主役「+ レポート追加」の色：ロゴの赤（#E4002B）→ 青 #1d4ed8（本人指定・見本のボタンの色をそのまま測った・§431）。
+   hover は一段濃い #1e40af。警告中の白地・波紋も青に。右上の「先月分が未追加」の点は警告なので赤のまま。 */
+.hbtn-main { font-weight: 700; border: 1px solid #1d4ed8; background: #1d4ed8; color: #fff; position: relative; }
+.hbtn-main:hover { background: #1e40af; border-color: #1e40af; }
 .hbtn-main:disabled { opacity: .5; cursor: not-allowed; }
 /* 警告（日別データ欠け）が出ている間は、主役を白地＋赤枠・赤文字に下げる（赤の塗りが2つ並ぶと、主役と警告の見分けが「光るかどうか」だけになるため） */
-.header.hdr-alert .hbtn-main { background: var(--bg2); color: #E4002B; }
-.header.hdr-alert .hbtn-main:hover { background: #fff1f3; }
+.header.hdr-alert .hbtn-main { background: var(--bg2); color: #1d4ed8; }   /* 【v1.1045】赤 → 青 */
+.header.hdr-alert .hbtn-main:hover { background: #eff6ff; }
 /* 月が変わって先月分の月次レポートが未追加：主役に波紋＋右上の赤い点（v1.0402。色だけロゴの赤に） */
 .hbtn-main.report-due { animation: ycMainRipple 1.6s ease-in-out infinite; }
 .hbtn-main.report-due::after { content: ''; position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; border-radius: 50%;
   background: #dc2626; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.28); }
-@keyframes ycMainRipple { 0%,100% { box-shadow: 0 0 0 0 rgba(228,0,43,.45); } 50% { box-shadow: 0 0 0 5px rgba(228,0,43,.18); } }
+@keyframes ycMainRipple { 0%,100% { box-shadow: 0 0 0 0 rgba(29,78,216,.45); } 50% { box-shadow: 0 0 0 5px rgba(29,78,216,.18); } }   /* 【v1.1045】波紋も青 */
 @media (prefers-reduced-motion: reduce) { .hbtn-main.report-due { animation: none; } }
 /* ③ 文字サイズ（ADcheck の .hzoom と同じく控えめに） */
 .header-right .hzoom { opacity: .85; border: 1px solid var(--border); border-radius: 6px; padding: 1px 3px; }
@@ -5241,7 +5243,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1044</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1045</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
