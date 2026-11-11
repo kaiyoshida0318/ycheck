@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1045 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1046 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5243,7 +5243,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1045</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1046</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6388,8 +6388,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
+              <th class="nosort yc-rk-th" data-resize-key="rankAdTune" id="hAdTuneRank" title="取得データ（広告順位）の最新日の順位。↗ で直近7日">広告順位</th>   <!-- 【v1.1038】 -->
               <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
-              <th class="nosort yc-rk-th" id="hAdTuneRank" title="取得データ（広告順位）の最新日の順位。↗ で直近7日">広告順位</th>   <!-- 【v1.1038】 -->
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <!-- 【v1.0654】広告売上も直近3ヶ月ぶん並べる（旧: 最新月の1列だけ） -->
               <th class="num col-ad" data-sort="adRev0" id="hAdTuneAdSales0">広告売上<br>(3ヶ月前)</th>
@@ -6501,8 +6501,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="proStatus">PR状態</th>
+              <th class="nosort yc-rk-th" data-resize-key="rankProTune" id="hProTuneRank" title="取得データ（SEO順位）の最新日の順位。↗ で直近7日">SEO順位</th>   <!-- 【v1.1038】 -->
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
-              <th class="nosort yc-rk-th" id="hProTuneRank" title="取得データ（SEO順位）の最新日の順位。↗ で直近7日">SEO順位</th>   <!-- 【v1.1038】 -->
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <!-- 【v1.0647】PR広告売上ROAS(推定)×3ヶ月を SEO売上 の左に追加（商品-基本データと同じ紫・同じ計算） -->
               <th class="num col-sroas" data-sort="prsr0" id="hProTunePrsr0" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR広告<br>売上ROAS<br>(3ヶ月前)</th>
@@ -20095,8 +20095,8 @@ function renderAdAdjust(cfg) {
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'ad')}${(tableSel === '#tableAdTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'ad') : ''}</td>
+      ${tableSel === '#tableAdTune' ? _ycRankCellHtml(r.code, 'ad') : ''}${/* 【v1.1046】広告順位は入札状態の右（本人指定・§432） */''}
       ${_bidCellT}
-      ${tableSel === '#tableAdTune' ? _ycRankCellHtml(r.code, 'ad') : ''}
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
       ${_roasCells}
@@ -20340,8 +20340,8 @@ function renderProAdjust(cfg) {
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
       <td class="status-col">${statusSelectHtml(r.code, 'pro')}${(tableSel === '#tableProTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'pro') : ''}</td>
+      ${tableSel === '#tableProTune' ? _ycRankCellHtml(r.code, 'seo') : ''}${/* 【v1.1046】SEO順位はPR状態の右（本人指定・§432） */''}
       ${_proCellT}
-      ${tableSel === '#tableProTune' ? _ycRankCellHtml(r.code, 'seo') : ''}
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
@@ -30782,7 +30782,26 @@ function _ensureFixedLayout() {
   });
 }
 // 保存済み列幅を全テーブルに適用（th に width/min-width/max-width を設定）
+// 【v1.1046】順位の列（§424）を 状態 の右へ動かした（§432）。この列は data-sort が無く、列幅のキーが位置（auto_<表>__c8）で決まっていたため、
+//   動かすとキーが変わって幅が消える。→ 列に固定のキー（data-resize-key="rankAdTune"／"rankProTune"）を付け、
+//   保存してある旧キーの幅・ロックを新しいキーへ写す（何度呼んでも同じ。新しいキーに値があれば上書きしない）。
+//   写した先は旧い型（sig）のまま → 画面を開くと台帳の引き継ぎ（_colRegisterLayouts・v1.0965）で新しい型へ移る。
+function _colMigrateRankKeysV1046() {
+  try {
+    const vp = ensureViewPrefs(); const W = vp.colWidths || {}, Lk = vp.colLocks || {};
+    const map = { 'auto_tableAdTune__c8': 'rankAdTune', 'auto_tableProTune__c8': 'rankProTune' };
+    [W, Lk].forEach(o => Object.keys(o).forEach(k => {
+      for (const oldK in map) {
+        if (k === oldK || k.endsWith('|' + oldK)) {
+          const nk = k.slice(0, k.length - oldK.length) + map[oldK];
+          if (o[nk] == null) o[nk] = o[k];
+        }
+      }
+    }));
+  } catch (e) {}
+}
 function applyColWidths() {
+  _colMigrateRankKeysV1046();
   // 【v1.0610】installColResizeHandles を経由せず applyColWidths だけが呼ばれる経路
   //   （_vpPreviewColWidth / applyViewPrefs 等）でも自動キーが揃っているようにする。
   try { autoAssignResizeKeys(); } catch (e) {}
