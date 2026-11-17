@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1046 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1048 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5243,7 +5243,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1046</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1048</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6186,8 +6186,12 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           </span>
           <!-- 【v1.0949】SEO売上トップ15・比率表記・計算式は月途中ボタンの右（本人指定）。左＝表の見せ方を変える操作をまとめる -->
           <!-- 【v1.0508】各月の直後にSEO売上トップ15のサムネ帯を差し込むスイッチ（月別だけ） -->
-          <span id="zdSeoWrap" style="display:inline-flex;align-items:center">
+          <span id="zdSeoWrap" style="display:inline-flex;align-items:center;gap:6px">
             <button type="button" id="zdSeoOn" onclick="_zdSetSeoShow(!_zdSeoShow)">SEO売上トップ15</button>
+            <!-- 【v1.1048】SEO売上トップ15の右に、広告の3つのトップ15（本人指定・§434）。どれも各月の直後に帯を差し込む（同時に出してよい） -->
+            <button type="button" id="zdTopAdRevOn" onclick="_zdToggleTop('adRev')">広告売上トップ15</button>
+            <button type="button" id="zdTopAdCostOn" onclick="_zdToggleTop('adCost')">広告実績額トップ15</button>
+            <button type="button" id="zdTopRoasOn" onclick="_zdToggleTop('roas')">広告ROASトップ15</button>
           </span>
           <!-- 【v1.0566】内訳列の金額の下に構成比を出すスイッチ（商品-日月別データの「比率表記」と同じ _zdRatio を見る） -->
           <span id="zdRatioWrap" style="display:inline-flex;align-items:center">
@@ -10857,7 +10861,9 @@ async function extractCsvFromZip(zipFile) {
     if (name.startsWith('__MACOSX/') || name.split('/').pop().startsWith('.')) continue;
     if (!name.toLowerCase().endsWith('.csv')) continue;
     const blob = await entry.async('blob');
-    csvFiles.push(new File([blob], name.split('/').pop(), { type: 'text/csv' }));
+    // 【v1.1047】ZIPの中の日時を lastModified に残す（取得日時の最後の手がかり＝§433。無いと展開した時刻になり新旧が分からない）
+    const _lm = (entry.date && !isNaN(entry.date.getTime())) ? entry.date.getTime() : (zipFile.lastModified || Date.now());
+    csvFiles.push(new File([blob], name.split('/').pop(), { type: 'text/csv', lastModified: _lm }));
   }
   return csvFiles;
 }
@@ -10949,6 +10955,10 @@ let _ycImportUnknown = [];
 // 【v1.0526】このバッチでドロップされた日別データの一時置き場（「アップロード実行」で state.daily へ反映）。
 //   ステージしただけでは保存されない＝取り込む前にカレンダーで過不足を目視できる。
 let _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };
+// 【v1.1047】ステージした日ごとの「取得日時」。同じ種類・同じ日が2回来たら、取得日時が新しいほうだけ残す（入れる順番に左右されない）。
+let _dailyStageTs = { overall: {}, item: {}, ad: {}, pr: {} };
+// 【v1.1047】直近の取り込みの整理結果（読み飛ばし・抜け・読めなかったファイル）。アップロード実行の知らせにも使う。
+let _ycImportReport = null;
 function _dailyStageDates() {
   const s = new Set();
   DAILY_TYPE_KEYS.forEach(k => Object.keys(_dailyStage[k] || {}).forEach(d => s.add(d)));
@@ -12274,67 +12284,178 @@ function validateBuffer() {
 }
 
 // ==================== File Processing ====================
+// ============================================================================
+// 【v1.1047】30日分の日別データを「休日をはさんでまとめて取り込む」ための取り込みルール（本人指定・§433）
+//   ADcheck／Ycheck／Amacheck 共通の仕様（RPP一括ダウンローダー v6.0.8＋ADcheck の改修）を Ycheck に流用。
+//   ・拡張機能が毎日「前日〜N日前」を1日1ファイルで取り直す → 休日明けは同じ日付のファイルが何回分も入ってくる。
+//   ・取得日時が新しいファイルほど数字が新しい（あとから増えた広告経由の売上まで入っている）。
+//   → 同じ種類・同じ日付は、取得日時がいちばん新しい1つだけを取り込む。入れる順番には左右されない。
+//
+//   取得日時の決め方（新しいかどうかの判断だけに使う）：
+//     ① ファイル名の _getYYYYMMDD-HHMM（拡張機能が付ける。例 item-reach-20261012_get20261111-1209.csv）
+//     ② 中身・元のファイル名にある取得日時（⑤PRオプ料率の data202611111209.csv の12桁）
+//     ③ ファイルの更新日時（File.lastModified。ZIPの中のファイルはZIPに記録された日時）
+//   データの日付：今までどおり（①③④は中身の日付の列、②商品別売上はファイル名の8桁。★_get の日付は読まない）。
+//   ★今の取り込みは前から「その日・その種類を丸ごと入れ替え」（commitUpload の d[k][date] = …）。足し算はしていない
+//     ＝同じファイルを2回入れても数字は倍にならない。ここは変えていない。
+// ============================================================================
+function _ycStripGet(name) { return String(name || '').replace(/_get\d{8}-\d{4}/, ''); }
+function _ycGetTsFromName(name) {
+  const m = String(name || '').match(/_get(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
+  if (!m) return null;
+  const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime();   // ★ローカル時刻
+  return isNaN(t) ? null : t;
+}
+function _ycGetTsFromContent(kind, name) {
+  if (kind === 'proRate') {   // data202611111209.csv（拡張機能「商品データ」）＝ 取得した年月日時分
+    const m = _ycStripGet(name).match(/data(20\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/i);
+    if (m) { const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime(); if (!isNaN(t)) return t; }
+  }
+  return null;
+}
+function _ycFmtTs(t) {
+  if (!t) return '—';
+  const d = new Date(t), p = n => String(n).padStart(2, '0');
+  return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function _ycMd(ymd) { const m = String(ymd || '').match(/^\d{4}-(\d{2})-(\d{2})$/); return m ? (+m[1]) + '/' + (+m[2]) : String(ymd || ''); }
+// 日別4種を、ステージに入れる前の形（日付 → 値）にする。★ここで例外が出たら「読めなかった」扱い→次に新しいファイルを使う
+function _ycParseDailyByDate(kind, dt, rows) {
+  if (kind === 'overall') {
+    const parsed = parseOverallDaily(rows);
+    return Object.keys(parsed).length ? parsed : { [dt]: 0 };
+  }
+  if (kind === 'item') return { [dt]: parseItemDaily(rows) };   // このCSVは日付列が無い＝ファイル名の日付
+  if (kind === 'ad') {
+    const parsed = parseAdDaily(rows);
+    return Object.keys(parsed).length ? parsed : { [dt]: {} };
+  }
+  return parsePrDaily(rows);   // pr：行が無ければ何も入れない（今までどおり）
+}
+function _ycDailyRecCount(kind, v) {
+  if (kind === 'overall' || kind === 'pr') return 1;
+  return (v && typeof v === 'object') ? Object.keys(v).length : 0;
+}
+// 取得日時が新しい（か同じ）ときだけステージに入れる。★入れる順番に左右されないための要
+function _ycStagePut(kind, date, value, ts) {
+  const cur = _dailyStageTs[kind] ? _dailyStageTs[kind][date] : undefined;
+  if (cur != null && ts < cur) return false;
+  _dailyStage[kind][date] = value;
+  if (!_dailyStageTs[kind]) _dailyStageTs[kind] = {};
+  _dailyStageTs[kind][date] = ts;
+  return true;
+}
+
 async function processFiles(files) {
   $('#logArea').classList.add('show');
   log(`${files.length}件のファイルを処理開始`);
   const csvFiles = await expandFiles(files);
   if (csvFiles.length === 0) { log('処理するCSVがありません', 'err'); validateBuffer(); return; }
   _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };   // 【v1.0537】prを追加
+  _dailyStageTs = { overall: {}, item: {}, ad: {}, pr: {} };            // 【v1.1047】
   _ycImportUnknown = [];   // 【v1.0836】店を判別できなかったファイル（アップロード実行の前に確認する）
-  for (const file of csvFiles) {
-    try {
-      log(`読み込み中: ${file.name}`);
-      const rows = await readCsvFile(file);
-      const kind = classifyFile(file.name, rows);
-      if (kind === 'unknown') { log(`⚠ 種別判定できず: ${file.name}`, 'err'); continue; }
-      // 【v1.0814】★別の店のレポートなら取り込まない。
-      //   ここで止めないと、他店の売上がそのまま混ざり、あとから分離できなくなる
-      //   （実際にKAIRYがゆかい屋のデータで汚染された）。
-      {
-        const _sc = ycShopCheck(file.name, rows);   /* 【v1.0836】中身も見る */
-        if (_sc.unknown) _ycImportUnknown.push({ name: file.name, badge: (reportTypeOf(kind) || {}).badge || '', label: (reportTypeOf(kind) || {}).label || kind });
-        else if (_sc.ok) log(`　（店の照合OK: ${_sc.found} / ${_sc.by === 'content' ? '中身のストアアカウント列' : 'ファイル名'}）`);
-        if (!_sc.ok) {
-          const _now = (typeof getSessionShop === 'function') ? getSessionShop() : {};
-          log(`⛔ 別のショップのファイルです: ${file.name}`
-            + `（このファイルは「${_sc.found}」/ いま開いているのは「${_now.name || ''}（${_sc.expect}）」）`
-            + ' → 取り込みませんでした。ヘッダーのショップを切り替えてからやり直してください。', 'err');
-          try { if (typeof showToast === 'function') showToast(
-            '別のショップのファイルなので取り込みませんでした（' + _sc.found + ' → ' + _sc.expect + '）', 'warn'); } catch (e) {}
-          continue;
-        }
-      }
+  const R = _ycImportReport = { picked: files.length, csv: csvFiles.length, used: 0, skipped: [], unreadable: [], multiDay: [], otherShop: [], kinds: {} };
+  const isDaily = k => DAILY_TYPE_KEYS.indexOf(k) >= 0;
+  const isSnap = k => k === 'bid' || k === 'proRate' || k === 'master';
 
-      // 【v1.0526】まず日別レポートかどうかを判定する。
-      //   日別3種（ショップ売上・商品別売上・広告詳細）で日付が取れたものは、日別として取り込む。
-      //   日付が取れないもの（従来の月次ファイル）は、下の従来ロジックへそのまま流す。
-      const _dt = (kind === 'overall' || kind === 'item' || kind === 'ad' || kind === 'pr') ? reportDateFor(kind, file.name, rows) : null;
-      if (_dt) {
-        let _days = 0, _recs = 0;
-        if (kind === 'overall') {
-          const parsed = parseOverallDaily(rows);
-          const keys = Object.keys(parsed);
-          if (keys.length) { keys.forEach(d => { _dailyStage.overall[d] = parsed[d]; }); _days = keys.length; _recs = keys.length; }
-          else { _dailyStage.overall[_dt] = 0; _days = 1; }
-        } else if (kind === 'item') {
-          const parsed = parseItemDaily(rows);            // このCSVは日付列が無いのでファイル名の日付を使う
-          _dailyStage.item[_dt] = parsed; _days = 1; _recs = Object.keys(parsed).length;
-        } else if (kind === 'ad') {
-          const parsed = parseAdDaily(rows);              // 1ファイルに複数日が入っていても日ごとに分ける
-          const keys = Object.keys(parsed);
-          keys.forEach(d => { _dailyStage.ad[d] = parsed[d]; _recs += Object.keys(parsed[d]).length; });
-          _days = keys.length || 1;
-          if (!keys.length) _dailyStage.ad[_dt] = {};
-        } else {
-          // 【v1.0537】PRオプション実績。同じ日を再取込したら上書き（二重加算しない）。
-          const parsed = parsePrDaily(rows);
-          const keys = Object.keys(parsed);
-          keys.forEach(d => { _dailyStage.pr[d] = parsed[d]; _recs++; });
-          _days = keys.length || 1;
-        }
+  // ---- 1〜2. 全部読み、1ファイルずつ「種類・データの日付・取得日時」を決める
+  if (csvFiles.length > 8) log(`📄 ${csvFiles.length}件のCSVを読み込み中…`);
+  const metas = [];
+  for (let i = 0; i < csvFiles.length; i++) {
+    const file = csvFiles[i];
+    const m = { file, idx: i, name: file.name, base: _ycStripGet(file.name), rows: null, err: '', kind: 'unknown', date: null, ts: 0, tsBy: '', mtime: +file.lastModified || 0, byDate: null };
+    try { m.rows = await readCsvFile(file); } catch (err) { m.err = '読み込めない（' + ((err && err.message) || err) + '）'; }
+    m.kind = m.rows ? classifyFile(m.base, m.rows) : (fileTypeFromName(m.base) || 'unknown');
+    if (m.kind === 'unknown') {
+      R.unreadable.push({ name: m.name, reason: m.err || '種類を判定できない' });
+      log(`⚠ ${m.err ? '読み込めません' : '種別判定できず'}: ${m.name}${m.err ? '（' + m.err + '）' : ''}`, 'err');
+      continue;
+    }
+    // 【v1.0814】★別の店のレポートなら取り込まない（他店の売上が混ざると、あとから分離できない）
+    if (m.rows) {
+      const _sc = ycShopCheck(m.name, m.rows);   /* 【v1.0836】中身も見る */
+      if (!_sc.ok) {
+        const _now = (typeof getSessionShop === 'function') ? getSessionShop() : {};
+        R.otherShop.push(m.name);
+        log(`⛔ 別のショップのファイルです: ${m.name}`
+          + `（このファイルは「${_sc.found}」/ いま開いているのは「${_now.name || ''}（${_sc.expect}）」）`
+          + ' → 取り込みませんでした。ヘッダーのショップを切り替えてからやり直してください。', 'err');
+        try { if (typeof showToast === 'function') showToast(
+          '別のショップのファイルなので取り込みませんでした（' + _sc.found + ' → ' + _sc.expect + '）', 'warn'); } catch (e) {}
+        continue;
+      }
+      m.shopUnknown = !!_sc.unknown; m.shopOk = _sc.ok && !_sc.unknown ? _sc : null;
+    }
+    // データの日付（日別4種だけ）。★_get の日付は読まない（base で見る）
+    if (isDaily(m.kind)) m.date = m.rows ? reportDateFor(m.kind, m.base, m.rows) : fileDateFromName(m.base);
+    // 取得日時：① _get → ② 中身・元の名前 → ③ 更新日時
+    const t1 = _ycGetTsFromName(m.name), t2 = t1 ? null : _ycGetTsFromContent(m.kind, m.name);
+    if (t1) { m.ts = t1; m.tsBy = 'ファイル名の_get'; }
+    else if (t2) { m.ts = t2; m.tsBy = '元のファイル名の日時'; }
+    else { m.ts = m.mtime; m.tsBy = 'ファイルの更新日時'; }
+    // 日別は先に中身を読み解いておく（2日以上入っているかを知るため。失敗は「読めなかった」→次に新しいものを使う）
+    if (isDaily(m.kind) && m.date && m.rows) {
+      try { m.byDate = _ycParseDailyByDate(m.kind, m.date, m.rows); }
+      catch (err) { m.err = '中身を読み取れない（' + ((err && err.message) || err) + '）'; }
+    }
+    metas.push(m);
+  }
+
+  // ---- 3〜4. 種類と日付が同じ（スナップショットは種類が同じ）ファイルは、取得日時がいちばん新しい1つだけ
+  const groups = new Map(), multi = [], legacy = [];
+  metas.forEach(m => {
+    let key = null;
+    if (isDaily(m.kind)) {
+      if (!m.date) { legacy.push(m); return; }                       // 日付の無い日別種別＝従来の月次ファイル（今までどおり）
+      if (m.byDate && Object.keys(m.byDate).length >= 2) { multi.push(m); return; }   // 7. 期間が2日以上のファイル
+      key = m.kind + '|' + m.date;
+    } else if (isSnap(m.kind)) key = m.kind + '|snapshot';
+    else { legacy.push(m); return; }
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  });
+  const chosen = [];
+  groups.forEach(list => {
+    // 新しい順。取得日時が同じなら更新日時が新しいほう、それも同じなら後に選ばれたほう
+    list.sort((a, b) => (b.ts - a.ts) || (b.mtime - a.mtime) || (b.idx - a.idx));
+    let picked = null;
+    list.forEach(m => {
+      if (picked) { R.skipped.push(m); return; }
+      if (m.err || !m.rows) { R.unreadable.push({ name: m.name, reason: m.err || '読み込めない' }); return; }   // いちばん新しいのが壊れていたら次へ
+      picked = m;
+    });
+    if (picked) chosen.push(picked);
+  });
+
+  // ---- 5. 残ったファイルを、データの日付の古い順に取り込む（日付の無いものは後ろ）
+  const order = chosen.concat(multi.filter(m => !m.err && m.rows));
+  multi.filter(m => m.err || !m.rows).forEach(m => R.unreadable.push({ name: m.name, reason: m.err || '読み込めない' }));
+  order.sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')) || (a.ts - b.ts) || (a.idx - b.idx));
+  const run = order.concat(legacy.sort((a, b) => a.idx - b.idx));
+
+  for (const m of run) {
+    const file = m.file, rows = m.rows, kind = m.kind;
+    if (!rows) { R.unreadable.push({ name: m.name, reason: m.err || '読み込めない' }); continue; }
+    try {
+      if (m.shopUnknown) _ycImportUnknown.push({ name: file.name, badge: (reportTypeOf(kind) || {}).badge || '', label: (reportTypeOf(kind) || {}).label || kind });
+      R.used++;
+      // 【v1.0526】日別4種：日付が取れたものは日別として取り込む（6. その日・その種類を丸ごと入れ替え＝commitUpload）
+      const _dt = m.date;
+      if (_dt && m.byDate) {
+        const keys = Object.keys(m.byDate).sort();
+        let _recs = 0, _put = 0;
+        keys.forEach(d => { if (_ycStagePut(kind, d, m.byDate[d], m.ts)) { _put++; _recs += _ycDailyRecCount(kind, m.byDate[d]); } });
+        if (keys.length >= 2) R.multiDay.push({ name: m.name, from: keys[0], to: keys[keys.length - 1], days: keys.length });
+        const K = R.kinds[kind] || (R.kinds[kind] = { dates: new Set(), files: 0 });
+        K.files++; keys.forEach(d => K.dates.add(d));
         _dailyStage.files.push({ kind, date: _dt, filename: file.name });
-        log(`✓ ${reportTypeOf(kind).badge} ${reportTypeOf(kind).label} を日別バッファへ（${_dt}${_days > 1 ? ` 他${_days - 1}日` : ''} / ${_recs}件）`, 'ok');
+        log(`✓ ${reportTypeOf(kind).badge} ${reportTypeOf(kind).label} を日別バッファへ（${_dt}${keys.length > 1 ? ` 他${keys.length - 1}日` : ''} / ${_recs}件 / 取得 ${_ycFmtTs(m.ts)}）`
+          + (_put < keys.length ? `（${keys.length - _put}日は、もっと新しいファイルのほうを使います）` : ''), 'ok');
         _dailySlotSummary(kind);
+        continue;
+      }
+      if (_dt && isDaily(kind) && !m.byDate) {   // pr で日付の列が無い等（今までどおり何も入れない）
+        log(`⚠ ${reportTypeOf(kind).badge} ${reportTypeOf(kind).label}: 中身に日付の行がありませんでした（${file.name}）`, 'warn');
         continue;
       }
 
@@ -12344,7 +12465,7 @@ async function processFiles(files) {
         log(`✓ ショップ売上をバッファへ (${rows.length}行, 月=${month || '?'})`, 'ok');
       } else if (kind === 'item') {
         // 【v1.0505】複数の商品別売上ファイル(zip等)を月ごとに保持。ファイル名から月を推定。
-        const fnMonth = monthFromFilename(file.name);
+        const fnMonth = monthFromFilename(m.base);
         if (!state.uploadBuffer.itemList) state.uploadBuffer.itemList = [];
         state.uploadBuffer.itemList.push({ rows, filename: file.name, month: fnMonth });
         state.uploadBuffer.item = { rows, filename: file.name, month: fnMonth };  // 検証UI・従来経路用（最後の1件）
@@ -12357,21 +12478,51 @@ async function processFiles(files) {
         log(`✓ 広告詳細レポートをバッファへ (${rows.length}行, 月=${month || '?'})`, 'ok');
       } else if (kind === 'bid') {
         state.uploadBuffer.bid = { rows, filename: file.name };
-        log(`✓ 入札価格をバッファへ (${rows.length}行)`, 'ok');
+        log(`✓ 入札価格をバッファへ (${rows.length}行 / 取得 ${_ycFmtTs(m.ts)})`, 'ok');
       } else if (kind === 'proRate') {
         state.uploadBuffer.proRate = { rows, filename: file.name };
-        log(`✓ PRオプ料率をバッファへ (${rows.length}行)`, 'ok');
+        log(`✓ PRオプ料率をバッファへ (${rows.length}行 / 取得 ${_ycFmtTs(m.ts)})`, 'ok');
       } else if (kind === 'master') {
         state.uploadBuffer.master = { rows, filename: file.name };
         log(`✓ 商品マスタをバッファへ (${rows.length}行)`, 'ok');
       }
       updateSlot(kind, file.name);
     } catch (err) {
+      R.used = Math.max(0, R.used - 1);
+      R.unreadable.push({ name: file.name, reason: (err && err.message) || String(err) });
       log(`✗ エラー: ${file.name} — ${err.message}`, 'err');
     }
   }
+  _ycImportReportLog(R);
   dropCalShow();   // 【v1.0526】取り込む前に「種別×日」のカレンダーで過不足を目視できるようにする
   validateBuffer();
+}
+// 【v1.1047】9. 結果の表示（取り込む前＝ステージした時点で出す。アップロード実行のあとは知らせで要約）
+function _ycImportReportLog(R) {
+  if (!R) return;
+  const short = (arr, n) => arr.slice(0, n).join('、') + (arr.length > n ? ` ほか${arr.length - n}件` : '');
+  log('――――――――――――――――――――', 'info');
+  log(`📋 取り込みの整理：選んだファイル ${R.picked}件（CSV ${R.csv}件）／取り込む ${R.used}件／古い重複として読み飛ばし ${R.skipped.length}件`
+    + '（同じ種類・同じ日付は、取得日時がいちばん新しいものだけを使います）', R.skipped.length ? 'ok' : 'info');
+  if (R.skipped.length) log(`　読み飛ばし：${short(R.skipped.map(m => m.name), 6)}`, 'info');
+  DAILY_TYPE_KEYS.forEach(k => {
+    const K = R.kinds[k]; if (!K || !K.dates.size) return;
+    const ds = [...K.dates].sort(), t = reportTypeOf(k);
+    // 抜けている日付（取り込んだ範囲の中で、ファイルが無かった日）。★実績が無くてファイルが出なかっただけのこともあるので「お知らせ」
+    const miss = []; let cur = new Date(ds[0] + 'T00:00:00');
+    const last = new Date(ds[ds.length - 1] + 'T00:00:00'), have = new Set(ds);
+    while (cur <= last && miss.length < 400) {
+      const y = cur.getFullYear(), mo = String(cur.getMonth() + 1).padStart(2, '0'), d = String(cur.getDate()).padStart(2, '0');
+      const key = `${y}-${mo}-${d}`; if (!have.has(key)) miss.push(key);
+      cur.setDate(cur.getDate() + 1);
+    }
+    log(`　${t.badge} ${t.label}：${_ycMd(ds[0])}〜${_ycMd(ds[ds.length - 1])} の${ds.length}日分`
+      + (miss.length ? `　ℹ この間で無い日：${short(miss.map(_ycMd), 10)}（その日に実績が無くファイルが出なかっただけのこともあります）` : ''), miss.length ? 'warn' : 'ok');
+  });
+  if (R.multiDay.length) log(`　ℹ 期間が2日以上のファイル（今までどおり日ごとに分けて取り込み）：${short(R.multiDay.map(x => `${x.name}（${_ycMd(x.from)}〜${_ycMd(x.to)}）`), 5)}`, 'warn');
+  if (R.unreadable.length) log(`　⚠ 読めなかったファイル：${short(R.unreadable.map(x => `${x.name}（${x.reason}）`), 6)}`, 'err');
+  if (R.otherShop.length) log(`　⛔ 別のショップのため取り込まない：${short(R.otherShop, 6)}`, 'err');
+  log('――――――――――――――――――――', 'info');
 }
 
 async function commitUpload() {
@@ -12621,6 +12772,13 @@ async function commitUpload() {
   } else {
     log('💾 この端末に保存しました（GitHub未設定のため、他PCには共有されません）', 'ok');
   }
+  // 【v1.1047】取り込みの要約を知らせで出す（モーダルは閉じるので、整理の結果はここで1行だけ）
+  try {
+    const R = _ycImportReport;
+    if (R && typeof showToast === 'function') showToast(`取り込みました：${R.used}ファイル`
+      + (R.skipped.length ? `（古い重複 ${R.skipped.length}件は読み飛ばし）` : '')
+      + (R.unreadable.length ? `／読めなかった ${R.unreadable.length}件` : ''), R.unreadable.length ? 'warn' : 'success');
+  } catch (e) {}
   closeUploadModal();
 }
 
@@ -18046,6 +18204,60 @@ function _zdSetSeoShowUI(){
 }
 function _zdSetSeoShow(b){ _zdSeoShow=!!b; _zdSetSeoShowUI(); renderGraphData(); }
 window._zdSetSeoShow=_zdSetSeoShow;
+// ==================== 【v1.1048】広告売上／広告実績額／広告ROAS トップ15（本人指定・§434） ====================
+//   ・SEO売上トップ15と同じ帯（_zdSeoPanelHtml）を、指標だけ替えて出す。親子は代表コードに合算して1商品（SEOと同じ）。
+//   ・広告売上＝①広告詳細の売上（アイテムリーチ経由）／広告実績額＝①の利用金額／広告ROAS＝広告売上÷広告実績額×100（%）。
+//   ・★ROAS は、その月の広告実績額が ZD_ROAS_MIN_COST 円以上の商品だけで並べる（数十円の広告で1件売れただけの商品が
+//     1,000%超で上位を占めるのを防ぐ。実データで 1,000円以上＝毎月25〜36商品）。
+//   ・月途中（1〜N日）は日別データの1〜N日で数える（SEO と同じ）。月別のときだけ（日別・新商品では隠す＝zdSeoWrap ごと）。
+//   ・数字の色＝前月比（SEO と同じ色分け）。広告実績額は「増えた＝青」だが、良し悪しではなく増減の向きだけを表す。
+const ZD_ROAS_MIN_COST = 1000;
+const ZD_TOP_DEFS = {
+  adRev:  { btn: 'zdTopAdRevOn',  color: '#0F766E', label: '広告売上トップ15',   title: '広告売上トップ15商品',   empty: '広告売上のある商品' },
+  adCost: { btn: 'zdTopAdCostOn', color: '#B45309', label: '広告実績額トップ15', title: '広告実績額トップ15商品', empty: '広告実績額のある商品' },
+  roas:   { btn: 'zdTopRoasOn',   color: '#7C3AED', label: '広告ROASトップ15',   title: '広告ROASトップ15商品',   empty: '広告実績額 ' + ZD_ROAS_MIN_COST.toLocaleString('ja-JP') + '円以上の商品',
+            note: '広告実績額 ' + ZD_ROAS_MIN_COST.toLocaleString('ja-JP') + '円以上の商品', pct: true },
+};
+const ZD_TOP_ORDER = ['adRev', 'adCost', 'roas'];
+const _zdTopShow = { adRev: false, adCost: false, roas: false };
+function _zdSetTopShowUI() {
+  ZD_TOP_ORDER.forEach(function (k) { const d = ZD_TOP_DEFS[k]; _tgPaint(document.getElementById(d.btn), null, !!_zdTopShow[k], d.color, d.label); });
+}
+function _zdToggleTop(k) { if (!(k in _zdTopShow)) return; _zdTopShow[k] = !_zdTopShow[k]; _zdSetTopShowUI(); renderGraphData(); }
+window._zdToggleTop = _zdToggleTop;
+// 代表コードごとの {ym:{rep:{cost, rev}}}（月別＝buildFullAggregate／月途中＝日別の1〜N日）
+function _zdAdFamByMonth(cutN) {
+  const fam = {};
+  const add = function (ym, code, cost, rev) {
+    const rep = ((state.productMeta[code] || {}).repCode || '').trim() || code;
+    const mm = fam[ym] || (fam[ym] = {}); const o = mm[rep] || (mm[rep] = { cost: 0, rev: 0 });
+    o.cost += cost; o.rev += rev;
+  };
+  if (cutN > 0) {
+    const D = ensureDaily();
+    Object.keys(D.ad || {}).forEach(function (d) {
+      if (!isYmd(d) || +d.slice(8, 10) > cutN) return;
+      const ad = dailyAdOf(d); Object.keys(ad).forEach(function (c) { add(ymOf(d), c, ad[c].adCost, ad[c].adRevenue); });
+    });
+  } else {
+    (buildFullAggregate() || []).forEach(function (r) { if (r.month) add(r.month, r.code, +r.adCost || 0, +r.adRev || 0); });
+  }
+  return fam;
+}
+// 指標ごとの {ym:{rep:値}}（正の値だけ）。形は _zdSeoByMonth と同じ
+function _zdTopByMonth(k, fam) {
+  const map = {};
+  Object.keys(fam).forEach(function (ym) {
+    Object.keys(fam[ym]).forEach(function (rep) {
+      const o = fam[ym][rep]; let v = 0;
+      if (k === 'adRev') v = o.rev;
+      else if (k === 'adCost') v = o.cost;
+      else if (k === 'roas') v = (o.cost >= ZD_ROAS_MIN_COST && o.rev > 0) ? (o.rev / o.cost * 100) : 0;
+      if (v > 0) (map[ym] || (map[ym] = {}))[rep] = v;
+    });
+  });
+  return map;
+}
 // 商品×月のSEO売上（=max(0,総売上−広告売上)）を {ym:{code:seo}} で返す（正の分だけ）
 function _zdSeoByMonth(){
   // 【v1.0511】親子商品は代表コード(repCode)へ合算して1商品として集計。
@@ -18100,7 +18312,9 @@ function _zdSeoParentSet(){
   }catch(e){}
   return set;
 }
-function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
+function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet, def){
+  // 【v1.1048】def＝ZD_TOP_DEFS の1つ（広告売上／広告実績額／広告ROAS）。省略＝SEO売上（今までどおり）
+  const _d=def||{ title:'SEO売上トップ15商品', empty:'SEO売上のある商品', color:'#1565C0' };
   const top=_zdSeoTop(seoByMonth, ym);
   const yy=ym.slice(0,4), mm=ym.slice(5,7);
   let _py=+yy, _pm=+mm-1; if(_pm<1){_pm=12;_py--;}
@@ -18110,7 +18324,7 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
   const fY=function(v){return Math.round(v).toLocaleString('ja-JP');};   /* 【v1.0963】¥ なし */
   let inner;
   if(!top.length){
-    inner='<div style="padding:10px 12px;color:var(--text3);font-size:12px">この月はSEO売上のある商品がありません</div>';
+    inner='<div style="padding:10px 12px;color:var(--text3);font-size:12px">この月は'+_d.empty+'がありません</div>';
   } else {
     const items=top.map(function(x,i){
       const m=getMaster(x.code)||{}; const name=m.name||x.code;
@@ -18124,20 +18338,21 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       const _isParent=!!(parentSet && parentSet.has(x.code));
       // 【v1.0521】案A(スクリム)：写真の上端に薄い暗がりを敷き、その上に順位・親アイコンを置いて常にくっきり見せる。高さは不変。
       const scrim='<div style="position:absolute;top:1px;left:1px;right:1px;height:32px;border-radius:7px 7px 0 0;background:linear-gradient(to bottom,rgba(0,0,0,.48),rgba(0,0,0,0));pointer-events:none;z-index:1"></div>';
-      const rankBadge='<div style="position:absolute;top:4px;left:4px;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:'+(i<3?'#1565C0':'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 1px 2px rgba(0,0,0,.35);text-shadow:0 1px 2px rgba(0,0,0,.5)">'+(i+1)+'</div>';
+      const rankBadge='<div style="position:absolute;top:4px;left:4px;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:'+(i<3?_d.color:'#94a3b8')+';color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 1px 2px rgba(0,0,0,.35);text-shadow:0 1px 2px rgba(0,0,0,.5)">'+(i+1)+'</div>';
       const parentMark=_isParent
         ? '<div title="親子商品（親商品）" style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:5px;background:#16a34a;border:1.5px solid rgba(255,255,255,.92);box-shadow:0 1px 3px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2"><svg viewBox="0 0 20 20" style="width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg></div>'
         : '';
       return '<div title="'+esc(name)+(_isParent?'（親子商品）':'')+'" onclick="_zdSeoOpenGraph(\''+esc(String(x.code).replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\')" style="cursor:pointer;min-width:0;text-align:center;position:relative">'
         +'<div style="position:relative;display:block;width:100%;max-width:120px;margin:0 auto;line-height:0">'+imgEl+scrim+rankBadge+parentMark+'</div>'
-        +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:15px;color:'+cs.col+';margin-top:6px;line-height:1.2">'+fY(x.seo)+'</div>'
+        +'<div style="font-family:\'DM Mono\',ui-monospace,monospace;font-weight:700;font-size:15px;color:'+cs.col+';margin-top:6px;line-height:1.2">'+fY(x.seo)+(_d.pct?'%':'')+'</div>'
         +tagHtml
         +'</div>';
     }).join('');
     // 【v1.0522】凡例に「15位以内の親子商品の件数」を出す
     const _parentCount=top.filter(function(x){return parentSet && parentSet.has(x.code);}).length;
     inner='<div style="padding:10px 12px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:9px">◎ '+yy+'/'+mm+' SEO売上トップ15商品　'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:9px">◎ '+yy+'/'+mm+' '+_d.title+'　'
+      +(_d.note?'<span style="font-weight:400;color:var(--text3)">（'+_d.note+'）</span>　':'')
       +'<span style="font-weight:400;color:var(--text3)">（数字の色＝前月比：'
       +'<span style="color:#1565C0;font-weight:700">+20%↑</span> <span style="color:#2E7D32;font-weight:700">+10%↑</span> '
       +'<span style="color:#1a1a1a;font-weight:700">中間</span> <span style="color:#BA7517;font-weight:700">-10%↓</span> '
@@ -18149,7 +18364,7 @@ function _zdSeoPanelHtml(seoByMonth, ym, colCount, parentSet){
       +'<div style="display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:10px;align-items:start">'+items+'</div>'
       +'</div>';
   }
-  return '<tr class="zd-seo-row" data-ym="'+ym+'"><td colspan="'+colCount+'" style="background:#fff;border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
+  return '<tr class="zd-seo-row" data-ym="'+ym+'"'+(def?' data-top="'+(def.key||'')+'"':'')+'><td colspan="'+colCount+'" style="background:#fff;border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">'+inner+'</td></tr>';
 }
 // 【v1.0948】月途中で 1〜N日 の一部しか日別データが無い月だけ「17/21日」を出す（満日数なら何も出さない）
 function _zdCutBadgeHtml(r) {
@@ -18559,6 +18774,7 @@ function renderGraphData() {
     }
   }
   _zdSetSeoShowUI();
+  _zdSetTopShowUI();   // 【v1.1048】
   // 【v1.0948】月途中（各月 1〜N日）。日別タブでは使わない
   const _cutN = _zdLatestCut();
   if (!(_cutN > 0)) _zdDayCutMode = 'full';   // 最新日が月末になったら月全体に戻す
@@ -18566,6 +18782,11 @@ function renderGraphData() {
   const _seoOn = _zdSeoShow && !_dayMode && !_cohort;   // SEO売上トップ15は月別のときだけ
   const _seoByM = _seoOn ? (_cutOn ? _zdSeoByMonthCut(_cutN) : _zdSeoByMonth()) : null;
   const _seoParentSet = _seoOn ? _zdSeoParentSet() : null;   // 【v1.0520】親子商品マーカー用
+  // 【v1.1048】広告のトップ15（月別のときだけ・SEO と同じ条件）
+  const _topKeys = (!_dayMode && !_cohort) ? ZD_TOP_ORDER.filter(function (k) { return _zdTopShow[k]; }) : [];
+  const _topFam = _topKeys.length ? _zdAdFamByMonth(_cutOn ? _cutN : 0) : null;
+  const _topMaps = {}; _topKeys.forEach(function (k) { _topMaps[k] = _zdTopByMonth(k, _topFam); });
+  const _topParentSet = _topKeys.length ? (_seoParentSet || _zdSeoParentSet()) : null;
   const _zdCols = zdCols();                     // 【v1.0547】検算列の表示/非表示を反映した列リスト
   _zdSetVerifyUI();
   _zdSetSplitUI();
@@ -18814,6 +19035,8 @@ function renderGraphData() {
     if (_ydMap && _ydMap.has(r.month)) _rowHtml += _zdYoyDiffRowHtml(_ydMap.get(r.month));
     // 【v1.0508】SEO売上表示ONなら、その月の直後にSEO売上トップ15パネルを差し込む
     if (_seoOn && _seoByM) _rowHtml += _zdSeoPanelHtml(_seoByM, r.month, _zdColCount, _seoParentSet);
+    // 【v1.1048】広告売上／広告実績額／広告ROAS トップ15（SEOの下に、ボタンの並び順で）
+    _topKeys.forEach(function (k) { _rowHtml += _zdSeoPanelHtml(_topMaps[k], r.month, _zdColCount, _topParentSet, Object.assign({ key: k }, ZD_TOP_DEFS[k])); });
     return _rowHtml;
   }).join('');
   // 【v1.0993】前年同月比差異で差異の行が1つも出ないとき（月途中＝日別データがある月だけ、など）の説明
@@ -25013,6 +25236,7 @@ function openUploadModal(mode) {
     if (hintEl) hintEl.textContent = 'その日の6ファイルをまとめてドロップしてください（CSVまたはZIP）。①〜④は日別、⑤⑥は日付を持たない最新値です。';
     state.uploadBuffer = { overall: null, item: null, itemList: [], ad: null, bid: null, proRate: null, master: null };
     _dailyStage = { overall: {}, item: {}, ad: {}, pr: {}, files: [] };   // 【v1.0537】日別ステージもリセット
+    _dailyStageTs = { overall: {}, item: {}, ad: {}, pr: {} }; _ycImportReport = null;   // 【v1.1047】
     ['overall', 'item', 'ad', 'pr', 'proRate', 'bid'].forEach(clearSlot);
     _renderMissingNotice(null);
     refreshSlotExamples();      // 【v1.0532】ファイル名の例を表示
