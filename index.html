@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1048 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1049 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5243,7 +5243,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1048</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1049</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -17714,6 +17714,14 @@ function _zenRank5(val, allVals, hi) {
   if (idx >= Math.floor(n * 0.80)) return 'o';
   return 'bk';
 }
+// 【v1.1049】前年同月比差異のときは、組を「新しい年＋その1つ前の年」の2行だけにする（本人指定・§435。
+//   前年同月比は3年分並べてよいが、差異は今年と前年の比較だけで十分。ADcheck の差異と同じ形）
+function _zenYoyOrderFor(rowsDesc) {
+  const all = _zenYoyOrder(rowsDesc);
+  if (_zdMode !== 'yoydiff') return all;
+  let n = 0;
+  return all.filter(r => { n = r._grpTop ? 1 : n + 1; return n <= 2; });
+}
 function _zenYoyOrder(rowsDesc) {
   const out = [], used = new Set();
   rowsDesc.forEach(r => {
@@ -18151,7 +18159,7 @@ function downloadZenMonthlyCsv() {
     const desc = asc.slice().reverse();
     const _coCsv = (_zdGrain === 'cohort');   // 【v1.1024】全-月別データ-新商品
     const drows = _coCsv ? _zdCohortDrows(desc, _cOn ? _cN : 0)
-      : (_zdIsYoy() && _zdGrain !== 'day' && typeof _zenYoyOrder === 'function') ? _zenYoyOrder(desc) : desc;   /* 【v1.0993】差異も前年同月比の並び */
+      : (_zdIsYoy() && _zdGrain !== 'day' && typeof _zenYoyOrder === 'function') ? _zenYoyOrderFor(desc) : desc;   /* 【v1.1049】差異は2行の組 */   /* 【v1.0993】差異も前年同月比の並び */
     const esc = function (v) { let s = (v == null) ? '' : String(v); if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"'; return s; };
     const numY = function (v) { return (v == null || isNaN(v) || v === 0) ? '' : String(Math.round(v)); };
     // 【v1.0794】★CSVも画面と同じ桁で出す。ここだけ小数第1位のままにすると
@@ -18918,7 +18926,7 @@ function renderGraphData() {
   const desc = asc.slice().reverse();
   // 【v1.0527】日別モードは常に日付降順（前年同月比は月別のみ）
   const drows = _cohort ? _zdCohortDrows(desc, _cutOn ? _cutN : 0)   /* 【v1.1024】 */
-    : (!_dayMode && _zdIsYoy()) ? _zenYoyOrder(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));   /* 【v1.0993】差異も前年同月比の並び */
+    : (!_dayMode && _zdIsYoy()) ? _zenYoyOrderFor(desc) : desc.map(r => Object.assign({}, r, { _grpTop: false }));   /* 【v1.0993】差異も前年同月比の並び */
   // 【v1.0993】前年同月比差異の行（組の最後の行の month → 差異）
   const _ydMap = (!_dayMode && !_cohort && _zdMode === 'yoydiff') ? _zdYoyDiffs(drows, _zdCols) : null;
   const _ydLatest = drows.reduce((mx, r) => (r.month && r.month > mx ? r.month : mx), '');
@@ -18995,22 +19003,25 @@ function renderGraphData() {
     const ya = String(x.a.month).slice(0, 4), yb = String(x.b.month).slice(0, 4);
     const warn = (!_cutOn && _cutN > 0 && x.a.month === _ydLatest)
       ? '<div style="margin-top:2px;font-size:9px;font-weight:700;color:#c2410c;white-space:nowrap" title="今月はまだ1〜' + _cutN + '日分、前年は1か月分なので、差が大きくマイナスに出ます">⚠ 今月は1〜' + _cutN + '日</div>' : '';
-    const lbl = '<div style="font-size:11px;font-weight:800;color:#334155">差異</div><div style="font-size:9px;color:var(--text3);white-space:nowrap">' + ya + '−' + yb + '</div>' + warn;
+    // 【v1.1049】ADcheck の差異の行にそろえる（本人指定・§435）：「差異」を月の列と同じ大きさの太字、その下に年
+    const lbl = '<div style="font-size:' + ZD_TD_FS + ';font-weight:800;color:#334155;line-height:1.25">差異</div><div style="font-size:10px;color:var(--text3);white-space:nowrap;margin-top:2px">' + ya + '-' + yb + '</div>' + warn;
     const DBG = '#eef2f7';
-    const first = '<td style="padding:5px 6px;text-align:center;background:' + DBG + ';position:sticky;left:0;z-index:1;border-bottom:1px solid var(--border);border-right:' + VBD + ';vertical-align:middle">' + lbl + '</td>';
+    const first = '<td style="padding:8px 6px;text-align:center;background:' + DBG + ';position:sticky;left:0;z-index:1;border-bottom:1px solid var(--border);border-right:' + VBD + ';vertical-align:middle">' + lbl + '</td>';
     const tds = x.cells.map((cl, ci) => {
       const c = _zdCols[ci];
       let inner = '';
       if (cl && cl.dash) inner = '<span style="color:var(--text3)" title="' + (cl.why === 'nodata' ? 'どちらかの月にこの列のデータが無いので差は出しません' : '総売上が0の月がからむので差は出しません') + '">—</span>';
+      else if (cl && Math.round(cl.d) === 0 && !(+_zdValOf(x.a, c)) && !(+_zdValOf(x.b, c))) inner = '';   // 【v1.1049】どちらも0の列は空（±¥0 を並べない）
       else if (cl) {
+        // 【v1.1049】ADcheck と同じ：金額はふつうの行と同じ大きさの太字、増減率はその下に小さく（同じ色・少し薄く）
         const d = cl.d, sign = d > 0 ? '+' : d < 0 ? '−' : '±';
-        inner = '<span style="color:' + cl.col + ';font-weight:700;font-size:0.88em;letter-spacing:-0.02em">' + sign + '¥' + Math.abs(Math.round(d)).toLocaleString('ja-JP') + '</span>'   /* 少し小さく：差異の行で列が広がらないように */
-          + (cl.pc == null ? '' : '<div style="font-size:0.82em;font-weight:700;color:' + cl.col + ';opacity:.8;line-height:1.1;margin-top:1px">' + (cl.pc > 0 ? '+' : '') + cl.pc + '%</div>');
+        inner = '<div style="color:' + cl.col + ';font-weight:700;line-height:1.25">' + sign + '¥' + Math.abs(Math.round(d)).toLocaleString('ja-JP') + '</div>'
+          + (cl.pc == null ? '' : '<div style="font-size:0.8em;font-weight:600;color:' + cl.col + ';opacity:.75;line-height:1.2;margin-top:2px">' + (cl.pc > 0 ? '+' : '') + cl.pc + '%</div>');
       }
-      return '<td style="padding:' + _zdTdPad(c) + ';' + TDBASE0 + 'background:' + DBG + ';border-bottom:1px solid var(--border);'
+      return '<td style="padding:7px 8px;' + TDBASE0 + 'background:' + DBG + ';border-bottom:1px solid var(--border);'
         + (c.blockStart ? 'border-left:' + BLK + ';' : _famL(c)) + _vb(ci) + 'white-space:nowrap;vertical-align:middle">' + inner + '</td>';
     }).join('');
-    return '<tr class="zd-yoydiff" style="border-top:1px dashed #94a3b8">' + first + tds + '</tr>';
+    return '<tr class="zd-yoydiff" style="border-top:1px solid var(--border2)">' + first + tds + '</tr>';
   }
   const body = drows.map(r => {
     // 【v1.1024】全-月別データ-新商品のリリース月別の行
