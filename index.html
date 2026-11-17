@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1049 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1050 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5243,7 +5243,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1049</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1050</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -19023,7 +19023,7 @@ function renderGraphData() {
     }).join('');
     return '<tr class="zd-yoydiff" style="border-top:1px solid var(--border2)">' + first + tds + '</tr>';
   }
-  const body = drows.map(r => {
+  const body = drows.map((r, _ri) => {
     // 【v1.1024】全-月別データ-新商品のリリース月別の行
     if (r._co) {
       const cells = _zdCols.map((c, ci) => _zdCellHtml(c, _zdValOf(r, c), { plain: true, vb: _vb(ci), total: r[c.famKey || c.key], row: r, tdx: 'opacity:.92;' })).join('');
@@ -19031,7 +19031,9 @@ function renderGraphData() {
       if (_zdCoOpen.has(r.month + '|' + r._co) && _zdCoTiles(r).length) _h += _zdCohortPanelHtml(r, _zdColCount, wrap.clientWidth);   // 【v1.1025】／【v1.1027】売れた商品がある行だけ
       return _h;
     }
-    const bT = r._coTop ? 'border-top:3px solid #64748b' : (r._grpTop ? 'border-top:2px solid var(--border2)' : '');
+    // 【v1.1050】前年同月比／前年同月比差異：組と組の境目（＝前の組の下）に濃い太線（ADcheck と同じ・本人指定 §436）。
+    //   差異では差異の行の下、前年同月比では一番古い年の行の下に入る。表の先頭の組は見出しの直下なので細いまま
+    const bT = r._coTop ? 'border-top:3px solid #64748b' : (r._grpTop ? (_ri > 0 ? 'border-top:3px solid #475569' : 'border-top:2px solid var(--border2)') : '');
     // 【v1.0527】日別は「その日が確定しているか」を月では測れないので、未満了の色抑制は月別のときだけ
     const _unmatured = !_dayMode && !!(r.month && curYm && r.month >= curYm);
     const _ymCell = '<td' + (r._coTop && _zdCoTiles(r).length ? ' class="zd-co-topcell"' : '') + ' style="padding:' + ZD_TD_PAD + ';text-align:center;font-weight:700;font-size:' + ZD_TD_FS + ';' + (_cutOn ? 'color:#0f766e;background:#e6f4f1;' : 'color:var(--accent);background:var(--bg3);') + 'position:sticky;left:0;z-index:1;font-family:\'DM Mono\',ui-monospace,monospace;border-bottom:1px solid var(--border);border-right:' + VBD + ';white-space:nowrap;' + bT + '">'
