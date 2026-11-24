@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1053 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1054 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2585,11 +2585,27 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 .idd-stack > div { overflow: hidden; text-overflow: ellipsis; }
 .idd-stack > .idd-sub { color: var(--text3); }
 .idd-stack > .idd-none { color: #c0c4cc; }
+/* 【v1.1054】調整-入札価格／調整-PRオプの操作行（§440）：｜でカテゴリを区切る・? はマウスを乗せると説明 */
+.tune-tb { gap: 8px; }
+#view-ad-tune .tune-tb input[type="search"], #view-pro-tune .tune-tb input[type="search"] { width: 168px; }
+.tune-tb .tb-sep { width: 1px; height: 22px; background: var(--border2); flex: 0 0 auto; margin: 0 2px; }
+.tune-tb .tb-grp { display: inline-flex; align-items: center; gap: 6px; }
+.tune-tb .tb-right { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.tune-tb .tsb-wrap { margin-left: 0; }
+.tune-tb .tune-period-seg { gap: 6px; }
+.tb-help { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text3); font-size: 11px; font-weight: 800; cursor: help; flex: 0 0 auto; }
+.tb-help:hover, .tb-help:focus { background: #475569; color: #fff; border-color: #475569; outline: none; }
+/* ★z-index は 表の見出し（sticky・100）より上。操作行には z-index を付けない（付けると、その中の説明は行より上に出られない） */
+.tb-help[data-tip]:hover::after, .tb-help[data-tip]:focus::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  white-space: pre; z-index: 200; background: #1e293b; color: #fff; font-size: 12px; font-weight: 500; line-height: 1.6; padding: 8px 11px; border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18); pointer-events: none; }
 /* 【v1.1053】＋直近30日／＋確定30日 のボタン（§439。ADcheck の「ROASの列」と同じ形）。押すと ✓ に変わり色が付く */
 .xr-bar { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .xr-bar-lbl { font-size: 0.78rem; font-weight: 700; color: var(--text3); }
 .xr-seg { display: inline-flex; gap: 3px; padding: 2px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg2); }
-.xr-btn { font-size: 0.8rem; font-weight: 700; padding: 4px 11px; border-radius: 7px; border: 0; background: transparent; color: var(--xt); cursor: pointer; white-space: nowrap; font-family: inherit; }
+.xr-btn { font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 7px; border: 0; background: transparent; color: var(--xt); cursor: pointer; white-space: nowrap; font-family: inherit; }
+.xr-btn .xr-ic { display: inline-block; width: 1.05em; text-align: center; margin-right: 1px; }   /* 【v1.1054】＋と✓を同じ幅に＝押しても幅が変わらない */
 .xr-btn:hover { background: var(--xb); }
 .xr-btn.on { background: var(--xc); color: #fff; }
 /* 商品モーダルの平均の行（列名のすぐ下で止まる） */
@@ -5257,7 +5273,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1053</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1054</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6370,32 +6386,33 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     <div class="view" id="view-ad-tune">
       <div class="card">
         <h3 class="card-title">入札価格調整</h3>
-        <div class="filters">
-          <span class="filter-label">検索</span>
-          <input type="search" id="adTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-          <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
-<!-- 【v1.0900】本人指定：調整-入札価格／調整-PRオプは「表示の仕方は個別のみ」。
-               「まとめ方」（合算／個別／両表示）はこの2画面から撤去し、表示は 全表示／通常商品のみ／親商品のみ の3つだけ（ラジオ式）。
-               ・どれを選んでも1商品1行（_effRowMode() がこの2画面では常に 'each' を返す）。
-               ・basicRowMode（商品-基本データ等と共有）は書き換えない＝他の画面のまとめ方には影響しない。
-               ・v1.0884〜v1.0899 の「子商品のみ」（調整-PRオプ）も、本人指定の3つに合わせて撤去。 -->
-          <span class="filter-label tsb-lbl">表示</span>
-          <span class="tsb-wrap tune-show-bar" data-kind="ad" role="group" aria-label="表示する商品">
-            <span class="seg-filter tsb-seg"><button type="button" class="segf-btn tsb-btn tsb-all" data-repf="" title="通常商品も親子も全部（親と子は別々の行）">全表示<span class="tsb-n" data-tsbn="all"></span></button><button type="button" class="segf-btn tsb-btn" data-repf="!" title="送り込み（親子設定）が無い商品だけ">通常商品のみ<span class="tsb-n" data-tsbn="normal"></span></button><button type="button" class="segf-btn tsb-btn tsb-parent" data-repf="*P" title="送り込み元（親）だけ"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>親商品のみ<span class="tsb-n" data-tsbn="parent"></span></button></span>
-            <span class="tsb-each-tag" title="この画面はいつも1商品1行で表示します（親子を合算した行は出しません）。&#10;親子の合計で見たいときは 商品-基本データ 等の「合算」を使ってください">1商品1行（個別）</span>
-          </span>
-          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <!-- 【v1.0999】「🤖 GPT用に要約コピー ▾」は撤去（本人指定）。処理（gptOpenTuneMenu / gptBuildTuneText）は残置 -->
-          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
-          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">時期</span>
-            <span style="display:inline-flex;gap:4px">
-              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
-              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
+        <div class="filters tune-tb">
+          <!-- 【v1.1054】操作行を「｜」でカテゴリごとに整理（本人指定・§440）：検索｜表示（?）｜操作｜時期｜ROAS列。
+               一括変更ボタンは廃止。「1商品1行（個別）」の札は「表示」の右の ? （マウスを乗せると説明）へ。
+               ★右の「時期｜ROAS列」は margin-left:auto のかたまり（反映ボタン .yc-reflect-wrap はこの手前に入る＝_ycInjectReflectButtons）。 -->
+          <input type="search" id="adTuneSearch" placeholder="🔍 コード・商品名" title="商品コード・商品名で検索（子商品は親のコードでも当たる）" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <span class="tb-sep" aria-hidden="true"></span>
+          <span class="tb-grp">
+            <span class="filter-label">表示</span>
+            <span class="tsb-wrap tune-show-bar" data-kind="ad" role="group" aria-label="表示する商品">
+              <span class="seg-filter tsb-seg"><button type="button" class="segf-btn tsb-btn tsb-all" data-repf="" title="通常商品も親子も全部（親と子は別々の行）">全表示<span class="tsb-n" data-tsbn="all"></span></button><button type="button" class="segf-btn tsb-btn" data-repf="!" title="通常商品のみ：送り込み（親子設定）が無い商品だけ">通常<span class="tsb-n" data-tsbn="normal"></span></button><button type="button" class="segf-btn tsb-btn tsb-parent" data-repf="*P" title="親商品のみ：送り込み元（親）だけ"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>親商品<span class="tsb-n" data-tsbn="parent"></span></button></span>
             </span>
+            <span class="tb-help" tabindex="0" data-tip="この画面はいつも1商品1行（個別）で表示します。親子を合算した行は出しません。&#10;親子の合計で見たいときは、商品-基本データ 等の「合算」を使ってください。">?</span>
           </span>
-          <!-- 【v1.1053】＋直近30日／＋確定30日（§439。中身は _tuneXrHead） -->
-          <span class="xr-bar" id="adTuneXrBar" style="margin-left:14px"></span>
+          <span class="tb-sep" aria-hidden="true"></span>
+          <button class="btn sm" id="btnUpdateAllAdTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容を全更新</button>
+          <!-- 右のかたまり：時期｜ROAS列 -->
+          <span class="tb-right" style="margin-left:auto">
+            <span class="tune-period-seg tb-grp" role="group" aria-label="時期">
+              <span class="filter-label">時期</span>
+              <span style="display:inline-flex;gap:4px">
+                <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月除く</button>
+                <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
+              </span>
+            </span>
+            <span class="tb-sep" aria-hidden="true"></span>
+            <span class="xr-bar" id="adTuneXrBar"></span>   <!-- 【v1.1053】＋直近30日／＋確定30日（中身は _tuneXrHead） -->
+          </span>
         </div>
         <div class="table-wrap">
           <table id="tableAdTune" class="data-grid">
@@ -6486,34 +6503,34 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     <div class="view" id="view-pro-tune">
       <div class="card">
         <h3 class="card-title">PRオプ調整</h3>
-        <div class="filters">
-          <span class="filter-label">検索</span>
-          <input type="search" id="proTuneSearch" placeholder="商品コード・商品名で検索..." autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-          <!-- 【v1.0662】送り込みバッジを撤去し、商品-基本データと同じ 個別/合算/両表示 ＋ 送り込み(親＋子/親/子) ＋ 一括変更 を置いた。状態は共有（basicRowMode / state.repFilter / _bulkMode） -->
-<!-- 【v1.0900】本人指定：調整-入札価格／調整-PRオプは「表示の仕方は個別のみ」。
-               「まとめ方」（合算／個別／両表示）はこの2画面から撤去し、表示は 全表示／通常商品のみ／親商品のみ の3つだけ（ラジオ式）。
-               ・どれを選んでも1商品1行（_effRowMode() がこの2画面では常に 'each' を返す）。
-               ・basicRowMode（商品-基本データ等と共有）は書き換えない＝他の画面のまとめ方には影響しない。
-               ・v1.0884〜v1.0899 の「子商品のみ」（調整-PRオプ）も、本人指定の3つに合わせて撤去。 -->
-          <span class="filter-label tsb-lbl">表示</span>
-          <span class="tsb-wrap tune-show-bar" data-kind="pro" role="group" aria-label="表示する商品">
-            <span class="seg-filter tsb-seg"><button type="button" class="segf-btn tsb-btn tsb-all" data-repf="" title="通常商品も親子も全部（親と子は別々の行）">全表示<span class="tsb-n" data-tsbn="all"></span></button><button type="button" class="segf-btn tsb-btn" data-repf="!" title="送り込み（親子設定）が無い商品だけ">通常商品のみ<span class="tsb-n" data-tsbn="normal"></span></button><button type="button" class="segf-btn tsb-btn tsb-parent" data-repf="*P" title="送り込み元（親）だけ"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>親商品のみ<span class="tsb-n" data-tsbn="parent"></span></button></span>
-            <span class="tsb-each-tag" title="この画面はいつも1商品1行で表示します（親子を合算した行は出しません）。&#10;親子の合計で見たいときは 商品-基本データ 等の「合算」を使ってください">1商品1行（個別）</span>
-          </span>
-          <button class="btn sm ghost js-bulk-btn" type="button" title="複数の商品を選んで、ステータス／PR状態／入札状態をまとめて変更します">☑ 一括変更</button>
-          <!-- 【v1.0882】調整-基本と同じ「順位取得CSV(GitHub反映)」を調整-PRオプにも（本人指定）。中身・変動アラートは共通（updateCsvDownloadButtonState が両方を更新） -->
-          <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード">🡇 順位取得CSV(GitHub反映)</button>
-          <!-- 【v1.0999】「🤖 GPT用に要約コピー ▾」は撤去（本人指定）。処理（gptOpenTuneMenu / gptBuildTuneText）は残置 -->
-          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容-全更新処理</button>
-          <span class="tune-period-seg" role="group" aria-label="時期" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
-            <span class="filter-label">時期</span>
-            <span style="display:inline-flex;gap:4px">
-              <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月含まない</button>
-              <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
+        <div class="filters tune-tb">
+          <!-- 【v1.1054】操作行を「｜」でカテゴリごとに整理（本人指定・§440）：検索｜表示（?）｜操作｜時期｜ROAS列。
+               一括変更ボタンは廃止。「1商品1行（個別）」の札は「表示」の右の ? （マウスを乗せると説明）へ。
+               ★右の「時期｜ROAS列」は margin-left:auto のかたまり（反映ボタン .yc-reflect-wrap はこの手前に入る＝_ycInjectReflectButtons）。 -->
+          <input type="search" id="proTuneSearch" placeholder="🔍 コード・商品名" title="商品コード・商品名で検索（子商品は親のコードでも当たる）" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <span class="tb-sep" aria-hidden="true"></span>
+          <span class="tb-grp">
+            <span class="filter-label">表示</span>
+            <span class="tsb-wrap tune-show-bar" data-kind="pro" role="group" aria-label="表示する商品">
+              <span class="seg-filter tsb-seg"><button type="button" class="segf-btn tsb-btn tsb-all" data-repf="" title="通常商品も親子も全部（親と子は別々の行）">全表示<span class="tsb-n" data-tsbn="all"></span></button><button type="button" class="segf-btn tsb-btn" data-repf="!" title="通常商品のみ：送り込み（親子設定）が無い商品だけ">通常<span class="tsb-n" data-tsbn="normal"></span></button><button type="button" class="segf-btn tsb-btn tsb-parent" data-repf="*P" title="親商品のみ：送り込み元（親）だけ"><svg viewBox="0 0 20 20" class="rep-icon" aria-hidden="true"><path d="M3 5 L7 5 L13 15 L17 15"/><path d="M3 15 L7 15 L13 5 L17 5"/><polyline points="14.5,2.5 17,5 14.5,7.5"/><polyline points="14.5,12.5 17,15 14.5,17.5"/></svg>親商品<span class="tsb-n" data-tsbn="parent"></span></button></span>
             </span>
+            <span class="tb-help" tabindex="0" data-tip="この画面はいつも1商品1行（個別）で表示します。親子を合算した行は出しません。&#10;親子の合計で見たいときは、商品-基本データ 等の「合算」を使ってください。">?</span>
           </span>
-          <!-- 【v1.1053】＋直近30日／＋確定30日（§439。中身は _tuneXrHead） -->
-          <span class="xr-bar" id="proTuneXrBar" style="margin-left:14px"></span>
+          <span class="tb-sep" aria-hidden="true"></span>
+          <button class="btn sm ghost rank-csv-btn" id="btnDownloadRankCsvPro" type="button" data-tooltip="順位取得API用の商品マスタCSV（code, keyword）をダウンロード（GitHub に反映した内容）">🡇 順位CSV</button>
+          <button class="btn sm" id="btnUpdateAllProTune" style="border-color:var(--green);color:var(--green);font-weight:600;" title="今この一覧に表示されている全商品（絞り込み後）を「対応済み」にして一覧（全体を含む）から消す。次に「最新値を更新」すると再表示。空欄・更新日時のみの対応内容には本日の更新日時を記入、メモがある行はそのまま維持。">✅ 対応内容を全更新</button>
+          <!-- 右のかたまり：時期｜ROAS列 -->
+          <span class="tb-right" style="margin-left:auto">
+            <span class="tune-period-seg tb-grp" role="group" aria-label="時期">
+              <span class="filter-label">時期</span>
+              <span style="display:inline-flex;gap:4px">
+                <button type="button" class="tune-period-btn on" data-inclcur="0" onclick="_setTunePeriod(false)" title="今月を含まない直近3ヶ月（完了した月のみ）&#10;※今月のデータが14日までのときは、開いたときこちらが選ばれます">今月除く</button>
+                <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
+              </span>
+            </span>
+            <span class="tb-sep" aria-hidden="true"></span>
+            <span class="xr-bar" id="proTuneXrBar"></span>   <!-- 【v1.1053】＋直近30日／＋確定30日（中身は _tuneXrHead） -->
+          </span>
         </div>
         <div class="table-wrap">
           <table id="tableProTune" class="data-grid">
@@ -15508,7 +15525,7 @@ function _bulkFillSelects() {
 // 【v1.0651】一括変更は 商品-基本データ／調整-基本／商品-広告データ／商品-PRデータ で使う。
 //   ★バー（#basicBulkBar）は1本だけ。いま開いている画面のツールバー（.filters）の直後へ DOM ごと移して使う（id を複製しない）。
 const BULK_TABLE_OF = { 'basic': '#tableBasic', 'ad-data': '#tableAdData', 'pr-data': '#tablePrData',
-  'ad-tune': '#tableAdTune', 'pro-tune': '#tableProTune',   // 【v1.0662】調整-入札価格／調整-PRオプでも一括変更
+  /* 【v1.1054】調整-入札価格／調整-PRオプの一括変更は廃止（本人指定・§440）。'ad-tune' / 'pro-tune' を外した */
   'withdraw': '#tableWithdraw' };   // 【v1.0722】【撤退】でもステータスの一括変更を使う
 function _bulkTableSel() { return BULK_TABLE_OF[state.currentView] || '#tableBasic'; }
 function _bulkPlaceBar() {
@@ -15521,7 +15538,7 @@ function _bulkPlaceBar() {
 function _bulkSyncUI() {
   _bulkPlaceBar();
   const bar = document.getElementById('basicBulkBar');
-  if (bar) bar.style.display = _bulkMode ? 'flex' : 'none';
+  if (bar) bar.style.display = (_bulkMode && BULK_TABLE_OF[state.currentView]) ? 'flex' : 'none';   // 【v1.1054】一括変更の無い画面では出さない
   document.querySelectorAll('.js-bulk-btn').forEach(btn => btn.classList.toggle('primary', _bulkMode));
   const cnt = document.getElementById('bulkCount');
   if (cnt) cnt.textContent = _bulkSel.size + '件選択中';
@@ -20178,7 +20195,7 @@ function _xrBtnHtml(k, on, onclick, what) {
   const c = XR_COL[k];
   const tip = (on ? 'ON：' + what + '（' + XR_NAME[k] + ' ' + _xrSpanYmd(k) + '）を表示中。押すと消す'
                   : 'OFF：押すと ' + what + '（' + XR_NAME[k] + ' ' + _xrSpanYmd(k) + '）が入る') + '\n\n' + XR_TIP;
-  return '<button type="button" class="xr-btn' + (on ? ' on' : '') + '" data-xr="' + k + '" style="--xc:' + c.c + ';--xt:' + c.t + ';--xb:' + c.bg + '" onclick="' + onclick + '" title="' + escapeHtml(tip) + '">' + (on ? '✓ ' : '＋') + XR_NAME[k] + '</button>';
+  return '<button type="button" class="xr-btn' + (on ? ' on' : '') + '" data-xr="' + k + '" style="--xc:' + c.c + ';--xt:' + c.t + ';--xb:' + c.bg + '" onclick="' + onclick + '" title="' + escapeHtml(tip) + '"><span class="xr-ic">' + (on ? '✓' : '＋') + '</span>' + XR_NAME[k] + '</button>';
 }
 function _xrBarHtml(lbl, isOn, onclickOf, what) {
   return '<span class="xr-bar-lbl">' + lbl + '</span><span class="xr-seg">' + XR_KEYS.map(k => _xrBtnHtml(k, isOn(k), onclickOf(k), what)).join('') + '</span>';
@@ -20209,7 +20226,7 @@ window._tuneXrToggle = _tuneXrToggle;
 function _tuneXrHead(kind) {
   const T = _TUNE_XR[kind], st = _tuneXr[kind];
   const bar = document.getElementById(T.bar);
-  if (bar) bar.innerHTML = _xrBarHtml('ROASの列', k => st[k], k => "_tuneXrToggle('" + kind + "','" + k + "')", T.what);
+  if (bar) bar.innerHTML = _xrBarHtml('ROAS列', k => st[k], k => "_tuneXrToggle('" + kind + "','" + k + "')", T.what);
   XR_KEYS.forEach(k => {
     const th = document.getElementById(T.th + (k === 'l30' ? 'L30' : 'S30')); if (!th) return;
     th.style.display = st[k] ? '' : 'none';
@@ -20493,7 +20510,7 @@ function renderAdAdjust(cfg) {
       return;
     }
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT || tableSel === '#tableAdTune' /* 【v1.1054】一括変更は廃止 */))}</td>
       ${_idDatesTd(r, adAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
@@ -20742,7 +20759,7 @@ function renderProAdjust(cfg) {
       ? _proSetCellHtml(r.code, r._members)   /* 【v1.0874】 */
       : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
     tr.innerHTML = `
-      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT))}</td>
+      <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT || tableSel === '#tableProTune' /* 【v1.1054】一括変更は廃止 */))}</td>
       ${_idDatesTd(r, proAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
       <td>${nameCellHtml(r.code)}</td>
