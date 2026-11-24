@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1054 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1055 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2140,6 +2140,9 @@ td.roas-none { color: var(--text3); font-weight: 400; }
 .yc-reflect-btn.yc-dirty { background: #d97706; border-color: #d97706; animation: ycReflectPulse 1.1s ease-in-out infinite; }
 .yc-reflect-btn.yc-clean { background: var(--bg3); border-color: var(--border); color: var(--text3); cursor: default; box-shadow: none; }
 .yc-reflect-btn[hidden] { display: none !important; }
+/* 【v1.1055】調整-入札価格／調整-PRオプ：キャンセル／アップ内容／反映する は「必要ページ一括オープン」の行の右端（§441） */
+#tuneFilterBar .yc-reflect-wrap { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+#tuneFilterBar .yc-reflect-wrap .yc-cancel-btn { margin-right: 0; }
 /* 【v1.0452】キャンセル＋反映のペア。
    【v1.0669】★右端（margin-left:auto）に置くと、右端の「表示時期」や「このページをCSV出力」の後ろに回り、
    操作行が1行ぶん下へ伸びていた。★いまは _ycInjectReflectButtons が
@@ -5273,7 +5276,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1054</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1055</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -9986,7 +9989,7 @@ function _ycUpdateReflectBtn() {
     if (ub) ub.hidden = !_ghDirty;   // ★未反映のときだけ出す（反映するボタンと同じ条件）
     if (_ghDirty) {
       b.classList.add('yc-dirty'); b.classList.remove('yc-clean');
-      b.textContent = b.closest('#view-ad-tune, #view-pro-tune') ? '⬆ 反映する' : '⬆ 反映する（未反映）';   // 【v1.0938】調整2画面は短く（1行に収めるため）
+      b.textContent = '⬆ 反映する（未反映）';   // 【v1.1055】調整2画面も一括オープンの行へ移したので短くしない（v1.0938 の短縮は撤去）
       if (cb) cb.hidden = false;   // 反映ボタンが出るときだけキャンセルも表示
       if (wrap) wrap.hidden = false;
     } else {
@@ -9999,7 +10002,10 @@ function _ycUpdateReflectBtn() {
 }
 // 【v1.0355】各ビューの操作行(.filters)の右端に「反映する」ボタンを注入
 function _ycInjectReflectButtons() {
-  document.querySelectorAll('.filters').forEach(f => {
+  // 【v1.1055】調整-入札価格／調整-PRオプは、表の上の操作行ではなく「必要ページ一括オープン」の行（#tuneFilterBar）の右端に出す（本人指定・§441）。
+  //   #tuneFilterBar は2画面で共通の1本（updateTuneBar がこの2画面のときだけ出す）。ボタンも1組で、どちらの画面でも同じものが出る。
+  document.querySelectorAll('.filters, #tuneFilterBar').forEach(f => {
+    if (f.closest('#view-ad-tune, #view-pro-tune')) return;   // 【v1.1055】この2画面の操作行には入れない
     if (f.querySelector('.yc-reflect-btn')) return;
     // 【v1.0452】キャンセル（左）＋反映（右）をラッパーにまとめ、操作行の右端へ配置
     const wrap = document.createElement('span');
