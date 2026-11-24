@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1051 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1052 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5246,7 +5246,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1051</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1052</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -7246,7 +7246,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
       <h2 class="modal-title">📂 レポートを追加</h2>
       <span class="up-head-actions">
         <button class="btn sm primary" id="btnConfirmUploadHead" type="button" disabled>⬆ アップロード実行</button>
-        <button class="btn sm" id="modalClose" type="button" title="閉じる（Esc）">✕ 閉じる</button>
+        <button class="btn sm" id="modalClose" type="button" title="閉じる">✕ 閉じる</button>
       </span>
     </div>
     <p class="dropzone-hint" id="uploadModeHint" style="margin:0 0 10px 0;">ショップ売上・商品別売上・広告詳細レポートは1つ以上、または入札価格を単独でアップロードできます（CSVまたはZIP）</p>
@@ -25318,10 +25318,9 @@ if ($('#btnJumpUploadMonthly')) $('#btnJumpUploadMonthly').addEventListener('cli
 /* 【v1.0526】「+ 最新値を更新」ボタンは「+ レポート追加」に統合したため配線を撤去 */
 if ($('#modalClose')) $('#modalClose').addEventListener('click', closeUploadModal);
 if ($('#btnCloseBottom')) $('#btnCloseBottom').addEventListener('click', closeUploadModal);
-if (uploadModal) uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) closeUploadModal(); });
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && uploadModal && uploadModal.classList.contains('open')) closeUploadModal();
-});
+// 【v1.1052】レポート追加は「閉じる」ボタン（右上の ✕ 閉じる・下の 閉じる）を押したときだけ閉じる（本人指定・§438）。
+//   外側（暗いところ）のクリックと Esc では閉じない（ファイルを選んだ途中で消えてしまうのを防ぐ）。
+//   アップロード実行が終わったときは今までどおり自動で閉じる（commitUpload の最後）。
 
 // ==================== Events ====================
 // 【v1.0545】文字サイズも表示設定として保存する（_vpFontStep 経由。GitHubにも載る）
