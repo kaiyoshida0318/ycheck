@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1052 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1053 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2585,6 +2585,17 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 .idd-stack > div { overflow: hidden; text-overflow: ellipsis; }
 .idd-stack > .idd-sub { color: var(--text3); }
 .idd-stack > .idd-none { color: #c0c4cc; }
+/* 【v1.1053】＋直近30日／＋確定30日 のボタン（§439。ADcheck の「ROASの列」と同じ形）。押すと ✓ に変わり色が付く */
+.xr-bar { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.xr-bar-lbl { font-size: 0.78rem; font-weight: 700; color: var(--text3); }
+.xr-seg { display: inline-flex; gap: 3px; padding: 2px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg2); }
+.xr-btn { font-size: 0.8rem; font-weight: 700; padding: 4px 11px; border-radius: 7px; border: 0; background: transparent; color: var(--xt); cursor: pointer; white-space: nowrap; font-family: inherit; }
+.xr-btn:hover { background: var(--xb); }
+.xr-btn.on { background: var(--xc); color: #fff; }
+/* 商品モーダルの平均の行（列名のすぐ下で止まる） */
+#productEditModal .pe-table-wrap tbody tr.pe-xr td { position: sticky; z-index: 1; font-weight: 700; background: var(--xrbg) !important; box-shadow: inset 0 -2px 0 var(--xrc); }
+#productEditModal .pe-table-wrap tbody tr.pe-xr td.pe-xr-name { text-align: left !important; white-space: nowrap; font-weight: 800; }
+#productEditModal .pe-table-wrap tbody tr.pe-xr td .pe-xr-sub { font-size: 10.5px; font-weight: 600; margin-top: 1px; }
 /* 【v1.1051】親は未販売・子だけ売れている → 子の初回販売日を薄く（§437） */
 .idd-stack > .idd-kid { color: #b4bac4; }
 .idd-stack > div.idd-kid.idd-on { color: #e8a0a0; }
@@ -5246,7 +5257,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1052</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1053</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6383,6 +6394,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
             </span>
           </span>
+          <!-- 【v1.1053】＋直近30日／＋確定30日（§439。中身は _tuneXrHead） -->
+          <span class="xr-bar" id="adTuneXrBar" style="margin-left:14px"></span>
         </div>
         <div class="table-wrap">
           <table id="tableAdTune" class="data-grid">
@@ -6406,6 +6419,9 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="num col-aroas" data-sort="roas0" id="hAdTuneRoas0">広告ROAS<br>(3ヶ月前)</th>
               <th class="num col-aroas" data-sort="roas1" id="hAdTuneRoas1">広告ROAS<br>(2ヶ月前)</th>
               <th class="num col-aroas" data-sort="roas2" id="hAdTuneRoas2">広告ROAS<br>(前月)</th>
+              <!-- 【v1.1053】＋直近30日／＋確定30日 で出す列（OFF は隠す。中身は _tuneXrHead） -->
+              <th class="num col-aroas" data-sort="roasL30" id="hAdTuneRoasL30" style="display:none">広告ROAS<br>直近30日</th>
+              <th class="num col-aroas" data-sort="roasS30" id="hAdTuneRoasS30" style="display:none">広告ROAS<br>確定30日</th>
               <th class="num col-spend" data-sort="adCost0" id="hAdTuneAdRev0">広告実績額<br>(3ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost1" id="hAdTuneAdRev1">広告実績額<br>(2ヶ月前)</th>
               <th class="num col-spend" data-sort="adCost2" id="hAdTuneAdRev2">広告実績額<br>(前月)</th>
@@ -6496,6 +6512,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <button type="button" class="tune-period-btn" data-inclcur="1" onclick="_setTunePeriod(true)" title="今月を含む直近3ヶ月&#10;※今月のデータが15日まで入ったら、開いたときこちらが選ばれます">今月含む</button>
             </span>
           </span>
+          <!-- 【v1.1053】＋直近30日／＋確定30日（§439。中身は _tuneXrHead） -->
+          <span class="xr-bar" id="proTuneXrBar" style="margin-left:14px"></span>
         </div>
         <div class="table-wrap">
           <table id="tableProTune" class="data-grid">
@@ -6515,6 +6533,9 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="num col-sroas" data-sort="prsr0" id="hProTunePrsr0" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR広告<br>売上ROAS<br>(3ヶ月前)</th>
               <th class="num col-sroas" data-sort="prsr1" id="hProTunePrsr1" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR広告<br>売上ROAS<br>(2ヶ月前)</th>
               <th class="num col-sroas" data-sort="prsr2" id="hProTunePrsr2" title="PR広告 売上ROAS（見出しの ？ ＝ 推定値の印）&#10;＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100&#10;★⑤の設定PRオプ料率からの推定です（実測ではありません）。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR広告<br>売上ROAS<br>(前月)</th>
+              <!-- 【v1.1053】＋直近30日／＋確定30日 で出す列（OFF は隠す。中身は _tuneXrHead） -->
+              <th class="num col-sroas" data-sort="prsrL30" id="hProTunePrsrL30" style="display:none">PR広告売上ROAS 直近30日</th>
+              <th class="num col-sroas" data-sort="prsrS30" id="hProTunePrsrS30" style="display:none">PR広告売上ROAS 確定30日</th>
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProTuneSeo2">SEO売上<br>(前月)</th>
@@ -6906,6 +6927,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
         <span class="seg-filter" id="peSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
         <!-- 【v1.0641】月別のときの期間。may＝直近の5月から / 12＝直近1年 / 24＝直近2年 -->
         <span class="seg-filter" id="peMSpanSeg" style="display:none"><button type="button" class="segf-btn on" data-pemspan="may">5月始まり</button><button type="button" class="segf-btn" data-pemspan="12">1年</button><button type="button" class="segf-btn" data-pemspan="24">2年</button></span>
+        <span class="xr-bar" id="peXrBarInfo"></span>   <!-- 【v1.1053】＋直近30日／＋確定30日（日別だけ・§439） -->
         <span class="pe-ctl-note" id="peCtlNote"></span>
       </div>
       <!-- 【v1.0897】凡例 → 押すと消える／戻る「系列ボタン」に（ADcheck の商品モーダルと同じ形）。グラフの上に置く。
@@ -6923,6 +6945,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
         <span class="seg-filter" id="peAdjGrainSeg"><button type="button" class="segf-btn on" data-peadjgrain="day">日別</button><button type="button" class="segf-btn" data-peadjgrain="month">月別</button></span>
         <span class="seg-filter" id="peAdjSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
         <span class="seg-filter" id="peAdjMSpanSeg" style="display:none"><button type="button" class="segf-btn on" data-pemspan="may">5月始まり</button><button type="button" class="segf-btn" data-pemspan="12">1年</button><button type="button" class="segf-btn" data-pemspan="24">2年</button></span>
+        <span class="xr-bar" id="peXrBarAdj"></span>   <!-- 【v1.1053】＋直近30日／＋確定30日（日別だけ・§439） -->
         <span class="pe-ctl-note" id="peAdjNote"></span>
       </div>
       <div class="pe-legend pe-sw-bar" id="peAdjLegend"></div>
@@ -20127,6 +20150,117 @@ let adAdjustSortKey = 'adCost2', adAdjustSortDir = -1;  // デフォルト: 前�
 // nullなら凍結なし（次回描画でソートして凍結）。配列ならその順序で並べる。
 // ソート切替・ビュー離脱でnullに戻る。
 let adAdjustFrozenOrder = null;
+// ============================================================================
+// 【v1.1053】直近30日／確定30日（本人指定・§439）。ADcheck v1.1572 の KW-個別推移「直近30日の平均／確定30日の平均」の仕様を流用。
+//   期間は日別データの最終日 L から数える（今日ではない）：直近30日＝L−29〜L、確定30日＝L−59〜L−30（すき間・重なりなし）。
+//   ・商品モーダル（商品-日月別／商品-調整 の日別）：表の列名のすぐ下に「1日あたりの平均」の行（合計÷データのある日数／率は合計から）。
+//   ・調整-入札価格：広告ROAS の列、調整-PRオプ：PR広告売上ROAS の列を足す（＋を押すと出る・もう一度押すと消える）。
+//   ・色：直近30日＝青 #3b82f6、確定30日＝紫 #8b5cf6（ADcheck と同じ）。どれも保存しない（読み込み直すと OFF）。
+// ============================================================================
+const XR_NAME = { l30: '直近30日', s30: '確定30日' };
+const XR_COL = { l30: { c: '#3b82f6', bg: '#eff6ff', t: '#1d4ed8' }, s30: { c: '#8b5cf6', bg: '#f5f3ff', t: '#6d28d9' } };
+const XR_KEYS = ['l30', 's30'];
+const XR_TIP = '直近30日＝日別データの最終日までの30日。最後のほうの日は、広告の売上があとから増える途中（取り込み直すと増える）なので、ROAS が低めに出ることがある。\n'
+  + '確定30日＝その前の30日（31〜60日前）。30日以上たった日だけなので数字が出そろっている。判断には確定30日のほうが向いている。';
+function _xrLastDay() { const a = dailyAllDates(); return a.length ? a[a.length - 1] : ''; }
+function _xrAdd(ds, n) {
+  const d = new Date(+ds.slice(0, 4), +ds.slice(5, 7) - 1, +ds.slice(8, 10)); d.setDate(d.getDate() + n);
+  const p = x => String(x).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function _xrRange(k) { const L = _xrLastDay(); if (!L) return null; return k === 'l30' ? [_xrAdd(L, -29), L] : [_xrAdd(L, -59), _xrAdd(L, -30)]; }
+// その期間で日別データのある日（＝取り込んだ日）。割る日数 nd はこの数
+function _xrDays(k) { const r = _xrRange(k); return r ? dailyAllDates().filter(d => d >= r[0] && d <= r[1]) : []; }
+function _xrMd(ds) { return (+ds.slice(5, 7)) + '/' + (+ds.slice(8, 10)); }
+function _xrYmd(ds) { return String(ds || '').replace(/-/g, '/'); }
+function _xrSpan(k) { const r = _xrRange(k); return r ? _xrMd(r[0]) + '〜' + _xrMd(r[1]) : ''; }
+function _xrSpanYmd(k) { const r = _xrRange(k); return r ? _xrYmd(r[0]) + '〜' + _xrYmd(r[1]) : ''; }
+function _xrBtnHtml(k, on, onclick, what) {
+  const c = XR_COL[k];
+  const tip = (on ? 'ON：' + what + '（' + XR_NAME[k] + ' ' + _xrSpanYmd(k) + '）を表示中。押すと消す'
+                  : 'OFF：押すと ' + what + '（' + XR_NAME[k] + ' ' + _xrSpanYmd(k) + '）が入る') + '\n\n' + XR_TIP;
+  return '<button type="button" class="xr-btn' + (on ? ' on' : '') + '" data-xr="' + k + '" style="--xc:' + c.c + ';--xt:' + c.t + ';--xb:' + c.bg + '" onclick="' + onclick + '" title="' + escapeHtml(tip) + '">' + (on ? '✓ ' : '＋') + XR_NAME[k] + '</button>';
+}
+function _xrBarHtml(lbl, isOn, onclickOf, what) {
+  return '<span class="xr-bar-lbl">' + lbl + '</span><span class="xr-seg">' + XR_KEYS.map(k => _xrBtnHtml(k, isOn(k), onclickOf(k), what)).join('') + '</span>';
+}
+// 商品ごとの期間合計 {code:{cost, adRev, rev}}（①広告の実績額・広告売上、②の総売上）
+function _xrSumByCode(k) {
+  const out = {}, o = c => out[c] || (out[c] = { cost: 0, adRev: 0, rev: 0 });
+  _xrDays(k).forEach(d => {
+    const ad = dailyAdOf(d); Object.keys(ad).forEach(c => { const x = o(c); x.cost += +ad[c].adCost || 0; x.adRev += +ad[c].adRevenue || 0; });
+    const it = dailyItemOf(d); Object.keys(it).forEach(c => { o(c).rev += +it[c].revenue || 0; });
+  });
+  return out;
+}
+// ---- 調整-入札価格／調整-PRオプ：＋直近30日／＋確定30日（列を足す） ----
+const _tuneXr = { ad: { l30: false, s30: false }, pro: { l30: false, s30: false } };
+const _TUNE_XR = {
+  ad:  { tbl: 'tableAdTune',  bar: 'adTuneXrBar',  th: 'hAdTuneRoas', sort: 'roas', what: '広告ROAS の列', head: '広告ROAS' },
+  pro: { tbl: 'tableProTune', bar: 'proTuneXrBar', th: 'hProTunePrsr', sort: 'prsr', what: 'PR広告売上ROAS の列', head: '<span class="th-est">？</span>PR広告<br>売上ROAS' },
+};
+function _tuneXrToggle(kind, k) {
+  const T = _TUNE_XR[kind]; if (!T) return;
+  _tuneXr[kind][k] = !_tuneXr[kind][k];
+  if (kind === 'ad') renderAdTune(); else renderProTune();
+  try { _xrInheritWidths(document.getElementById(T.tbl)); applyColWidths(); } catch (e) {}
+}
+window._tuneXrToggle = _tuneXrToggle;
+// ボタンと見出し（★描画の最初に呼ぶ。見出しを書き換えたあとで installSortButtons が並べ替えの印を付け直す）
+function _tuneXrHead(kind) {
+  const T = _TUNE_XR[kind], st = _tuneXr[kind];
+  const bar = document.getElementById(T.bar);
+  if (bar) bar.innerHTML = _xrBarHtml('ROASの列', k => st[k], k => "_tuneXrToggle('" + kind + "','" + k + "')", T.what);
+  XR_KEYS.forEach(k => {
+    const th = document.getElementById(T.th + (k === 'l30' ? 'L30' : 'S30')); if (!th) return;
+    th.style.display = st[k] ? '' : 'none';
+    th.style.background = XR_COL[k].bg; th.style.color = XR_COL[k].t; th.style.boxShadow = 'inset 0 3px 0 ' + XR_COL[k].c;
+    th.title = XR_NAME[k] + '（' + _xrSpanYmd(k) + '）の' + (kind === 'ad' ? '広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100' : 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。PR実績額は今のPRオプ料率からの推定（月の列と同じ）') + '\n\n' + XR_TIP;
+    th.innerHTML = T.head + '<br>' + XR_NAME[k] + '<br><span class="th-note">' + _xrSpan(k) + '</span>';
+  });
+}
+// 行ごとの値（★列が出ているときだけ計算）。合算の行はメンバーの合計から
+function _tuneXrAttach(kind, list) {
+  const st = _tuneXr[kind];
+  XR_KEYS.forEach(k => {
+    if (!st[k]) return;
+    const S = _xrSumByCode(k);
+    list.forEach(r => {
+      let cost = 0, adRev = 0, rev = 0;
+      _rfMembersOf(r).forEach(c => { const x = S[c]; if (x) { cost += x.cost; adRev += x.adRev; rev += x.rev; } });
+      const v = (kind === 'ad') ? (cost > 0 ? adRev / cost * 100 : null) : itemPrSalesRoasPct(r.code, rev, cost);
+      (r._xr || (r._xr = {}))[k] = { v, cost };
+    });
+  });
+}
+function _tuneXrSortVal(r, key, base) {
+  const m = new RegExp('^' + base + '(L30|S30)$').exec(key); if (!m) return undefined;
+  const x = (r._xr || {})[m[1] === 'L30' ? 'l30' : 's30'];
+  return (x && x.v != null && isFinite(x.v)) ? x.v : -1;
+}
+function _tuneXrCells(kind, r) {
+  return XR_KEYS.filter(k => _tuneXr[kind][k]).map(k => {
+    const x = (r._xr || {})[k] || { v: null, cost: 0 };
+    const td = (kind === 'ad') ? adRoasCell(x.v, x.cost)
+      : '<td class="num col-sroas est-val">' + (x.v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(x.v, PR_SALES_ROAS_TH)) + '</td>';
+    return td.replace('<td ', '<td style="background:' + XR_COL[k].bg + '" ');
+  }).join('');
+}
+// 列を出した表の型（sig）は、出す前の型の幅を引き継ぐ（列幅は表の型ごと＝§v1.0957。出すたびに幅が変わらないように）
+function _xrInheritWidths(tbl) {
+  try {
+    if (!tbl) return;
+    const s = _colSig(tbl); if (!s) return;
+    const vp = ensureViewPrefs(), W = vp.colWidths, L = vp.colLocks;
+    if (W[s.sig + '|__f']) return;
+    const base = s.keys.filter(k => !/__(roas|prsr)(L30|S30)$/.test(k));
+    if (base.length === s.keys.length) return;
+    const bsig = 'L' + _colHash36(s.tk + '#' + base.join(','));
+    if (!W[bsig + '|__f']) return;   // 元の型もまだ触っていない＝どちらも列キーの幅を見る
+    base.forEach(k => { if (W[bsig + '|' + k] != null) W[s.sig + '|' + k] = W[bsig + '|' + k]; if (L[bsig + '|' + k]) L[s.sig + '|' + k] = true; });
+    W[s.sig + '|__f'] = 1;
+  } catch (e) {}
+}
+
 function renderAdAdjust(cfg) {
   // 【v239】cfg で対象テーブル等を差し替え可能に。既定は「入札価格全体」。
   //   tune（入札価格調整）は tableAdTune 等 + groupFilter を渡して同ロジックを再利用する。
@@ -20238,8 +20372,10 @@ function renderAdAdjust(cfg) {
     updateSortIndicator(tableSel, adAdjustSortKey, adAdjustSortDir);
     return;
   }
+  if (tableSel === '#tableAdTune') _tuneXrAttach('ad', list);   // 【v1.1053】
   // ソート
   const adSortGet = (r, k) => {
+    { const xv = _tuneXrSortVal(r, k, 'roas'); if (xv !== undefined) return xv; }   // 【v1.1053】roasL30／roasS30
     if (k === 'code') return r.code || '';
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     if (k === 'bid') return (state.bid && state.bid[r.code]) || 0;
@@ -20369,6 +20505,7 @@ function renderAdAdjust(cfg) {
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
       ${_roasCells}
+      ${tableSel === '#tableAdTune' ? _tuneXrCells('ad', r) : ''}${/* 【v1.1053】広告ROAS（直近30日／確定30日） */''}
       ${_revCells}
       ${statusFirst ? '' : _tdStatus}
     `;
@@ -20387,6 +20524,7 @@ function renderAdAdjust(cfg) {
 
 // 【v239】入札価格調整（tune）: 入札価格全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderAdTune() {
+  _tuneXrHead('ad');   // 【v1.1053】＋直近30日／＋確定30日
   { const h = document.getElementById('hAdTuneRank'); if (h) h.innerHTML = '広告順位<br><span class="th-note">' + (_ycRankLatestDate() ? _ycRankLatestDate().slice(5).replace('-', '/') : '—') + '</span>'; }   // 【v1.1038】
   ensureTuneMembers('ad');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   _syncTunePeriodSegs();    // 【v1.0400】表示時期トグルの選択状態を反映
@@ -20515,8 +20653,10 @@ function renderProAdjust(cfg) {
     updateSortIndicator(tableSel, proAdjustSortKey, proAdjustSortDir);
     return;
   }
+  if (tableSel === '#tableProTune') _tuneXrAttach('pro', list);   // 【v1.1053】
   // ソート
   const proSortGet = (r, k) => {
+    { const xv = _tuneXrSortVal(r, k, 'prsr'); if (xv !== undefined) return xv; }   // 【v1.1053】prsrL30／prsrS30
     if (k === 'code') return r.code || '';
     if (k === 'name') return (getMaster(r.code) && getMaster(r.code).name) || '';
     { const mm = /^seoRev(\d+)$/.exec(k); if (mm) return r.seoRevs[+mm[1]] || 0; }   // 【v278】当月列(seoRev3)も対応
@@ -20613,6 +20753,7 @@ function renderProAdjust(cfg) {
       ${_proCellT}
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
+      ${tableSel === '#tableProTune' ? _tuneXrCells('pro', r) : ''}${/* 【v1.1053】PR広告売上ROAS（直近30日／確定30日） */''}
       ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
       ${statusFirst ? '' : _tdStatus}
     `;
@@ -20631,6 +20772,7 @@ function renderProAdjust(cfg) {
 
 // 【v239】PRオプ調整（tune）: PRオプ全体と同ロジックを、選択中グループで絞り込んで描画。
 function renderProTune() {
+  _tuneXrHead('pro');   // 【v1.1053】＋直近30日／＋確定30日
   { const h = document.getElementById('hProTuneRank'); if (h) h.innerHTML = 'SEO順位<br><span class="th-note">' + (_ycRankLatestDate() ? _ycRankLatestDate().slice(5).replace('-', '/') : '—') + '</span>'; }   // 【v1.1038】
   ensureTuneMembers('pro');  // 【v253】未凍結なら現在の分類でメンバーを凍結
   _syncTunePeriodSegs();     // 【v1.0400】表示時期トグルの選択状態を反映
@@ -27122,7 +27264,60 @@ function _peStickyHead(wrap) {
       const one = [...tr.children].find(th => !(th.rowSpan > 1)) || tr.children[0];
       top += one ? one.getBoundingClientRect().height : 0;
     });
+    // 【v1.1053】平均の行（直近30日／確定30日）も列名のすぐ下で止める（2行なら続けて）
+    wrap.querySelectorAll('tbody tr.pe-xr').forEach(tr => {
+      tr.querySelectorAll('td').forEach(td => { td.style.top = top + 'px'; });
+      top += tr.getBoundingClientRect().height;
+    });
   } catch (e) {}
+}
+// ============================================================================
+// 【v1.1053】商品モーダル：＋直近30日／＋確定30日 ＝ 日別の表の列名のすぐ下に「1日あたりの平均」の行（本人指定・§439）。
+//   ADcheck v1.1572 の KW-個別推移（spec_kwt_day_30d_avg）と同じ決まり：
+//   ・金額・件数＝期間の合計 ÷ データのある日数（nd＝その期間で日別データを取り込んだ日。売れなかった日も0として入る）
+//   ・率（ROAS・CTR・CPC・CVR・平均獲得単価・PR広告売上ROAS 等）＝期間の合計から出し直す（日ごとの率の平均にしない）
+//   ・入札価格・PRオプ料率＝日ごとの値の平均。表示＝表示回数がある日だけの平均（v1.0911 より前に取り込んだ日は表示回数が無い）
+//   ・件数（クリック数・広告個数）は 100未満なら小数1けた
+//   ・商品-日月別／商品-調整 で共通の状態（_peXr）。日別のときだけ出す。保存しない
+// ============================================================================
+const _peXr = { l30: false, s30: false };
+function _peXrToggle(k) { if (!(k in _peXr)) return; _peXr[k] = !_peXr[k]; if (_peTab === 'adj') peRenderAdj(); else peRenderInfo(); }
+window._peXrToggle = _peXrToggle;
+function _peXrBar(id, isDay) {
+  const b = document.getElementById(id); if (!b) return;
+  b.style.display = isDay ? '' : 'none';
+  b.innerHTML = isDay ? _xrBarHtml('平均の行', k => _peXr[k], k => "_peXrToggle('" + k + "')", '表の一番上に1日あたりの平均の行') : '';
+}
+// rows＝日別の行（その表と同じ作り方で、直近60日ぶん）。戻り値 { A: 平均の行, nd }
+function _peXrAvg(rows, k) {
+  const days = new Set(_xrDays(k)), nd = days.size;
+  const W = rows.filter(r => days.has(String(r.key)));
+  const F = ['rev', 'revP', 'revC', 'seoRev', 'seoP', 'seoC', 'adP', 'adC', 'adSelfP', 'adSelfC', 'adRev', 'adCost', 'prOver', 'clicks', 'adOrders', 'orders'];
+  const S = {}, A = {};
+  F.forEach(f => { S[f] = W.reduce((a, r) => a + (+r[f] || 0), 0); A[f] = nd > 0 ? S[f] / nd : null; });
+  A.key = k; A.prKnown = W.some(r => r.prKnown); A.prParts = [];
+  A.prsr = (A.prKnown && (S.adCost + S.prOver) > 0) ? Math.round(S.rev / (S.adCost + S.prOver) * 100) : null;
+  A.pronly = (A.prKnown && S.prOver > 0) ? Math.round(S.rev / S.prOver * 100) : null;
+  A.sroas = salesRoasPct(S.rev, S.adCost, 0);
+  A.aroas = S.adCost > 0 ? S.adRev / S.adCost * 100 : null;
+  const iw = W.filter(r => r.imp != null), impSum = iw.reduce((a, r) => a + (+r.imp || 0), 0), ctrCl = iw.reduce((a, r) => a + (+r.clicks || 0), 0);
+  A.imp = iw.length ? impSum / iw.length : null; A.impPartial = false; A.impDays = iw.length; A.adDays = nd;
+  A.ctr = impSum > 0 ? ctrCl / impSum * 100 : null;
+  A.cpc = S.clicks > 0 ? S.adCost / S.clicks : null;
+  A.cvr = S.clicks > 0 ? S.adOrders / S.clicks * 100 : null;
+  A.cpa = (S.adOrders > 0 && S.adCost > 0) ? S.adCost / S.adOrders : null;
+  A.avg = S.orders > 0 ? S.rev / S.orders : null;
+  const av = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  A.bid = av(W.map(r => r.bid).filter(v => v != null && isFinite(v)));
+  A.prRate = av(W.map(r => r.prRate).filter(v => v != null && isFinite(v)));
+  A.hasAd = nd > 0; A.dayHasAdFile = nd > 0;
+  return { A, nd };
+}
+function _peXrTrOpen(k) { return '<tr class="pe-xr pe-xr-' + k + '" style="--xrbg:' + XR_COL[k].bg + ';--xrc:' + XR_COL[k].c + '">'; }
+function _peXrNameTd(k, nd, cellStyle) {
+  const tip = XR_NAME[k] + '（' + _xrSpanYmd(k) + '）の1日あたりの平均。データのある日 ' + nd + '日で割っています（売れなかった日も0として入る）。率は期間の合計から出し直しています。\n\n' + XR_TIP;
+  return '<td class="pe-xr-name" style="' + (cellStyle || '') + 'color:' + XR_COL[k].t + '" title="' + escapeHtml(tip) + '">' + XR_NAME[k] + ' 平均'
+    + '<div class="pe-xr-sub">' + _xrSpan(k) + '（' + nd + '日）</div></td>';
 }
 // ============================================================================
 // 【v1.0911→v1.0912】商品モーダル「調整-日月別」タブ＝調整用。その日（月）の細かい数字の動きを見る（本人指定）。
@@ -27252,6 +27447,7 @@ function peRenderAdj() {
     const ms = document.getElementById('peAdjMSpanSeg');
     if (ms) { ms.style.display = (grain === 'month') ? '' : 'none'; ms.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pemspan')) === String(_peMSpan))); }
   }
+  _peXrBar('peXrBarAdj', grain === 'day');   // 【v1.1053】
   const rows = _peAdjRows(code, grain);
   {
     const note = document.getElementById('peAdjNote');
@@ -27409,7 +27605,8 @@ function peRenderAdj() {
 
   // ---- 表（新しい順） ----
   const dash = '<span style="color:var(--text3)">—</span>';
-  const n0 = v => (v == null ? dash : Math.round(v).toLocaleString('ja-JP'));
+  let _xrFmt = false;   // 【v1.1053】平均の行を描く間だけ true：件数が100未満なら小数1けた（1.8 クリックなど）
+  const n0 = v => (v == null ? dash : ((_xrFmt && Math.abs(v) < 100) ? (Math.round(v * 10) / 10).toFixed(1) : Math.round(v).toLocaleString('ja-JP')));
   const y0 = v => (v == null ? dash : (v > 0 ? yen(v) : '<span style="color:var(--text3)">0</span>'));
   const pc = (v, d) => (v == null ? dash : v.toFixed(d == null ? 1 : d) + '%');
   // 【v1.0978】広告ROAS の色を ADcheck 全広告ROAS と同じ基準に（500以上 緑／300以上 黄土／0より大きい 赤／0 は赤の 0%）。表示と同じ整数で判定
@@ -27487,7 +27684,20 @@ function peRenderAdj() {
           return '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="background:' + (c.cc ? ycCcTint(c.cc, YC_CC_TD) : G[c.g].b) /* 【v1.1017】B案 */ + ';text-align:right;' + (c.bold ? 'font-weight:700;' : '') + (c.gs ? _gsB : '') + '">' + c.f(r) + '</td>';
         }).join('') + '</tr>';
   }).join('');
-  wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>'
+  // 【v1.1053】平均の行（直近30日 → 確定30日。日の行より上）
+  let _xrRows = '';
+  if (isDay && XR_KEYS.some(k => _peXr[k])) {
+    const _all = (() => { const _k = _peAdjSpan; _peAdjSpan = 60; try { return _peAdjRows(code, 'day'); } finally { _peAdjSpan = _k; } })();
+    _xrRows = XR_KEYS.filter(k => _peXr[k]).map(k => {
+      const { A, nd } = _peXrAvg(_all, k);
+      _xrFmt = true;
+      try {
+        return _peXrTrOpen(k) + _peXrNameTd(k, nd, 'text-align:left;')
+          + COLS.map(c => '<td' + (c.strong ? ' class="pe-strong"' : '') + ' style="text-align:right;' + (c.gs ? _gsB : '') + '">' + c.f(A) + '</td>').join('') + '</tr>';
+      } finally { _xrFmt = false; }
+    }).join('');
+  }
+  wrap.innerHTML = '<table class="pe-day-tbl" style="width:100%"><thead>' + head + '</thead><tbody>' + _xrRows + body + '</tbody></table>'
     + '<div class="pe-day-foot">' + (isDay ? 'こげ茶のマス（35→30）＝入札価格を変えた日。ピンクのマス（15→25%）＝PRオプ料率を変えた日。濃いマス＝上げた／薄いマス＝下げた。' : '') + '表示・CTR は v1.0911 から取り込む「表示回数」で、それより前に取り込んだ日は「—」（その日の item-reach を取り込み直すと出ます）'
     + (isDay ? '' : '。月別で「※」＝表示回数がある日だけの合計（CTR も同じ日だけで計算）')
     + '。広告個数＝広告経由の注文数。広告個数・クリック数は、Yahoo のレポートが1件を0と出す分を1に戻しています（売上・実績額がある日）。平均獲得単価＝広告実績額 ÷ 広告個数（0件の日は —）。PR実績額は その日のPRオプ料率（調整-PRオプの履歴）からの推定。</div>';
@@ -27971,6 +28181,7 @@ function peRenderInfo() {
   if (ms) { ms.style.display = (_peGrain === 'month') ? '' : 'none';
             ms.querySelectorAll('.segf-btn').forEach(b => b.classList.toggle('on', String(b.getAttribute('data-pemspan')) === String(_peMSpan))); }
 
+  _peXrBar('peXrBarInfo', _peGrain === 'day');   // 【v1.1053】
   const rows = _peRows(code);
   const note = document.getElementById('peCtlNote');
   // 【v1.0638】いま何を合計しているかを注記に出す（合算・親・子のとき）
@@ -28217,11 +28428,11 @@ function peRenderInfo() {
     + '</tr>';
 
   // ---- 明細（新しい順） ----
-  const body = rows.slice().reverse().map(r => {
+  const _rowHtml = (r, _xrk, _xrnd) => {   // 【v1.1053】_xrk＝平均の行（'l30'｜'s30'）
     const _prAmt = r.prKnown ? ((+r.adCost || 0) + (+r.prOver || 0)) : null;   // PR広告売上ROASの分母
     const gap = _adGap(r);
-    return '<tr>'
-      + (() => { const sa = _peSaleCellAttr(String(r.key)); return '<td class="pe-date' + sa.cls + '"' + sa.title + ' style="' + tdB + 'background:' + (sa.cls ? '#fdf2f8' : 'var(--bg3)') + ';font-weight:700;color:var(--accent)">' + escapeHtml(String(r.key)) + '</td>'; })()   /* 【v1.0914】セールの印 */
+    return (_xrk ? _peXrTrOpen(_xrk) : '<tr>')
+      + (_xrk ? _peXrNameTd(_xrk, _xrnd, tdB) : '') + (_xrk ? '' : (() => { const sa = _peSaleCellAttr(String(r.key)); return '<td class="pe-date' + sa.cls + '"' + sa.title + ' style="' + tdB + 'background:' + (sa.cls ? '#fdf2f8' : 'var(--bg3)') + ';font-weight:700;color:var(--accent)">' + escapeHtml(String(r.key)) + '</td>'; })())   /* 【v1.0914】セールの印 */
       + '<td style="' + tdB + BD + 'background:' + G.rev.bg + ';color:' + G.rev.color + '">' + _yen0(r.rev) + '</td>'
       + (_tblSplit
           ? '<td style="' + tdB + 'background:' + OYA.bg + '">' + _yen0(r.revP || 0) + '</td><td style="' + tdB + 'background:' + KO.bg + '">' + _yen0(r.revC || 0) + '</td>'
@@ -28241,8 +28452,15 @@ function peRenderInfo() {
       + '<td class="est-val" title="' + escapeHtml(_whyDash(r) || ('【内訳】\n' + _prPartsTip(r))) + '" style="' + tdB + 'background:' + ycCcTint(YC_CC.pr, YC_CC_TD) + '">'
         + (!r.prKnown ? _dash : _yen0(r.prOver)) + '</td>'
       + '</tr>';
-  }).join('');
-  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  };
+  const body = rows.slice().reverse().map(r => _rowHtml(r)).join('');
+  // 【v1.1053】平均の行（直近30日 → 確定30日。日の行より上）
+  let _xrRows = '';
+  if (_peGrain === 'day' && XR_KEYS.some(k => _peXr[k])) {
+    const _all = _peWithGrain('day', () => { const _k = _peSpan; _peSpan = 60; try { return _peRows(code); } finally { _peSpan = _k; } });
+    _xrRows = XR_KEYS.filter(k => _peXr[k]).map(k => { const { A, nd } = _peXrAvg(_all, k); return _rowHtml(A, k, nd); }).join('');
+  }
+  wrap.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead>' + head + '</thead><tbody>' + _xrRows + body + '</tbody></table>';
   requestAnimationFrame(() => _peStickyHead(wrap));   // 【v1.0910】表の見出しを上で止める
 }
 
