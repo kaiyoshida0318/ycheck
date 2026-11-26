@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1055 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1056 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5000,6 +5000,11 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .yc-rk-badge.yc-rk-none { color: var(--text3); font-weight: 400; }
 .yc-rk-open { flex: 0 0 auto; cursor: pointer; border: none; background: transparent; padding: 0 3px; font-size: 0.72rem; line-height: 1; color: var(--text3); border-radius: 3px; opacity: 0.55; }
 .yc-rk-open:hover { opacity: 1; background: rgba(37,99,235,0.12); color: var(--accent); }
+/* 【v1.1056】調整-入札価格：入札状態のセルの右下の ↗（§442） */
+.data-grid td.yc-rk-host { position: relative; }
+.yc-rk-open.yc-rk-corner { position: absolute; right: 1px; bottom: 1px; font-size: 11px; font-weight: 700; line-height: 1; padding: 2px 3px; opacity: 1;
+  color: var(--accent); background: #fff; border: 1px solid #c7d2fe; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.08); z-index: 1; }
+.yc-rk-open.yc-rk-corner:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 #ycRankModal { position: fixed; inset: 0; z-index: 7000; background: rgba(15,23,42,0.35); display: none; align-items: center; justify-content: center; }
 .yc-rkm-box { background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); min-width: 380px; max-width: 520px; padding: 16px 18px 14px; }
 .yc-rkm-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
@@ -5276,7 +5281,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1055</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1056</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6428,7 +6433,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="adStatus">入札状態</th>
-              <th class="nosort yc-rk-th" data-resize-key="rankAdTune" id="hAdTuneRank" title="取得データ（広告順位）の最新日の順位。↗ で直近7日">広告順位</th>   <!-- 【v1.1038】 -->
+              <!-- 【v1.1056】広告順位の列は撤去（本人指定・§442）。直近7日のモーダルは 入札状態 のセルの右下の ↗ から（_ycRankOpenBtnHtml） -->
               <th class="num col-bidonly" data-sort="bid">入札価格<br><span class="th-note">(最安25円)</span></th>
               <th data-sort="adNote" data-resize-key="adNote">対応内容</th>
               <!-- 【v1.0654】広告売上も直近3ヶ月ぶん並べる（旧: 最新月の1列だけ） -->
@@ -20228,9 +20233,13 @@ function _tuneXrToggle(kind, k) {
   try { _xrInheritWidths(document.getElementById(T.tbl)); applyColWidths(); } catch (e) {}
 }
 window._tuneXrToggle = _tuneXrToggle;
+// 【v1.1056】調整-入札価格：直近30日／確定30日のどちらかを出している間は、一番古い月（3ヶ月前）の
+//   広告売上・広告ROAS・広告実績額 の3列を隠す（本人指定・§442。30日の2列を足しても横スクロールを出さないため）
+function _tuneXrHideOldest(kind) { return kind === 'ad' && XR_KEYS.some(k => _tuneXr.ad[k]); }
 // ボタンと見出し（★描画の最初に呼ぶ。見出しを書き換えたあとで installSortButtons が並べ替えの印を付け直す）
 function _tuneXrHead(kind) {
   const T = _TUNE_XR[kind], st = _tuneXr[kind];
+  if (kind === 'ad') ['hAdTuneAdSales0', 'hAdTuneRoas0', 'hAdTuneAdRev0'].forEach(id => { const th = document.getElementById(id); if (th) th.style.display = _tuneXrHideOldest('ad') ? 'none' : ''; });
   const bar = document.getElementById(T.bar);
   if (bar) bar.innerHTML = _xrBarHtml('ROAS列', k => st[k], k => "_tuneXrToggle('" + kind + "','" + k + "')", T.what);
   XR_KEYS.forEach(k => {
@@ -20269,20 +20278,46 @@ function _tuneXrCells(kind, r) {
   }).join('');
 }
 // 列を出した表の型（sig）は、出す前の型の幅を引き継ぐ（列幅は表の型ごと＝§v1.0957。出すたびに幅が変わらないように）
-function _xrInheritWidths(tbl) {
+// 【v1.1056】一般化：いまの型がまだ触っていない型なら、次の「元になる型」のうち幅を変えたことのある最初の1つから、共通の列の幅を写す。
+//   ① 30日の列を消し、隠した古い月を戻した型（＝ふだんの型）
+//   ② 調整-入札価格だけ：①に v1.1055 までの「広告順位」の列（rankAdTune・入札状態の右）を足した型（＝v1.1055 までの型。列を撤去しても幅が変わらないように）
+//   applyColWidths の最初に毎回呼ぶ（読み込み直したとき・列を出し入れしたとき）。
+function _tuneInheritWidths(tbl) {
   try {
     if (!tbl) return;
     const s = _colSig(tbl); if (!s) return;
     const vp = ensureViewPrefs(), W = vp.colWidths, L = vp.colLocks;
     if (W[s.sig + '|__f']) return;
-    const base = s.keys.filter(k => !/__(roas|prsr)(L30|S30)$/.test(k));
-    if (base.length === s.keys.length) return;
-    const bsig = 'L' + _colHash36(s.tk + '#' + base.join(','));
-    if (!W[bsig + '|__f']) return;   // 元の型もまだ触っていない＝どちらも列キーの幅を見る
-    base.forEach(k => { if (W[bsig + '|' + k] != null) W[s.sig + '|' + k] = W[bsig + '|' + k]; if (L[bsig + '|' + k]) L[s.sig + '|' + k] = true; });
-    W[s.sig + '|__f'] = 1;
+    const row = _colHeadRow(tbl); if (!row) return;
+    const all = Array.from(row.children).map(th => th.dataset && th.dataset.resizeKey).filter(Boolean);
+    const base = all.filter(k => !/__(roas|prsr)(L30|S30)$/.test(k));
+    const cands = [base];
+    if (tbl.id === 'tableAdTune') {
+      const st = base.findIndex(k => /__adStatus$/.test(k));
+      if (st >= 0 && base.indexOf('rankAdTune') < 0) {
+        const legacy = base.slice(0, st + 1).concat(['rankAdTune'], base.slice(st + 1));
+        cands.push(legacy);
+        // ★1回だけの移し替え：ふだんの型（広告順位の列なし）は v1.1038 より前にも同じ並びだったので、その頃の幅が残っている。
+        //   v1.1038〜v1.1055 の型（広告順位の列あり）で幅を変えていたら、そちらが新しいので、ふだんの型へ上書きで写す（印 'sig|__v1056'）。
+        const bs = 'L' + _colHash36(s.tk + '#' + base.join(',')), ls = 'L' + _colHash36(s.tk + '#' + legacy.join(','));
+        if (!W[bs + '|__v1056'] && W[ls + '|__f']) {
+          base.forEach(k => { if (W[ls + '|' + k] != null) W[bs + '|' + k] = W[ls + '|' + k]; if (L[ls + '|' + k]) L[bs + '|' + k] = true; });
+          W[bs + '|__f'] = 1; W[bs + '|__v1056'] = 1;
+        }
+      }
+    }
+    if (W[s.sig + '|__f']) return;
+    for (const keys of cands) {
+      if (keys.join(',') === s.keys.join(',')) continue;
+      const bsig = 'L' + _colHash36(s.tk + '#' + keys.join(','));
+      if (!W[bsig + '|__f']) continue;
+      s.keys.forEach(k => { if (W[bsig + '|' + k] != null) W[s.sig + '|' + k] = W[bsig + '|' + k]; if (L[bsig + '|' + k]) L[s.sig + '|' + k] = true; });
+      W[s.sig + '|__f'] = 1;
+      return;
+    }
   } catch (e) {}
 }
+function _xrInheritWidths(tbl) { _tuneInheritWidths(tbl); }
 
 function renderAdAdjust(cfg) {
   // 【v239】cfg で対象テーブル等を差し替え可能に。既定は「入札価格全体」。
@@ -20466,15 +20501,16 @@ function renderAdAdjust(cfg) {
       : `<td class="num col-bidonly bid-price" data-code="${escapeHtml(r.code)}" title="クリックで編集">${bidCellInnerHtml(r.code, bid)}</td>`;
     // 【v278】実績額・広告ROASは月数ぶんループ（当月列にも対応）
     // 【v1.0647】色を商品-基本データに合わせた: 広告実績額＝ピンク(col-spend) / 広告ROAS＝藍(col-aroas)。広告売上はアンバー(col-ad)のまま
-    const _revCells  = r.adCosts.map(v => `<td class="num col-spend">${fmt(v)}</td>`).join('');
+    const _skip0 = (tableSel === '#tableAdTune') && _tuneXrHideOldest('ad');   // 【v1.1056】一番古い月を隠す（30日の列を出している間）
+    const _revCells  = r.adCosts.map((v, i) => (_skip0 && i === 0) ? '' : `<td class="num col-spend">${fmt(v)}</td>`).join('');
     // 【v1.1035】調整-入札価格だけ：広告ROASの下に小さく「子 ◯%」（広告売上のうち子が売れた分。子が売れていない月・親子の無い商品は出さない）
     const _famK = String(((state.productMeta || {})[r.code] || {}).repCode || '').trim() || r.code;
-    const _roasCells = r.roass.map((v, i) => { const td = adRoasCell(v, (r.adCosts || [])[i]);
+    const _roasCells = r.roass.map((v, i) => { if (_skip0 && i === 0) return ''; const td = adRoasCell(v, (r.adCosts || [])[i]);
       const x = _csm ? _csm[_famK + '|' + months[i]] : null;
       if (!x || !(x.c > 0)) return td;
       return td.replace(/<\/td>$/, '<div class="yc-kid-share" style="color:' + _ycChildAdShareCol(x.pct) + '" title="' + months[i].replace('-', '/') + ' の広告売上のうち、子が売れた分（推定）&#10;¥' + Math.round(x.c).toLocaleString('ja-JP') + ' ／ ¥' + Math.round(x.t).toLocaleString('ja-JP') + '&#10;広告ROASはこの子の分も含んだ値です">子 ' + Math.round(x.pct) + '%</div></td>'); }).join('');   /* 【v1.0978】ADcheck 全広告ROAS の色 */
     // 【v1.0654】広告売上は月数ぶん（実績額・広告ROASと同じ並び）。構成比%つき
-    const _adRevMainCell = r.adRevs.map((v, i) => shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('');
+    const _adRevMainCell = r.adRevs.map((v, i) => (_skip0 && i === 0) ? '' : shareRevCell(v, r.seoRevs[i], false, "col-ad")).join('');
     // 【v1.0649】商品-広告データ: 商品コード / 画像 / 商品名 / 入札価格 / 広告売上×3 / 広告ROAS×3 / 広告実績額×3
     if (cfg.layout === 'data') {
       // 【v1.0650】合算のセット行／両表示の内訳行（商品-基本データと同じクラス・同じ入札価格の出し方）
@@ -20522,8 +20558,8 @@ function renderAdAdjust(cfg) {
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
-      <td class="status-col">${statusSelectHtml(r.code, 'ad')}${(tableSel === '#tableAdTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'ad') : ''}</td>
-      ${tableSel === '#tableAdTune' ? _ycRankCellHtml(r.code, 'ad') : ''}${/* 【v1.1046】広告順位は入札状態の右（本人指定・§432） */''}
+      <td class="status-col${tableSel === '#tableAdTune' ? ' yc-rk-host' : ''}">${statusSelectHtml(r.code, 'ad')}${(tableSel === '#tableAdTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'ad') : ''}${tableSel === '#tableAdTune' ? _ycRankOpenBtnHtml(r.code, 'ad', true) : ''}</td>
+${/* 【v1.1056】広告順位の列は撤去（§442）。↗ は入札状態のセルの右下 */''}
       ${_bidCellT}
       <td>${noteCellHtml(r.code, 'ad')}</td>
       ${_adRevMainCell}
@@ -21621,6 +21657,17 @@ function _ycRankCellHtml(code, kind) {
   return '<td class="yc-rk-cell"><div class="yc-rk-in">' + _ycRankBadge(eff.value)
     + '<button type="button" class="yc-rk-open" onclick="event.stopPropagation();_ycRankModal(\'' + String(code).replace(/'/g, "\\'") + '\',\'' + kind + '\')"'
     + ' title="直近7日の' + (kind === 'ad' ? '広告順位と入札価格' : 'SEO順位とPRオプ料率') + 'を見る' + (kw ? '（KW：' + escapeHtml(kw) + '）' : '') + '">↗</button></div></td>';
+}
+// 【v1.1056】↗（直近7日の順位のモーダルを開く）だけを返す。直近7日に順位が1日も無ければ ''（_ycRankCellHtml と同じ決まり）。
+//   corner=true：セルの右下に置く（調整-入札価格の 入札状態 のセル。td に .yc-rk-host を付ける）
+function _ycRankOpenBtnHtml(code, kind, corner) {
+  const has = _ycRankLast7().some(x => { const v = _ycRankAt(code, kind, x).value; return v != null && v !== ''; });
+  if (!has) return '';
+  const kw = ((getMaster(code) || {}).kw || '').trim();
+  const d = _ycRankLatestDate(), eff = d ? _ycRankAt(code, kind, d) : { value: null };
+  const now = (eff.value == null || eff.value === '') ? '' : '（' + d.slice(5).replace('-', '/') + '：' + (/^\d+$/.test(String(eff.value)) ? eff.value + '位' : eff.value) + '）';
+  return '<button type="button" class="yc-rk-open' + (corner ? ' yc-rk-corner' : '') + '" onclick="event.stopPropagation();_ycRankModal(\'' + String(code).replace(/'/g, "\\'") + '\',\'' + kind + '\')"'
+    + ' title="' + (kind === 'ad' ? '広告順位' : 'SEO順位') + ' 直近7日を見る' + now + (kw ? '　KW：' + escapeHtml(kw) : '') + '">↗</button>';
 }
 function _ycRankModal(code, kind) {
   const isAd = (kind === 'ad');
@@ -31317,6 +31364,7 @@ function applyColWidths() {
   try { autoAssignResizeKeys(); } catch (e) {}
   _ensureFixedLayout();
   loadColWidths();
+  try { ['tableAdTune', 'tableProTune'].forEach(id => _tuneInheritWidths(document.getElementById(id))); } catch (e) {}   // 【v1.1056】保存値を読んだあとで
   // 【v1.0957】幅は「表の型（sig）」ごと。表ごとに sig を1回だけ求める
   const _sgCache = new Map();
   const _sgOf = (tbl) => { if (!tbl) return null; if (!_sgCache.has(tbl)) _sgCache.set(tbl, _colSig(tbl)); return _sgCache.get(tbl); };
