@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1058 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1060 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5298,7 +5298,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1058</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1060</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6568,7 +6568,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
               <th class="status-col" data-sort="status">ステータス</th>
               <th class="status-col" data-sort="proStatus">PR状態</th>
-              <th class="nosort yc-rk-th" data-resize-key="rankProTune" id="hProTuneRank" title="取得データ（SEO順位）の最新日の順位。↗ で直近7日">SEO順位</th>   <!-- 【v1.1038】 -->
+              <!-- 【v1.1060】SEO順位の列は撤去（本人指定・§446）。直近7日のモーダルは PR状態 のセルの右下の ↗ から（_ycRankOpenBtnHtml） -->
               <th class="num col-pro" data-sort="proRate">PRオプ<br>料率</th>
               <th data-sort="proNote" data-resize-key="proNote">対応内容</th>
               <!-- 【v1.0647】PR広告売上ROAS(推定)×3ヶ月を SEO売上 の左に追加（商品-基本データと同じ紫・同じ計算） -->
@@ -20248,6 +20248,7 @@ function _tuneXrToggle(kind, k) {
   _tuneXr[kind][k] = !_tuneXr[kind][k];
   if (kind === 'ad') renderAdTune(); else renderProTune();
   try { _xrInheritWidths(document.getElementById(T.tbl)); applyColWidths(); } catch (e) {}
+  try { if (_colResizeOn) _wrowSyncAll(); } catch (e) {}   // 【v1.1059】幅調整中なら一番下の入力欄・ロックも並び直す（列の出し入れで型が変わる）
 }
 window._tuneXrToggle = _tuneXrToggle;
 // 【v1.1056】調整-入札価格：直近30日／確定30日のどちらかを出している間は、一番古い月（3ヶ月前）の
@@ -20313,10 +20314,12 @@ function _tuneInheritWidths(tbl) {
     const all = Array.from(row.children).map(th => th.dataset && th.dataset.resizeKey).filter(Boolean);
     const base = all.filter(k => !/__(roas|prsr)(L30|S30)$/.test(k));
     const cands = [base];
-    if (tbl.id === 'tableAdTune') {
-      const st = base.findIndex(k => /__adStatus$/.test(k));
-      if (st >= 0 && base.indexOf('rankAdTune') < 0) {
-        const legacy = base.slice(0, st + 1).concat(['rankAdTune'], base.slice(st + 1));
+    // 【v1.1060】調整-PRオプも同じ（SEO順位の列 rankProTune は PR状態 proStatus の右だった・§446）。印は sig|__v1056 を共用
+    const _rk = tbl.id === 'tableAdTune' ? { st: /__adStatus$/, k: 'rankAdTune' } : tbl.id === 'tableProTune' ? { st: /__proStatus$/, k: 'rankProTune' } : null;
+    if (_rk) {
+      const st = base.findIndex(k => _rk.st.test(k));
+      if (st >= 0 && base.indexOf(_rk.k) < 0) {
+        const legacy = base.slice(0, st + 1).concat([_rk.k], base.slice(st + 1));
         cands.push(legacy);
         // ★1回だけの移し替え：ふだんの型（広告順位の列なし）は v1.1038 より前にも同じ並びだったので、その頃の幅が残っている。
         //   v1.1038〜v1.1055 の型（広告順位の列あり）で幅を変えていたら、そちらが新しいので、ふだんの型へ上書きで写す（印 'sig|__v1056'）。
@@ -20828,8 +20831,7 @@ function renderProAdjust(cfg) {
       <td>${nameCellHtml(r.code)}</td>
       <td>${kwCellHtml(r.code)}</td>
       ${statusFirst ? _tdStatus : ''}
-      <td class="status-col">${statusSelectHtml(r.code, 'pro')}${(tableSel === '#tableProTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'pro') : ''}</td>
-      ${tableSel === '#tableProTune' ? _ycRankCellHtml(r.code, 'seo') : ''}${/* 【v1.1046】SEO順位はPR状態の右（本人指定・§432） */''}
+      <td class="status-col${tableSel === '#tableProTune' ? ' yc-rk-host' : ''}">${statusSelectHtml(r.code, 'pro')}${(tableSel === '#tableProTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'pro') : ''}${tableSel === '#tableProTune' ? _ycRankOpenBtnHtml(r.code, 'seo', true) : ''}</td>${/* 【v1.1060】SEO順位の列は撤去（§446）。↗ はPR状態のセルの右下 */''}
       ${_proCellT}
       <td>${noteCellHtml(r.code, 'pro')}</td>
       ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
@@ -32099,12 +32101,15 @@ function _wrowBuild(table) {
   const cls = (th) => String(th.className || '').split(/\s+/).filter(c => c && !/^sort-/.test(c)).join(' ');
   const _sgB = _colSig(table);
   // 【v1.0957】入力欄・ロックは「この表の何列目か」（data-ci）で持つ。キーだけだと同じキーの別の表（型が違う）まで触ってしまう
+  // 【v1.1059】見出しが隠れている列（style の display:none。調整-入札価格で30日の列を出している間の一番古い月・OFF の30日の列 等）は、
+  //   この行のセルも隠す（本人指摘・§445）。今までは class で隠れる列しか合わせておらず、隠した3列のぶんだけ右の列の入力欄・ロックが左にずれていた。
+  const _hid = (th) => getComputedStyle(th).display === 'none' ? ' style="display:none"' : '';
   foot.innerHTML = '<tr>' + ths.map((th, ci) => {
     const key = th.dataset.resizeKey;
-    if (!key) return '<td class="' + cls(th) + ' yc-wrow-td"></td>';
+    if (!key) return '<td class="' + cls(th) + ' yc-wrow-td"' + _hid(th) + '></td>';
     const lk = _colIsLockedTh(th, _sgB);
     // 【v1.0877】🔓/🔒 → 文字（未固定「ロック」／固定中「ロック中」）。数値の下に置く
-    return '<td class="' + cls(th) + ' yc-wrow-td' + (lk ? ' is-locked' : '') + '"><span class="yc-wrow">'
+    return '<td class="' + cls(th) + ' yc-wrow-td' + (lk ? ' is-locked' : '') + '"' + _hid(th) + '><span class="yc-wrow">'
       + '<input type="number" class="yc-wrow-in" min="' + COL_RESIZE_MIN_PX + '" max="' + COL_RESIZE_MAX_PX + '" step="1"'
       + ' data-key="' + escapeHtml(key) + '" data-ci="' + ci + '"' + (lk ? ' disabled' : '') + ' title="この列の幅（px）。入力して Enter か欄の外をクリックで反映">'
       + '<button type="button" class="yc-wrow-lock' + (lk ? ' is-locked' : '') + '" data-key="' + escapeHtml(key) + '" data-ci="' + ci + '" title="'
@@ -32120,6 +32125,7 @@ function _wrowRefresh(table) {
     const ths = Array.from(t.querySelectorAll('thead tr')[0].children);
     const tds = Array.from(t.querySelectorAll('tfoot.yc-wrow-foot tr')[0] ? t.querySelectorAll('tfoot.yc-wrow-foot tr')[0].children : []);
     ths.forEach((th, i) => {
+      if (tds[i]) tds[i].style.display = (getComputedStyle(th).display === 'none') ? 'none' : '';   // 【v1.1059】見出しと同じく出し入れ
       const inp = tds[i] && tds[i].querySelector('.yc-wrow-in');
       if (!inp || inp === document.activeElement) return;
       const w = th.getBoundingClientRect().width;
