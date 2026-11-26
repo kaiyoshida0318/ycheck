@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1062 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1063 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5283,7 +5283,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1062</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1063</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6566,6 +6566,10 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
               <th class="num col-sales" data-sort="seoRev0" id="hProTuneSeo0">SEO売上<br>(3ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev1" id="hProTuneSeo1">SEO売上<br>(2ヶ月前)</th>
               <th class="num col-sales" data-sort="seoRev2" id="hProTuneSeo2">SEO売上<br>(前月)</th>
+              <!-- 【v1.1063】SEO売上の右に PR実績額(7%超・推定)×3ヶ月（本人指定・§449。商品-PRデータと同じ計算・同じ見出し。月の表示は renderProAdjust の hPrefix+'Prov'+i） -->
+              <th class="num col-prov" data-sort="prov0" id="hProTuneProv0" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR<br>実績額<br>(3ヶ月前)</th>
+              <th class="num col-prov" data-sort="prov1" id="hProTuneProv1" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR<br>実績額<br>(2ヶ月前)</th>
+              <th class="num col-prov" data-sort="prov2" id="hProTuneProv2" title="PR実績額（見出しの ？ ＝ 7%超ぶん・推定値の印）&#10;PR実績額(7%超・推定) ＝ 総売上 ÷ 1.1 ×（設定PRオプ料率 − 7％）&#10;★7％より高い料率にしていることで余分に払っている分。⑤の設定料率からの推定です（実測ではありません）。&#10;料率7％の商品は0なので「—」。商品-基本データの同名列と同じ計算。"><span class="th-est">？</span>PR<br>実績額<br>(前月)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -20238,11 +20242,14 @@ function _tuneXrToggle(kind, k) {
 window._tuneXrToggle = _tuneXrToggle;
 // 【v1.1056】調整-入札価格：直近30日／確定30日のどちらかを出している間は、一番古い月（3ヶ月前）の
 //   広告売上・広告ROAS・広告実績額 の3列を隠す（本人指定・§442。30日の2列を足しても横スクロールを出さないため）
-function _tuneXrHideOldest(kind) { return kind === 'ad' && XR_KEYS.some(k => _tuneXr.ad[k]); }
+// 【v1.1063】調整-PRオプも同じ：PR広告売上ROAS・SEO売上・PR実績額 の一番古い月（本人指定・§449）
+function _tuneXrHideOldest(kind) { return (kind === 'ad' || kind === 'pro') && XR_KEYS.some(k => _tuneXr[kind][k]); }
+const _TUNE_OLDEST_TH = { ad: ['hAdTuneAdSales0', 'hAdTuneRoas0', 'hAdTuneAdRev0'], pro: ['hProTunePrsr0', 'hProTuneSeo0', 'hProTuneProv0'] };
+const _TUNE_OLDEST_KEY = { tableAdTune: /^auto_tableAdTune__(adRev|roas|adCost)0$/, tableProTune: /^auto_tableProTune__(prsr|seoRev|prov)0$/ };
 // ボタンと見出し（★描画の最初に呼ぶ。見出しを書き換えたあとで installSortButtons が並べ替えの印を付け直す）
 function _tuneXrHead(kind) {
   const T = _TUNE_XR[kind], st = _tuneXr[kind];
-  if (kind === 'ad') ['hAdTuneAdSales0', 'hAdTuneRoas0', 'hAdTuneAdRev0'].forEach(id => { const th = document.getElementById(id); if (th) th.style.display = _tuneXrHideOldest('ad') ? 'none' : ''; });
+  (_TUNE_OLDEST_TH[kind] || []).forEach(id => { const th = document.getElementById(id); if (th) th.style.display = _tuneXrHideOldest(kind) ? 'none' : ''; });
   const bar = document.getElementById(T.bar);
   if (bar) bar.innerHTML = _xrBarHtml('ROAS列', k => st[k], k => "_tuneXrToggle('" + kind + "','" + k + "')", T.what);
   XR_KEYS.forEach(k => {
@@ -20299,18 +20306,22 @@ function _tuneInheritWidths(tbl) {
     const all = Array.from(row.children).map(th => th.dataset && th.dataset.resizeKey).filter(Boolean);
     const base = all.filter(k => !/__(roas|prsr)(L30|S30)$/.test(k));
     const cands = [base];
+    // 【v1.1063】調整-PRオプは PR実績額の3列（prov0〜2）を足した。足す前の型（v1.1060〜v1.1062）からも引き継ぐ。
+    //   広告順位／SEO順位の列の1回だけの移し替え（下）は、足す前の型（base0）を相手にする（v1.1060 と同じ型）
+    const base0 = tbl.id === 'tableProTune' ? base.filter(k => !/__prov\d$/.test(k)) : base;
+    if (base0.length !== base.length) cands.push(base0);
     // 【v1.1060】調整-PRオプも同じ（SEO順位の列 rankProTune は PR状態 proStatus の右だった・§446）。印は sig|__v1056 を共用
     const _rk = tbl.id === 'tableAdTune' ? { st: /__adStatus$/, k: 'rankAdTune' } : tbl.id === 'tableProTune' ? { st: /__proStatus$/, k: 'rankProTune' } : null;
     if (_rk) {
-      const st = base.findIndex(k => _rk.st.test(k));
-      if (st >= 0 && base.indexOf(_rk.k) < 0) {
-        const legacy = base.slice(0, st + 1).concat([_rk.k], base.slice(st + 1));
+      const st = base0.findIndex(k => _rk.st.test(k));
+      if (st >= 0 && base0.indexOf(_rk.k) < 0) {
+        const legacy = base0.slice(0, st + 1).concat([_rk.k], base0.slice(st + 1));
         cands.push(legacy);
         // ★1回だけの移し替え：ふだんの型（広告順位の列なし）は v1.1038 より前にも同じ並びだったので、その頃の幅が残っている。
         //   v1.1038〜v1.1055 の型（広告順位の列あり）で幅を変えていたら、そちらが新しいので、ふだんの型へ上書きで写す（印 'sig|__v1056'）。
-        const bs = 'L' + _colHash36(s.tk + '#' + base.join(',')), ls = 'L' + _colHash36(s.tk + '#' + legacy.join(','));
+        const bs = 'L' + _colHash36(s.tk + '#' + base0.join(',')), ls = 'L' + _colHash36(s.tk + '#' + legacy.join(','));
         if (!W[bs + '|__v1056'] && W[ls + '|__f']) {
-          base.forEach(k => { if (W[ls + '|' + k] != null) W[bs + '|' + k] = W[ls + '|' + k]; if (L[ls + '|' + k]) L[bs + '|' + k] = true; });
+          base0.forEach(k => { if (W[ls + '|' + k] != null) W[bs + '|' + k] = W[ls + '|' + k]; if (L[ls + '|' + k]) L[bs + '|' + k] = true; });
           W[bs + '|__f'] = 1; W[bs + '|__v1056'] = 1;
         }
       }
@@ -20809,7 +20820,8 @@ function renderProAdjust(cfg) {
     const _proCellT = _isSetT
       ? _proSetCellHtml(r.code, r._members)   /* 【v1.0874】 */
       : `<td class="num col-pro pro-rate-cell" data-code="${escapeHtml(r.code)}" title="クリックで編集">${fmtProRate(pr)}</td>`;
-    tr.innerHTML = `
+    const _skipP0 = (tableSel === '#tableProTune') && _tuneXrHideOldest('pro');   // 【v1.1063】30日の列を出している間は一番古い月を隠す（§449）
+      tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT || tableSel === '#tableProTune' /* 【v1.1054】一括変更は廃止 */))}</td>
       ${_idDatesTd(r, proAdjustSortKey)}
       <td>${imageCellHtml(r.code)}</td>
@@ -20819,9 +20831,10 @@ function renderProAdjust(cfg) {
       <td class="status-col${tableSel === '#tableProTune' ? ' yc-rk-host' : ''}">${statusSelectHtml(r.code, 'pro')}${(tableSel === '#tableProTune' && !_isSetT) ? _tuneFixWhyHtml(r.code, 'pro') : ''}${tableSel === '#tableProTune' ? _ycRankOpenBtnHtml(r.code, 'seo', true) : ''}</td>${/* 【v1.1060】SEO順位の列は撤去（§446）。↗ はPR状態のセルの右下 */''}
       ${_proCellT}
       <td>${noteCellHtml(r.code, 'pro')}</td>
-      ${r.prsrs.map(v => '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
+      ${r.prsrs.map((v, i) => (_skipP0 && i === 0) ? '' : '<td class="num col-sroas est-val">' + (v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(v, PR_SALES_ROAS_TH)) + '</td>').join('')}
       ${tableSel === '#tableProTune' ? _tuneXrCells('pro', r) : ''}${/* 【v1.1053】PR広告売上ROAS（直近30日／確定30日） */''}
-      ${r.seoRevs.map((v,i) => shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
+      ${r.seoRevs.map((v,i) => (_skipP0 && i === 0) ? '' : shareRevCell(v, r.adRevs[i], true, "col-sales")).join('')}
+      ${tableSel === '#tableProTune' ? r.provs.map((v, i) => (_skipP0 && i === 0) ? '' : '<td class="num col-prov est-val">' + ((v != null && v > 0) ? fmt(Math.round(v)) : '<span style="color:var(--text3)">—</span>') + '</td>').join('') : ''}${/* 【v1.1063】PR実績額×3ヶ月（§449） */''}
       ${statusFirst ? '' : _tdStatus}
     `;
     tbody.appendChild(tr);
@@ -31619,7 +31632,7 @@ function _tuneSiblingSigs(table) {
   const row = _colHeadRow(table); const s0 = _colSig(table); if (!row || !s0) return [];
   const all = Array.from(row.children).map(th => th.dataset && th.dataset.resizeKey).filter(Boolean);
   const isX = k => /__(roas|prsr)(L30|S30)$/.test(k);
-  const old = table.id === 'tableAdTune' ? /^auto_tableAdTune__(adRev|roas|adCost)0$/ : null;
+  const old = _TUNE_OLDEST_KEY[table.id] || null;   // 【v1.1063】PRオプも
   return [[0, 0], [1, 0], [0, 1], [1, 1]].map(([l, ss]) => {
     const keys = all.filter(k => isX(k) ? (/L30$/.test(k) ? l : ss) : !(old && old.test(k) && (l || ss)));
     return { sig: 'L' + _colHash36(s0.tk + '#' + keys.join(',')), keys };
