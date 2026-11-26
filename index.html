@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1060 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1062 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -36,7 +36,8 @@
   --amber: #d97706;
   --red: #dc2626;
   --blue: #2563eb;
-  --row-hover-border: #1e4fbf;              /* 【v152】行ホバー枠専用色（明度を落として紺色寄りに） */
+  --row-hover-border: #1e4fbf;              /* 【v152】行ホバー枠専用色（明度を落として紺色寄りに）※v1.1062 から未使用 */
+  --row-hover-tint: rgba(15, 23, 42, 0.055); /* 【v1.1062】行ホバーのうっすらグレー（§448） */
   --font-scale: 1;
 }
 .c-g1{color:#1565C0;font-weight:700}
@@ -1796,30 +1797,12 @@ thead th.col-bid, thead th.col-pro, thead th.col-bidonly { text-align: center; l
    border-collapse: collapse の運用なので、tr に直接 border は効きにくい → 各td に inset box-shadow で
    上下のラインを引き、最左セルに左ライン、最右セルに右ラインを足して矩形に囲む。
    【v152】枠色は--accent(#2563eb)から--row-hover-border(#1e4fbf, 紺寄り)に変更 */
+/* 【v1.1062】行にカーソルを乗せたときの青い枠（v147〜）はやめて、行全体にうっすらグレーをかける（本人指定・§448）。
+   セルごとに地の色（列の色・直近30日の色 等、!important のものもある）が違うので background では上書きせず、
+   中身の下・地の上に描かれる inset の box-shadow（大きく広げて塗りつぶす）で薄いグレーを重ねる＝どの地の色の上でも同じように少し暗くなる。
+   月別データ（#mi-wrap）と商品モーダルは今までどおり何も出さない（下の個別の指定がそのまま効く）。 */
 tbody tr:hover td {
-  box-shadow:
-    inset 0 1.5px 0 var(--row-hover-border),     /* 上ライン */
-    inset 0 -1.5px 0 var(--row-hover-border);    /* 下ライン */
-}
-tbody tr:hover td:first-child {
-  box-shadow:
-    inset 0 1.5px 0 var(--row-hover-border),
-    inset 0 -1.5px 0 var(--row-hover-border),
-    inset 1.5px 0 0 var(--row-hover-border);     /* 左ライン */
-}
-tbody tr:hover td:last-child {
-  box-shadow:
-    inset 0 1.5px 0 var(--row-hover-border),
-    inset 0 -1.5px 0 var(--row-hover-border),
-    inset -1.5px 0 0 var(--row-hover-border);    /* 右ライン */
-}
-/* 1セルしかないケース（empty-state など）にも対応 */
-tbody tr:hover td:first-child:last-child {
-  box-shadow:
-    inset 0 1.5px 0 var(--row-hover-border),
-    inset 0 -1.5px 0 var(--row-hover-border),
-    inset 1.5px 0 0 var(--row-hover-border),
-    inset -1.5px 0 0 var(--row-hover-border);
+  box-shadow: inset 0 0 0 9999px var(--row-hover-tint);
 }
 
 /* ============================================================
@@ -5019,7 +5002,9 @@ table td.code-cell .code-text { word-break: normal; overflow-wrap: anywhere; lin
 .yc-rk-open:hover { opacity: 1; background: rgba(37,99,235,0.12); color: var(--accent); }
 /* 【v1.1056】調整-入札価格：入札状態のセルの右下の ↗（§442） */
 .data-grid td.yc-rk-host { position: relative; }
-.yc-rk-open.yc-rk-corner { position: absolute; right: 1px; bottom: 1px; font-size: 11px; font-weight: 700; line-height: 1; padding: 2px 3px; opacity: 1;
+/* 【v1.1061】↗ が文字（状態のボタン・「○なのに7位以下」等の理由）にかからないよう、↗ のあるセルは下に ↗ の分の余白を取る（本人指摘・§447） */
+.data-grid td.yc-rk-host:has(> .yc-rk-corner) { padding-bottom: 19px !important; }
+.yc-rk-open.yc-rk-corner { position: absolute; right: 3px; bottom: 2px; font-size: 11px; font-weight: 700; line-height: 1; padding: 2px 3px; opacity: 1;
   color: var(--accent); background: #fff; border: 1px solid #c7d2fe; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.08); z-index: 1; }
 .yc-rk-open.yc-rk-corner:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 #ycRankModal { position: fixed; inset: 0; z-index: 7000; background: rgba(15,23,42,0.35); display: none; align-items: center; justify-content: center; }
@@ -5298,7 +5283,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1060</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1062</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
