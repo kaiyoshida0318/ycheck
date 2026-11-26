@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1056 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1058 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1975,7 +1975,10 @@ body.col-resize-on td[data-resize-key] .col-resize-handle { pointer-events: auto
 /* ONのときは境目をうっすら見せる（どこを掴めるか分かるように） */
 body.col-resize-on th[data-resize-key] .col-resize-handle { background: rgba(37,99,235,0.22); }
 body.col-resize-on .data-grid thead th { box-shadow: inset -1px 0 0 rgba(37,99,235,0.25); }
-body.col-resize-on thead th { cursor: default; }   /* 【v1.0958】幅調整中は見出しで並び替えしない＝指マークにしない */
+body.col-resize-on thead th { cursor: default; }
+/* 【v1.1057】列の端（境目の左右5px）にマウスが来たら ⇔、ドラッグ中もずっと ⇔（§443） */
+body.col-resize-on.yc-col-edge, body.col-resize-on.yc-col-edge * { cursor: col-resize !important; }
+body.is-col-resizing, body.is-col-resizing * { cursor: col-resize !important; user-select: none !important; }   /* 【v1.0958】幅調整中は見出しで並び替えしない＝指マークにしない */
 /* 【v1.0865】幅調整モードの一番下の行（列ごとの幅の数値入力＋🔒固定）。表の下端に貼り付く */
 tfoot.yc-wrow-foot td.yc-wrow-td { position: sticky; bottom: 0; z-index: 4; background: #fff7e0 !important;
   border-top: 2px solid #f59e0b; padding: 4px 3px !important; text-align: center; overflow: hidden; }
@@ -2611,6 +2614,20 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 .xr-btn .xr-ic { display: inline-block; width: 1.05em; text-align: center; margin-right: 1px; }   /* 【v1.1054】＋と✓を同じ幅に＝押しても幅が変わらない */
 .xr-btn:hover { background: var(--xb); }
 .xr-btn.on { background: var(--xc); color: #fff; }
+
+/* 【v1.1058】調整-入札価格／調整-PRオプの 直近30日／確定30日 の列（本人指定・§444）：ほかの列に溶け込まないように
+   ・見出しをその色で塗る（直近30日＝青 #3b82f6／確定30日＝紫 #8b5cf6）・白い字
+   ・本文は薄い地（#eff6ff／#f5f3ff）・太字
+   ・2列のかたまりの外側を薄めのライン（2px #a5b4fc）で囲む：見出しの上・左の列の左・右の列の右・一番下の行の下
+     （.xr-first＝出ている中で左端の列、.xr-last＝右端の列。片方だけ ON でもその1列を囲む） */
+.xr-l30 { --xc: #3b82f6; --xb: #eff6ff; --xt: #1d4ed8; }
+.xr-s30 { --xc: #8b5cf6; --xb: #f5f3ff; --xt: #6d28d9; }
+.data-grid thead th.xr-th { background: var(--xc) !important; color: #fff !important; border-top: 2px solid #a5b4fc !important; }
+.data-grid thead th.xr-th .th-note { color: rgba(255,255,255,.85) !important; }
+.data-grid td.xr-td { background: var(--xb) !important; font-weight: 700; }
+.data-grid .xr-th.xr-first, .data-grid td.xr-td.xr-first { border-left: 2px solid #a5b4fc !important; }
+.data-grid .xr-th.xr-last, .data-grid td.xr-td.xr-last { border-right: 2px solid #a5b4fc !important; }
+.data-grid tbody tr:last-child td.xr-td { border-bottom: 2px solid #a5b4fc !important; }
 /* 商品モーダルの平均の行（列名のすぐ下で止まる） */
 #productEditModal .pe-table-wrap tbody tr.pe-xr td { position: sticky; z-index: 1; font-weight: 700; background: var(--xrbg) !important; box-shadow: inset 0 -2px 0 var(--xrc); }
 #productEditModal .pe-table-wrap tbody tr.pe-xr td.pe-xr-name { text-align: left !important; white-space: nowrap; font-weight: 800; }
@@ -5281,7 +5298,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1056</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1058</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -20245,7 +20262,10 @@ function _tuneXrHead(kind) {
   XR_KEYS.forEach(k => {
     const th = document.getElementById(T.th + (k === 'l30' ? 'L30' : 'S30')); if (!th) return;
     th.style.display = st[k] ? '' : 'none';
-    th.style.background = XR_COL[k].bg; th.style.color = XR_COL[k].t; th.style.boxShadow = 'inset 0 3px 0 ' + XR_COL[k].c;
+    th.style.background = ''; th.style.color = ''; th.style.boxShadow = '';   // 見た目は CSS（.xr-th）
+    th.classList.add('xr-th', 'xr-' + k);
+    th.classList.toggle('xr-last', !!st[k] && (k === 's30' || !st.s30));
+    th.classList.toggle('xr-first', !!st[k] && (k === 'l30' || !st.l30));
     th.title = XR_NAME[k] + '（' + _xrSpanYmd(k) + '）の' + (kind === 'ad' ? '広告ROAS ＝ 広告売上 ÷ 広告実績額 × 100' : 'PR広告売上ROAS（推定）＝ 総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。PR実績額は今のPRオプ料率からの推定（月の列と同じ）') + '\n\n' + XR_TIP;
     th.innerHTML = T.head + '<br>' + XR_NAME[k] + '<br><span class="th-note">' + _xrSpan(k) + '</span>';
   });
@@ -20270,11 +20290,12 @@ function _tuneXrSortVal(r, key, base) {
   return (x && x.v != null && isFinite(x.v)) ? x.v : -1;
 }
 function _tuneXrCells(kind, r) {
-  return XR_KEYS.filter(k => _tuneXr[kind][k]).map(k => {
+  const _on = XR_KEYS.filter(k => _tuneXr[kind][k]);
+  return _on.map(k => {
     const x = (r._xr || {})[k] || { v: null, cost: 0 };
     const td = (kind === 'ad') ? adRoasCell(x.v, x.cost)
       : '<td class="num col-sroas est-val">' + (x.v == null ? '<span style="color:var(--text3)">—</span>' : salesRoasCellHtml(x.v, PR_SALES_ROAS_TH)) + '</td>';
-    return td.replace('<td ', '<td style="background:' + XR_COL[k].bg + '" ');
+    return td.replace('<td class="', '<td class="xr-td xr-' + k + (k === _on[_on.length - 1] ? ' xr-last' : '') + (k === _on[0] ? ' xr-first' : '') + ' ');
   }).join('');
 }
 // 列を出した表の型（sig）は、出す前の型の幅を引き継ぐ（列幅は表の型ごと＝§v1.0957。出すたびに幅が変わらないように）
@@ -31583,6 +31604,7 @@ function saveColWidthTh(th, px) {
     const vp = ensureViewPrefs();
     if (px == null) delete vp.colWidths[s.sig + '|' + key];
     else vp.colWidths[s.sig + '|' + key] = Math.round(px);
+    try { _tuneMirrorWidth(table, s.sig, key); } catch (e2) {}   // 【v1.1057】30日の列の ON/OFF の4通りで同じ幅に
     _vpTouch('この端末');
     _colResizeDirty = true;
   } catch (e) { console.warn('列幅の保存に失敗:', e); }
@@ -31597,8 +31619,38 @@ function _colToggleLockTh(th) {
     const w = Math.round(th.getBoundingClientRect().width);
     if (w > 0 && vp.colWidths[sk] == null) vp.colWidths[sk] = w;   // 固定する時点の幅を保存値にしておく
   }
+  try { _tuneMirrorWidth(table, s.sig, key); } catch (e2) {}   // 【v1.1057】ロックも4通りで同じに
   _vpTouch('この端末');
   _colResizeDirty = true;
+}
+// 【v1.1057】調整-入札価格／調整-PRオプは、＋直近30日／＋確定30日 の ON/OFF で列の並び（＝幅を覚える型）が4通りに変わる
+//   （どちらも OFF／直近だけ／確定だけ／両方。入札価格は ON の間 一番古い月の3列も隠れる）。
+//   型ごとに幅を覚えると「両方 ON で直した幅が、片方 ON では元のまま」になり、幅を変えられないように見える（本人指摘・§443）。
+//   → 1つの型で幅・ロックを変えたら、ほかの3通りの型にも同じ列の値を写す（まだ触っていない型は、いまの型の幅を丸ごと写してから）。
+function _tuneSiblingSigs(table) {
+  if (!table || (table.id !== 'tableAdTune' && table.id !== 'tableProTune')) return [];
+  const row = _colHeadRow(table); const s0 = _colSig(table); if (!row || !s0) return [];
+  const all = Array.from(row.children).map(th => th.dataset && th.dataset.resizeKey).filter(Boolean);
+  const isX = k => /__(roas|prsr)(L30|S30)$/.test(k);
+  const old = table.id === 'tableAdTune' ? /^auto_tableAdTune__(adRev|roas|adCost)0$/ : null;
+  return [[0, 0], [1, 0], [0, 1], [1, 1]].map(([l, ss]) => {
+    const keys = all.filter(k => isX(k) ? (/L30$/.test(k) ? l : ss) : !(old && old.test(k) && (l || ss)));
+    return { sig: 'L' + _colHash36(s0.tk + '#' + keys.join(',')), keys };
+  });
+}
+function _tuneMirrorWidth(table, srcSig, key) {
+  const sib = _tuneSiblingSigs(table); if (!sib.length) return;
+  const vp = ensureViewPrefs(), W = vp.colWidths, L = vp.colLocks;
+  sib.forEach(x => {
+    if (x.sig === srcSig || x.keys.indexOf(key) < 0) return;
+    if (!W[x.sig + '|__f']) {
+      x.keys.forEach(k => { const v = W[srcSig + '|' + k]; if (v != null) W[x.sig + '|' + k] = v; if (L[srcSig + '|' + k]) L[x.sig + '|' + k] = true; });
+      W[x.sig + '|__f'] = 1;
+    }
+    const sk = srcSig + '|' + key, dk = x.sig + '|' + key;
+    if (W[sk] == null) delete W[dk]; else W[dk] = W[sk];
+    if (L[sk]) L[dk] = true; else delete L[dk];
+  });
 }
 // 画面の名前（いま選んでいるナビのタブ）
 function _colScreenLabel() {
@@ -31795,6 +31847,128 @@ function _colIsLocked(key) {
   try { return !!(key && ensureViewPrefs().colLocks[key]); } catch (e) { return false; }
 }
 
+// 【v1.1057】列幅のドラッグ本体（つまみ .col-resize-handle からも、列の端の検出 _colEdgeThAt からも呼ぶ）。handle は無くてもよい（null）
+function _colDragStart(e, ownerTh, key, handle) {
+  e.preventDefault();
+  e.stopPropagation();  // 行hover/ソートクリックに波及させない
+  // 【v1.0865】幅を固定した列は動かさない（解除は一番下の 🔒 を押す）
+  if (_colIsLockedTh(ownerTh)) {   /* 【v1.0957】 */
+    // 【v1.1043】知らせ（黒い吹き出し）は出さない（§429）。ロック中なのは表の一番下の「ロック中」で分かる
+    return;
+  }
+  const startX = e.clientX;
+  const startWidth = ownerTh.getBoundingClientRect().width;
+  if (handle) handle.classList.add('is-resizing');
+  document.body.classList.add('is-col-resizing');
+  let moved = false;   // 【v278】ドラッグしたか（誤ソート抑止用）
+
+  let _shrunk = null;   // 【v1.0751】このドラッグで縮めた他の列（mouseupでまとめて保存する）
+  const _tbl = ownerTh.closest('table');
+  const _isFixedTbl = !!(_tbl && _tbl.dataset.fixedInit === '1');
+  const onMove = (ev) => {
+    moved = true;
+    const dx = ev.clientX - startX;
+    const wantW = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, startWidth + dx));
+    // 【v1.0751】横スクロールが出る直前で止め、足りないぶんは他の列から均等にもらう
+    const plan = _colPlanWiden(ownerTh, wantW);
+    _colApplyWidth(ownerTh, plan.w);
+    if (plan.others) {
+      if (!_shrunk) _shrunk = new Map();
+      plan.others.forEach((w, t) => { _colApplyWidth(t, w); _shrunk.set(t, w); });
+    }
+    // 【v1.0877】★縮めたとき、他の列に配り直させない（表の幅＝列の合計にする）→ 空いた分は右の空きになる
+    if (_isFixedTbl) { try { _tbl.style.width = Math.ceil(_colVisibleSum(_tbl)) + 'px'; } catch (e) {} }
+    // 【v1.0751】★仕上げの実測補正。
+    //   計算だけでは 数px ずれて横スクロールが出ることがある
+    //   （セルのpadding/border・最小幅に達した列・小数の丸めなど、計算では読み切れない要素があるため）。
+    //   適用したあとに【実際にはみ出しているか】を測り、はみ出したぶんだけこの列を縮める。
+    //   ★ここを消すと「ほぼ収まるが1〜2px だけスクロールバーが出る」状態に戻る。
+    try {
+      const wrap = ownerTh.closest('.table-wrap');
+      if (wrap) {
+        const over = wrap.scrollWidth - wrap.clientWidth;
+        if (over > 0) {
+          const w2 = Math.max(COL_RESIZE_MIN_PX, (parseFloat(ownerTh.style.width) || plan.w) - over);
+          _colApplyWidth(ownerTh, Math.round(w2));
+        }
+      }
+    } catch (e) {}
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    if (handle) handle.classList.remove('is-resizing');
+    document.body.classList.remove('is-col-resizing');
+    const finalW = parseFloat(ownerTh.style.width) || COL_RESIZE_MIN_PX;
+    // 【v1.0877】★動かした列以外は、いまの幅のまま止める（まだ触っていない列も保存値にする）。
+    //   しないと applyColWidths → _colFitFixedTables が「まだ触っていない列」に空きを配り直し、他の列が動く。
+    if (moved && _isFixedTbl) _colPinOthers(_tbl, key);
+    saveColWidthTh(ownerTh, finalW);   // 【v1.0957】この表の型だけに保存
+    // 【v1.0751】★他の列からもらった結果も保存する。しないと再描画で元の幅に戻り、
+    //   横スクロールがまた出る（見た目とデータが食い違う）。
+    if (_shrunk) _shrunk.forEach((w, t) => { const k2 = t.dataset && t.dataset.resizeKey; if (k2) saveColWidthTh(t, w); });
+    applyColWidths();
+    try { _wrowRefresh(); } catch (e2) {}   // 【v1.0865】一番下の数値も合わせる
+    // 【v1.0623】★今までドラッグしても画面に何も出ず、「保存されていない」ように見えていた。
+    //   実際は端末には保存されているが、GitHubへは「⬆ 反映する」を押すまで上がらない（v1.0354で自動保存廃止）。
+    //   それが分かるように一度だけ知らせる（連続ドラッグでは出しっぱなしにしない）。
+    if (moved) _vpNotifySaved();
+    // 【v278】列幅ドラッグの直後に発火する spurious click を1回だけ握りつぶし、
+    //   ヘッダーのソートが誤発動しないようにする（全テーブル共通）。
+    if (moved) {
+      const swallow = (ce) => {
+        ce.stopPropagation(); ce.preventDefault();
+        document.removeEventListener('click', swallow, true);
+      };
+      document.addEventListener('click', swallow, true);
+      setTimeout(() => document.removeEventListener('click', swallow, true), 250);
+    }
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+// 【v1.1057】幅調整モードのとき、列の右端（見出しでも表の中でも、境目から左右 COL_EDGE_PX 以内）を押したらドラッグを始める（本人指定・§443）。
+//   今までのつまみ（th の右端の 6px の div）は、①右半分が隣の列の見出し（sticky）の下に隠れて掴めない、
+//   ②表を描き直すたびに見出しの書き換え（月の見出し・直近30日の見出し等）や行の作り直しで消える、ため実際にはほとんど掴めなかった。
+//   → 要素ではなく座標で判定する（描き直しても効く・どの列でも同じ）。つまみ自体は残してあり、つまみを押したときはつまみ側が動く。
+const COL_EDGE_PX = 5;
+function _colEdgeThAt(e) {
+  if (!document.body.classList.contains('col-resize-on')) return null;
+  const t = e.target; if (!t || !t.closest) return null;
+  if (t.closest('input, select, textarea, button, a, .col-resize-handle, tfoot.yc-wrow-foot')) return null;
+  const cell = t.closest('th, td'); if (!cell) return null;
+  const table = cell.closest('table'); if (!table) return null;
+  const row = _colHeadRow(table); if (!row) return null;
+  const x = e.clientX; let best = null, bd = COL_EDGE_PX + 0.5;
+  Array.from(row.children).forEach(th => {
+    if (!th.dataset || !th.dataset.resizeKey) return;
+    if ((th.colSpan || 1) > 1 || getComputedStyle(th).display === 'none') return;
+    const r = th.getBoundingClientRect(); if (!(r.width > 0)) return;
+    const d = Math.abs(r.right - x);
+    if (d < bd) { bd = d; best = th; }
+  });
+  return best;
+}
+document.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  const th = _colEdgeThAt(e); if (!th) return;
+  _colDragStart(e, th, th.dataset.resizeKey, null);
+}, true);
+document.addEventListener('dblclick', (e) => {   // 端をダブルクリック＝その列を既定の幅に戻す（つまみと同じ）
+  const th = _colEdgeThAt(e); if (!th) return;
+  e.preventDefault(); e.stopPropagation();
+  if (_colIsLockedTh(th)) return;
+  saveColWidthTh(th, null); applyColWidths();
+  try { _wrowRefresh(); } catch (e2) {}
+}, true);
+let _colEdgeRaf = 0;
+document.addEventListener('mousemove', (e) => {   // 端にマウスが来たら ⇔ のカーソル
+  if (!document.body.classList.contains('col-resize-on')) { document.body.classList.remove('yc-col-edge'); return; }
+  if (document.body.classList.contains('is-col-resizing') || _colEdgeRaf) return;
+  const ev = { target: e.target, clientX: e.clientX };
+  _colEdgeRaf = requestAnimationFrame(() => { _colEdgeRaf = 0; document.body.classList.toggle('yc-col-edge', !!_colEdgeThAt(ev)); });
+}, true);
+
 // 各 th の右端にリサイズハンドル div を差し込む（再呼び出し可、既設置はスキップ）
 // 【v142】th だけでなく、各 tbody tr の同じ列番目の td 右端にもハンドルを設置。
 //        renderAll後に呼べば、再描画されたtdにもハンドルが付く。
@@ -31810,85 +31984,7 @@ function installColResizeHandles() {
     handle.title = 'ドラッグで列幅を変更／ダブルクリックでリセット';
     baseEl.appendChild(handle);
 
-    handle.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      e.stopPropagation();  // 行hover/ソートクリックに波及させない
-      // 【v1.0865】幅を固定した列は動かさない（解除は一番下の 🔒 を押す）
-      if (_colIsLockedTh(ownerTh)) {   /* 【v1.0957】 */
-        // 【v1.1043】知らせ（黒い吹き出し）は出さない（§429）。ロック中なのは表の一番下の「ロック中」で分かる
-        return;
-      }
-      const startX = e.clientX;
-      const startWidth = ownerTh.getBoundingClientRect().width;
-      handle.classList.add('is-resizing');
-      document.body.classList.add('is-col-resizing');
-      let moved = false;   // 【v278】ドラッグしたか（誤ソート抑止用）
-
-      let _shrunk = null;   // 【v1.0751】このドラッグで縮めた他の列（mouseupでまとめて保存する）
-      const _tbl = ownerTh.closest('table');
-      const _isFixedTbl = !!(_tbl && _tbl.dataset.fixedInit === '1');
-      const onMove = (ev) => {
-        moved = true;
-        const dx = ev.clientX - startX;
-        const wantW = Math.max(COL_RESIZE_MIN_PX, Math.min(COL_RESIZE_MAX_PX, startWidth + dx));
-        // 【v1.0751】横スクロールが出る直前で止め、足りないぶんは他の列から均等にもらう
-        const plan = _colPlanWiden(ownerTh, wantW);
-        _colApplyWidth(ownerTh, plan.w);
-        if (plan.others) {
-          if (!_shrunk) _shrunk = new Map();
-          plan.others.forEach((w, t) => { _colApplyWidth(t, w); _shrunk.set(t, w); });
-        }
-        // 【v1.0877】★縮めたとき、他の列に配り直させない（表の幅＝列の合計にする）→ 空いた分は右の空きになる
-        if (_isFixedTbl) { try { _tbl.style.width = Math.ceil(_colVisibleSum(_tbl)) + 'px'; } catch (e) {} }
-        // 【v1.0751】★仕上げの実測補正。
-        //   計算だけでは 数px ずれて横スクロールが出ることがある
-        //   （セルのpadding/border・最小幅に達した列・小数の丸めなど、計算では読み切れない要素があるため）。
-        //   適用したあとに【実際にはみ出しているか】を測り、はみ出したぶんだけこの列を縮める。
-        //   ★ここを消すと「ほぼ収まるが1〜2px だけスクロールバーが出る」状態に戻る。
-        try {
-          const wrap = ownerTh.closest('.table-wrap');
-          if (wrap) {
-            const over = wrap.scrollWidth - wrap.clientWidth;
-            if (over > 0) {
-              const w2 = Math.max(COL_RESIZE_MIN_PX, (parseFloat(ownerTh.style.width) || plan.w) - over);
-              _colApplyWidth(ownerTh, Math.round(w2));
-            }
-          }
-        } catch (e) {}
-      };
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        handle.classList.remove('is-resizing');
-        document.body.classList.remove('is-col-resizing');
-        const finalW = parseFloat(ownerTh.style.width) || COL_RESIZE_MIN_PX;
-        // 【v1.0877】★動かした列以外は、いまの幅のまま止める（まだ触っていない列も保存値にする）。
-        //   しないと applyColWidths → _colFitFixedTables が「まだ触っていない列」に空きを配り直し、他の列が動く。
-        if (moved && _isFixedTbl) _colPinOthers(_tbl, key);
-        saveColWidthTh(ownerTh, finalW);   // 【v1.0957】この表の型だけに保存
-        // 【v1.0751】★他の列からもらった結果も保存する。しないと再描画で元の幅に戻り、
-        //   横スクロールがまた出る（見た目とデータが食い違う）。
-        if (_shrunk) _shrunk.forEach((w, t) => { const k2 = t.dataset && t.dataset.resizeKey; if (k2) saveColWidthTh(t, w); });
-        applyColWidths();
-        try { _wrowRefresh(); } catch (e2) {}   // 【v1.0865】一番下の数値も合わせる
-        // 【v1.0623】★今までドラッグしても画面に何も出ず、「保存されていない」ように見えていた。
-        //   実際は端末には保存されているが、GitHubへは「⬆ 反映する」を押すまで上がらない（v1.0354で自動保存廃止）。
-        //   それが分かるように一度だけ知らせる（連続ドラッグでは出しっぱなしにしない）。
-        if (moved) _vpNotifySaved();
-        // 【v278】列幅ドラッグの直後に発火する spurious click を1回だけ握りつぶし、
-        //   ヘッダーのソートが誤発動しないようにする（全テーブル共通）。
-        if (moved) {
-          const swallow = (ce) => {
-            ce.stopPropagation(); ce.preventDefault();
-            document.removeEventListener('click', swallow, true);
-          };
-          document.addEventListener('click', swallow, true);
-          setTimeout(() => document.removeEventListener('click', swallow, true), 250);
-        }
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
+    handle.addEventListener('mousedown', (e) => _colDragStart(e, ownerTh, key, handle));   // 【v1.1057】本体は _colDragStart
 
     handle.addEventListener('dblclick', (e) => {
       e.preventDefault();
