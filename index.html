@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1065 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1066 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5285,7 +5285,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1065</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1066</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -11774,6 +11774,50 @@ function itemPrEstimate(code, rev, rateOverride) {
     over: taxEx * Math.max(0, r - PR_BASE_RATE_PCT) / 100
   };
 }
+// 【v1.1066】期間（'YYYY-MM'＝月／'YYYY-MM-DD'＝日）の PRオプ料率で推定する（本人指摘・§452）。
+//   今までは過去の月・日にも「今の料率」（getProRate）を掛けていたので、料率を変えた商品は 商品-調整モーダル
+//   （その月・その日の料率＝_pePrRateMonth／_pePrRateOn・v1.0925）と数字がずれていた。
+//   月＝その月の料率を日別の売上で重みを付けた平均、日＝その日の料率。期間が分からないときは今の料率（今までどおり）。
+//   _pePrRateMonth は重いので、1回の描画の間だけ覚えておく（次のマイクロタスクで捨てる）。
+let _prRateMemo = null;
+function _prRateAt(code, period) {
+  const p = String(period || '');
+  if (!/^\d{4}-\d{2}(-\d{2})?$/.test(p)) return null;
+  if (!_prRateMemo) { _prRateMemo = new Map(); Promise.resolve().then(() => { _prRateMemo = null; }); }
+  const k = code + '|' + p;
+  if (_prRateMemo.has(k)) return _prRateMemo.get(k);
+  let v = null;
+  try { v = (p.length === 10) ? _pePrRateOn(code, p) : _prRateMonthFast(code, p); } catch (e) { v = null; }
+  if (v != null && !isFinite(v)) v = null;
+  _prRateMemo.set(k, v);
+  return v;
+}
+// _pePrRateMonth と同じ値を速く出す（その月の日付・その月の日の並びを1回の描画の間だけ覚えておく。中身の計算は同じ）
+function _prRateMonthFast(code, ym) {
+  const M = _prRateMemo;
+  let byM = M.get('__days');
+  if (!byM) { byM = {}; dailyAllDates().forEach(d => { (byM[d.slice(0, 7)] || (byM[d.slice(0, 7)] = [])).push(d); }); M.set('__days', byM); }
+  const items = ensureDaily().item || {};
+  let w = 0, sum = 0;
+  (byM[ym] || []).forEach(d => {
+    const rv = +((((items[d] || {})[code]) || [])[0]) || 0; if (!(rv > 0)) return;   // ＝dayAgg(code, d).rev
+    const rt = _pePrRateOn(code, d); if (rt == null) return;
+    w += rv; sum += rv * rt;
+  });
+  if (w > 0) return sum / w;
+  let md = M.get('__md|' + ym); if (!md) { md = _peMonthDays(ym); M.set('__md|' + ym, md); }
+  let n = 0, s2 = 0;
+  md.forEach(d => { const rt = _pePrRateOn(code, d); if (rt != null && isFinite(rt)) { n++; s2 += Number(rt); } });
+  return n ? s2 / n : null;
+}
+function itemPrEstimateAt(code, rev, period) { return itemPrEstimate(code, rev, _prRateAt(code, period)); }
+function itemPrSalesRoasPctAt(code, rev, adCost, period) {
+  const e = itemPrEstimateAt(code, rev, period);
+  if (!e) return null;
+  const den = (+adCost || 0) + (e.over || 0);
+  if (!(den > 0)) return null;
+  return Math.round((+rev || 0) / den * 100);
+}
 // 商品別のPR広告売上ROAS(推定)＝総売上 ÷（広告実績額 ＋ PR実績額(7%超・推定)）× 100。
 //   定義はストア全体版（storeSalesRoasPct・§4-B-6-4）と同じ。分母に入れるのは7%超ぶんだけ。
 //   ★料率が7%ちょうどの商品は上乗せ分が0なので、値は広告売上ROASと一致する（それが正しい）。
@@ -15058,9 +15102,9 @@ function renderBasic() {
     if (k === 'kw') return (getMaster(r.code) && getMaster(r.code).kw) || '';   /* 【v1.0965】調整-基本のメインKW */
     if (k === 'sroas') return salesRoasSortVal(r.rev, r.adCost);   // 【v1.0524】対象外(広告費0)は -1＝最下位
     // 【v1.0580】全-月別データ相当に増やした列のソート。算出できないものは -1＝最下位に寄せる
-    if (k === 'prsroas')  { const v = itemPrSalesRoasPct(r.code, r.rev, r.adCost); return (v == null) ? -1 : v; }
+    if (k === 'prsroas')  { const v = itemPrSalesRoasPctAt(r.code, r.rev, r.adCost, r.month); return (v == null) ? -1 : v; }   /* 【v1.1066】その月（日）の料率 */
     if (k === 'pronlyroas') { const o = basicPrOverOf(r); return (o != null && o > 0) ? Math.round((+r.rev || 0) / o * 100) : -1; }   /* 【v1.0676】 */
-    if (k === 'prOverEst'){ const e = itemPrEstimate(r.code, r.rev); return e ? e.over : -1; }
+    if (k === 'prOverEst'){ const e = itemPrEstimateAt(r.code, r.rev, r.month); return e ? e.over : -1; }   /* 【v1.1066】 */
     /* 【v1.0593】広告CVRの列は撤去（r.cvr は計算し続けている。CSVで使用） */
     if (k === 'adUnknown'){ const v = adUnknownOf(r, _famMap).val; return v == null ? -1 : v; }   // 【v1.0590/v1.0591】溢れていない行は最下位
     /* 【v1.0592】送り込み売上の列は撤去（データは _soiByParent に残置・CSVで使用） */
@@ -15207,7 +15251,7 @@ function renderBasic() {
     if (r._setMember) tr.className = (tr.className ? tr.className + ' ' : '') + 'row-setmember';
     if (_isSet && _effRowMode() === 'both') tr.className = (tr.className ? tr.className + ' ' : '') + 'row-setparent';
     // 【v1.0580/v1.0587】PR系は「推定」。合算では商品ごとに出した7%超ぶんを足し上げてある（§5-D）
-    const _pe = itemPrEstimate(r.code, r.rev);          // 個別モードのツールチップ用（料率を出すため）
+    const _pe = itemPrEstimateAt(r.code, r.rev, r.month);   // 個別モードのツールチップ用（料率を出すため）【v1.1066】その月（日）の料率
     const _prOver = basicPrOverOf(r);
     // 【v1.0676】PR売上ROAS(推定)＝総売上÷PR実績額(7%超・推定)。広告費は入れない。色分けはしない（料率の裏返しになるため）
     const _prOnly = (_prOver != null && _prOver > 0) ? Math.round((+r.rev || 0) / _prOver * 100) : null;
@@ -16007,6 +16051,8 @@ function salesRoasCat(v) {
 }
 // セル中身のHTML（色付き数値 / 対象外は「—」）
 function salesRoasCellHtml(v, th) {
+  // 【v1.1066】0（費用はかかったのに売上0）は「—」ではなく「0%」（商品-調整モーダルと同じ・§452）。色は低い ROAS と同じ
+  if (v === 0) return '<span style="color:' + SALES_ROAS_COLORS.r + ';font-weight:700">0%</span>';
   if (v == null || !(v > 0)) return '<span style="color:' + SALES_ROAS_COLORS.n + '">—</span>';
   return '<span style="color:' + SALES_ROAS_COLORS[salesRoasCat(v, th)] + ';font-weight:700">' + Math.round(v).toLocaleString() + '%</span>';
 }
@@ -16177,7 +16223,7 @@ function _basicRollupRows(rows) {
     f._members.push(r.code);
     // ★PR実績額(7%超・推定)は「商品ごとに料率が違う」ので、必ず商品単位で出してから足す。
     //   セット合計の売上に代表商品の料率を掛けてはいけない（§5-B の推定の前提が崩れる）。
-    const e = itemPrEstimate(r.code, r.rev);
+    const e = itemPrEstimateAt(r.code, r.rev, r.month);   // 【v1.1066】その月（日）の料率
     if (e) { f._prRateKnown = true; f._prOverEst += Math.max(0, +e.over || 0); }
   });
   const out = [];
@@ -16245,7 +16291,7 @@ function _dataExpandBoth(list, preByCode) {
 function basicPrOverOf(r) {
   if (!r) return null;
   if (r._rollup) return r._prRateKnown ? r._prOverEst : null;
-  const e = itemPrEstimate(r.code, r.rev);
+  const e = itemPrEstimateAt(r.code, r.rev, r.month);   // 【v1.1066】
   return e ? Math.max(0, +e.over || 0) : null;
 }
 function basicPrSalesRoasOf(r) {
@@ -16255,7 +16301,7 @@ function basicPrSalesRoasOf(r) {
     const den = (+r.adCost || 0) + (+r._prOverEst || 0);
     return den > 0 ? Math.round((+r.rev || 0) / den * 100) : null;
   }
-  return itemPrSalesRoasPct(r.code, r.rev, r.adCost);
+  return itemPrSalesRoasPctAt(r.code, r.rev, r.adCost, r.month) /* 【v1.1066】 */;
 }
 // 合算行のメンバーで値が割れる列（PRオプ料率・入札価格）の表示。1種類なら普通に、複数なら範囲で。
 // 【v1.0870】★合算のセット行の入札価格セルも、クリックで手入力できるようにする（本人指定：「全てクリックしたら手入力できるように」）。
@@ -16933,7 +16979,7 @@ function renderMonthly() {
         const ad = adMap[code + '|' + ym]; if (ad) { _cost = ad.adCost || 0; _asales = ad.adRev || 0; _cl = ad.cl || 0; _or = ad.or || 0; }
       }
       rev += _rev;
-      { const e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(code, _rev) : null;
+      { const e = (typeof itemPrEstimateAt === 'function') ? itemPrEstimateAt(code, _rev, ym) : null;   /* 【v1.1066】その月（日）の料率 */
         if (e) { _prKnown = true; _prOverEst += Math.max(0, +e.over || 0); } }
       // 【v1.0410】送り込み売上＝この家族のうち子商品（黄色バッジ＝repCode設定あり・自コードと異なる）の売上
       const _rep = String((_pm[code] || {}).repCode || '').trim();
@@ -20342,10 +20388,12 @@ function _xrBarHtml(lbl, isOn, onclickOf, what) {
 }
 // 商品ごとの期間合計 {code:{cost, adRev, rev}}（①広告の実績額・広告売上、②の総売上）
 function _xrSumByCode(k) {
-  const out = {}, o = c => out[c] || (out[c] = { cost: 0, adRev: 0, rev: 0 });
+  const out = {}, o = c => out[c] || (out[c] = { cost: 0, adRev: 0, rev: 0, over: 0, prKnown: false });
   _xrDays(k).forEach(d => {
     const ad = dailyAdOf(d); Object.keys(ad).forEach(c => { const x = o(c); x.cost += +ad[c].adCost || 0; x.adRev += +ad[c].adRevenue || 0; });
-    const it = dailyItemOf(d); Object.keys(it).forEach(c => { o(c).rev += +it[c].revenue || 0; });
+    const it = dailyItemOf(d); Object.keys(it).forEach(c => { const x = o(c), rv = +it[c].revenue || 0; x.rev += rv;
+      // 【v1.1066】PR実績額(7%超・推定)は その日の料率 で出して足す（§452。商品-調整モーダルと同じ）
+      const e = itemPrEstimateAt(c, rv, d); if (e) { x.prKnown = true; x.over += Math.max(0, +e.over || 0); } });
   });
   return out;
 }
@@ -20393,9 +20441,11 @@ function _tuneXrAttach(kind, list) {
     if (!st[k]) return;
     const S = _xrSumByCode(k);
     list.forEach(r => {
-      let cost = 0, adRev = 0, rev = 0;
-      _rfMembersOf(r).forEach(c => { const x = S[c]; if (x) { cost += x.cost; adRev += x.adRev; rev += x.rev; } });
-      const v = (kind === 'ad') ? (cost > 0 ? adRev / cost * 100 : null) : itemPrSalesRoasPct(r.code, rev, cost);
+      let cost = 0, adRev = 0, rev = 0, over = 0, prKnown = false;
+      _rfMembersOf(r).forEach(c => { const x = S[c]; if (x) { cost += x.cost; adRev += x.adRev; rev += x.rev; over += x.over; if (x.prKnown) prKnown = true; } });
+      if (kind === 'pro' && !prKnown) { const e0 = itemPrEstimate(r.code, 0); if (e0) prKnown = true; }   // 売上が無くても料率が分かれば 0 扱い
+      const v = (kind === 'ad') ? (cost > 0 ? adRev / cost * 100 : null)
+        : ((prKnown && (cost + over) > 0) ? Math.round(rev / (cost + over) * 100) : null);   // 【v1.1066】日ごとの料率で出した 7%超ぶん
       (r._xr || (r._xr = {}))[k] = { v, cost };
     });
   });
@@ -20812,9 +20862,9 @@ function renderProAdjust(cfg) {
     const adRevs  = months.map(m => byKey[code + '|' + m] ? byKey[code + '|' + m].adRev  : 0);   // 【v1.0461】SEO売上の構成比%用
     // 【v1.0647】PR広告売上ROAS(推定)。★商品-基本データと同じ itemPrSalesRoasPct（総売上÷(広告実績額＋PR実績額7%超・推定)）
     //   データが無い月は null＝「—」（0%扱いにしない）
-    const prsrs = months.map(m => { const x = byKey[code + '|' + m]; return x ? itemPrSalesRoasPct(code, x.rev, x.adCost) : null; });
+    const prsrs = months.map(m => { const x = byKey[code + '|' + m]; return x ? itemPrSalesRoasPctAt(code, x.rev, x.adCost, m) : null; });   // 【v1.1066】その月の料率（§452）
     // 【v1.0649】PR実績額(7%超・推定)。★商品-基本データの basicPrOverOf と同じ itemPrEstimate(code, rev).over
-    const provs = months.map(m => { const x = byKey[code + '|' + m]; if (!x) return null; const e = itemPrEstimate(code, x.rev); return e ? Math.max(0, +e.over || 0) : null; });
+    const provs = months.map(m => { const x = byKey[code + '|' + m]; if (!x) return null; const e = itemPrEstimateAt(code, x.rev, m); return e ? Math.max(0, +e.over || 0) : null; });   // 【v1.1066】
     // 【v1.0650】合算で PR広告売上ROAS を合計から計算し直すための素材
     const revs    = months.map(m => byKey[code + '|' + m] ? (+byKey[code + '|' + m].rev    || 0) : 0);
     const adCosts = months.map(m => byKey[code + '|' + m] ? (+byKey[code + '|' + m].adCost || 0) : 0);
@@ -22316,7 +22366,7 @@ function _ytAgg(ym, md, faRows) {
     Object.keys(x._rev).forEach(code => {
       const rev = x._rev[code];
       if (!(rev > 0)) return;
-      const e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(code, rev) : null;
+      const e = (typeof itemPrEstimateAt === 'function') ? itemPrEstimateAt(code, rev, ym) : null;   /* 【v1.1066】その月の料率 */
       if (!e) x.rateKnown = false; else x.prOver += +e.over || 0;
     });
     delete x._rev;
@@ -23354,7 +23404,7 @@ function ycThumbRowsLatestMonth() {
       const it = itemMap[c + '|' + ym], ad = adMap[c + '|' + ym];
       const r0 = it ? (it.rev || 0) : 0;
       rev += r0; if (ad) spend += ad.adCost || 0;
-      const e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(c, r0) : null;
+      const e = (typeof itemPrEstimateAt === 'function') ? itemPrEstimateAt(c, r0, ym) : null;   /* 【v1.1066】その月の料率 */
       if (e) { known = true; over += Math.max(0, +e.over || 0); }
     });
     const den = spend + over;
@@ -23433,7 +23483,7 @@ function _itDayRaw(codes, d) {
   codes.forEach(c => {
     const a = dayAgg(c, d);
     rev += a.rev || 0; adRev += a.adRev || 0; adCost += a.adCost || 0;
-    const e = itemPrEstimate(c, a.rev || 0);
+    const e = itemPrEstimateAt(c, a.rev || 0, d);   // 【v1.1066】その日の料率
     if (e) { prKnown = true; prOver += Math.max(0, +e.over || 0); }
   });
   return { rev: rev, adRev: adRev, adCost: adCost, prOver: prOver, prKnown: prKnown };
@@ -23861,7 +23911,7 @@ function _cbAggFor(ym, all) {
     by[k].cost += (+r.adCost || 0);
     // 【v1.0767】PR広告売上ROAS(推定)用。★7%超ぶんは【商品ごとに】設定料率から出してから足す。
     //   セット合計の売上に代表の料率を掛けてはいけない（§5-D-3・商品-基本データと同じ扱い）。
-    const _e = (typeof itemPrEstimate === 'function') ? itemPrEstimate(r.code, r.rev) : null;
+    const _e = (typeof itemPrEstimateAt === 'function') ? itemPrEstimateAt(r.code, r.rev, ym) : null;   /* 【v1.1066】その月の料率 */
     if (_e) by[k].prOver += (+_e.over || 0); else by[k].rateKnown = false;   // 料率未取得の商品が1つでもあれば「—」
     if (r.code !== k) by[k].kids.add(r.code);
   });
@@ -30415,6 +30465,9 @@ function npApplyRows(rows) {
       {
         const pm = (state.productMeta[code] = state.productMeta[code] || { adStatus: '', proStatus: '', adNote: '', proNote: '' });
         if (!pm.status || (pm.status === '新商品' && !pm.statusTs)) { pm.status = STATUS_SENTAKUMAE; pm._ts = Date.now(); }
+        // 【v1.1066】初回登録日（§451・§452）：「🔎 APIから取得」・CSV・1件ずつ入力 で新しく追加した商品は、その日を入れる。
+        //   ★すでに regDate がある（先にレポート取込で入っていた等）ときは触らない。保存の履歴にある商品（meta が無かっただけ）は履歴の日付。
+        if (typeof pm.regDate !== 'string') { const d0 = _ycRegDerived(code); pm.regDate = (d0 != null) ? d0 : _ycToday(); pm._ts = Date.now(); }
       }
       added++;
     }
