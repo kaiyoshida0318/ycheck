@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1063 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1064 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2574,6 +2574,8 @@ tr.row-child td.col-soi,   tr.row-child:hover td.col-soi   { background-color: #
 .idd-stack > div { overflow: hidden; text-overflow: ellipsis; }
 .idd-stack > .idd-sub { color: var(--text3); }
 .idd-stack > .idd-none { color: #c0c4cc; }
+/* 【v1.1064】まだ描いていない行の高さだけの仮の行（§450） */
+tr.yc-chunk-ph td { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
 /* 【v1.1054】調整-入札価格／調整-PRオプの操作行（§440）：｜でカテゴリを区切る・? はマウスを乗せると説明 */
 .tune-tb { gap: 8px; }
 #view-ad-tune .tune-tb input[type="search"], #view-pro-tune .tune-tb input[type="search"] { width: 168px; }
@@ -5283,7 +5285,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1063</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1064</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -14748,6 +14750,77 @@ function renderWithdrawConsider() {
   wrap.innerHTML = '<div class="table-wrap"><table class="data-grid"><thead><tr>' + h + '</tr></thead><tbody>' + body + '</tbody></table></div>';
 }
 
+// ============================================================================
+// 【v1.1064】表の行を「見える分だけ先に → 残りはすぐあとに少しずつ」描く（本人指摘「ボタンを押して切り替わるまでが長い」・§450）
+//   測った結果：調整-PRオプ 290行で 1回 約1.1秒のうち、ほとんどが行の数に比例する「ブラウザの描画（レイアウト）」。
+//   60行なら 約0.26秒 → 画面に見える行（＋余裕）を先に描いて画面を切り替え、残りは次のフレーム以降に 60行ずつ足す。
+//   ・残りの行のぶんは高さだけの仮の行（.yc-chunk-ph）を置く＝スクロールバーの長さ・位置が変わらない。
+//   ・その表を初めて描くとき（列幅の固定がまだ＝data-fixed-init なし）は、列の自然な幅を測るので今までどおり全部いっぺんに描く。
+//   ・描いている途中で同じ表をもう一度描き始めたら、前の続きは捨てる。
+//   ・行を読む処理（GPT の要約 等）は _ycRowsFlush(tbody) で残りを先に描き切ってから読む。
+// ============================================================================
+const YC_CHUNK = 60;
+const _ycChunkJobs = new Map();   // tbody → 続きの仕事
+function _ycRowsChunked(tbody, rows, makeTr, opts) {
+  opts = opts || {};
+  const prev = _ycChunkJobs.get(tbody); if (prev) prev.dead = true;
+  _ycChunkJobs.delete(tbody);
+  const n = rows.length;
+  const table = tbody.closest('table');
+  let syncN = n;
+  // ★ここでは大きさ・スクロール位置を読まない（読むと、行を消した直後の短い表でレイアウトが走り、スクロール位置が 0 に戻ってしまう）。
+  //   スクロール位置は、スクロールしたときに覚えておいた値（wrap.__ycST）を使う。
+  try {
+    const view = tbody.closest('.view');
+    const shown = !view || view.classList.contains('active');
+    if (table && table.getAttribute('data-fixed-init') === '1' && n > YC_CHUNK + 20) {
+      const avg = tbody.__ycAvgH || 66;
+      if (shown) {
+        const wrap = tbody.closest('.table-wrap');
+        const st = (wrap && wrap.__ycST) || 0;
+        const vh = window.innerHeight || 900;
+        syncN = Math.min(n, Math.max(YC_CHUNK, Math.ceil((st + vh * 1.5) / avg) + 10));
+      } else syncN = Math.min(n, YC_CHUNK);   // 見えていない画面：先に少しだけ、残りはあとで
+    }
+  } catch (e) { syncN = n; }
+  for (let i = 0; i < syncN; i++) { const tr = makeTr(rows[i], i); if (tr) tbody.appendChild(tr); }
+  if (syncN >= n) { _ycRowsDone(tbody, opts); return; }
+  const avg = tbody.__ycAvgH || 66;
+  const head = table && typeof _colHeadRow === 'function' ? _colHeadRow(table) : null;
+  const cols = head ? Array.from(head.children).filter(th => th.style.display !== 'none').reduce((a, th) => a + (th.colSpan || 1), 0) : 1;
+  const ph = document.createElement('tr'); ph.className = 'yc-chunk-ph';
+  ph.innerHTML = '<td colspan="' + cols + '" style="height:' + Math.round((n - syncN) * avg) + 'px"></td>';
+  tbody.appendChild(ph);
+  const job = { i: syncN, rows, makeTr, ph, opts, dead: false, avg };
+  _ycChunkJobs.set(tbody, job);
+  const step = () => {
+    if (job.dead) return;
+    if (ph.parentNode !== tbody) { job.dead = true; _ycChunkJobs.delete(tbody); return; }   // 表が別の理由で空にされた（該当なし 等）
+    const end = Math.min(n, job.i + YC_CHUNK), frag = document.createDocumentFragment();
+    for (; job.i < end; job.i++) { const tr = makeTr(rows[job.i], job.i); if (tr) frag.appendChild(tr); }
+    tbody.insertBefore(frag, ph);
+    if (job.i < n) { ph.firstChild.style.height = Math.round((n - job.i) * avg) + 'px'; requestAnimationFrame(() => setTimeout(step, 0)); }
+    else { ph.remove(); _ycChunkJobs.delete(tbody); _ycRowsDone(tbody, opts); }
+  };
+  job.step = step;
+  requestAnimationFrame(() => setTimeout(step, 0));
+}
+// 表の枠（.table-wrap）のスクロール位置を、スクロールしたときに覚えておく（_ycRowsChunked が読む）
+document.addEventListener('scroll', (e) => { const t = e.target; if (t && t.classList && t.classList.contains('table-wrap')) t.__ycST = t.scrollTop; }, { capture: true, passive: true });
+function _ycRowsDone(tbody, opts) {
+  try { if (opts && typeof opts.onDone === 'function') opts.onDone(); } catch (e) {}
+  // 次の回の「1行の高さ」の見込み（見えている表のときだけ。描画のあとに測る）
+  requestAnimationFrame(() => { try { const rs = tbody.children.length; if (rs > 5 && tbody.offsetParent) { const h = tbody.getBoundingClientRect().height / rs; if (h > 10 && h < 400) tbody.__ycAvgH = h; } } catch (e) {} });
+}
+// 残りの行をいま描き切る（行を読む前に呼ぶ）。tbody 省略＝全部の表
+function _ycRowsFlush(tbody) {
+  const list = tbody ? [tbody] : Array.from(_ycChunkJobs.keys());
+  list.forEach(tb => { const job = _ycChunkJobs.get(tb); if (!job || job.dead) return; job.dead = true; _ycChunkJobs.delete(tb);
+    const frag = document.createDocumentFragment(); for (; job.i < job.rows.length; job.i++) { const tr = job.makeTr(job.rows[job.i], job.i); if (tr) frag.appendChild(tr); }
+    tb.insertBefore(frag, job.ph); job.ph.remove(); _ycRowsDone(tb, job.opts); });
+}
+window._ycRowsFlush = _ycRowsFlush;
+
 function renderBasic() {
   // 【v1.0609】タブ2本（商品-基本データ / 調整-基本）は data-view が同じなので、
   //   .active の付け外しは必ずここに任せる（§18-16 と同じ理由）
@@ -15071,7 +15144,7 @@ function renderBasic() {
   state.basicDisplayedCodes = list.map(r => r.code);   // 【v1.0522】CSV出力＝いま表示中の商品に限定するため
   // 【v134】親子表示のための分類（リスト確定後に1度だけ計算）
   const _pcSets = buildParentChildSets(list);
-  list.slice(0, 2000).forEach(r => {
+  const _ycMkRow = (r) => {   // 【v1.1064】1行を作って返す（_ycRowsChunked が呼ぶ）
     const bid = getBid(r.code);   // 【v1.0587】小文字フォールバック付き（renderBasic / renderAdAdjust 共通）
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
@@ -15209,8 +15282,9 @@ function renderBasic() {
       <td class="status-col tune-col">${statusSelectHtml(r.code, 'pro')}</td>
       <td class="status-col st-right">${statusSelectHtml(r.code, 'status')}</td>
     `;
-    tbody.appendChild(tr);
-  });
+    return tr;
+  };
+  _ycRowsChunked(tbody, list.slice(0, 2000), _ycMkRow, { onDone: () => { try { _bulkSyncUI(); } catch (e) {} } });   // 【v1.1064】
   updateSortIndicator('#tableBasic', basicSortKey, basicSortDir);
   _bulkSyncUI();   // 【v1.0620】選択件数・行のハイライトを再描画後に合わせる（【v1.0651】バーも商品-基本データへ戻る）
 }
@@ -20504,7 +20578,7 @@ function renderAdAdjust(cfg) {
   // 【v134】親子表示のための分類
   _tuneRecordShown(tableSel, list);   // 【v1.0883】全更新処理の対象＝いま表示している商品（合算のセット行はメンバー全員）
   const _pcSetsAdAdj = buildParentChildSets(list);
-  list.slice(0, 2000).forEach(r => {
+  const _ycMkRow = (r) => {   // 【v1.1064】1行を作って返す（_ycRowsChunked が呼ぶ）
     const bid = getBid(r.code);   // 【v1.0587】小文字フォールバック付き（renderBasic / renderAdAdjust 共通）
     const tr = document.createElement('tr');
     const _pcCls = rowParentChildClass(r.code, _pcSetsAdAdj);
@@ -20553,8 +20627,7 @@ function renderAdAdjust(cfg) {
       ${_bidCellD}
       ${_tdStatus}
     `;
-      tbody.appendChild(tr);
-      return;
+      return tr;
     }
     // 【v1.0722】撤退ビュー: 左は調整-入札価格と同じ、右だけ 広告売上×3 ＋ SEO売上×3
     if (_wd) {
@@ -20568,8 +20641,7 @@ function renderAdAdjust(cfg) {
       ${_revCells}
       ${_tdStatus}
     `;
-      tbody.appendChild(tr);
-      return;
+      return tr;
     }
     tr.innerHTML = `
       <td class="code-cell">${codeCellHtml(r.code, _bulkCbHtml(r.code, _isSetT || tableSel === '#tableAdTune' /* 【v1.1054】一括変更は廃止 */))}</td>
@@ -20588,14 +20660,16 @@ ${/* 【v1.1056】広告順位の列は撤去（§442）。↗ は入札状態�
       ${_revCells}
       ${statusFirst ? '' : _tdStatus}
     `;
-    tbody.appendChild(tr);
-  });
+    return tr;
+  };
+  const _ycRowsA = list.slice(0, 2000);
+  _ycRowsChunked(tbody, _ycRowsA, _ycMkRow, { onDone: () => { try { if (typeof _bulkSyncUI === 'function') _bulkSyncUI(); } catch (e) {} } });   // 【v1.1064】
   updateSortIndicator(tableSel, adAdjustSortKey, adAdjustSortDir);
   // 【v166】広告全体タブ見出しの件数 (N) を更新（フィルタ・絞り込み適用後の実際の表示行数）
   if (cntSel) {
     const _cntAdAdj = $(cntSel);
     if (_cntAdAdj) {
-      const _n = tbody.children.length;
+      const _n = _ycRowsA.length;   // 【v1.1064】行は分けて描くので、描く予定の行数で数える
       _cntAdAdj.textContent = _n > 0 ? `(${_n})` : '';
     }
   }
@@ -20780,7 +20854,7 @@ function renderProAdjust(cfg) {
   // 【v134】親子表示のための分類
   _tuneRecordShown(tableSel, list);   // 【v1.0883】
   const _pcSetsProAdj = buildParentChildSets(list);
-  list.slice(0, 2000).forEach(r => {
+  const _ycMkRow = (r) => {   // 【v1.1064】1行を作って返す（_ycRowsChunked が呼ぶ）
     const pr = getProRate(r.code);
     const tr = document.createElement('tr');
     const _pcCls = rowParentChildClass(r.code, _pcSetsProAdj);
@@ -20809,8 +20883,7 @@ function renderProAdjust(cfg) {
       ${_proCellD}
       ${_tdStatus}
     `;
-      tbody.appendChild(tr);
-      return;
+      return tr;
     }
     // 【v1.0662】合算のセット行／両表示の内訳行
     const _isSetT = !!r._rollup && (r._members || []).length > 1;
@@ -20837,14 +20910,16 @@ function renderProAdjust(cfg) {
       ${tableSel === '#tableProTune' ? r.provs.map((v, i) => (_skipP0 && i === 0) ? '' : '<td class="num col-prov est-val">' + ((v != null && v > 0) ? fmt(Math.round(v)) : '<span style="color:var(--text3)">—</span>') + '</td>').join('') : ''}${/* 【v1.1063】PR実績額×3ヶ月（§449） */''}
       ${statusFirst ? '' : _tdStatus}
     `;
-    tbody.appendChild(tr);
-  });
+    return tr;
+  };
+  const _ycRowsP = list.slice(0, 2000);
+  _ycRowsChunked(tbody, _ycRowsP, _ycMkRow, { onDone: () => { try { if (typeof _bulkSyncUI === 'function') _bulkSyncUI(); } catch (e) {} } });   // 【v1.1064】
   updateSortIndicator(tableSel, proAdjustSortKey, proAdjustSortDir);
   // 【v166】PRオプ全体タブ見出しの件数 (N) を更新（フィルタ・絞り込み適用後の実際の表示行数）
   if (cntSel) {
     const _cntProAdj = $(cntSel);
     if (_cntProAdj) {
-      const _n = tbody.children.length;
+      const _n = _ycRowsP.length;   // 【v1.1064】
       _cntProAdj.textContent = _n > 0 ? `(${_n})` : '';
     }
   }
@@ -28075,6 +28150,7 @@ function gptBuildItemText(code) {
 function _gptTuneCodes(kind) {
   const tb = document.querySelector((kind === 'ad' ? '#tableAdTune' : '#tableProTune') + ' tbody');
   if (!tb) return [];
+  try { _ycRowsFlush(tb); } catch (e) {}   // 【v1.1064】分けて描いている途中なら残りを先に
   const out = [];
   tb.querySelectorAll(':scope > tr').forEach(tr => {
     const el = tr.querySelector('td.code-cell .code-text');
