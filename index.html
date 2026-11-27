@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1064 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1065 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -5285,7 +5285,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1064</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1065</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -5704,8 +5704,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
                  ============================================================ -->
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植）→【v1.1065】上の段は 初回登録日（§451） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）で並べ替え">初回登録日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th class="col-namebasic" data-sort="name" data-resize-key="nameBasic">商品名</th>   <!-- 【v1.0969】調整-基本では隠す（.col-namebasic） -->
               <!-- 【v1.0965】メインKW（調整-基本だけ。本人指定「調整-基本の商品名の右にメインKW列」）。.tune-col なので商品-基本データでは隠れる -->
@@ -6430,8 +6430,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableAdTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植）→【v1.1065】上の段は 初回登録日（§451） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）で並べ替え">初回登録日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdTune">商品名</th>
               <th class="nosort" data-resize-key="kwAdTune">メインKW</th>
@@ -6484,8 +6484,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableWithdraw" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植）→【v1.1065】上の段は 初回登録日（§451） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）で並べ替え">初回登録日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameWd">商品名</th>
               <!-- 【v1.0724】列は 広告売上×3 / SEO売上×3 / 広告実績額×3 の9列だけ。
@@ -6548,8 +6548,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableProTune" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植）→【v1.1065】上の段は 初回登録日（§451） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）で並べ替え">初回登録日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameProTune">商品名</th>
               <th class="nosort" data-resize-key="kwProTune">メインKW</th>
@@ -6612,8 +6612,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tableAdData" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植）→【v1.1065】上の段は 初回登録日（§451） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）で並べ替え">初回登録日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="nameAdData">商品名</th>
               <!-- 【v1.0655】広告売上ROAS(総売上÷広告実績額)×3ヶ月。商品-基本データと同じ計算・同じ紫 -->
@@ -6672,8 +6672,8 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
           <table id="tablePrData" class="data-grid">
             <thead><tr>
               <th data-sort="code" data-resize-key="code">商品コード</th>
-              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植） -->
-              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回販売日（売上が最初に立った日）で並べ替え">初回販売日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
+              <!-- 【v1.1020】初回販売日／リニュ日（上下2段。それぞれ押すと並べ替え。ADcheck v1.1521 の移植）→【v1.1065】上の段は 初回登録日（§451） -->
+              <th class="nosort id-dates-th" data-resize-key="idDates"><span class="ch-sub" data-sort="firstsale" title="初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）で並べ替え">初回登録日</span><span class="ch-sub" data-sort="renewal" title="リニュ日（変更記録の最後の日付）で並べ替え">リニュ日</span></th>
               <th class="nosort">画像</th>
               <th data-sort="name" data-resize-key="namePrData">商品名</th>
               <th class="num col-sales" data-sort="seoRev0" id="hPrDataSeo0">SEO売上<br>(3ヶ月前)</th>
@@ -7030,6 +7030,15 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
             </div>
           </div>
           <div class="soi-note" id="peSoiNote"></div>
+        </div>
+      </div>
+      <!-- 【v1.1065】初回登録日（本人指定・§451）。保存は saveProductEdit → productMeta[code].regDate -->
+      <div class="pe-row">
+        <label class="pe-label" for="peRegDate">初回登録日</label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="text" id="peRegDate" class="pe-input" style="max-width:150px" placeholder="YYYY/MM/DD" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+          <button type="button" class="btn sm ghost" id="peRegToday" onclick="document.getElementById('peRegDate').value=_ycYmdSlash(_ycToday())">今日</button>
+          <span class="pe-image-note" style="margin:0">この商品を Ycheck に登録した日。空欄にもできる（2026/11/27・2026-11-27・2026/11 の形）</span>
         </div>
       </div>
       <div class="pe-row">
@@ -10580,7 +10589,7 @@ function migrateProStatusToStatus() {
   let migrated = 0;
   allCodes.forEach(code => {
     if (!state.productMeta[code]) {
-      state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前' };   // 【v1.0861】新しく増えた商品は選択前から
+      state.productMeta[code] = _ycNewMeta(code);   // 【v1.0861】新しく増えた商品は選択前から
       return;
     }
     const meta = state.productMeta[code];
@@ -13235,7 +13244,7 @@ async function runRetireCheck(file) {
 }
 function getMeta(code) {
   if (!state.productMeta[code]) {
-    state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前' };   // 【v1.0861】新しく増えた商品は選択前から
+    state.productMeta[code] = _ycNewMeta(code);   // 【v1.0861】新しく増えた商品は選択前から
   }
   // statusが未定義の既存データは「新商品」で補完（★ここは '新商品' のまま。古いデータの意味を変えない）
   if (!state.productMeta[code].status) {
@@ -13798,6 +13807,46 @@ function _ycFirstSaleMap() {
   return out;
 }
 function _ycFirstSaleDate(code) { return _ycFirstSaleMap()[code] || ''; }
+// ============================================================================
+// 【v1.1065】初回登録日（本人指定・§451）：「初回販売日」の列をやめて、その商品を Ycheck に登録した日にする。
+//   ・保存先：productMeta[コード].regDate（'YYYY-MM-DD'。昔の商品は 'YYYY-MM' もある。'' ＝空欄にした）。productMeta ごと GitHub に載る。
+//   ・新しく Ycheck に入った商品（productMeta を作るとき＝ステータス「選択前」で作る所すべて）は、その日（端末の日付）を入れる（_ycNewMeta）。
+//   ・商品情報を編集（#peRegDate）で変えられる。
+//   ・regDate をまだ持っていない既存の商品は、次の値を出す（_ycRegDerived。保存はしない＝編集したときだけ保存）：
+//       GitHub の保存の履歴（2026-04-23〜2026-11-27 の各日の最後の保存）で、productMeta か master に初めて出てきた日（YC_REG_HIST）。
+//       ★最初の日（2026-04-23）からある商品は本当の登録日が分からないので、今までの初回販売日（_ycFirstSaleDate。月までのこともある）。本人の選択。
+//   ・新商品（リリース月）の画面は今までどおり「いちばん早く売れた日」を使う（売れた月でまとめる機能のため）。
+// ============================================================================
+const YC_REG_HIST_START = '2026-04-23';
+const YC_REG_HIST = {"IH-21-01":"2026-04-23","IH-21-02":"2026-04-23","baby-23-01-miton":"2026-04-23","baby-23-01-miton-5set":"2026-11-12","baby-23-02":"2026-04-23","baby-23-03-sty":"2026-04-23","baby-23-04-gauze":"2026-04-23","bg-01-con-20set":"2026-04-23","bg-02-con-hook-15set":"2026-11-12","bg-02-con-hook-20set":"2026-04-23","bg-02-con-hook-30set":"2026-11-12","bg-03-con-mesu-30set":"2026-04-23","bg-04-nylon-10set":"2026-04-23","bg-05-ori-5set":"2026-04-23","bg-06-kakon-10set":"2026-04-23","bg-07-usb-mesu-20set":"2026-04-23","bg-08-usb-osu-20set":"2026-04-23","bg-09-usbc-mesu-20set":"2026-04-23","bg-10-usbc-osu-20set":"2026-04-23","bi-25-01-2set":"2026-11-24","bi-25-01-2set-tape":"2026-11-24","bi-25-01-4set":"2026-11-24","bi-25-01-4set-tape":"2026-11-24","bloop-18-01-10":"2026-04-23","bloop-18-01-10-2set":"2026-04-23","bloop-18-01-12":"2026-04-23","bloop-18-01-12-2set":"2026-04-23","bloop-18-01-14":"2026-04-23","bloop-18-01-14-2set":"2026-04-23","bloop-18-01-16":"2026-04-23","bloop-18-01-16-2set":"2026-04-23","bloop-18-01-18":"2026-04-23","bloop-18-01-18-2set":"2026-04-23","bloop-18-01-20":"2026-04-23","bloop-18-01-20-2set":"2026-04-23","bloop-18-01-22":"2026-04-23","bloop-18-01-22-2set":"2026-04-23","bloop-18-01-24":"2026-04-23","bloop-18-01-24-2set":"2026-04-23","bloop-18-01-26":"2026-04-23","bloop-18-01-26-2set":"2026-04-23","bloop-18-01-28":"2026-04-23","bloop-18-01-28-2set":"2026-04-23","bloop-18-01-30":"2026-04-23","bloop-18-01-30-2set":"2026-04-23","bloop-18-02":"2026-04-23","bloop-18-02-2set":"2026-04-23","ca-02-01-hera":"2026-04-23","cab-16-02-01":"2026-04-23","cab-16-02-03":"2026-04-23","cab-16-02-05":"2026-04-23","cab-17-06":"2026-04-23","cab-17-07-set":"2026-04-23","cab-18-01-05":"2026-07-16","cab-18-01-20":"2026-07-16","cab-25-01":"2026-04-23","cab-25-02":"2026-04-23","cam-21-01":"2026-04-23","cam-21-01-2set":"2026-04-23","cam-21-02":"2026-04-23","cam-21-02-2set":"2026-04-23","car-02-01-2set-hera":"2026-04-23","car-02-01-2set-kougu":"2026-04-23","car-02-01-kougu":"2026-04-23","car-02-03":"2026-04-23","car-17-02-02":"2026-04-23","case-18-02":"2026-08-19","case-18-03":"2026-07-16","case-18-08-0set":"2026-05-08","cg-22-03":"2026-04-23","cg-22-03-2set":"2026-04-23","cg-22-04":"2026-04-23","cg-22-04-2set":"2026-04-23","cg-22-05":"2026-04-23","cg-22-06":"2026-04-23","cg-22-07":"2026-04-23","cuff-19-01-00set":"2026-05-26","cuff-19-01-02set":"2026-07-16","ele-18-03":"2026-07-16","eq-22-01":"2026-04-23","eq-22-01-clear-2set":"2026-04-23","eq-22-02":"2026-04-23","eq-22-02-04set":"2026-10-27","eq-22-02-12set":"2026-10-27","eq-22-04-blue-mat":"2026-04-23","eq-22-04-clear-mat":"2026-04-23","eq-22-05-toilet":"2026-04-23","eq-22-05-toilet-01set":"2026-10-08","eq-22-05-toilet-02set":"2026-10-08","eq-22-05-toilet-04set":"2026-10-08","eq-22-05-toilet-05set":"2026-10-08","eq-22-05-toilet-10set":"2026-10-08","eq-22-05-toilet-15set":"2026-10-08","eq-22-05-toilet-25set":"2026-10-08","eq-24-02-toilet-01set":"2026-10-13","eq-24-02-toilet-02set":"2026-10-13","eq-24-02-toilet-04set":"2026-10-13","eq-24-02-toilet-05set":"2026-10-13","eq-24-02-toilet-10set":"2026-10-13","eq-24-02-toilet-15set":"2026-10-13","eq-24-02-toilet-25set":"2026-10-13","eq-24-02-toilet-test":"2026-11-04","eq-24-03-lock":"2026-10-23","eq-24-03-lock-mat04":"2026-10-23","eq-24-03-lock-mat12":"2026-10-23","et-a-25-01-2set":"2026-10-13","et-a-25-01-4set":"2026-10-13","et-a-25-01-6set":"2026-10-13","et-apple-25-02-1set":"2026-11-04","et-apple-25-02-2set":"2026-11-04","et-sony-26-01-2set":"2026-10-27","et-sony-26-01-4set":"2026-10-27","et-sony-26-01-8set":"2026-10-27","fas-16-01-2set":"2026-04-23","fas-16-01-black1":"2026-04-23","fas-16-01-blue":"2026-04-23","fas-16-01-brown":"2026-04-23","fas-16-01-gray":"2026-04-23","fas-16-01-green":"2026-04-23","fas-16-01-navy":"2026-04-23","fas-16-01-orange":"2026-04-23","fas-16-01-pink":"2026-04-23","fas-16-01-purple":"2026-04-23","fas-16-01-red":"2026-04-23","fas-16-01-white":"2026-04-23","fas-16-01-yellow":"2026-04-23","fas-16-02-2set":"2026-04-23","fas-16-02-b":"2026-04-23","fas-16-02-green":"2026-04-23","fas-16-02-navy":"2026-04-23","fas-16-02-orange":"2026-04-23","fas-16-02-purple":"2026-04-23","fas-16-02-r":"2026-04-23","fas-16-02-red2":"2026-04-23","fas-16-02-w":"2026-04-23","fas-16-02-yellow":"2026-04-23","fas-17-01":"2026-05-08","fas-17-01-2set":"2026-05-08","fas-17-03":"2026-04-23","fel-22-01":"2026-04-23","fel-22-01-2set":"2026-04-23","fel-22-02":"2026-04-23","fel-22-02-2set":"2026-04-23","fing-25-02":"2026-04-23","foot-22-01-3set":"2026-04-23","foot-22-02-3set":"2026-04-23","foot-22-03-3set":"2026-04-23","foot-22-04-2set":"2026-04-23","foot-23-01-4set":"2026-04-23","foot-23-02-4set":"2026-04-23","foot-23-03-4set":"2026-04-23","foot-23-04":"2026-04-23","foot-23-05":"2026-04-23","foot-25-01":"2026-04-23","foot-25-03":"2026-04-23","foot-25-04":"2026-04-23","foot-25-05":"2026-04-23","foot-25-06":"2026-04-23","gar-fa-01":"2026-04-23","gar-fa-02":"2026-04-23","gar-fa-03":"2026-04-23","gar-fa-04":"2026-04-23","gar-feni-01":"2026-04-23","gar-feni-02":"2026-04-23","gar-feni-03":"2026-04-23","gar-feni-04":"2026-04-23","gar-in-01":"2026-04-23","gar-in-02":"2026-04-23","ih-21-01":"2026-04-23","ih-21-01-set":"2026-04-23","ih-21-02":"2026-04-23","ih-21-03a":"2026-04-23","ih-21-04":"2026-04-23","ih-21-04a":"2026-10-23","ih-21-kakato-01020304":"2026-10-23","ih-21-kakato-0103":"2026-10-23","ih-21-kakato-0104":"2026-10-23","ih-21-kakato-0203":"2026-10-23","ih-21-kakato-0204":"2026-10-23","ih-21-kakato-0304":"2026-10-23","ih-22-01":"2026-04-23","ih-22-01-2set":"2026-04-23","ih-22-02":"2026-04-23","ih-22-03-12set":"2026-04-23","ih-22-04":"2026-04-23","ih-22-04-set1-2cm-2cm":"2026-11-24","ih-22-04-set1-2cm-3cm":"2026-11-24","ih-22-04-set1-2cm-5cm":"2026-11-24","ih-22-04-set1-3cm-3cm":"2026-11-24","ih-22-04-set1-3cm-5cm":"2026-11-24","ih-22-04-set1-5cm-5cm":"2026-11-24","ih-22-05":"2026-04-23","ih-22-10-0set":"2026-04-23","ih-22-10-0set-no-band":"2026-11-02","ih-22-10-0set-template-band":"2026-11-02","ih-22-10-0set-template-no":"2026-11-02","ih-23-01-00set":"2026-04-23","ih-23-01-04set":"2026-11-09","ih-23-03":"2026-04-23","ih-23-05-00set":"2026-04-23","ih-23-10":"2026-04-23","ih-23-11":"2026-04-23","ih-23-13":"2026-04-23","ih-24-02":"2026-04-23","ih-24-05":"2026-04-23","ih-24-08-set2":"2026-10-29","ih-24-08-set3":"2026-10-29","ih-24-08-set4":"2026-10-29","ih-25-01-set1":"2026-11-18","ih-25-01-set2":"2026-11-18","ih-25-01-set3":"2026-11-18","ih-25-02-020set":"2026-11-17","ih-25-02-040set":"2026-11-17","ih-25-02-060set":"2026-11-17","ih-25-02-120set":"2026-11-17","ih-25-02-180set":"2026-11-17","ih-25-03-group-1set":"2026-11-04","ih-25-03-group-2set":"2026-11-04","ih-25-03-group-3set":"2026-11-04","mus-25-01":"2026-11-24","mus-25-01-set":"2026-11-24","neck-cat-01":"2026-04-23","neck-cat-01-set":"2026-07-16","neck-long":"2026-04-23","neck-long-0set":"2026-04-23","nt-19-01-00set":"2026-04-23","nt-19-01a":"2026-04-23","nt-19-02":"2026-04-23","nt-19-02-00set":"2026-04-23","pc-19-01":"2026-04-23","pc-19-01-0set":"2026-04-23","pc-19-02":"2026-04-23","pc-19-02-0set":"2026-04-23","pc-19-02-green":"2026-04-23","sb-01":"2026-04-23","sb-01-2set":"2026-04-23","sb-02":"2026-04-23","sb-02-2set":"2026-04-23","sb-04":"2026-04-23","sb-05":"2026-04-23","sb-06":"2026-04-23","sb-07":"2026-08-10","sb-08":"2026-04-23","scarf-23-01":"2026-04-23","scarf-23-02":"2026-04-23","si-21-01":"2026-04-23","si-21-01-0set":"2026-04-23","si-22-01":"2026-04-23","si-22-01-3set":"2026-04-23","si-22-02":"2026-04-23","si-22-02-2set":"2026-04-23","si-22-03":"2026-04-23","si-22-03-0set":"2026-04-23","si-22-03-3set":"2026-04-23","si-22-04-00set":"2026-04-23","si-22-04a":"2026-04-23","si-22-04a-set1":"2026-04-23","si-22-05":"2026-04-23","si-22-05-2l":"2026-09-08","si-22-06":"2026-04-23","si-22-06-brush":"2026-04-23","si-22-07":"2026-04-23","si-22-08":"2026-04-23","si-22-10":"2026-04-23","si-22-10-set":"2026-11-16","si-22-11-00set":"2026-04-23","si-22-12":"2026-07-16","si-23-01-00set":"2026-04-23","si-23-02-00set":"2026-04-23","si-23-03":"2026-04-23","si-23-03-hue":"2026-11-24","si-23-04-00set":"2026-04-23","si-23-06":"2026-04-23","si-23-07":"2026-04-23","si-23-07a":"2026-06-24","si-23-08-00set":"2026-04-23","si-23-09":"2026-04-23","si-23-09-150-senyou":"2026-04-23","si-23-10":"2026-04-23","si-23-11":"2026-04-23","si-23-11-cut-case1":"2026-11-18","si-23-11-cut-case1-push1":"2026-11-18","si-23-11-cut1-push1":"2026-11-18","si-23-11-push1":"2026-11-18","si-23-11a":"2026-06-24","si-23-12":"2026-04-23","si-23-13a-01-hane":"2026-11-24","si-23-13a-01-hane-st":"2026-11-24","si-23-13a-02-heart":"2026-11-24","si-23-13a-02-heart-st":"2026-11-24","si-23-13a-03-noko":"2026-11-24","si-23-13a-03-noko-st":"2026-11-24","si-23-13a-04-st":"2026-11-24","si-24-01":"2026-04-23","si-24-02":"2026-04-23","si-24-02a":"2026-06-24","si-24-03":"2026-04-23","si-24-04-key":"2026-11-12","si-24-04-set":"2026-11-12","si-25-01-120set":"2026-10-15","si-25-01-180set":"2026-10-15","si-25-01-240set":"2026-10-15","si-25-01-300set":"2026-10-15","si-25-01-30set":"2026-10-15","si-25-01-60set":"2026-10-15","si-25-01-90set":"2026-10-15","si-25-03-3set":"2026-11-17","si-25-03-3set-h":"2026-11-17","si-25-03-6set":"2026-11-17","si-25-03-6set-h":"2026-11-17","si-25-04-set":"2026-11-17","si-25-05-04set":"2026-10-16","si-25-05-08set":"2026-10-16","si-25-05-16set":"2026-10-16","si-26-02-1s-10set-case":"2026-10-27","si-26-02-1s-10set-no":"2026-10-27","si-26-02-1s-20set-case":"2026-10-27","si-26-02-1s-20set-no":"2026-10-27","si-26-02-1s-30set-case":"2026-10-27","si-26-02-1s-30set-no":"2026-10-27","si-26-02-2l-10set-case":"2026-10-27","si-26-02-2l-10set-no":"2026-10-27","si-26-02-2l-20set-case":"2026-10-27","si-26-02-2l-20set-no":"2026-10-27","si-26-02-2l-30set-case":"2026-10-27","si-26-02-2l-30set-no":"2026-10-27","si-26-03-group-12set":"2026-10-29","si-26-03-group-24set":"2026-10-29","si-26-03-group-48set":"2026-10-29","si-26-03-group-72set":"2026-10-29","si-26-05-1set":"2026-11-24","si-26-05-2set":"2026-11-24","si-26-07-04set":"2026-11-12","si-26-07-10set":"2026-11-12","si-26-07-20set":"2026-11-12","si-26-08-3set":"2026-09-17","si-26-08-6set":"2026-09-17","si-26-09-02set":"2026-10-16","si-26-09-04set":"2026-10-16","si-26-09-10set":"2026-10-16","sil-18-01-05a":"2026-07-16","sil-18-01-10":"2026-07-16","sou-18-03-3":"2026-05-26","sou-18-03-6":"2026-06-16","sou-20-01-0set":"2026-04-23","ss-22-01":"2026-10-29","ss-22-01-set":"2026-10-29","ss-22-03":"2026-11-24","ss-22-03-8set":"2026-11-24","swatch-01-navy-0set":"2026-07-16","tb-23-01":"2026-04-23","tb-23-01-2set":"2026-04-23","tb-23-01-3set":"2026-04-23","tb-23-01-4set":"2026-04-23","tb-23-02":"2026-04-23","tb-23-02-2set":"2026-04-23","tb-23-02-3set":"2026-04-23","tb-23-02-4set":"2026-04-23","tb-23-03":"2026-04-23","tb-23-03-2set":"2026-04-23","tb-23-03-3set":"2026-04-23","tb-23-03-4set":"2026-04-23","tb-25-01-1set":"2026-10-27","tb-25-01-2set":"2026-10-27","tb-25-01-3set":"2026-10-27","tb-25-01-4set":"2026-10-27","tb-25-01-5set":"2026-10-27","toilet":"2026-04-23","wat-18-01":"2026-04-23","wat-18-03":"2026-07-16","wat-18-04":"2026-04-23","wat-18-04-set":"2026-04-23","wat-18-05":"2026-04-23","wat-18-05-set2":"2026-04-23","wat-18-06-set2":"2026-06-29","wat-18-07":"2026-04-23","wat-18-07-set":"2026-04-23","wat-18-08":"2026-04-23","wat-18-08-set":"2026-04-23","wat-18-09":"2026-04-23","wat-18-11-set":"2026-04-23","wat-18-11a":"2026-05-26","wat-18-13a":"2026-04-23","wat-18-14":"2026-04-23","wat-18-14-set":"2026-04-23","wat-18-18":"2026-07-16","wat-18-18-0set":"2026-05-26","wat-18-20":"2026-07-16","wat-18-20-set":"2026-04-23","wat-18-21-set1":"2026-07-09","wat-18-22":"2026-04-23","wat-18-22-0set":"2026-04-23","wat-19-02":"2026-04-23","wat-19-02-0set":"2026-04-23","wat-20-02":"2026-07-16","wat-20-02-0set":"2026-04-23","wat-20-03":"2026-04-23","wat-20-03-0set":"2026-04-23","wat-fb-07":"2026-07-16","wat-fb-08":"2026-04-23","wat-fb-10":"2026-07-16","wat-fb-11":"2026-04-23","wat-fb-12":"2026-04-23","wat-fb-14":"2026-04-23","wat-fb-15":"2026-04-23","wat-fb-17":"2026-07-16","wat-fb-21-00":"2026-04-23","wat-fb-21-01":"2026-04-23","wat-fb-21-02":"2026-04-23","wat-fb-21-03":"2026-04-23","wat-fb-21-05":"2026-04-23","wat-fb-21-06":"2026-04-23","wat-fb-21-07":"2026-04-23","wat-fb-21-08":"2026-04-23","wat-fb-21-09":"2026-04-23","wat-ga-02":"2026-04-23","wat-ga-04":"2026-04-23","wat-mb-02a":"2026-04-23","wat-mb-03-set":"2026-04-23","wat-mb-04-set":"2026-04-23","wat-mb-05-0set":"2026-04-23","wat-os-01":"2026-04-23","wat-sma-01":"2026-04-23","wat-sma-01-0set":"2026-04-23","wat-sma-01b":"2026-04-23","wat-sma-01b-0set":"2026-10-20","wat-sma-02":"2026-04-23","wat-sma-02-0set":"2026-04-23","wat-sma-02b":"2026-04-23","wat-sma-03":"2026-04-23","wat-sma-03-02-22":"2026-04-23","wat-sma-03-0set1":"2026-04-23","wat-sma-03a":"2026-04-23","wat-sma-04-set1":"2026-04-23","wat-sma-04-set1a":"2026-04-23","wat-sma-04-set2":"2026-04-23","wat-sma-05":"2026-04-23","wat-sma-05-0set":"2026-04-23","wat-sma-07":"2026-04-23","wat-sma-08":"2026-04-23","wat-sma-09":"2026-04-23","wat-sma-10":"2026-04-23","wb-26-01":"2026-10-07","wb-26-01-set":"2026-10-07","yoga-23-01-00set":"2026-04-23","yoga-23-01-03set":"2026-10-27","yoga-23-02-set":"2026-04-23","yoga-23-03-00set":"2026-04-23","yoga-24-01-band1":"2026-11-18","yoga-25-01-1set-n":"2026-11-05","yoga-25-01-1set-s":"2026-11-05","yoga-25-01-2set-nn":"2026-11-05","yoga-25-01-2set-ns":"2026-11-05","yoga-25-01-2set-ss":"2026-11-05","zak-17-01-04":"2026-07-16","zak-17-05":"2026-07-16","zak-17-09-a":"2026-04-23","zak-18-06-02set1":"2026-07-16","zak-18-06-08set":"2026-04-23","zak-18-06-12set":"2026-04-23","zak-18-06-d08set":"2026-07-16","zak-18-07":"2026-04-23","zak-18-07-05c":"2026-04-23","zak-18-07-10":"2026-04-23","zak-18-07-20":"2026-04-23","zak-18-10b":"2026-04-23","zak-18-11-05a":"2026-04-23","zak-18-11-10":"2026-04-23","zak-18-11-20":"2026-04-23","zak-18-11-50":"2026-04-23","zak-18-15":"2026-05-26","zak-18-17-25":"2026-04-23","zak-18-17-32":"2026-04-23","zak-18-17-38":"2026-04-23","zak-18-17-50":"2026-04-23","zak-18-19":"2026-04-23","zak-18-19-2set":"2026-04-23","zak-19-14":"2026-07-16","zak-19-15":"2026-07-16","zak-20-01":"2026-04-23","zak-20-01-00set":"2026-04-23","zak-20-10-2set":"2026-07-16","zak-20-16-05":"2026-04-23","zak-20-16-10":"2026-04-23","zak-20-16-20":"2026-04-23","zak-20-16-50":"2026-04-23","zak-20-17-05":"2026-04-23","zak-20-17-10":"2026-04-23","zak-20-17-20":"2026-04-23","zak-20-17-50":"2026-04-23","zak-20-18-05":"2026-04-23","zak-20-18-10":"2026-04-23","zak-20-18-20":"2026-04-23","zak-20-18-50":"2026-04-23"};
+function _ycToday() { const d = new Date(), p = x => String(x).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+// 既存の商品の初期値（履歴に無い＝null）
+function _ycRegDerived(code) {
+  const h = YC_REG_HIST[code] || YC_REG_HIST[String(code || '').toLowerCase()];
+  if (!h) return null;
+  if (h > YC_REG_HIST_START) return h;
+  return _ycFirstSaleDate(code) || _ycFirstSaleDate(String(code).toLowerCase()) || '';
+}
+function _ycRegDate(code) {
+  const pm = state.productMeta || {}, m = pm[code] || pm[String(code || '').toLowerCase()];
+  if (m && typeof m.regDate === 'string') return m.regDate;
+  const d = _ycRegDerived(code); return d == null ? '' : d;
+}
+// 新しく productMeta を作るとき（＝Ycheck に商品が入ったとき）。履歴にある商品（meta が無かっただけ）は初期値、無ければ今日
+function _ycNewMeta(code) {
+  const d = _ycRegDerived(code);
+  return { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前', regDate: d != null ? d : _ycToday() };
+}
+// 入力を 'YYYY-MM-DD'／'YYYY-MM'／'' に。形がおかしいときは null
+function _ycRegParse(v) {
+  v = String(v || '').trim().replace(/[．。]/g, '/').replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  if (!v) return '';
+  let m = /^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/.exec(v);
+  if (m) { const y = +m[1], mo = +m[2], d = +m[3]; const dt = new Date(y, mo - 1, d); if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null; return y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'); }
+  m = /^(\d{4})[\/\-.年](\d{1,2})月?$/.exec(v);
+  if (m && +m[2] >= 1 && +m[2] <= 12) return m[1] + '-' + String(+m[2]).padStart(2, '0');
+  return null;
+}
 function _ycRenewalDate(code) {
   const a = ((state.changeLog || {}).items || {})[code];
   if (!Array.isArray(a)) return '';
@@ -13827,12 +13876,12 @@ function _ycIdDates(r) {
   const codes = roll ? r._members : [r.code];
   let fs = '', rn = '', kidFs = '', kidCode = '';
   codes.forEach(c => { const n = _ycRenewalDate(c); if (n && n > rn) rn = n; });
-  const own = (r && r.code) ? _ycFirstSaleDate(r.code) : '';
-  if (roll && own) codes.forEach(c => { const f = _ycFirstSaleDate(c); if (f && (!fs || f < fs)) fs = f; });   // 親が売れている合算行＝今までどおり
+  const own = (r && r.code) ? _ycRegDate(r.code) : '';   // 【v1.1065】初回登録日
+  if (roll && own) codes.forEach(c => { const f = _ycRegDate(c); if (f && (!fs || f < fs)) fs = f; });   // 合算行＝まとまりでいちばん古い登録日
   else if (own) fs = own;
   else {
     const kids = roll ? codes.filter(c => c !== r.code) : (r && r.code ? _ycKidsOf(r.code) : []);
-    kids.forEach(c => { const f = _ycFirstSaleDate(c); if (f && (!kidFs || f < kidFs)) { kidFs = f; kidCode = c; } });
+    kids.forEach(c => { const f = _ycRegDate(c); if (f && (!kidFs || f < kidFs)) { kidFs = f; kidCode = c; } });   // 【v1.1065】
   }
   return { fs, rn, kidFs, kidCode };
 }
@@ -13843,8 +13892,8 @@ function _idDatesTd(r, activeKey) {
   const cell = (v, sub, on, tip) => '<div class="' + (sub ? 'idd-sub ' : '') + (v ? '' : 'idd-none ') + ((on && v) ? 'idd-on' : '') + '" title="' + tip + '">' + (v ? _ycYmdSlash(v) : '-') + '</div>';
   // 【v1.1051】親は未販売・子だけ売れている → 子のいちばん早い初回販売日を薄く（.idd-kid）
   const fsCell = (!fs && kidFs)
-    ? '<div class="idd-kid' + (activeKey === 'firstsale' ? ' idd-on' : '') + '" title="' + escapeHtml('子（' + kidCode + '）の初回販売日。親の商品そのものはまだ売れていません' + (kidFs.length === 7 ? '（日別データより前の月なので月まで）' : '')) + '">' + _ycYmdSlash(kidFs) + '</div>'
-    : cell(fs, false, activeKey === 'firstsale', '初回販売日（売上が最初に立った日）' + (fs && fs.length === 7 ? '。日別データより前の月なので月まで' : ''));
+    ? '<div class="idd-kid' + (activeKey === 'firstsale' ? ' idd-on' : '') + '" title="' + escapeHtml('子（' + kidCode + '）の初回登録日。親の初回登録日は空欄です') + '">' + _ycYmdSlash(kidFs) + '</div>'
+    : cell(fs, false, activeKey === 'firstsale', '初回登録日（この商品を Ycheck に登録した日。商品情報を編集で変えられる）' + (fs && fs.length === 7 ? '。昔からある商品で、売上が最初に立った月までしか分からない' : ''));
   return '<td class="idd-cell"><div class="idd-stack">'
     + fsCell
     + cell(rn, true, activeKey === 'renewal', 'リニュ日（変更記録の最後の日付）')
@@ -20070,7 +20119,7 @@ function tuneIsToday(s) { return !!s && s === tuneTodayStr(); }
 function tuneIsThisMonth(s) { return !!s && String(s).slice(0, 7) === tuneTodayStr().slice(0, 7); }
 function markTuneAction(code, kind) {
   if (!code) return;
-  if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
+  if (!state.productMeta[code]) state.productMeta[code] = _ycNewMeta(code);   /* 【v1.0861】 */
   const today = tuneTodayStr();
   const nowTs = Date.now();
   // 【v301】対応時刻(ミリ秒)も記録。推移確認/未確認は「最新値更新サイクル」内で対応済みかを
@@ -25836,7 +25885,7 @@ function bulkMarkTuneDone(kind /* 'ad' | 'pro' */) {
   const dd = String(now.getDate()).padStart(2, '0');
   const stamp = `更新日時-${yy}-${mm}${dd}`;
   codes.forEach(code => {
-    if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
+    if (!state.productMeta[code]) state.productMeta[code] = _ycNewMeta(code);   /* 【v1.0861】 */
     const meta = state.productMeta[code];
     const note = (meta[field] || '').trim();
     // 【v1.0903】空欄/更新日時のみ → 文章は空にして、確認日（右下）を今日に。メモがある行も確認日は今日にする
@@ -26515,7 +26564,7 @@ function startBidEdit(cell) {
       const oldBid = (currentBid === '' || currentBid == null) ? '' : currentBid;
       const newBid = (state.bid[code] == null) ? '' : state.bid[code];
       if (String(oldBid) !== String(newBid)) {
-        if (!state.productMeta[code]) state.productMeta[code] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
+        if (!state.productMeta[code]) state.productMeta[code] = _ycNewMeta(code);   /* 【v1.0861】 */
         state.productMeta[code].adNote = buildPriceChangeNote(state.productMeta[code].adNote, 'bid', oldBid, newBid);
         markTuneAction(code, 'ad');  // 【v249】入札価格の値変更＝対応済み
         _setTuneReviewed(code, 'ad', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
@@ -26612,7 +26661,7 @@ function setProRateTo(code, num, why) {
   const oldRate = (cur == null || isNaN(cur)) ? '' : Math.floor(Number(cur));
   const newRate = Math.floor(Number(num));
   if (String(oldRate) !== String(newRate)) {
-    const pm = state.productMeta[code] || state.productMeta[codeLower] || (state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' });
+    const pm = state.productMeta[code] || state.productMeta[codeLower] || (state.productMeta[codeLower] = _ycNewMeta(codeLower));
     pm.proNote = buildPriceChangeNote(pm.proNote, 'pro', oldRate, newRate);
     try { markTuneAction(code, 'pro'); _setTuneReviewed(code, 'pro', false); } catch (e) {}
   }
@@ -26679,7 +26728,7 @@ function startProRateEdit(cell) {
       const oldRate = (currentRaw == null || isNaN(currentRaw)) ? '' : Math.floor(Number(currentRaw));
       const newRate = (state.proRate[codeLower] == null) ? '' : Math.floor(Number(state.proRate[codeLower]));
       if (String(oldRate) !== String(newRate)) {
-        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
+        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = _ycNewMeta(codeLower);   /* 【v1.0861】 */
         state.productMeta[codeLower].proNote = buildPriceChangeNote(state.productMeta[codeLower].proNote, 'pro', oldRate, newRate);
         markTuneAction(codeLower, 'pro');  // 【v249】PRオプ料率の値変更＝対応済み
         _setTuneReviewed(codeLower, 'pro', false);  // 【v1.0398】値を再調整→レビュー済み解除→推移確認へ戻す
@@ -26843,7 +26892,7 @@ function startRankEditCell(cell) {
       const oldNum = (currentVal == null || isNaN(Number(currentVal)) || Number(currentVal) === 0) ? '' : Math.floor(Number(currentVal));
       const newNum = (newVal == null) ? '' : Math.floor(Number(newVal));
       if (String(oldNum) !== String(newNum)) {
-        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = { adStatus:'', proStatus:'', adNote:'', proNote:'', status:'選択前' };   /* 【v1.0861】 */
+        if (!state.productMeta[codeLower]) state.productMeta[codeLower] = _ycNewMeta(codeLower);   /* 【v1.0861】 */
         if (isBid) {
           state.productMeta[codeLower].adNote = buildPriceChangeNote(state.productMeta[codeLower].adNote, 'bid', oldNum, newNum);
           markTuneAction(codeLower, 'ad');  // 【v249】
@@ -28723,6 +28772,7 @@ function openProductEditModal(code, _openOpt) {
   const m = getMaster(code) || { code, name: '', kw: '', searchUrl: '', editedKw: false };
   const meta = state.productMeta[code] || {};
   $('#peCode').textContent = code;
+  try { $('#peRegDate').value = _ycYmdSlash(_ycRegDate(code)); } catch (e) {}   // 【v1.1065】初回登録日
   $('#peName').value = m.name || '';
   $('#peKw').value = m.kw || '';
   $('#peSearchUrl').value = m.searchUrl || '';
@@ -29066,7 +29116,7 @@ function _peSoiSuggest(q) {
 //   newRepCode：''＝なし／自分のコード＝親／ほかのコード＝その商品の子。保存（saveToStorage）は呼び出し側で。
 function applyRepCodeChange(code, newRepCode) {
   newRepCode = String(newRepCode || '').trim();
-  if (!state.productMeta[code]) state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '', status: '選択前' };
+  if (!state.productMeta[code]) state.productMeta[code] = _ycNewMeta(code);
   //   【v1.0763】_prevRep（変更前の代表コード）は「子商品タイプ未選択の通知」専用だったので撤去。
   // 【v1.0936】本人指定：子商品にした時点で、ステータスを「子（親に追従）」にする。
   //   ・子になった（前は子でなかった／親を付け替えた）ときだけ書き換える。同じ親のまま保存し直しただけなら触らない
@@ -29103,6 +29153,10 @@ function saveProductEdit(opts) {
   const newUrl = $('#peSearchUrl').value.trim();
   const newKw = $('#peKw').value.trim();
   const newRepCode = $('#peRepCode').value.trim();  // 【v124】代表商品コード
+  // 【v1.1065】初回登録日：形がおかしければ保存しない
+  const _regIn = $('#peRegDate') ? $('#peRegDate').value : null;
+  const _reg = _regIn == null ? undefined : _ycRegParse(_regIn);
+  if (_reg === null) { showToast('初回登録日の形が読めません（例：2026/11/27 または 2026/11）', 'error'); try { $('#peRegDate').focus(); } catch (e) {} return; }
   if (!state.master[code]) {
     state.master[code] = { code, name: '', kw: '', searchUrl: '', editedKw: false };
   }
@@ -29128,6 +29182,8 @@ function saveProductEdit(opts) {
   if (!state.productMeta[code]) {
     state.productMeta[code] = { adStatus: '', proStatus: '', adNote: '', proNote: '' };
   }
+  // 【v1.1065】初回登録日：いま出している値と違うときだけ保存（昔の商品の初期値は、変えない限り保存しない）
+  if (_reg !== undefined && _reg !== _ycRegDate(code)) state.productMeta[code].regDate = _reg;
   // 【v124】代表商品コードを保存（空文字なら削除扱い）。【v1.0981】中身は applyRepCodeChange へ（新規登録の画面と共通）
   applyRepCodeChange(code, newRepCode);
   // 【親子成立時の通知】は【v1.0763】で撤去。
