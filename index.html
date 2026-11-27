@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1068 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1069 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2617,7 +2617,10 @@ tr.yc-chunk-ph td { padding: 0 !important; border: 0 !important; background: tra
 /* 商品モーダルの平均の行（列名のすぐ下で止まる） */
 #productEditModal .pe-table-wrap tbody tr.pe-xr td { position: sticky; z-index: 1; font-weight: 700; background: var(--xrbg) !important; box-shadow: inset 0 -2px 0 var(--xrc); }
 #productEditModal .pe-table-wrap tbody tr.pe-xr td.pe-xr-name { text-align: left !important; white-space: nowrap; font-weight: 800; }
-#productEditModal .pe-table-wrap tbody tr.pe-xr td .pe-xr-sub { font-size: 10.5px; font-weight: 600; margin-top: 1px; }
+#productEditModal .pe-table-wrap tbody tr.pe-xr td .pe-xr-sub { font-size: 10px; font-weight: 600; margin-left: 5px; }   /* 【v1.1069】下の段 → 名前の右（1行に。§455） */
+/* 【v1.1069】平均の行があるときは、日付の列を中身（1行の「直近30日 平均 10/28〜11/26（30日）」）ぴったりの幅に。
+   width:1% ＝ 自動レイアウトで余りの幅を日付の列に回さない（ほかの列を細らせない）。 */
+#productEditModal .pe-table-wrap table:has(tr.pe-xr) thead tr:first-child > :first-child { width: 1%; }
 /* 【v1.1051】親は未販売・子だけ売れている → 子の初回販売日を薄く（§437） */
 .idd-stack > .idd-kid { color: #b4bac4; }
 .idd-stack > div.idd-kid.idd-on { color: #e8a0a0; }
@@ -5286,7 +5289,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1068</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1069</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -27585,7 +27588,7 @@ function _peXrTrOpen(k) { return '<tr class="pe-xr pe-xr-' + k + '" style="--xrb
 function _peXrNameTd(k, nd, cellStyle) {
   const tip = XR_NAME[k] + '（' + _xrSpanYmd(k) + '）の1日あたりの平均。データのある日 ' + nd + '日で割っています（売れなかった日も0として入る）。率は期間の合計から出し直しています。\n\n' + XR_TIP;
   return '<td class="pe-xr-name" style="' + (cellStyle || '') + 'color:' + XR_COL[k].t + '" title="' + escapeHtml(tip) + '">' + XR_NAME[k] + ' 平均'
-    + '<div class="pe-xr-sub">' + _xrSpan(k) + '（' + nd + '日）</div></td>';
+    + '<span class="pe-xr-sub">' + _xrSpan(k) + '（' + nd + '日）</span></td>';   // 【v1.1069】期間は名前の右に並べて1行に（§455）
 }
 // ============================================================================
 // 【v1.0911→v1.0912】商品モーダル「調整-日月別」タブ＝調整用。その日（月）の細かい数字の動きを見る（本人指定）。
