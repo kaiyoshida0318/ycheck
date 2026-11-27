@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- 【v1.0523】タイトル表記が v1.0519 のまま止まっていたため、ソースの実体（v1.0520〜v1.0523の変更が入った状態）に合わせて修正 -->
-<title>Ycheck v1.1066 — Yahoo!ショッピング売上管理ダッシュボード</title>
+<title>Ycheck v1.1067 — Yahoo!ショッピング売上管理ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2593,6 +2593,7 @@ tr.yc-chunk-ph td { padding: 0 !important; border: 0 !important; background: tra
   box-shadow: 0 6px 20px rgba(0,0,0,.18); pointer-events: none; }
 /* 【v1.1053】＋直近30日／＋確定30日 のボタン（§439。ADcheck の「ROASの列」と同じ形）。押すと ✓ に変わり色が付く */
 .xr-bar { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.xr-bar.pe-xr-above { display: flex; margin: -6px 0 8px; }   /* 【v1.1067】商品-調整：表のすぐ上に置く */
 .xr-bar-lbl { font-size: 0.78rem; font-weight: 700; color: var(--text3); }
 .xr-seg { display: inline-flex; gap: 3px; padding: 2px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg2); }
 .xr-btn { font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 7px; border: 0; background: transparent; color: var(--xt); cursor: pointer; white-space: nowrap; font-family: inherit; }
@@ -5285,7 +5286,7 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
     </button>
     <div class="shop-menu" id="shopMenu"></div>
     <!-- 【v1.1001】バージョン表記をショップ選択のすぐ右へ（本人指定）。.logo-sub は保存データの savedByVer などが読むので class は変えない -->
-    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1066</div>
+    <div class="logo-sub" title="Ycheckのバージョン（改修ごとに+1）">v1.1067</div>
     <!-- 【v1.1012】日別データ欠けのボタンは右の「毎日の作業」のまとまりへ移した -->
   </div>
   <!-- 【v1.1012】★右側をADcheck v1.1514「ヘッダー（色付けと配置）仕様書」の形に作り変え（本人指定）。
@@ -6978,11 +6979,12 @@ body .top-nav:not(.top-nav-3) .nav-tab .chip-num, body .top-nav-3 .nav-row-tabs 
         <span class="seg-filter" id="peAdjGrainSeg"><button type="button" class="segf-btn on" data-peadjgrain="day">日別</button><button type="button" class="segf-btn" data-peadjgrain="month">月別</button></span>
         <span class="seg-filter" id="peAdjSpanSeg"><button type="button" class="segf-btn" data-pespan="30">30日</button><button type="button" class="segf-btn on" data-pespan="60">60日</button><button type="button" class="segf-btn" data-pespan="0">全期間</button></span>
         <span class="seg-filter" id="peAdjMSpanSeg" style="display:none"><button type="button" class="segf-btn on" data-pemspan="may">5月始まり</button><button type="button" class="segf-btn" data-pemspan="12">1年</button><button type="button" class="segf-btn" data-pemspan="24">2年</button></span>
-        <span class="xr-bar" id="peXrBarAdj"></span>   <!-- 【v1.1053】＋直近30日／＋確定30日（日別だけ・§439） -->
         <span class="pe-ctl-note" id="peAdjNote"></span>
       </div>
       <div class="pe-legend pe-sw-bar" id="peAdjLegend"></div>
       <div class="pe-chart-wrap pe-chart-big"><canvas id="peAdjChart"></canvas></div>
+      <!-- 【v1.1067】＋直近30日／＋確定30日 は 表のすぐ上（本人指定・§453。前はグラフの上の操作の行。日別だけ） -->
+      <div class="xr-bar pe-xr-above" id="peXrBarAdj"></div>
       <div class="pe-table-wrap" id="peAdjTable"></div>
     </div>
 
